@@ -1988,4 +1988,85 @@ partial class CoreTests
 
         Assert.That(gamepad.buttonSouth.isPressed, Is.True);
     }
+
+    [Test]
+    [Category("Events")]
+    [Ignore("Not implemented yet. Fix as part of https://jira.unity3d.com/browse/ISX-557.")]
+    public void Events_MaximumEventLoadPerUpdateIsLimited()
+    {
+        // Default setting is 5MB.
+        Assert.That(InputSystem.settings.maxEventBytesPerUpdate, Is.EqualTo(5 * 1024 * 1024));
+
+        InputSystem.settings.maxEventBytesPerUpdate = StateEvent.GetEventSizeWithPayload<MouseState>() * 2;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
+
+        var eventCount = 0;
+        InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
+
+        LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to raise the limit.");
+
+        InputSystem.Update();
+
+        Assert.That(eventCount, Is.EqualTo(2));
+        Assert.That(mouse.rightButton.isPressed, Is.True);
+        Assert.That(mouse.middleButton.isPressed, Is.False);
+
+        eventCount = 0;
+
+        // Disable the limit.
+        InputSystem.settings.maxEventBytesPerUpdate = 0;
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
+
+        InputSystem.Update();
+
+        Assert.That(eventCount, Is.EqualTo(3));
+        Assert.That(mouse.rightButton.isPressed, Is.False);
+        Assert.That(mouse.middleButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanQueueEventsFromWithinEventProcessing()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var numMouseEventsQueued = InputTestRuntime.kDefaultEventBufferSize / StateEvent.GetEventSizeWithPayload<MouseState>() + 1;
+        var numMouseEventsReceived = 0;
+        InputSystem.onEvent +=
+            (eventPtr, device) =>
+        {
+            if (device == mouse)
+                ++numMouseEventsReceived;
+        };
+
+        var action = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/space");
+        action.performed +=
+            _ =>
+        {
+            // Queue enough events to make sure we overflow the current event buffer size.
+            // This way we not only test whether the events make it into the queue at all but
+            // also that they still make it if we have to re-allocate the buffer.
+            for (var i = 0; i < numMouseEventsQueued; ++i)
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(123, 234) }.WithButton(MouseButton.Left));
+        };
+        action.Enable();
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
+    }
+
+    ////TODO: test thread-safe QueueEvent
 }

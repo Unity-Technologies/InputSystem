@@ -472,6 +472,38 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
+        /// <see cref="InputSystem.Update"/>.
+        /// </summary>
+        /// <remarks>
+        /// This setting establishes a bound on the amount of input event data processed in a single
+        /// update and thus limits throughput allowed for input. This both prevents long stalls from
+        /// leading to long delays in input processing and prevents deadlocks when events themselves
+        /// lead to additional events being queued.
+        ///
+        /// When the limit is exceeded, all events remaining in the buffer are thrown away (the
+        /// <see cref="InputEventBuffer"/> is reset) and an error is logged. After that, the current
+        /// update will abort and early out.
+        ///
+        /// Setting this property to 0 or a negative value will disable the limit.
+        ///
+        /// The default value is 5MB.
+        /// </remarks>
+        /// <seealso cref="InputSystem.Update"/>
+        /// <see cref="InputEvent.sizeInBytes"/>
+        public int maxEventBytesPerUpdate
+        {
+            get => m_MaxEventBytesPerUpdate;
+            set
+            {
+                if (m_MaxEventBytesPerUpdate == value)
+                    return;
+                m_MaxEventBytesPerUpdate = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
         /// <remarks>
@@ -524,6 +556,7 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1014 * 1024;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;

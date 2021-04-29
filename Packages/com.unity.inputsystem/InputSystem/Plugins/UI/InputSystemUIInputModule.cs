@@ -6,6 +6,9 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////FIXME: The UI is currently not reacting to pointers until they are moved after the UI module has been enabled. What needs to
 ////       happen is that point, trackedDevicePosition, and trackedDeviceOrientation have initial state checks. However, for touch,
@@ -1205,12 +1208,46 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, m_OnTrackedDevicePositionDelegate);
         }
 
+        /// <summary>
+        /// Assigns default input actions asset and input actions, similar to how defaults are assigned when creating UI module in editor.
+        /// Useful for creating <see cref="InputSystemUIInputModule"/> at runtime.
+        /// </summary>
+        public void AssignDefaultActions()
+        {
+            var defaultActions = new DefaultInputActions();
+            actionsAsset = defaultActions.asset;
+            cancel = InputActionReference.Create(defaultActions.UI.Cancel);
+            submit = InputActionReference.Create(defaultActions.UI.Submit);
+            move = InputActionReference.Create(defaultActions.UI.Navigate);
+            leftClick = InputActionReference.Create(defaultActions.UI.Click);
+            rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
+            middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
+            point = InputActionReference.Create(defaultActions.UI.Point);
+            scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
+
+            defaultActions.Enable();
+        }
+
         [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
         public InputActionReference trackedDeviceSelect
         {
             get => throw new InvalidOperationException();
             set => throw new InvalidOperationException();
         }
+
+#if UNITY_EDITOR
+        protected override void Reset()
+        {
+            base.Reset();
+
+            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
+                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+                typeof(InputActionAsset));
+            // Setting default asset and actions when creating via inspector
+            Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);
+        }
+
+#endif
 
         protected override void Awake()
         {

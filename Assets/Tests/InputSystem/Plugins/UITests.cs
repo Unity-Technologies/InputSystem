@@ -174,23 +174,6 @@ internal class UITests : CoreTestsFixture
         return objects;
     }
 
-    private static void AssignDefaultActions(ref TestObjects setup)
-    {
-        var defaultActions = new DefaultInputActions();
-
-        setup.uiModule.actionsAsset = defaultActions.asset;
-        setup.uiModule.cancel = InputActionReference.Create(defaultActions.UI.Cancel);
-        setup.uiModule.submit = InputActionReference.Create(defaultActions.UI.Submit);
-        setup.uiModule.move = InputActionReference.Create(defaultActions.UI.Navigate);
-        setup.uiModule.leftClick = InputActionReference.Create(defaultActions.UI.Click);
-        setup.uiModule.rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
-        setup.uiModule.middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
-        setup.uiModule.point = InputActionReference.Create(defaultActions.UI.Point);
-        setup.uiModule.scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
-
-        defaultActions.Enable();
-    }
-
     // Comprehensive test for general pointer input behaviors.
     // NOTE: The behavior we test for here is slightly *DIFFERENT* than what you get with StandaloneInputModule. The reason is that
     //       StandaloneInputModule has both lots of inconsistencies between touch and mouse input (example: touch press handling goes
@@ -1587,7 +1570,7 @@ internal class UITests : CoreTestsFixture
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var scene = CreateTestUI();
-        AssignDefaultActions(ref scene);
+        scene.uiModule.AssignDefaultActions();
         TouchSimulation.Enable();
 
         try
