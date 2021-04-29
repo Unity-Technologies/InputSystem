@@ -25,6 +25,7 @@ using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 #if UNITY_2021_2_OR_NEWER
@@ -164,23 +165,6 @@ internal class UITests : CoreTestsFixture
         objects.eventSystem.InvokeUpdate(); // Initial update only sets current module.
 
         return objects;
-    }
-
-    private static void AssignDefaultActions(ref TestObjects setup)
-    {
-        var defaultActions = new DefaultInputActions();
-
-        setup.uiModule.actionsAsset = defaultActions.asset;
-        setup.uiModule.cancel = InputActionReference.Create(defaultActions.UI.Cancel);
-        setup.uiModule.submit = InputActionReference.Create(defaultActions.UI.Submit);
-        setup.uiModule.move = InputActionReference.Create(defaultActions.UI.Navigate);
-        setup.uiModule.leftClick = InputActionReference.Create(defaultActions.UI.Click);
-        setup.uiModule.rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
-        setup.uiModule.middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
-        setup.uiModule.point = InputActionReference.Create(defaultActions.UI.Point);
-        setup.uiModule.scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
-
-        defaultActions.Enable();
     }
 
     // Comprehensive test for general pointer input behaviors.
@@ -327,7 +311,7 @@ internal class UITests : CoreTestsFixture
         yield return null;
 
         const int kHaveMovementEvents =
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
             1
 #else
             0
@@ -668,7 +652,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerCurrentRaycast.screenPosition", secondScreenPosition),
 
                 // PointerMove.
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("dragging", false),
                 // Again, pointer movement is processed exclusively "from" the left button.
@@ -717,7 +701,7 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
         Assert.That(scene.parentReceiver.events,
             EventSequence(
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -748,7 +732,7 @@ internal class UITests : CoreTestsFixture
         // children to another) but *should* have seen a move event.
         Assert.That(scene.parentReceiver.events,
             EventSequence(
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -779,7 +763,7 @@ internal class UITests : CoreTestsFixture
                 // press positions on the moves will be zero.
 
                 // PointerMove.
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("button", PointerEventData.InputButton.Left),
                 OneEvent("pointerEnter", scene.leftGameObject),
@@ -1070,6 +1054,39 @@ internal class UITests : CoreTestsFixture
                 Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition, Is.EqualTo(default(Vector2)));
             }
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1232705/
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanReceivePointerExitsWhenChangingUIStateWithoutMovingPointer()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = new DefaultInputActions();
+        scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
+
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
+
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
+
+        scene.parentReceiver.events.Clear();
+
+        // Hide the left GO. Should send a pointer exit.
+        scene.leftGameObject.SetActive(false);
+        yield return null;
+
+        // We already disabled the left GO so ExecuteEvents will refuse to send OnPointerExit
+        // to it. However, we should see the exit on the still-active parent.
+        Assert.That(scene.parentReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerExit),
+                AllEvents("position", scene.From640x480ToScreen(100, 100)),
+                AllEvents("pointerEnter", scene.leftGameObject)
+            )
+        );
     }
 
     [UnityTest]
@@ -1493,7 +1510,7 @@ internal class UITests : CoreTestsFixture
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var scene = CreateTestUI();
-        AssignDefaultActions(ref scene);
+        scene.uiModule.AssignDefaultActions();
         TouchSimulation.Enable();
 
         try
@@ -1587,7 +1604,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -30, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1607,7 +1624,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -31, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1666,7 +1683,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 #endif
                 OneEvent("type", EventType.PointerExit)
@@ -1679,7 +1696,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1698,7 +1715,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 #endif
                 OneEvent("type", EventType.PointerExit)
@@ -1711,7 +1728,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1974,8 +1991,8 @@ internal class UITests : CoreTestsFixture
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
 
-        //2021.1 added an additional move event.
-#if UNITY_2021_1_OR_NEWER
+        //2021.2 added an additional move event.
+#if UNITY_2021_2_OR_NEWER
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
 #else
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -2571,6 +2588,117 @@ internal class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse));
     }
 
+    private class InputSystemUIInputModuleTestScene_Setup : IPrebuildSetup, IPostBuildCleanup
+    {
+        public void Setup()
+        {
+#if UNITY_EDITOR
+            EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
+                { path = UITestScene.TestScenePath, enabled = true }).ToArray();
+#endif
+        }
+
+        public void Cleanup()
+        {
+#if UNITY_EDITOR
+            Debug.Log("Running post build cleanup");
+            var scenes = EditorBuildSettings.scenes.ToList();
+            scenes.RemoveAll(s => s.path == UITestScene.TestScenePath);
+            EditorBuildSettings.scenes = scenes.ToArray();
+#endif
+        }
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenMultipleInputModulesExist_ActionsAreNotDisabledUntilTheLastInputModuleIsDisabled()
+    {
+        var firstScene = UITestScene.LoadScene();
+        yield return null;
+
+        var secondScene = UITestScene.LoadScene();
+        yield return null;
+
+        var unloadOperation = SceneManager.UnloadSceneAsync(firstScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        var pointAction = secondScene.InputModule.point.action;
+        Assert.That(pointAction.enabled, Is.True);
+
+        unloadOperation = SceneManager.UnloadSceneAsync(secondScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        Assert.That(pointAction.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("UI")]
+    public void UI_WhenDisablingInputModule_ActionsAreNotDisabledIfTheyWereNotEnabledByTheInputModule()
+    {
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var inputModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        GameObject.DestroyImmediate(eventSystemGO);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenAssigningInputModuleAction_PreviousOwnedActionsAreDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        var previousAction = inputModule.point.action;
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        Assert.That(previousAction.enabled, Is.False);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenAssigningInputModuleAction_ExternalActionsAreNotDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var scrollAction = map.AddAction("scroll", type: InputActionType.PassThrough, binding: "<Mouse>/scroll/x");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        inputModule.point = InputActionReference.Create(pointAction);
+        inputModule.point = InputActionReference.Create(scrollAction);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
     [UnityTest]
     [Category("UI")]
     [Ignore("TODO")]
@@ -3035,7 +3163,12 @@ internal class UITests : CoreTestsFixture
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
             yield return null;
 
+            ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
+            // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
+            // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
+            #if UNITY_2021_3_OR_NEWER
             Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
+            #endif
 
             // Try a button press with the gamepad.
             // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
@@ -3183,7 +3316,7 @@ internal class UITests : CoreTestsFixture
             events.Add(new Event(EventType.PointerUp, ClonePointerEventData(eventData)));
         }
 
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
         public void OnPointerMove(PointerEventData eventData)
         {
             events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
@@ -3443,5 +3576,28 @@ internal class UITests : CoreTestsFixture
 
             return new ConstraintResult(this, actual, true);
         }
+    }
+
+    private class UITestScene
+    {
+        private UITestScene(Scene scene)
+        {
+            Scene = scene;
+        }
+
+        public static UITestScene LoadScene(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
+        {
+#if UNITY_EDITOR
+            var scene = EditorSceneManager.LoadSceneInPlayMode(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#else
+            var scene = SceneManager.LoadScene(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#endif
+            return new UITestScene(scene);
+        }
+
+        public Scene Scene { get; }
+        public InputSystemUIInputModule InputModule => Scene.GetRootGameObjects()[0].GetComponent<InputSystemUIInputModule>();
+
+        public const string TestScenePath = "Assets/Tests/InputSystem/Assets/UIInputModuleTestScene.unity";
     }
 }

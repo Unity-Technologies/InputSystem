@@ -2213,14 +2213,15 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        ////TODO: need to handle events being queued *during* event processing
-
         /// <summary>
         /// Add an event to the internal event queue.
         /// </summary>
         /// <param name="eventPtr">Event to add to the internal event buffer.</param>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not
         /// valid (see <see cref="InputEventPtr.valid"/>).</exception>
+        /// <exception cref="InvalidOperationException">The method was called from
+        /// within event processing more than 1000 times. To avoid deadlocking, this
+        /// results in an exception being thrown.</exception>
         /// <remarks>
         /// The event will be copied in full to the internal event buffer meaning that
         /// you can release memory for the event after it has been queued. The internal event
@@ -2233,6 +2234,14 @@ namespace UnityEngine.InputSystem
         /// Note that this ID will be written into the memory buffer referenced by <paramref cref="eventPtr"/>
         /// meaning that after calling <c>QueueEvent</c>, you will see the event ID with which the event
         /// was queued.
+        ///
+        /// Events that are queued during event processing will get processed in the same update.
+        /// This happens, for example, when queuing input from within <see cref="onEvent"/> or from
+        /// action callbacks such as <see cref="InputAction.performed"/>.
+        ///
+        /// The total size of <see cref="InputEvent"/>s processed in a single update is limited by
+        /// <see cref="InputSettings.maxEventBytesPerUpdate"/>. This also prevents deadlocks when
+        /// each processing of an event leads to one or more additional events getting queued.
         ///
         /// <example>
         /// <code>
@@ -2249,6 +2258,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="Update"/>
         /// <seealso cref="onEvent"/>
         /// <seealso cref="onBeforeUpdate"/>
+        /// <seealso cref="InputEvent"/>
         public static void QueueEvent(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
@@ -3086,6 +3096,9 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
+
+                    // Nuke all InputUsers.
+                    InputUser.ResetGlobals();
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();

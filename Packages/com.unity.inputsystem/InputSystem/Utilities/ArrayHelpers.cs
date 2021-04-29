@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Utilities
             return false;
         }
 
-        public static bool ContainsReference<TValue>(TValue[] array, TValue value)
+        public static bool ContainsReference<TValue>(this TValue[] array, TValue value)
             where TValue : class
         {
             if (array == null)
@@ -100,7 +100,7 @@ namespace UnityEngine.InputSystem.Utilities
             return ContainsReference(array, array.Length, value);
         }
 
-        public static bool ContainsReference<TFirst, TSecond>(TFirst[] array, int count, TSecond value)
+        public static bool ContainsReference<TFirst, TSecond>(this TFirst[] array, int count, TSecond value)
             where TSecond : class
             where TFirst : TSecond
         {
@@ -542,7 +542,7 @@ namespace UnityEngine.InputSystem.Utilities
             Array.Resize(ref array, length - 1);
         }
 
-        public static void EraseAtWithCapacity<TValue>(TValue[] array, ref int count, int index)
+        public static void EraseAtWithCapacity<TValue>(this TValue[] array, ref int count, int index)
         {
             Debug.Assert(array != null);
             Debug.Assert(count <= array.Length);
