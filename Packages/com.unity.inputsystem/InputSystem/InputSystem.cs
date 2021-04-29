@@ -1574,7 +1574,7 @@ namespace UnityEngine.InputSystem
             var lastUpdateTime = -1.0;
             foreach (var device in devices)
             {
-                if (device.GetType() != type)
+                if (!type.IsInstanceOfType(device))
                     continue;
 
                 if (result == null || device.m_LastUpdateTimeInternal > lastUpdateTime)
