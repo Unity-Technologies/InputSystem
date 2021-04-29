@@ -135,16 +135,7 @@ namespace UnityEngine.InputSystem
                     return InputUpdateType.Editor;
                 #endif
 
-                if ((m_UpdateMask & InputUpdateType.Manual) != 0)
-                    return InputUpdateType.Manual;
-
-                if ((m_UpdateMask & InputUpdateType.Dynamic) != 0)
-                    return InputUpdateType.Dynamic;
-
-                if ((m_UpdateMask & InputUpdateType.Fixed) != 0)
-                    return InputUpdateType.Fixed;
-
-                return InputUpdateType.None;
+                return m_UpdateMask.GetUpdateTypeForPlayer();
             }
         }
 
@@ -1583,7 +1574,9 @@ namespace UnityEngine.InputSystem
                             return;
                         device.disabledWhileInBackground = true;
                         ResetDevice(device, noResetCommand: true);
+                        #if UNITY_EDITOR
                         if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                        #endif
                         {
                             device.ExecuteDisableCommand();
                             device.disabledInRuntime = true;
@@ -2684,6 +2677,13 @@ namespace UnityEngine.InputSystem
                 return;
             }
 
+            #if UNITY_EDITOR
+            // Set the current update type while we process the focus changes to make sure we
+            // feed into the right buffer. No need to do this in the player as it doesn't have
+            // the editor/player confusion.
+            m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
+            #endif
+
             if (!focus)
             {
                 // We only react to loss of focus when we will keep running in the background. If not,
@@ -2728,6 +2728,10 @@ namespace UnityEngine.InputSystem
                         ResetDevice(device, noResetCommand: true);
                 }
             }
+
+            #if UNITY_EDITOR
+            m_CurrentUpdate = InputUpdateType.None;
+            #endif
 
             // We set this *after* the block above as defaultUpdateType is influenced by the setting.
             m_HasFocus = focus;
@@ -2816,11 +2820,6 @@ namespace UnityEngine.InputSystem
             m_CurrentUpdate = updateType;
             InputUpdate.OnUpdate(updateType);
 
-            var isPlaying = true;
-            #if UNITY_EDITOR
-            isPlaying = m_Runtime.isInPlayMode;
-            #endif
-
             // See if we're supposed to only take events up to a certain time.
             // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
             //       all events in the buffer each time. Note that if there are multiple events for the same
@@ -2888,6 +2887,10 @@ namespace UnityEngine.InputSystem
             var numEventsRetainedInBuffer = 0;
 
             var totalEventLag = 0.0;
+
+            #if UNITY_EDITOR
+            var isPlaying = m_Runtime.isInPlayMode;
+            #endif
 
             // Handle events.
             while (remainingEventCount > 0)

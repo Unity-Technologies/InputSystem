@@ -195,5 +195,19 @@ namespace UnityEngine.InputSystem.LowLevel
                     break;
             }
         }
+
+        public static InputUpdateType GetUpdateTypeForPlayer(this InputUpdateType mask)
+        {
+            if ((mask & InputUpdateType.Manual) != 0)
+                return InputUpdateType.Manual;
+
+            if ((mask & InputUpdateType.Dynamic) != 0)
+                return InputUpdateType.Dynamic;
+
+            if ((mask & InputUpdateType.Fixed) != 0)
+                return InputUpdateType.Fixed;
+
+            return InputUpdateType.None;
+        }
     }
 }

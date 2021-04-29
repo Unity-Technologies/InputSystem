@@ -4738,25 +4738,23 @@ partial class CoreTests
                         break;
 
                     case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
-                        switch (gameViewFocus)
+                        if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
                         {
-                            case InputSettings.GameViewFocus.AllDevices:
-                                Assert.That(mouse2.enabled, Is.False);
-                                Assert.That(mouse3.enabled, Is.False);
-                                Assert.That(trackedDevice2.enabled, Is.False);
-                                break;
-
-                            case InputSettings.GameViewFocus.ExactlyAsInPlayer:
-                                Assert.That(mouse2.enabled, Is.True);
-                                Assert.That(mouse3.enabled, Is.False);
-                                Assert.That(trackedDevice2.enabled, Is.True);
-                                break;
-
-                            case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
-                                Assert.That(mouse2.enabled, Is.False);
-                                Assert.That(mouse3.enabled, Is.False);
-                                Assert.That(trackedDevice2.enabled, Is.True);
-                                break;
+                            Assert.That(mouse2.enabled, Is.True);
+                            Assert.That(mouse3.enabled, Is.False);
+                            Assert.That(trackedDevice2.enabled, Is.True);
+                        }
+                        if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                        {
+                            Assert.That(mouse2.enabled, Is.False);
+                            Assert.That(mouse3.enabled, Is.False);
+                            Assert.That(trackedDevice2.enabled, Is.False);
+                        }
+                        if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                        {
+                            Assert.That(mouse2.enabled, Is.False);
+                            Assert.That(mouse3.enabled, Is.False);
+                            Assert.That(trackedDevice2.enabled, Is.True);
                         }
                         break;
                 }
@@ -4779,19 +4777,23 @@ partial class CoreTests
             // No change on focus gain.
 
             Assert.That(trackedDevice.enabled, Is.True);
-            Assert.That(trackedDevice2.enabled, Is.True);
             Assert.That(mouse.enabled, Is.True);
-            Assert.That(mouse2.enabled, Is.True);
-            Assert.That(mouse3.enabled, Is.True);
             Assert.That(keyboard.enabled, Is.True);
             Assert.That(gamepad.enabled, Is.True);
             Assert.That(joystick.enabled, Is.True);
 
+            if (kIsEditor)
+            {
+                Assert.That(trackedDevice2.enabled, Is.True);
+                Assert.That(mouse2.enabled, Is.True);
+                Assert.That(mouse3.enabled, Is.True);
+            }
+
             Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-            Assert.That(mouse.leftButton.isPressed, Is.True);
+            Assert.That(mouse.leftButton.isPressed, Is.False);
+            Assert.That(joystick.trigger.isPressed, Is.False);
             Assert.That(keyboard.spaceKey.isPressed, Is.True);
             Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Using(FloatEqualityComparer.Instance));
-            Assert.That(joystick.trigger.isPressed, Is.True);
             Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
             Assert.That(trackedDevice.isTracked.isPressed, Is.True);
 
