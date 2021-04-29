@@ -1789,12 +1789,12 @@ internal class UITests : CoreTestsFixture
         scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
         scene.uiModule.leftClick = InputActionReference.Create(actions.UI.Click);
 
-        Set(mouse.position, scene.From640x480ToScreen(100, 100), queueEventOnly : true);
+        Set(mouse.position, scene.From640x480ToScreen(100, 100), queueEventOnly: true);
 
         yield return null;
 
         scene.ClearEvents();
-        Press(mouse.leftButton, queueEventOnly : true);
+        Press(mouse.leftButton, queueEventOnly: true);
 
         yield return null;
 
@@ -1811,7 +1811,7 @@ internal class UITests : CoreTestsFixture
         );
 
         scene.ClearEvents();
-        Release(mouse.leftButton, queueEventOnly : true);
+        Release(mouse.leftButton, queueEventOnly: true);
 
         yield return null;
 
@@ -1825,7 +1825,7 @@ internal class UITests : CoreTestsFixture
         );
 
         scene.ClearEvents();
-        PressAndRelease(mouse.leftButton, queueEventOnly : true);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
 
         yield return null;
 
@@ -1855,7 +1855,7 @@ internal class UITests : CoreTestsFixture
 
         clickTime = runtime.unscaledGameTime;
         scene.ClearEvents();
-        PressAndRelease(mouse.leftButton, queueEventOnly : true);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
 
         yield return null;
 
@@ -1885,7 +1885,7 @@ internal class UITests : CoreTestsFixture
 
         clickTime = runtime.unscaledGameTime;
         scene.ClearEvents();
-        Press(mouse.leftButton, queueEventOnly : true);
+        Press(mouse.leftButton, queueEventOnly: true);
 
         yield return null;
 
@@ -1897,7 +1897,7 @@ internal class UITests : CoreTestsFixture
         );
 
         scene.ClearEvents();
-        Release(mouse.leftButton, queueEventOnly : true);
+        Release(mouse.leftButton, queueEventOnly: true);
 
         // Doesn't matter how long we hold the button. If we don't move far enough by the time we release and we still
         // have the same UI element underneath us, it's a click.
@@ -1916,7 +1916,7 @@ internal class UITests : CoreTestsFixture
 
         // However, when more than 0.3s elapses between release and next press, it resets
         // the click sequence.
-        Press(mouse.leftButton, queueEventOnly : true);
+        Press(mouse.leftButton, queueEventOnly: true);
         runtime.unscaledGameTime += 1f;
         yield return null;
 
@@ -1939,7 +1939,7 @@ internal class UITests : CoreTestsFixture
         // Clone left button. If we release the button now, there should not be
         // a click because the object pointed to has changed.
         UnityEngine.Object.Instantiate(scene.leftGameObject, scene.parentReceiver.transform);
-        Release(mouse.leftButton, queueEventOnly : true);
+        Release(mouse.leftButton, queueEventOnly: true);
         scene.ClearEvents();
 
         yield return null;
