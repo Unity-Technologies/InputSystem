@@ -60,6 +60,7 @@ however, it has to be formatted properly to pass verification tests.
   * Fix contributed by [Sven Herrmann](https://github.com/SvenRH) in [1292](https://github.com/Unity-Technologies/InputSystem/pull/1292).
 - Fixed `AxisDeadzoneProcessor` min/max values not being settable to 0 in editor UI ([case 1293744](https://issuetracker.unity3d.com/issues/input-system-input-system-axis-deadzone-minimum-value-fallsback-to-default-value-if-its-set-to-0)).
 - Fixed blurry icons in input debugger, asset editor, input settings ([case 1299595](https://issuetracker.unity3d.com/issues/inputsystem-supported-device-list-dropdown-icons-present-under-project-settings-are-not-user-friendly)).
+- Fixed `clickCount` not being incremented correctly by `InputSystemUIInputModule` for successive mouse clicks ([case 1317239](https://issuetracker.unity3d.com/issues/eventdata-dot-clickcount-doesnt-increase-when-clicking-repeatedly-in-the-new-input-system)).
 - Fixed UI not working after additively loading scenes with additional InputSystemUIInputModule modules ([case 1251720](https://issuetracker.unity3d.com/issues/input-system-buttons-cannot-be-pressed-after-additively-loading-scenes-with-additional-event-systems)).
 - Fixed no `OnPointerExit` received when changing UI state without moving pointer ([case 1232705](https://issuetracker.unity3d.com/issues/input-system-onpointerexit-is-not-triggered-when-a-ui-element-interrupts-a-mouse-hover)).
 - Controls such as mouse positions are no longer reset when focus is lost.
