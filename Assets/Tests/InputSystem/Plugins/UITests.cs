@@ -1549,6 +1549,7 @@ internal class UITests : CoreTestsFixture
     }
 
     // https://fogbugz.unity3d.com/f/cases/1190150/
+    // https://fogbugz.unity3d.com/f/cases/1311018/
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanUseTouchSimulationWithUI()
@@ -1562,40 +1563,47 @@ internal class UITests : CoreTestsFixture
         try
         {
             yield return null;
-            scene.leftChildReceiver.events.Clear();
-
-            InputSystem.QueueStateEvent(mouse, new MouseState
+            for (var attempt = 0; attempt < 3; ++attempt)
             {
-                position = scene.From640x480ToScreen(123, 123)
-            }.WithButton(MouseButton.Left));
-            InputSystem.Update();
+                scene.leftChildReceiver.events.Clear();
 
-            yield return null;
-
-            Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
-            Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
-            Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.EqualTo(1));
-            Assert.That(scene.uiModule.m_PointerTouchControls[0], Is.SameAs(Touchscreen.current.touches[0]));
-            Assert.That(scene.leftChildReceiver.events.Select(x => x.type),
-                Is.EquivalentTo(new[]
+                var position = scene.From640x480ToScreen(123, 123);
+                InputSystem.QueueStateEvent(mouse, new MouseState
                 {
-                    EventType.PointerEnter,
-                    #if UNITY_2021_2_OR_NEWER
-                    EventType.PointerMove,
-                    #endif
-                    EventType.PointerDown,
-                    EventType.InitializePotentialDrag
-                }));
-            Assert.That(scene.leftChildReceiver.events,
-                Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.pointerType == UIPointerType.Touch));
-            Assert.That(scene.leftChildReceiver.events,
-                Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.touchId == 1));
+                    position = position
+                }.WithButton(MouseButton.Left));
+                InputSystem.Update();
 
-            // Release the mouse button so the touch ends. TouchSimulation.Disable() will remove
-            // the touchscreen and thus cancel ongoing actions (like Point). This should not result
-            // in exceptions from the input module trying to read data from the already removed touchscreen.
-            Release(mouse.leftButton);
-            yield return null;
+                yield return null;
+
+                Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
+                Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
+                Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.EqualTo(1));
+                Assert.That(scene.uiModule.m_PointerTouchControls[0], Is.SameAs(Touchscreen.current.touches[0]));
+                Assert.That(scene.leftChildReceiver.events.Select(x => x.type),
+                    Is.EquivalentTo(new[]
+                    {
+                        EventType.PointerEnter,
+#if UNITY_2021_2_OR_NEWER
+                        EventType.PointerMove,
+#endif
+                        EventType.PointerDown,
+                        EventType.InitializePotentialDrag
+                    }));
+                Assert.That(scene.leftChildReceiver.events,
+                    Has.All.Matches(
+                        (UICallbackReceiver.Event evt) => evt.pointerData.pointerType == UIPointerType.Touch));
+                Assert.That(scene.leftChildReceiver.events,
+                    Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.touchId == attempt + 1));
+                Assert.That(scene.leftChildReceiver.events,
+                    Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.position == position));
+
+                // Release the mouse button so the touch ends. TouchSimulation.Disable() will remove
+                // the touchscreen and thus cancel ongoing actions (like Point). This should not result
+                // in exceptions from the input module trying to read data from the already removed touchscreen.
+                Release(mouse.leftButton);
+                yield return null;
+            }
         }
         finally
         {
