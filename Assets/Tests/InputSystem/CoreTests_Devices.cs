@@ -4196,4 +4196,20 @@ partial class CoreTests
         InputSystem.RemoveDevice(keyboard2);
         Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingDevice_MakesNextDeviceOfTypeCurrent()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Press(mouse.leftButton);
+        Assert.That(Pointer.current, Is.EqualTo(mouse));
+
+        var pointer = InputSystem.AddDevice<Pointer>();
+        Move(pointer.position, Vector2.right);
+        Assert.That(Pointer.current, Is.EqualTo(pointer));
+
+        InputSystem.RemoveDevice(pointer);
+        Assert.That(Pointer.current, Is.EqualTo(mouse));
+    }
 }

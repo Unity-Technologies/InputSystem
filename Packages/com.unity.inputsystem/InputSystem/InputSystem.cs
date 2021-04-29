@@ -1562,12 +1562,28 @@ namespace UnityEngine.InputSystem
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
+        ////REVIEW: this API seems inconsistent with GetDevice(string); both have very different meaning yet very similar signatures
+        /// <summary>
+        /// Return the most recently used device that is assignable to the given type <typeparamref name="TDevice"/>.
+        /// Returns null if no such device currently exists.
+        /// </summary>
+        /// <typeparam name="TDevice">Type of device to look for.</typeparam>
+        /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice(Type)"/>
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
             return (TDevice)GetDevice(typeof(TDevice));
         }
 
+        ////REVIEW: this API seems inconsistent with GetDevice(string); both have very different meaning yet very similar signatures
+        /// <summary>
+        /// Return the most recently used device that is assignable to the given type <param name="type"/>.
+        /// Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="type">Type of the device</param>
+        /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice&lt;TDevice&gt;()"/>
         public static InputDevice GetDevice(Type type)
         {
             InputDevice result = null;
