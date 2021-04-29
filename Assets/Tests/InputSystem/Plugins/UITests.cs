@@ -3160,7 +3160,7 @@ internal class UITests : CoreTestsFixture
         Assert.That(clicked, Is.False);
     }
 
-    public class MyButton : Button
+    public class MyButton : UnityEngine.UI.Button
     {
         public bool receivedPointerDown;
         public bool receivedPointerUp;
