@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 (byte*)NativeArrayUnsafeUtility
                     .GetUnsafeBufferPointerWithoutChecks(m_NativeBuffer.data));
 
-        public InputEventStream(ref InputEventBuffer eventBuffer)
+        public InputEventStream(ref InputEventBuffer eventBuffer, int maxAppendedEvents)
         {
             m_CurrentNativeEventWritePtr = m_CurrentNativeEventReadPtr =
                 (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
@@ -42,6 +42,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_CurrentAppendEventReadPtr = m_CurrentAppendEventWritePtr = default;
             m_AppendBuffer = default;
             m_RemainingAppendEventCount = 0;
+            m_MaxAppendedEvents = maxAppendedEvents;
 
             m_IsOpen = true;
         }
@@ -71,6 +72,14 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void Write(InputEvent* eventPtr)
         {
+	        if (m_AppendBuffer.eventCount >= m_MaxAppendedEvents)
+	        {
+                Debug.LogError($"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' " +
+                               $"setting to a higher value if you need to queue more events than this. " +
+                               $"Current limit is '{m_MaxAppendedEvents}'.");
+		        return;
+	        }
+
             var wasAlreadyCreated = m_AppendBuffer.data.IsCreated;
             var oldBufferPtr = (byte*)m_AppendBuffer.bufferPtr.data;
 
@@ -117,6 +126,7 @@ namespace UnityEngine.InputSystem.LowLevel
         private InputEvent* m_CurrentNativeEventReadPtr;
         private InputEvent* m_CurrentNativeEventWritePtr;
         private int m_RemainingNativeEventCount;
+        private readonly int m_MaxAppendedEvents;
 
         // During Update, new events that are queued will be added to the append buffer
         private InputEventBuffer m_AppendBuffer;
