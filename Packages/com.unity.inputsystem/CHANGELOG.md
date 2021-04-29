@@ -58,6 +58,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed reference to `.inputactions` of `Player Prefab` referenced by `PlayerInputManager` being destroyed on going into play mode, if the player prefab was a nested prefab ([case 1319756](https://issuetracker.unity3d.com/issues/playerinput-component-loses-its-reference-to-an-inputactionasset)).
 - Fixed "Scheme Name" label clipped in "Add Control Schema" popup window ([case 1199560]https://issuetracker.unity3d.com/issues/themes-input-system-scheme-name-is-clipped-in-add-control-schema-window-with-inter-default-font)).
 - Fixed `InputSystem.QueueEvent` calls from within `InputAction` callbacks getting dropped entirely ([case 1297339](https://issuetracker.unity3d.com/issues/input-system-ui-button-wont-click-when-simulating-a-mouse-click-with-inputsystem-dot-queueevent)).
+- Fixed `InputSystemUIInputModule` being in invalid state when added from `Awake` to a game object when entering playmode ([case 1323566](https://issuetracker.unity3d.com/issues/input-system-default-ui-actions-do-not-register-when-adding-inputsystemuiinputmodule-at-runtime-to-an-active-game-object)).
+- Fixed binding path selection windows not remembering navigation state when going up through hierarchy ([case 1254981](https://issuetracker.unity3d.com/issues/action-binding-path-selection-windows-doesnt-remember-navigation-state)).
 
 #### Actions
 
@@ -104,6 +106,7 @@ however, it has to be formatted properly to pass verification tests.
   * Puts an upper limit on the number of event bytes processed in a single update.
   * If exceeded, any additional event data will get thrown away and an error will be issued.
   * Set to 5MB by default.
+- Added `InputSystemUIInputModule.AssignDefaultActions` to assign default actions when creating ui module in runtime.
 - Added `UNITY_INCLUDE_TESTS` define constraints to our test assemblies, which is 2019.2+ equivalent to `"optionalUnityReferences": ["TestAssemblies"]`.
 
 ## [1.1.0-preview.3] - 2021-02-04
