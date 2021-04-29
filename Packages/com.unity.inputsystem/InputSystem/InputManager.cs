@@ -2634,13 +2634,13 @@ namespace UnityEngine.InputSystem
             // Handle events.
             while (m_InputEventStream.remainingEventCount > 0)
             {
-	            if (m_Settings.maxEventBytesPerUpdate > 0 &&
-	                totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
-	            {
-		            Debug.LogError("Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-					             + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
-		            break;
-	            }
+                if (m_Settings.maxEventBytesPerUpdate > 0 &&
+                    totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
+                {
+                    Debug.LogError("Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+                        + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+                    break;
+                }
 
                 InputDevice device = null;
                 var currentEventReadPtr = m_InputEventStream.currentEventPtr;

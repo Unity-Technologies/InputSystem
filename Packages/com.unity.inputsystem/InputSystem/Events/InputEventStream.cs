@@ -72,13 +72,13 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void Write(InputEvent* eventPtr)
         {
-	        if (m_AppendBuffer.eventCount >= m_MaxAppendedEvents)
-	        {
+            if (m_AppendBuffer.eventCount >= m_MaxAppendedEvents)
+            {
                 Debug.LogError($"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' " +
-                               $"setting to a higher value if you need to queue more events than this. " +
-                               $"Current limit is '{m_MaxAppendedEvents}'.");
-		        return;
-	        }
+                    $"setting to a higher value if you need to queue more events than this. " +
+                    $"Current limit is '{m_MaxAppendedEvents}'.");
+                return;
+            }
 
             var wasAlreadyCreated = m_AppendBuffer.data.IsCreated;
             var oldBufferPtr = (byte*)m_AppendBuffer.bufferPtr.data;

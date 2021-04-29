@@ -2076,33 +2076,32 @@ partial class CoreTests
     [Category("Events")]
     public void Events_MaximumQueuedEventsDuringEventProcessingIsLimited()
     {
-	    // Default setting is 1000.
-	    Assert.That(InputSystem.settings.maxQueuedEventsPerUpdate, Is.EqualTo(1000));
+        // Default setting is 1000.
+        Assert.That(InputSystem.settings.maxQueuedEventsPerUpdate, Is.EqualTo(1000));
 
-	    InputSystem.settings.maxQueuedEventsPerUpdate = 20;
+        InputSystem.settings.maxQueuedEventsPerUpdate = 20;
 
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var callbackCount = 0;
         var action = new InputAction(type: InputActionType.Value, binding: "<mouse>/position");
-	    action.performed +=
-		    _ =>
-		    {
-                if(callbackCount > InputSystem.settings.maxQueuedEventsPerUpdate)
-                    Assert.Fail("Maximum queued event count exceeded");
+        action.performed +=
+            _ =>
+        {
+            if (callbackCount > InputSystem.settings.maxQueuedEventsPerUpdate)
+                Assert.Fail("Maximum queued event count exceeded");
 
-                callbackCount++;
-                Set(mouse.position, Random.insideUnitCircle * 100, queueEventOnly: true);
-            };
-	    action.Enable();
+            callbackCount++;
+            Set(mouse.position, Random.insideUnitCircle * 100, queueEventOnly: true);
+        };
+        action.Enable();
 
         Set(mouse.position, Random.insideUnitCircle * 100);
 
         LogAssert.Expect(LogType.Error, $"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' setting to a higher value if you " +
-                                        $"need to queue more events than this. Current limit is '{InputSystem.settings.maxQueuedEventsPerUpdate}'.");
-		Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
+            $"need to queue more events than this. Current limit is '{InputSystem.settings.maxQueuedEventsPerUpdate}'.");
+        Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
     }
-
 
     ////TODO: test thread-safe QueueEvent
 }

@@ -460,15 +460,15 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public int maxQueuedEventsPerUpdate
         {
-	        get => m_MaxQueuedEventsPerUpdate;
-	        set
-	        {
-		        if (m_MaxQueuedEventsPerUpdate == value)
-			        return;
+            get => m_MaxQueuedEventsPerUpdate;
+            set
+            {
+                if (m_MaxQueuedEventsPerUpdate == value)
+                    return;
 
-		        m_MaxQueuedEventsPerUpdate = value;
+                m_MaxQueuedEventsPerUpdate = value;
                 OnChange();
-	        }
+            }
         }
 
         /// <summary>
