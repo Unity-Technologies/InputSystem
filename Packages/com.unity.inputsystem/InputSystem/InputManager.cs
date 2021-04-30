@@ -2631,11 +2631,20 @@ namespace UnityEngine.InputSystem
             var processingStartTime = Stopwatch.GetTimestamp();
             var totalEventLag = 0.0;
 
-            m_InputEventStream = new InputEventStream(ref eventBuffer);
+            m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
+            var totalEventBytesProcessed = 0U;
 
             // Handle events.
             while (m_InputEventStream.remainingEventCount > 0)
             {
+                if (m_Settings.maxEventBytesPerUpdate > 0 &&
+                    totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
+                {
+                    Debug.LogError("Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+                        + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+                    break;
+                }
+
                 InputDevice device = null;
                 var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
@@ -2785,6 +2794,8 @@ namespace UnityEngine.InputSystem
 
                             haveChangedStateOtherThanNoise = UpdateState(device, eventPtr, updateType);
                         }
+
+                        totalEventBytesProcessed += eventPtr.sizeInBytes;
 
                         // Update timestamp on device.
                         // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
