@@ -1721,6 +1721,12 @@ namespace UnityEngine.InputSystem.Users
             if (s_ListenForUnpairedDeviceActivity == 0)
                 return;
 
+            // Ignore input in editor.
+            #if UNITY_EDITOR
+            if (InputState.currentUpdateType == InputUpdateType.Editor)
+                return;
+            #endif
+
             // Ignore any state change not triggered from a state event.
             var eventType = eventPtr.type;
             if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
