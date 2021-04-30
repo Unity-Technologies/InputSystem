@@ -366,15 +366,15 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (!Application.isFocused)
                 {
-                    switch (InputSystem.settings.gameViewFocus)
+                    switch (InputSystem.settings.editorInputBehaviorInPlayMode)
                     {
-                        case InputSettings.GameViewFocus.AllDevices:
+                        case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
                             return InputUpdateType.Editor;
 
-                        case InputSettings.GameViewFocus.ExactlyAsInPlayer:
+                        case InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView:
                             break;
 
-                        case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
+                        case InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus:
                             if (device is Pointer || device is Keyboard)
                                 return InputUpdateType.Editor;
                             break;

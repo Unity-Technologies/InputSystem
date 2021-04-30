@@ -2754,6 +2754,24 @@ namespace UnityEngine.InputSystem
             m_HasFocus = focus;
         }
 
+        #if UNITY_EDITOR
+        internal void LeavePlayMode()
+        {
+            // Reenable all devices and reset their play mode state.
+            m_CurrentUpdate = InputUpdate.GetUpdateTypeForPlayer(m_UpdateMask);
+            InputStateBuffers.SwitchTo(m_StateBuffers, m_CurrentUpdate);
+            for (var i = 0; i < m_DevicesCount; ++i)
+            {
+                var device = m_Devices[i];
+                if (device.disabledWhileInBackground)
+                    EnableOrDisableDevice(device, true, scope: DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                ResetDevice(device, alsoResetDontResetControls: true, noResetCommand: true);
+            }
+            m_CurrentUpdate = default;
+        }
+
+        #endif
+
         internal bool ShouldRunUpdate(InputUpdateType updateType)
         {
             // We perform a "null" update after domain reloads and on startup to get our devices

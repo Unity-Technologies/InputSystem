@@ -2563,6 +2563,30 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_LeavingPlayMode_ReenablesAllDevicesTemporarilyDisabledDueToFocus()
+    {
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.ResetAndDisableAllDevices;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Set(mouse.position, new Vector2(123, 234));
+        Press(gamepad.buttonSouth);
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(gamepad.enabled, Is.False);
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+
+        Assert.That(gamepad.enabled, Is.True);
+        Assert.That(gamepad.disabledWhileInBackground, Is.False);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_LeavingPlayMode_DiscardsInputActionAssetChanges()
     {
         // Control schemes

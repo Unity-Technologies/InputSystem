@@ -3176,7 +3176,7 @@ namespace UnityEngine.InputSystem
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
-                    s_Manager.OnFocusChanged(false);
+                    s_Manager.LeavePlayMode();
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
