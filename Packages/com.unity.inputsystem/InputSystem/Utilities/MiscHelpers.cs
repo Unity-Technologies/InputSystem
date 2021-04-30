@@ -25,5 +25,16 @@ namespace UnityEngine.InputSystem.Utilities
                 ++index;
             }
         }
+
+        public static int IndexOf<TValue>(this IEnumerable<TValue> enumerable, TValue value)
+        {
+            var index = 0;
+            foreach (var element in enumerable)
+                if (EqualityComparer<TValue>.Default.Equals(element, value))
+                    return index;
+                else
+                    ++index;
+            return -1;
+        }
     }
 }

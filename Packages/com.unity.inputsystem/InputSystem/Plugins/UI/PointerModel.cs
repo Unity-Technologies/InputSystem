@@ -219,6 +219,12 @@ namespace UnityEngine.InputSystem.UI
                 }
             }
 
+            public bool ignoreNextClick
+            {
+                get => m_IgnoreNextClick;
+                set => m_IgnoreNextClick = value;
+            }
+
             public float pressTime
             {
                 get => m_PressTime;
@@ -246,6 +252,7 @@ namespace UnityEngine.InputSystem.UI
             private int m_ClickCount;
             private bool m_Dragging;
             private bool m_ClickedOnSameGameObject;
+            private bool m_IgnoreNextClick;
 
             public void CopyPressStateTo(PointerEventData eventData)
             {
@@ -265,6 +272,9 @@ namespace UnityEngine.InputSystem.UI
                 eventData.rawPointerPress = m_RawPressObject;
                 eventData.pointerDrag = m_DragObject;
                 eventData.dragging = m_Dragging;
+
+                if (ignoreNextClick)
+                    eventData.eligibleForClick = false;
             }
 
             public void CopyPressStateFrom(PointerEventData eventData)

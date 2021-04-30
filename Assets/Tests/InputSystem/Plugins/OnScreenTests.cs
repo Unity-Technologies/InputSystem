@@ -286,8 +286,10 @@ internal class OnScreenTests : CoreTestsFixture
 
     private class TestEventSystem : EventSystem
     {
+        public bool hasFocus;
         public new void OnApplicationFocus(bool hasFocus)
         {
+            this.hasFocus = hasFocus;
             base.OnApplicationFocus(hasFocus);
         }
 

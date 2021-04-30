@@ -66,23 +66,23 @@ Gyroscope.current.samplingFrequency = 16;
 
 ## <a name="accelerometer"></a>[`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html)
 
-Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. It reports the acceleration measured on a device both due to moving the device around, and due to gravity pulling the device down. You can use `GravitySensor` and `LinearAccelerationSensor` to get separate values for these. Values are affected by the [__Compensate For Screen Orientation__](Settings.md#compensate-for-screen-orientation) setting.
+Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. It reports the acceleration measured on a device both due to moving the device around, and due to gravity pulling the device down. You can use `GravitySensor` and `LinearAccelerationSensor` to get separate values for these. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
 ## <a name="gyroscope"></a>[`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html)
 
-Use the gyroscope to measure the angular velocity of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate For Screen Orientation__](Settings.md#compensate-for-screen-orientation) setting.
+Use the gyroscope to measure the angular velocity of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
 ## <a name="gravitysensor"></a>[`GravitySensor`](../api/UnityEngine.InputSystem.GravitySensor.html)
 
-Use the gravity sensor to determine the direction of the gravity vector relative to a device. This is useful to control content by device orientation. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of linear acceleration (see `LinearAccelerationSensor`). Values are affected by the [__Compensate For Screen Orientation__](Settings.md#compensate-for-screen-orientation) setting.
+Use the gravity sensor to determine the direction of the gravity vector relative to a device. This is useful to control content by device orientation. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of linear acceleration (see `LinearAccelerationSensor`). Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
 ## <a name="attitudesensor"></a>[`AttitudeSensor`](../api/UnityEngine.InputSystem.AttitudeSensor.html)
 
-Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate For Screen Orientation__](Settings.md#compensate-for-screen-orientation) setting.
+Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
 ## <a name="linearaccelerationsensor"></a>[`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html)
 
-Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (see `GravitySensor`). Values are affected by the [__Compensate For Screen Orientation__](Settings.md#compensate-for-screen-orientation) setting.
+Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (see `GravitySensor`). Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
 ## <a name="magneticfieldsensor"></a>[`MagneticFieldSensor`](../api/UnityEngine.InputSystem.MagneticFieldSensor.html)
 

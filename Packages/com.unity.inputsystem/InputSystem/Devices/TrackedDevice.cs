@@ -13,16 +13,16 @@ namespace UnityEngine.InputSystem
     [Preserve]
     public class TrackedDevice : InputDevice
     {
-        [InputControl(noisy = true)]
+        [InputControl(synthetic = true)]
         [Preserve]
         public IntegerControl trackingState { get; private set; }
-        [InputControl(noisy = true)]
+        [InputControl(synthetic = true)]
         [Preserve]
         public ButtonControl isTracked { get; private set; }
-        [InputControl(noisy = true)]
+        [InputControl(noisy = true, dontReset = true)]
         [Preserve]
         public Vector3Control devicePosition { get; private set; }
-        [InputControl(noisy = true)]
+        [InputControl(noisy = true, dontReset = true)]
         [Preserve]
         public QuaternionControl deviceRotation { get; private set; }
 

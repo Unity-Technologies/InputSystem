@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 
@@ -12,19 +11,16 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     /// <seealso cref="RequestSyncCommand"/>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
-    public unsafe struct RequestResetCommand : IInputDeviceCommandInfo
+    public struct RequestResetCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('R', 'S', 'E', 'T'); } }
+        public static FourCC Type => new FourCC('R', 'S', 'E', 'T');
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC typeStatic
-        {
-            get { return Type; }
-        }
+        public FourCC typeStatic => Type;
 
         public static RequestResetCommand Create()
         {

@@ -33,6 +33,8 @@ using UnityEngine.Serialization;
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
 ////        the system fits together.
 
+////REVIEW: add "lastControl" property? (and maybe a lastDevice at the InputActionMap/Asset level?)
+
 ////REVIEW: have single delegate instead of separate performed/started/canceled callbacks?
 
 ////REVIEW: Do we need to have separate display names for actions?

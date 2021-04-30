@@ -194,7 +194,7 @@ namespace UnityEngine.InputSystem.Editor
                 // So what we do is add an extra level to the keyboard where key's can be bound by character
                 // according to the current layout. And in the top level of the keyboard we display keys with
                 // both physical and logical names.
-                if (layout.type == typeof(Keyboard) && Keyboard.current != null)
+                if (layout.type == typeof(Keyboard) && InputSystem.GetDevice<Keyboard>() != null)
                 {
                     var byLocationGroup = new AdvancedDropdownItem("By Location of Key (Using US Layout)");
                     var byCharacterGroup = new AdvancedDropdownItem("By Character Mapped to Key");
@@ -202,7 +202,7 @@ namespace UnityEngine.InputSystem.Editor
                     deviceItem.AddChild(byLocationGroup);
                     deviceItem.AddChild(byCharacterGroup);
 
-                    var keyboard = Keyboard.current;
+                    var keyboard = InputSystem.GetDevice<Keyboard>();
 
                     AddCharacterKeyBindingsTo(byCharacterGroup, keyboard);
                     AddPhysicalKeyBindingsTo(byLocationGroup, keyboard, searchable);

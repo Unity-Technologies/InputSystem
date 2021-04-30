@@ -26,8 +26,6 @@ namespace UnityEngine.InputSystem
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
-        public bool hasFocus => m_HasFocus;
-
         ~InputTestRuntime()
         {
             Dispose();
@@ -120,6 +118,20 @@ namespace UnityEngine.InputSystem
                 m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
+        }
+
+        public unsafe void SetCanRunInBackground(int deviceId)
+        {
+            SetDeviceCommandCallback(deviceId,
+                (id, command) =>
+                {
+                    if (command->type == QueryCanRunInBackground.Type)
+                    {
+                        ((QueryCanRunInBackground*)command)->canRunInBackground = true;
+                        return InputDeviceCommand.GenericSuccess;
+                    }
+                    return InputDeviceCommand.GenericFailure;
+                });
         }
 
         public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
@@ -327,7 +339,7 @@ namespace UnityEngine.InputSystem
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
-        public bool isFocused => m_HasFocus;
+        public bool isPlayerFocused => m_HasFocus;
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
@@ -373,6 +385,7 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
         public bool isPaused { get; set; }
+        public bool isEditorActive { get; set; } = true;
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif

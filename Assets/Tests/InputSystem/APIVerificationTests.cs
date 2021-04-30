@@ -771,6 +771,14 @@ class APIVerificationTests
         public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
         public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
+    // These methods have been superseded and have an Obsolete warning on them.
+    [Property("Exclusions", @"1.0.0
+        public static bool TryResetDevice(UnityEngine.InputSystem.InputDevice device);
+    ")]
+    // Enum value that was never functional.
+    [Property("Exclusions", @"1.0.0
+        public const UnityEngine.InputSystem.InputDeviceChange Destroyed = 8;
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

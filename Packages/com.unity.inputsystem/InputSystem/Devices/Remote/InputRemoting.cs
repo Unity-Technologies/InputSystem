@@ -62,6 +62,7 @@ namespace UnityEngine.InputSystem
             ChangeUsages,
             StartSending,
             StopSending,
+            ResetDevice,
         }
 
         /// <summary>
@@ -167,6 +168,9 @@ namespace UnityEngine.InputSystem
                 case MessageType.StopSending:
                     StopSendingMsg.Process(this);
                     break;
+                case MessageType.ResetDevice:
+                    ResetDeviceMsg.Process(this, msg);
+                    break;
             }
         }
 
@@ -266,6 +270,12 @@ namespace UnityEngine.InputSystem
                     break;
                 case InputDeviceChange.UsageChanged:
                     msg = ChangeUsageMsg.Create(device);
+                    break;
+                case InputDeviceChange.SoftReset:
+                    msg = ResetDeviceMsg.Create(device, false);
+                    break;
+                case InputDeviceChange.HardReset:
+                    msg = ResetDeviceMsg.Create(device, true);
                     break;
                 default:
                     return;
@@ -717,6 +727,41 @@ namespace UnityEngine.InputSystem
                 var device = receiver.TryGetDeviceByRemoteId(remoteDeviceId, senderIndex);
                 if (device != null)
                     receiver.m_LocalManager.RemoveDevice(device);
+            }
+        }
+
+        private static class ResetDeviceMsg
+        {
+            [Serializable]
+            public struct Data
+            {
+                public int deviceId;
+                public bool hardReset;
+            }
+
+            public static Message Create(InputDevice device, bool isHardReset)
+            {
+                var data = new Data
+                {
+                    deviceId = device.deviceId,
+                    hardReset = isHardReset,
+                };
+
+                return new Message
+                {
+                    type = MessageType.ResetDevice,
+                    data = SerializeData(data)
+                };
+            }
+
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
+                var data = DeserializeData<Data>(msg.data);
+
+                var device = receiver.TryGetDeviceByRemoteId(data.deviceId, senderIndex);
+                if (device != null)
+                    receiver.m_LocalManager.ResetDevice(device, alsoResetDontResetControls: data.hardReset);
             }
         }
 

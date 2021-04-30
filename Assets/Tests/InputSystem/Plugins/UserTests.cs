@@ -1177,6 +1177,27 @@ internal class UserTests : CoreTestsFixture
         Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad }));
     }
 
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Users")]
+    public void Users_DoNotReactToEditorInput()
+    {
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed += (control, eventPtr) => Assert.Fail("Should not react!");
+
+        runtime.PlayerFocusLost();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+    }
+
+    #endif
+
     [Test]
     [Category("Users")]
     [Ignore("TODO")]

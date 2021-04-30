@@ -1766,6 +1766,69 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanMarkControlAsDontReset()
+    {
+        const string layout1 = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button"", ""layout"" : ""Button"", ""dontReset"" : true }
+                ]
+            }
+        ";
+        const string layout2 = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button"", ""layout"" : ""Key"" },
+                    { ""name"" : ""axis"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""otherButton"", ""layout"" : ""Button"", ""useStateFrom"" : ""button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout1);
+        InputSystem.RegisterLayout(layout2);
+
+        var layout = InputSystem.LoadLayout("DerivedLayout");
+        Assert.That(layout["button"].dontReset, Is.True);
+        Assert.That(layout["axis"].dontReset, Is.False);
+        Assert.That(layout["otherButton"].dontReset, Is.False);
+
+        var device = InputSystem.AddDevice("DerivedLayout");
+
+        Assert.That(device["button"].dontReset, Is.True);
+        Assert.That(device["axis"].dontReset, Is.False);
+        Assert.That(device["otherButton"].dontReset, Is.True); // Should automatically get toggled on because of useStateFrom.
+    }
+
+    // If a parent is noisy, all its children are.
+    // If a parent is dontReset, all its children are.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_NoisyAndDontResetPropagateDownTheControlHierarchy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""noisyStick"", ""layout"" : ""Stick"", ""noisy"" : true },
+                    { ""name"" : ""dontResetStick"", ""layout"" : ""Stick"", ""dontReset"" : true }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["noisyStick"].children, Has.All.Matches((InputControl x) => x.noisy));
+        Assert.That(device["dontResetStick"].children, Has.All.Matches((InputControl x) => x.dontReset));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_NoisyControls_AutomaticallyMakeAllTheirChildrenNoisy()
     {
         const string json = @"

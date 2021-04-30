@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // Is true when the player or game view has focus.
         /// </summary>
         /// <seealso cref="Application.isFocused"/>
-        bool isFocused { get; }
+        bool isPlayerFocused { get; }
 
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
@@ -181,6 +181,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
         bool isPaused { get; }
+        bool isEditorActive { get; }
         #endif
     }
 
