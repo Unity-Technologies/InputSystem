@@ -103,12 +103,21 @@ namespace UnityEngine.InputSystem
         ConfigurationChanged,
 
         /// <summary>
-        /// Device is being reset. This can happen during application focus changes
+        /// Device is being "soft" reset but in a way that excludes <see cref="Layouts.InputControlLayout.ControlItem.dontReset"/>
+        /// controls such as mouse positions. This can happen during application focus changes
         /// (see <see cref="InputSettings.backgroundBehavior"/>) or when <see cref="InputSystem.ResetDevice"/>
         /// is called explicitly.
         ///
         /// This notification is sent before the actual reset happens.
         /// </summary>
-        Reset,
+        SoftReset,
+
+        /// <summary>
+        /// Device is being "hard" reset, i.e. every control is reset to its default value. This happens only
+        /// when explicitly forced through <see cref="InputSystem.ResetDevice"/>.
+        ///
+        /// This notification is sent before the actual reset happens.
+        /// </summary>
+        HardReset,
     }
 }

@@ -1329,8 +1329,9 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException($"Device '{device}' has not been added to the system");
 
             // Trigger reset notification.
-            InputActionState.OnDeviceChange(device, InputDeviceChange.Reset);
-            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reset, "onDeviceChange");
+            var change = alsoResetDontResetControls ? InputDeviceChange.HardReset : InputDeviceChange.SoftReset;
+            InputActionState.OnDeviceChange(device, change);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
 
             var defaultStatePtr = device.defaultStatePtr;
             var deviceStateBlockSize = device.stateBlock.alignedSizeInBytes;

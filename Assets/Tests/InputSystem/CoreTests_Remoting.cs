@@ -205,6 +205,48 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
+    public void Remote_ResettingDevice_WillSendChangeToRemotes()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Press(gamepad.buttonSouth);
+
+        using (var remote = new FakeRemote())
+        {
+            var remoteGamepad = (Gamepad)remote.manager.devices[0];
+
+            var remoteGamepadWasSoftReset = false;
+            var remoteGamepadWasHardReset = false;
+            remote.manager.onDeviceChange += (device, change) =>
+            {
+                if (device == remoteGamepad && change == InputDeviceChange.SoftReset)
+                {
+                    Assert.That(remoteGamepadWasSoftReset, Is.False);
+                    remoteGamepadWasSoftReset = true;
+                }
+                if (device == remoteGamepad && change == InputDeviceChange.HardReset)
+                {
+                    Assert.That(remoteGamepadWasHardReset, Is.False);
+                    remoteGamepadWasHardReset = true;
+                }
+            };
+
+            InputSystem.ResetDevice(gamepad);
+
+            Assert.That(remoteGamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(remoteGamepadWasSoftReset, Is.True);
+            Assert.That(remoteGamepadWasHardReset, Is.False);
+
+            remoteGamepadWasSoftReset = false;
+
+            InputSystem.ResetDevice(gamepad, alsoResetDontResetControls: true);
+
+            Assert.That(remoteGamepadWasSoftReset, Is.False);
+            Assert.That(remoteGamepadWasHardReset, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
     public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
     {
 #if UNITY_EDITOR

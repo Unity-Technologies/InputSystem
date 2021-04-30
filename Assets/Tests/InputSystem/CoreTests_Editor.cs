@@ -2414,6 +2414,39 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_CanForceKeyboardAndMouseInputToGameViewWithoutFocus()
+    {
+        runtime.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(keyboard.enabled, Is.True);
+        Assert.That(mouse.enabled, Is.True);
+
+        Press(keyboard.spaceKey, queueEventOnly: true);
+        Press(mouse.leftButton, queueEventOnly: true);
+
+        // First make sure the editor is *not* eating this input.
+        var eventCountBefore = InputSystem.metrics.totalEventCount;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputSystem.metrics.totalEventCount, Is.EqualTo(eventCountBefore));
+
+        Assert.That(keyboard.spaceKey.isPressed, Is.False);
+        Assert.That(mouse.leftButton.isPressed, Is.False);
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(keyboard.spaceKey.isPressed, Is.True);
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_WhenNotInPlayMode_AllInputGoesToEditor()
     {
         // Give us a setting where in play mode, gamepad input would go to the game

@@ -1784,7 +1784,8 @@ namespace UnityEngine.InputSystem
         /// Reset the state of the given device.
         /// </summary>
         /// <param name="device">Device to reset. Must be <see cref="InputDevice.added"/> to the system.</param>
-        /// <param name="alsoResetDontResetControls">If true, also reset controls that are marked as <see cref="InputControlAttribute.dontReset"/>.</param>
+        /// <param name="alsoResetDontResetControls">If true, also reset controls that are marked as <see cref="InputControlAttribute.dontReset"/>.
+        /// Leads to <see cref="InputDeviceChange.HardReset"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been <see cref="InputDevice.added"/>.</exception>
         /// <remarks>
@@ -1814,7 +1815,8 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
-        /// Resetting a device will trigger a <see cref="InputDeviceChange.Reset"/> notification on <see cref="onDeviceChange"/>.
+        /// Resetting a device will trigger a <see cref="InputDeviceChange.SoftReset"/> or <see cref="InputDeviceChange.HardReset"/>
+        /// (based on the value of <paramref name="alsoResetDontResetControls"/>) notification on <see cref="onDeviceChange"/>.
         /// Also, all <see cref="InputAction"/>s currently in progress from controls on <paramref name="device"/> will be cancelled
         /// (see <see cref="InputAction.canceled"/>) in a way that guarantees for them to not get triggered. That is, a reset is
         /// semantically different from simply sending an event with default state. Using the latter, a button may be considered as
@@ -1822,7 +1824,7 @@ namespace UnityEngine.InputSystem
         /// a button release (and thus not trigger interactions that are waiting for a button release).
         /// </remarks>
         /// <seealso cref="TrySyncDevice"/>
-        /// <seealso cref="InputDeviceChange.Reset"/>
+        /// <seealso cref="InputDeviceChange.HardReset"/>
         public static void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false)
         {
             s_Manager.ResetDevice(device, alsoResetDontResetControls);

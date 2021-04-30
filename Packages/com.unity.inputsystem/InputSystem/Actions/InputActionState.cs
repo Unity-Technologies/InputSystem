@@ -3749,7 +3749,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(
                 change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
                 change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged ||
-                change == InputDeviceChange.Reset,
+                change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset,
                 "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
@@ -3800,7 +3800,8 @@ namespace UnityEngine.InputSystem
                     // On reset, cancel all actions currently in progress from the device that got reset.
                     // If we simply let change monitors trigger, we will respond to things like button releases
                     // that are in fact just resets of buttons to their default state.
-                    case InputDeviceChange.Reset:
+                    case InputDeviceChange.SoftReset:
+                    case InputDeviceChange.HardReset:
                         if (!state.IsUsingDevice(device))
                             continue;
                         state.ResetActionStatesDrivenBy(device);
