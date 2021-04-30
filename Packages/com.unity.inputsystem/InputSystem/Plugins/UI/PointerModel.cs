@@ -236,7 +236,7 @@ namespace UnityEngine.InputSystem.UI
                 get => m_ClickedOnSameGameObject;
                 set => m_ClickedOnSameGameObject = value;
             }
-            
+
             public bool wasPressedThisFrame => m_FramePressState == PointerEventData.FramePressState.Pressed ||
             m_FramePressState == PointerEventData.FramePressState.PressedAndReleased;
             public bool wasReleasedThisFrame => m_FramePressState == PointerEventData.FramePressState.Released ||
@@ -272,7 +272,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData.rawPointerPress = m_RawPressObject;
                 eventData.pointerDrag = m_DragObject;
                 eventData.dragging = m_Dragging;
-                
+
                 if (ignoreNextClick)
                     eventData.eligibleForClick = false;
             }

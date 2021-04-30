@@ -1578,7 +1578,7 @@ namespace UnityEngine.InputSystem
                         device.disabledWhileInBackground = true;
                         ResetDevice(device, noResetCommand: true);
                         #if UNITY_EDITOR
-                        if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                        if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                         #endif
                         {
                             device.ExecuteDisableCommand();
@@ -2648,9 +2648,9 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             if (runDeviceInBackground)
             {
-                if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     runDeviceInBackground = false;
-                else if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                else if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     runDeviceInBackground = !(device is Pointer || device is Keyboard);
             }
             #endif
@@ -2671,7 +2671,7 @@ namespace UnityEngine.InputSystem
             #endif
 
             #if UNITY_EDITOR
-            var gameViewFocus = m_Settings.gameViewFocus;
+            var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
             #endif
 
             var runInBackground =
@@ -2682,7 +2682,7 @@ namespace UnityEngine.InputSystem
                 //
                 // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
                 // path as in the player.
-                gameViewFocus != InputSettings.GameViewFocus.ExactlyAsInPlayer || m_Runtime.runInBackground;
+                gameViewFocus != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView || m_Runtime.runInBackground;
                 #else
                 m_Runtime.runInBackground;
                 #endif
@@ -2855,7 +2855,7 @@ namespace UnityEngine.InputSystem
                 false
 #if UNITY_EDITOR
                 // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
-                || (!m_HasFocus && m_Settings.gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer &&
+                || (!m_HasFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView &&
                     (!m_Runtime.runInBackground ||
                         m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
 #else
@@ -2871,7 +2871,8 @@ namespace UnityEngine.InputSystem
                 (!m_HasFocus &&
                     ((m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices && updateType != InputUpdateType.Editor)
 #if UNITY_EDITOR
-                        || (m_Settings.gameViewFocus == InputSettings.GameViewFocus.AllDevices && updateType != InputUpdateType.Editor)
+                        || (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus && updateType != InputUpdateType.Editor)
+                        || (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && updateType == InputUpdateType.Editor)
 #endif
                     )
                 );
@@ -2899,7 +2900,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             var isPlaying = m_Runtime.isInPlayMode;
             #endif
-            
+
             m_InputEventStream = new InputEventStream(ref eventBuffer);
 
             // Handle events.
@@ -2985,7 +2986,7 @@ namespace UnityEngine.InputSystem
                     #if UNITY_EDITOR
                     else if (!m_HasFocus && isPlaying)
                     {
-                        if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard &&
+                        if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus &&
                             m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
                         {
                             var isPointerOrKeyboard = device is Pointer || device is Keyboard;

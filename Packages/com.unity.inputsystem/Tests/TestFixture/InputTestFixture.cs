@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
                 #if UNITY_EDITOR
-                InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.ExactlyAsInPlayer;
+                InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
                 #endif
 
                 // We use native collections in a couple places. We when leak them, we want to know where exactly

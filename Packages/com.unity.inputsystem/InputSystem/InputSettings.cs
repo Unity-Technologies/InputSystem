@@ -428,7 +428,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputSystem.ResetDevice"/>
         /// <seealso cref="InputSystem.EnableDevice"/>
         /// <seealso cref="InputDevice.canRunInBackground"/>
-        /// <seealso cref="gameViewFocus"/>
+        /// <seealso cref="editorInputBehaviorInPlayMode"/>
         public BackgroundBehavior backgroundBehavior
         {
             get => m_BackgroundBehavior;
@@ -456,17 +456,18 @@ namespace UnityEngine.InputSystem
         /// or not. This essentially equates to <a href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html">Application.runInBackground</a> always
         /// being true in the editor.
         ///
-        /// To accomodate this behavior, this setting determines where input is routed while the player loop is running with no Game View being focused.
+        /// To accommodate this behavior, this setting determines where input is routed while the player loop is running with no Game View being focused. As such,
+        /// it also dictates which input reaches the editor (if any) while the game is playing.
         /// </remarks>
         /// <seealso cref="backgroundBehavior"/>
-        public GameViewFocus gameViewFocus
+        public EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode
         {
-            get => m_GameViewFocus;
+            get => m_EditorInputBehaviorInPlayMode;
             set
             {
-                if (m_GameViewFocus == value)
+                if (m_EditorInputBehaviorInPlayMode == value)
                     return;
-                m_GameViewFocus = value;
+                m_EditorInputBehaviorInPlayMode = value;
                 OnChange();
             }
         }
@@ -561,7 +562,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
         [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
-        [SerializeField] private GameViewFocus m_GameViewFocus;
+        [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
@@ -643,7 +644,7 @@ namespace UnityEngine.InputSystem
         /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html"/>
         /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html"/>
         /// <seealso cref="backgroundBehavior"/>
-        /// <seealso cref="gameViewFocus"/>
+        /// <seealso cref="InputSettings.editorInputBehaviorInPlayMode"/>
         public enum BackgroundBehavior
         {
             /// <summary>
@@ -652,7 +653,7 @@ namespace UnityEngine.InputSystem
             /// and <see cref="InputDevice.enabled"/>). Devices that <see cref="InputDevice.canRunInBackground"/> will not be touched and will
             /// keep running as is.
             ///
-            /// In effect, this setting will"soft-reset" all devices that cannot receive input while the application does
+            /// In effect, this setting will "soft-reset" all devices that cannot receive input while the application does
             /// not have focus. That is, it will reset all controls that are not marked as <see cref="InputControlLayout.ControlItem.dontReset"/>
             /// to their default state.
             ///
@@ -679,31 +680,34 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Determines how player focus is handled in the editor with respect to input. See <see cref="gameViewFocus"/>.
+        /// Determines how player focus is handled with respect to input when we are in play mode in the editor.
+        /// See <see cref="InputSettings.editorInputBehaviorInPlayMode"/>. The setting does not have an effect
+        /// when the editor is not in play mode.
         /// </summary>
-        /// <seealso cref="gameViewFocus"/>
-        public enum GameViewFocus
+        public enum EditorInputBehaviorInPlayMode
         {
             /// <summary>
-            /// Only input from <see cref="Pointer"/> devices (such as <see cref="Mouse"/> and <see cref="Touchscreen"/>) requires the Game View
-            /// to be focused. Input from other devices is routed to the game regardless of which <c>EditorWindow</c> is focused. This means, for
-            /// example, that <see cref="Gamepad"/> input will continue to be received in the Game View even after focus is lost.
+            /// When the game view does not have focus, input from <see cref="Pointer"/> devices (such as <see cref="Mouse"/> and <see cref="Touchscreen"/>)
+            /// is routed to the editor and not visible in player code. Input from devices such as <see cref="Gamepad"/>s will continue to
+            /// go to the game regardless of which <c>EditorWindow</c> is focused.
+            ///
+            /// This is the default. It makes sure that the devices that are used with the editor UI respect <c>EditorWindow</c> focus and thus
+            /// do not lead to accidental inputs affecting the game. While at the same time letting all other input get through to the game.
+            /// It does, however, mean that no other <c>EditorWindow</c> can tap input from these devices (such as <see cref="Gamepad"/>s and <see cref="HID"/>s).
             /// </summary>
-            OnlyPointerAndKeyboard,
+            PointersAndKeyboardsRespectGameViewFocus,
 
             /// <summary>
-            /// All input is routed into editor state while the game view does not have focus. This allows devices such as HIDs and
-            /// gamepads to be used in other EditorWindows. In effect, no input will be received in the Game View until focus is transferred
-            /// back.
+            /// When the game view does not have focus, all input is routed to the editor (and thus <c>EditorWindow</c>s). No input
+            /// is received in the game regardless of the type of device generating it.
             /// </summary>
-            AllDevices,
+            AllDevicesRespectGameViewFocus,
 
             /// <summary>
-            /// Focus behavior for the Game View is handled exactly like in the player. This effectively makes the Input System exclusive to the
-            /// application and cuts the editor off. Depending on <see cref="backgroundBehavior"/> devices may actually be disabled at the runtime
-            /// level while the Game View does not have focus.
+            /// All input is going to the game at all times. This most closely aligns input behavior in the editor with that in players. <see cref="backgroundBehavior"/>
+            /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
             /// </summary>
-            ExactlyAsInPlayer,
+            AllDeviceInputAlwaysGoesToGameView,
         }
     }
 }

@@ -126,7 +126,7 @@ however, it has to be formatted properly to pass verification tests.
     // Perform a "hard" reset of the mouse. The mouse position will also be reset to (0,0).
     InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
     ```
-  * Resets will lead to `InputAction`s that are enabled and in-progress from controls that being reset, to be canceled. This wil not perform actions even if they trigger on, for example, button release.
+  * Resets will lead to `InputAction`s that are enabled and in-progress from controls that being reset, to be canceled. This will not perform actions even if they trigger on, for example, button release.
 - `InputDevice.canRunInBackground` can now be force-set through layouts.
    ```CSharp
    // Force XInputWindows gamepads to not run in the background.

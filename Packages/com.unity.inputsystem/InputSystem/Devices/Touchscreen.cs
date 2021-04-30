@@ -591,7 +591,7 @@ namespace UnityEngine.InputSystem
         //
         // NOTE: We do *NOT* make a effort here to prevent us from losing short-lived touches. This is different
         //       from the old input system where individual touches were not reused until the next frame. This meant
-        //       that additional touches potentially had to be allocated in order to accomodate new touches coming
+        //       that additional touches potentially had to be allocated in order to accommodate new touches coming
         //       in from the system.
         //
         //       The rationale for *NOT* doing this is that:

@@ -657,7 +657,7 @@ partial class CoreTests
     {
         // InputTestFixture puts this at ExactlyAsInPlayer. Give us a setting that allows
         // gamepad input to go through to the editor.
-        InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.AllDevices;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1627,7 +1627,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_ExcludesEditorInputByDefault()
     {
-        InputSystem.settings.gameViewFocus = default;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
@@ -1646,7 +1646,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_CanCaptureEditorInput()
     {
-        InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.AllDevices;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))

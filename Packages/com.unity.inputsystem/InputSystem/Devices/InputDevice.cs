@@ -228,7 +228,7 @@ namespace UnityEngine.InputSystem
         /// Furthermore, the property may be force-set through a device's <see cref="InputControl.layout"/> by
         /// means of <see cref="InputControlLayout.canRunInBackground"/>.
         ///
-        /// Lastly, in the editor, the value of the property may be overridden depending on <see cref="InputSettings.gameViewFocus"/>
+        /// Lastly, in the editor, the value of the property may be overridden depending on <see cref="InputSettings.editorInputBehaviorInPlayMode"/>
         /// in case certain devices are automatically kept running in play mode even when no Game View has focus.
         ///
         /// Be aware that as far as players are concerned, only certain platforms support running Unity while not having focus.
@@ -246,10 +246,10 @@ namespace UnityEngine.InputSystem
                 // So, we modulate canRunInBackground depending on how input should behave WRT game view according
                 // to the input settings.
                 #if UNITY_EDITOR
-                var gameViewFocus = InputSystem.settings.gameViewFocus;
-                if (gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                var gameViewFocus = InputSystem.settings.editorInputBehaviorInPlayMode;
+                if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     return false; // No device considered being able to run without game view focus.
-                if (gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     return !(this is Pointer || this is Keyboard); // Anything but pointers and keyboards considered as being able to run in background.
                 #endif
 

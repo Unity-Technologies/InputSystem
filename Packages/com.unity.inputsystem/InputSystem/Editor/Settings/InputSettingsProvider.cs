@@ -102,7 +102,6 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
                 if (!runInBackground)
                     EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
-                EditorGUILayout.PropertyField(m_GameViewFocus, m_GameViewFocusContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
@@ -140,6 +139,11 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
                 EditorGUILayout.Space();
                 m_iOSProvider.OnGUI();
+
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
 
                 if (EditorGUI.EndChangeCheck())
                     Apply();
@@ -245,7 +249,7 @@ namespace UnityEngine.InputSystem.Editor
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
-            m_GameViewFocus = m_SettingsObject.FindProperty("m_GameViewFocus");
+            m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
@@ -268,12 +272,12 @@ namespace UnityEngine.InputSystem.Editor
                 + "is running in the background.\n"
                 + "'Ignore Focus' leaves all devices untouched when application focus changes. While running in the background, all input that is received is processed as if "
                 + "running in the foreground.");
-            m_GameViewFocusContent = new GUIContent("Game View Focus", "Determines how input is treated in the editor with respect to the Game View not having focus.\n\n"
-                + "'Only Pointer And Keyboard' requires Game View focus only for pointers (mice, touch, etc.) and keyboards. Other devices will feed input to the game regardless "
+            m_EditorInputBehaviorInPlayModeContent = new GUIContent("Play Mode Input Behavior", "When in play mode, determines how focus of the Game View is handled with respect to input.\n\n"
+                + "'Pointers And Keyboards Respect Game View Focus' requires Game View focus only for pointers (mice, touch, etc.) and keyboards. Other devices will feed input to the game regardless "
                 + "of whether the Game View is focused or not. Note that this means that input on these devices is not visible in other EditorWindows.\n"
-                + "'All Devices' requires Game View focus for all input devices. While focus is not on the Game View, all input on InputDevices will go to the editor and not "
+                + "'All Devices Respect Game View Focus' requires Game View focus for all input devices. While focus is not on the Game View, all input on InputDevices will go to the editor and not "
                 + "the game.\n"
-                + "'Exactly As In Player' causes input to treat 'Background Behavior' exactly as in the player including devices potentially being disabled entirely while the Game View "
+                + "'All Device Input Always Goes To Game View' causes input to treat 'Background Behavior' exactly as in the player including devices potentially being disabled entirely while the Game View "
                 + "does not have focus. In this setting, no input from the Input System will be visible to EditorWindows.");
             m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
@@ -375,7 +379,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
-        [NonSerialized] private SerializedProperty m_GameViewFocus;
+        [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
@@ -399,7 +403,7 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_FilterNoiseOnCurrentContent;
         private GUIContent m_CompensateForScreenOrientationContent;
         private GUIContent m_BackgroundBehaviorContent;
-        private GUIContent m_GameViewFocusContent;
+        private GUIContent m_EditorInputBehaviorInPlayModeContent;
         private GUIContent m_DefaultDeadzoneMinContent;
         private GUIContent m_DefaultDeadzoneMaxContent;
         private GUIContent m_DefaultButtonPressPointContent;

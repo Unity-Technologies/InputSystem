@@ -1821,7 +1821,7 @@ partial class CoreTests
         bool? receivedResetDeviceChange = null;
         InputSystem.onDeviceChange += (d, c) =>
         {
-            if (c == InputDeviceChange.Reset)
+            if (c == InputDeviceChange.SoftReset)
             {
                 Assert.That(receivedResetDeviceChange, Is.Null);
                 receivedResetDeviceChange = true;
@@ -4152,30 +4152,30 @@ partial class CoreTests
     [Test]
     [Category("Devices")]
 
-    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
-    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
-    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)]
 
-    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
-    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
-    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)]
 
-    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.AllDevices)]
-    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.AllDevices)]
-    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.AllDevices)]
+    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)]
 
-    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.AllDevices)]
-    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.AllDevices)]
-    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.AllDevices)]
+    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)]
 
-    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
-    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
-    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
 
-    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
-    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
-    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
-    public unsafe void Devices_CanHandleFocusChanges(bool appRunInBackground, InputSettings.BackgroundBehavior backgroundBehavior, InputSettings.GameViewFocus gameViewFocus)
+    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
+    public unsafe void Devices_CanHandleFocusChanges(bool appRunInBackground, InputSettings.BackgroundBehavior backgroundBehavior, InputSettings.EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode)
     {
         // The constant leads to "Unreachable code detected" warnings.
         #pragma warning disable CS0162
@@ -4189,13 +4189,13 @@ partial class CoreTests
 
         // runInBackground=false in UNITY_EDITOR without gameViewFocus=ExactlyAsInPlayer is undefined as
         // we consider runInBackground to always be on in the editor.
-        if (!appRunInBackground && kIsEditor && gameViewFocus != InputSettings.GameViewFocus.ExactlyAsInPlayer)
+        if (!appRunInBackground && kIsEditor && editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
             return;
 
         runtime.runInBackground = appRunInBackground;
 
         InputSystem.settings.backgroundBehavior = backgroundBehavior;
-        InputSystem.settings.gameViewFocus = gameViewFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode = editorInputBehaviorInPlayMode;
 
         // Add a device that is disabled from the get-go and should remain disabled.
         var sensorId = runtime.ReportNewInputDevice<Gyroscope>();
@@ -4305,13 +4305,13 @@ partial class CoreTests
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
 
-        if (kIsEditor && gameViewFocus != InputSettings.GameViewFocus.ExactlyAsInPlayer)
+        if (kIsEditor && editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
         {
             // In the editor, canRunInBackground is automatically adapted to account both for the fact that "background" means
             // "Game View not focused (but Unity is still running)" and that "Run In Background" is essentially always on.
-            switch (gameViewFocus)
+            switch (editorInputBehaviorInPlayMode)
             {
-                case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
+                case InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus:
                     Assert.That(trackedDevice.canRunInBackground, Is.True);
                     Assert.That(mouse.canRunInBackground, Is.False);
                     Assert.That(gamepad.canRunInBackground, Is.True);
@@ -4319,7 +4319,7 @@ partial class CoreTests
                     Assert.That(keyboard.canRunInBackground, Is.False);
                     break;
 
-                case InputSettings.GameViewFocus.AllDevices:
+                case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
                     Assert.That(trackedDevice.canRunInBackground, Is.False);
                     Assert.That(mouse.canRunInBackground, Is.False);
                     Assert.That(gamepad.canRunInBackground, Is.False);
@@ -4343,7 +4343,7 @@ partial class CoreTests
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
 
-        if (!appRunInBackground && (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer))
+        if (!appRunInBackground && (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
         {
             // No change on focus loss.
 
@@ -4408,7 +4408,7 @@ partial class CoreTests
                         "Reset Mouse", "Reset Keyboard", "Reset Gamepad", "Reset Joystick", "Reset TrackedDevice",
                         "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
                     }));
-                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                         Assert.That(commands, Is.EquivalentTo(new[] { "Disable Mouse", "Disable Keyboard", "Disable Gamepad", "Disable Joystick", "Disable TrackedDevice" }));
                     else
                         Assert.That(commands, Is.Empty); // We don't actually disable them in the backend as the editor will continue to receive data.
@@ -4416,7 +4416,7 @@ partial class CoreTests
                     break;
 
                 case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
-                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                     {
                         Assert.That(trackedDevice.enabled, Is.True);
                         Assert.That(mouse.enabled, Is.False);
@@ -4437,13 +4437,13 @@ partial class CoreTests
                             "Reset Mouse", "Reset Keyboard", "Reset Joystick",
                             "Disabled Mouse", "Disabled Keyboard", "Disabled Joystick"
                         }));
-                        if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                        if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                             Assert.That(commands, Is.EquivalentTo(new[] { "Disable Mouse", "Disable Keyboard", "Disable Joystick" }));
                         else
                             Assert.That(commands, Is.Empty);
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     {
                         Assert.That(trackedDevice.enabled, Is.True);
                         Assert.That(mouse.enabled, Is.False);
@@ -4467,7 +4467,7 @@ partial class CoreTests
                         Assert.That(commands, Is.Empty); // No actual disabling in backend.
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     {
                         Assert.That(trackedDevice.enabled, Is.False);
                         Assert.That(mouse.enabled, Is.False);
@@ -4529,7 +4529,7 @@ partial class CoreTests
             {
                 case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
 
-                    if (appRunInBackground && (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer))
+                    if (appRunInBackground && (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
                     {
                         // Only background devices should have been affected.
                         Assert.That(eventCount, Is.EqualTo(2));
@@ -4540,7 +4540,7 @@ partial class CoreTests
                         Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666))); // canRunInBackground
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     {
                         // All devices should be unaffected.
                         Assert.That(eventCount, Is.Zero);
@@ -4551,7 +4551,7 @@ partial class CoreTests
                         Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     {
                         // All devices except for mouse and keyboard should be affected.
                         Assert.That(eventCount, Is.EqualTo(3));
@@ -4579,7 +4579,7 @@ partial class CoreTests
 
                 case InputSettings.BackgroundBehavior.IgnoreFocus:
 
-                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                     {
                         if (appRunInBackground)
                         {
@@ -4604,7 +4604,7 @@ partial class CoreTests
                         }
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     {
                         // All devices should be unaffected.
                         Assert.That(eventCount, Is.Zero);
@@ -4615,7 +4615,7 @@ partial class CoreTests
                         Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     {
                         // All devices except for mouse and keyboard should be affected.
                         Assert.That(eventCount, Is.EqualTo(3));
@@ -4645,9 +4645,9 @@ partial class CoreTests
 
                 Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
 
-                switch (gameViewFocus)
+                switch (editorInputBehaviorInPlayMode)
                 {
-                    case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
+                    case InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus:
                         if (backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices ||
                             backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
                         {
@@ -4672,7 +4672,7 @@ partial class CoreTests
                         }
                         break;
 
-                    case InputSettings.GameViewFocus.AllDevices:
+                    case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
                         // All input should have gone to editor.
                         Assert.That(eventCount, Is.EqualTo(5));
                         Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
@@ -4683,7 +4683,7 @@ partial class CoreTests
                         Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
                         break;
 
-                    case InputSettings.GameViewFocus.ExactlyAsInPlayer:
+                    case InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView:
                         // No input should have been deferred.
                         Assert.That(eventCount, Is.Zero);
                         break;
@@ -4738,19 +4738,19 @@ partial class CoreTests
                         break;
 
                     case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
-                        if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                        if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                         {
                             Assert.That(mouse2.enabled, Is.True);
                             Assert.That(mouse3.enabled, Is.False);
                             Assert.That(trackedDevice2.enabled, Is.True);
                         }
-                        if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                        if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                         {
                             Assert.That(mouse2.enabled, Is.False);
                             Assert.That(mouse3.enabled, Is.False);
                             Assert.That(trackedDevice2.enabled, Is.False);
                         }
-                        if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                        if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                         {
                             Assert.That(mouse2.enabled, Is.False);
                             Assert.That(mouse3.enabled, Is.False);
@@ -4772,7 +4772,7 @@ partial class CoreTests
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
 
-        if (!appRunInBackground && (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer))
+        if (!appRunInBackground && (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
         {
             // No change on focus gain.
 
@@ -4834,7 +4834,7 @@ partial class CoreTests
             {
                 case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
 
-                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                     {
                         // All non-canRunInBackground devices are re-enabled and receive a sync request.
 
@@ -4859,7 +4859,7 @@ partial class CoreTests
                         }));
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
                     {
                         // Pointers and keyboards are re-enabled and receive a sync request.
 
@@ -4879,7 +4879,7 @@ partial class CoreTests
                         }));
                     }
 
-                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
                     {
                         // All devices re-enabled and receive a sync request.
 
@@ -4910,7 +4910,7 @@ partial class CoreTests
 
                     // All devices re-enabled and receive a sync request.
 
-                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                     {
                         Assert.That(commands,
                             Is.EquivalentTo(new[]

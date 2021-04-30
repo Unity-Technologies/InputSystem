@@ -2,12 +2,12 @@
 
 * [Update Mode](#update-mode)
 * [Background Behavior](#background-behavior)
-* [Game View Focus](#game-view-focus)
 * [Filter Noise on .current](#filter-noise-on-current)
 * [Compensate orientation](#compensate-orientation)
 * [Default value properties](#default-value-properties)
 * [Supported Devices](#supported-devices)
 * [Platform-specific Settings](#platform-specific-settings)
+* [Play Mode Input Behavior](#play-mode-input-behavior)
 
 To configure the Input System individually for each project, go to __Edit > Project Settings… > Input System Package__ from Unity's main menu.
 
@@ -45,7 +45,7 @@ This setting is only relevant when "Run In Background" is enabled in the [Player
 
 Note that in the editor, "Run In Background" is considered to always be enabled as the player loop will be kept running regardless of whether a Game View is focused or not. Also, in development players on desktop platforms, the setting is force-enabled during the build process.
 
->__Note__: In the editor, `Background Behavior` is further influenced by [`Game View Focus`](#game-view-focus). See [Background and Focus Change Behavior](Devices.md#background-and-focus-change-behavior) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) partly depends on the [`Game View Focus`](#game-view-focus) setting.
+>__Note__: In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](Devices.md#background-and-focus-change-behavior) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
 
 |Setting|Description|
 |----|-----------|
@@ -54,18 +54,6 @@ Note that in the editor, "Run In Background" is considered to always be enabled 
 |[`Ignore Focus`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_IgnoreFocus)|Do nothing when focus is lost. When focus is regained, issue a [sync request](Devices.md#device-syncs) on all Devices.|
 
 Focus behavior has implications for how [Actions](./Actions.md) behave on focus changes. When a Device is reset, Actions bound to a Controls on the device will be cancelled. This ensures, for example, that the player does not keep running when focus is lost while one of the W, A, S, or D keys is pressed. The cancellation happens in such a way that Actions are guaranteed to not trigger. That is, even if an Action is set to trigger on button release, it will not get triggered when a button is down and gets reset by a [Device reset](Devices.md#device-resets).
-
-## Game View Focus
-
-![Game View Focus](Images/GameViewFocus.png)
-
-Determines how input is handled in the Editor when in play mode. Unlike in players, in the Editor Unity (and thus its input backends) will keep running for as long as the Editor is active regardless of whether a Game View is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
-
-|Setting|Description|
-|-------|-----------|
-|[`Only Pointer and Keyboard`](../api/UnityEngine.InputSystem.InputSettings.GameViewFocus.html#UnityEngine_InputSystem_InputSettings_GameViewFocus_OnlyPointerAndKeyboard)|Only [Pointer](Pointers.md) and [Keyboard](Keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](Gamepad.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
-|[`All Devices`](../api/UnityEngine.InputSystem.InputSettings.GameViewFocus.html#UnityEngine_InputSystem_InputSettings_GameViewFocus_AllDevices)|Focus on a Game View is required for all Devices. When no Game View window is focused, all input goes to the editor and not to the application. This allows other EditorWindows to receive these inputs (from gamepads, for example).|
-|[`Exactly As In Player`](../api/UnityEngine.InputSystem.InputSettings.GameViewFocus.html#UnityEngine_InputSystem_InputSettings_GameViewFocus_ExactlyAsInPlayer)|All editor input is disabled and input is considered to be exclusive to Game Views. Also, [`Background Behavior`](#background-behavior) is to be taken literally and executed like in players. Meaning, if in a certain situation, a Device is disabled in the player, it will get disabled in the editor as well.<br><br>This setting most closely aligns player behavior with editor behavior. Be aware, however, that no EditorWindows will be able to see input from Devices.|
 
 ## Filter Noise On Current
 
@@ -148,3 +136,17 @@ This setting is stored as a user setting (that is, other users who open the same
 
 * __Motion Usage__<br>
   Governs access to the [pedometer](Sensors.md# on the device. If enabled, the __Description__ string supplied in the settings will be added to the application's Info.plist
+
+### Editor
+
+#### Play Mode Input Behavior
+
+![Play Mode Input Behavior](Images/PlayModeInputBehavior.png)
+
+Determines how input is handled in the Editor when in play mode. Unlike in players, in the Editor Unity (and thus its input backends) will keep running for as long as the Editor is active regardless of whether a Game View is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
+
+|Setting|Description|
+|-------|-----------|
+|[`Pointers And Keyboards Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_PointersAndKeyboardsRespectGameViewFocus)|Only [Pointer](Pointers.md) and [Keyboard](Keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](Gamepad.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
+|[`All Devices Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDevicesRespectGameViewFocus)|Focus on a Game View is required for all Devices. When no Game View window is focused, all input goes to the editor and not to the application. This allows other EditorWindows to receive these inputs (from gamepads, for example).|
+|[`All Device Input Always Goes To Game View`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDeviceInputAlwaysGoesToGameView)|All editor input is disabled and input is considered to be exclusive to Game Views. Also, [`Background Behavior`](#background-behavior) is to be taken literally and executed like in players. Meaning, if in a certain situation, a Device is disabled in the player, it will get disabled in the editor as well.<br><br>This setting most closely aligns player behavior with editor behavior. Be aware, however, that no EditorWindows will be able to see input from Devices.|

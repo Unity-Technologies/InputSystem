@@ -345,7 +345,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
     {
-        InputSystem.settings.gameViewFocus = default;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -2418,7 +2418,7 @@ partial class CoreTests
     {
         // Give us a setting where in play mode, gamepad input would go to the game
         // regardless of focus.
-        InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.OnlyPointerAndKeyboard;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var mouse = InputSystem.AddDevice<Mouse>();
