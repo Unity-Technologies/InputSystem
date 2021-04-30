@@ -269,6 +269,8 @@ namespace UnityEngine.InputSystem.UI
             eventData.button = PointerEventData.InputButton.Left;
             state.leftButton.CopyPressStateTo(eventData);
 
+            // Unlike StandaloneInputModule, we process moves before processing buttons. This way
+            // UI elements get pointer enters/exits before they get button ups/downs and clicks.
             ProcessPointerMovement(ref state, eventData);
 
             // We always need to process move-related events in order to get PointerEnter and Exit events
@@ -388,6 +390,8 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+        private const float kClickSpeed = 0.3f;
+
         private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerEventData eventData)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
@@ -398,6 +402,8 @@ namespace UnityEngine.InputSystem.UI
             // Button press.
             if (button.wasPressedThisFrame)
             {
+                button.pressTime = InputRuntime.s_Instance.unscaledGameTime;
+
                 eventData.delta = Vector2.zero;
                 eventData.dragging = false;
                 eventData.pressPosition = eventData.position;
@@ -415,22 +421,23 @@ namespace UnityEngine.InputSystem.UI
                 // Invoke OnPointerDown, if present.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
 
-                // Detect clicks.
-                // NOTE: StandaloneInputModule does this *after* the click handler has been invoked -- which doesn't seem to
-                //       make sense. We do it *before* IPointerClickHandler.
-                var time = InputRuntime.s_Instance.unscaledGameTime;
-                const float clickSpeed = 0.3f;
-                if (newPressed == eventData.lastPress && (time - eventData.clickTime) < clickSpeed)
-                    ++eventData.clickCount;
-                else
-                    eventData.clickCount = 1;
-
-                eventData.clickTime = time;
-
-                // We didn't find a press handler, so we turn it into a click.
+                // If no GO responded to OnPointerDown, look for one that responds to OnPointerClick.
+                // NOTE: This only looks up the handler. We don't invoke OnPointerClick here.
                 if (newPressed == null)
                     newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
+                // Reset click state if delay to last release was too long or if we didn't
+                // press on the same object as last time. The latter part we don't know until
+                // we've actually run the press handler.
+                button.clickedOnSameGameObject = newPressed == eventData.lastPress && button.pressTime - eventData.clickTime <= kClickSpeed;
+                if (eventData.clickCount > 0 && !button.clickedOnSameGameObject)
+                {
+                    eventData.clickCount = default;
+                    eventData.clickTime = default;
+                }
+
+                // Set pointerPress. This nukes lastPress. Meaning that after OnPointerDown, lastPress will
+                // become null.
                 eventData.pointerPress = newPressed;
                 eventData.rawPointerPress = currentOverGo;
 
@@ -444,11 +451,37 @@ namespace UnityEngine.InputSystem.UI
             // Button release.
             if (button.wasReleasedThisFrame)
             {
+                // Check for click. Release must be on same GO that we pressed on and we must not
+                // have moved beyond our move tolerance (doing so will set eligibleForClick to false).
+                // NOTE: There's two difference to click handling here compared to StandaloneInputModule.
+                //       1) StandaloneInputModule counts clicks entirely on press meaning that clickCount is increased
+                //          before a click has actually happened.
+                //       2) StandaloneInputModule increases click counts even if something is eventually not deemed a
+                //          click and OnPointerClick is thus never invoked.
+                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                var isClick = eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
+                if (isClick)
+                {
+                    // Count clicks.
+                    if (button.clickedOnSameGameObject)
+                    {
+                        // We re-clicked on the same UI element within 0.3 seconds so count
+                        // it as a repeat click.
+                        ++eventData.clickCount;
+                    }
+                    else
+                    {
+                        // First click on this object.
+                        eventData.clickCount = 1;
+                    }
+                    eventData.clickTime = InputRuntime.s_Instance.unscaledGameTime;
+                }
+
+                // Invoke OnPointerUp.
                 ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
 
-                var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-
-                if (eventData.pointerPress == pointerUpHandler && eventData.eligibleForClick)
+                // Invoke OnPointerClick or OnDrop.
+                if (isClick)
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
                 else if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
@@ -474,6 +507,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData.pointerDrag == null)
                 return;
 
+            // Detect drags.
             if (!eventData.dragging)
             {
                 if (!eventData.useDragThreshold || (eventData.pressPosition - eventData.position).sqrMagnitude >=
@@ -481,6 +515,7 @@ namespace UnityEngine.InputSystem.UI
                                                                                                ? m_TrackedDeviceDragThresholdMultiplier
                                                                                                : 1))
                 {
+                    // Started dragging. Invoke OnBeginDrag.
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
                     eventData.dragging = true;
                 }
@@ -497,6 +532,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerPress = null;
                     eventData.rawPointerPress = null;
                 }
+
                 ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
                 button.CopyPressStateFrom(eventData);
             }
@@ -563,7 +599,7 @@ namespace UnityEngine.InputSystem.UI
                         var eventData = m_NavigationState.eventData;
                         if (eventData == null)
                         {
-                            eventData = new AxisEventData(eventSystem);
+                            eventData = new ExtendedAxisEventData(eventSystem);
                             m_NavigationState.eventData = eventData;
                         }
                         eventData.Reset();
