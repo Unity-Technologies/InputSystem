@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.XInput;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
-internal class iOSTests : InputTestFixture
+internal class iOSTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -83,6 +83,7 @@ internal class iOSTests : InputTestFixture
         Assert.That(InputSystem.devices[0].description.deviceClass, Is.EqualTo(deviceClass));
     }
 
+#if UNITY_EDITOR || UNITY_IOS
     [Test]
     [Category("Devices")]
     public void Devices_SupportsiOSStepCounter()
@@ -97,5 +98,7 @@ internal class iOSTests : InputTestFixture
         InputSystem.Update();
         Assert.That(device.stepCounter.ReadValue(), Is.EqualTo(5));
     }
+
+#endif
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

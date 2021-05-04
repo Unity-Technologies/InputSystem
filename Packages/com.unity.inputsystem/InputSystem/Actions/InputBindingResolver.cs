@@ -155,6 +155,7 @@ namespace UnityEngine.InputSystem
             InputAction currentCompositeAction = null;
             var bindingMaskOnThisMap = map.m_BindingMask;
             var devicesForThisMap = map.devices;
+            var isSingletonAction = map.m_SingletonAction != null;
 
             // Can't use `using` as we need to use it with `ref`.
             var resolvedControls = new InputControlList<InputControl>(Allocator.Temp);
@@ -200,15 +201,15 @@ namespace UnityEngine.InputSystem
                         InputAction action = null;
                         if (!isPartOfComposite)
                         {
-                            if (!string.IsNullOrEmpty(actionName))
+                            if (isSingletonAction)
+                            {
+                                // Singleton actions always ignore names.
+                                actionIndexInMap = 0;
+                            }
+                            else if (!string.IsNullOrEmpty(actionName))
                             {
                                 ////REVIEW: should we fail here if we don't manage to find the action
                                 actionIndexInMap = map.FindActionIndex(actionName);
-                            }
-                            else if (map.m_SingletonAction != null)
-                            {
-                                // Special-case for singleton actions that don't have names.
-                                actionIndexInMap = 0;
                             }
 
                             if (actionIndexInMap != InputActionState.kInvalidIndex)

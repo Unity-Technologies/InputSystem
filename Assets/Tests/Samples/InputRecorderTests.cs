@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
-public class InputRecorderTests : InputTestFixture
+public class InputRecorderTests : CoreTestsFixture
 {
     [Test]
     [Category("Samples")]

@@ -2253,7 +2253,7 @@ partial class CoreTests
                         if (keyNameCommand->scanOrKeyCode == (int)Key.A)
                         {
                             scanCode = 0x01;
-                            name = currentLayoutName == "default" ? "m" : "q";
+                            name = currentLayoutName == "default" ? "M" : "RIGHT CTRL";
                         }
 
                         keyNameCommand->scanOrKeyCode = scanCode;
@@ -2267,16 +2267,16 @@ partial class CoreTests
                 });
         }
 
-        Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
-        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("M"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("Other"));
 
         // Change layout.
         currentLayoutName = "other";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
-        Assert.That(keyboard.aKey.displayName, Is.EqualTo("q"));
-        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("Right Ctrl"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("Other"));
     }
 
     [Test]
@@ -4179,5 +4179,37 @@ partial class CoreTests
         ////REVIEW: should this require IME to be enabled?
         keyboard.SetIMECursorPosition(Vector2.one);
         Assert.That(commandWasSent, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingKeyboardMakesNextKeyboardCurrent()
+    {
+        var keyboard1 = InputSystem.AddDevice<Keyboard>();
+        Press(keyboard1.spaceKey);
+        Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
+
+        var keyboard2 = InputSystem.AddDevice<Keyboard>();
+        Press(keyboard2.spaceKey);
+        Assert.That(Keyboard.current, Is.EqualTo(keyboard2));
+
+        InputSystem.RemoveDevice(keyboard2);
+        Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingDevice_MakesNextDeviceOfTypeCurrent()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Press(mouse.leftButton);
+        Assert.That(Pointer.current, Is.EqualTo(mouse));
+
+        var pointer = InputSystem.AddDevice<Pointer>();
+        Move(pointer.position, Vector2.right);
+        Assert.That(Pointer.current, Is.EqualTo(pointer));
+
+        InputSystem.RemoveDevice(pointer);
+        Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
 }

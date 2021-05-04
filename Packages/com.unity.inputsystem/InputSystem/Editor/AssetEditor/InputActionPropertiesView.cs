@@ -32,9 +32,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_SelectedControlType = 0;
 
             if (s_ControlTypeLabel == null)
-                s_ControlTypeLabel = EditorGUIUtility.TrTextContent("Control Type", m_ExpectedControlTypeProperty.tooltip);
+                s_ControlTypeLabel = EditorGUIUtility.TrTextContent("Control Type", m_ExpectedControlTypeProperty.GetTooltip());
             if (s_ActionTypeLabel == null)
-                s_ActionTypeLabel = EditorGUIUtility.TrTextContent("Action Type", m_ActionTypeProperty.tooltip);
+                s_ActionTypeLabel = EditorGUIUtility.TrTextContent("Action Type", m_ActionTypeProperty.GetTooltip());
         }
 
         protected override void DrawGeneralProperties()

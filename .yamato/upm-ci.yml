@@ -10,12 +10,19 @@
     image: {{ platform.image }}
     flavor: {{ platform.flavor}}
   commands:
+    # Install any extra .NET SDK's on images that don't have them, "docfx metadata" requires a .NET SDK to work.
+{% if platform.netinstall %}
+    - {{ platform.netinstall }}
+{% endif %}
+    # Get latest version of doctools package. Automatically makes the documentation tests in APIVerification go live.
+    - git clone git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
     # really work with them. Move them into the package for when we run upm-ci here.
     - mv ./Assets/Samples ./Packages/com.unity.inputsystem
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    # Run upm-ci verification tests as well as tests contained in the package.
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     {% if platform.installscript %}
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
@@ -25,6 +32,7 @@
     # samples are in the package. Move the samples back into the project.
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
+    # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
     - upm-ci~/tools/utr/utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
@@ -74,6 +82,26 @@ run_ios_{{ editor.version }}:
     logs:
         paths:
           - "build/test-results/**"
+		  
+build_tvos_{{ editor.version }}:
+  name: Build Tests on {{ editor.version }} on tvos
+  agent:
+    type: Unity::VM::osx
+    image: mobile/macos-10.13-testing:stable
+    flavor: b1.large
+  commands:
+    - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+    - chmod +x ./utr
+    - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  artifacts:
+    players:
+        paths:
+          - "build/players/**"
+    logs:
+        paths:
+          - "build/logs/**"
   
 {% for backend in scripting_backends %}
 build_android_{{ editor.version }}_{{ backend.name }}:
@@ -142,6 +170,7 @@ all_tests:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}  
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
     {% endfor %}
   triggers:
     cancel_old_ci: true

@@ -412,6 +412,66 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
+        /// <see cref="InputSystem.Update"/>.
+        /// </summary>
+        /// <remarks>
+        /// This setting establishes a bound on the amount of input event data processed in a single
+        /// update and thus limits throughput allowed for input. This prevents long stalls from
+        /// leading to long delays in input processing.
+        ///
+        /// When the limit is exceeded, all events remaining in the buffer are thrown away (the
+        /// <see cref="InputEventBuffer"/> is reset) and an error is logged. After that, the current
+        /// update will abort and early out.
+        ///
+        /// Setting this property to 0 or a negative value will disable the limit.
+        ///
+        /// The default value is 5MB.
+        /// </remarks>
+        /// <seealso cref="InputSystem.Update"/>
+        /// <see cref="InputEvent.sizeInBytes"/>
+        public int maxEventBytesPerUpdate
+        {
+            get => m_MaxEventBytesPerUpdate;
+            set
+            {
+                if (m_MaxEventBytesPerUpdate == value)
+                    return;
+                m_MaxEventBytesPerUpdate = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Upper limit on the number of <see cref="InputEvent"/>s that can be queued within one
+        /// <see cref="InputSystem.Update"/>.
+        /// <remarks>
+        /// This settings establishes an upper limit on the number of events that can be queued
+        /// using <see cref="InputSystem.QueueEvent"/> during a single update. This prevents infinite
+        /// loops where an action callback queues an event that causes the action callback to
+        /// be called again which queues an event...
+        ///
+        /// Note that this limit only applies while the input system is updating. There is no limit
+        /// on the number of events that can be queued outside of this time, but those will be queued
+        /// into the next frame where the <see cref="maxEventBytesPerUpdate"/> setting will apply.
+        ///
+        /// The default value is 1000.
+        /// </remarks>
+        /// </summary>
+        public int maxQueuedEventsPerUpdate
+        {
+            get => m_MaxQueuedEventsPerUpdate;
+            set
+            {
+                if (m_MaxQueuedEventsPerUpdate == value)
+                    return;
+
+                m_MaxQueuedEventsPerUpdate = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
         /// <remarks>
@@ -464,6 +524,8 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1024 * 1024;
+        [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
@@ -493,8 +555,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// By default, the input system will run event processing as part of the player loop. In the default configuration,
-        /// the processing will happens once before every every dynamic update (<see cref="Update"/>), i.e. <see cref="ProcessEventsInDynamicUpdate"/>
-        /// is the default behavior.
+        /// the processing will happens once before every every dynamic update (<a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>),
+        /// i.e. <see cref="ProcessEventsInDynamicUpdate"/> is the default behavior.
         ///
         /// There are two types of updates not governed by UpdateMode. One is <see cref="InputUpdateType.Editor"/> which
         /// will always be enabled in the editor and govern input updates for <see cref="UnityEditor.EditorWindow"/>s in
@@ -506,26 +568,26 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputSystem.Update"/>
         /// <seealso cref="InputUpdateType"/>
-        /// <seealso cref="MonoBehaviour.FixedUpdate"/>
-        /// <seealso cref="MonoBehaviour.Update"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html"/>
         public enum UpdateMode
         {
             // Removed: ProcessEventsInBothFixedAndDynamicUpdate=0
 
             /// <summary>
-            /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
+            /// Automatically run input updates right before every <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>.
             ///
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
-            /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
+            /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
             /// </summary>
             ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
-            /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
+            /// Automatically input run updates right before every <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a>.
             ///
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
-            /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
+            /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
             /// </summary>
             ProcessEventsInFixedUpdate,
