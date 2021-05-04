@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to the input system package will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
@@ -7,10 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
-
-### Added
-- Support for Device Simulator touchscreen input.
+## [1.1.0-pre.4] - 2021-05-04
 
 ### Changed
 
@@ -60,7 +58,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Scheme Name" label clipped in "Add Control Schema" popup window ([case 1199560]https://issuetracker.unity3d.com/issues/themes-input-system-scheme-name-is-clipped-in-add-control-schema-window-with-inter-default-font)).
 - Fixed `InputSystem.QueueEvent` calls from within `InputAction` callbacks getting dropped entirely ([case 1297339](https://issuetracker.unity3d.com/issues/input-system-ui-button-wont-click-when-simulating-a-mouse-click-with-inputsystem-dot-queueevent)).
 - Fixed `InputSystemUIInputModule` being in invalid state when added from `Awake` to a game object when entering playmode ([case 1323566](https://issuetracker.unity3d.com/issues/input-system-default-ui-actions-do-not-register-when-adding-inputsystemuiinputmodule-at-runtime-to-an-active-game-object)).
-- Fixed binding path selection windows not remembering navigation state when going up through hierarchy ([case 1254981](https://issuetracker.unity3d.com/issues/action-binding-path-selection-windows-doesnt-remember-navigation-state)).
 - Fixed `Keyboard.current` becoming `null` after `OnScreenButton` is disabled or destroyed ([case 1305016](https://issuetracker.unity3d.com/issues/inputsystem-keyboard-dot-current-becomes-null-after-onscreenbutton-is-destroyed)).
 
 #### Actions
@@ -81,9 +78,11 @@ however, it has to be formatted properly to pass verification tests.
   * When there were multiple controls bound to an action, this bug would get triggered by any interaction that did not result in a phase change on the action.
 - Fixed runtime rebinds added as new bindings from leaking into .inputactions assets when exiting play mode ([case 1190502](https://issuetracker.unity3d.com/issues/inputsystem-runtime-rebinds-are-leaking-into-inputactions-asset))
 - Fixed `IndexOutOfRangeException` and `null` elements in `InputUser.lostDevices` when an `InputUser` loses a devices from a control scheme with only optional devices ([case 1275148](https://issuetracker.unity3d.com/issues/disconnecting-and-reconnecting-input-device-causes-exception-in-inputuser)).
+- Fixed binding path selection windows not remembering navigation state when going up through hierarchy ([case 1254981](https://issuetracker.unity3d.com/issues/action-binding-path-selection-windows-doesnt-remember-navigation-state)).
 
 ### Added
 
+- Support for Device Simulator touchscreen input.
 - Enabled XR device support on Magic Leap (Lumin).
 - Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
 - Added a warning message to PlayerInputManager editor when the attached input action asset won't work with Join Players When Button Is Pressed behaviour due to missing control scheme device requirements ([case 1265853](https://issuetracker.unity3d.com/issues/input-system-player-prefabs-are-not-instantiated-on-join-action-when-they-have-inputactionasset-assigned-to-them)).
