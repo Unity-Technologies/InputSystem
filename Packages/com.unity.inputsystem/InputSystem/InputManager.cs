@@ -2556,6 +2556,7 @@ namespace UnityEngine.InputSystem
         /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
         /// which buffers we activate in the update and write the event data into.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
@@ -2564,7 +2565,8 @@ namespace UnityEngine.InputSystem
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
-            Debug.Assert(!m_InputEventStream.isOpen, "Already have an event buffer set! Was OnUpdate() called recursively?");
+            if (m_InputEventStream.isOpen)
+                throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
 
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
