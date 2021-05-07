@@ -118,8 +118,6 @@ namespace UnityEngine.InputSystem.Editor
                 bindingTextRect.x -= 15;
                 bindingTextRect.width += 15;
 
-                bindingTextRect.height -= 2;
-                bindingTextRect.y += 1;
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(bindingTextRect, path);
                 if (EditorGUI.EndChangeCheck())
