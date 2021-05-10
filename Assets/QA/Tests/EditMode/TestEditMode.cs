@@ -1,3 +1,7 @@
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+#define ENABLE_XR_COMBINED_DEFINE
+#endif
+
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -15,7 +19,7 @@ public class TestEditMode : MonoBehaviour
         set => m_RunUpdatesInEditMode = value;
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
     void OnEnable()
     {
         EditorApplication.update += TickEditor;
