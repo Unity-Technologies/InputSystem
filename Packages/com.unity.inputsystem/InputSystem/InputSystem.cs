@@ -1,3 +1,7 @@
+#if !UNITY_EDITOR && (UNITY_ANDROID || UNITY_IOS)
+#define PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
+#endif
+
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Haptics;
@@ -2917,6 +2921,12 @@ namespace UnityEngine.InputSystem
         /// <value>Current version of the input system.</value>
         public static Version version => new Version(kAssemblyVersion);
 
+        /// <summary>
+        /// Returns the instance of the screen keyboard.
+        /// If a platform specific keyboard is not found, an emulated screenkeyboard is returned instead.
+        /// </summary>
+        public static ScreenKeyboard screenKeyboard => InputRuntime.s_Instance.screenKeyboard;
+
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
         /// Get various up-to-date metrics about the input system.
@@ -3281,6 +3291,11 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+        private static void PerformDefaultPluginShutdown()
+        {
+            NativeInputRuntime.instance.DisposeScreenKeyboard();
+        }
+
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
 
         // For testing, we want the ability to push/pop system state even in the player.
@@ -3343,10 +3358,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         private static void Destroy()
         {
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+            PerformDefaultPluginShutdown();
+            #endif
+
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-
             InputActionState.ResetGlobals();
             s_Manager.Destroy();
             if (s_RemoteConnection != null)

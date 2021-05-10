@@ -342,6 +342,13 @@ namespace UnityEngine.InputSystem
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
+        ScreenKeyboard m_ScreenKeyboard = new EmulatedScreenKeyboard();
+        public ScreenKeyboard screenKeyboard
+        {
+            get => m_ScreenKeyboard;
+            set => throw new NotImplementedException("You cannot set screen keyboard for test runtime");
+        }
+
         public List<PairedUser> userAccountPairings
         {
             get
@@ -354,6 +361,7 @@ namespace UnityEngine.InputSystem
 
         public void Dispose()
         {
+            screenKeyboard?.Dispose();
             m_EventBuffer.Dispose();
             GC.SuppressFinalize(this);
         }

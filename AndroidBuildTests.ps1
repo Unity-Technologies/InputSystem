@@ -14,5 +14,6 @@ If (!$Env:EDITOR_LOCATION)
 
 Write-Output "Editor location is $Env:EDITOR_LOCATION"
 
+Remove-Item 'build\players' -Recurse
 Invoke-WebRequest -Uri "https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat" -OutFile "utr.bat"
-./utr.bat --suite=playmode --platform=Android --editor-location="$Env:EDITOR_LOCATION" --testproject=F:/Projects/InputSystem --player-save-path=build/players --artifacts_path=build/logs --scripting-backend=il2cpp --build-only
+./utr.bat --suite=playmode --platform=Android --editor-location="$Env:EDITOR_LOCATION" --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend=mono --build-only

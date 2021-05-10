@@ -411,6 +411,28 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public System.Type screenKeyboardFactory
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(m_ScreenKeyboardFactoryType))
+                    m_ScreenKeyboardFactoryType = typeof(DefaultScreenKeyboardFactory).AssemblyQualifiedName;
+
+                var type = System.Type.GetType(m_ScreenKeyboardFactoryType);
+                if (type == null)
+                    throw new System.Exception($"Couldn't resolve Screen Keyboard Factory ('{m_ScreenKeyboardFactoryType}')");
+
+                return type;
+            }
+
+            set
+            {
+                if (!typeof(IScreenKeyboardFactory).IsAssignableFrom(value))
+                    throw new System.Exception($"Type '{value.FullName}' has to be derived from '{nameof(IScreenKeyboardFactory)}'");
+                m_ScreenKeyboardFactoryType = value.AssemblyQualifiedName;
+            }
+        }
+
         /// <summary>
         /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
         /// <see cref="InputSystem.Update"/>.
@@ -541,6 +563,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private string m_ScreenKeyboardFactoryType = typeof(DefaultScreenKeyboardFactory).AssemblyQualifiedName;
 
         internal void OnChange()
         {

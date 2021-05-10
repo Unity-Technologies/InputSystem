@@ -115,6 +115,15 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
                 EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
 
+                int index = ScreenKeyboardUtilities.GetIndexOf(m_ScreenKeyboardFactoryType.stringValue);
+                EditorGUI.BeginChangeCheck();
+                index = EditorGUILayout.Popup(m_ScreenKeyboardFactoryContent, index, ScreenKeyboardUtilities.Factories.Select(m => m.GetType().Name).ToArray());
+                if (EditorGUI.EndChangeCheck())
+                {
+                    m_ScreenKeyboardFactoryType.stringValue = index < 0 ? string.Empty : ScreenKeyboardUtilities.Factories[index].GetType().AssemblyQualifiedName;
+                }
+
+
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
@@ -244,6 +253,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
+            m_ScreenKeyboardFactoryType = m_SettingsObject.FindProperty("m_ScreenKeyboardFactoryType");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
             m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
@@ -257,6 +267,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
+            m_ScreenKeyboardFactoryContent = new GUIContent("Screen Keyboard Factory");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -357,6 +368,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
+        [NonSerialized] private SerializedProperty m_ScreenKeyboardFactoryType;
+
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
@@ -378,6 +391,7 @@ namespace UnityEngine.InputSystem.Editor
         GUIContent m_DefaultHoldTimeContent;
         GUIContent m_TapRadiusContent;
         GUIContent m_MultiTapDelayTimeContent;
+        GUIContent m_ScreenKeyboardFactoryContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 

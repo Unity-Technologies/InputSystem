@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
 
@@ -16,6 +19,8 @@ namespace UnityEngine.InputSystem.LowLevel
     internal class NativeInputRuntime : IInputRuntime
     {
         public static readonly NativeInputRuntime instance = new NativeInputRuntime();
+
+        internal ScreenKeyboard m_ScreenKeyboard;
 
         public int AllocateDeviceId()
         {
@@ -220,6 +225,32 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         public ScreenOrientation screenOrientation => Screen.orientation;
+
+        public ScreenKeyboard screenKeyboard
+        {
+            get
+            {
+                if (m_ScreenKeyboard != null)
+                    return m_ScreenKeyboard;
+
+                var factoryType = InputSystem.settings.screenKeyboardFactory;
+                if (factoryType == null)
+                    return null;
+
+                var factory = (IScreenKeyboardFactory)Activator.CreateInstance(factoryType);
+                m_ScreenKeyboard = factory.Create();
+
+                return m_ScreenKeyboard;
+            }
+        }
+
+        public void DisposeScreenKeyboard()
+        {
+            if (m_ScreenKeyboard == null)
+                return;
+            m_ScreenKeyboard.Dispose();
+            m_ScreenKeyboard = null;
+        }
 
         public bool isInBatchMode => Application.isBatchMode;
 
