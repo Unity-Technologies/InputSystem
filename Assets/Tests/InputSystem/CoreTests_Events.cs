@@ -2103,5 +2103,25 @@ partial class CoreTests
         Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1316000/
+    [Test]
+    [Category("Events")]
+    public void Events_CallingInputSystemUpdateDuringEventProcessingThrowsInvalidOperation()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed += _ =>
+        {
+            InputSystem.Update();
+        };
+        action.Enable();
+
+        Press(device.buttonSouth);
+
+        LogAssert.Expect(LogType.Error, "InvalidOperationException while executing 'performed' callbacks of '<Unnamed>[/Gamepad/buttonSouth]'");
+        LogAssert.Expect(LogType.Exception, "InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?");
+    }
+
     ////TODO: test thread-safe QueueEvent
 }
