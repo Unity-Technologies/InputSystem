@@ -43,6 +43,8 @@ partial class CoreTests
             var versionString = packageJson.version;
             if (versionString.Contains("-preview"))
                 versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
+            else if (versionString.Contains("-pre"))
+                versionString = versionString.Substring(0, versionString.IndexOf("-pre"));
             return new Version(versionString);
         }
     }

@@ -1567,20 +1567,40 @@ namespace UnityEngine.InputSystem
             return s_Manager.TryGetDevice(nameOrLayout);
         }
 
+        ////REVIEW: this API seems inconsistent with GetDevice(string); both have very different meaning yet very similar signatures
+        /// <summary>
+        /// Return the most recently used device that is assignable to the given type <typeparamref name="TDevice"/>.
+        /// Returns null if no such device currently exists.
+        /// </summary>
+        /// <typeparam name="TDevice">Type of device to look for.</typeparam>
+        /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice(Type)"/>
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
-            TDevice result = null;
+            return (TDevice)GetDevice(typeof(TDevice));
+        }
+
+        ////REVIEW: this API seems inconsistent with GetDevice(string); both have very different meaning yet very similar signatures
+        /// <summary>
+        /// Return the most recently used device that is assignable to the given type <param name="type"/>.
+        /// Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="type">Type of the device</param>
+        /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice&lt;TDevice&gt;()"/>
+        public static InputDevice GetDevice(Type type)
+        {
+            InputDevice result = null;
             var lastUpdateTime = -1.0;
             foreach (var device in devices)
             {
-                var deviceOfType = device as TDevice;
-                if (deviceOfType == null)
+                if (!type.IsInstanceOfType(device))
                     continue;
 
-                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
+                if (result == null || device.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
-                    result = deviceOfType;
+                    result = device;
                     lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }
@@ -2218,14 +2238,15 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        ////TODO: need to handle events being queued *during* event processing
-
         /// <summary>
         /// Add an event to the internal event queue.
         /// </summary>
         /// <param name="eventPtr">Event to add to the internal event buffer.</param>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not
         /// valid (see <see cref="InputEventPtr.valid"/>).</exception>
+        /// <exception cref="InvalidOperationException">The method was called from
+        /// within event processing more than 1000 times. To avoid deadlocking, this
+        /// results in an exception being thrown.</exception>
         /// <remarks>
         /// The event will be copied in full to the internal event buffer meaning that
         /// you can release memory for the event after it has been queued. The internal event
@@ -2238,6 +2259,14 @@ namespace UnityEngine.InputSystem
         /// Note that this ID will be written into the memory buffer referenced by <paramref cref="eventPtr"/>
         /// meaning that after calling <c>QueueEvent</c>, you will see the event ID with which the event
         /// was queued.
+        ///
+        /// Events that are queued during event processing will get processed in the same update.
+        /// This happens, for example, when queuing input from within <see cref="onEvent"/> or from
+        /// action callbacks such as <see cref="InputAction.performed"/>.
+        ///
+        /// The total size of <see cref="InputEvent"/>s processed in a single update is limited by
+        /// <see cref="InputSettings.maxEventBytesPerUpdate"/>. This also prevents deadlocks when
+        /// each processing of an event leads to one or more additional events getting queued.
         ///
         /// <example>
         /// <code>
@@ -2254,6 +2283,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="Update"/>
         /// <seealso cref="onEvent"/>
         /// <seealso cref="onBeforeUpdate"/>
+        /// <seealso cref="InputEvent"/>
         public static void QueueEvent(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)

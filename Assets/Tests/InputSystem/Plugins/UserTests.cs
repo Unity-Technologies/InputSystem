@@ -1177,6 +1177,33 @@ internal class UserTests : CoreTestsFixture
         Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad }));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1327628/
+    [Test]
+    [Category("Users")]
+    public void Users_WhenAddingDevicesToUsers_PairedDevicesOfExistingUsersAreUnaffected()
+    {
+        var user1 = InputUser.CreateUserWithoutPairedDevices();
+
+        var user1pad1 = InputSystem.AddDevice<Gamepad>("user1pad1");
+        var user1pad2 = InputSystem.AddDevice<Gamepad>("user1pad2");
+
+        InputUser.PerformPairingWithDevice(user1pad1, user1);
+        InputUser.PerformPairingWithDevice(user1pad2, user1);
+
+        var user2pad = InputSystem.AddDevice<Gamepad>("user2pad");
+        var user2 = InputUser.PerformPairingWithDevice(user2pad);
+
+        var user3pad = InputSystem.AddDevice<Gamepad>("user3pad");
+        var user3 = InputUser.PerformPairingWithDevice(user3pad);
+
+        var user1pad3 = InputSystem.AddDevice<Gamepad>("user1pad3");
+        InputUser.PerformPairingWithDevice(user1pad3, user1);
+
+        Assert.That(user1.pairedDevices, Is.EquivalentTo(new[] { user1pad1, user1pad2, user1pad3 }));
+        Assert.That(user2.pairedDevices, Is.EquivalentTo(new[] { user2pad }));
+        Assert.That(user3.pairedDevices, Is.EquivalentTo(new[] { user3pad }));
+    }
+
     [Test]
     [Category("Users")]
     [Ignore("TODO")]
