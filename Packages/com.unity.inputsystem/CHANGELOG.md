@@ -19,6 +19,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed binding paths being misaligned in UI when switching to text mode editing ([case 1200107](https://issuetracker.unity3d.com/issues/input-system-path-input-field-text-is-clipping-under-binding-in-the-properties-section)).
 
+### Added
+
+- Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+
 ## [1.1.0-pre.4] - 2021-05-04
 
 ### Changed

@@ -1,3 +1,8 @@
+// Grouping up the XR defines since it's a pretty heavy sequence
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+#define ENABLE_XR_COMBINED_DEFINE
+#endif
+
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Haptics;
@@ -2640,6 +2645,22 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
+        /// <summary>
+        /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
+        /// </summary>
+        /// <remarks>
+        /// Enabling this allows native input to continue processing as if the application was playing, similar to how the <see cref="ExecuteInEditMode"/> attribute affects Monobehaviours.
+        /// By default, only updates flagged with <see cref="InputUpdateType.Editor"/> will be processed, and native inputs events will only be processed and registered for that type.
+        /// By setting this to true, the InputSystem will act like it is in play mode and allow full action processing to occur.
+        /// </remarks>
+        public static bool runUpdatesInEditMode
+        {
+            get => s_Manager.runUpdatesInEditMode;
+            set => s_Manager.runUpdatesInEditMode = value;
+        }
+#endif
+
         #endregion
 
         #region Settings
@@ -3264,7 +3285,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+            #if ENABLE_XR_COMBINED_DEFINE
             XR.XRSupport.Initialize();
             #endif
 
