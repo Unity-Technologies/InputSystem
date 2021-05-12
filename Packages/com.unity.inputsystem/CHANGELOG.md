@@ -19,6 +19,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed binding paths being misaligned in UI when switching to text mode editing ([case 1200107](https://issuetracker.unity3d.com/issues/input-system-path-input-field-text-is-clipping-under-binding-in-the-properties-section)).
 
+### Added
+
+- Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+
 ## [1.1.0-pre.4] - 2021-05-04
 
 ### Changed
@@ -122,7 +126,6 @@ however, it has to be formatted properly to pass verification tests.
   * This limits the number of events that can be queued during event processing using the `InputSystem.QueueEvent` method. This guards against infinite loops in the case where an action callback queues an event that causes the same action callback to be called again.
 - Added `InputSystemUIInputModule.AssignDefaultActions` to assign default actions when creating ui module in runtime.
 - Added `UNITY_INCLUDE_TESTS` define constraints to our test assemblies, which is 2019.2+ equivalent to `"optionalUnityReferences": ["TestAssemblies"]`.
-- Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode.
 
 ## [1.1.0-preview.3] - 2021-02-04
 
