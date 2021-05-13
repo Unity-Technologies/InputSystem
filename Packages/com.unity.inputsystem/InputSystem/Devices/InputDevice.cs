@@ -432,7 +432,7 @@ namespace UnityEngine.InputSystem
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
-        internal void OnConfigurationChanged()
+        internal void NotifyConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
@@ -443,6 +443,8 @@ namespace UnityEngine.InputSystem
 
             // Make sure we fetch the enabled/disabled state again.
             m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+
+            OnConfigurationChanged();
         }
 
         /// <summary>
@@ -500,6 +502,11 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="OnRemoved"/>
         protected virtual void OnRemoved()
         {
+        }
+
+        protected virtual void OnConfigurationChanged()
+        {
+
         }
 
         ////TODO: add overridable OnDisable/OnEnable that fire the device commands
