@@ -23,6 +23,9 @@ however, it has to be formatted properly to pass verification tests.
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
 
+### Changed
+- Exposed 'InputDevice.OnConfigurationChanged' for overloading
+
 ## [1.1.0-pre.4] - 2021-05-04
 
 ### Changed

@@ -504,6 +504,12 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device configuration is changed/>.
+        /// </summary>
+        /// <seealso cref="InputManager.OnUpdate"/>
+        /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
+        /// <seealso cref="OnConfigurationChanged"/>///
         protected virtual void OnConfigurationChanged()
         {
 
