@@ -953,6 +953,13 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<Touchscreen, TouchscreenState>(name, TouchscreenState.Format);
+            layout.isGenericTypeOfDevice = true;
+            return layout;
+        }
+
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases
         // in one operation.
         private static void TriggerTap(TouchControl control, ref TouchState state, InputEventPtr eventPtr)

@@ -49,5 +49,13 @@ namespace UnityEngine.InputSystem.Controls
         {
             throw new NotSupportedException();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            return new InputControlLayout(name, typeof(TouchPressControl))
+            {
+                hideInUI = true
+            };
+        }
     }
 }

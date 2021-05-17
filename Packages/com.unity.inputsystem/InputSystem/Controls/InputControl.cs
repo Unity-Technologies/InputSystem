@@ -958,6 +958,24 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        internal static InputControlLayout CreateDefaultLayout<TControl>(string name, string displayName = null)
+            where TControl : InputControl
+        {
+            var layout = new InputControlLayout(name, typeof(TControl), displayName);
+            layout.BuildChildControlsFrom<TControl>();
+            return layout;
+        }
+
+        internal static InputControlLayout CreateDefaultLayoutFromStateType<TControl, TStateType>(string name,
+            FourCC format, string displayName = null)
+            where TControl : InputControl
+        {
+            var layout = new InputControlLayout(name, typeof(TControl), displayName);
+            layout.BuildChildControlsFrom<TStateType>();
+            layout.SetStateFormat(format);
+            return layout;
+        }
     }
 
     /// <summary>

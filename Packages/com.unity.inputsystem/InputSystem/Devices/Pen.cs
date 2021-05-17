@@ -382,5 +382,12 @@ namespace UnityEngine.InputSystem
             twist = GetChildControl<AxisControl>("twist");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<Pen, PenState>(name, PenState.Format);
+            layout.isGenericTypeOfDevice = true;
+            return layout;
+        }
     }
 }

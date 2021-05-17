@@ -233,5 +233,10 @@ namespace UnityEngine.InputSystem.Controls
             var valuePtr = (TouchState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<TouchState>());
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            return CreateDefaultLayoutFromStateType<TouchControl, TouchState>(name, TouchState.Format);
+        }
     }
 }

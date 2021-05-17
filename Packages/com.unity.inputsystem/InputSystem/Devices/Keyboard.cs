@@ -2204,6 +2204,13 @@ namespace UnityEngine.InputSystem
         private KeyControl[] m_Keys;
         private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
 
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<Keyboard, KeyboardState>(name, KeyboardState.Format);
+            layout.isGenericTypeOfDevice = true;
+            return layout;
+        }
+
         /// <summary>
         /// Raw array of key controls on the keyboard.
         /// </summary>

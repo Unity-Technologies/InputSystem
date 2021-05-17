@@ -45,5 +45,13 @@ namespace UnityEngine.InputSystem.Controls
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
             *(TouchPhase*)valuePtr = value;
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            return new InputControlLayout(name, typeof(TouchPhaseControl))
+            {
+                hideInUI = true
+            };
+        }
     }
 }

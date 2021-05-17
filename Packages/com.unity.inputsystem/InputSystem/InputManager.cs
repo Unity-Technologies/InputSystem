@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem
                     result.currentControlCount += m_Devices[i].allControls.Count;
 
                 // Count layouts.
-                result.currentLayoutCount = m_Layouts.layoutTypes.Count;
+                result.currentLayoutCount = m_Layouts.layoutConstructors.Count;
                 result.currentLayoutCount += m_Layouts.layoutStrings.Count;
                 result.currentLayoutCount += m_Layouts.layoutBuilders.Count;
                 result.currentLayoutCount += m_Layouts.layoutOverrides.Count;
@@ -358,7 +358,7 @@ namespace UnityEngine.InputSystem
             // This not only avoids us creating a bunch of objects on the managed heap but
             // also avoids us laboriously constructing a XRController layout, for example,
             // in a game that never uses XR.
-            m_Layouts.layoutTypes[internedName] = type;
+            m_Layouts.layoutConstructors[internedName] = new InputControlLayout.LayoutConstructor(type);
 
             ////TODO: make this independent of initialization order
             ////TODO: re-scan base type information after domain reloads
@@ -370,12 +370,46 @@ namespace UnityEngine.InputSystem
             for (var baseType = type.BaseType; baseLayout == null && baseType != typeof(InputControl);
                  baseType = baseType.BaseType)
             {
-                foreach (var entry in m_Layouts.layoutTypes)
-                    if (entry.Value == baseType)
+                foreach (var entry in m_Layouts.layoutConstructors)
+                    if (entry.Value.controlType == baseType)
                     {
                         baseLayout = entry.Key;
                         break;
                     }
+            }
+
+            PerformLayoutPostRegistration(internedName, new InlinedArray<InternedString>(new InternedString(baseLayout)),
+                isReplacement, isKnownToBeDeviceLayout: isDeviceLayout);
+        }
+
+        private void RegisterControlLayout<TControl>(string name, Func<string, InputControlLayout> createLayoutFunc = null)
+            where TControl : InputControl
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
+
+            var isDeviceLayout = typeof(InputDevice).IsAssignableFrom(typeof(TControl));
+
+            var internedName = new InternedString(name);
+            var isReplacement = DoesLayoutExist(internedName);
+
+            if (createLayoutFunc == null)
+                createLayoutFunc = n => InputControl.CreateDefaultLayout<TControl>(name);
+
+            m_Layouts.layoutConstructors[internedName] =
+                new InputControlLayout.LayoutConstructor(typeof(TControl), createLayoutFunc);
+
+            string baseLayout = null;
+            for (var baseType = typeof(TControl).BaseType; baseLayout == null && baseType != typeof(InputControl); baseType = baseType.BaseType)
+            {
+                foreach (var entry in m_Layouts.layoutConstructors)
+                {
+                    if (entry.Value.controlType == baseType)
+                    {
+                        baseLayout = entry.Key;
+                        break;
+                    }
+                }
             }
 
             PerformLayoutPostRegistration(internedName, new InlinedArray<InternedString>(new InternedString(baseLayout)),
@@ -798,7 +832,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Remove layout record.
-            m_Layouts.layoutTypes.Remove(internedName);
+            m_Layouts.layoutConstructors.Remove(internedName);
             m_Layouts.layoutStrings.Remove(internedName);
             m_Layouts.layoutBuilders.Remove(internedName);
             m_Layouts.baseLayoutTable.Remove(internedName);
@@ -945,7 +979,7 @@ namespace UnityEngine.InputSystem
 
         private bool DoesLayoutExist(InternedString name)
         {
-            return m_Layouts.layoutTypes.ContainsKey(name) ||
+            return m_Layouts.layoutConstructors.ContainsKey(name) ||
                 m_Layouts.layoutStrings.ContainsKey(name) ||
                 m_Layouts.layoutBuilders.ContainsKey(name);
         }
@@ -957,7 +991,7 @@ namespace UnityEngine.InputSystem
             if (!string.IsNullOrEmpty(basedOn))
             {
                 var internedBasedOn = new InternedString(basedOn);
-                foreach (var entry in m_Layouts.layoutTypes)
+                foreach (var entry in m_Layouts.layoutConstructors)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
                         yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutStrings)
@@ -969,7 +1003,7 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-                foreach (var entry in m_Layouts.layoutTypes)
+                foreach (var entry in m_Layouts.layoutConstructors)
                     yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutStrings)
                     yield return entry.Key;
@@ -1622,45 +1656,45 @@ namespace UnityEngine.InputSystem
             m_PollingFrequency = 60;
 
             // Register layouts.
-            RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
-            RegisterControlLayout("Button", typeof(ButtonControl));
-            RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
-            RegisterControlLayout("Key", typeof(KeyControl));
-            RegisterControlLayout("Analog", typeof(AxisControl));
-            RegisterControlLayout("Integer", typeof(IntegerControl));
-            RegisterControlLayout("Digital", typeof(IntegerControl));
-            RegisterControlLayout("Double", typeof(DoubleControl));
-            RegisterControlLayout("Vector2", typeof(Vector2Control));
-            RegisterControlLayout("Vector3", typeof(Vector3Control));
-            RegisterControlLayout("Quaternion", typeof(QuaternionControl));
-            RegisterControlLayout("Stick", typeof(StickControl));
-            RegisterControlLayout("Dpad", typeof(DpadControl));
-            RegisterControlLayout("DpadAxis", typeof(DpadControl.DpadAxisControl));
-            RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
-            RegisterControlLayout("Touch", typeof(TouchControl));
-            RegisterControlLayout("TouchPhase", typeof(TouchPhaseControl));
-            RegisterControlLayout("TouchPress", typeof(TouchPressControl));
+            RegisterControlLayout<AxisControl>("Axis");
+            RegisterControlLayout<ButtonControl>("Button");
+            RegisterControlLayout<DiscreteButtonControl>("DiscreteButton");
+            RegisterControlLayout<KeyControl>("Key");
+            RegisterControlLayout<AxisControl>("Analog");
+            RegisterControlLayout<IntegerControl>("Integer");
+            RegisterControlLayout<IntegerControl>("Digital");
+            RegisterControlLayout<DoubleControl>("Double");
+            RegisterControlLayout<Vector2Control>("Vector2");
+            RegisterControlLayout<Vector3Control>("Vector3");
+            RegisterControlLayout<QuaternionControl>("Quaternion");
+            RegisterControlLayout<StickControl>("Stick");
+            RegisterControlLayout<DpadControl>("Dpad", DpadControl.CreateLayout);
+            RegisterControlLayout<DpadControl.DpadAxisControl>("DpadAxis");
+            RegisterControlLayout<AnyKeyControl>("AnyKey");
+            RegisterControlLayout<TouchControl>("Touch", TouchControl.CreateLayout);
+            RegisterControlLayout<TouchPhaseControl>("TouchPhase", TouchPhaseControl.CreateLayout);
+            RegisterControlLayout<TouchPressControl>("TouchPress", TouchPressControl.CreateLayout);
 
-            RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
-            RegisterControlLayout("Joystick", typeof(Joystick));
-            RegisterControlLayout("Keyboard", typeof(Keyboard));
-            RegisterControlLayout("Pointer", typeof(Pointer));
-            RegisterControlLayout("Mouse", typeof(Mouse));
-            RegisterControlLayout("Pen", typeof(Pen));
-            RegisterControlLayout("Touchscreen", typeof(Touchscreen));
-            RegisterControlLayout("Sensor", typeof(Sensor));
-            RegisterControlLayout("Accelerometer", typeof(Accelerometer));
-            RegisterControlLayout("Gyroscope", typeof(Gyroscope));
-            RegisterControlLayout("GravitySensor", typeof(GravitySensor));
-            RegisterControlLayout("AttitudeSensor", typeof(AttitudeSensor));
-            RegisterControlLayout("LinearAccelerationSensor", typeof(LinearAccelerationSensor));
-            RegisterControlLayout("MagneticFieldSensor", typeof(MagneticFieldSensor));
-            RegisterControlLayout("LightSensor", typeof(LightSensor));
-            RegisterControlLayout("PressureSensor", typeof(PressureSensor));
-            RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
-            RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
-            RegisterControlLayout("StepCounter", typeof(StepCounter));
-            RegisterControlLayout("TrackedDevice", typeof(TrackedDevice));
+            RegisterControlLayout<Gamepad>("Gamepad", Gamepad.CreateLayout);
+            RegisterControlLayout<Joystick>("Joystick", Joystick.CreateLayout);
+            RegisterControlLayout<Keyboard>("Keyboard", Keyboard.CreateLayout);
+            RegisterControlLayout<Pointer>("Pointer", Pointer.CreatePointerLayout);
+            RegisterControlLayout<Mouse>("Mouse", Mouse.CreateLayout);
+            RegisterControlLayout<Pen>("Pen", Pen.CreateLayout);
+            RegisterControlLayout<Touchscreen>("Touchscreen", Touchscreen.CreateLayout);
+            RegisterControlLayout<Sensor>("Sensor", Sensor.CreateSensorLayout);
+            RegisterControlLayout<Accelerometer>("Accelerometer", Accelerometer.CreateLayout);
+            RegisterControlLayout<Gyroscope>("Gyroscope", Gyroscope.CreateLayout);
+            RegisterControlLayout<GravitySensor>("GravitySensor", GravitySensor.CreateLayout);
+            RegisterControlLayout<AttitudeSensor>("AttitudeSensor", AttitudeSensor.CreateLayout);
+            RegisterControlLayout<LinearAccelerationSensor>("LinearAccelerationSensor", LinearAccelerationSensor.CreateLayout);
+            RegisterControlLayout<MagneticFieldSensor>("MagneticFieldSensor", MagneticFieldSensor.CreateLayout);
+            RegisterControlLayout<LightSensor>("LightSensor", LightSensor.CreateLayout);
+            RegisterControlLayout<PressureSensor>("PressureSensor", PressureSensor.CreateLayout);
+            RegisterControlLayout<HumiditySensor>("HumiditySensor", HumiditySensor.CreateLayout);
+            RegisterControlLayout<AmbientTemperatureSensor>("AmbientTemperatureSensor", AmbientTemperatureSensor.CreateLayout);
+            RegisterControlLayout<StepCounter>("StepCounter", StepCounter.CreateLayout);
+            RegisterControlLayout<TrackedDevice>("TrackedDevice", TrackedDevice.CreateLayout);
 
             // Precompiled layouts.
             RegisterPrecompiledLayout<FastKeyboard>(FastKeyboard.metadata);

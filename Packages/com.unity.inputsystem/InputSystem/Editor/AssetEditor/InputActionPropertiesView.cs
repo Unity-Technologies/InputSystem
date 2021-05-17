@@ -66,21 +66,21 @@ namespace UnityEngine.InputSystem.Editor
         {
             var types = new List<string>();
             var allLayouts = InputSystem.s_Manager.m_Layouts;
-            foreach (var layoutName in allLayouts.layoutTypes.Keys)
+            foreach (var layoutName in allLayouts.layoutConstructors.Keys)
             {
                 if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)
                     continue;
 
                 // If the action type is InputActionType.Value, skip button controls.
-                var type = allLayouts.layoutTypes[layoutName];
+                var type = allLayouts.layoutConstructors[layoutName];
                 if ((InputActionType)m_SelectedActionType == InputActionType.Value &&
-                    typeof(ButtonControl).IsAssignableFrom(type))
+                    typeof(ButtonControl).IsAssignableFrom(type.controlType))
                     continue;
 
                 ////TODO: skip aliases
 
-                if (typeof(InputControl).IsAssignableFrom(type) &&
-                    !typeof(InputDevice).IsAssignableFrom(type))
+                if (typeof(InputControl).IsAssignableFrom(type.controlType) &&
+                    !typeof(InputDevice).IsAssignableFrom(type.controlType))
                 {
                     types.Add(layoutName);
                 }

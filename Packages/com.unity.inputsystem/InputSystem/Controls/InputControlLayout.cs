@@ -924,6 +924,16 @@ namespace UnityEngine.InputSystem.Layouts
             return layout;
         }
 
+        public void BuildChildControlsFrom<T>()
+        {
+            m_Controls = GetControlItems(typeof(T), name).ToArray();
+        }
+
+        public void SetStateFormat(FourCC format)
+        {
+            m_StateFormat = format;
+        }
+
         public string ToJson()
         {
             var layout = LayoutJson.FromLayout(this);
@@ -962,16 +972,25 @@ namespace UnityEngine.InputSystem.Layouts
             IsOverride = 1 << 2,
         }
 
-        private InputControlLayout(string name, Type type)
+        internal InputControlLayout(string name, Type type, string displayName = null)
         {
             m_Name = new InternedString(name);
             m_Type = type;
+            m_DisplayName = displayName;
         }
 
         private static void AddControlItems(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
             AddControlItemsFromFields(type, controlLayouts, layoutName);
             AddControlItemsFromProperties(type, controlLayouts, layoutName);
+        }
+
+        private static List<ControlItem> GetControlItems(Type type, string layoutName)
+        {
+            var controlLayouts = new List<ControlItem>();
+            AddControlItemsFromFields(type, controlLayouts, layoutName);
+            AddControlItemsFromProperties(type, controlLayouts, layoutName);
+            return controlLayouts;
         }
 
         // Add ControlLayouts for every public property in the given type that has
@@ -1795,7 +1814,7 @@ namespace UnityEngine.InputSystem.Layouts
                 public string metadata;
             }
 
-            public Dictionary<InternedString, Type> layoutTypes;
+            public Dictionary<InternedString, LayoutConstructor> layoutConstructors;
             public Dictionary<InternedString, string> layoutStrings;
             public Dictionary<InternedString, Func<InputControlLayout>> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
@@ -1809,7 +1828,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             public void Allocate()
             {
-                layoutTypes = new Dictionary<InternedString, Type>();
+                layoutConstructors = new Dictionary<InternedString, LayoutConstructor>();
                 layoutStrings = new Dictionary<InternedString, string>();
                 layoutBuilders = new Dictionary<InternedString, Func<InputControlLayout>>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
@@ -1821,9 +1840,10 @@ namespace UnityEngine.InputSystem.Layouts
 
             public InternedString TryFindLayoutForType(Type layoutType)
             {
-                foreach (var entry in layoutTypes)
-                    if (entry.Value == layoutType)
+                foreach (var entry in layoutConstructors)
+                    if (entry.Value.controlType == layoutType)
                         return entry.Key;
+
                 return new InternedString();
             }
 
@@ -1856,7 +1876,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             public bool HasLayout(InternedString name)
             {
-                return layoutTypes.ContainsKey(name) || layoutStrings.ContainsKey(name) ||
+                return layoutConstructors.ContainsKey(name) || layoutStrings.ContainsKey(name) ||
                     layoutBuilders.ContainsKey(name);
             }
 
@@ -1869,8 +1889,8 @@ namespace UnityEngine.InputSystem.Layouts
                     return FromJson(json);
 
                 // No, but maybe we have a type layout for it.
-                if (layoutTypes.TryGetValue(name, out var type))
-                    return FromType(name, type);
+                if (layoutConstructors.TryGetValue(name, out var constructor))
+                    return constructor.CreateLayout(name);
 
                 // Finally, check builders. Always the last ones to get a shot at
                 // providing layouts.
@@ -2053,8 +2073,8 @@ namespace UnityEngine.InputSystem.Layouts
                 }
 
                 // Try layout types.
-                layoutTypes.TryGetValue(layoutName, out var result);
-                return result;
+                layoutConstructors.TryGetValue(layoutName, out var result);
+                return result?.controlType;
             }
 
             // Return true if the given control layout has a value type whose values
@@ -2108,6 +2128,31 @@ namespace UnityEngine.InputSystem.Layouts
                 // Append.
                 layoutMatchers.Add(new LayoutMatcher {layoutName = layout, deviceMatcher = matcher});
             }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InputControlLayout"/> instance from a provided function or by using the
+        /// reflection path if no function is passed.
+        /// </summary>
+        public class LayoutConstructor
+        {
+            public LayoutConstructor(Type type, Func<string, InputControlLayout> func = null)
+            {
+                controlType = type;
+                m_Func = func;
+            }
+
+            public Type controlType { get; }
+
+            public InputControlLayout CreateLayout(string name)
+            {
+                if (m_Func != null)
+                    return m_Func.Invoke(name);
+
+                return FromType(name, controlType);
+            }
+
+            private readonly Func<string, InputControlLayout> m_Func;
         }
 
         // This collection is owned and managed by InputManager.

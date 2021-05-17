@@ -122,6 +122,13 @@ namespace UnityEngine.InputSystem
                 ExecuteCommand(ref command);
             }
         }
+
+        public static InputControlLayout CreateSensorLayout(string name)
+        {
+            var layout = CreateDefaultLayout<Sensor>(name);
+            layout.isGenericTypeOfDevice = true;
+            return layout;
+        }
     }
 
     /// <summary>
@@ -190,6 +197,12 @@ namespace UnityEngine.InputSystem
             acceleration = GetChildControl<Vector3Control>("acceleration");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<Accelerometer, AccelerometerState>(name, AccelerometerState.kFormat);
+            return layout;
+        }
     }
 
     /// <summary>
@@ -230,6 +243,12 @@ namespace UnityEngine.InputSystem
         {
             angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
             base.FinishSetup();
+        }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<Gyroscope, GyroscopeState>(name, GyroscopeState.kFormat);
+            return layout;
         }
     }
 
@@ -272,6 +291,12 @@ namespace UnityEngine.InputSystem
             base.OnRemoved();
             if (current == this)
                 current = null;
+        }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<GravitySensor, GravityState>(name, GravityState.kFormat, "Gravity");
+            return layout;
         }
     }
 
@@ -316,6 +341,12 @@ namespace UnityEngine.InputSystem
             attitude = GetChildControl<QuaternionControl>("attitude");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<AttitudeSensor, AttitudeState>(name, AttitudeState.kFormat, "Attitude");
+            return layout;
+        }
     }
 
     /// <summary>
@@ -358,6 +389,13 @@ namespace UnityEngine.InputSystem
         {
             acceleration = GetChildControl<Vector3Control>("acceleration");
             base.FinishSetup();
+        }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayoutFromStateType<LinearAccelerationSensor, LinearAccelerationState>(name,
+                LinearAccelerationState.kFormat, "Linear Acceleration");
+            return layout;
         }
     }
 
@@ -405,6 +443,12 @@ namespace UnityEngine.InputSystem
             magneticField = GetChildControl<Vector3Control>("magneticField");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<MagneticFieldSensor>(name, "Magnetic Field");
+            return layout;
+        }
     }
 
     /// <summary>
@@ -447,6 +491,12 @@ namespace UnityEngine.InputSystem
             lightLevel = GetChildControl<AxisControl>("lightLevel");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<Accelerometer>(name, "Light");
+            return layout;
+        }
     }
 
     /// <summary>
@@ -488,6 +538,12 @@ namespace UnityEngine.InputSystem
         {
             atmosphericPressure = GetChildControl<AxisControl>("atmosphericPressure");
             base.FinishSetup();
+        }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<PressureSensor>(name, "Pressure");
+            return layout;
         }
     }
 
@@ -534,6 +590,12 @@ namespace UnityEngine.InputSystem
             distance = GetChildControl<AxisControl>("distance");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<ProximitySensor>(name, "Proximity");
+            return layout;
+        }
     }
 
     /// <summary>
@@ -576,6 +638,12 @@ namespace UnityEngine.InputSystem
             relativeHumidity = GetChildControl<AxisControl>("relativeHumidity");
             base.FinishSetup();
         }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<HumiditySensor>(name, "Humidity");
+            return layout;
+        }
     }
 
     /// <summary>
@@ -617,6 +685,12 @@ namespace UnityEngine.InputSystem
         {
             ambientTemperature = GetChildControl<AxisControl>("ambientTemperature");
             base.FinishSetup();
+        }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<AmbientTemperatureSensor>(name, "Ambient Temperature");
+            return layout;
         }
     }
 
@@ -662,6 +736,12 @@ namespace UnityEngine.InputSystem
         {
             stepCounter = GetChildControl<IntegerControl>("stepCounter");
             base.FinishSetup();
+        }
+
+        public static InputControlLayout CreateLayout(string name)
+        {
+            var layout = CreateDefaultLayout<StepCounter>(name, "Step Counter");
+            return layout;
         }
     }
 }

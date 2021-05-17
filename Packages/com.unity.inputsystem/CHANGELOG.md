@@ -23,6 +23,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
 
+### Changed
+
+- Changes to control and device layout registration resulting in minor performance increase and slightly lower memory consumption during device creation.
+
 ## [1.1.0-pre.4] - 2021-05-04
 
 ### Changed
