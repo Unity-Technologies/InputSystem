@@ -1297,7 +1297,7 @@ namespace UnityEngine.InputSystem.UI
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_OnActionControlsChanged.AppendWithCapacity(m_OnControlsChangedDelegate);
+            InputActionState.s_OnActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
 
             HookActions();
             EnableAllActions();
@@ -1307,9 +1307,7 @@ namespace UnityEngine.InputSystem.UI
         {
             base.OnDisable();
 
-            var i = InputActionState.s_OnActionControlsChanged.IndexOfReference(m_OnControlsChangedDelegate);
-            if (i != -1)
-                InputActionState.s_OnActionControlsChanged.RemoveAtWithCapacity(i);
+            InputActionState.s_OnActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
 
             DisableAllActions();
             UnhookActions();

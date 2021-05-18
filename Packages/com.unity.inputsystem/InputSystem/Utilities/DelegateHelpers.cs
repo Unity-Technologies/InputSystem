@@ -8,18 +8,17 @@ namespace UnityEngine.InputSystem.Utilities
         // InvokeCallbacksSafe protects both against the callback getting removed while being called
         // and against exceptions being thrown by the callback.
 
-        public static void InvokeCallbacksSafe(ref InlinedArray<Action> callbacks, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe(ref CallbackArray<Action> callbacks, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var list = callbacks.PrepareExecution();
+            for (var i = 0; i < list.length; ++i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
-                    callbacks[i]();
+                    list[i]();
                 }
                 catch (Exception exception)
                 {
@@ -29,26 +28,21 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
         }
 
-        public static void InvokeCallbacksSafe<TValue>(ref InlinedArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe<TValue>(ref CallbackArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var list = callbacks.PrepareExecution();
+            for (var i = 0; i < list.length; ++i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
-                    callbacks[i](argument);
+                    list[i](argument);
                 }
                 catch (Exception exception)
                 {
@@ -58,26 +52,21 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
         }
 
-        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref InlinedArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
+        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref CallbackArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var list = callbacks.PrepareExecution();
+            for (var i = 0; i < list.length; ++i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
-                    callbacks[i](argument1, argument2);
+                    list[i](argument1, argument2);
                 }
                 catch (Exception exception)
                 {
@@ -87,27 +76,22 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
         }
 
-        public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref InlinedArray<Func<TValue1, TValue2, bool>> callbacks,
+        public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref CallbackArray<Func<TValue1, TValue2, bool>> callbacks,
             TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
         {
             if (callbacks.length == 0)
                 return true;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var list = callbacks.PrepareExecution();
+            for (var i = 0; i < list.length; ++i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
-                    if (callbacks[i](argument1, argument2))
+                    if (list[i](argument1, argument2))
                         return true;
                 }
                 catch (Exception exception)
@@ -118,10 +102,6 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
             return false;
