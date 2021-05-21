@@ -17,10 +17,10 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Samples.InGameHints
 {
-    public partial class @InGameHintsActions: IInputActionCollection2, IDisposable
+    public partial class @InGameHintsActions : IInputActionCollection2, IDisposable
     {
         public InputActionAsset asset { get; }
-        public @InGameHintsActions()
+        public @InGameHintsActions(bool isEnabledByDefault = false)
         {
             asset = InputActionAsset.FromJson(@"{
     ""name"": ""InGameHintsActions"",
@@ -265,6 +265,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
             m_Gameplay_PickUp = m_Gameplay.FindAction("PickUp", throwIfNotFound: true);
             m_Gameplay_Drop = m_Gameplay.FindAction("Drop", throwIfNotFound: true);
             m_Gameplay_Throw = m_Gameplay.FindAction("Throw", throwIfNotFound: true);
+            if(isEnabledByDefault) Enable();
         }
 
         public void Dispose()
@@ -310,14 +311,12 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
         {
             asset.Disable();
         }
-
         public IEnumerable<InputBinding> bindings => asset.bindings;
 
         public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
             return asset.FindAction(actionNameOrId, throwIfNotFound);
         }
-
         public int FindBinding(InputBinding bindingMask, out InputAction action)
         {
             return asset.FindBinding(bindingMask, out action);
