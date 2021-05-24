@@ -36,7 +36,6 @@ namespace UnityEngine.InputSystem.DmytroRnD
         private void OnDisable()
         {
             Core.NativeClear();
-            Core.NativeSetup();
         }
 
         private void OnEnable()
@@ -52,6 +51,11 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 Debug.Log($"restoring {kv.Key}");
                 Core.NativeDeviceDiscovered(kv.Key, kv.Value);
             }
+        }
+
+        public static void BootstrapWIP()
+        {
+            Bootstrap();
         }
 
         public static void Preserve(int deviceId, string deviceDescriptorJson)

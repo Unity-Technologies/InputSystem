@@ -1,0 +1,55 @@
+{
+    "name": "TestAsset",
+    "maps": [
+        {
+            "name": "testmap",
+            "id": "58e647bc-733d-4aa1-b0ca-1f23b6a2b0e2",
+            "actions": [
+                {
+                    "name": "testaction",
+                    "type": "Value",
+                    "id": "f3517aae-9631-4a6e-9567-a75db0379f72",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2b9b84b6-ab03-447b-9105-16cb1e18af1c",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "testaction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cbaee7cc-c9ff-4628-ac87-4a27969e924a",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "testaction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e2fb7407-9e6f-4eb3-adfd-15e684a7741e",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "testaction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
