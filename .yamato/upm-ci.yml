@@ -61,7 +61,7 @@ build_ios_{{ editor.version }}:
     logs:
         paths:
           - "build/logs/**"
- 
+
 run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
@@ -82,7 +82,7 @@ run_ios_{{ editor.version }}:
     logs:
         paths:
           - "build/test-results/**"
-		  
+
 build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
@@ -102,7 +102,7 @@ build_tvos_{{ editor.version }}:
     logs:
         paths:
           - "build/logs/**"
-  
+
 {% for backend in scripting_backends %}
 build_android_{{ editor.version }}_{{ backend.name }}:
   name: Build Tests on {{ editor.version }} on android {{ backend.name }}
@@ -122,13 +122,13 @@ build_android_{{ editor.version }}_{{ backend.name }}:
     logs:
         paths:
           - "build/logs/**"
+
 run_android_{{ editor.version }}_{{ backend.name }}:
   name: Run Tests on {{ editor.version }} on android {{ backend.name }}
   agent:
       type: Unity::mobile::shield
       image: mobile/android-execution-r19:stable
       flavor: b1.medium
-      
   # Skip repository cloning
   skip_checkout: true
   # Set a dependency on the build job
@@ -157,7 +157,6 @@ run_android_{{ editor.version }}_{{ backend.name }}:
 {% endfor %}
 
 {% endfor %}
-
 
 all_tests:
   name: All Tests
@@ -190,6 +189,7 @@ publish:
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
   artifacts:
     artifacts:
