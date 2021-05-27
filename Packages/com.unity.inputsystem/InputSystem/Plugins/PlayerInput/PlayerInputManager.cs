@@ -534,6 +534,15 @@ namespace UnityEngine.InputSystem
                 return;
             }
 
+            // if the join action is a reference, clone it so we don't run into problems with the action being disabled by
+            // PlayerInput when devices are assigned to individual players
+            if (joinAction.reference != null && joinAction.action?.actionMap?.asset != null)
+            {
+                var inputActionAsset = Instantiate(joinAction.action.actionMap.asset);
+                var inputActionReference = InputActionReference.Create(inputActionAsset.FindAction(joinAction.action.name));
+                joinAction = new InputActionProperty(inputActionReference);
+            }
+
             // Join all players already in the game.
             for (var i = 0; i < PlayerInput.s_AllActivePlayersCount; ++i)
                 NotifyPlayerJoined(PlayerInput.s_AllActivePlayers[i]);
