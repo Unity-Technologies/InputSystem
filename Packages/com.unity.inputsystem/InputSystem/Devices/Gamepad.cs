@@ -713,7 +713,7 @@ namespace UnityEngine.InputSystem
             m_Rumble.SetMotorSpeeds(this, lowFrequency, highFrequency);
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Gamepad, GamepadState>(name, GamepadState.Format);
             layout.isGenericTypeOfDevice = true;

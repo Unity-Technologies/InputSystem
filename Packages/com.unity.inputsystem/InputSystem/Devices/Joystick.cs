@@ -186,7 +186,7 @@ namespace UnityEngine.InputSystem
         private static int s_JoystickCount;
         private static Joystick[] s_Joysticks;
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Joystick, JoystickState>(name, JoystickState.kFormat);
             layout.isGenericTypeOfDevice = true;

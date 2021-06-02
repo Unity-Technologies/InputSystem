@@ -320,7 +320,7 @@ namespace UnityEngine.InputSystem
             OnStateEvent(eventPtr);
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Mouse, MouseState>(name, MouseState.Format);
             layout.isGenericTypeOfDevice = true;

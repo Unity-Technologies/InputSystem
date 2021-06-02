@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public static InputControlLayout CreateSensorLayout(string name)
+        internal static InputControlLayout CreateSensorLayout(string name)
         {
             var layout = CreateDefaultLayout<Sensor>(name);
             layout.isGenericTypeOfDevice = true;
@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Accelerometer, AccelerometerState>(name, AccelerometerState.kFormat);
             return layout;
@@ -245,7 +245,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Gyroscope, GyroscopeState>(name, GyroscopeState.kFormat);
             return layout;
@@ -293,7 +293,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<GravitySensor, GravityState>(name, GravityState.kFormat, "Gravity");
             return layout;
@@ -342,7 +342,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<AttitudeSensor, AttitudeState>(name, AttitudeState.kFormat, "Attitude");
             return layout;
@@ -391,7 +391,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<LinearAccelerationSensor, LinearAccelerationState>(name,
                 LinearAccelerationState.kFormat, "Linear Acceleration");
@@ -444,7 +444,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<MagneticFieldSensor>(name, "Magnetic Field");
             return layout;
@@ -492,7 +492,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<Accelerometer>(name, "Light");
             return layout;
@@ -540,7 +540,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<PressureSensor>(name, "Pressure");
             return layout;
@@ -591,7 +591,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<ProximitySensor>(name, "Proximity");
             return layout;
@@ -639,7 +639,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<HumiditySensor>(name, "Humidity");
             return layout;
@@ -687,7 +687,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<AmbientTemperatureSensor>(name, "Ambient Temperature");
             return layout;
@@ -738,7 +738,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<StepCounter>(name, "Step Counter");
             return layout;

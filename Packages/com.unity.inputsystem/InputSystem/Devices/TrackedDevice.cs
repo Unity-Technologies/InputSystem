@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem
             deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayout<TrackedDevice>(name, "Tracked Device");
             layout.isGenericTypeOfDevice = true;

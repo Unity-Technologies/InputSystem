@@ -394,7 +394,7 @@ namespace UnityEngine.InputSystem
             var isReplacement = DoesLayoutExist(internedName);
 
             if (createLayoutFunc == null)
-                createLayoutFunc = n => InputControl.CreateDefaultLayout<TControl>(name);
+                createLayoutFunc = _ => InputControl.CreateDefaultLayout<TControl>(name);
 
             m_Layouts.layoutConstructors[internedName] =
                 new InputControlLayout.LayoutConstructor(typeof(TControl), createLayoutFunc);

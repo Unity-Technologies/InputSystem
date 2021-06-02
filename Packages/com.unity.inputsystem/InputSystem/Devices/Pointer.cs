@@ -250,7 +250,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        public static InputControlLayout CreatePointerLayout(string name)
+        internal static InputControlLayout CreatePointerLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Pointer, PointerState>(name, PointerState.kFormat);
             layout.isGenericTypeOfDevice = true;

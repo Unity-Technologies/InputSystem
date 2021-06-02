@@ -234,7 +234,7 @@ namespace UnityEngine.InputSystem.Controls
             UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<TouchState>());
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             return CreateDefaultLayoutFromStateType<TouchControl, TouchState>(name, TouchState.Format);
         }

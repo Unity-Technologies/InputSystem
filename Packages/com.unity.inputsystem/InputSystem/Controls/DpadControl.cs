@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.Controls
             return new Vector2(-left + right, up - down);
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             return CreateDefaultLayout<DpadControl>(name);
         }

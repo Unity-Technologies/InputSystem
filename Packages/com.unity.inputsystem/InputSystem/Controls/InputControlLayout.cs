@@ -924,12 +924,12 @@ namespace UnityEngine.InputSystem.Layouts
             return layout;
         }
 
-        public void BuildChildControlsFrom<T>()
+        internal void BuildChildControlsFrom<T>()
         {
             m_Controls = GetControlItems(typeof(T), name).ToArray();
         }
 
-        public void SetStateFormat(FourCC format)
+        internal void SetStateFormat(FourCC format)
         {
             m_StateFormat = format;
         }
@@ -2134,7 +2134,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// Creates an <see cref="InputControlLayout"/> instance from a provided function or by using the
         /// reflection path if no function is passed.
         /// </summary>
-        public class LayoutConstructor
+        internal class LayoutConstructor
         {
             public LayoutConstructor(Type type, Func<string, InputControlLayout> func = null)
             {
@@ -2144,7 +2144,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             public Type controlType { get; }
 
-            public InputControlLayout CreateLayout(string name)
+            internal InputControlLayout CreateLayout(string name)
             {
                 if (m_Func != null)
                     return m_Func.Invoke(name);

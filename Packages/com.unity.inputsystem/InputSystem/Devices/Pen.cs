@@ -383,7 +383,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             var layout = CreateDefaultLayoutFromStateType<Pen, PenState>(name, PenState.Format);
             layout.isGenericTypeOfDevice = true;

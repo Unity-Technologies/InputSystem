@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.Controls
             *(TouchPhase*)valuePtr = value;
         }
 
-        public static InputControlLayout CreateLayout(string name)
+        internal static InputControlLayout CreateLayout(string name)
         {
             return new InputControlLayout(name, typeof(TouchPhaseControl))
             {
