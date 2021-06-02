@@ -108,8 +108,8 @@ namespace UnityEngine.InputSystem.Editor
                 propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
 
             return property.type == nameof(InputActionMap) ?
-                $"Input Action Map{propertyTitleNumeral}" :
-                $"Input Action{propertyTitleNumeral}";
+                $"{property.displayName}{propertyTitleNumeral}" :
+                $"{property.displayName}{propertyTitleNumeral}";
         }
 
         private void OnItemDoubleClicked(ActionTreeItemBase item, SerializedProperty property)

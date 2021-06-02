@@ -18,6 +18,8 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Fixed binding paths being misaligned in UI when switching to text mode editing ([case 1200107](https://issuetracker.unity3d.com/issues/input-system-path-input-field-text-is-clipping-under-binding-in-the-properties-section)).
+- Fixed inspector for `InputAction` and `InputActionMap` properties (such as in `MonoBehaviour`s) no longer displaying name of property but rather just "Input Action" or "Input Action Map" ([case 1340394](https://issuetracker.unity3d.com/product/unity/issues/guid/1340394/)).
+  * Regression introduced in 1.1-pre.5.
 
 ### Added
 
