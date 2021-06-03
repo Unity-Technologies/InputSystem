@@ -1672,6 +1672,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            ////REVIEW: This API has been confusing for users who usually will do something like WithControlsExcluding("Mouse"); find a more intuitive way to do this
             /// <summary>
             /// Prevent specific controls from being considered as candidate controls.
             /// </summary>
@@ -1891,8 +1892,7 @@ namespace UnityEngine.InputSystem
                 m_Timeout = default;
                 m_WaitSecondsAfterMatch = default;
                 m_Flags = default;
-                m_StartingActuationControls.Clear();
-                m_StartingActuationsCount = 0;
+                m_StartingActuations?.Clear();
                 return this;
             }
 
@@ -1920,41 +1920,37 @@ namespace UnityEngine.InputSystem
             private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
                 // Ignore if not a state event.
-                if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                var eventType = eventPtr.type;
+                if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                     return;
 
                 ////TODO: add callback that shows the candidate *and* the event to the user (this is particularly useful when we are suppressing
                 ////      and thus throwing away events)
 
-                // Go through controls and see if there's anything interesting in the event.
+                // Go through controls in the event and see if there's anything interesting.
                 // NOTE: We go through quite a few steps and operations here. However, the chief goal here is trying to be as robust
                 //       as we can in isolating the control the user really means to single out. If this code here does its job, that
                 //       control should always pop up as the first entry in the candidates list (if the configuration of the rebind
                 //       operation is otherwise sane).
-                var controls = device.allControls;
-                var controlCount = controls.Count;
                 var haveChangedCandidates = false;
                 var suppressEvent = false;
-                for (var i = 0; i < controlCount; ++i)
+                var controlEnumerationFlags =
+                    InputControlExtensions.Enumerate.IncludeNonLeafControls
+                    | InputControlExtensions.Enumerate.IncludeSyntheticControls;
+                if ((m_Flags & Flags.DontIgnoreNoisyControls) != 0)
+                    controlEnumerationFlags |= InputControlExtensions.Enumerate.IncludeNoisyControls;
+                foreach (var control in eventPtr.EnumerateControls(controlEnumerationFlags, device))
                 {
-                    var control = controls[i];
-
-                    // Skip controls that have no state in the event.
-                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
-                    if (statePtr == null)
-                        continue;
+                    var statePtr = control.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+                    Debug.Assert(statePtr != null, "If EnumerateControls() returns a control, GetStatePtrFromStateEvent should not return null for it");
 
                     // If the control that cancels has been actuated, abort the operation now.
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
-                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeInState(statePtr))
+                        control.HasValueChangeInState(statePtr))
                     {
                         OnCancel();
                         break;
                     }
-
-                    // Skip noisy controls.
-                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
-                        continue;
 
                     // If controls must not match certain paths, make sure the control doesn't.
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
@@ -1990,9 +1986,15 @@ namespace UnityEngine.InputSystem
                         // However, when such a control goes back to default state, we want to reset that recorded value. This makes
                         // sure that if, for example, a key is down when the rebind started, when the key is released and then pressed
                         // again, we don't compare to the previously recorded magnitude of 1 but rather to 0.
-                        var staringActuationIndex = m_StartingActuationControls.IndexOfReference(control);
-                        if (staringActuationIndex != -1)
-                            m_StaringActuationMagnitudes[staringActuationIndex] = 0;
+                        if (!m_StartingActuations.ContainsKey(control))
+                            // ...but we also need to record the first time this control appears in it's default state for the case where
+                            // the user is holding a discrete control when rebinding starts. On the first release, we'll record here a
+                            // starting actuation of 0, then when the key is pressed again, the code below will successfully compare the
+                            // starting value of 0 to the pressed value of 1. If we didn't set this to zero on release, the user would
+                            // have to release the key, press and release again, and on the next press, it would register as actuated.
+                            m_StartingActuations.Add(control, 0);
+
+                        m_StartingActuations[control] = 0;
 
                         continue;
                     }
@@ -2001,21 +2003,12 @@ namespace UnityEngine.InputSystem
                     if (magnitude >= 0)
                     {
                         // Determine starting actuation.
-                        float startingMagnitude;
-                        var startingActuationIndex = m_StartingActuationControls.IndexOfReference(control);
-                        if (startingActuationIndex != -1)
-                        {
-                            // We have seen this control start actuating before and have recorded its starting actuation.
-                            startingMagnitude = m_StaringActuationMagnitudes[startingActuationIndex];
-                        }
-                        else
+                        if (m_StartingActuations.TryGetValue(control, out var startingMagnitude) == false)
                         {
                             // Haven't seen this control changing actuation yet. Record its current actuation as its
                             // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
                             startingMagnitude = control.EvaluateMagnitude();
-                            var count = m_StartingActuationsCount;
-                            ArrayHelpers.AppendWithCapacity(ref m_StartingActuationControls, ref m_StartingActuationsCount, control);
-                            ArrayHelpers.AppendWithCapacity(ref m_StaringActuationMagnitudes, ref count, startingMagnitude);
+                            m_StartingActuations.Add(control, startingMagnitude);
                         }
 
                         // Ignore control if it hasn't exceeded the magnitude threshold relative to its starting actuation yet.
@@ -2254,8 +2247,7 @@ namespace UnityEngine.InputSystem
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
                 m_StartTime = -1;
-                m_StartingActuationControls.Clear();
-                m_StartingActuationsCount = 0;
+                m_StartingActuations.Clear();
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
@@ -2321,11 +2313,9 @@ namespace UnityEngine.InputSystem
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
 
-            // Controls may already be actuated by the time we start a rebind. For those, we track starting actutations
+            // Controls may already be actuated by the time we start a rebind. For those, we track starting actuations
             // individually and require them to cross the actuation threshold WRT the starting actuation.
-            private int m_StartingActuationsCount;
-            private float[] m_StaringActuationMagnitudes;
-            private InputControl[] m_StartingActuationControls;
+            private Dictionary<InputControl, float> m_StartingActuations = new Dictionary<InputControl, float>();
 
             [Flags]
             private enum Flags

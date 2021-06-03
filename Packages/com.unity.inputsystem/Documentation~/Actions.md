@@ -6,6 +6,7 @@
     * [Embedding Actions in MonoBehaviours](#embedding-actions-in-monobehaviours)
     * [Loading Actions from JSON](#loading-actions-from-json)
     * [Creating Actions in code](#creating-actions-in-code)
+      * [Default Actions](#default-actions)
 * [Using Actions](#using-actions)
     * [Responding to Actions](#responding-to-actions)
       * [Action callbacks](#action-callbacks)
@@ -181,6 +182,23 @@ var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 var gameplayMap = new InputActionMap("gameplay");
 asset.AddActionMap(gameplayMap);
 var lookAction = gameplayMap.AddAction("look", "<Gamepad>/leftStick");
+```
+
+Any action that you create in this way during Play mode do not persist in the Input Action Asset after you exit Play mode. This means you can test your application in a realistic manner in the Editor without having to worry about inadvertently modifying the asset.
+
+#### Default Actions
+
+An [asset](./ActionAssets.md) called `DefaultInputActions.inputactions` containing a default setup of Actions comes with the Input System Package. You can reference this asset directly in your projects like any other Unity asset. However, the asset is also available in code form through the [`DefaultInputActions`](../api/UnityEngine.InputSystem.DefaultInputActions.html) class.
+
+```CSharp
+void Start()
+{
+    // Create an instance of the default actions.
+    var actions = new DefaultInputActions();
+    actions.Player.Look.performed += OnLook;
+    actions.Player.Move.performed += OnMove;
+    actions.Enable();
+}
 ```
 
 ## Using Actions

@@ -513,6 +513,7 @@ namespace UnityEngine.InputSystem
                 public string name;
                 public string layout;
                 public int deviceId;
+                public string[] usages;
                 public InputDeviceDescription description;
             }
 
@@ -525,7 +526,8 @@ namespace UnityEngine.InputSystem
                     name = device.name,
                     layout = device.layout,
                     deviceId = device.deviceId,
-                    description = device.description
+                    description = device.description,
+                    usages = device.usages.Select(x => x.ToString()).ToArray()
                 };
 
                 return new Message
@@ -572,6 +574,8 @@ namespace UnityEngine.InputSystem
                 }
                 device.m_Description = data.description;
                 device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
+                foreach (var usage in data.usages)
+                    receiver.m_LocalManager.AddDeviceUsage(device, new InternedString(usage));
 
                 // Remember it.
                 var record = new RemoteInputDevice
@@ -624,8 +628,9 @@ namespace UnityEngine.InputSystem
                     var eventCount = 0;
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
                     var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-
-                    while ((Int64)eventPtr.data < dataEndPtr.ToInt64())
+                    // Don't use IntPtr.ToInt64() function, on 32 bit systems, the pointer is first converted to Int32 and then casted to Int64
+                    // Thus for big pointer value, you might get a negative value even though the pointer value will be less than Int64.MaxValue
+                    while ((void*)eventPtr.data < dataEndPtr.ToPointer())
                     {
                         // Patch up device ID to refer to local device and send event.
                         var remoteDeviceId = eventPtr.deviceId;
@@ -677,10 +682,18 @@ namespace UnityEngine.InputSystem
                 var device = receiver.TryGetDeviceByRemoteId(data.deviceId, senderIndex);
                 if (device != null)
                 {
-                    ////TODO: clearing usages and setting multiple usages
+                    foreach (var deviceUsage in device.usages)
+                    {
+                        if (!data.usages.Contains(deviceUsage))
+                            receiver.m_LocalManager.RemoveDeviceUsage(device, new InternedString(deviceUsage));
+                    }
 
-                    if (data.usages.Length == 1)
-                        receiver.m_LocalManager.SetDeviceUsage(device, new InternedString(data.usages[0]));
+                    foreach (var dataUsage in data.usages)
+                    {
+                        var internedDataUsage = new InternedString(dataUsage);
+                        if (!device.usages.Contains(internedDataUsage))
+                            receiver.m_LocalManager.AddDeviceUsage(device, new InternedString(dataUsage));
+                    }
                 }
             }
         }

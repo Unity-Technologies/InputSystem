@@ -427,7 +427,48 @@ namespace UnityEngine.InputSystem
         /// will first resolve controls on the action (and for all actions in the map and/or
         /// the asset). See <a href="../manual/ActionBindings.html#binding-resolution">Binding Resolution</a>
         /// in the manual for details.
+        ///
+        /// To map a control in this array to an index into <see cref="bindings"/>, use
+        /// <see cref="InputActionRebindingExtensions.GetBindingIndexForControl"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Map control list to binding indices.
+        /// var bindingIndices = myAction.controls.Select(c => myAction.GetBindingIndexForControl(c));
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this array will not contain the same control multiple times even if more than
+        /// one binding on an action references the same control. Instead, the first binding on
+        /// an action that resolves to a particular control will essentially "own" the control
+        /// and subsequent bindings for the action will be blocked from resolving to the same control.
+        ///
+        /// <example>
+        /// <code>
+        /// var action1 = new InputAction();
+        /// action1.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// action1.AddBinding("&lt;Gamepad&gt;/buttonSouth"); // This binding will be ignored.
+        ///
+        /// // Contains only one instance of buttonSouth which is associated
+        /// // with the first binding (at index #0).
+        /// var action1Controls = action1.controls;
+        ///
+        /// var action2 = new InputAction();
+        /// action2.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// // Add a binding that implicitly matches the first binding, too. When binding resolution
+        /// // happens, this binding will only receive buttonNorth, buttonWest, and buttonEast, but not
+        /// // buttonSouth as the first binding already received that control.
+        /// action2.AddBinding("&lt;Gamepad&gt;/button*");
+        ///
+        /// // Contains only all four face buttons (buttonSouth, buttonNorth, buttonEast, buttonWest)
+        /// // but buttonSouth is associated with the first button and only buttonNorth, buttonEast,
+        /// // and buttonWest are associated with the second binding.
+        /// var action2Controls = action2.controls;
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingIndexForControl"/>
+        /// <seealso cref="bindings"/>
         public ReadOnlyArray<InputControl> controls
         {
             get
@@ -452,7 +493,7 @@ namespace UnityEngine.InputSystem
         /// whenever the value of the control changes (including the first time; i.e. it will first
         /// trigger <see cref="InputActionPhase.Started"/> and then <see cref="InputActionPhase.Performed"/>
         /// right after) whereas <see cref="InputActionType.Button"/> will trigger <see cref="InputActionPhase.Performed"/>
-        /// as soon as the button press threshold (<see cref="InputSettings.buttonPressThreshold"/>)
+        /// as soon as the button press threshold (<see cref="InputSettings.defaultButtonPressPoint"/>)
         /// has been crossed.
         ///
         /// Note that both interactions and the action <see cref="type"/> can affect the phases
@@ -1044,7 +1085,7 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// var fire = playerInput.actions["fire"];
-        /// if (fire.WasPressedThisFrame() && fire.IsPressed())
+        /// if (fire.WasPressedThisFrame() &amp;&amp; fire.IsPressed())
         ///     StartFiring();
         /// else if (fire.WasReleasedThisFrame())
         ///     StopFiring();
@@ -1090,7 +1131,7 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// var fire = playerInput.actions["fire"];
-        /// if (fire.WasPressedThisFrame() && fire.IsPressed())
+        /// if (fire.WasPressedThisFrame() &amp;&amp; fire.IsPressed())
         ///     StartFiring();
         /// else if (fire.WasReleasedThisFrame())
         ///     StopFiring();
@@ -1175,7 +1216,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Return the completion percentage of the timeout (if any) running on the current interaction.
         /// </summary>
-        /// <returns>A value &ge; 0 (no progress) and &le; 1 (finished) indicating the level of completion
+        /// <returns>A value &gt;= 0 (no progress) and &lt;= 1 (finished) indicating the level of completion
         /// of the currently running timeout.</returns>
         /// <remarks>
         /// This method is useful, for example, when providing UI feedback for an ongoing action. If, say,
@@ -1224,12 +1265,12 @@ namespace UnityEngine.InputSystem
         ///         holdAction = new InputAction(type: InputActionType.Button, interactions: "hold(duration=2)");
         ///
         ///         // Show the UI object when the hold starts and hide it when it ends.
-        ///         holdAction.started += _ => uiObjectToScale.SetActive(true);
-        ///         holdAction.canceled += _ => uiObjectToScale.SetActive(false);
+        ///         holdAction.started += _ =&gt; uiObjectToScale.SetActive(true);
+        ///         holdAction.canceled += _ =&gt; uiObjectToScale.SetActive(false);
         ///
         ///         // If you want to play a visual effect when the action performs, you can initiate from
         ///         // the performed callback.
-        ///         holdAction.performed += _ => /* InitiateVisualEffectWhenHoldIsComplete() */;
+        ///         holdAction.performed += _ =&gt; /* InitiateVisualEffectWhenHoldIsComplete() */;
         ///     }
         ///
         ///     holdAction.Enable();
@@ -1314,9 +1355,21 @@ namespace UnityEngine.InputSystem
         [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
             + "without breaking references to the action.")]
         [SerializeField] internal string m_Name;
+        [Tooltip("Determines how the action triggers.\n"
+            + "\n"
+            + "A Value action will start and perform when a control moves from its default value and then "
+            + "perform on every value change. It will cancel when controls go back to default value. Also, when enabled, a Value "
+            + "action will respond right away to a control's current value.\n"
+            + "\n"
+            + "A Button action will start when a button is pressed and perform when the press threshold (see 'Default Button Press Point' in settings) "
+            + "is reached. It will cancel when the button is going below the release threshold (see 'Button Release Threshold' in settings). Also, "
+            + "if a button is already pressed when the action is enabled, the button has to be released first.\n"
+            + "\n"
+            + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
+            + "the action will perform.")]
         [SerializeField] internal InputActionType m_Type;
         [FormerlySerializedAs("m_ExpectedControlLayout")]
-        [Tooltip("Type of control expected by the action (e.g. \"Button\" or \"Stick\"). This will limit the controls shown "
+        [Tooltip("The type of control expected by the action (e.g. \"Button\" or \"Stick\"). This will limit the controls shown "
             + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
         [SerializeField] internal string m_ExpectedControlType;
         [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "

@@ -17,7 +17,7 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 using UnityEngine.InputSystem.Editor;
 #endif
 
-internal class EnhancedTouchTests : InputTestFixture
+internal class EnhancedTouchTests : CoreTestsFixture
 {
     private TouchSimulation m_OldTouchSimulationInstance;
 
@@ -550,14 +550,14 @@ internal class EnhancedTouchTests : InputTestFixture
     {
         var touchscreen1 = Touchscreen.current;
 
-        // To mix it up, have a touchscreen with 60 possible contacts instead of
+        // To mix it up, have a touchscreen with 15 possible contacts instead of
         // the default ten.
         const string json = @"
             {
                 ""name"" : ""CustomTouchscreen"",
                 ""extend"" : ""Touchscreen"",
                 ""controls"" : [
-                    { ""name"" : ""touch"", ""arraySize"" : 60 }
+                    { ""name"" : ""touch"", ""arraySize"" : 15 }
                 ]
             }
         ";
@@ -796,6 +796,42 @@ internal class EnhancedTouchTests : InputTestFixture
         {
             new Tuple<string, Finger>("Up", Touch.fingers[1])
         }));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1286865/
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_CanBeDisabledAndReenabled()
+    {
+        BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
+
+        MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Moved));
+
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
+
+        EnhancedTouchSupport.Disable();
+        EnhancedTouchSupport.Enable();
+
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
+
+        MoveTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Moved));
+
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
     }
 
     [Test]
@@ -1043,5 +1079,33 @@ internal class EnhancedTouchTests : InputTestFixture
         TouchSimulation.Enable();
 
         Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.SameAs(device));
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public unsafe void EnhancedTouch_TouchSimulation_DisablesPointerDevicesWithoutDisablingEvents()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var pen = InputSystem.AddDevice<Pen>();
+
+        runtime.SetDeviceCommandCallback(mouse, (id, command) =>
+        {
+            Assert.That(command->type, Is.Not.EqualTo(DisableDeviceCommand.Type));
+            return InputDeviceCommand.GenericFailure;
+        });
+
+        TouchSimulation.Enable();
+
+        Assert.That(mouse.enabled, Is.False);
+        Assert.That(pen.enabled, Is.False);
+
+        InputSystem.QueueStateEvent(mouse, new MouseState
+        {
+            position = new Vector2(123, 234),
+        }.WithButton(MouseButton.Left));
+        InputSystem.Update();
+
+        Assert.That(Touchscreen.current.touches[0].isInProgress, Is.True);
+        Assert.That(Touchscreen.current.touches[0].position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
     }
 }

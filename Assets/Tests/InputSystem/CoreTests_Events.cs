@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -19,6 +20,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using Random = UnityEngine.Random;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
@@ -264,7 +266,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public unsafe void Events_AreTimeslicedByDefault()
+    public unsafe void Events_InFixedUpdate_AreTimesliced()
     {
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
@@ -442,6 +444,261 @@ partial class CoreTests
 
             Assert.That(gamepad.leftStick.ReadValue(),
                 Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    [TestCase(false, "Gamepad")] // No changed controls.
+    [TestCase(false, "Gamepad", "buttonSouth", 0f)] // Default value.
+    [TestCase(true, "Gamepad", "buttonSouth", 0f)] // Default value.
+    [TestCase(false, "Gamepad", "buttonSouth", 1f)]
+    [TestCase(true, "Gamepad", "buttonSouth", 1f)]
+    [TestCase(false, "Gamepad", "buttonSouth", 1f, "buttonNorth", 1f)]
+    [TestCase(true, "Gamepad", "leftTrigger", 1f, "rightTrigger", 1f)] // Using buttons here will lead to problems because delta events do not work at the level of individual bits.
+    public void Events_CanIterateOverChangedControlsInEvent(bool deltaEvent, string layoutName, params object[] controlsAndValues)
+    {
+        Assert.That(controlsAndValues.Length % 2, Is.Zero, "Must have even pairing of controls and values");
+
+        var device = InputSystem.AddDevice(layoutName);
+        var controls = controlsAndValues.EveryNth(2, start: 0).Select(path => device[(string)path]).ToArray();
+        var values = controlsAndValues.EveryNth(2, start: 1).ToArray();
+        var controlsNotAtDefaultValue = controls
+            .Zip(values, (control, value) => !control.ReadDefaultValueAsObject().Equals(value) ? control : null).Where(v => v != null).ToArray();
+
+        var eventHandlerWasCalled = false;
+        var numChangedControls = 0;
+        InputSystem.onEvent +=
+            (eventPtrReceived, deviceForEvent) =>
+        {
+            eventHandlerWasCalled = true;
+
+            Assert.That(deviceForEvent, Is.SameAs(device));
+            Assert.That(eventPtrReceived.IsA<StateEvent>() || deltaEvent);
+            Assert.That(eventPtrReceived.IsA<DeltaStateEvent>() || !deltaEvent);
+
+            var result = eventPtrReceived.EnumerateChangedControls().ToList();
+            Assert.That(result, Has.Count.EqualTo(deltaEvent ? Math.Min(controlsNotAtDefaultValue.Length, 1) : controlsNotAtDefaultValue.Length));
+            numChangedControls += result.Count;
+        };
+
+        NativeArray<byte> tempMemory = default;
+        InputEventPtr stateEventPtr = default;
+
+        if (!deltaEvent)
+            tempMemory = StateEvent.From(device, out stateEventPtr);
+
+        for (var i = 0; i < controls.Length; ++i)
+        {
+            var control = controls[i];
+            var value = values[i];
+
+            if (deltaEvent)
+            {
+                using (DeltaStateEvent.From(control, out var eventPtr))
+                {
+                    control.WriteValueFromObjectIntoEvent(eventPtr, value);
+                    InputSystem.QueueEvent(eventPtr);
+                }
+            }
+            else
+            {
+                control.WriteValueFromObjectIntoEvent(stateEventPtr, value);
+            }
+        }
+
+        if (!deltaEvent)
+            InputSystem.QueueEvent(stateEventPtr);
+        if (tempMemory.IsCreated)
+            tempMemory.Dispose();
+
+        InputSystem.Update();
+
+        Assert.That(eventHandlerWasCalled, Is.True);
+        Assert.That(numChangedControls, Is.EqualTo(controlsNotAtDefaultValue.Length));
+    }
+
+    // Touchscreen, as usual, is a troublemaker. We send it TouchState events and not TouchscreenState events
+    // and it has its own (involved) logic for incorporating them into state. From a control enumeration
+    // perspective, though, this is still just a matter of narrowing down the set of controls to consider
+    // and taking their relative offsets into account.
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanIterateOverChangedControlsInEvent_WithDeviceThatIsStateCallbackReceiver()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        var eventHandlerWasCalled = false;
+        InputSystem.onEvent +=
+            (eventPtrReceived, deviceForEvent) =>
+        {
+            eventHandlerWasCalled = true;
+
+            Assert.That(deviceForEvent, Is.SameAs(touchscreen));
+            Assert.That(eventPtrReceived.IsA<StateEvent>());
+            Assert.That(StateEvent.From(eventPtrReceived)->stateFormat, Is.EqualTo(TouchState.Format));
+
+            var result = eventPtrReceived.EnumerateChangedControls().ToList();
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result, Has.Exactly(1).SameAs(touchscreen.touches[0].position.x));
+            Assert.That(result, Has.Exactly(1).SameAs(touchscreen.touches[0].position.y));
+        };
+
+        InputSystem.QueueStateEvent(touchscreen, new TouchState { position = new Vector2(123, 234) });
+        InputSystem.Update();
+
+        Assert.That(eventHandlerWasCalled, Is.True);
+    }
+
+    // A control may employ useStateFrom to point itself at the state of another control. The
+    // control enumerator by default ignores useStateFrom controls and returns only the ones that have
+    // their "own" state.
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverChangedControlsInEvent_IgnoresControlsUsingStateFromOtherControls()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""Button2"", ""layout"" : ""Button"", ""useStateFrom"" : ""Button1"" },
+                    { ""name"" : ""Button1"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        var eventHandlerWasCalled = false;
+        InputSystem.onEvent +=
+            (eventPtrReceived, deviceForEvent) =>
+        {
+            eventHandlerWasCalled = true;
+
+            Assert.That(deviceForEvent, Is.SameAs(device));
+            Assert.That(eventPtrReceived.IsA<StateEvent>());
+
+            var result = eventPtrReceived.EnumerateChangedControls().ToList();
+            Assert.That(result, Is.EquivalentTo(new[] { device["Button1"] }));
+        };
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            device["Button1"].WriteValueFromObjectIntoEvent(eventPtr, 1f);
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+        }
+
+        InputSystem.Update();
+
+        Assert.That(eventHandlerWasCalled, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverChangedControlsInEvent_IncludingParentControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.leftStick.x, 0.5f);
+
+        using (StateEvent.From(gamepad, out var eventPtr))
+        {
+            Set(gamepad.leftStick.x, 0f);
+
+            var result =
+                eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IgnoreControlsInCurrentState
+                    | InputControlExtensions.Enumerate.IncludeNonLeafControls).ToList();
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result, Has.Exactly(1).SameAs(gamepad.leftStick.x));
+            Assert.That(result, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverChangedControlsInEvent_IncludingSyntheticControls()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Press(mouse.leftButton);
+
+        using (StateEvent.From(mouse, out var eventPtr))
+        {
+            Release(mouse.leftButton);
+
+            var result =
+                eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IgnoreControlsInCurrentState
+                    | InputControlExtensions.Enumerate.IncludeSyntheticControls).ToList();
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result, Has.Exactly(1).SameAs(mouse.leftButton));
+            Assert.That(result, Has.Exactly(1).SameAs(mouse.press));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverControlsInEvent_AboveSpecifiedThreshold()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftTrigger, 0.25f);
+        Set(gamepad.rightTrigger, 0.75f);
+
+        using (StateEvent.From(gamepad, out var eventPtr))
+        {
+            Set(gamepad.leftTrigger, 0f);
+            Set(gamepad.rightTrigger, 0f);
+
+            var result = eventPtr.EnumerateChangedControls(magnitudeThreshold: 0.5f);
+            Assert.That(result, Is.EquivalentTo(new[] { gamepad.rightTrigger }));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverControlsInEvent_WhenDeltaEventContainsOnlyPartialStateForControl()
+    {
+        // The keyboard's AnyKey control spans all keys on the keyboard. Thus, if we send
+        // a DeltaStateEvent, it will have partial state for AnyKey. This should be treated
+        // equivalent to the control *not* being in the event and thus not getting returned
+        // by enumeration.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(keyboard.spaceKey.stateBlock.byteOffset, Is.Zero);
+        Assert.That(keyboard.spaceKey.stateBlock.bitOffset, Is.LessThan(8));
+        var allKeysInFirstByte = keyboard.allControls.Where(x => x.stateBlock.byteOffset == 0 && x.stateBlock.bitOffset < 8 && !x.synthetic).ToList();
+
+        using (DeltaStateEvent.From(keyboard.spaceKey, out var eventPtr))
+        {
+            var result = eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IncludeSyntheticControls).ToList();
+
+            Assert.That(result, Has.Count.EqualTo(allKeysInFirstByte.Count));
+            Assert.That(result, Has.Exactly(0).SameAs(keyboard.anyKey));
+            Assert.That(result, Has.Exactly(1).SameAs(keyboard.spaceKey));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    [Retry(2)] // Warm up JIT.
+    public void Events_CanIterateOverControlsInEvent_WithoutAllocatingGC()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        using (StateEvent.From(touchscreen, out var eventPtr))
+        {
+            // Alter current state after we grabbed the default state above.
+            BeginTouch(1, new Vector2(123, 234));
+
+            var list = new List<InputControl>(512);
+            Assert.That(() =>
+            {
+                foreach (var control in eventPtr.EnumerateChangedControls())
+                    list.Add(control);
+            }, Is.Not.AllocatingGCMemory());
+            Assert.That(list, Is.Not.Empty);
         }
     }
 
@@ -1732,4 +1989,139 @@ partial class CoreTests
 
         Assert.That(gamepad.buttonSouth.isPressed, Is.True);
     }
+
+    [Test]
+    [Category("Events")]
+    public void Events_MaximumEventLoadPerUpdateIsLimited()
+    {
+        // Default setting is 5MB.
+        Assert.That(InputSystem.settings.maxEventBytesPerUpdate, Is.EqualTo(5 * 1024 * 1024));
+
+        InputSystem.settings.maxEventBytesPerUpdate = StateEvent.GetEventSizeWithPayload<MouseState>() * 2;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
+
+        var eventCount = 0;
+        InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
+
+        LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+
+        InputSystem.Update();
+
+        Assert.That(eventCount, Is.EqualTo(2));
+        Assert.That(mouse.rightButton.isPressed, Is.True);
+        Assert.That(mouse.middleButton.isPressed, Is.False);
+
+        eventCount = 0;
+
+        // Disable the limit.
+        InputSystem.settings.maxEventBytesPerUpdate = 0;
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
+
+        InputSystem.Update();
+
+        Assert.That(eventCount, Is.EqualTo(3));
+        Assert.That(mouse.rightButton.isPressed, Is.False);
+        Assert.That(mouse.middleButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanQueueEventsFromWithinEventProcessing()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var numMouseEventsQueued = InputTestRuntime.kDefaultEventBufferSize / StateEvent.GetEventSizeWithPayload<MouseState>() + 1;
+
+        // allow all these events
+        InputSystem.settings.maxQueuedEventsPerUpdate = numMouseEventsQueued;
+
+        var numMouseEventsReceived = 0;
+        InputSystem.onEvent +=
+            (eventPtr, device) =>
+        {
+            if (device == mouse)
+                ++numMouseEventsReceived;
+        };
+
+        var action = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/space");
+        action.performed +=
+            _ =>
+        {
+            // Queue enough events to make sure we overflow the current event buffer size.
+            // This way we not only test whether the events make it into the queue at all but
+            // also that they still make it if we have to re-allocate the buffer.
+            for (var i = 0; i < numMouseEventsQueued; ++i)
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(123, 234) }.WithButton(MouseButton.Left));
+        };
+        action.Enable();
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_MaximumQueuedEventsDuringEventProcessingIsLimited()
+    {
+        // Default setting is 1000.
+        Assert.That(InputSystem.settings.maxQueuedEventsPerUpdate, Is.EqualTo(1000));
+
+        InputSystem.settings.maxQueuedEventsPerUpdate = 20;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var callbackCount = 0;
+        var action = new InputAction(type: InputActionType.Value, binding: "<mouse>/position");
+        action.performed +=
+            _ =>
+        {
+            if (callbackCount > InputSystem.settings.maxQueuedEventsPerUpdate)
+                Assert.Fail("Maximum queued event count exceeded");
+
+            callbackCount++;
+            Set(mouse.position, Random.insideUnitCircle * 100, queueEventOnly: true);
+        };
+        action.Enable();
+
+        Set(mouse.position, Random.insideUnitCircle * 100);
+
+        LogAssert.Expect(LogType.Error, $"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' setting to a higher value if you " +
+            $"need to queue more events than this. Current limit is '{InputSystem.settings.maxQueuedEventsPerUpdate}'.");
+        Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1316000/
+    [Test]
+    [Category("Events")]
+    public void Events_CallingInputSystemUpdateDuringEventProcessingThrowsInvalidOperation()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed += _ =>
+        {
+            InputSystem.Update();
+        };
+        action.Enable();
+
+        Press(device.buttonSouth);
+
+        LogAssert.Expect(LogType.Error, "InvalidOperationException while executing 'performed' callbacks of '<Unnamed>[/Gamepad/buttonSouth]'");
+        LogAssert.Expect(LogType.Exception, "InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?");
+    }
+
+    ////TODO: test thread-safe QueueEvent
 }

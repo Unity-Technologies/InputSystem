@@ -1102,35 +1102,6 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_AddingTwoControlsWithSameName_WillCauseException()
-    {
-        const string json = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""extend"" : ""Gamepad"",
-                ""controls"" : [
-                    {
-                        ""name"" : ""MyControl"",
-                        ""layout"" : ""Button""
-                    },
-                    {
-                        ""name"" : ""MyControl"",
-                        ""layout"" : ""Button""
-                    }
-                ]
-            }
-        ";
-
-        // We do minimal processing when adding a layout so verification
-        // only happens when we actually try to instantiate the layout.
-        InputSystem.RegisterLayout(json);
-
-        Assert.That(() => InputSystem.AddDevice("MyDevice"),
-            Throws.TypeOf<InvalidOperationException>().With.Property("Message").Contain("Duplicate control"));
-    }
-
-    [Test]
-    [Category("Layouts")]
     public void Layouts_ReplacingDeviceLayoutAffectsAllDevicesUsingLayout()
     {
         // Create a device hiearchy and then replace the base layout. We can't easily use

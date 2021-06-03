@@ -623,6 +623,9 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Input device representing the foot steps taken by the user as measured by the device playing the content.
     /// </summary>
+    /// <remarks>
+    /// On iOS, access to the step counter must be enabled via <see cref="InputSettings.iOSSettings.motionUsage"/>.
+    /// </remarks>
     [InputControlLayout(displayName = "Step Counter")]
     [Scripting.Preserve]
     public class StepCounter : Sensor

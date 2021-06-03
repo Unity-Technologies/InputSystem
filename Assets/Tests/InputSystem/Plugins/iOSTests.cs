@@ -7,10 +7,13 @@ using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.iOS;
 using UnityEngine.InputSystem.iOS.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.XInput;
+using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 
-internal class iOSTests : InputTestFixture
+internal class iOSTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -79,5 +82,23 @@ internal class iOSTests : InputTestFixture
         Assert.That(InputSystem.devices[0].description.interfaceName, Is.EqualTo("iOS"));
         Assert.That(InputSystem.devices[0].description.deviceClass, Is.EqualTo(deviceClass));
     }
+
+#if UNITY_EDITOR || UNITY_IOS
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsiOSStepCounter()
+    {
+        var device = InputSystem.AddDevice<iOSStepCounter>();
+        LogAssert.Expect(LogType.Error, "Please enable Motion Usage in Input Settings before using Step Counter.");
+        InputSystem.EnableDevice(device);
+
+        InputSystem.settings.iOS.motionUsage.enabled = true;
+        InputSystem.EnableDevice(device);
+        InputSystem.QueueStateEvent(device, new iOSStepCounterState(){stepCounter = 5});
+        InputSystem.Update();
+        Assert.That(device.stepCounter.ReadValue(), Is.EqualTo(5));
+    }
+
+#endif
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

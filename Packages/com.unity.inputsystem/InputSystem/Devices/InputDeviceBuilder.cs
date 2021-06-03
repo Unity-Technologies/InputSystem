@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -51,7 +52,11 @@ namespace UnityEngine.InputSystem.Layouts
             InstantiateLayout(layout, variants, new InternedString(), null);
             FinalizeControlHierarchy();
 
+            m_StateOffsetToControlMap.Sort();
+
             m_Device.m_Description = deviceDescription;
+            m_Device.m_StateOffsetToControlMap = m_StateOffsetToControlMap.ToArray();
+
             m_Device.CallFinishSetupRecursive();
         }
 
@@ -82,6 +87,8 @@ namespace UnityEngine.InputSystem.Layouts
         // overrides for the control at the given path.
         private Dictionary<string, InputControlLayout.ControlItem> m_ChildControlOverrides;
 
+        private List<uint> m_StateOffsetToControlMap;
+
         private StringBuilder m_StringBuilder;
 
         // Reset the setup in a way where it can be reused for another setup.
@@ -90,6 +97,7 @@ namespace UnityEngine.InputSystem.Layouts
         {
             m_Device = null;
             m_ChildControlOverrides?.Clear();
+            m_StateOffsetToControlMap?.Clear();
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
@@ -345,8 +353,7 @@ namespace UnityEngine.InputSystem.Layouts
             InputControlLayout.ControlItem controlItem,
             int childIndex, string nameOverride = null)
         {
-            var name = nameOverride ?? controlItem.name;
-            var nameInterned = new InternedString(name);
+            var name = nameOverride != null ? new InternedString(nameOverride) : controlItem.name;
 
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
@@ -355,9 +362,7 @@ namespace UnityEngine.InputSystem.Layouts
             // See if there is an override for the control.
             if (m_ChildControlOverrides != null)
             {
-                var path = $"{parent.path}/{name}";
-                var pathLowerCase = path.ToLower();
-
+                var pathLowerCase = ChildControlOverridePath(parent, name);
                 if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out var controlOverride))
                     controlItem = controlOverride.Merge(controlItem);
             }
@@ -369,7 +374,7 @@ namespace UnityEngine.InputSystem.Layouts
             InputControl control;
             try
             {
-                control = InstantiateLayout(layoutName, variants, nameInterned, parent);
+                control = InstantiateLayout(layoutName, variants, name, parent);
             }
             catch (InputControlLayout.LayoutNotFoundException exception)
             {
@@ -389,6 +394,7 @@ namespace UnityEngine.InputSystem.Layouts
             control.synthetic = controlItem.isSynthetic;
             if (control.noisy)
                 m_Device.noisy = true;
+            control.isButton = control is ButtonControl;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
@@ -470,10 +476,8 @@ namespace UnityEngine.InputSystem.Layouts
             if (m_ChildControlOverrides == null)
                 m_ChildControlOverrides = new Dictionary<string, InputControlLayout.ControlItem>();
 
-            var path = InputControlPath.Combine(parent, controlItem.name);
-            var pathLowerCase = path.ToLower();
-
             // See if there are existing overrides for the control.
+            var pathLowerCase = ChildControlOverridePath(parent, controlItem.name);
             if (!m_ChildControlOverrides.TryGetValue(pathLowerCase, out var existingOverrides))
             {
                 // So, so just insert our overrides and we're done.
@@ -486,6 +490,14 @@ namespace UnityEngine.InputSystem.Layouts
             //       the override has been established from higher up in the layout hierarchy.
             existingOverrides = existingOverrides.Merge(controlItem);
             m_ChildControlOverrides[pathLowerCase] = existingOverrides;
+        }
+
+        private string ChildControlOverridePath(InputControl parent, InternedString controlName)
+        {
+            var pathLowerCase = controlName.ToLower();
+            for (var current = parent; current != m_Device; current = current.m_Parent)
+                pathLowerCase = $"{current.m_Name.ToLower()}/{pathLowerCase}";
+            return pathLowerCase;
         }
 
         private void AddChildControlIfMissing(InputControlLayout layout, InternedString variants, InputControl parent,
@@ -570,6 +582,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             // Copy its state settings.
             child.m_StateBlock = referencedControl.m_StateBlock;
+            child.usesStateFromOtherControl = true;
 
             // At this point, all byteOffsets are relative to parents so we need to
             // walk up the referenced control's parent chain and add offsets until
@@ -852,11 +865,32 @@ namespace UnityEngine.InputSystem.Layouts
 
         private void FinalizeControlHierarchy()
         {
-            FinalizeControlHierarchyRecursive(m_Device);
+            if (m_StateOffsetToControlMap == null)
+                m_StateOffsetToControlMap = new List<uint>();
+
+            if (m_Device.allControls.Count > (1U << InputDevice.kControlIndexBits))
+                throw new NotSupportedException($"Device '{m_Device}' exceeds maximum supported control count of {1U << InputDevice.kControlIndexBits} (has {m_Device.allControls.Count} controls)");
+
+            // Device is not in m_ChildrenForEachControl so use index -1.
+            FinalizeControlHierarchyRecursive(m_Device, -1, m_Device.m_ChildrenForEachControl);
         }
 
-        private void FinalizeControlHierarchyRecursive(InputControl control)
+        private void FinalizeControlHierarchyRecursive(InputControl control, int controlIndex, InputControl[] allControls)
         {
+            // Make sure we're staying within limits on state offsets and sizes.
+            if (control.m_ChildCount == 0)
+            {
+                if (control.m_StateBlock.effectiveBitOffset >= (1U << InputDevice.kStateOffsetBits))
+                    throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit offset of {(1U << InputDevice.kStateOffsetBits) - 1} (bit offset {control.stateBlock.effectiveBitOffset})");
+                if (control.m_StateBlock.sizeInBits >= (1U << InputDevice.kStateSizeBits))
+                    throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit size of {(1U << InputDevice.kStateSizeBits) - 1} (bit offset {control.stateBlock.sizeInBits})");
+            }
+
+            // Add all leaf controls to state offset mapping.
+            if (control.m_ChildCount == 0)
+                m_StateOffsetToControlMap.Add(
+                    InputDevice.EncodeStateOffsetToControlMapEntry((uint)controlIndex, control.m_StateBlock.effectiveBitOffset, control.m_StateBlock.sizeInBits));
+
             // Set final display names. This may overwrite the ones supplied by the layout so temporarily
             // store the values here.
             var displayNameFromLayout = control.m_DisplayNameFromLayout;
@@ -866,10 +900,15 @@ namespace UnityEngine.InputSystem.Layouts
 
             // Recurse into children. Also bake our state offset into our children.
             var ourOffset = control.m_StateBlock.byteOffset;
-            foreach (var child in control.children)
+            var childCount = control.m_ChildCount;
+            var childStartIndex = control.m_ChildStartIndex;
+            for (var i = 0; i < childCount; ++i)
             {
+                var childIndex = childStartIndex + i;
+                var child = allControls[childIndex];
                 child.m_StateBlock.byteOffset += ourOffset;
-                FinalizeControlHierarchyRecursive(child);
+
+                FinalizeControlHierarchyRecursive(child, childIndex, allControls);
             }
 
             control.isSetupFinished = true;

@@ -155,6 +155,7 @@ namespace UnityEngine.InputSystem
             InputAction currentCompositeAction = null;
             var bindingMaskOnThisMap = map.m_BindingMask;
             var devicesForThisMap = map.devices;
+            var isSingletonAction = map.m_SingletonAction != null;
 
             // Can't use `using` as we need to use it with `ref`.
             var resolvedControls = new InputControlList<InputControl>(Allocator.Temp);
@@ -200,15 +201,15 @@ namespace UnityEngine.InputSystem
                         InputAction action = null;
                         if (!isPartOfComposite)
                         {
-                            if (!string.IsNullOrEmpty(actionName))
+                            if (isSingletonAction)
+                            {
+                                // Singleton actions always ignore names.
+                                actionIndexInMap = 0;
+                            }
+                            else if (!string.IsNullOrEmpty(actionName))
                             {
                                 ////REVIEW: should we fail here if we don't manage to find the action
                                 actionIndexInMap = map.FindActionIndex(actionName);
-                            }
-                            else if (map.m_SingletonAction != null)
-                            {
-                                // Special-case for singleton actions that don't have names.
-                                actionIndexInMap = 0;
                             }
 
                             if (actionIndexInMap != InputActionState.kInvalidIndex)
@@ -252,6 +253,74 @@ namespace UnityEngine.InputSystem
                                 !action.m_BindingMask.Value.Matches(ref unresolvedBinding,
                                     InputBinding.MatchOptions.EmptyGroupMatchesAny));
 
+                        // If the binding isn't disabled, look up controls now. We do this first as we may still disable the
+                        // binding if it doesn't resolve to any controls or resolves only to controls already bound to by
+                        // other bindings.
+                        //
+                        // NOTE: We continuously add controls here to `resolvedControls`. Once we've completed our
+                        //       pass over the bindings in the map, `resolvedControls` will have all the controls for
+                        //       the current map.
+                        if (!bindingIsDisabled && !isComposite)
+                        {
+                            firstControlIndex = memory.controlCount + resolvedControls.Count;
+                            if (devicesForThisMap != null)
+                            {
+                                // Search in devices for only this map.
+                                var list = devicesForThisMap.Value;
+                                for (var i = 0; i < list.Count; ++i)
+                                {
+                                    var device = list[i];
+                                    if (!device.added)
+                                        continue; // Skip devices that have been removed.
+                                    numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
+                                }
+                            }
+                            else
+                            {
+                                // Search globally.
+                                numControls = InputSystem.FindControls(path, ref resolvedControls);
+                            }
+
+                            // Check for controls that are already bound to the action through other
+                            // bindings. The first binding that grabs a specific control gets to "own" it.
+                            if (numControls > 0)
+                            {
+                                for (var i = 0; i < n; ++i)
+                                {
+                                    ref var otherBindingState = ref bindingStatesPtr[bindingStartIndex + i];
+
+                                    // Skip if binding has no controls.
+                                    if (otherBindingState.controlCount == 0)
+                                        continue;
+
+                                    // Skip if binding isn't from same action.
+                                    if (otherBindingState.actionIndex != actionStartIndex + actionIndexInMap)
+                                        continue;
+
+                                    // Check for controls in the set that we just resolved that are also on the other
+                                    // binding. Each such control we find, we kick out of the list.
+                                    for (var k = 0; k < numControls; ++k)
+                                    {
+                                        var controlOnCurrentBinding = resolvedControls[firstControlIndex + k - memory.controlCount];
+                                        var controlIndexOnOtherBinding = resolvedControls.IndexOf(controlOnCurrentBinding,
+                                            otherBindingState.controlStartIndex - memory.controlCount, otherBindingState.controlCount);
+                                        if (controlIndexOnOtherBinding != -1)
+                                        {
+                                            // Control is bound to a previous binding. Remove it from the current binding.
+                                            resolvedControls.RemoveAt(firstControlIndex + k - memory.controlCount);
+                                            --numControls;
+                                            --k;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Disable binding if it doesn't resolve to any controls.
+                            // NOTE: This also happens to bindings that got all their resolved controls removed because other bindings from the same
+                            //       action already grabbed them.
+                            if (numControls == 0)
+                                bindingIsDisabled = true;
+                        }
 
                         // If the binding isn't disabled, resolve its controls, processors, and interactions.
                         if (!bindingIsDisabled)
@@ -325,30 +394,6 @@ namespace UnityEngine.InputSystem
                                     currentCompositeIndex = InputActionState.kInvalidIndex;
                                     currentCompositeAction = null;
                                     currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
-                                }
-
-                                // Look up controls.
-                                //
-                                // NOTE: We continuously add controls here to `resolvedControls`. Once we've completed our
-                                //       pass over the bindings in the map, `resolvedControls` will have all the controls for
-                                //       the current map.
-                                firstControlIndex = memory.controlCount + resolvedControls.Count;
-                                if (devicesForThisMap != null)
-                                {
-                                    // Search in devices for only this map.
-                                    var list = devicesForThisMap.Value;
-                                    for (var i = 0; i < list.Count; ++i)
-                                    {
-                                        var device = list[i];
-                                        if (!device.added)
-                                            continue; // Skip devices that have been removed.
-                                        numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
-                                    }
-                                }
-                                else
-                                {
-                                    // Search globally.
-                                    numControls = InputSystem.FindControls(path, ref resolvedControls);
                                 }
                             }
                         }

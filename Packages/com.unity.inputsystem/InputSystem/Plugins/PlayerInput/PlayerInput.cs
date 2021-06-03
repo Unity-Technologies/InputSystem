@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (!m_ActionsInitialized && gameObject.activeSelf)
+                if (!m_ActionsInitialized && gameObject.activeInHierarchy)
                     InitializeActions();
                 return m_Actions;
             }
@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem
                 if (m_Actions != null)
                 {
                     m_Actions.Disable();
-                    if (m_Enabled)
+                    if (m_ActionsInitialized)
                         UninitializeActions();
                 }
 
@@ -415,7 +415,7 @@ namespace UnityEngine.InputSystem
                 if (m_NeverAutoSwitchControlSchemes == value)
                     return;
                 m_NeverAutoSwitchControlSchemes = value;
-                if (enabled)
+                if (m_Enabled)
                 {
                     if (!value && !m_OnUnpairedDeviceUsedHooked)
                         StartListeningForUnpairedDeviceActivity();
@@ -1106,7 +1106,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
         [NonSerialized] private bool m_Enabled;
-        [NonSerialized] private bool m_ActionsInitialized;
+        [NonSerialized] internal bool m_ActionsInitialized;
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
@@ -1115,6 +1115,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
         [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
+        [NonSerialized] private Func<InputDevice, InputEventPtr, bool> m_PreFilterUnpairedDeviceUsedDelegate;
         [NonSerialized] private bool m_OnUnpairedDeviceUsedHooked;
         [NonSerialized] private Action<InputDevice, InputDeviceChange> m_DeviceChangeDelegate;
         [NonSerialized] private bool m_OnDeviceChangeHooked;
@@ -1629,7 +1630,10 @@ namespace UnityEngine.InputSystem
                 return;
             if (m_UnpairedDeviceUsedDelegate == null)
                 m_UnpairedDeviceUsedDelegate = OnUnpairedDeviceUsed;
+            if (m_PreFilterUnpairedDeviceUsedDelegate == null)
+                m_PreFilterUnpairedDeviceUsedDelegate = OnPreFilterUnpairedDeviceUsed;
             InputUser.onUnpairedDeviceUsed += m_UnpairedDeviceUsedDelegate;
+            InputUser.onPrefilterUnpairedDeviceActivity += m_PreFilterUnpairedDeviceUsedDelegate;
             ++InputUser.listenForUnpairedDeviceActivity;
             m_OnUnpairedDeviceUsedHooked = true;
         }
@@ -1639,6 +1643,7 @@ namespace UnityEngine.InputSystem
             if (!m_OnUnpairedDeviceUsedHooked)
                 return;
             InputUser.onUnpairedDeviceUsed -= m_UnpairedDeviceUsedDelegate;
+            InputUser.onPrefilterUnpairedDeviceActivity -= m_PreFilterUnpairedDeviceUsedDelegate;
             --InputUser.listenForUnpairedDeviceActivity;
             m_OnUnpairedDeviceUsedHooked = false;
         }
@@ -1798,6 +1803,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private static bool OnPreFilterUnpairedDeviceUsed(InputDevice device, InputEventPtr eventPtr)
+        {
+            // Early out if the device isn't usable with any of our control schemes.
+            var actions = all[0].actions;
+            return actions != null && actions.IsUsableWithDevice(device);
+        }
+
         private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             // We only support automatic control scheme switching in single player mode.
@@ -1806,14 +1818,15 @@ namespace UnityEngine.InputSystem
                 return;
 
             var player = all[0];
-            if (player.m_Actions == null)
+            var actions = player.m_Actions;
+            if (actions == null)
                 return;
 
+            var device = control.device;
             using (InputActionRebindingExtensions.DeferBindingResolution())
             using (var availableDevices = InputUser.GetUnpairedInputDevices())
             {
                 // Put our device first in the list to make sure it's the first one picked for a match.
-                var device = control.device;
                 if (availableDevices.Count > 1)
                 {
                     var indexOfDevice = availableDevices.IndexOf(device);

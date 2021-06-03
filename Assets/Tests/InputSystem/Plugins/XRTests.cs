@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)
 using System;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
 using DeviceRole = UnityEngine.XR.InputDeviceRole;
 
-internal class XRTests : InputTestFixture
+internal class XRTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -826,4 +826,4 @@ internal class XRTests : InputTestFixture
         Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
     }
 }
-#endif // UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#endif // (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)

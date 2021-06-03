@@ -5,6 +5,10 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 using UnityEngine.TestTools;
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+
+#endif
 
 // Disable irrelevant warning about there not being underscores in method names.
 #pragma warning disable CA1707
@@ -83,7 +87,42 @@ public class IntegrationTests
         }
     }
 
-    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_EDITOR
+
+    [Test]
+    [Category("Integration")]
+    public void Integration_CanChangeInputBackendPlayerSettingInEditor()
+    {
+        // Save current player settings so we can restore them.
+        var oldEnabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
+        var newEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
+
+        // Enable new and disable old.
+        EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
+        Assert.That(EditorPlayerSettingHelpers.newSystemBackendsEnabled, Is.True);
+        Assert.That(EditorPlayerSettingHelpers.oldSystemBackendsEnabled, Is.False);
+
+        // Enable old and disable new.
+        EditorPlayerSettingHelpers.newSystemBackendsEnabled = false;
+        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = true;
+        Assert.That(EditorPlayerSettingHelpers.newSystemBackendsEnabled, Is.False);
+        Assert.That(EditorPlayerSettingHelpers.oldSystemBackendsEnabled, Is.True);
+
+        // Enable both.
+        EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = true;
+        Assert.That(EditorPlayerSettingHelpers.newSystemBackendsEnabled, Is.True);
+        Assert.That(EditorPlayerSettingHelpers.oldSystemBackendsEnabled, Is.True);
+
+        // Restore previous settings.
+        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = oldEnabled;
+        EditorPlayerSettingHelpers.newSystemBackendsEnabled = newEnabled;
+    }
+
+#endif
+
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
     [UnityTest]
     [Category("Integration")]

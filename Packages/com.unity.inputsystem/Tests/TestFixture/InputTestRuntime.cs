@@ -47,6 +47,12 @@ namespace UnityEngine.InputSystem
 
             lock (m_Lock)
             {
+                if (type == InputUpdateType.Dynamic && !dontAdvanceUnscaledGameTimeNextDynamicUpdate)
+                {
+                    unscaledGameTime += 1 / 30f;
+                    dontAdvanceUnscaledGameTimeNextDynamicUpdate = false;
+                }
+
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)
@@ -60,7 +66,10 @@ namespace UnityEngine.InputSystem
                 // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
                 // don't get bumped into the following update.
                 if (type == InputUpdateType.Dynamic && !dontAdvanceTimeNextDynamicUpdate)
+                {
                     currentTime += advanceTimeEachDynamicUpdate;
+                    dontAdvanceTimeNextDynamicUpdate = false;
+                }
 
                 if (onUpdate != null)
                 {
@@ -72,6 +81,7 @@ namespace UnityEngine.InputSystem
 
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;
+
                     if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
                         NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
                         m_EventBuffer = buffer.data;
@@ -81,8 +91,6 @@ namespace UnityEngine.InputSystem
                     m_EventCount = 0;
                     m_EventWritePosition = 0;
                 }
-
-                dontAdvanceTimeNextDynamicUpdate = false;
             }
         }
 
@@ -319,10 +327,12 @@ namespace UnityEngine.InputSystem
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
+        public bool isFocused => m_HasFocus;
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
         public float unscaledGameTime { get; set; } = 1;
+        public bool dontAdvanceUnscaledGameTimeNextDynamicUpdate { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
@@ -369,12 +379,14 @@ namespace UnityEngine.InputSystem
 
         public int eventCount => m_EventCount;
 
+        internal const int kDefaultEventBufferSize = 1024 * 512;
+
         private bool m_HasFocus = true;
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;
         private int m_EventWritePosition;
-        private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
+        private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(kDefaultEventBufferSize, Allocator.Persistent);
         private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;

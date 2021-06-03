@@ -388,23 +388,32 @@ namespace UnityEngine.InputSystem.Editor
         public string displayPath =>
             !string.IsNullOrEmpty(path) ? InputControlPath.ToHumanReadableString(path) : "<No Binding>";
 
+        private ActionTreeItem actionItem
+        {
+            get
+            {
+                // Find the action we're under.
+                for (var node = parent; node != null; node = node.parent)
+                    if (node is ActionTreeItem item)
+                        return item;
+                return null;
+            }
+        }
+
         public override string expectedControlLayout
         {
             get
             {
-                // Find the action we're under and return its expected control layout.
-                for (var item = parent; item != null; item = item.parent)
-                {
-                    if (item is ActionTreeItem actionItem)
-                        return actionItem.expectedControlLayout;
-                }
-                return string.Empty;
+                var currentActionItem = actionItem;
+                return currentActionItem != null ? currentActionItem.expectedControlLayout : string.Empty;
             }
         }
 
         public override void DeleteData()
         {
-            var bindingsArrayProperty = property.GetParentProperty();
+            var currentActionItem = actionItem;
+            Debug.Assert(currentActionItem != null, "BindingTreeItem should always have a parent action");
+            var bindingsArrayProperty = currentActionItem.bindingsArrayProperty;
             InputActionSerializationHelpers.DeleteBinding(bindingsArrayProperty, guid);
         }
 

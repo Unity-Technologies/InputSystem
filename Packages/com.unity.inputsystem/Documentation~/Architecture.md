@@ -12,6 +12,8 @@ The Input System can also send data back to the native backend in the form of [c
 
 # Input System (low-level)
 
+![Low-Level Architecture](Images/InputArchitectureLowLevel.png)
+
 The low-level Input System code processes and interprets the memory from the event stream that the native backend provides, and dispatches individual events.
 
 The Input System creates Device representations for any newly discovered Device in the event stream. The low-level code sees a Device as a block of raw, unmanaged memory. If it receives a state event for a Device, it writes the data from the state event into the Device's [state representation](Controls.md#control-state) in memory, so that the state always contains an up-to-date representation of the Device and all its Controls.
@@ -19,6 +21,8 @@ The Input System creates Device representations for any newly discovered Device 
 The low-level system code also contains structs which describe the data layout of commonly known Devices.
 
 # Input System (high-level)
+
+![High-Level Architecture](Images/InputArchitectureHighLevel.png)
 
 The high-level Input System code interprets the data in a Device's state buffers by using [layouts](Layouts.md), which describe the data layout of a Device and its Controls in memory. The Input System creates layouts from either the pre-defined structs of commonly known Devices supplied by the low level system, or dynamically at runtime, as in the case of [generic HIDs](HID.md#auto-generated-layouts).
 

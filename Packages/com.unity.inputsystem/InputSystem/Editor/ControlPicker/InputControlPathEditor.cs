@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Editor
             this.pathProperty = pathProperty;
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
-            m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.tooltip);
+            m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.GetTooltip());
         }
 
         public void Dispose()
@@ -118,8 +118,6 @@ namespace UnityEngine.InputSystem.Editor
                 bindingTextRect.x -= 15;
                 bindingTextRect.width += 15;
 
-                bindingTextRect.height -= 2;
-                bindingTextRect.y += 1;
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(bindingTextRect, path);
                 if (EditorGUI.EndChangeCheck())
