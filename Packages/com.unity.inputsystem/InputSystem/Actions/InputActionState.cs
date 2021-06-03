@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
@@ -109,15 +110,15 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
+        public uint* enabledControls => (uint*)memory.enabledControls;
 
-        private Action<InputUpdateType> m_OnBeforeUpdateDelegate;
-        private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+        public bool isProcessingControlStateChange => m_InProcessControlStateChange;
+
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
-
-        private int m_ContinuousActionCount;
-        private int m_ContinuousActionCountFromPreviousUpdate;
-        private int[] m_ContinuousActions;
+        private bool m_InProcessControlStateChange;
+        private Action m_OnBeforeUpdateDelegate;
+        private Action m_OnAfterUpdateDelegate;
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
@@ -155,11 +156,17 @@ namespace UnityEngine.InputSystem
 
         private void Destroy(bool isFinalizing = false)
         {
+            Debug.Assert(!isProcessingControlStateChange, "Must not destroy InputActionState while executing an action callback within it");
+
             if (!isFinalizing)
             {
                 for (var i = 0; i < totalMapCount; ++i)
                 {
                     var map = maps[i];
+
+                    // Remove state change monitors.
+                    if (map.enabled)
+                        DisableControls(i, mapIndices[i].controlStartIndex, mapIndices[i].controlCount);
 
                     if (map.m_Asset != null)
                         map.m_Asset.m_SharedStateForAllMaps = null;
@@ -173,7 +180,7 @@ namespace UnityEngine.InputSystem
                     if (actions != null)
                     {
                         for (var n = 0; n < actions.Length; ++n)
-                            actions[n].m_ActionIndex = kInvalidIndex;
+                            actions[n].m_ActionIndexInState = kInvalidIndex;
                     }
                 }
 
@@ -216,7 +223,7 @@ namespace UnityEngine.InputSystem
         /// <param name="device">Any input device.</param>
         /// <returns>True if any of the maps in the state has the device in its <see cref="InputActionMap.devices"/>
         /// list or if any of the device's controls are contained in <see cref="controls"/>.</returns>
-        public bool IsUsingDevice(InputDevice device)
+        private bool IsUsingDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
 
@@ -245,12 +252,8 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        /// <summary>
-        /// Check if the state would use a control from the given device.
-        /// </summary>
-        /// <param name="device"></param>
-        /// <returns></returns>
-        public bool CanUseDevice(InputDevice device)
+        // Check if the state would use a control from the given device.
+        private bool CanUseDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
 
@@ -305,6 +308,20 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        public void FinishBindingCompositeSetups()
+        {
+            for (var i = 0; i < totalBindingCount; ++i)
+            {
+                ref var binding = ref bindingStates[i];
+                if (!binding.isComposite || binding.compositeOrCompositeBindingIndex == -1)
+                    continue;
+
+                var composite = composites[binding.compositeOrCompositeBindingIndex];
+                var context = new InputBindingCompositeContext { m_State = this, m_BindingIndex = i };
+                composite.CallFinishSetup(ref context);
+            }
+        }
+
         /// <summary>
         /// Synchronize the current action states based on what they were before.
         /// </summary>
@@ -321,8 +338,10 @@ namespace UnityEngine.InputSystem
         public void RestoreActionStates(UnmanagedMemory oldState)
         {
             Debug.Assert(oldState.isAllocated, "Old state contains no memory");
+
+            // This method cannot deal with actions and/or maps having been removed.
+            // It DOES cope with bindings have been added and/or removed, though!
             Debug.Assert(oldState.actionCount == memory.actionCount, "Action count in old and new state must be the same");
-            Debug.Assert(oldState.bindingCount == memory.bindingCount, "Binding count in old and new state must be the same");
             Debug.Assert(oldState.mapCount == memory.mapCount, "Map count in old and new state must be the same");
 
             // Go through the state map by map and in each map, binding by binding. Enable
@@ -360,22 +379,32 @@ namespace UnityEngine.InputSystem
                     var mapIndex = actionState->mapIndex;
                     var map = maps[mapIndex];
                     ++map.m_EnabledActionsCount;
-
-                    ////REVIEW: Ideally, we'd know when an action map had *ALL* actions enabled and do not send notifications one by one here
-                    var action = map.m_Actions[actionIndex - mapIndices[mapIndex].actionStartIndex];
-                    NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
                 }
 
                 // Enable all controls on the binding.
-                // NOTE: We force an initial state check on actions here regardless of whether the action has
-                //       it enabled or not. The reason is that we use this path to temporarily disable actions
-                //       and re-enabling them should have the actions resume where they left off (where applicable).
-                EnableControls(actionState->mapIndex, bindingState->controlStartIndex, bindingState->controlCount,
-                    forceStateCheck: true);
+                EnableControls(actionState->mapIndex, bindingState->controlStartIndex,
+                    bindingState->controlCount);
             }
 
             // Make sure we get an initial state check.
             HookOnBeforeUpdate();
+
+            // Fire notifications.
+            if (s_OnActionChange.length > 0)
+            {
+                for (var i = 0; i < totalMapCount; ++i)
+                {
+                    var map = maps[i];
+                    if (map.m_SingletonAction == null && map.m_EnabledActionsCount == map.m_Actions.LengthSafe())
+                        NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
+                    else
+                    {
+                        var actions = map.actions;
+                        for (var n = 0; n < actions.Count; ++n)
+                            NotifyListenersOfActionChange(InputActionChange.ActionEnabled, actions[n]);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -384,7 +413,9 @@ namespace UnityEngine.InputSystem
         /// <param name="actionIndex">Action whose state to reset.</param>
         /// <param name="toPhase">Phase to reset the action to. Must be either <see cref="InputActionPhase.Waiting"/>
         /// or <see cref="InputActionPhase.Disabled"/>. Other phases cannot be transitioned to through resets.</param>
-        public void ResetActionState(int actionIndex, InputActionPhase toPhase = InputActionPhase.Waiting)
+        /// <param name="hardReset">If true, also wipe state such as for <see cref="InputAction.WasPressedThisFrame"/> which normally
+        /// persists even if an action is disabled.</param>
+        public void ResetActionState(int actionIndex, InputActionPhase toPhase = InputActionPhase.Waiting, bool hardReset = false)
         {
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range when resetting action");
             Debug.Assert(toPhase == InputActionPhase.Waiting || toPhase == InputActionPhase.Disabled,
@@ -392,7 +423,7 @@ namespace UnityEngine.InputSystem
 
             // If the action in started or performed phase, cancel it first.
             var actionState = &actionStates[actionIndex];
-            if (actionState->phase != InputActionPhase.Waiting)
+            if (actionState->phase != InputActionPhase.Waiting && actionState->phase != InputActionPhase.Disabled)
             {
                 // Cancellation calls should receive current time.
                 actionState->time = InputRuntime.s_Instance.currentTime;
@@ -428,23 +459,28 @@ namespace UnityEngine.InputSystem
             }
 
             // Wipe state.
-            var state = *actionState;
-            state.phase = toPhase;
-            state.controlIndex = kInvalidIndex;
-            state.bindingIndex = 0;
-            state.interactionIndex = kInvalidIndex;
-            state.startTime = 0;
-            state.time = 0;
-            state.hasMultipleConcurrentActuations = false;
-            *actionState = state;
+            actionState->phase = toPhase;
+            actionState->controlIndex = kInvalidIndex;
+            actionState->bindingIndex = 0;
+            actionState->interactionIndex = kInvalidIndex;
+            actionState->startTime = 0;
+            actionState->time = 0;
+            actionState->hasMultipleConcurrentActuations = false;
+            actionState->inProcessing = false;
+            actionState->isPressed = false;
 
-            // Remove if currently on the list of continuous actions.
-            if (state.continuous)
+            // For "hard resets", wipe state we don't normally wipe. This resets things such as WasPressedThisFrame().
+            if (hardReset)
             {
-                var continuousIndex = ArrayHelpers.IndexOf(m_ContinuousActions, actionIndex, count: m_ContinuousActionCount);
-                if (continuousIndex != -1)
-                    ArrayHelpers.EraseAtByMovingTail(m_ContinuousActions, ref m_ContinuousActionCount, continuousIndex);
+                actionState->lastCanceledInUpdate = default;
+                actionState->lastPerformedInUpdate = default;
+                actionState->pressedInUpdate = default;
+                actionState->releasedInUpdate = default;
             }
+
+            Debug.Assert(!actionState->isStarted, "Cannot reset an action to started phase");
+            Debug.Assert(!actionState->isPerformed, "Cannot reset an action to performed phase");
+            Debug.Assert(!actionState->isCanceled, "Cannot reset an action to canceled phase");
         }
 
         public ref TriggerState FetchActionState(InputAction action)
@@ -453,9 +489,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap != null, "Action must have an action map");
             Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex, "Action must have index set");
             Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
-            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount, "Action index is out of range");
+            Debug.Assert(action.m_ActionIndexInState >= 0 && action.m_ActionIndexInState < totalActionCount, "Action index is out of range");
 
-            return ref actionStates[action.m_ActionIndex];
+            return ref actionStates[action.m_ActionIndexInState];
         }
 
         public ActionMapIndices FetchMapIndices(InputActionMap map)
@@ -471,17 +507,21 @@ namespace UnityEngine.InputSystem
             Debug.Assert(map.m_Actions != null, "Map must have actions");
             Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
+            // Enable all controls in map that aren't already enabled.
             EnableControls(map);
 
-            // Put all actions into waiting state.
+            // Put all actions that aren't already enabled into waiting state.
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
             var actionCount = mapIndices[mapIndex].actionCount;
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
             {
                 var actionIndex = actionStartIndex + i;
-                actionStates[actionIndex].phase = InputActionPhase.Waiting;
+                var actionState = &actionStates[actionIndex];
+                if (actionState->isDisabled)
+                    actionState->phase = InputActionPhase.Waiting;
+                actionState->inProcessing = false;
             }
             map.m_EnabledActionsCount = actionCount;
 
@@ -502,7 +542,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
 
             // Install state monitors for all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
@@ -520,7 +560,7 @@ namespace UnityEngine.InputSystem
             EnableControls(action);
 
             // Put action into waiting state.
-            var actionIndex = action.m_ActionIndex;
+            var actionIndex = action.m_ActionIndexInState;
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when enabling single action");
             actionStates[actionIndex].phase = InputActionPhase.Waiting;
@@ -536,7 +576,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap != null, "Action must have action map");
             Debug.Assert(maps.Contains(action.m_ActionMap), "Map must be contained in state");
 
-            var actionIndex = action.m_ActionIndex;
+            var actionIndex = action.m_ActionIndexInState;
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when enabling controls");
 
@@ -620,7 +660,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
             DisableControls(action);
-            ResetActionState(action.m_ActionIndex, toPhase: InputActionPhase.Disabled);
+            ResetActionState(action.m_ActionIndexInState, toPhase: InputActionPhase.Disabled);
             --action.m_ActionMap.m_EnabledActionsCount;
 
             NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
@@ -632,7 +672,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap != null, "Action must have action map");
             Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
-            var actionIndex = action.m_ActionIndex;
+            var actionIndex = action.m_ActionIndexInState;
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when disabling controls");
 
@@ -666,7 +706,8 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
 
-        private void EnableControls(int mapIndex, int controlStartIndex, int numControls, bool forceStateCheck = false)
+        ////NOTE: This must not enable only a partial set of controls on a binding (currently we have no setup that would lead to that)
+        private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
         {
             Debug.Assert(controls != null, "State must have controls");
             Debug.Assert(controlStartIndex >= 0 && (controlStartIndex < totalControlCount || numControls == 0),
@@ -677,12 +718,20 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
+
+                // We don't want to add multiple state monitors for the same control. This can happen if enabling
+                // single actions is mixed with enabling actions maps containing them.
+                if (IsControlEnabled(controlIndex))
+                    continue;
+
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
-
-                if (forceStateCheck || bindingStates[bindingIndex].wantsInitialStateCheck)
-                    bindingStates[bindingIndex].initialStateCheckPending = true;
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (bindingStatePtr->wantsInitialStateCheck)
+                    SetInitialStateCheckPending(bindingStatePtr, true);
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+
+                SetControlEnabled(controlIndex, true);
             }
         }
 
@@ -697,13 +746,52 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
+                if (!IsControlEnabled(controlIndex))
+                    continue;
+
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
-
-                if (bindingStates[bindingIndex].wantsInitialStateCheck)
-                    bindingStates[bindingIndex].initialStateCheckPending = false;
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (bindingStatePtr->wantsInitialStateCheck)
+                    SetInitialStateCheckPending(bindingStatePtr, false);
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+
+                SetControlEnabled(controlIndex, false);
             }
+        }
+
+        private void SetInitialStateCheckPending(BindingState* bindingStatePtr, bool value)
+        {
+            if (bindingStatePtr->isPartOfComposite)
+            {
+                // For composites, we always flag the composite itself as wanting an initial state check. This
+                // way, we don't have to worry about triggering the composite multiple times when several of its
+                // controls are actuated.
+                var compositeIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
+                bindingStates[compositeIndex].initialStateCheckPending = value;
+            }
+            else
+            {
+                bindingStatePtr->initialStateCheckPending = value;
+            }
+        }
+
+        private bool IsControlEnabled(int controlIndex)
+        {
+            var intIndex = controlIndex / 32;
+            var mask = 1U << (controlIndex % 32);
+            return (enabledControls[intIndex] & mask) != 0;
+        }
+
+        private void SetControlEnabled(int controlIndex, bool state)
+        {
+            var intIndex = controlIndex / 32;
+            var mask = 1U << (controlIndex % 32);
+
+            if (state)
+                enabledControls[intIndex] |= mask;
+            else
+                enabledControls[intIndex] &= ~mask;
         }
 
         private void HookOnBeforeUpdate()
@@ -733,19 +821,15 @@ namespace UnityEngine.InputSystem
         // NOTE: We do this as a callback from onBeforeUpdate rather than directly when the action is enabled
         //       to ensure that the callbacks happen during input processing and not randomly from wherever
         //       an action happens to be enabled.
-        private void OnBeforeInitialUpdate(InputUpdateType type)
+        private void OnBeforeInitialUpdate()
         {
-            ////TODO: deal with update type
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+                return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
 
             Profiler.BeginSample("InitialActionStateCheck");
-
-            // The composite logic relies on the event ID to determine whether a composite binding should trigger again
-            // when already triggered. Make up a fake event with just an ID.
-            var inputEvent = new InputEvent {eventId = 1234};
-            var eventPtr = new InputEventPtr(&inputEvent);
 
             // Use current time as time of control state change.
             var time = InputRuntime.s_Instance.currentTime;
@@ -757,151 +841,58 @@ namespace UnityEngine.InputSystem
             // that the control just got actuated.
             for (var bindingIndex = 0; bindingIndex < totalBindingCount; ++bindingIndex)
             {
-                if (!bindingStates[bindingIndex].initialStateCheckPending)
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (!bindingStatePtr->initialStateCheckPending)
                     continue;
 
-                bindingStates[bindingIndex].initialStateCheckPending = false;
+                Debug.Assert(!bindingStatePtr->isPartOfComposite, "Initial state check flag must be set on composite, not on its parts");
+                bindingStatePtr->initialStateCheckPending = false;
 
-                var mapIndex = bindingStates[bindingIndex].mapIndex;
-                var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
-                var controlCount = bindingStates[bindingIndex].controlCount;
+                var mapIndex = bindingStatePtr->mapIndex;
+                var controlStartIndex = bindingStatePtr->controlStartIndex;
+                var controlCount = bindingStatePtr->controlCount;
 
+                var isComposite = bindingStatePtr->isComposite;
                 for (var n = 0; n < controlCount; ++n)
                 {
                     var controlIndex = controlStartIndex + n;
                     var control = controls[controlIndex];
 
                     if (!control.CheckStateIsAtDefault())
-                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
+                    {
+                        // For composites, the binding index we have at this point is for the composite binding, not for the part
+                        // binding that contributes the control we're looking at. Adjust for that.
+                        var bindingIndexForControl = bindingIndex;
+                        if (isComposite)
+                            bindingIndexForControl = controlIndexToBindingIndex[controlIndex];
+
+                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndexForControl, time, default);
+
+                        // For composites, any one actuated control will lead to the composite being
+                        // processed as a whole so we can stop here. This also ensure that we are
+                        // not triggering the composite repeatedly if there are multiple actuated
+                        // controls bound to its parts.
+                        if (isComposite)
+                            break;
+                    }
                 }
             }
 
             Profiler.EndSample();
         }
 
-        private void OnAfterUpdateProcessContinuousActions(InputUpdateType updateType)
-        {
-            ////TODO: handle update type
-
-            // Everything that is still on the list of continuous actions at the end of a
-            // frame either got there during the frame or is there still from the last frame
-            // (meaning the action didn't get any input this frame). Continuous actions added
-            // this update will all have been added to the end of the array so we know that
-            // everything in between #0 and m_ContinuousActionCountFromPreviousUpdate is
-            // continuous actions left from the previous update.
-
-            var time = InputRuntime.s_Instance.currentTime;
-            for (var i = 0; i < m_ContinuousActionCountFromPreviousUpdate; ++i)
-            {
-                var actionIndex = m_ContinuousActions[i];
-                Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
-                    "Action index out of range when updating continuous actions");
-
-                var currentPhase = actionStates[actionIndex].phase;
-                Debug.Assert(currentPhase == InputActionPhase.Started || currentPhase == InputActionPhase.Performed,
-                    "Current phase must be Started or Performed");
-
-                // Trigger the action and go back to its current phase (may be
-                actionStates[actionIndex].time = time;
-                ChangePhaseOfAction(InputActionPhase.Performed, ref actionStates[actionIndex],
-                    phaseAfterPerformedOrCanceled: currentPhase);
-            }
-
-            // All actions that are currently in the list become the actions we update by default
-            // on the next update. If events come in during the next update, the action will be
-            // moved out of there using DontTriggerContinuousActionThisUpdate().
-            m_ContinuousActionCountFromPreviousUpdate = m_ContinuousActionCount;
-        }
-
-        /// <summary>
-        /// Add an action to the list of actions we trigger every frame.
-        /// </summary>
-        /// <param name="actionIndex">Index of the action in <see cref="actionStates"/>.</param>
-        private void AddContinuousAction(int actionIndex)
-        {
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
-                "Action index out of range when adding continuous action");
-            Debug.Assert(!actionStates[actionIndex].onContinuousList, "Action is already in list");
-            Debug.Assert(
-                ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0, count: m_ContinuousActionCount) == -1,
-                "Action is already on list of continuous actions");
-
-            ArrayHelpers.AppendWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, actionIndex);
-            actionStates[actionIndex].onContinuousList = true;
-
-            // Hook into `onAfterUpdate` if we haven't already.
-            if (!m_OnAfterUpdateHooked)
-            {
-                if (m_OnAfterUpdateDelegate == null)
-                    m_OnAfterUpdateDelegate = OnAfterUpdateProcessContinuousActions;
-                InputSystem.s_Manager.onAfterUpdate += m_OnAfterUpdateDelegate;
-                m_OnAfterUpdateHooked = true;
-            }
-        }
-
-        /// <summary>
-        /// Remove an action from the list of actions we trigger every frame.
-        /// </summary>
-        /// <param name="actionIndex"></param>
-        private void RemoveContinuousAction(int actionIndex)
-        {
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
-                "Action index out of range when removing continuous action");
-            Debug.Assert(actionStates[actionIndex].onContinuousList, "Action not in list");
-            Debug.Assert(
-                ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0, count: m_ContinuousActionCount) != -1,
-                "Action is not currently in list of continuous actions");
-            Debug.Assert(m_ContinuousActionCount > 0, "List of continuous actions is empty");
-
-            var index = ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0,
-                count: m_ContinuousActionCount);
-            Debug.Assert(index != -1, "Action not found in list of continuous actions");
-
-            ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
-            actionStates[actionIndex].onContinuousList = false;
-
-            // If the action was in the part of the list that continuous actions we have carried
-            // over from the previous update, adjust for having removed a value there.
-            if (index < m_ContinuousActionCountFromPreviousUpdate)
-                --m_ContinuousActionCountFromPreviousUpdate;
-
-            // Unhook from `onAfterUpdate` if we don't need it anymore.
-            if (m_ContinuousActionCount == 0 && m_OnAfterUpdateHooked)
-            {
-                InputSystem.s_Manager.onAfterUpdate -= m_OnAfterUpdateDelegate;
-                m_OnAfterUpdateHooked = false;
-            }
-        }
-
-        private void DontTriggerContinuousActionThisUpdate(int actionIndex)
-        {
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Index out of range");
-            Debug.Assert(actionStates[actionIndex].onContinuousList, "Action not in list");
-            Debug.Assert(
-                ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0, count: m_ContinuousActionCount) != -1,
-                "Action is not currently in list of continuous actions");
-            Debug.Assert(m_ContinuousActionCount > 0, "List of continuous actions is empty");
-
-            // Check if the action is within the beginning section of the list of actions that we need to check at
-            // the end of the current update. If so, move it out of there.
-            var index = ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0,
-                count: m_ContinuousActionCount);
-            if (index < m_ContinuousActionCountFromPreviousUpdate)
-            {
-                // Move to end of list.
-                ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
-                --m_ContinuousActionCountFromPreviousUpdate;
-                ArrayHelpers.AppendWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, actionIndex);
-            }
-        }
-
         // Called from InputManager when one of our state change monitors has fired.
         // Tells us the time of the change *according to the state events coming in*.
         // Also tells us which control of the controls we are binding to triggered the
-        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
+        // change and relays the binding index we gave it when we called AddChangeMonitor.
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time,
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
+            #if UNITY_EDITOR
+            if (InputState.currentUpdateType == InputUpdateType.Editor)
+                return;
+            #endif
+
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
         }
@@ -957,72 +948,114 @@ namespace UnityEngine.InputSystem
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
 
-            var bindingStatePtr = &bindingStates[bindingIndex];
-            var actionIndex = bindingStatePtr->actionIndex;
-
-            var trigger = new TriggerState
+            using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                mapIndex = mapIndex,
-                controlIndex = controlIndex,
-                bindingIndex = bindingIndex,
-                interactionIndex = kInvalidIndex,
-                time = time,
-                startTime = time,
-                continuous = actionIndex != kInvalidIndex && actionStates[actionIndex].continuous,
-                passThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].passThrough,
-            };
+                // Callbacks can do pretty much anything and thus trigger arbitrary state/configuration
+                // changes in the system. We have to ensure that while we're executing callbacks, our
+                // current InputActionState is not getting changed from under us. We dictate that while
+                // m_InProcessControlStateChange is true, no binding resolution can be triggered on the state and
+                // it cannot be destroyed.
+                //
+                // This is also why we defer binding resolution above. If there is a configuration change
+                // triggered by an action callback, the state will be marked dirty and re-resolved after
+                // we have completed the callback.
+                m_InProcessControlStateChange = true;
 
-            // If the binding is part of a composite, check for interactions on the composite
-            // itself and give them a first shot at processing the value change.
-            var haveInteractionsOnComposite = false;
-            if (bindingStatePtr->isPartOfComposite)
-            {
-                var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
-                var compositeBindingPtr = &bindingStates[compositeBindingIndex];
-
-                // If the composite has already been triggered from the very same event, ignore it.
-                // Example: KeyboardState change that includes both A and W key state changes and we're looking
-                //          at a WASD composite binding. There's a state change monitor on both the A and the W
-                //          key and thus the manager will notify us individually of both changes. However, we
-                //          want to perform the action only once.
-                if (ShouldIgnoreControlStateChangeOnCompositeBinding(compositeBindingPtr, eventPtr))
-                    return;
-
-                // Common conflict resolution. We do this *after* the check above as it is more expensive.
-                if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
-                    return;
-
-                // Run through interactions on composite.
-                var interactionCountOnComposite = compositeBindingPtr->interactionCount;
-                if (interactionCountOnComposite > 0)
+                try
                 {
-                    haveInteractionsOnComposite = true;
-                    ProcessInteractions(ref trigger,
-                        compositeBindingPtr->interactionStartIndex,
-                        interactionCountOnComposite);
+                    var bindingStatePtr = &bindingStates[bindingIndex];
+                    var actionIndex = bindingStatePtr->actionIndex;
+
+                    var trigger = new TriggerState
+                    {
+                        mapIndex = mapIndex,
+                        controlIndex = controlIndex,
+                        bindingIndex = bindingIndex,
+                        interactionIndex = kInvalidIndex,
+                        time = time,
+                        startTime = time,
+                        isPassThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].isPassThrough,
+                        isButton = actionIndex != kInvalidIndex && actionStates[actionIndex].isButton,
+                    };
+
+                    // If we have pending initial state checks that will run in the next update,
+                    // force-reset the flag on the control that just triggered. This ensures that we're
+                    // not triggering an action twice from the same state change in case the initial state
+                    // check happens later (see Actions_ValueActionsEnabledInOnEvent_DoNotReactToCurrentStateOfControlTwice).
+                    if (m_OnBeforeUpdateHooked)
+                        bindingStatePtr->initialStateCheckPending = false;
+
+                    // If the binding is part of a composite, check for interactions on the composite
+                    // itself and give them a first shot at processing the value change.
+                    var haveInteractionsOnComposite = false;
+                    if (bindingStatePtr->isPartOfComposite)
+                    {
+                        var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
+                        var compositeBindingPtr = &bindingStates[compositeBindingIndex];
+
+                        // If the composite has already been triggered from the very same event, ignore it.
+                        // Example: KeyboardState change that includes both A and W key state changes and we're looking
+                        //          at a WASD composite binding. There's a state change monitor on both the A and the W
+                        //          key and thus the manager will notify us individually of both changes. However, we
+                        //          want to perform the action only once.
+                        if (ShouldIgnoreControlStateChangeOnCompositeBinding(compositeBindingPtr, eventPtr))
+                            return;
+
+                        // Common conflict resolution. We do this *after* the check above as it is more expensive.
+                        if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
+                            return;
+
+                        // Run through interactions on composite.
+                        var interactionCountOnComposite = compositeBindingPtr->interactionCount;
+                        if (interactionCountOnComposite > 0)
+                        {
+                            haveInteractionsOnComposite = true;
+                            ProcessInteractions(ref trigger,
+                                compositeBindingPtr->interactionStartIndex,
+                                interactionCountOnComposite);
+                        }
+                    }
+                    else if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
+                    {
+                        return;
+                    }
+
+                    // Check actuation level.
+                    var actuation = ComputeMagnitude(ref trigger);
+                    var actionState = &actionStates[actionIndex];
+                    var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                    if (!actionState->isPressed && actuation >= pressPoint)
+                    {
+                        actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
+                        actionState->isPressed = true;
+                    }
+                    else if (actionState->isPressed)
+                    {
+                        var releasePoint = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
+                        if (actuation <= releasePoint)
+                        {
+                            actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
+                            actionState->isPressed = false;
+                        }
+                    }
+
+                    // If we have interactions, let them do all the processing. The presence of an interaction
+                    // essentially bypasses the default phase progression logic of an action.
+                    var interactionCount = bindingStatePtr->interactionCount;
+                    if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
+                    {
+                        ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
+                    }
+                    else if (!haveInteractionsOnComposite)
+                    {
+                        ProcessDefaultInteraction(ref trigger, actionIndex);
+                    }
+                }
+                finally
+                {
+                    m_InProcessControlStateChange = false;
                 }
             }
-            else if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
-            {
-                return;
-            }
-
-            // If we have interactions, let them do all the processing. The presence of an interaction
-            // essentially bypasses the default phase progression logic of an action.
-            var interactionCount = bindingStatePtr->interactionCount;
-            if (interactionCount > 0)
-            {
-                ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
-            }
-            else if (!haveInteractionsOnComposite)
-            {
-                ProcessDefaultInteraction(ref trigger, actionIndex);
-            }
-
-            // If the associated action is continuous and is currently on the list to get triggered
-            // this update, move it to the set of continuous actions we do NOT trigger this update.
-            if (actionIndex != kInvalidIndex && actionStates[actionIndex].onContinuousList)
-                DontTriggerContinuousActionThisUpdate(actionIndex);
         }
 
         /// <summary>
@@ -1105,6 +1138,11 @@ namespace UnityEngine.InputSystem
             if (!trigger.haveMagnitude)
                 trigger.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
 
+            // We take a local copy of this value, so we can change it to use the starting control of composites
+            // for simpler conflict resolution (so composites always use the same value), but still report the actually
+            // actuated control to the user.
+            var triggerControlIndex = trigger.controlIndex;
+
             // Update magnitude stored in state.
             if (bindingStates[trigger.bindingIndex].isPartOfComposite)
             {
@@ -1119,9 +1157,9 @@ namespace UnityEngine.InputSystem
                 // first control in a composite. Otherwise it becomes much harder to tell if the we have
                 // multiple concurrent actuations or not.
                 // Since composites always evaluate as a whole instead of as single controls, having
-                // trigger.controlIndex differ from the state monitor that fired should be fine.
-                trigger.controlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
-                Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount,
+                // triggerControlIndex differ from the state monitor that fired should be fine.
+                triggerControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
+                Debug.Assert(triggerControlIndex >= 0 && triggerControlIndex < totalControlCount,
                     "Control start index on composite binding out of range");
             }
             else
@@ -1130,7 +1168,7 @@ namespace UnityEngine.InputSystem
                     "Composite should not trigger directly from a control");
 
                 // "Normal" control. Store magnitude in controlMagnitudes.
-                memory.controlMagnitudes[trigger.controlIndex] = trigger.magnitude;
+                memory.controlMagnitudes[triggerControlIndex] = trigger.magnitude;
             }
 
             // Never ignore state changes for actions that aren't currently driven by
@@ -1155,13 +1193,22 @@ namespace UnityEngine.InputSystem
                 // Remember that so that when the controls are released again, we can more
                 // efficiently determine whether we need to take multiple bound controls into
                 // account or not.
-                // NOTE: For composites, we have forced trigger.controlIndex to the first control
+                // NOTE: For composites, we have forced triggerControlIndex to the first control
                 //       in the composite. See above.
-                if (trigger.magnitude > 0 && trigger.controlIndex != actionState->controlIndex && actionState->magnitude > 0)
+                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex && actionState->magnitude > 0)
                     actionState->hasMultipleConcurrentActuations = true;
 
+                // Keep recorded magnitude in action state up to date.
+                actionState->magnitude = trigger.magnitude;
                 Profiler.EndSample();
                 return false;
+            }
+
+            var actionStateControlIndex = actionState->controlIndex;
+            if (bindingStates[actionState->bindingIndex].isPartOfComposite)
+            {
+                var compositeBindingIndex = bindingStates[actionState->bindingIndex].compositeOrCompositeBindingIndex;
+                actionStateControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
             }
 
             // If the control is actuated *less* then the current level of actuation we
@@ -1172,7 +1219,7 @@ namespace UnityEngine.InputSystem
             {
                 // If we're not currently driving the action, it's simple. Doesn't matter that we lowered
                 // actuation as we didn't have the highest actuation anyway.
-                if (trigger.controlIndex != actionState->controlIndex)
+                if (triggerControlIndex != actionStateControlIndex)
                 {
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
@@ -1189,6 +1236,8 @@ namespace UnityEngine.InputSystem
                 // If we don't have multiple controls that are currently actuated, it's simple.
                 if (!actionState->hasMultipleConcurrentActuations)
                 {
+                    // Keep recorded magnitude in action state up to date.
+                    actionState->magnitude = trigger.magnitude;
                     Profiler.EndSample();
                     return false;
                 }
@@ -1218,8 +1267,6 @@ namespace UnityEngine.InputSystem
                         var firstControlIndex = binding->controlStartIndex;
                         var compositeIndex = binding->compositeOrCompositeBindingIndex;
 
-                        Debug.Assert(firstControlIndex >= 0 && firstControlIndex < totalControlCount,
-                            "Control start index out of range on composite");
                         Debug.Assert(compositeIndex >= 0 && compositeIndex < totalCompositeCount,
                             "Composite index out of range on composite");
 
@@ -1228,6 +1275,9 @@ namespace UnityEngine.InputSystem
                             ++numActuations;
                         if (magnitude > highestActuationLevel)
                         {
+                            Debug.Assert(firstControlIndex >= 0 && firstControlIndex < totalControlCount,
+                                "Control start index out of range on composite");
+
                             controlWithHighestActuation = firstControlIndex;
                             bindingWithHighestActuation = controlIndexToBindingIndex[firstControlIndex];
                             highestActuationLevel = magnitude;
@@ -1274,6 +1324,13 @@ namespace UnityEngine.InputSystem
                     trigger.bindingIndex = bindingWithHighestActuation;
                     trigger.magnitude = highestActuationLevel;
 
+                    // We're switching the action to a different control so regardless of whether
+                    // the processing of the control state change results in a call to ChangePhaseOfAction,
+                    // we need to record this or the disambiguation code may start ignoring valid input.
+                    actionState->controlIndex = controlWithHighestActuation;
+                    actionState->bindingIndex = bindingWithHighestActuation;
+                    actionState->magnitude = highestActuationLevel;
+
                     Profiler.EndSample();
                     return false;
                 }
@@ -1287,7 +1344,11 @@ namespace UnityEngine.InputSystem
             //       before we let it drive the action.
             if (Mathf.Approximately(trigger.magnitude, actionState->magnitude))
             {
-                if (trigger.magnitude > 0 && trigger.controlIndex != actionState->controlIndex)
+                // However, if we have changed the control to a different control on the same composite, we *should* let
+                // it drive the action - this is like a direction change on the same control.
+                if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
+                    return false;
+                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
             }
@@ -1304,32 +1365,53 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// The default interaction does not have its own <see cref="InteractionState"/>. Whatever we do in here,
         /// we store directly on the action state.
+        ///
+        /// The default interaction is basically a sort of optimization where we don't require having an explicit
+        /// interaction object. Conceptually, it can be thought of, however, as putting this interaction on any
+        /// binding that doesn't have any other interaction on it.
         /// </remarks>
         private void ProcessDefaultInteraction(ref TriggerState trigger, int actionIndex)
         {
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when processing default interaction");
 
-            switch (actionStates[actionIndex].phase)
+            var actionState = &actionStates[actionIndex];
+            switch (actionState->phase)
             {
                 case InputActionPhase.Waiting:
                 {
                     // Pass-through actions we perform on every value change and then go back
                     // to waiting.
-                    if (trigger.passThrough)
+                    if (trigger.isPassThrough)
                     {
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                             phaseAfterPerformedOrCanceled: InputActionPhase.Waiting);
                         break;
                     }
-
-                    // Ignore if the control has not crossed its actuation threshold.
-                    if (IsActuated(ref trigger))
+                    // Button actions need to cross the button-press threshold.
+                    if (trigger.isButton)
                     {
-                        // Go into started, then perform and then go back to started.
-                        ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
-                        ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                            phaseAfterPerformedOrCanceled: InputActionPhase.Started);
+                        var actuation = ComputeMagnitude(ref trigger);
+                        if (actuation > 0)
+                            ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
+                        var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        if (actuation >= threshold)
+                        {
+                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                                phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
+                        }
+                    }
+                    else
+                    {
+                        // Value-type action.
+                        // Ignore if the control has not crossed its actuation threshold.
+                        if (IsActuated(ref trigger))
+                        {
+                            // Go into started, then perform and then go back to started.
+                            ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
+                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                                phaseAfterPerformedOrCanceled: InputActionPhase.Started);
+                        }
                     }
 
                     break;
@@ -1337,16 +1419,59 @@ namespace UnityEngine.InputSystem
 
                 case InputActionPhase.Started:
                 {
-                    if (!IsActuated(ref trigger))
+                    if (actionState->isButton)
                     {
-                        // Control went back to below actuation threshold. Cancel interaction.
-                        ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                        var actuation = ComputeMagnitude(ref trigger);
+                        var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        if (actuation >= threshold)
+                        {
+                            // Button crossed press threshold. Perform.
+                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                                phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
+                        }
+                        else if (Mathf.Approximately(actuation, 0))
+                        {
+                            // Button is no longer actuated. Never reached threshold to perform.
+                            // Cancel.
+                            ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                        }
                     }
                     else
                     {
-                        // Control changed value above magnitude threshold. Perform and remain started.
+                        if (!IsActuated(ref trigger))
+                        {
+                            // Control went back to below actuation threshold. Cancel interaction.
+                            ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                        }
+                        else
+                        {
+                            // Control changed value above magnitude threshold. Perform and remain started.
+                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                                phaseAfterPerformedOrCanceled: InputActionPhase.Started);
+                        }
+                    }
+                    break;
+                }
+
+                case InputActionPhase.Performed:
+                {
+                    if (actionState->isButton)
+                    {
+                        var actuation = ComputeMagnitude(ref trigger);
+                        var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
+                        if (actuation <= threshold)
+                            ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                    }
+                    else if (actionState->isPassThrough)
+                    {
+                        ////REVIEW: even for pass-through actions, shouldn't we cancel when seeing a default value?
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                            phaseAfterPerformedOrCanceled: InputActionPhase.Started);
+                            phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "Value type actions should not be left in performed state");
                     }
                     break;
                 }
@@ -1385,8 +1510,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
             Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount, "Interaction index out of range");
 
-            var currentState = interactionStates[interactionIndex];
-            var actionIndex = bindingStates[bindingIndex].actionIndex;
+            ref var currentState = ref interactionStates[interactionIndex];
 
             var context = new InputInteractionContext
             {
@@ -1400,16 +1524,27 @@ namespace UnityEngine.InputSystem
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     interactionIndex = interactionIndex,
-                    continuous = actionStates[actionIndex].continuous,
+                    startTime = currentState.startTime
                 },
                 timerHasExpired = true,
             };
 
             currentState.isTimerRunning = false;
-            interactionStates[interactionIndex] = currentState;
+            currentState.totalTimeoutCompletionTimeRemaining =
+                Mathf.Max(currentState.totalTimeoutCompletionTimeRemaining - currentState.timerDuration, 0);
+            currentState.timerDuration = default;
 
             // Let interaction handle timer expiration.
             interactions[interactionIndex].Process(ref context);
+        }
+
+        internal void SetTotalTimeoutCompletionTime(float seconds, ref TriggerState trigger)
+        {
+            Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount, "Interaction index out of range");
+
+            ref var interactionState = ref interactionStates[trigger.interactionIndex];
+            interactionState.totalTimeoutCompletionDone = 0;
+            interactionState.totalTimeoutCompletionTimeRemaining = seconds;
         }
 
         internal void StartTimeout(float seconds, ref TriggerState trigger)
@@ -1426,17 +1561,19 @@ namespace UnityEngine.InputSystem
                 ToCombinedMapAndControlAndBindingIndex(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex);
 
             // If there's already a timeout running, cancel it first.
-            if (interactionStates[interactionIndex].isTimerRunning)
-                StopTimeout(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex, interactionIndex);
+            ref var interactionState = ref interactionStates[interactionIndex];
+            if (interactionState.isTimerRunning)
+                StopTimeout(trigger.mapIndex, interactionState.triggerControlIndex, trigger.bindingIndex,
+                    interactionIndex);
 
             // Add new timeout.
             manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, monitorIndex,
                 interactionIndex);
 
             // Update state.
-            var interactionState = interactionStates[interactionIndex];
             interactionState.isTimerRunning = true;
-            interactionStates[interactionIndex] = interactionState;
+            interactionState.timerStartTime = currentTime;
+            interactionState.timerDuration = seconds;
         }
 
         private void StopTimeout(int mapIndex, int controlIndex, int bindingIndex, int interactionIndex)
@@ -1452,9 +1589,13 @@ namespace UnityEngine.InputSystem
             manager.RemoveStateChangeMonitorTimeout(this, monitorIndex, interactionIndex);
 
             // Update state.
-            var interactionState = interactionStates[interactionIndex];
+            ref var interactionState = ref interactionStates[interactionIndex];
             interactionState.isTimerRunning = false;
-            interactionStates[interactionIndex] = interactionState;
+            interactionState.totalTimeoutCompletionDone += interactionState.timerDuration;
+            interactionState.totalTimeoutCompletionTimeRemaining =
+                Mathf.Max(interactionState.totalTimeoutCompletionTimeRemaining - interactionState.timerDuration, 0);
+            interactionState.timerDuration = default;
+            interactionState.timerStartTime = default;
         }
 
         /// <summary>
@@ -1499,16 +1640,18 @@ namespace UnityEngine.InputSystem
                 phaseAfterPerformedOrCanceled = phaseAfterPerformed;
 
             // Any time an interaction changes phase, we cancel all pending timeouts.
-            if (interactionStates[interactionIndex].isTimerRunning)
-                StopTimeout(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex, trigger.interactionIndex);
+            ref var interactionState = ref interactionStates[interactionIndex];
+            if (interactionState.isTimerRunning)
+                StopTimeout(trigger.mapIndex, interactionState.triggerControlIndex, trigger.bindingIndex,
+                    trigger.interactionIndex);
 
             // Update interaction state.
-            interactionStates[interactionIndex].phase = newPhase;
-            interactionStates[interactionIndex].triggerControlIndex = trigger.controlIndex;
-            if (newPhase == InputActionPhase.Started)
-                interactionStates[interactionIndex].startTime = trigger.time;
+            interactionState.phase = newPhase;
+            interactionState.triggerControlIndex = trigger.controlIndex;
+            interactionState.startTime = trigger.startTime;
+            if (newPhase == InputActionPhase.Performed)
+                interactionState.performedTime = trigger.time;
 
-            ////REVIEW: If we want to defer triggering of actions, this is the point where we probably need to cut things off
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
             if (actionIndex != -1)
@@ -1516,34 +1659,57 @@ namespace UnityEngine.InputSystem
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
                     // We're the first interaction to go to the start phase.
-                    ChangePhaseOfAction(newPhase, ref trigger,
-                        phaseAfterPerformedOrCanceled: phaseAfterPerformedOrCanceled);
+                    if (!ChangePhaseOfAction(newPhase, ref trigger,
+                        phaseAfterPerformedOrCanceled: phaseAfterPerformedOrCanceled))
+                        return;
                 }
                 else if (newPhase == InputActionPhase.Canceled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
                     // We're canceling but maybe there's another interaction ready
-                    // to go into start phase.
+                    // to go into start phase. *Or* there's an interaction that has
+                    // already performed.
 
-                    ChangePhaseOfAction(newPhase, ref trigger);
+                    if (!ChangePhaseOfAction(newPhase, ref trigger))
+                        return;
 
                     var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
                     var numInteractions = bindingStates[bindingIndex].interactionCount;
                     for (var i = 0; i < numInteractions; ++i)
                     {
                         var index = interactionStartIndex + i;
-                        if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
+                        if (index != trigger.interactionIndex && (interactionStates[index].phase == InputActionPhase.Started ||
+                                                                  interactionStates[index].phase == InputActionPhase.Performed))
                         {
-                            ////REVIEW: does this handle continuous mode correctly?
+                            // Trigger start.
+                            var startTime = interactionStates[index].startTime;
                             var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
                                 controlIndex = interactionStates[index].triggerControlIndex,
                                 bindingIndex = trigger.bindingIndex,
                                 interactionIndex = index,
-                                time = trigger.time,
-                                startTime = interactionStates[index].startTime
+                                mapIndex = trigger.mapIndex,
+                                time = startTime,
+                                startTime = startTime,
                             };
-                            ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction);
+                            if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction))
+                                return;
+
+                            // If the interaction has already performed, trigger it now.
+                            if (interactionStates[index].phase == InputActionPhase.Performed)
+                            {
+                                triggerForInteraction = new TriggerState
+                                {
+                                    phase = InputActionPhase.Performed,
+                                    controlIndex = interactionStates[index].triggerControlIndex,
+                                    bindingIndex = trigger.bindingIndex,
+                                    interactionIndex = index,
+                                    time = interactionStates[index].performedTime, // Time when the interaction performed.
+                                    startTime = startTime,
+                                };
+                                if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction))
+                                    return;
+                            }
                             break;
                         }
                     }
@@ -1552,7 +1718,8 @@ namespace UnityEngine.InputSystem
                 {
                     // Any other phase change goes to action if we're the interaction driving
                     // the current phase.
-                    ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled);
+                    if (!ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled))
+                        return;
 
                     // We're the interaction driving the action and we performed the action,
                     // so reset any other interaction to waiting state.
@@ -1574,15 +1741,21 @@ namespace UnityEngine.InputSystem
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
-            if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
+            if (newPhase == InputActionPhase.Performed && actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
             {
-                interactionStates[interactionIndex].phase = phaseAfterPerformed;
+                // We performed but we're not the interaction driving the action. We want to stay performed to make
+                // sure that if the interaction that is currently driving the action cancels, we get to perform
+                // the action. If we go back to waiting here, then the system can't tell that there's another interaction
+                // ready to perform (in fact, that has already performed).
+            }
+            else if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
+            {
+                interactionState.phase = phaseAfterPerformed;
             }
             else if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
             {
                 ResetInteractionState(trigger.mapIndex, trigger.bindingIndex, trigger.interactionIndex);
             }
-            ////TODO: reset entire chain
         }
 
         /// <summary>
@@ -1599,7 +1772,7 @@ namespace UnityEngine.InputSystem
         /// (<see cref="InputActionPhase.Waiting"/> by default). This change is not visible to observers, i.e. there won't
         /// be another run through callbacks.
         /// </remarks>
-        private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
+        private bool ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
             InputActionPhase phaseAfterPerformedOrCanceled = InputActionPhase.Waiting)
         {
             Debug.Assert(newPhase != InputActionPhase.Disabled, "Should not disable an action using this method");
@@ -1609,21 +1782,106 @@ namespace UnityEngine.InputSystem
 
             var actionIndex = bindingStates[trigger.bindingIndex].actionIndex;
             if (actionIndex == kInvalidIndex)
-                return; // No action associated with binding.
+                return true; // No action associated with binding.
 
             // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
-            if (actionState->phase == InputActionPhase.Disabled)
-                return;
+            if (actionState->isDisabled)
+                return true;
 
-            // Update action state.
+            // We mark the action as in-processing while we execute its phase transitions and perform
+            // callbacks. The callbacks may alter system state such that the action may get disabled
+            // (and potentially re-enabled) while the callback is in progress. We need to make sure that
+            // if that happens, we don't go and then do more processing on the action.
+            actionState->inProcessing = true;
+            try
+            {
+                // Enforce transition constraints.
+                if (actionState->isPassThrough && trigger.interactionIndex == kInvalidIndex)
+                {
+                    // No constraints on pass-through actions except if there are interactions driving the action.
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+                }
+                else if (newPhase == InputActionPhase.Performed && actionState->phase == InputActionPhase.Waiting)
+                {
+                    // Going from waiting to performed, we make a detour via started.
+                    ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Started, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+
+                    // Then we perform.
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+
+                    // And finally, if we're going back to waiting, we make a detour via canceled.
+                    if (phaseAfterPerformedOrCanceled == InputActionPhase.Waiting)
+                        ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Canceled, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+
+                    actionState->phase = phaseAfterPerformedOrCanceled;
+                }
+                else if (actionState->phase != newPhase || newPhase == InputActionPhase.Performed) // We allow Performed to trigger repeatedly.
+                {
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+
+                    if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
+                        actionState->phase = phaseAfterPerformedOrCanceled;
+                }
+            }
+            finally
+            {
+                actionState->inProcessing = false;
+            }
+
+            // If we're now waiting, reset control state. This is important for the disambiguation code
+            // to not consider whatever control actuation happened on the action last.
+            if (actionState->phase == InputActionPhase.Waiting)
+            {
+                actionState->controlIndex = kInvalidIndex;
+                actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
+            }
+
+            return true;
+        }
+
+        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger)
+        {
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
+
+            // Update action state.
             var newState = trigger;
-            newState.flags = actionState->flags;
+
+            // We need to make sure here that any HaveMagnitude flag we may be carrying over from actionState
+            // is handled correctly (case 1239551).
+            newState.flags = actionState->flags; // Preserve flags.
+            newState.magnitude = trigger.haveMagnitude ? trigger.magnitude : ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
             newState.phase = newPhase;
-            if (!newState.haveMagnitude)
-                newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+            if (newPhase == InputActionPhase.Performed)
+            {
+                newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
+            }
+            else if (newPhase == InputActionPhase.Canceled)
+            {
+                newState.lastCanceledInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
+            }
+            else
+            {
+                newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
+                newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
+            }
+            newState.pressedInUpdate = actionState->pressedInUpdate;
+            newState.releasedInUpdate = actionState->releasedInUpdate;
+            if (newPhase == InputActionPhase.Started)
+                newState.startTime = newState.time;
             *actionState = newState;
 
             // Let listeners know.
@@ -1636,62 +1894,28 @@ namespace UnityEngine.InputSystem
             {
                 case InputActionPhase.Started:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted);
+                    Debug.Assert(trigger.controlIndex != -1, "Must have control to start an action");
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted, "started");
                     break;
                 }
 
                 case InputActionPhase.Performed:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
-                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
-                    {
-                        actionState->phase = phaseAfterPerformedOrCanceled;
-
-                        // If the action is continuous and remains in performed or started state, make sure the action
-                        // is on the list of continuous actions that we check every update.
-                        if ((phaseAfterPerformedOrCanceled == InputActionPhase.Started ||
-                             phaseAfterPerformedOrCanceled == InputActionPhase.Performed) &&
-                            actionState->continuous &&
-                            !actionState->onContinuousList)
-                        {
-                            AddContinuousAction(actionIndex);
-                        }
-                    }
+                    Debug.Assert(trigger.controlIndex != -1, "Must have control to perform an action");
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed, "performed");
                     break;
                 }
 
                 case InputActionPhase.Canceled:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled);
-                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
-                    {
-                        actionState->phase = phaseAfterPerformedOrCanceled;
-
-                        // Remove from list of continuous actions, if necessary.
-                        if (actionState->onContinuousList)
-                            RemoveContinuousAction(actionIndex);
-                    }
+                    Debug.Assert(trigger.controlIndex != -1, "When canceling, must have control that started action");
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled, "canceled");
                     break;
                 }
-
-                case InputActionPhase.Waiting:
-                {
-                    if (actionState->onContinuousList)
-                        RemoveContinuousAction(actionIndex);
-                    break;
-                }
-            }
-
-            // If we're now waiting, reset control state. This is important for the disambiguation code
-            // to not consider whatever control actuation happened on the action last.
-            if (actionState->phase == InputActionPhase.Waiting)
-            {
-                actionState->controlIndex = kInvalidIndex;
-                actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
             }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
@@ -1707,10 +1931,9 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputActionCallback");
 
             // Global callback goes first.
+            var action = context.action;
             if (s_OnActionChange.length > 0)
             {
-                var action = context.action;
-
                 InputActionChange change;
                 switch (phase)
                 {
@@ -1733,36 +1956,10 @@ namespace UnityEngine.InputSystem
             }
 
             // Run callbacks (if any) directly on action.
-            var listenerCount = listeners.length;
-            for (var i = 0; i < listenerCount; ++i)
-            {
-                try
-                {
-                    listeners[i](context);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"{exception.GetType().Name} thrown during execution of '{phase}' callback on action '{GetActionOrNull(ref actionStates[actionIndex])}'");
-                    Debug.LogException(exception);
-                }
-            }
+            DelegateHelpers.InvokeCallbacksSafe(ref listeners, context, callbackName, action);
 
             // Run callbacks (if any) on action map.
-            var listenerCountOnMap = callbacksOnMap.length;
-            for (var i = 0; i < listenerCountOnMap; ++i)
-            {
-                try
-                {
-                    callbacksOnMap[i](context);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"{exception.GetType().Name} thrown during execution of callback for '{phase}' phase of '{GetActionOrNull(ref actionStates[actionIndex]).name}' action in map '{actionMap.name}'");
-                    Debug.LogException(exception);
-                }
-            }
+            DelegateHelpers.InvokeCallbacksSafe(ref callbacksOnMap, context, callbackName, actionMap);
 
             Profiler.EndSample();
         }
@@ -1818,6 +2015,27 @@ namespace UnityEngine.InputSystem
 
             Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount, "Interaction index out of range");
             return interactions[trigger.interactionIndex];
+        }
+
+        internal int GetBindingIndexInMap(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
+            var mapIndex = bindingStates[bindingIndex].mapIndex;
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            return bindingIndex - bindingStartIndex;
+        }
+
+        internal int GetBindingIndexInState(int mapIndex, int bindingIndexInMap)
+        {
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            return bindingStartIndex + bindingIndexInMap;
+        }
+
+        // Iterators may not use unsafe code so do the detour here.
+        internal BindingState GetBindingState(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
+            return bindingStates[bindingIndex];
         }
 
         internal InputBinding GetBinding(int bindingIndex)
@@ -1890,13 +2108,13 @@ namespace UnityEngine.InputSystem
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
                 var compositeObject = composites[compositeIndex];
-                Debug.Assert(compositeObject != null);
+                Debug.Assert(compositeObject != null, "Composite object on composite state is null");
 
                 return compositeObject.valueSizeInBytes;
             }
 
             var control = controls[controlIndex];
-            Debug.Assert(control != null);
+            Debug.Assert(control != null, "Control at given index is null");
             return control.valueSizeInBytes;
         }
 
@@ -1922,16 +2140,19 @@ namespace UnityEngine.InputSystem
 
         internal bool IsActuated(ref TriggerState trigger, float threshold = 0)
         {
+            var magnitude = ComputeMagnitude(ref trigger);
+            if (magnitude < 0)
+                return true;
+            if (Mathf.Approximately(threshold, 0))
+                return magnitude > 0;
+            return magnitude >= threshold;
+        }
+
+        internal float ComputeMagnitude(ref TriggerState trigger)
+        {
             if (!trigger.haveMagnitude)
                 trigger.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
-
-            if (trigger.magnitude < 0)
-                return true;
-
-            if (Mathf.Approximately(threshold, 0))
-                return trigger.magnitude > 0;
-
-            return trigger.magnitude >= threshold;
+            return trigger.magnitude;
         }
 
         private float ComputeMagnitude(int bindingIndex, int controlIndex)
@@ -1966,7 +2187,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: we can unify the reading paths once we have blittable type constraints
 
-        internal void ReadValue(int bindingIndex, int controlIndex, void* buffer, int bufferSize)
+        internal void ReadValue(int bindingIndex, int controlIndex, void* buffer, int bufferSize, bool ignoreComposites = false)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
@@ -1975,7 +2196,7 @@ namespace UnityEngine.InputSystem
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
-            if (bindingStates[bindingIndex].isPartOfComposite)
+            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite)
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
@@ -1989,6 +2210,9 @@ namespace UnityEngine.InputSystem
                 };
 
                 compositeObject.ReadValue(ref context, buffer, bufferSize);
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
@@ -2023,15 +2247,10 @@ namespace UnityEngine.InputSystem
             if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite)
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
-                Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount);
+                Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount, "Composite binding index is out of range");
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
                 var compositeObject = composites[compositeIndex];
                 Debug.Assert(compositeObject != null, "Composite object is null");
-
-                var compositeOfType = compositeObject as InputBindingComposite<TValue>;
-                if (compositeOfType == null)
-                    throw new InvalidOperationException(
-                        $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(compositeObject.GetType().GetGenericArguments()[0])}')");
 
                 var context = new InputBindingCompositeContext
                 {
@@ -2039,7 +2258,26 @@ namespace UnityEngine.InputSystem
                     m_BindingIndex = compositeBindingIndex
                 };
 
-                value = compositeOfType.ReadValue(ref context);
+                var compositeOfType = compositeObject as InputBindingComposite<TValue>;
+                if (compositeOfType == null)
+                {
+                    // Composite is not derived from InputBindingComposite<TValue>. Do an explicit value
+                    // type check here. Might be a composite like OneModifierComposite that dynamically
+                    // determines its value type based on what its parts are bound to.
+                    var valueType = compositeObject.valueType;
+                    if (!valueType.IsAssignableFrom(typeof(TValue)))
+                        throw new InvalidOperationException(
+                            $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(valueType)}')");
+
+                    compositeObject.ReadValue(ref context, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<TValue>());
+                }
+                else
+                {
+                    value = compositeOfType.ReadValue(ref context);
+                }
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
@@ -2061,13 +2299,33 @@ namespace UnityEngine.InputSystem
                 var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
                 for (var i = 0; i < processorCount; ++i)
                 {
-                    var processor = processors[processorStartIndex + i] as InputProcessor<TValue>;
-                    if (processor != null)
+                    if (processors[processorStartIndex + i] is InputProcessor<TValue> processor)
                         value = processor.Process(value, controlOfType);
                 }
             }
 
             return value;
+        }
+
+        public float EvaluateCompositePartMagnitude(int bindingIndex, int partNumber)
+        {
+            var firstChildBindingIndex = bindingIndex + 1;
+            var currentMagnitude = float.MinValue;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var control = controls[controlStartIndex + i];
+                    currentMagnitude = Mathf.Max(control.EvaluateMagnitude(), currentMagnitude);
+                }
+            }
+
+            return currentMagnitude;
         }
 
         /// <summary>
@@ -2096,8 +2354,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue)
-            where TValue : struct, IComparable<TValue>
+        internal TValue ReadCompositePartValue<TValue, TComparer>(int bindingIndex, int partNumber,
+            bool* buttonValuePtr, out int controlIndex, TComparer comparer = default)
+            where TValue : struct
+            where TComparer : IComparer<TValue>
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
             Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
@@ -2106,9 +2366,9 @@ namespace UnityEngine.InputSystem
             var firstChildBindingIndex = bindingIndex + 1;
             var isFirstValue = true;
 
-            buttonValue = false;
+            controlIndex = kInvalidIndex;
 
-            // Find the binding in the composite that both has the given part number and
+            // Find the binding in the composite that has both the given part number and
             // the greatest value.
             //
             // NOTE: It is tempting to go by control magnitudes instead as those are readily available to us (controlMagnitudes)
@@ -2127,21 +2387,36 @@ namespace UnityEngine.InputSystem
                 var controlStartIndex = bindingStates[index].controlStartIndex;
                 for (var i = 0; i < controlCount; ++i)
                 {
-                    var controlIndex = controlStartIndex + i;
-                    var value = ReadValue<TValue>(index, controlIndex, ignoreComposites: true);
+                    var thisControlIndex = controlStartIndex + i;
+                    var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
 
                     if (isFirstValue)
                     {
                         result = value;
+                        controlIndex = thisControlIndex;
                         isFirstValue = false;
-                        if (controls[controlIndex] is Controls.ButtonControl)
-                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
                     }
-                    else if (value.CompareTo(result) > 0)
+                    else if (comparer.Compare(value, result) > 0)
                     {
                         result = value;
-                        if (controls[controlIndex] is Controls.ButtonControl)
-                            buttonValue = ((Controls.ButtonControl)controls[controlIndex]).isPressed;
+                        controlIndex = thisControlIndex;
+                    }
+
+                    if (buttonValuePtr != null && controlIndex == thisControlIndex)
+                    {
+                        var control = controls[thisControlIndex];
+                        if (control is ButtonControl button)
+                        {
+                            *buttonValuePtr = button.isPressed;
+                        }
+                        else if (control is InputControl<float>)
+                        {
+                            var valuePtr = UnsafeUtility.AddressOf(ref value);
+                            *buttonValuePtr = *(float*)valuePtr >= ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        }
+
+                        ////REVIEW: Early out here as soon as *any* button is pressed? Technically, the comparer
+                        ////        could still select a different control, though...
                     }
                 }
             }
@@ -2149,7 +2424,94 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
-        internal object ReadValueAsObject(int bindingIndex, int controlIndex)
+        internal bool ReadCompositePartValue(int bindingIndex, int partNumber, void* buffer, int bufferSize)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
+
+            var firstChildBindingIndex = bindingIndex + 1;
+
+            // Find the binding in the composite that has both the given part number and
+            // the greatest amount of actuation.
+            var currentMagnitude = float.MinValue;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var thisControlIndex = controlStartIndex + i;
+
+                    // Check if the control has greater actuation than the most actuated control
+                    // we've found so far.
+                    //
+                    // NOTE: We cannot rely on controlMagnitudes here as several controls used by a composite may all have been updated
+                    //       with a single event (e.g. WASD on a keyboard will usually see just one update that refreshes the entire state
+                    //       of the keyboard). In that case, one of the controls will see its state monitor trigger first and in turn
+                    //       trigger processing of the action and composite. Thus only that one single control would have its value
+                    //       refreshed in controlMagnitudes whereas the other control magnitudes would be stale.
+                    var control = controls[thisControlIndex];
+                    var magnitude = control.EvaluateMagnitude();
+                    if (magnitude < currentMagnitude)
+                        continue;
+
+                    // If so, read the value.
+                    ReadValue(index, thisControlIndex, buffer, bufferSize, ignoreComposites: true);
+                    currentMagnitude = magnitude;
+                }
+            }
+
+            return currentMagnitude > float.MinValue;
+        }
+
+        internal object ReadCompositePartValueAsObject(int bindingIndex, int partNumber)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
+
+            var firstChildBindingIndex = bindingIndex + 1;
+
+            // Find the binding in the composite that both has the given part number and
+            // the greatest amount of actuation.
+            var currentMagnitude = float.MinValue;
+            object currentValue = null;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var thisControlIndex = controlStartIndex + i;
+
+                    // Check if the control has greater actuation than the most actuated control
+                    // we've found so far.
+                    //
+                    // NOTE: We cannot rely on controlMagnitudes here as several controls used by a composite may all have been updated
+                    //       with a single event (e.g. WASD on a keyboard will usually see just one update that refreshes the entire state
+                    //       of the keyboard). In that case, one of the controls will see its state monitor trigger first and in turn
+                    //       trigger processing of the action and composite. Thus only that one single control would have its value
+                    //       refreshed in controlMagnitudes whereas the other control magnitudes would be stale.
+                    var control = controls[thisControlIndex];
+                    var magnitude = control.EvaluateMagnitude();
+                    if (magnitude < currentMagnitude)
+                        continue;
+
+                    // If so, read the value.
+                    currentValue = ReadValueAsObject(index, thisControlIndex, ignoreComposites: true);
+                    currentMagnitude = magnitude;
+                }
+            }
+
+            return currentValue;
+        }
+
+        internal object ReadValueAsObject(int bindingIndex, int controlIndex, bool ignoreComposites = false)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index is out of range");
@@ -2159,7 +2521,7 @@ namespace UnityEngine.InputSystem
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
-            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount, "Binding index is out of range");
@@ -2174,6 +2536,9 @@ namespace UnityEngine.InputSystem
                 };
 
                 value = compositeObject.ReadValueAsObject(ref context);
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
@@ -2194,24 +2559,44 @@ namespace UnityEngine.InputSystem
             return value;
         }
 
+        internal bool ReadValueAsButton(int bindingIndex, int controlIndex)
+        {
+            var buttonControl = default(ButtonControl);
+            if (!bindingStates[bindingIndex].isPartOfComposite)
+                buttonControl = controls[controlIndex] as ButtonControl;
+
+            // Read float value.
+            var floatValue = ReadValue<float>(bindingIndex, controlIndex);
+
+            // Compare to press point.
+            if (buttonControl != null)
+                return floatValue >= buttonControl.pressPointOrDefault;
+            return floatValue >= ButtonControl.s_GlobalDefaultButtonPressPoint;
+        }
+
         /// <summary>
         /// Records the current state of a single interaction attached to a binding.
         /// Each interaction keeps track of its own trigger control and phase progression.
         /// </summary>
-        [StructLayout(LayoutKind.Explicit, Size = 12)]
+        [StructLayout(LayoutKind.Explicit, Size = 40)]
         internal struct InteractionState
         {
             [FieldOffset(0)] private ushort m_TriggerControlIndex;
             [FieldOffset(2)] private byte m_Phase;
             [FieldOffset(3)] private byte m_Flags;
-            [FieldOffset(4)] private double m_StartTime;
+            [FieldOffset(4)] private float m_TimerDuration;
+            [FieldOffset(8)] private double m_StartTime;
+            [FieldOffset(16)] private double m_TimerStartTime;
+            [FieldOffset(24)] private double m_PerformedTime;
+            [FieldOffset(32)] private float m_TotalTimeoutCompletionTimeDone;
+            [FieldOffset(36)] private float m_TotalTimeoutCompletionTimeRemaining;
 
             public int triggerControlIndex
             {
                 get => m_TriggerControlIndex;
                 set
                 {
-                    Debug.Assert(value >= 0 && value <= ushort.MaxValue);
+                    Debug.Assert(value >= 0 && value <= ushort.MaxValue, "Trigger control index is out of range");
                     if (value < 0 || value > ushort.MaxValue)
                         throw new NotSupportedException("Cannot have more than ushort.MaxValue controls in a single InputActionState");
                     m_TriggerControlIndex = (ushort)value;
@@ -2222,6 +2607,36 @@ namespace UnityEngine.InputSystem
             {
                 get => m_StartTime;
                 set => m_StartTime = value;
+            }
+
+            public double performedTime
+            {
+                get => m_PerformedTime;
+                set => m_PerformedTime = value;
+            }
+
+            public double timerStartTime
+            {
+                get => m_TimerStartTime;
+                set => m_TimerStartTime = value;
+            }
+
+            public float timerDuration
+            {
+                get => m_TimerDuration;
+                set => m_TimerDuration = value;
+            }
+
+            public float totalTimeoutCompletionDone
+            {
+                get => m_TotalTimeoutCompletionTimeDone;
+                set => m_TotalTimeoutCompletionTimeDone = value;
+            }
+
+            public float totalTimeoutCompletionTimeRemaining
+            {
+                get => m_TotalTimeoutCompletionTimeRemaining;
+                set => m_TotalTimeoutCompletionTimeRemaining = value;
             }
 
             public bool isTimerRunning
@@ -2297,7 +2712,7 @@ namespace UnityEngine.InputSystem
                 get => m_ControlStartIndex;
                 set
                 {
-                    Debug.Assert(value != kInvalidIndex);
+                    Debug.Assert(value != kInvalidIndex, "Control state index is invalid");
                     if (value >= ushort.MaxValue)
                         throw new NotSupportedException("Total control count in state cannot exceed byte.MaxValue=" + ushort.MaxValue);
                     m_ControlStartIndex = (ushort)value;
@@ -2425,7 +2840,7 @@ namespace UnityEngine.InputSystem
                 get => m_MapIndex;
                 set
                 {
-                    Debug.Assert(value != kInvalidIndex);
+                    Debug.Assert(value != kInvalidIndex, "Map index is invalid");
                     if (value >= byte.MaxValue)
                         throw new NotSupportedException("Map count cannot exceed byte.MaxValue=" + byte.MaxValue);
                     m_MapIndex = (byte)value;
@@ -2572,7 +2987,7 @@ namespace UnityEngine.InputSystem
         /// other is to represent the current actuation state of an action as a whole. The latter is stored in <see cref="actionStates"/>
         /// while the former is passed around as temporary instances on the stack.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 32)]
+        [StructLayout(LayoutKind.Explicit, Size = 48)]
         public struct TriggerState
         {
             [FieldOffset(0)] private byte m_Phase;
@@ -2587,6 +3002,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(24)] private ushort m_BindingIndex;
             [FieldOffset(26)] private ushort m_InteractionIndex;
             [FieldOffset(28)] private float m_Magnitude;
+            [FieldOffset(32)] private uint m_LastPerformedInUpdate;
+            [FieldOffset(36)] private uint m_LastCanceledInUpdate;
+            [FieldOffset(40)] private uint m_PressedInUpdate;
+            [FieldOffset(44)] private uint m_ReleasedInUpdate;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -2596,6 +3015,12 @@ namespace UnityEngine.InputSystem
                 get => (InputActionPhase)m_Phase;
                 set => m_Phase = (byte)value;
             }
+
+            public bool isDisabled => phase == InputActionPhase.Disabled;
+            public bool isWaiting => phase == InputActionPhase.Waiting;
+            public bool isStarted => phase == InputActionPhase.Started;
+            public bool isPerformed => phase == InputActionPhase.Performed;
+            public bool isCanceled => phase == InputActionPhase.Canceled;
 
             /// <summary>
             /// The time the binding got triggered.
@@ -2727,41 +3152,38 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Whether the action associated with the trigger state is marked as continuous.
+            /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action triggered/performed last.
+            /// Zero if the action did not trigger yet. Also reset to zero when the action is disabled.
             /// </summary>
-            /// <seealso cref="InputAction.continuous"/>
-            public bool continuous
+            public uint lastPerformedInUpdate
             {
-                get => (flags & Flags.Continuous) != 0;
-                set
-                {
-                    if (value)
-                        flags |= Flags.Continuous;
-                    else
-                        flags &= ~Flags.Continuous;
-                }
+                get => m_LastPerformedInUpdate;
+                set => m_LastPerformedInUpdate = value;
             }
 
-            /// <summary>
-            /// Whether the action is currently on the list of continuous actions.
-            /// </summary>
-            public bool onContinuousList
+            public uint lastCanceledInUpdate
             {
-                get => (flags & Flags.OnContinuousList) != 0;
-                set
-                {
-                    if (value)
-                        flags |= Flags.OnContinuousList;
-                    else
-                        flags &= ~Flags.OnContinuousList;
-                }
+                get => m_LastCanceledInUpdate;
+                set => m_LastCanceledInUpdate = value;
+            }
+
+            public uint pressedInUpdate
+            {
+                get => m_PressedInUpdate;
+                set => m_PressedInUpdate = value;
+            }
+
+            public uint releasedInUpdate
+            {
+                get => m_ReleasedInUpdate;
+                set => m_ReleasedInUpdate = value;
             }
 
             /// <summary>
             /// Whether the action associated with the trigger state is marked as pass-through.
             /// </summary>
-            /// <seealso cref="InputAction.passThrough"/>
-            public bool passThrough
+            /// <seealso cref="InputActionType.PassThrough"/>
+            public bool isPassThrough
             {
                 get => (flags & Flags.PassThrough) != 0;
                 set
@@ -2774,6 +3196,34 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
+            /// Whether the action associated with the trigger state is a button-type action.
+            /// </summary>
+            /// <seealso cref="InputActionType.Button"/>
+            public bool isButton
+            {
+                get => (flags & Flags.Button) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.Button;
+                    else
+                        flags &= ~Flags.Button;
+                }
+            }
+
+            public bool isPressed
+            {
+                get => (flags & Flags.Pressed) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.Pressed;
+                    else
+                        flags &= ~Flags.Pressed;
+                }
+            }
+
+            /// <summary>
             /// Whether the action may potentially see multiple concurrent actuations from its bindings
             /// and wants them resolved automatically.
             /// </summary>
@@ -2781,7 +3231,7 @@ namespace UnityEngine.InputSystem
             /// We use this to gate some of the more expensive checks that are pointless to
             /// perform if we don't have to disambiguate input from concurrent sources.
             ///
-            /// Always disabled if <see cref="passThrough"/> is true.
+            /// Always disabled if <see cref="isPassThrough"/> is true.
             /// </remarks>
             public bool mayNeedConflictResolution
             {
@@ -2813,6 +3263,18 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            public bool inProcessing
+            {
+                get => (flags & Flags.InProcessing) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.InProcessing;
+                    else
+                        flags &= ~Flags.InProcessing;
+                }
+            }
+
             public Flags flags
             {
                 get => (Flags)m_Flags;
@@ -2823,27 +3285,15 @@ namespace UnityEngine.InputSystem
             public enum Flags
             {
                 /// <summary>
-                /// Whether the action associated with the trigger state is continuous.
-                /// </summary>
-                /// <seealso cref="InputAction.continuous"/>
-                Continuous = 1 << 0,
-
-                /// <summary>
-                /// Whether the action is currently on the list of actions to check continuously.
-                /// </summary>
-                /// <seealso cref="InputActionState.m_ContinuousActions"/>
-                OnContinuousList = 1 << 1,
-
-                /// <summary>
                 /// Whether <see cref="magnitude"/> has been set.
                 /// </summary>
-                HaveMagnitude = 1 << 2,
+                HaveMagnitude = 1 << 0,
 
                 /// <summary>
                 /// Whether the action associated with the trigger state is marked as pass-through.
                 /// </summary>
-                /// <seealso cref="InputAction.passThrough"/>
-                PassThrough = 1 << 3,
+                /// <seealso cref="InputActionType.PassThrough"/>
+                PassThrough = 1 << 1,
 
                 /// <summary>
                 /// Whether the action has more than one control bound to it.
@@ -2853,7 +3303,7 @@ namespace UnityEngine.InputSystem
                 /// at runtime. In that case, this flag is NOT set. We only set it if binding resolution for
                 /// an action indeed ended up with multiple controls able to trigger the same action.
                 /// </remarks>
-                MayNeedConflictResolution = 1 << 4,
+                MayNeedConflictResolution = 1 << 2,
 
                 /// <summary>
                 /// Whether there are currently multiple bound controls that are actuated.
@@ -2861,7 +3311,17 @@ namespace UnityEngine.InputSystem
                 /// <remarks>
                 /// This is only used if <see cref="TriggerState.mayNeedConflictResolution"/> is true.
                 /// </remarks>
-                HasMultipleConcurrentActuations = 1 << 5,
+                HasMultipleConcurrentActuations = 1 << 3,
+
+                InProcessing = 1 << 4,
+
+                /// <summary>
+                /// Whether the action associated with the trigger state is a button-type action.
+                /// </summary>
+                /// <seealso cref="InputActionType.Button"/>
+                Button = 1 << 5,
+
+                Pressed = 1 << 6,
             }
         }
 
@@ -2945,7 +3405,8 @@ namespace UnityEngine.InputSystem
                 compositeCount * sizeof(float) + // compositeMagnitudes
                 controlCount * sizeof(int) + // controlIndexToBindingIndex
                 actionCount * sizeof(ushort) * 2 + // actionBindingIndicesAndCounts
-                bindingCount * sizeof(ushort); // actionBindingIndices
+                bindingCount * sizeof(ushort) + // actionBindingIndices
+                (controlCount + 31) / 32 * sizeof(int); // enabledControlsArray
 
             /// <summary>
             /// Trigger state of all actions added to the state.
@@ -2988,6 +3449,8 @@ namespace UnityEngine.InputSystem
 
             public float* compositeMagnitudes;
 
+            public int* enabledControls;
+
             /// <summary>
             /// Array of pair of ints, one pair for each action (same index as <see cref="actionStates"/>). First int
             /// is count of bindings on action, second int is index into <see cref="actionBindingIndices"/> where
@@ -3022,8 +3485,9 @@ namespace UnityEngine.InputSystem
                 this.controlCount = controlCount;
                 this.compositeCount = compositeCount;
 
-                var ptr = (byte*)UnsafeUtility.Malloc(sizeInBytes, 4, Allocator.Persistent);
-                UnsafeUtility.MemClear(ptr, sizeInBytes);
+                var numBytes = sizeInBytes;
+                var ptr = (byte*)UnsafeUtility.Malloc(numBytes, 4, Allocator.Persistent);
+                UnsafeUtility.MemClear(ptr, numBytes);
 
                 basePtr = ptr;
 
@@ -3038,6 +3502,7 @@ namespace UnityEngine.InputSystem
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
                 actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
                 actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
+                enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);
             }
 
             public void Dispose()
@@ -3082,6 +3547,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
+                UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));
             }
 
             public UnmanagedMemory Clone()
@@ -3115,8 +3581,9 @@ namespace UnityEngine.InputSystem
         ///
         /// Both of these needs are served by this global list.
         /// </remarks>
-        private static InlinedArray<GCHandle> s_GlobalList;
+        internal static InlinedArray<GCHandle> s_GlobalList;
         internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
+        internal static InlinedArray<Action<object>> s_OnActionControlsChanged;
 
         private void AddToGlobaList()
         {
@@ -3146,28 +3613,32 @@ namespace UnityEngine.InputSystem
             var head = 0;
             for (var i = 0; i < length; ++i)
             {
-                if (s_GlobalList[i].Target != null)
+                var handle = s_GlobalList[i];
+                if (handle.IsAllocated && handle.Target != null)
                 {
                     if (head != i)
-                        s_GlobalList[head] = s_GlobalList[i];
+                        s_GlobalList[head] = handle;
                     ++head;
                 }
                 else
                 {
-                    s_GlobalList[i].Free();
+                    if (handle.IsAllocated)
+                        s_GlobalList[i].Free();
+                    s_GlobalList[i] = default;
                 }
             }
             s_GlobalList.length = head;
         }
 
-        internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMap)
+        internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMapOrAsset)
         {
-            Debug.Assert(actionOrMap != null, "Should have action or action map object to notify about");
-            Debug.Assert(actionOrMap is InputAction || ((InputActionMap)actionOrMap).m_SingletonAction == null,
+            Debug.Assert(actionOrMapOrAsset != null, "Should have action or action map or asset object to notify about");
+            Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
-            for (var i = 0; i < s_OnActionChange.length; ++i)
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMap, change, "onActionChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            if (change == InputActionChange.BoundControlsChanged)
+                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
         }
 
         /// <summary>
@@ -3177,9 +3648,11 @@ namespace UnityEngine.InputSystem
         {
             DestroyAllActionMapStates();
             for (var i = 0; i < s_GlobalList.length; ++i)
-                s_GlobalList[i].Free();
+                if (s_GlobalList[i].IsAllocated)
+                    s_GlobalList[i].Free();
             s_GlobalList.length = 0;
             s_OnActionChange.Clear();
+            s_OnActionControlsChanged.Clear();
         }
 
         // Walk all maps with enabled actions and add all enabled actions to the given list.
@@ -3189,7 +3662,10 @@ namespace UnityEngine.InputSystem
             var stateCount = s_GlobalList.length;
             for (var i = 0; i < stateCount; ++i)
             {
-                var state = (InputActionState)s_GlobalList[i].Target;
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated)
+                    continue;
+                var state = (InputActionState)handle.Target;
                 if (state == null)
                     continue;
 
@@ -3242,38 +3718,96 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            Debug.Assert(device != null);
-
-            // We only care about new devices appearing or existing devices disappearing.
-            if (change != InputDeviceChange.Added && change != InputDeviceChange.Removed)
-                return;
+            Debug.Assert(device != null, "Device is null");
+            ////REVIEW: should we ignore disconnected devices in InputBindingResolver?
+            Debug.Assert(
+                change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
+                change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged,
+                "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
             {
-                var state = (InputActionState)s_GlobalList[i].Target;
-                if (state == null)
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                    s_GlobalList[i].Free();
+                    if (handle.IsAllocated)
+                        s_GlobalList[i].Free();
                     s_GlobalList.RemoveAtWithCapacity(i);
+                    --i;
                     continue;
                 }
+                var state = (InputActionState)handle.Target;
 
-                // If this state is not affected by the addition or removal of the given
-                // device, skip it.
-                if (change == InputDeviceChange.Added && !state.CanUseDevice(device))
-                    continue;
-                if (change == InputDeviceChange.Removed && !state.IsUsingDevice(device))
-                    continue;
+                // If this state is not affected by the change, skip.
+                switch (change)
+                {
+                    case InputDeviceChange.Added:
+                        if (!state.CanUseDevice(device))
+                            continue;
+                        break;
+
+                    case InputDeviceChange.Removed:
+                        if (!state.IsUsingDevice(device))
+                            continue;
+
+                        // If the device is listed in a device mask (on either a map or an asset) in the
+                        // state, remove it (see Actions_WhenDeviceIsRemoved_DeviceIsRemovedFromDeviceMask).
+                        for (var n = 0; n < state.totalMapCount; ++n)
+                        {
+                            var map = state.maps[n];
+                            map.m_Devices.Remove(device);
+                            map.asset?.m_Devices.Remove(device);
+                        }
+
+                        break;
+
+                    // NOTE: ConfigurationChanges can affect display names of controls which may make a device usable that
+                    //       we didn't find anything usable on before.
+                    case InputDeviceChange.ConfigurationChanged:
+                    case InputDeviceChange.UsageChanged:
+                        if (!state.IsUsingDevice(device) && !state.CanUseDevice(device))
+                            continue;
+                        break;
+                }
 
                 // Trigger a lazy-resolve on all action maps in the state.
                 for (var n = 0; n < state.totalMapCount; ++n)
                     if (state.maps[n].LazyResolveBindings())
                     {
-                        // Map has chosen to resolve right away (i.e it has enabled actions).
-                        // This will resolve bindings for *all* maps in the state, so we're done here.
+                        // Map has chosen to resolve right away. This will resolve bindings for *all*
+                        // maps in the state, so we're done here.
                         break;
                     }
+            }
+        }
+
+        internal static void DeferredResolutionOfBindings()
+        {
+            ++InputActionMap.s_DeferBindingResolution;
+            try
+            {
+                for (var i = 0; i < s_GlobalList.length; ++i)
+                {
+                    var handle = s_GlobalList[i];
+                    if (!handle.IsAllocated || handle.Target == null)
+                    {
+                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
+                        if (handle.IsAllocated)
+                            s_GlobalList[i].Free();
+                        s_GlobalList.RemoveAtWithCapacity(i);
+                        --i;
+                        continue;
+                    }
+
+                    var state = (InputActionState)handle.Target;
+                    for (var n = 0; n < state.totalMapCount; ++n)
+                        state.maps[n].ResolveBindingsIfNecessary();
+                }
+            }
+            finally
+            {
+                --InputActionMap.s_DeferBindingResolution;
             }
         }
 
@@ -3281,16 +3815,17 @@ namespace UnityEngine.InputSystem
         {
             for (var i = 0; i < s_GlobalList.length; ++i)
             {
-                var state = (InputActionState)s_GlobalList[i].Target;
-                if (state == null)
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
                     continue;
+                var state = (InputActionState)handle.Target;
 
                 var mapCount = state.totalMapCount;
                 var maps = state.maps;
                 for (var n = 0; n < mapCount; ++n)
                 {
                     maps[n].Disable();
-                    Debug.Assert(!maps[n].enabled);
+                    Debug.Assert(!maps[n].enabled, "Map is still enabled after calling Disable");
                 }
             }
         }
@@ -3307,15 +3842,17 @@ namespace UnityEngine.InputSystem
             while (s_GlobalList.length > 0)
             {
                 var index = s_GlobalList.length - 1;
-                var state = (InputActionState)s_GlobalList[index].Target;
-                if (state == null)
+                var handle = s_GlobalList[index];
+                if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Already destroyed.
-                    s_GlobalList[index].Free();
+                    if (handle.IsAllocated)
+                        s_GlobalList[index].Free();
                     s_GlobalList.RemoveAtWithCapacity(index);
                     continue;
                 }
 
+                var state = (InputActionState)handle.Target;
                 state.Destroy();
             }
         }

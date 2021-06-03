@@ -21,9 +21,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static RequestSyncCommand Create()

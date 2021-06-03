@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 16 + 1)]
     internal unsafe struct ActionEvent : IInputEventTypeInfo
     {
-        public const int Type = 0x4143544E; // 'ACTN'
+        public static FourCC Type => new FourCC('A', 'C', 'T', 'N');
 
         ////REVIEW: should we decouple this from InputEvent? we get deviceId which we don't really have a use for
         [FieldOffset(0)] public InputEvent baseEvent;
@@ -123,10 +123,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public static int GetEventSizeWithValueSize(int valueSizeInBytes)
         {

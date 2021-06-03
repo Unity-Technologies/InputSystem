@@ -1,9 +1,9 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_ENABLE_UI
 
 using UnityEditor;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.InputSystem.Plugins.UI.Editor
+namespace UnityEngine.InputSystem.UI.Editor
 {
     // The only purpose of the Input System suppying a custom editor for the UI StandaloneInputModule is to guide users to using
     // the Input System's InputSystemUIInputModule instead.
@@ -36,8 +36,9 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
                     EditorGUILayout.HelpBox("You are using StandaloneInputModule, which uses the old InputManager. You also have the new InputSystem enabled in your project. Click the button below to replace this component with a InputSystemUIInputModule, which uses the new InputSystem (recommended).", MessageType.Info);
                 if (GUILayout.Button("Replace with InputSystemUIInputModule"))
                 {
-                    ((StandaloneInputModule)target).gameObject.AddComponent<InputSystemUIInputModule>();
-                    DestroyImmediate(target);
+                    var go = ((StandaloneInputModule)target).gameObject;
+                    Undo.DestroyObjectImmediate(target);
+                    Undo.AddComponent<InputSystemUIInputModule>(go);
                     return;
                 }
                 GUILayout.Space(10);

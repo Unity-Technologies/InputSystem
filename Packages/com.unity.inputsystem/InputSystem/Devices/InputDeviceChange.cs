@@ -6,11 +6,33 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputDevice">input device</see> occurred.
     /// </summary>
-    /// <seealso cref="InputSystem.onDeviceChange"/>
+    /// <remarks>
+    /// Use <see cref="InputSystem.onDeviceChange"/> to receive notifications about changes
+    /// to the input device setup in the system.
+    ///
+    /// <example>
+    /// <code>
+    /// InputSystem.onDeviceChange +=
+    ///     (device, change) =>
+    ///     {
+    ///         switch (change)
+    ///         {
+    ///             case InputDeviceChange.Added:
+    ///                 Debug.Log($"Device {device} was added");
+    ///                 break;
+    ///             case InputDeviceChange.Removed:
+    ///                 Debug.Log($"Device {device} was removed");
+    ///                 break;
+    ///         }
+    ///     };
+    /// </code>
+    /// </example>
+    /// </remarks>
     public enum InputDeviceChange
     {
         /// <summary>
-        /// A new device was added to the system.
+        /// A new device was added to the system. This is triggered <em>after</em> the device
+        /// has already been added, i.e. it already appears on <see cref="InputSystem.devices"/>.
         /// </summary>
         /// <seealso cref="InputSystem.AddDevice(string,string,string)"/>
         /// <seealso cref="InputSystem.AddDevice{TDevice}(string)"/>
@@ -18,7 +40,8 @@ namespace UnityEngine.InputSystem
         Added,
 
         /// <summary>
-        /// An existing device was removed from the system.
+        /// An existing device was removed from the system. This is triggered <em>after</em> the
+        /// device has already been removed, i.e. it already has been cleared from <see cref="InputSystem.devices"/>.
         /// </summary>
         /// <remarks>
         /// Other than when a device is removed programmatically, this happens when a device
@@ -69,9 +92,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 
-        ////REVIEW: nuke this?
-        LayoutVariantChanged,
-
         /// <summary>
         /// The configuration of a device has changed.
         /// </summary>
@@ -82,10 +102,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="DeviceConfigurationEvent"/>
         /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
         ConfigurationChanged,
-
-        ////REVIEW: it doesn't seem smart to deliver this high-frequency change on the same path
-        ////        as the other low-frequency changes
-        StateChanged,
 
         ////TODO: fire this when we purge disconnected devices
         Destroyed,

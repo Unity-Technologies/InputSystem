@@ -2,12 +2,15 @@
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 
+////REVIEW: This mechanism sucks. We should have this conversion without the device having to support it through an IOCTL. A Pointer
+////        should just inherently have this conversion mechanism on its controls that operate in screen space.
+
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryEditorWindowCoordinatesCommand : IInputDeviceCommandInfo
+    internal struct QueryEditorWindowCoordinatesCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('E', 'W', 'P', 'S'); } }
+        public static FourCC Type => new FourCC('E', 'W', 'P', 'S');
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 
@@ -17,10 +20,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public Vector2 inOutCoordinates;
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public static QueryEditorWindowCoordinatesCommand Create(Vector2 playerWindowCoordinates)
         {

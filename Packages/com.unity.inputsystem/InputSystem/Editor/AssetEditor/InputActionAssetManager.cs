@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using UnityEditor;
 
+////TODO: ensure that GUIDs in the asset are unique
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -10,12 +12,11 @@ namespace UnityEngine.InputSystem.Editor
     /// around for editing.
     /// </summary>
     [Serializable]
-    internal class InputActionAssetManager
+    internal class InputActionAssetManager : IDisposable
     {
         [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
         [SerializeField] private string m_AssetGUID;
-        [SerializeField] private string m_AssetPath;
         [SerializeField] private string m_ImportedAssetJson;
         [SerializeField] private bool m_IsDirty;
 
@@ -23,7 +24,17 @@ namespace UnityEngine.InputSystem.Editor
 
         public string guid => m_AssetGUID;
 
-        public string path { get => m_AssetPath; set => m_AssetPath = value; }
+        public string path
+        {
+            get
+            {
+                Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID), "Asset GUID is empty");
+                var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+                if (string.IsNullOrEmpty(assetPath))
+                    throw new InvalidOperationException("Could not determine asset path for " + m_AssetGUID);
+                return assetPath;
+            }
+        }
 
         public string name
         {
@@ -32,8 +43,8 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ImportedAssetObject != null)
                     return m_ImportedAssetObject.name;
 
-                if (!string.IsNullOrEmpty(m_AssetPath))
-                    return Path.GetFileNameWithoutExtension(m_AssetPath);
+                if (!string.IsNullOrEmpty(path))
+                    return Path.GetFileNameWithoutExtension(path);
 
                 return string.Empty;
             }
@@ -46,7 +57,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ImportedAssetObject == null)
                     LoadImportedObjectFromGuid();
 
-                Debug.Assert(m_ImportedAssetObject != null);
                 return m_ImportedAssetObject;
             }
         }
@@ -56,24 +66,34 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionAssetManager(InputActionAsset inputActionAsset)
         {
             m_ImportedAssetObject = inputActionAsset;
-            m_AssetPath = AssetDatabase.GetAssetPath(importedAsset);
-            m_AssetGUID = AssetDatabase.AssetPathToGUID(m_AssetPath);
+            Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(importedAsset, out m_AssetGUID, out long _), $"Failed to get asset {inputActionAsset.name} GUID");
         }
 
         public SerializedObject serializedObject => m_SerializedObject;
 
         public bool dirty => m_IsDirty;
 
-        public void Initialize()
+        public bool Initialize()
         {
             if (m_AssetObjectForEditing == null)
             {
+                if (importedAsset == null)
+                    // The asset we want to edit no longer exists.
+                    return false;
+
                 CreateWorkingCopyAsset();
             }
             else
             {
                 m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
             }
+
+            return true;
+        }
+
+        public void Dispose()
+        {
+            m_SerializedObject?.Dispose();
         }
 
         public bool ReInitializeIfAssetHasChanged()
@@ -113,13 +133,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void LoadImportedObjectFromGuid()
         {
-            Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID));
-
-            m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            if (string.IsNullOrEmpty(m_AssetPath))
-                throw new Exception("Could not determine asset path for " + m_AssetGUID);
-
-            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
+            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(path);
         }
 
         public void ApplyChanges()
@@ -130,19 +144,20 @@ namespace UnityEngine.InputSystem.Editor
 
         internal void SaveChangesToAsset()
         {
-            Debug.Assert(!string.IsNullOrEmpty(m_AssetPath));
+            Debug.Assert(importedAsset != null);
 
             // Update JSON.
             var asset = m_AssetObjectForEditing;
             m_ImportedAssetJson = asset.ToJson();
 
             // Write out, if changed.
-            var existingJson = File.ReadAllText(m_AssetPath);
+            var assetPath = path;
+            var existingJson = File.ReadAllText(assetPath);
             if (m_ImportedAssetJson != existingJson)
             {
-                ////TODO: has to be made to work with version control
-                File.WriteAllText(m_AssetPath, m_ImportedAssetJson);
-                AssetDatabase.ImportAsset(m_AssetPath);
+                EditorHelpers.CheckOut(assetPath);
+                File.WriteAllText(assetPath, m_ImportedAssetJson);
+                AssetDatabase.ImportAsset(assetPath);
             }
 
             m_IsDirty = false;

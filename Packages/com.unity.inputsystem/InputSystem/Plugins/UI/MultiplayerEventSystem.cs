@@ -1,17 +1,19 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// A modified EventSystem class, which allows multiple players to have their own instances of a UI,
     /// each with it's own selection.
     /// </summary>
     /// <remarks>
-    /// You can use the `playerRoot` property on MultiPlayerEventSystem to specify a part of the hierarchy belonging to the current player.
+    /// You can use the <see cref="playerRoot"/> property to specify a part of the hierarchy belonging to the current player.
     /// Mouse selection will ignore any game objects not within this hierarchy. For gamepad/keyboard selection, you need to make sure that
     /// the navigation links stay within the player's hierarchy.
     /// </remarks>
+    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#multiplayereventsystem-component")]
     public class MultiplayerEventSystem : EventSystem
     {
         [Tooltip("If set, only process mouse events for any game objects which are children of this game object.")]
@@ -25,7 +27,7 @@ namespace UnityEngine.InputSystem.Plugins.UI
 
         protected override void Update()
         {
-            EventSystem originalCurrent = EventSystem.current;
+            var originalCurrent = current;
             current = this; // in order to avoid reimplementing half of the EventSystem class, just temporarily assign this EventSystem to be the globally current one
             try
             {
@@ -38,3 +40,4 @@ namespace UnityEngine.InputSystem.Plugins.UI
         }
     }
 }
+#endif

@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct QueryEnabledStateCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('Q', 'E', 'N', 'B'); } }
+        public static FourCC Type => new FourCC('Q', 'E', 'N', 'B');
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool);
 
@@ -19,10 +19,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public bool isEnabled;
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public static QueryEnabledStateCommand Create()
         {

@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// Adds support for PS4 DualShock controllers.
@@ -27,19 +27,37 @@ namespace UnityEngine.InputSystem.Plugins.DualShock
             //       not return anything from IOHIDDevice_GetProduct() and IOHIDevice_GetManufacturer()
             //       even though it will report the expected results when plugged in via USB.
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR
-            InputSystem.RegisterLayout<DualShockGamepadHID>(
+            InputSystem.RegisterLayout<DualShock4GamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x54C) // Sony Entertainment.
                     .WithCapability("productId", 0x9CC)); // Wireless controller.
+            InputSystem.RegisterLayout<DualShock4GamepadHID>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x54C) // Sony Entertainment.
+                    .WithCapability("productId", 0x5C4)); // Wireless controller.
+            InputSystem.RegisterPrecompiledLayout<FastDualShock4GamepadHID>(FastDualShock4GamepadHID.metadata);
 
             // Just to make sure, also set up a matcher that goes by strings so that we cover
             // all bases.
-            InputSystem.RegisterLayoutMatcher<DualShockGamepadHID>(
+            InputSystem.RegisterLayoutMatcher<DualShock4GamepadHID>(
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithManufacturer("Sony.+Entertainment")
                     .WithProduct("Wireless Controller"));
+
+            InputSystem.RegisterLayout<DualShock3GamepadHID>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x54C) // Sony Entertainment.
+                    .WithCapability("productId", 0x268)); // PLAYSTATION(R)3 Controller.
+
+            InputSystem.RegisterLayoutMatcher<DualShock3GamepadHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithManufacturer("Sony.+Entertainment")
+                    .WithProduct("PLAYSTATION(R)3 Controller"));
             #endif
         }
     }

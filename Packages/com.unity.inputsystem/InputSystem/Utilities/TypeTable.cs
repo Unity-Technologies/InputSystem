@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Utilities
             // Hide entries that have [DesignTimeVisible(false)] on the type.
             var type = LookupTypeRegistration(name);
             var attribute = type?.GetCustomAttribute<DesignTimeVisibleAttribute>();
-            return attribute?.Visible ?? false;
+            return !(attribute?.Visible ?? true);
         }
 
         #endif

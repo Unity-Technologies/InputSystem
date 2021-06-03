@@ -170,8 +170,9 @@ namespace UnityEngine.InputSystem.Editor
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
 
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_Type").intValue = (int)InputActionType.Button;  // Default to creating button actions.
             actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
-            actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue = string.Empty;
+            actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue = "Button";
 
             return actionProperty;
         }
@@ -390,6 +391,7 @@ namespace UnityEngine.InputSystem.Editor
             nameProperty.stringValue = FindUniqueName(arrayProperty, baseName, ignoreIndex: arrayIndexOfElement);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly", Justification = "False positive (possibly caused by lambda expression?).")]
         public static string FindUniqueName(SerializedProperty arrayProperty, string baseName, int ignoreIndex = -1)
         {
             return StringHelpers.MakeUniqueName(baseName,
@@ -557,6 +559,67 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             return bindingProperty;
+        }
+
+        public static void ReplaceBindingGroup(SerializedObject asset, string oldBindingGroup, string newBindingGroup, bool deleteOrphanedBindings = false)
+        {
+            var mapArrayProperty = asset.FindProperty("m_ActionMaps");
+            var mapCount = mapArrayProperty.arraySize;
+
+            for (var k = 0; k < mapCount; ++k)
+            {
+                var actionMapProperty = mapArrayProperty.GetArrayElementAtIndex(k);
+                var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
+                var bindingsCount = bindingsArrayProperty.arraySize;
+
+                for (var i = 0; i < bindingsCount; ++i)
+                {
+                    var bindingProperty = bindingsArrayProperty.GetArrayElementAtIndex(i);
+                    var groupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
+                    var groups = groupsProperty.stringValue;
+
+                    // Ignore bindings not belonging to any control scheme.
+                    if (string.IsNullOrEmpty(groups))
+                        continue;
+
+                    var groupsArray = groups.Split(InputBinding.Separator);
+                    var numGroups = groupsArray.LengthSafe();
+                    var didRename = false;
+                    for (var n = 0; n < numGroups; ++n)
+                    {
+                        if (string.Compare(groupsArray[n], oldBindingGroup, StringComparison.InvariantCultureIgnoreCase) != 0)
+                            continue;
+                        if (string.IsNullOrEmpty(newBindingGroup))
+                        {
+                            ArrayHelpers.EraseAt(ref groupsArray, n);
+                            --n;
+                            --numGroups;
+                        }
+                        else
+                            groupsArray[n] = newBindingGroup;
+                        didRename = true;
+                    }
+                    if (!didRename)
+                        continue;
+
+                    if (groupsArray != null)
+                        groupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, groupsArray);
+                    else
+                    {
+                        if (deleteOrphanedBindings)
+                        {
+                            // Binding no long belongs to any binding group. Delete it.
+                            bindingsArrayProperty.DeleteArrayElementAtIndex(i);
+                            --i;
+                            --bindingsCount;
+                        }
+                        else
+                        {
+                            groupsProperty.stringValue = string.Empty;
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,54 +1,70 @@
-    ////TODO: the screenshots are outdated and need updating
+# Migrating from the old input system
 
-# Migrate From Old Input System
+This guide provides a list of APIs in `UnityEngine.Input` (and other related APIs in `UnityEngine`) and their corresponding APIs in the new Input System. Not all APIs have a corresponding version in the new API yet.
 
-This guide provides a listing of the APIs in `UnityEngine.Input` (and related APIs in `UnityEngine`) and their corresponding APIs in the new input system. Not all APIs have a corresponding version in the new API yet.
+>__Note__: All of the new APIs are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
 
->NOTE: The new APIs are currently in the `UnityEngine.Experimental.Input` namespace. The namespace is omitted here for brevity. `UnityEngine.Input` is referenced in full for easy disambiguation.
+Note that it is possible to have code for the old and the new input system at the same time using conditional compilation. When the new input system is enabled in the player preferences (see [here](./Installation.md#enabling-the-new-input-backends)), the `ENABLE_INPUT_SYSTEM` preprocessor directive is available.
+
+```CSharp
+#if ENABLE_INPUT_SYSTEM
+    // New input system backends are enabled.
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+    // Old input backends are enabled.
+#endif
+
+    // NOTE: Both can be true at the same time as it is possible to select "Both"
+    //       under "Active Input Handling".
+```
 
 ## [`UnityEngine.Input`](https://docs.unity3d.com/ScriptReference/Input.html)
 
 ### [`UnityEngine.Input.acceleration`](https://docs.unity3d.com/ScriptReference/Input-acceleration.html)
 
-`Accelerometer.current.acceleration.ReadValue()`
+Use [`Accelerometer.current.acceleration.ReadValue()`](../api/UnityEngine.InputSystem.Accelerometer.html).
 
 ### [`UnityEngine.Input.accelerationEventCount`](https://docs.unity3d.com/ScriptReference/Input-accelerationEventCount.html)
 
-See next section.
+See [`UnityEngine.Input.accelerationEvents`](#accelerationEvents).
 
-### [`UnityEngine.Input.accelerationEvents`](https://docs.unity3d.com/ScriptReference/Input-accelerationEvents.html)
+### <a name="accelerationEvents"></a>[`UnityEngine.Input.accelerationEvents`](https://docs.unity3d.com/ScriptReference/Input-accelerationEvents.html)
 
-Acceleration events are not made available separately from other input events. The following code will listen to all input events and filter out state changes on `Accelerometer` devices.
+Acceleration events aren't made available separately from other input events. The following code traces all input events on the [`Accelerometer.current`](../api/UnityEngine.InputSystem.Accelerometer.html) device.
 
-```
-InputSystem.onEvent +=
-    eventPtr =>
+```CSharp
+    private InputEventTrace trace;
+
+    void StartTrace()
     {
-        if (eventPtr.IsA<StateEvent>() || eventPtr.IsA<DeltaStateEvent>())
+        trace = new InputEventTrace() {deviceId = Accelerometer.current.deviceId};
+        trace.Enable();
+    }
+
+    void Update()
+    {
+        foreach (var e in trace)
         {
-            var accelerometer = InputSystem.TryGetDeviceById(eventPtr.deviceId) as Accelerometer;
-            if (accelerometer != null)
-            {
-                var acceleration = accelerometer.acceleration.ReadValueFrom(eventPtr);
-                //...
-            }
+            //...
         }
+        trace.Clear();
     }
 ```
 
->////TODO: wrap in nicer APIs
-
 ### [`UnityEngine.Input.anyKey`](https://docs.unity3d.com/ScriptReference/Input-anyKey.html)
 
-ATM this only exists for the keyboard, not yet in a way where it also covers mouse buttons.
+For keyboard keys, use:
+* [`Keyboard.current.anyKey.isPressed`](../api/UnityEngine.InputSystem.Keyboard.html)
 
-`Keyboard.current.anyKey.isPressed`
-
->////REVIEW: I think we want to have this in a way where it isn't just keyboard and mouse buttons but any meaningful "user triggered control"
+For mouse buttons, use:
+* [`Mouse.current.leftButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
+* [`Mouse.current.rightButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
+* [`Mouse.current.middleButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
 
 ### [`UnityEngine.Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)
 
-No corresponding API yet.
+Use [`Keyboard.current.anyKey.wasUpdatedThisFrame`](../api/UnityEngine.InputSystem.Keyboard.html)
 
 ### [`UnityEngine.Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)
 
@@ -56,83 +72,66 @@ No corresponding API yet.
 
 ### [`UnityEngine.Input.compass`](https://docs.unity3d.com/ScriptReference/Input-compass.html)
 
-`Compass.current`
-
-### [`UnityEngine.Input.compass.enabled`](https://docs.unity3d.com/ScriptReference/Compass-enabled.html)
-
-```
-// Get.
-Compass.current.enabled
-
-// Set.
-InputSystem.EnableDevice(Compass.current);
-InputSystem.DisableDevice(Compass.current);
-```
-
-### [`UnityEngine.Input.compass.headingAccuracy`](https://docs.unity3d.com/ScriptReference/Compass-headingAccuracy.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.compass.magneticHeading`](https://docs.unity3d.com/ScriptReference/Compass-magneticHeading.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.compass.rawVector`](https://docs.unity3d.com/ScriptReference/Compass-rawVector.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.compass.timestamp`](https://docs.unity3d.com/ScriptReference/Compass-timestamp.html)
-
-`Compass.current.lastUpdateTime`
-
->////TODO: time units don't match
-
-### [`UnityEngine.Input.compass.trueHeading`](https://docs.unity3d.com/ScriptReference/Compass-trueHeading.html)
-
 No corresponding API yet.
 
 ### [`UnityEngine.Input.compensateSensors`](https://docs.unity3d.com/ScriptReference/Input-compensateSensors.html)
 
-No corresponding API yet.
+Use [`InputSystem.settings.compensateForScreenOrientation`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_compensateForScreenOrientation).
 
 ### [`UnityEngine.Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)
 
-No corresponding API yet.
+Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_UnityEngine_Vector2_).
 
 ### [`UnityEngine.Input.compositionString`](https://docs.unity3d.com/ScriptReference/Input-compositionString.html)
 
-No corresponding API yet.
+Subscribe to the [`Keyboard.onIMECompositionChange`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange) event:
+
+```CSharp
+    var compositionString = "";
+    Keyboard.current.onIMECompositionChange += composition =>
+    {
+        compositionString = composition.ToString();
+    };
+```
 
 ### [`UnityEngine.Input.deviceOrientation`](https://docs.unity3d.com/ScriptReference/Input-deviceOrientation.html)
 
 No corresponding API yet.
 
-### [`UnityEngine.Input.gyro`](https://docs.unity3d.com/ScriptReference/Input-gyro.html)
+### <a name="gyro"></a>[`UnityEngine.Input.gyro`](https://docs.unity3d.com/ScriptReference/Input-gyro.html)
 
-`Gyro.current`
+The `UnityEngine.Gyroscope` class is replaced by multiple separate sensor Devices in the new Input System:
+
+* [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) to measure angular velocity.
+* [`GravitySensor`](../api/UnityEngine.InputSystem.GravitySensor.html) to measure the direction of gravity.
+* [`AttitudeSensor`](../api/UnityEngine.InputSystem.AttitudeSensor.html) to measure the orientation of the device.
+* [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html) to measure the total acceleration applied to the device.
+* [`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html) to measure acceleration applied to the device, compensating for gravity.
 
 ### [`UnityEngine.Input.gyro.attitude`](https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html)
 
-`Gyro.current.orientation.ReadValue()`
+Use [`AttitudeSensor.current.orientation.ReadValue()`](../api/UnityEngine.InputSystem.AttitudeSensor.html).
 
 ### [`UnityEngine.Input.gyro.enabled`](https://docs.unity3d.com/ScriptReference/Gyroscope-enabled.html)
 
 ```
-// Get.
-Gyro.current.enabled
+// Get:
+`Gyroscope.current.enabled`
 
-// Set.
-InputSystem.EnableDevice(Gyro.current);
-InputSystem.DisableDevice(Gyro.current);
+// Set:
+`InputSystem.EnableDevice(Gyroscope.current);`
+`InputSystem.DisableDevice(Gyroscope.current);`
 ```
+
+>__Note__: The new Input System replaces `UnityEngine.Gyroscope` with multiple separate sensor devices. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See [`UnityEngine.Input.gyro`](#gyro) section for details.
 
 ### [`UnityEngine.Input.gyro.gravity`](https://docs.unity3d.com/ScriptReference/Gyroscope-gravity.html)
 
-`Gyro.current.gravity.ReadValue()`
+Use [`GravitySensor.current.gravity.ReadValue()`](../api/UnityEngine.InputSystem.GravitySensor.html).
 
 ### [`UnityEngine.Input.gyro.rotationRate`](https://docs.unity3d.com/ScriptReference/Gyroscope-rotationRate.html)
 
-`Gyro.current.angularVelocity.ReadValue()`
+Use [`Gyroscope.current.angularVelocity.ReadValue()`](../api/UnityEngine.InputSystem.Gyroscope.html).
 
 ### [`UnityEngine.Input.gyro.rotationRateUnbiased`](https://docs.unity3d.com/ScriptReference/Gyroscope-rotationRateUnbiased.html)
 
@@ -140,13 +139,19 @@ No corresponding API yet.
 
 ### [`UnityEngine.Input.gyro.updateInterval`](https://docs.unity3d.com/ScriptReference/Gyroscope-updateInterval.html)
 
-`Gyro.current.samplingFrequency = 30.0f; // 30 Hz.`
+Use [`Sensor.samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency):
 
->////FIXME: time units don't match
+```
+Gyroscope.current.samplingFrequency = 1.0f / updateInterval;
+```
+
+>__Note__:
+>* [`samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) is in Hz, not in seconds as [`updateInterval`](https://docs.unity3d.com/ScriptReference/Gyroscope-updateInterval.html), so you need to divide 1 by the value.
+>* The new Input System replaces `UnityEngine.Gyroscope` with multiple separate sensor devices. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See [`UnityEngine.Input.gyro`](#gyro) for details.
 
 ### [`UnityEngine.Input.gyro.userAcceleration`](https://docs.unity3d.com/ScriptReference/Gyroscope-userAcceleration.html)
 
-`Gyro.current.acceleration.ReadValue()`
+Use [`LinearAccelerationSensor.current.acceleration.acceleration.ReadValue()`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html).
 
 ### [`UnityEngine.Input.imeCompositionMode`](https://docs.unity3d.com/ScriptReference/Input-imeCompositionMode.html)
 
@@ -154,12 +159,20 @@ No corresponding API yet.
 
 ### [`UnityEngine.Input.imeIsSelected`](https://docs.unity3d.com/ScriptReference/Input-imeIsSelected.html)
 
-No corresponding API yet.
+```
+// Get:
+Keyboard.current.imeSelected
+
+// Set:
+Keyboard.current.SetIMEEnabled(true);
+```
 
 ### [`UnityEngine.Input.inputString`](https://docs.unity3d.com/ScriptReference/Input-inputString.html)
 
+Subscribe to the [`Keyboard.onTextInput`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onTextInput) event:
+
 ```
-Keyboard.current.onText +=
+Keyboard.current.onTextInput +=
     character => /* ... */;
 ```
 
@@ -167,55 +180,15 @@ Keyboard.current.onText +=
 
 No corresponding API yet.
 
-### [`UnityEngine.Input.location.isEnabledByUser`](https://docs.unity3d.com/ScriptReference/LocationService-isEnabledByUser.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData`](https://docs.unity3d.com/ScriptReference/LocationService-lastData.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData.altitude`](https://docs.unity3d.com/ScriptReference/LocationInfo-altitude.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData.horizontalAccuracy`](https://docs.unity3d.com/ScriptReference/LocationInfo-altitude.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData.latitude`](https://docs.unity3d.com/ScriptReference/LocationInfo-latitude.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData.timestamp`](https://docs.unity3d.com/ScriptReference/LocationInfo-timestamp.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData.verticalAccuracy`](https://docs.unity3d.com/ScriptReference/LocationInfo-verticalAccuracy.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.lastData.status`](https://docs.unity3d.com/ScriptReference/LocationService-status.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.Start`](https://docs.unity3d.com/ScriptReference/LocationService.Start.html)
-
-No corresponding API yet.
-
-### [`UnityEngine.Input.location.Stop`](https://docs.unity3d.com/ScriptReference/LocationService.Stop.html)
-
-No corresponding API yet.
-
 ### [`UnityEngine.Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)
 
-`Mouse.current.position.ReadValue()`
+Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html).
 
->NOTE: Mouse simulation from touch is not implemented yet.
+>__Note__: Mouse simulation from touch isn't implemented yet.
 
 ### [`UnityEngine.Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)
 
-`Mouse.current != null`
+Use [`Mouse.current != null`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
 
 ### [`UnityEngine.Input.multiTouchEnabled`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)
 
@@ -231,11 +204,15 @@ No corresponding API yet.
 
 ### [`UnityEngine.Input.touchCount`](https://docs.unity3d.com/ScriptReference/Input-touchCount.html)
 
-`Touchscreen.current.activeTouches.Count`
+Use [`InputSystem.EnhancedTouch.Touch.activeTouches.Count`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)
+
+>__Note__: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html)
 
-`Touchscreen.current.activeTouches`
+Use [`InputSystem.EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches).
+
+>__Note__: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)
 
@@ -243,86 +220,95 @@ No corresponding API yet.
 
 ### [`UnityEngine.Input.touchSupported`](https://docs.unity3d.com/ScriptReference/Input-touchSupported.html)
 
-`Touchscreen.current != null`
+Use [`Touchscreen.current != null`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_current).
 
 ### [`UnityEngine.Input.GetAccelerationEvent`](https://docs.unity3d.com/ScriptReference/Input.GetAccelerationEvent.html)
 
-See `UnityEngine.Input.accelerationEvents`.
+See [`UnityEngine.Input.accelerationEvents`](#accelerationEvents).
 
-### [`UnityEngine.Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)
+### <a name="getAxis"></a>[`UnityEngine.Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)
 
-There is no global setup corresponding exactly to "virtual axis" setups in the old player input settings. Instead, sets of "input actions" can be set up as independent assets or put directly on your C# components.
+[//]: # (TODO: we should probably reference PlayerInput here in addition to or instead of the manual action setups described here)
 
->DISCLAIMER: The action part of the input system is still very unfinished and will change.
+There is no global setup that corresponds exactly to virtual axis setups in the old __Input Manager__ settings. Instead, you can create sets of [Input Actions](Actions.md) as independent Assets, or put them directly on your C# components.
 
-As an example, let's recreate the following axis configuration:
+For example, if you want to recreate the following axis configuration:
 
 ![Fire1 Action in Old Input Manager](./Images/FireActionOldInputManager.png)
 
-#### Option A: Put input actions on your component
+#### Option A: Put Input Actions on your component
 
-1. Declare one or more fields or properties type `InputAction`.
-   ```
-   public class MyComponent : MonoBehaviour
-   {
-       public InputAction fireAction;
-   ```
-2. Hook up a response to the action.
-   ```
-       void Awake()
-       {
-           fireAction.performed += ctx => Fire();
-       }
+1. Declare one or more fields of type [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html).
 
-       void Fire()
-       {
-           //...
-       }
    ```
-3. Put the component on a `GameObject` and configure bindings in the inspector by clicking the plus sign on the bindings list to add bindings and using the "Pick" button to pick controls to bind to.
+       public class MyComponent : MonoBehaviour
+       {
+           public InputAction fireAction;
+   ```
+
+2. Configure a response to the Action.
+   ```
+           void Awake()
+           {
+               fireAction.performed += ctx => Fire();
+           }
+
+           void Fire()
+           {
+               //...
+           }
+   ```
+3. Put the component on a `GameObject`. You can now configure Bindings in the Inspector window. Click the plus sign on the Bindings list to add Bindings, and double-click the Bindings to pick Controls to bind to.
 
    ![MyComponent fireAction](./Images/MyComponentFireAction.png)
-4. Enable and disable the action as needed.
+4. Enable and disable the Action as needed.
    ```
-       void OnEnable()
-       {
-           fireAction.Enable();
-       }
+           void OnEnable()
+           {
+               fireAction.Enable();
+           }
 
-       void OnDisable()
-       {
-           fireAction.Disable();
-       }
+           void OnDisable()
+           {
+               fireAction.Disable();
+           }
    ```
 
-#### Option B: Create input action asset
+#### Option B: Create an Input Action Asset
 
-1. Create an input action asset by right-clicking in the project browser and selecting "Create >> Input Actions" (alternatively you can go to "Assets >> Create >> Input Actions" in the main menu bar). Give a name to the asset.
-2. Select the asset and in the inspector, click "Add New Set" to add a new set of actions.
-3. Double-click the "default" name to give the set a better name. E.g. "gameplay".
-4. Double-click "\<Add Action...>" to add an action.
-5. Double-click the action to give it a name.
-6. Add bindings to the action by clicking the plus sign and using the "Pick" button to select controls.
-7. Enable "Generate C# Wrapper Class" in the importer settings and hit "Apply". Your inspector should now look something like this:
+1. Create an Input Action Asset (right-click in the Project browser and select __Create > Input Actions__). Give the Asset a name.
+2. Double-click the Asset to open the Input Actions editor window.
+3. In the __Action Maps__ column, click the plus sign to add a new Action Map.
+4. Double-click the __New Action Map__ name to rename the set. Use a descriptive name, such as *gameplay*.
+5. In the __Actions__ column, click the plus sign to add a new Action.
+6. Double-click the Action to give it a name.
+7. Add Bindings to the Action. To do this, click the plus sign on the Action and choose a Binding type from the list.
+8. Select the Binding and click on the __Path__ button in the right column to pick Controls to bind to.
+9. Click __Save Asset__. Your Input Action editor should now look like this:
 
    ![MyControls.inputactions](./Images/FireActionInputAsset.png)
-8. Add a field to your component to reference the asset using the generated C# wrapper.
+
+10. Check the __Generate C# Wrapper Class__ checkbox in the Inspector window for the Asset, then click __Apply__. Your Inspector should now look like this:
+
+   ![MyControls.inputactions](./Images/FireActionInputAssetInspector.png)
+
+11. Add an instance of the generated C# wrapper class to your component.
    ```
    public class MyComponent : MonoBehaviour
    {
-       public MyControls controls;
+       MyControls controls;
    ```
-9. Drag the .inputactions asset you created onto the field in the inspector.
 
-   ![MyComponent controls assets](./Images/MyComponentInputAsset.png)
-10. Hook up a response to the fire action.
+12. Create the instance and hook up a response to the fire Action.
+
    ```
        public void Awake()
        {
+           controls = new MyControls();
            controls.gameplay.fire.performed += ctx => Fire();
        }
    ```
-11. Enable and disable the action as appropriate.
+13. Enable and disable the Action as appropriate.
    ```
        public void OnEnable()
        {
@@ -337,8 +323,8 @@ As an example, let's recreate the following axis configuration:
 
 #### Hints
 
-- To force button-like behavior on the control referenced in a binding, add a "Press" modified to it.
-- You can access the control that triggered an action from the callback. Through it, you can also query its current value.
+- To force button-like behavior on the control referenced in a Binding, add a [press Interaction](Interactions.md#press) to it.
+- You can access the Control that triggered an Action from the callback. Through it, you can also query its current value.
    ```
    fireAction.performed +=
        ctx =>
@@ -355,31 +341,46 @@ As an example, let's recreate the following axis configuration:
 
 ### [`UnityEngine.Input.GetAxisRaw`](https://docs.unity3d.com/ScriptReference/Input.GetAxisRaw.html)
 
-No corresponding API yet.
+Not directly applicable. You can use [`InputControl<>.ReadUnprocessedValue()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) to read unprocessed values from any control.
 
 ### [`UnityEngine.Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)
 
-See `UnityEngine.Input.GetAxis`.
+Use [`InputAction.IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_).
+
+```CSharp
+if (playerInput.actions["fire"].IsPressed() && Time.time - m_LastFireTime >= kFireRate)
+    Fire();
+```
 
 ### [`UnityEngine.input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)
 
-See `UnityEngine.Input.GetAxis`.
+Use [`InputAction.WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_).
+
+```CSharp
+if (playerInput.actions["fire"].WasPressedThisFrame())
+    Fire();
+```
 
 ### [`UnityEngine.input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)
 
-See `UnityEngine.Input.GetAxis`.
+Use [`InputAction.WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_).
+
+```CSharp
+if (playerInput.actions["fire"].WasReleasedThisFrame())
+    StopFiring();
+```
 
 ### [`UnityEngine.Input.GetJoystickNames`](https://docs.unity3d.com/ScriptReference/Input.GetJoystickNames.html)
 
-There is no API that corresponds to this 100% (for good reason; `GetJoystickNames` was never a good API).
+There is no API that corresponds to this exactly.
 
-Here are various ways to discover connected devices:
+Here are various ways to discover connected Devices:
 
 ```
-// Query a list of all connected devices (does not allocate; read-only access)
+// Query a list of all connected Devices (does not allocate; read-only access).
 InputSystem.devices
 
-// Get notified when a device is added or removed
+// Get notified when a Device is added or removed.
 InputSystem.onDeviceChange +=
     (device, change) =>
     {
@@ -403,6 +404,8 @@ for (var i = 0; i < devices.Count; ++i)
 
 ### [`UnityEngine.Input.GetKey`](https://docs.unity3d.com/ScriptReference/Input.GetKey.html)
 
+Use [`ButtonControl.isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding key:
+
 ```
 // Using KeyControl property directly.
 Keyboard.current.spaceKey.isPressed
@@ -415,9 +418,11 @@ Keyboard.current[Key.Space].isPressed
 ((KeyControl)Keyboard.current["space"]).isPressed
 ```
 
->NOTE: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use `KeyControl.displayName`.
+>__Note__: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
 
 ### [`UnityEngine.Input.GetKeyDown`](https://docs.unity3d.com/ScriptReference/Input.GetKeyDown.html)
+
+Use [`ButtonControl.wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding key:
 
 ```
 // Using KeyControl property directly.
@@ -431,9 +436,11 @@ Keyboard.current[Key.Space].wasPressedThisFrame
 ((KeyControl)Keyboard.current["space"]).wasPressedThisFrame
 ```
 
->NOTE: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use `KeyControl.displayName`.
+>__Note__: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
 
 ### [`UnityEngine.Input.GetKeyUp`](https://docs.unity3d.com/ScriptReference/Input.GetKeyUp.html)
+
+Use [`ButtonControl.wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding key:
 
 ```
 // Using KeyControl property directly.
@@ -447,16 +454,18 @@ Keyboard.current[Key.Space].wasReleasedThisFrame
 ((KeyControl)Keyboard.current["space"]).wasReleasedThisFrame
 ```
 
->NOTE: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use `KeyControl.displayName`.
+>__Note__: The Input System identifies keys by physical layout, not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
 
 ### [`UnityEngine.Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)
+
+Use [`ButtonControl.isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) on the corresponding mouse button:
 
 ```
 Mouse.current.leftButton.isPressed
 Mouse.current.rightButton.isPressed
 Mouse.current.middleButton.isPressed
 
-// You can also go through all buttons on the mouse (does not allocate)
+// You can also go through all buttons on the mouse (does not allocate).
 var controls = Mouse.current.allControls;
 for (var i = 0; i < controls.Count; ++i)
 {
@@ -465,11 +474,13 @@ for (var i = 0; i < controls.Count; ++i)
         /* ... */;
 }
 
-// Or look up controls by name
+// Or look up controls by name.
 ((ButtonControl)Mouse.current["leftButton"]).isPressed
 ```
 
 ### [`UnityEngine.Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)
+
+Use [`ButtonControl.wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) on the corresponding mouse button:
 
 ```
 Mouse.current.leftButton.wasPressedThisFrame
@@ -479,6 +490,8 @@ Mouse.current.middleButton.wasPressedThisFrame
 
 ### [`UnityEngine.Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)
 
+Use [`ButtonControl.wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) on the corresponding mouse button:
+
 ```
 Mouse.current.leftButton.wasReleasedThisFrame
 Mouse.current.rightButton.wasReleasedThisFrame
@@ -487,19 +500,17 @@ Mouse.current.middleButton.wasReleasedThisFrame
 
 ### [`UnityEngine.Input.GetTouch`](https://docs.unity3d.com/ScriptReference/Input.GetTouch.html)
 
-`Touchscreen.current.activeTouches[i]`
+Use [`InputSystem.EnhancedTouch.Touch.activeTouches[i]`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)
+
+>__Note__: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.IsJoystickPreconfigured`](https://docs.unity3d.com/ScriptReference/Input.IsJoystickPreconfigured.html)
 
-No corresponding API yet.
+Not needed. Devices which derive from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) always correctly implement the mapping of axes and buttons to the corresponding [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) members of the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class.
 
 ### [`UnityEngine.Input.ResetInputAxes`](https://docs.unity3d.com/ScriptReference/Input.ResetInputAxes.html)
 
-No corresponding API yet.
-
-## [`UnityEngine.Handheld`](https://docs.unity3d.com/ScriptReference/Handheld.html)
-
-No corresponding API yet. Use `Handheld` for now.
+Not directly applicable.
 
 ## [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html)
 

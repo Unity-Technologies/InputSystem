@@ -16,6 +16,15 @@ namespace UnityEngine.InputSystem.Utilities
     /// The purpose of this struct is to allow exposing internal arrays directly such that no
     /// boxing and no going through interfaces is required but at the same time not allowing
     /// the internal arrays to be modified.
+    ///
+    /// It differs from <c>ReadOnlySpan&lt;T&gt;</c> in that it can be stored on the heap and differs
+    /// from <c>ReadOnlyCollection&lt;T&gt;</c> in that it supports slices directly without needing
+    /// an intermediate object representing the slice.
+    ///
+    /// Note that in most cases, the ReadOnlyArray instance should be treated as a <em>temporary</em>.
+    /// The actual array referred to by a ReadOnlyArray instance is usually owned and probably mutated
+    /// by another piece of code. When that code makes changes to the array, the ReadOnlyArray
+    /// instance will not get updated.
     /// </remarks>
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
@@ -72,9 +81,21 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public IEnumerator<TValue> GetEnumerator()
+        /// <summary>
+        /// Returns an enumerator that iterates through the read-only array.
+        /// <returns>
+        /// <see cref="ReadOnlyArray{TValue}.Enumerator"/>
+        /// An enumerator for the read-only array.
+        /// </returns>
+        /// </summary>
+        public Enumerator GetEnumerator()
         {
-            return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);
+            return new Enumerator(m_Array, m_StartIndex, m_Length);
+        }
+
+        IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -82,6 +103,7 @@ namespace UnityEngine.InputSystem.Utilities
             return GetEnumerator();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2225:OperatorOverloadsHaveNamedAlternates", Justification = "`ToXXX` message only really makes sense as static, which is not recommended for generic types.")]
         public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
         {
             return new ReadOnlyArray<TValue>(array);
@@ -103,7 +125,7 @@ namespace UnityEngine.InputSystem.Utilities
             get
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 // We allow array to be null as we are patching up ReadOnlyArrays in a separate
                 // path in several places.
                 if (m_Array == null)
@@ -112,14 +134,18 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
-        internal class Enumerator<T> : IEnumerator<T>
+        /// <summary>
+        /// <see cref="ReadOnlyArray{TValue}"/>
+        /// Enumerates the elements of a read-only array.
+        /// </summary>
+        public struct Enumerator : IEnumerator<TValue>
         {
-            private readonly T[] m_Array;
+            private readonly TValue[] m_Array;
             private readonly int m_IndexStart;
             private readonly int m_IndexEnd;
             private int m_Index;
 
-            public Enumerator(T[] array, int index, int length)
+            internal Enumerator(TValue[] array, int index, int length)
             {
                 m_Array = array;
                 m_IndexStart = index - 1; // First call to MoveNext() moves us to first valid index.
@@ -127,28 +153,32 @@ namespace UnityEngine.InputSystem.Utilities
                 m_Index = m_IndexStart;
             }
 
+            /// <inheritdoc/>
             public void Dispose()
             {
             }
 
+            /// <inheritdoc/>
             public bool MoveNext()
             {
                 if (m_Index < m_IndexEnd)
                     ++m_Index;
-                return (m_Index != m_IndexEnd);
+                return m_Index != m_IndexEnd;
             }
 
+            /// <inheritdoc/>
             public void Reset()
             {
                 m_Index = m_IndexStart;
             }
 
-            public T Current
+            /// <inheritdoc/>
+            public TValue Current
             {
                 get
                 {
                     if (m_Index == m_IndexEnd)
-                        throw new IndexOutOfRangeException();
+                        throw new InvalidOperationException("Iterated beyond end");
                     return m_Array[m_Index];
                 }
             }
@@ -157,6 +187,9 @@ namespace UnityEngine.InputSystem.Utilities
         }
     }
 
+    /// <summary>
+    /// Extension methods to help with <see cref="ReadOnlyArrayExtensions"/> contents.
+    /// </summary>
     public static class ReadOnlyArrayExtensions
     {
         public static bool Contains<TValue>(this ReadOnlyArray<TValue> array, TValue value)
@@ -181,6 +214,21 @@ namespace UnityEngine.InputSystem.Utilities
                 if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
                     return i;
             return -1;
+        }
+
+        internal static bool HaveEqualReferences<TValue>(this ReadOnlyArray<TValue> array1, IReadOnlyList<TValue> array2, int count = int.MaxValue)
+        {
+            var length1 = Math.Min(array1.Count, count);
+            var length2 = Math.Min(array2.Count, count);
+
+            if (length1 != length2)
+                return false;
+
+            for (var i = 0; i < length1; ++i)
+                if (!ReferenceEquals(array1[i], array2[i]))
+                    return false;
+
+            return true;
         }
     }
 }

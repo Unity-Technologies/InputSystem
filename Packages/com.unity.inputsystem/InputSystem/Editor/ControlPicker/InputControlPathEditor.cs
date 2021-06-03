@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,24 +16,30 @@ namespace UnityEngine.InputSystem.Editor
     /// greater control is required than is offered by the <see cref="PropertyDrawer"/> mechanism. In particular,
     /// it allows applying additional constraints such as requiring control paths to match ...
     /// </remarks>
-    public class InputControlPathEditor
+    public sealed class InputControlPathEditor : IDisposable
     {
         /// <summary>
-        ///
+        /// Initialize the control path editor.
         /// </summary>
         /// <param name="pathProperty"><see cref="string"/> type property that will receive the picked input control path.</param>
-        /// <param name="pickerState">Persistent editing state of the </param>
-        /// <param name="onModified"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public InputControlPathEditor(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified)
+        /// <param name="pickerState">Persistent editing state of the path editor. Used to retain state across domain reloads.</param>
+        /// <param name="onModified">Delegate that is called when the path has been modified.</param>
+        /// <param name="label">Optional label to display instead of display name of <paramref name="pathProperty"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="pathProperty"/> is <c>null</c>.</exception>
+        public InputControlPathEditor(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified, GUIContent label = null)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
 
             this.pathProperty = pathProperty;
-
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
+            m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.GetTooltip());
+        }
+
+        public void Dispose()
+        {
+            m_PickerDropdown?.Dispose();
         }
 
         public void SetControlPathsToMatch(IEnumerable<string> controlPaths)
@@ -88,16 +94,16 @@ namespace UnityEngine.InputSystem.Editor
             var lineRect = rect;
             var labelRect = lineRect;
             labelRect.width = EditorGUIUtility.labelWidth;
-            EditorGUI.LabelField(labelRect, s_PathLabel);
+            EditorGUI.LabelField(labelRect, m_PathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
 
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 15;
+            bindingTextRect.width -= 20;
             editButtonRect.x += bindingTextRect.width;
-            editButtonRect.width = 15;
+            editButtonRect.width = 20;
             editButtonRect.height = 15;
 
             var path = pathProperty.stringValue;
@@ -161,6 +167,7 @@ namespace UnityEngine.InputSystem.Editor
         public SerializedProperty pathProperty { get; }
         public Action onModified { get; }
 
+        private GUIContent m_PathLabel;
         private string m_ExpectedControlLayout;
         private string[] m_ControlPathsToMatch;
         private InputControlScheme[] m_ControlSchemes;
@@ -169,8 +176,6 @@ namespace UnityEngine.InputSystem.Editor
         private InputControlPickerDropdown m_PickerDropdown;
         private readonly InputControlPickerState m_PickerState;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
-
-        private static readonly GUIContent s_PathLabel = EditorGUIUtility.TrTextContent("Path", "Path of the controls that will be bound to the action at runtime.");
     }
 }
  #endif // UNITY_EDITOR

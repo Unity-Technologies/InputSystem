@@ -1,43 +1,33 @@
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.DualShock;
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+using UnityEngine.InputSystem.DualShock.LowLevel;
+#endif
 using UnityEngine.InputSystem.Processors;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 #endif
 
-internal class DualShockTests : InputTestFixture
+internal class DualShockTests : CoreTestsFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsDualShockAsHID()
+    public DualShockGamepad Devices_SupportsDualShockAsHID<TDevice, TState>(TState state)
+        where TDevice : DualShockGamepad
+        where TState : struct, IInputStateTypeInfo
     {
-        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
-
+        var gamepad = InputSystem.AddDevice<TDevice>();
         // Dpad has default state value so make sure that one is coming through.
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.QueueStateEvent(gamepad,
-            new DualShockHIDInputReport
-            {
-                leftStickX = 32,
-                leftStickY = 64,
-                rightStickX = 128,
-                rightStickY = 255,
-                leftTrigger = 20,
-                rightTrigger = 40,
-                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
-                buttons2 = 0xff,
-                buttons3 = 0xff
-            });
+        InputSystem.QueueStateEvent(gamepad, state);
+
         InputSystem.Update();
 
         var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
@@ -73,9 +63,63 @@ internal class DualShockTests : InputTestFixture
         Assert.That(gamepad.rightShoulder.isPressed);
         Assert.That(gamepad.leftStickButton.isPressed);
         Assert.That(gamepad.rightStickButton.isPressed);
-        Assert.That(gamepad.touchpadButton.isPressed);
 
+        ////REVIEW: Should we just kill these buttons? Do they provide any value?
+        // PS controller adds buttons for the left and right trigger. Make sure these are marked as
+        // synthetic so they don't get picked up as double input.
+        // https://fogbugz.unity3d.com/f/cases/1293734
+        Assert.That(gamepad["leftTriggerButton"].synthetic, Is.True);
+        Assert.That(gamepad["rightTriggerButton"].synthetic, Is.True);
+
+        return gamepad;
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Devices_SupportsDualShock4AsHID(bool precompiled)
+    {
+        if (!precompiled)
+            InputControlLayout.s_Layouts.precompiledLayouts.Clear();
+
+        var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReport>(
+            new DualShock4HIDInputReport
+            {
+                leftStickX = 32,
+                leftStickY = 64,
+                rightStickX = 128,
+                rightStickY = 255,
+                leftTrigger = 20,
+                rightTrigger = 40,
+                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
+                buttons2 = 0xff,
+                buttons3 = 0xff
+            }
+        );
+
+        Assert.That(gamepad.touchpadButton.isPressed);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShock3AsHID()
+    {
+        Devices_SupportsDualShockAsHID<DualShock3GamepadHID, DualShock3HIDInputReport>(
+            new DualShock3HIDInputReport
+            {
+                leftStickX = 32,
+                leftStickY = 64,
+                rightStickX = 128,
+                rightStickY = 255,
+                leftTrigger = 20,
+                rightTrigger = 40,
+                buttons1 = 0x9f, // High order 4 bits is Dpad
+                buttons2 = 0xff,
+                buttons3 = 0xff
+            }
+        );
     }
 
     [Test]
@@ -108,15 +152,17 @@ internal class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID()
+    [TestCase(0x54C, 0x9CC)]
+    [TestCase(0x54C, 0x5C4)]
+    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID(int vendorId, int productId)
     {
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "HID",
             capabilities = new HID.HIDDeviceDescriptor
             {
-                vendorId = 0x54C,
-                productId = 0x9CC,
+                vendorId = vendorId,
+                productId = productId,
             }.ToJson()
         });
 
@@ -149,7 +195,7 @@ internal class DualShockTests : InputTestFixture
         // The DualShock's dpad has a default state of 8 (indicating dpad isn't pressed in any direction),
         // not of 0 (which actually means "up" is pressed). Make sure this is set up correctly.
 
-        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
+        var gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
 
         Assert.That(gamepad.dpad.up.isPressed, Is.False);
         Assert.That(gamepad.dpad.down.isPressed, Is.False);
@@ -161,12 +207,12 @@ internal class DualShockTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanSetLightBarColorAndMotorSpeedsOnDualShockHID()
     {
-        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
+        var gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
 
         DualShockHIDOutputReport? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(gamepad.id,
+            runtime.SetDeviceCommandCallback(gamepad.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockHIDOutputReport.Type)

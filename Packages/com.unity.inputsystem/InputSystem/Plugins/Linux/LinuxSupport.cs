@@ -1,12 +1,12 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using System;
 
-namespace UnityEngine.InputSystem.Plugins.Linux
+namespace UnityEngine.InputSystem.Linux
 {
     // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
 #pragma warning disable 0649
 
-    public enum JoystickFeatureType
+    internal enum JoystickFeatureType
     {
         Invalid = 0,
         Axis,
@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Plugins.Linux
         Max
     }
 
-    public enum SDLAxisUsage
+    internal enum SDLAxisUsage
     {
         Unknown = 0,
         X,
@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Plugins.Linux
         Count
     }
 
-    public enum SDLButtonUsage
+    internal enum SDLButtonUsage
     {
         Unknown = 0,
         Trigger,
@@ -78,19 +78,19 @@ namespace UnityEngine.InputSystem.Plugins.Linux
         Count
     }
 
+    // JSON must match JoystickFeatureDefinition in native.
     [Serializable]
     internal struct SDLFeatureDescriptor
     {
         public JoystickFeatureType featureType;
         public int usageHint;
-        public int size;
+        public int featureSize;
         public int offset;
         public int bit;
         public int min;
         public int max;
     }
 
-    //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
     [Serializable]
     internal class SDLDeviceDescriptor
     {

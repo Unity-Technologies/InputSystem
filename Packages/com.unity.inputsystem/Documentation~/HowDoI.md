@@ -1,31 +1,36 @@
-# How Do I...?
+# How do I…?
 
 Devices:
 
-* [... check if the space key has been pressed this frame?](#check-if-the-space-key-has-been-pressed-this-frame)
-* [... find all connected gamepads?](#find-all-connected-gamepads)
-* [... find the gamepad currently used by the player?](#find-the-gamepad-currently-used-by-the-player)
-* [... know when a new device has been plugged in?](#know-when-a-new-device-has-been-plugged-in)
+* […check if the space key has been pressed this frame?](#check-if-the-space-key-has-been-pressed-this-frame)
+* […find all connected gamepads?](#find-all-connected-gamepads)
+* […find the gamepad that the player is currently using?](#find-the-gamepad-that-the-player-is-currently-using)
+* […know when a new device has been plugged in?](#know-when-a-new-device-has-been-plugged-in)
 
 Actions:
 
-UIs:
+* […create a simple Fire-type Action?](#create-a-simple-fire-type-action)
+* […require a button to be held for 0.4 seconds before triggering an Action?](#require-a-button-to-be-held-for-04-seconds-before-triggering-an-action)
+* […use a "positive" and a "negative" button to drive an axis?](#use-a-positive-and-a-negative-button-to-drive-an-axis)
+* […create a UI to rebind input in my game?](#create-a-ui-to-rebind-input-in-my-game)
 
-## ... check if the space key has been pressed this frame?
+## …check if the space key has been pressed this frame?
+
+Use this code:
 
 ```CSharp
     Keyboard.current.space.wasPressedThisFrame
 ```
 
-Same deal works for other devices.
+You can adapt this code to other Devices that have buttons or other types of input:
 
 ```CSharp
     Gamepad.current.aButton.wasPressedThisFrame
 ```
 
-## ... find all connected gamepads?
+## …find all connected gamepads?
 
-You can ask `Gamepad`.
+Use the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
 
 ```CSharp
     var allGamepads = Gamepad.all;
@@ -34,67 +39,77 @@ You can ask `Gamepad`.
     var allPS4Gamepads = DualShockGamepadPS4.all;
 ```
 
-Or you have some more involved options:
+Alternatively, you can use more generic Device queries using LINQ expressions or [control paths](Controls.md#control-paths):
 
 ```CSharp
 
     // Go through all devices and select gamepads.
     InputSystem.devices.Select(x => x is Gamepad);
 
-    // Query everything that is using the gamepad template or based on that template.
+    // Query everything that is using the gamepad layout or based on that layout.
     // NOTE: Don't forget to Dispose() the result.
     InputSystem.FindControls("<gamepad>");
 ```
 
-The last solution uses [control paths](Controls.md#control-paths).
+## …find the gamepad that the player is currently using?
 
-## ... find the gamepad currently used by the player?
+Use this code:
 
 ```CSharp
     var gamepad = Gamepad.current;
 
     // This works for other types of devices, too.
-    var keyboard = Keyboar.current;
+    var keyboard = Keyboard.current;
     var mouse = Mouse.current;
 ```
 
-# ... know when a new device has been plugged in?
+# …know when a new Device has been plugged in?
+
+Use this code:
 
 ```CSharp
     InputSystem.onDeviceChange +=
         (device, change) =>
         {
-            if (change == InputDeviceChange.Added)
-                /* New Device */;
-            else if (change == InputDeviceChange.Disconnected)
-                /* Device got unplugged */;
-            else if (change == InputDeviceChange.Connected)
-                /* Plugged back in */;
-            else if (change == InputDeviceChange.Removed)
-                /* Remove from input system entirely; by default, devices stay in the system once discovered */;
+            switch (change)
+            {
+                case InputDeviceChange.Added:
+                    // New Device.
+                    break;
+                case InputDeviceChange.Disconnected:
+                    // Device got unplugged.
+                    break;
+                case InputDeviceChange.Connected:
+                    // Plugged back in.
+                    break;
+                case InputDeviceChange.Removed:
+                    // Remove from Input System entirely; by default, Devices stay in the system once discovered.
+                    break;
+                default:
+                    // See InputDeviceChange reference for other event types.
+                    break;
+            }
         }
 ```
 
-For more details, see ["Monitoring Devices"](Devices.md#monitoring-devices).
+For more details, see documentation on ["Monitoring Devices"](Devices.md#monitoring-devices).
 
------------
+# …create a simple Fire-type Action?
 
-# ... create a simple fire-type action?
-
-One way to do so is directly in code:
+Use this code:
 
 ```C#
-    // Create action that binds to the primary action control on all devices.
+    // Create an Action that binds to the primary action control on all devices.
     var action = new InputAction(binding: "*/{primaryAction}");
 
-    // Have it run your code when action is triggered.
+    // Have it run your code when the Action is triggered.
     action.performed += _ => Fire();
 
     // Start listening for control changes.
     action.Enable();
 ```
 
-The second way is to simply have a serialized field of type InputAction in your MonoBehaviour like this:
+You can also have a serialized field of type `InputAction` in your `MonoBehaviour`, like this:
 
 ```C#
 
@@ -106,16 +121,16 @@ public class MyControllerComponent : MonoBehaviour
 
 ```
 
-In the editor, you will be presented with a nice inspector that allows you to add bindings to the actions and choose where the bindings go without having to fiddle around with path strings.
+The Editor lets you add and edit Bindings for the Actions in the Inspector window.
 
-Note that you still need to enable the action in code and hook up your response. You can do so in the Awake() method of your component.
+>__Note__: You still need to enable the Action in code and hook up your response. You can do so in the `Awake` method of your component:
 
 ```C#
 
     void Awake()
     {
-        fireAction.performed += _ => Fire;
-        walkAction.performed += _ => Walk;
+        fireAction.performed += Fire;
+        walkAction.performed += Walk;
     }
 
     void OnEnable()
@@ -130,21 +145,19 @@ Note that you still need to enable the action in code and hook up your response.
         walkAction.Disable();
     }
 
-    void Fire(InputAction action, InputControl control)
+    void Fire(CallbackContext ctx)
     {
         //...
     }
 
-    void Walk(InputAction action, InputControl control)
+    void Walk(CallbackContext ctx)
     {
         //...
     }
 
 ```
 
-    ////TODO: Working on a way to nicely package up actions in action sets
-
-If you are worried about GC from the delegates, you can also use a polling approach rather than a callback-driven approach.
+If you're worried about allocations from the delegates, you can use a polling approach rather than a callback-driven approach.
 
 ```C#
 
@@ -162,9 +175,9 @@ If you are worried about GC from the delegates, you can also use a polling appro
 
     void Update()
     {
-        if (fireAction.hasBeenPerformedThisFrame)
+        if (fireAction.triggered)
             Fire();
-        if (walkAction.hasBeenPerformedThisFrame)
+        if (walkAction.triggered)
             Walk();
     }
 
@@ -173,18 +186,37 @@ If you are worried about GC from the delegates, you can also use a polling appro
         //...
     }
 
-    void Walk(InputAction action, InputControl control)
+    void Walk()
     {
         //...
     }
 
 ```
 
-    ////TODO: that last way I'm still working on
+Typically, you need to deal with more than one Action. In this case, you might want to put these into an Input Actions Asset file. To create an Input Actions Asset, follow these steps:
 
-# ... require a button to be held for 0.4 seconds before triggering an action?
+1. In the Project view, click __Create__.
+2. Select __Input Actions__.
+3. Double-click the Asset to create and edit one or multiple Input Action Maps containing Input Actions.
 
-Put a HoldModifier on the action. In code, this works like so:
+If you then click __Generate C# Class__ in the Inspector for that Asset, Unity generates a wrapper class for your Actions which you can use like this:
+
+```C#
+    MyInputActionAssetClass actions;
+
+    public void OnEnable()
+    {
+        actions = new MyInputActionAssetClass();
+        controls.myActionsMap.fire.performed += Fire;
+        controls.myActionsMap.walk.performed += Walk;
+    }
+```
+
+For more details, see documentation on [Actions](Actions.md).
+
+# …require a button to be held for 0.4 seconds before triggering an Action?
+
+Put a [hold Interaction](Interactions.md#hold) on the Action, like this:
 
 ```C#
 
@@ -193,7 +225,7 @@ Put a HoldModifier on the action. In code, this works like so:
 
 ```
 
-To display UI feedback when the button starts being held, use the `started` callback.
+To display UI feedback when the button starts being held, use the [`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) callback.
 
 ```C#
 
@@ -203,23 +235,9 @@ To display UI feedback when the button starts being held, use the `started` call
 
 ```
 
-    ////TODO: still working on the modifier mechanics
+# …use a "positive" and a "negative" button to drive an axis?
 
-# ... require the left trigger to be held and then the A button to be pressed and held for 0.4 seconds?
-
-```C#
-
-    var action = new InputAction();
-    action.AddBinding("/<gamepad>/leftTrigger")
-        .CombinedWith("/<gamepad>/buttonSouth", modifiers: "hold(duration=0.4)");
-
-```
-
-Again, setting this up with the inspector in the editor is an alternative to dealing with the path strings directly.
-
-# ... use a "positive" and a "negative" button to drive an axis?
-
-Use a "1D-Axis" (or just "Axis") composite binding in the UI or in code and bind its parts to the respective buttons.
+Use an [axis composite](ActionBindings.md#1d-axis) binding in the UI or in code, and bind its parts to the respective buttons.
 
 ```CSharp
 var accelerateAction = new InputAction("Accelerate");
@@ -228,35 +246,38 @@ accelerateAction.AddCompositeBinding("Axis")
     .With("Negative", "<Gamepad>/leftTrigger");
 ```
 
-There are parameters available to tweak the axis' behavior. See [here](ActionBindings.md#1d-axis) for details.
+# …create a UI to rebind input in my game?
 
-# ... separate the actions in my game from user-overridable bindings?
-
-Put your actions in one JSON file and put your default bindings in another JSON file. At runtime, load the actions and then load either the default bindings or a customized version from the user's profile.
+Create a UI with a button to trigger rebinding. If the user clicks the button to bind a control to an action, use [`InputAction.PerformInteractiveRebinding`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_System_Int32_) to handle the rebinding:
 
 ```C#
-
-    ////TODO: still fleshing out the APIs for this
-
+    void RemapButtonClicked(InputAction actionToRebind)
+    {
+        var rebindOperation = actionToRebind.PerformInteractiveRebinding()
+                    // To avoid accidental input from mouse motion
+                    .WithControlsExcluding("Mouse")
+                    .OnMatchWaitForAnother(0.1f)
+                    .Start();
+    }
 ```
 
-# ... create a UI to rebind input in my game?
+You can install the Tanks Demo sample for the Input System package using the Package Manager, which has an example of an interactive rebinding UI.
 
-    ////TODO
+# …set up an Action to specifically target the left-hand XR controller?
 
-# ... set up an action to specifically target the left-hand XRController?
+Use this code:
 
 ```CSharp
     var action = new InputAction(binding: "/<XRController>{leftHand}/position");
 ```
 
-Again, the inspector allows setting this up without having to deal with paths directly.
+You can also set this up for any Input Bindings in the Inspector or the Input Action Asset editor window without having to deal with paths directly.
 
-# ... wait for any button to be pressed on any device?
+# …wait for any button to be pressed on any device?
 
-    ////TODO: this needs work
+[//]: # (TODO this needs work)
 
-One way is to use actions.
+Use this code:
 
 ```CSharp
     var myAction = new InputAction(binding: "/*/<button>");
@@ -264,45 +285,46 @@ One way is to use actions.
     myAction.Enable();
 ```
 
-However, this is dirt inefficient. The amount of processing an action has to do is directly correlated with the amount of controls it is targeting. Targeting every single button of every single device will yield a ton of controls and result in high processing overhead. The keyboard alone will contribute a ton of buttons each of which will have to be processed individually.
+>__Note__: This is inefficient and resource-intensive. The amount of processing an Action has to do is directly correlated with the amount of Controls it targets. Targeting every single button of every single Device yields a large number of Controls and results in a high processing overhead. For example, the keyboard alone contributes many buttons, each of which has to be processed individually.
 
-A more efficient way is to just listen for any activity on any device and when there was activity, find out whether it came from a button.
+[//]: # (TODO: A more efficient way is to just listen for any activity on any device and when there was activity, find out whether it came from a button.)
 
-```C#
-    ... still being worked on; can already listen on whole devices but you won't know what control caused the state change.
-```
+# …make my left-hand XR controller my right-hand one?
 
-# .. switch to a lefty gamepad?
-
-```C#
-
-    var gamepad = Gamepad.current; // Or whatever gamepad you are using.
-    InputSystem.SetVariant(gamepad, "Lefty");
-
-```
-
-This will swap the sticks, the triggers, and the shoulder buttons.
-
-# ... make my left-hand XR controller my right-hand one?
+Use this code:
 
 ```C#
     var controller = XRController.leftHand;
     InputSystem.SetUsage(controller, CommonUsages.RightHand);
 ```
 
-# ... get all current touches from the touchscreen?
+# …get all current touches from the touchscreen?
 
-    ////TODO
-
-# ... create a device?
+The recommended way is to use [`EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches):
 
 ```C#
-    InputSystem.AddDevice("Gamepad");
+    using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+
+    public void Update()
+    {
+        foreach (var touch in Touch.activeTouches)
+            Debug.Log($"{touch.touchId}: {touch.screenPosition},{touch.phase}");
+    }
 ```
 
-The given string is a template name.
+>__Note__: You must first enable enhanced touch support by calling  [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
-An alternative way is to tell about the availability of a device and let the system create a device from a matching template -- or not, if there is none (though if you later add one, the device will be created then).
+You can also use the lower-level [`Touchscreen.current.touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) API.
+
+# …create a Device?
+
+Use this code:
+
+```C#
+    InputSystem.AddDevice<Gamepad>();
+```
+
+An alternative way is to inform the Input System that a Device is available, and let the system create the Device from a matching layout. If no layout exists, the Input System doesn't create the Device until you add one.
 
 ```C#
     InputSystem.ReportAvailableDevice(
@@ -314,45 +336,61 @@ An alternative way is to tell about the availability of a device and let the sys
     );
 ```
 
-# ... create my own custom devices?
+# …create my own custom Devices?
 
-Two possible ways. If you are okay with using one of the existing C# InputDevice classes in code to interface with your device, you can just build on an existing template using JSON.
+There are two possible ways to do this.
+
+If you want to use one of the existing C# [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) classes in code to interface with your Device, you can build on an existing layout using JSON:
 
 ```
     {
         "name" : "MyDevice",
         "extend" : "Gamepad", // Or some other thing
         "controls" : [
-             // ... customize control setup
+            {
+                "name" : "firstButton",
+                "layout" : "Button",
+                "offset" : 0,
+                "bit": 0,
+                "format" : "BIT",
+            },
+            {
+                "name" : "secondButton",
+                "layout" : "Button",
+                "offset" : 0,
+                "bit": 1,
+                "format" : "BIT",
+            },
+            {
+                "name" : "axis",
+                "layout" : "Axis",
+                "offset" : 4,
+                "format" : "FLT",
+                "parameters" : "clamp=true,clampMin=0,clampMax=1"
+            }
         ]
     }
 ```
-
-You simply register your template with the system and then instantiate it.
+You then register your layout with the system and then instantiate it:
 
 ```C#
-    InputSystem.RegisterTemplate(myDeviceJson);
+    InputSystem.RegisterControlLayout(myDeviceJson);
     var device = InputSystem.AddDevice("MyDevice");
 ```
 
-Alternatively, you can create your own InputDevice class and state layouts in C#.
+Alternatively, you can create your own [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) class and state layouts in C#.
 
 ```C#
     public struct MyDeviceState : IInputStateTypeInfo
     {
-        // FourCC type codes are used identify the memory layouts of state blocks.
-        public static FourCC kFormat = new FourCC('M', 'D', 'E', 'V');
+        // FourCC type codes are used to identify the memory layouts of state blocks.
+        public FourCC format => new FourCC('M', 'D', 'E', 'V');
 
-        [InputControl(name = "firstButton", template = "Button", bit = 0)]
-        [InputControl(name = "secondButton", template = "Button", bit = 1)]
+        [InputControl(name = "firstButton", layout = "Button", bit = 0)]
+        [InputControl(name = "secondButton", layout = "Button", bit = 1)]
         public int buttons;
-        [InputControl(template = "Analog", parameters="clamp=true,clampMin=0,clampMax=1")]
+        [InputControl(layout = "Analog", parameters="clamp=true,clampMin=0,clampMax=1")]
         public float axis;
-
-        public FourcCC GetFormat()
-        {
-             return kFormat;
-        }
     }
 
     [InputState(typeof(MyDeviceState)]
@@ -372,20 +410,22 @@ Alternatively, you can create your own InputDevice class and state layouts in C#
     }
 ```
 
-To create an instance of your device, register it as a template and then instantiate it
+To create an instance of your Device, register it as a layout and then instantiate it:
 
 ```C#
-    InputSystem.RegisterTemplate("MyDevice", typeof(MyDevice));
+    InputSystem.RegisterControlLayout("MyDevice", typeof(MyDevice));
     InputSystem.AddDevice("MyDevice");
 ```
 
-////TODO: need a way to give devices an opportunity to feed events; ATM you have to make that happen yourself and events will only go in the next update this way
+For more information, see documentation on [HID](HID.md#overriding-the-hid-fallback).
 
-# ... deal with my gamepad data arriving in a format different from `GamepadState`?
+[//]: # (TODO: need a way to give devices an opportunity to feed events; ATM you have to make that happen yourself and events will only go in the next update this way)
 
-Extend the "Gamepad" template and customize its controls.
+# …deal with my gamepad data arriving in a format different from `GamepadState`?
 
-A real-world example of this is the Xbox Controller on OSX which is supported through HID. Its template looks like this:
+Extend the "Gamepad" layout and customize its Controls.
+
+A real-world example of this is the Xbox Controller on macOS, which is supported through HID. Its layout looks like this:
 
 ```JSON
 {
@@ -409,7 +449,7 @@ A real-world example of this is the Xbox Controller on OSX which is supported th
         { "name" : "dpad/right", "offset" : 0, "bit" : 11 },
         { "name" : "start", "offset" : 2, "bit" : 4 },
         { "name" : "select", "offset" : 2, "bit" : 5 },
-        { "name" : "xbox", "offset" : 2, "bit" : 2, "template" : "Button" },
+        { "name" : "xbox", "offset" : 2, "bit" : 2, "layout" : "Button" },
         { "name" : "leftTrigger", "offset" : 4, "format" : "BYTE" },
         { "name" : "rightTrigger", "offset" : 5, "format" : "BYTE" },
         { "name" : "leftStick", "offset" : 6, "format" : "VC2S" },
@@ -422,11 +462,11 @@ A real-world example of this is the Xbox Controller on OSX which is supported th
 }
 ```
 
-The same principle applies if on your device some buttons are swapped, for example. Simply remap their offsets.
+The same principle applies if some buttons on your Device are swapped, for example. In this case, you can remap their offsets.
 
-# ... have my own template used when the native backend discovers a specific device?
+# …force the Input System to use my own layout when the native backend discovers a specific Device?
 
-Simply describe the device in the template.
+Describe the Device in the layout, like this:
 
 ```
      {
@@ -440,15 +480,14 @@ Simply describe the device in the template.
      }
 ```
 
-Note that you don't have to restart Unity in order for changes in your template to take affect on native devices. On every domain reload, changes will automatically be applied so you can just keep refining a template and your device will get recreated with the most up-to-date version.
+Note that you don't have to restart Unity in order for changes in your layout to take effect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a layout and your Device is recreated with the most up-to-date version every time scripts are recompiled.
 
-# ... deal with my device being both a keyboard and a mouse?
+[//]: # (# …deal with my device being both a keyboard and a mouse?)
+[//]: # (////TODO: working on allowing layouts to create more than one device which can share state)
 
-    ////TODO: working on allowing templates to create more than one device which can share state
+# …add deadzoning to my gamepad sticks?
 
-# ... add deadzoning to my gamepad sticks?
-
-Simply put a deadzone processor on the sticks.
+Put a [stick deadzone Processor](Processors.md#stick-deadzone) on the sticks, like this:
 
 ```JSON
      {
@@ -457,11 +496,11 @@ Simply put a deadzone processor on the sticks.
         "controls" : [
             {
                 "name" : "leftStick",
-                "processors" : "deadzone(min=0.125,max=0.925)"
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
             },
             {
                 "name" : "rightStick",
-                "processors" : "deadzone(min=0.125,max=0.925)"
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
             }
         ]
     }
@@ -472,20 +511,20 @@ You can do the same in your C# state structs.
 ```C#
     public struct MyDeviceState
     {
-        [InputControl(processors = "deadzone(min=0.125,max=0.925)"]
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
         public StickControl leftStick;
-        [InputControl(processors = "deadzone(min=0.125,max=0.925)"]
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
         public StickControl rightStick;
     }
 ```
 
-In fact, the gamepad template already adds a deadzone processor which will take its min and max values from `InputConfiguration.DefaultDeadzoneMin` and `InputConfiguration.DefaultDeadzoneMax`.
+The gamepad layout already adds stick deadzone processors which take their min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
 
-    I'm still working on a way to do add a deadzone processor conveniently on the fly to an existing gamepad instance.
+[//]: # (I'm still working on a way to do add a deadzone processor conveniently on the fly to an existing gamepad instance.)
 
-# ... give my head tracking an extra update before rendering?
+# …give my head tracking an extra update before rendering?
 
-First enable before render updates on your device.
+First, enable before render updates on your Device.
 
 ```JSON
     {
@@ -495,13 +534,16 @@ First enable before render updates on your device.
     }
 ```
 
-And then make sure you put extra StateEvents for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking, if you want to, by sending a DeltaEvent instead of a full StateEvent.
+Then, make sure you put extra `StateEvents` for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking by sending a delta event instead of a full state event.
 
-# ... simulate HMD movement from mouse and keyboard?
+[//]: # (TODO: What is the "right queue"?)
 
-    I'm working on a callback that allows state to be updated from state and see the change in the same frame
+[//]: # (TODO:# …simulate HMD movement from mouse and keyboard?)
+[//]: # (TODO:I'm working on a callback that allows state to be updated from state and see the change in the same frame)
 
-# ... record events flowing through the system?
+# …record events flowing through the system?
+
+Use this code:
 
 ```C#
 
@@ -510,7 +552,7 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 
     trace.Enable();
 
-    //... run stuff
+    //…run stuff
 
     var current = new InputEventPtr();
     while (trace.GetNextEvent(ref current))
@@ -527,12 +569,14 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 
 ```
 
-# ... see events as they are processed?
+# …see events as they're processed?
+
+Use this code:
 
 ```C#
 
     InputSystem.onEvent +=
-        eventPtr =>
+        (eventPtr, device) =>
         {
             // Can handle events yourself, for example, and then stop them
             // from further processing by marking them as handled.
@@ -541,11 +585,11 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 
 ```
 
-# ... create an initial-engagement kind of screen?
+[//]: # (TODO:# …create an initial-engagement kind of screen?)
 
 
-# ... see what devices I have and what state they are in?
+# …see what Devices I have and what state they're in?
 
-Go to `Windows >> Analysis >> Input Debugger`.
+Go to __Windows > Analysis > Input Debugger__(Debugging.md), then double click on a Device to see its Controls. You can also click the __Remote Devices__ button to remotely see Devices from Unity Players deployed to any connected computers or devices.
 
-    ////TODO: working on having device setups from players mirrored 1:1 into the running input system in the editor (including having their input available in the editor)
+[//]: # (TODO: working on having device setups from players mirrored 1:1 into the running input system in the editor (including having their input available in the editor))

@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
 ////        the actions-update-when-not-expected problem; plus give us access to easy polling
@@ -18,7 +19,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: protect traces against controls changing configuration (if state layouts change, we're affected)
 
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Records the triggering of actions into a sequence of events that can be replayed at will.
@@ -89,7 +90,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputAction.performed"/>
     /// <seealso cref="InputAction.canceled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public sealed class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -250,6 +251,9 @@ namespace UnityEngine.InputSystem
             eventPtr->phase = triggerState.phase;
 
             // Store value.
+            // NOTE: If the action triggered from a composite, this stores the value as
+            //       read from the composite.
+            // NOTE: Also, the value we store is a fully processed value.
             var valueBuffer = eventPtr->valueData;
             context.ReadValue(valueBuffer, valueSizeInBytes);
         }
@@ -263,6 +267,25 @@ namespace UnityEngine.InputSystem
         ~InputActionTrace()
         {
             DisposeInternal();
+        }
+
+        public override string ToString()
+        {
+            if (count == 0)
+                return "[]";
+
+            var str = new StringBuilder();
+            str.Append('[');
+            var isFirst = true;
+            foreach (var eventPtr in this)
+            {
+                if (!isFirst)
+                    str.Append(",\n");
+                str.Append(eventPtr.ToString());
+                isFirst = false;
+            }
+            str.Append(']');
+            return str.ToString();
         }
 
         public void Dispose()
@@ -341,7 +364,7 @@ namespace UnityEngine.InputSystem
                     case InputActionChange.ActionCanceled:
                         Debug.Assert(actionOrMap is InputAction, "Expected an action");
                         var triggeredAction = (InputAction)actionOrMap;
-                        var actionIndex = triggeredAction.m_ActionIndex;
+                        var actionIndex = triggeredAction.m_ActionIndexInState;
                         var stateForAction = triggeredAction.m_ActionMap.m_State;
 
                         var context = new InputAction.CallbackContext
@@ -433,8 +456,35 @@ namespace UnityEngine.InputSystem
 
             public object ReadValueAsObject()
             {
-                var valueSizeInBytes = m_Ptr->valueSizeInBytes;
+                if (m_Ptr == null)
+                    throw new InvalidOperationException("ActionEventPtr is invalid");
+
                 var valuePtr = m_Ptr->valueData;
+
+                // Check if the value came from a composite.
+                var bindingIndex = m_Ptr->bindingIndex;
+                if (m_State.bindingStates[bindingIndex].isPartOfComposite)
+                {
+                    // Yes, so have to put the value/struct data we read into a boxed
+                    // object based on the value type of the composite.
+
+                    var compositeBindingIndex = m_State.bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                    var compositeIndex = m_State.bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                    var composite = m_State.composites[compositeIndex];
+                    Debug.Assert(composite != null, "NULL composite instance");
+
+                    var valueType = composite.valueType;
+                    if (valueType == null)
+                        throw new InvalidOperationException($"Cannot read value from Composite '{composite}' which does not have a valueType set");
+
+                    return Marshal.PtrToStructure(new IntPtr(valuePtr), valueType);
+                }
+
+                // Expecting action to only trigger from part bindings or bindings outside of composites.
+                Debug.Assert(!m_State.bindingStates[bindingIndex].isComposite, "Action should not have triggered directly from a composite binding");
+
+                // Read value through InputControl.
+                var valueSizeInBytes = m_Ptr->valueSizeInBytes;
                 return control.ReadValueFromBufferAsObject(valuePtr, valueSizeInBytes);
             }
 
@@ -473,7 +523,8 @@ namespace UnityEngine.InputSystem
                 if (m_Ptr == null)
                     return "<null>";
 
-                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                var actionName = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
+                return $"{{ action={actionName} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} duration={duration} }}";
             }
         }
 

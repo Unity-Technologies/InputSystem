@@ -1,10 +1,12 @@
 using System;
-#if ENABLE_VR
-using UnityEngine.XR;
-#endif
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// The TrackedPoseDriver component applies the current Pose value of a tracked device to the transform of the GameObject.
+    /// TrackedPoseDriver can track multiple types of devices including XR HMDs, controllers, and remotes.
+    /// </summary>
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]
     public class TrackedPoseDriver : MonoBehaviour
@@ -16,8 +18,12 @@ namespace UnityEngine.InputSystem.Plugins.XR
             PositionOnly
         }
 
+
         [SerializeField]
         TrackingType m_TrackingType;
+        /// <summary>
+        /// The tracking type being used by the tracked pose driver
+        /// </summary>
         public TrackingType trackingType
         {
             get { return m_TrackingType; }
@@ -33,6 +39,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         [SerializeField]
         UpdateType m_UpdateType = UpdateType.UpdateAndBeforeRender;
+        /// <summary>
+        /// The update type being used by the tracked pose driver
+        /// </summary>
         public UpdateType updateType
         {
             get { return m_UpdateType; }
@@ -80,6 +89,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
         {
             if (!m_PositionBound && m_PositionAction != null)
             {
+                m_PositionAction.Rename($"{gameObject.name} - TPD - Position");
                 m_PositionAction.performed += OnPositionUpdate;
                 m_PositionBound = true;
                 m_PositionAction.Enable();
@@ -90,6 +100,7 @@ namespace UnityEngine.InputSystem.Plugins.XR
         {
             if (!m_RotationBound && m_RotationAction != null)
             {
+                m_RotationAction.Rename($"{gameObject.name} - TPD - Rotation");
                 m_RotationAction.performed += OnRotationUpdate;
                 m_RotationBound = true;
                 m_RotationAction.Enable();
@@ -136,10 +147,10 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected virtual void Awake()
         {
-#if ENABLE_VR
+#if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
             if (HasStereoCamera())
             {
-                XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
+                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
             }
 #endif
         }
@@ -158,25 +169,20 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected virtual void OnDestroy()
         {
-#if ENABLE_VR
+#if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
             if (HasStereoCamera())
             {
-                XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), false);
+                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), false);
             }
 #endif
         }
 
-        protected void UpdateCallback(InputUpdateType type)
+        protected void UpdateCallback()
         {
-            switch (type)
-            {
-                case InputUpdateType.Dynamic:
-                    OnUpdate();
-                    break;
-                case InputUpdateType.BeforeRender:
-                    OnBeforeRender();
-                    break;
-            }
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+                OnBeforeRender();
+            else
+                OnUpdate();
         }
 
         protected virtual void OnUpdate()

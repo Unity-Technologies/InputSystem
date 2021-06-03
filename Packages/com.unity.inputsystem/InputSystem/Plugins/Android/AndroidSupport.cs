@@ -2,9 +2,9 @@
 using System.Linq;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
     /// <summary>
     /// Initializes custom android devices.
@@ -34,10 +34,10 @@ namespace UnityEngine.InputSystem.Plugins.Android
 
             const string kDpadHatSettings = @"
         { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
-        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
-        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
+        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
+        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
 ";
             InputSystem.RegisterLayout(@"
 {
@@ -85,38 +85,8 @@ namespace UnityEngine.InputSystem.Plugins.Android
                 , (uint)AndroidAxis.Rx * sizeof(float) + AndroidGameControllerState.kAxisOffset
                 , AndroidGameControllerState.kVariantGamepad));
 
-
-            InputSystem.RegisterLayout(string.Format(@"
-{{
-    ""name"" : ""AndroidGamepadDualShock"",
-    ""extend"" : ""AndroidGamepad"",
-    ""displayName"" : ""Android PS4 Gamepad"",
-    ""controls"" : [
-        {0},
-        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {3}, ""format"" : ""FLT"", ""parameters"" : ""normalize,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""defaultState"" : -1, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""leftShoulder"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {4}, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""rightShoulder"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {5}, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""buttonSouth"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {6}, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""buttonWest"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {7}, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""buttonNorth"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {8}, ""variant"" : ""{1}"" }},
-        {{ ""name"" : ""buttonEast"", ""layout"" : ""Button"", ""offset"" : 0, ""bit"" : {9}, ""variant"" : ""{1}"" }}
-    ]
-}}"
-                , kDpadHatSettings
-                , AndroidGameControllerState.kVariantGamepad
-                , (uint)AndroidAxis.Rx * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , (uint)AndroidAxis.Ry * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , (uint)AndroidKeyCode.ButtonY
-                , (uint)AndroidKeyCode.ButtonZ
-                , (uint)AndroidKeyCode.ButtonB
-                , (uint)AndroidKeyCode.ButtonA
-                , (uint)AndroidKeyCode.ButtonX
-                , (uint)AndroidKeyCode.ButtonC));
-
-
-            InputSystem.RegisterControlProcessor<AndroidCompensateDirectionProcessor>();
-            InputSystem.RegisterControlProcessor<AndroidCompensateRotationProcessor>();
+            InputSystem.RegisterProcessor<AndroidCompensateDirectionProcessor>();
+            InputSystem.RegisterProcessor<AndroidCompensateRotationProcessor>();
 
             // Add sensors
             InputSystem.RegisterLayout<AndroidAccelerometer>(
@@ -183,9 +153,14 @@ namespace UnityEngine.InputSystem.Plugins.Android
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }
 
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description,
-            string matchedTemplate, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
+            string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
+            // If we already have a matching layout, someone registered a better match.
+            // We only want to act as a fallback.
+            if (!string.IsNullOrEmpty(matchedLayout) && matchedLayout != "AndroidGamepad" && matchedLayout != "AndroidJoystick")
+                return null;
+
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
                 return null;
 
@@ -201,76 +176,11 @@ namespace UnityEngine.InputSystem.Plugins.Android
                     if ((caps.inputSources & AndroidInputSource.Gamepad) != AndroidInputSource.Gamepad)
                         return "AndroidJoystick";
 
-                    // Most of the gamepads:
-                    // - NVIDIA Controller v01.03/v01.04
-                    // - ELAN PLAYSTATION(R)3 Controller
-                    // - My-Power CO.,LTD. PS(R) Controller Adaptor
-                    // - (Add more)
-                    // map buttons in the following way:
-                    //  Left Stick -> AXIS_X(0) / AXIS_Y(1)
-                    //  Right Stick -> AXIS_Z (11) / AXIS_RZ(14)
-                    //  Right Thumb -> KEYCODE_BUTTON_THUMBR(107)
-                    //  Left Thumb -> KEYCODE_BUTTON_THUMBL(106)
-                    //  L1 (Left shoulder) -> KEYCODE_BUTTON_L1(102)
-                    //  R1 (Right shoulder) -> KEYCODE_BUTTON_R1(103)
-                    //  L2 (Left trigger) -> AXIS_BRAKE(23)
-                    //  R2 (Right trigger) -> AXIS_GAS(22)
-                    //  X -> KEYCODE_BUTTON_X(99)
-                    //  Y -> KEYCODE_BUTTON_Y(100)
-                    //  B -> KEYCODE_BUTTON_B(97)
-                    //  A -> KEYCODE_BUTTON_A(96)
-                    //  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16) or KEYCODE_DPAD_LEFT(21), KEYCODE_DPAD_RIGHT(22), KEYCODE_DPAD_UP(19), KEYCODE_DPAD_DOWN(20),
-
-                    // Note: On Nvidia Shield Console, L2/R2 additionally invoke key events for AXIS_LTRIGGER, AXIS_RTRIGGER (in addition to AXIS_BRAKE, AXIS_GAS)
-                    //       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
-                    //       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
-
-
-                    // Other exotic gamepads have different mappings
-                    //  Xbox Gamepad (for ex., Microsoft X-Box One pad (Firmware 2015)) mapping (Note mapping: L2/R2/Right Stick)
-                    //  Left Stick -> AXIS_X(0) / AXIS_Y(1)
-                    //  Right Stick -> AXIS_RX (12) / AXIS_RY(13)
-                    //  Right Thumb -> KEYCODE_BUTTON_THUMBR(107)
-                    //  Left Thumb -> KEYCODE_BUTTON_THUMBL(106)
-                    //  L1 (Left shoulder) -> KEYCODE_BUTTON_L1(102)
-                    //  R1 (Right shoulder) -> KEYCODE_BUTTON_R1(103)
-                    //  L2 (Left trigger) -> AXIS_Z(11)
-                    //  R2 (Right trigger) -> AXIS_RZ(14)
-                    //  X -> KEYCODE_BUTTON_X(99)
-                    //  Y -> KEYCODE_BUTTON_Y(100)
-                    //  B -> KEYCODE_BUTTON_B(97)
-                    //  A -> KEYCODE_BUTTON_A(96)
-                    //  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16)
-
-                    //  Sony's Dualshock
-                    //  Left Stick -> AXIS_X(0) / AXIS_Y(1)
-                    //  Right Stick -> AXIS_Z(11) / AXIS_RZ(14)
-                    //  Right Thumb -> KEYCODE_BUTTON_START(108)
-                    //  Left Thumb -> KEYCODE_BUTTON_SELECT(109)
-                    //  X -> KEYCODE_BUTTON_A(96),
-                    //  Y -> KEYCODE_BUTTON_X(99)
-                    //  B -> KEYCODE_BUTTON_C(98),
-                    //  A -> KEYCODE_BUTTON_B(97)
-                    //  L1 -> KEYCODE_BUTTON_Y(100)
-                    //  R1 -> KEYCODE_BUTTON_Z(101)
-                    //  L2 -> KEYCODE_BUTTON_L1(102), AXIS_RX(12),
-                    //  R2 -> KEYCODE_BUTTON_R1(103), AXIS_RY(13),
-                    //  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16),
-                    //  Share -> KEYCODE_BUTTON_L2(104)
-                    //  Options -> KEYCODE_BUTTON_R2(105),
-                    //  Click on Touchpad -> KEYCODE_BUTTON_THUMBL(106)
-
-
                     if (caps.motionAxes == null)
                         return "AndroidGamepadWithDpadButtons";
 
                     // Vendor Ids, Product Ids can be found here http://www.linux-usb.org/usb.ids
                     const int kVendorMicrosoft = 0x045e;
-
-                    const int kVendorSonyCorp = 0x54c;
-                    const int kDualShock4CUHZCT1x = 0x05c4;
-                    const int kDualShock4CUHZCT2x = 0x09cc;
-
 
                     if (caps.vendorId == kVendorMicrosoft &&
                         caps.motionAxes != null &&
@@ -279,9 +189,6 @@ namespace UnityEngine.InputSystem.Plugins.Android
                         caps.motionAxes.Contains(AndroidAxis.HatX) &&
                         caps.motionAxes.Contains(AndroidAxis.HatY))
                         return "AndroidGamepadXboxController";
-
-                    if (caps.vendorId == kVendorSonyCorp && (caps.productId == kDualShock4CUHZCT1x || caps.productId == kDualShock4CUHZCT2x))
-                        return "AndroidGamepadDualShock";
 
                     // Fallback to generic gamepads
                     if (caps.motionAxes.Contains(AndroidAxis.HatX) &&

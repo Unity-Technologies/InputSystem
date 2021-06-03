@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
@@ -15,58 +16,47 @@ namespace UnityEngine.InputSystem.Editor
     /// </remarks>
     internal class InputActionPropertiesView : PropertiesViewBase
     {
-        public static FourCC k_PropertiesChanged = new FourCC("PROP");
+        public static FourCC k_PropertiesChanged => new FourCC("PROP");
 
         public InputActionPropertiesView(SerializedProperty actionProperty, Action<FourCC> onChange = null)
-            : base("Action", actionProperty, onChange, actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue)
+            : base("Action", actionProperty, onChange, actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue)
         {
-            m_ExpectedControlLayoutProperty = actionProperty.FindPropertyRelative("m_ExpectedControlLayout");
-            m_FlagsProperty = actionProperty.FindPropertyRelative("m_Flags");
-            BuildControlTypeList();
+            m_ExpectedControlTypeProperty = actionProperty.FindPropertyRelative("m_ExpectedControlType");
+            m_ActionTypeProperty = actionProperty.FindPropertyRelative("m_Type");
 
-            m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlLayoutProperty.stringValue);
+            m_SelectedActionType = (InputActionType)m_ActionTypeProperty.intValue;
+
+            BuildControlTypeList();
+            m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlTypeProperty.stringValue);
             if (m_SelectedControlType == -1)
                 m_SelectedControlType = 0;
 
-            if (s_TypeLabel == null)
-                s_TypeLabel = EditorGUIUtility.TrTextContent("Type", m_ExpectedControlLayoutProperty.tooltip);
+            if (s_ControlTypeLabel == null)
+                s_ControlTypeLabel = EditorGUIUtility.TrTextContent("Control Type", m_ExpectedControlTypeProperty.GetTooltip());
+            if (s_ActionTypeLabel == null)
+                s_ActionTypeLabel = EditorGUIUtility.TrTextContent("Action Type", m_ActionTypeProperty.GetTooltip());
         }
 
         protected override void DrawGeneralProperties()
         {
             EditorGUI.BeginChangeCheck();
-            m_SelectedControlType = EditorGUILayout.Popup(s_TypeLabel, m_SelectedControlType, m_ControlTypeOptions);
+
+            m_SelectedActionType = EditorGUILayout.EnumPopup(s_ActionTypeLabel, m_SelectedActionType);
+            if ((InputActionType)m_SelectedActionType != InputActionType.Button)
+                m_SelectedControlType = EditorGUILayout.Popup(s_ControlTypeLabel, m_SelectedControlType, m_ControlTypeOptions);
+
             if (EditorGUI.EndChangeCheck())
             {
-                if (m_SelectedControlType == 0)
-                    m_ExpectedControlLayoutProperty.stringValue = string.Empty;
+                if ((InputActionType)m_SelectedActionType == InputActionType.Button)
+                    m_ExpectedControlTypeProperty.stringValue = "Button";
+                else if (m_SelectedControlType == 0)
+                    m_ExpectedControlTypeProperty.stringValue = string.Empty;
                 else
-                    m_ExpectedControlLayoutProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
-                onChange(k_PropertiesChanged);
-            }
+                    m_ExpectedControlTypeProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
 
-            var flags = (InputAction.ActionFlags)m_FlagsProperty.intValue;
-            var initialStateCheckOld = (flags & InputAction.ActionFlags.InitialStateCheck) != 0;
-            var isContinuousOld = (flags & InputAction.ActionFlags.Continuous) != 0;
-            var isPassThroughOld = (flags & InputAction.ActionFlags.PassThrough) != 0;
-
-            var initialStateCheckNew = EditorGUILayout.Toggle(s_InitialStateCheck, initialStateCheckOld);
-            var isContinuousNew = EditorGUILayout.Toggle(s_ContinuousLabel, isContinuousOld);
-            var isPassThroughNew = EditorGUILayout.Toggle(s_PassThroughLabel, isPassThroughOld);
-
-            if (isContinuousOld != isContinuousNew || isPassThroughOld != isPassThroughNew || initialStateCheckOld != initialStateCheckNew)
-            {
-                flags = InputAction.ActionFlags.None;
-
-                if (isContinuousNew)
-                    flags |= InputAction.ActionFlags.Continuous;
-                if (isPassThroughNew)
-                    flags |= InputAction.ActionFlags.PassThrough;
-                if (initialStateCheckNew)
-                    flags |= InputAction.ActionFlags.InitialStateCheck;
-
-                m_FlagsProperty.intValue = (int)flags;
-                m_FlagsProperty.serializedObject.ApplyModifiedProperties();
+                m_ActionTypeProperty.intValue = (int)(InputActionType)m_SelectedActionType;
+                m_ActionTypeProperty.serializedObject.ApplyModifiedProperties();
+                UpdateProcessors(m_ExpectedControlTypeProperty.stringValue);
 
                 onChange(k_PropertiesChanged);
             }
@@ -81,10 +71,16 @@ namespace UnityEngine.InputSystem.Editor
                 if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)
                     continue;
 
+                // If the action type is InputActionType.Value, skip button controls.
+                var type = allLayouts.layoutTypes[layoutName];
+                if ((InputActionType)m_SelectedActionType == InputActionType.Value &&
+                    typeof(ButtonControl).IsAssignableFrom(type))
+                    continue;
+
                 ////TODO: skip aliases
 
-                if (typeof(InputControl).IsAssignableFrom(allLayouts.layoutTypes[layoutName]) &&
-                    !typeof(InputDevice).IsAssignableFrom(allLayouts.layoutTypes[layoutName]))
+                if (typeof(InputControl).IsAssignableFrom(type) &&
+                    !typeof(InputDevice).IsAssignableFrom(type))
                 {
                     types.Add(layoutName);
                 }
@@ -99,25 +95,17 @@ namespace UnityEngine.InputSystem.Editor
                 .ToArray();
         }
 
-        private readonly SerializedProperty m_ExpectedControlLayoutProperty;
-        private readonly SerializedProperty m_FlagsProperty;
+        private readonly SerializedProperty m_ExpectedControlTypeProperty;
+        private readonly SerializedProperty m_ActionTypeProperty;
 
         private string m_ExpectedControlLayout;
         private string[] m_ControlTypeList;
         private GUIContent[] m_ControlTypeOptions;
         private int m_SelectedControlType;
+        private Enum m_SelectedActionType;
 
-        private static GUIContent s_TypeLabel;
-        private static readonly GUIContent s_ContinuousLabel = EditorGUIUtility.TrTextContent("Continuous",
-            "If enabled, the action will trigger every update while controls are actuated even if the controls do not change value in a given frame.");
-        private static readonly GUIContent s_PassThroughLabel = EditorGUIUtility.TrTextContent("Pass Through",
-            "If enabled, the action will not gate value changes on controls but will instead perform for every value change on any bound control. " +
-            "This is especially useful when binding multiple controls concurrently and not wanting the action to single out any one of multiple " +
-            "concurrent inputs.");
-        private static readonly GUIContent s_InitialStateCheck = EditorGUIUtility.TrTextContent("Initial State Check",
-            "If enabled, the action will perform an initial state check on all bound controls when the action is enabled. This means that " +
-            "if, for example, a button is held when the action is enabled, the action will be triggered right away. By default, controls " +
-            "that are already actuated when an action is enabled do not cause the action to be triggered.");
+        private static GUIContent s_ActionTypeLabel;
+        private static GUIContent s_ControlTypeLabel;
     }
 }
 #endif // UNITY_EDITOR

@@ -3,19 +3,32 @@
     "references": [
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
-        "Unity.ugui"
-    ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
+        "Unity.ugui",
+        "Unity.PackageManagerDocTools.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.PerformanceTesting",
+        "Unity.Coding.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Mono.Cecil.dll"
+        "Mono.Cecil.dll",
+        "nunit.framework.dll",
+        "HtmlAgilityPack.dll"
     ],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.package-manager-doctools",
+            "expression": "1.0",
+            "define": "HAVE_DOCTOOLS_INSTALLED"
+        }
+    ],
+    "noEngineReferences": false
 }

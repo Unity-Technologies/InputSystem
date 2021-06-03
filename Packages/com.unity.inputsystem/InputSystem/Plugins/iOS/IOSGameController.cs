@@ -1,13 +1,14 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.iOS.LowLevel;
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.iOS.LowLevel
 {
-    public enum iOSButton
+    internal enum iOSButton
     {
         DpadUp,
         DpadDown,
@@ -29,7 +30,7 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
         // Note: If you'll add an element here, be sure to update kMaxButtons const below
     };
 
-    public enum iOSAxis
+    internal enum iOSAxis
     {
         LeftStickX,
         LeftStickY,
@@ -40,7 +41,7 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
     };
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct iOSGameControllerState : IInputStateTypeInfo
+    internal unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
         public const int MaxButtons = (int)iOSButton.Select + 1;
@@ -72,41 +73,60 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
         [InputControl(name = "rightStick", offset = (uint)iOSAxis.RightStickX * sizeof(float) + kAxisOffset)]
         public fixed float axisValues[MaxAxis];
 
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
+        public FourCC format => kFormat;
 
         public iOSGameControllerState WithButton(iOSButton button, bool value = true, float rawValue = 1.0f)
         {
-            fixed(float* buttonsPtr = buttonValues)
-            {
-                buttonsPtr[(int)button] = rawValue;
-            }
+            buttonValues[(int)button] = rawValue;
 
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (value)
-                buttons |= (uint)1 << (int)button;
+                buttons |= bit;
             else
-                buttons &= ~(uint)1 << (int)button;
+                buttons &= ~bit;
 
             return this;
         }
 
         public iOSGameControllerState WithAxis(iOSAxis axis, float value)
         {
-            fixed(float* axisPtr = this.axisValues)
-            {
-                axisPtr[(int)axis] = value;
-            }
+            axisValues[(int)axis] = value;
             return this;
         }
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.iOS
+namespace UnityEngine.InputSystem.iOS
 {
+    /// <summary>
+    /// A generic Gamepad connected to an iOS device.
+    /// </summary>
+    /// <remarks>
+    /// Any MFi-certified Gamepad which is not an <see cref="XboxOneGampadiOS"/> or <see cref="DualShock4GampadiOS"/> will
+    /// be represented as an iOSGameController.
+    /// </remarks>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
+    [Scripting.Preserve]
     public class iOSGameController : Gamepad
+    {
+    }
+
+    /// <summary>
+    /// An Xbox One Bluetooth controller connected to an iOS device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Xbox One Gamepad")]
+    [Scripting.Preserve]
+    public class XboxOneGampadiOS : XInput.XInputController
+    {
+    }
+
+    /// <summary>
+    /// A PlayStation DualShock 4 controller connected to an iOS device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualShock 4 Gamepad")]
+    [Scripting.Preserve]
+    public class DualShock4GampadiOS : DualShockGamepad
     {
     }
 }

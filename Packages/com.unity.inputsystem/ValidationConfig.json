@@ -1,0 +1,23 @@
+{
+    "FilenameValidation":
+    {
+        "Filenames":
+        [
+            {
+                "Filename": "Samples~/RebindingUI/Icons/*.png*",
+                "Targets": "+PS4,+XboxOne"
+            }
+        ]
+    },
+    "FileContentKeywordValidation":
+    {
+        "Keywords":
+        [
+            {
+                "Targets": "+Switch",
+                "Files": [ "InputSystem/Plugins/Switch/SwitchSupportHID.cs" ],
+                "Patterns": [ "UnityEngine\\.InputSystem\\.Switch" ]
+            }
+        ]
+    }
+}

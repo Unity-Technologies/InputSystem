@@ -1,15 +1,20 @@
 using System;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
+////REVIEW: the join/leave messages should probably give a *GameObject* rather than the PlayerInput component (which can be gotten to via a simple GetComponent(InChildren) call)
+
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Manages joining and leaving of players.
@@ -17,22 +22,30 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
     /// <remarks>
     /// This is a singleton component. Only one instance is meant to be active in a game
     /// at any one time. To retrieve the current instance, use <see cref="instance"/>.
+    ///
+    /// Note that a PlayerInputManager is not strictly required to have multiple <see cref="PlayerInput"/> components.
+    /// What PlayerInputManager provides is the implementation of specific player join mechanisms
+    /// (<see cref="joinBehavior"/>) as well as automatic assignment of split-screen areas (<see cref="splitScreen"/>).
+    /// However, you can always implement your own custom logic instead and simply instantiate multiple GameObjects with
+    /// <see cref="PlayerInput"/> yourself.
     /// </remarks>
     [AddComponentMenu("Input/Player Input Manager")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/Components.html#playerinputmanager-component")]
     public class PlayerInputManager : MonoBehaviour
     {
+        /// <summary>
+        /// Name of the message that is sent when a player joins the game.
+        /// </summary>
         public const string PlayerJoinedMessage = "OnPlayerJoined";
+
         public const string PlayerLeftMessage = "OnPlayerLeft";
-        public const string PlayerJoinFailedMessage = "OnPlayerJoinFailed";
-        public const string SplitScreenSetupChanged = "OnSplitScreenSetupChanged";
 
         /// <summary>
-        /// If enabled, each player will automatically be assigned
+        /// If enabled, each player will automatically be assigned a portion of the available screen area.
         /// </summary>
         /// <remarks>
-        /// For this to work, the <see cref="GameObject"/> associated with each <see cref="PlayerInput"/>
-        /// component must have a <see cref="Camera"/> component either directly on the GameObject or
-        /// on a child.
+        /// For this to work, each <see cref="PlayerInput"/> component must have an associated <see cref="Camera"/>
+        /// object through <see cref="PlayerInput.camera"/>.
         ///
         /// Note that as player join, the screen may be increasingly subdivided and players may see their
         /// previous screen area getting resized.
@@ -85,29 +98,9 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         ///
         /// This property is irrelevant if <see cref="fixedNumberOfSplitScreens"/> is used.
         /// </remarks>
-        public bool maintainAspectRatioInSplitScreen
-        {
-            get => m_MaintainAspectRatioInSplitScreen;
-            set { throw new NotImplementedException(); }
-        }
+        public bool maintainAspectRatioInSplitScreen => m_MaintainAspectRatioInSplitScreen;
 
-        /// <summary>
-        /// This property
-        /// </summary>
-        public int fixedNumberOfSplitScreens
-        {
-            get => m_FixedNumberOfSplitScreens;
-            set { throw new NotImplementedException(); }
-        }
-
-        /// <summary>
-        /// If this is non-zero, split-screen areas will be
-        /// </summary>
-        public float splitScreenBorderWidth
-        {
-            get => m_SplitScreenBorderWidth;
-            set { throw new NotImplementedException(); }
-        }
+        public int fixedNumberOfSplitScreens => m_FixedNumberOfSplitScreens;
 
         /// <summary>
         /// The normalized screen rectangle available for allocating player split-screens into.
@@ -119,14 +112,17 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// If, for example, part of the screen should display a UI/information shared by all players, this
         /// property can be used to cut off the area and not have it used by PlayerInputManager.
         /// </remarks>
-        public Rect splitScreenArea
-        {
-            get => m_SplitScreenRect;
-            set { throw new NotImplementedException(); }
-        }
+        public Rect splitScreenArea => m_SplitScreenRect;
 
+        /// <summary>
+        /// The current number of active players.
+        /// </summary>
+        /// <remarks>
+        /// This count corresponds to all <see cref="PlayerInput"/> instances that are currently enabled.
+        /// </remarks>
         public int playerCount => PlayerInput.s_AllActivePlayersCount;
 
+        ////FIXME: this needs to be settable
         /// <summary>
         /// Maximum number of players allowed concurrently in the game.
         /// </summary>
@@ -136,17 +132,23 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// By default this is set to -1. Any negative value deactivates the player limit and allows
         /// arbitrary many players to join.
         /// </remarks>
-        public int maxPlayerCount
-        {
-            get => m_MaxPlayerCount;
-            set { throw new NotImplementedException(); }
-        }
+        public int maxPlayerCount => m_MaxPlayerCount;
 
-        public bool joiningEnabled
-        {
-            get => m_AllowJoining;
-        }
+        /// <summary>
+        /// Whether new players can currently join.
+        /// </summary>
+        /// <remarks>
+        /// While this is true, new players can join via the mechanism determined by <see cref="joinBehavior"/>.
+        /// </remarks>
+        /// <seealso cref="EnableJoining"/>
+        /// <seealso cref="DisableJoining"/>
+        public bool joiningEnabled => m_AllowJoining;
 
+        /// <summary>
+        /// Determines the mechanism by which players can join when joining is enabled (<see cref="joiningEnabled"/>).
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
         public PlayerJoinBehavior joinBehavior
         {
             get => m_JoinBehavior;
@@ -247,6 +249,10 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             }
         }
 
+        /// <summary>
+        /// Reference to the prefab that the manager will instantiate when players join.
+        /// </summary>
+        /// <value>Prefab to instantiate for new players.</value>
         public GameObject playerPrefab
         {
             get => m_PlayerPrefab;
@@ -254,33 +260,23 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         }
 
         /// <summary>
-        /// Optional delegate that creates players.
+        /// Singleton instance of the manager.
         /// </summary>
-        /// <remarks>
-        /// This can be used in place of <see cref="playerPrefab"/> to take control over how
-        /// player objects are created. If this property is not null, <see cref="playerPrefab"/>
-        /// will be ignored (and can be left at null) and the delegate will be invoked to create
-        /// new players.
-        /// </remarks>
-        public Func<PlayerInput> onCreatePlayer
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public Func<PlayerInput> onDestroyPlayer
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
+        /// <value>Singleton instance or null.</value>
         public static PlayerInputManager instance { get; private set; }
 
+        /// <summary>
+        /// Allow players to join the game based on <see cref="joinBehavior"/>.
+        /// </summary>
+        /// <seealso cref="DisableJoining"/>
+        /// <seealso cref="joiningEnabled"/>
         public void EnableJoining()
         {
             switch (m_JoinBehavior)
             {
                 case PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed:
+                    ValidateInputActionAsset();
+
                     if (!m_UnpairedDeviceUsedDelegateHooked)
                     {
                         if (m_UnpairedDeviceUsedDelegate == null)
@@ -316,6 +312,11 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             m_AllowJoining = true;
         }
 
+        /// <summary>
+        /// Inhibit players from joining the game.
+        /// </summary>
+        /// <seealso cref="EnableJoining"/>
+        /// <seealso cref="joiningEnabled"/>
         public void DisableJoining()
         {
             switch (m_JoinBehavior)
@@ -344,6 +345,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             m_AllowJoining = false;
         }
 
+        ////TODO
         /// <summary>
         /// Join a new player based on input on a UI element.
         /// </summary>
@@ -351,12 +353,12 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// This should be called directly from a UI callback such as <see cref="Button.onClick"/>. The device
         /// that the player joins with is taken from the device that was used to interact with the UI element.
         /// </remarks>
-        public void JoinPlayerFromUI()
+        internal void JoinPlayerFromUI()
         {
             if (!CheckIfPlayerCanJoin())
                 return;
 
-            //find used device
+            //find used device; InputSystemUIInputModule should probably make that available
 
             throw new NotImplementedException();
         }
@@ -388,28 +390,63 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             JoinPlayer(pairWithDevice: device);
         }
 
-        public void JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, InputDevice pairWithDevice = null)
+        /// <summary>
+        /// Spawn a new player from <see cref="playerPrefab"/>.
+        /// </summary>
+        /// <param name="playerIndex">Optional explicit <see cref="PlayerInput.playerIndex"/> to assign to the player. Must be unique within
+        /// <see cref="PlayerInput.all"/>. If not supplied, a player index will be assigned automatically (smallest unused index will be used).</param>
+        /// <param name="splitScreenIndex">Optional <see cref="PlayerInput.splitScreenIndex"/>. If supplied, this assigns a split-screen area to the player. For example,
+        /// a split-screen index of </param>
+        /// <param name="controlScheme">Control scheme to activate on the player (optional). If not supplied, a control scheme will
+        /// be selected based on <paramref name="pairWithDevice"/>. If no device is given either, the first control scheme that matches
+        /// the currently available unpaired devices (see <see cref="InputUser.GetUnpairedInputDevices()"/>) is used.</param>
+        /// <param name="pairWithDevice">Device to pair to the player. Also determines which control scheme to use if <paramref name="controlScheme"/>
+        /// is not given.</param>
+        /// <returns>The newly instantiated player or <c>null</c> if joining failed.</returns>
+        /// <remarks>
+        /// Joining must be enabled (see <see cref="joiningEnabled"/>) or the method will fail.
+        ///
+        /// To pair multiple devices, use <see cref="JoinPlayer(int,int,string,InputDevice[])"/>.
+        /// </remarks>
+        public PlayerInput JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, InputDevice pairWithDevice = null)
         {
             if (!CheckIfPlayerCanJoin(playerIndex))
-                return;
+                return null;
 
-            PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
+            PlayerInput.s_DestroyIfDeviceSetupUnsuccessful = true;
+            return PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
                 controlScheme: controlScheme, pairWithDevice: pairWithDevice);
         }
 
-        public void JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, params InputDevice[] pairWithDevices)
+        /// <summary>
+        /// Spawn a new player from <see cref="playerPrefab"/>.
+        /// </summary>
+        /// <param name="playerIndex">Optional explicit <see cref="PlayerInput.playerIndex"/> to assign to the player. Must be unique within
+        /// <see cref="PlayerInput.all"/>. If not supplied, a player index will be assigned automatically (smallest unused index will be used).</param>
+        /// <param name="splitScreenIndex">Optional <see cref="PlayerInput.splitScreenIndex"/>. If supplied, this assigns a split-screen area to the player. For example,
+        /// a split-screen index of </param>
+        /// <param name="controlScheme">Control scheme to activate on the player (optional). If not supplied, a control scheme will
+        /// be selected based on <paramref name="pairWithDevices"/>. If no device is given either, the first control scheme that matches
+        /// the currently available unpaired devices (see <see cref="InputUser.GetUnpairedInputDevices()"/>) is used.</param>
+        /// <param name="pairWithDevices">Devices to pair to the player. Also determines which control scheme to use if <paramref name="controlScheme"/>
+        /// is not given.</param>
+        /// <returns>The newly instantiated player or <c>null</c> if joining failed.</returns>
+        /// <remarks>
+        /// Joining must be enabled (see <see cref="joiningEnabled"/>) or the method will fail.
+        /// </remarks>
+        public PlayerInput JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, params InputDevice[] pairWithDevices)
         {
             if (!CheckIfPlayerCanJoin(playerIndex))
-                return;
+                return null;
 
-            PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
+            PlayerInput.s_DestroyIfDeviceSetupUnsuccessful = true;
+            return PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
                 controlScheme: controlScheme, pairWithDevices: pairWithDevices);
         }
 
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [SerializeField] internal int m_MaxPlayerCount = -1;
         [SerializeField] internal bool m_AllowJoining = true;
-        [SerializeField] internal bool m_JoinPlayersWithMissingDevices;
         [SerializeField] internal PlayerJoinBehavior m_JoinBehavior;
         [SerializeField] internal PlayerJoinedEvent m_PlayerJoinedEvent;
         [SerializeField] internal PlayerLeftEvent m_PlayerLeftEvent;
@@ -418,13 +455,12 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         [SerializeField] internal bool m_SplitScreen;
         [SerializeField] internal bool m_MaintainAspectRatioInSplitScreen;
         [SerializeField] internal int m_FixedNumberOfSplitScreens = -1;
-        [SerializeField] internal float m_SplitScreenBorderWidth;
         [SerializeField] internal Rect m_SplitScreenRect = new Rect(0, 0, 1, 1);
 
         [NonSerialized] private bool m_JoinActionDelegateHooked;
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
-        [NonSerialized] private Action<InputControl> m_UnpairedDeviceUsedDelegate;
+        [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
@@ -464,7 +500,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             return true;
         }
 
-        private void OnUnpairedDeviceUsed(InputControl control)
+        private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             if (!m_AllowJoining)
                 return;
@@ -479,6 +515,8 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
                 // to join a player who's then stranded and has no way to actually interact with the game.
                 if (!IsDeviceUsableWithPlayerActions(control.device))
                     return;
+
+                ////REVIEW: should we log a warning or error when the actions for the player do not have control schemes?
 
                 JoinPlayer(pairWithDevice: control.device);
             }
@@ -607,11 +645,57 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             if (actions == null)
                 return true;
 
+            // If the asset has control schemes, see if there's one that works with the device plus
+            // whatever unpaired devices we have left.
+            if (actions.controlSchemes.Count > 0)
+            {
+                using (var unpairedDevices = InputUser.GetUnpairedInputDevices())
+                {
+                    if (InputControlScheme.FindControlSchemeForDevices(unpairedDevices, actions.controlSchemes,
+                        mustIncludeDevice: device) == null)
+                        return false;
+                }
+                return true;
+            }
+
+            // Otherwise just check whether any of the maps has bindings usable with the device.
             foreach (var actionMap in actions.actionMaps)
                 if (actionMap.IsUsableWithDevice(device))
                     return true;
 
             return false;
+        }
+
+        private void ValidateInputActionAsset()
+        {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
+                return;
+
+            var actions = m_PlayerPrefab.GetComponentInChildren<PlayerInput>().actions;
+            if (actions == null)
+                return;
+
+            var isValid = true;
+            foreach (var controlScheme in actions.controlSchemes)
+            {
+                if (controlScheme.deviceRequirements.Count > 0)
+                    break;
+
+                isValid = false;
+            }
+
+            if (isValid) return;
+
+            var assetInfo = actions.name;
+#if UNITY_EDITOR
+            assetInfo = AssetDatabase.GetAssetPath(actions);
+#endif
+            Debug.LogWarning($"The input action asset '{assetInfo}' in the player prefab assigned to PlayerInputManager has " +
+                "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
+                "will not work unless the expected input devices are listed as requirements in the input " +
+                "action asset.", m_PlayerPrefab);
+#endif
         }
 
         /// <summary>

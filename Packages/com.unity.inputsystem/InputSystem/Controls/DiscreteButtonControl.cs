@@ -1,4 +1,6 @@
 using System;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: hide in UI
@@ -15,6 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     /// the value 1 could indicate that the switch is moved to the left whereas 3 could indicate it is
     /// moved up.
     /// </remarks>
+    [Scripting.Preserve]
     public class DiscreteButtonControl : ButtonControl
     {
         /// <summary>
@@ -42,10 +45,20 @@ namespace UnityEngine.InputSystem.Controls
 
         public int nullValue;
 
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+
+            if (!stateBlock.format.IsIntegerFormat())
+                throw new NotSupportedException(
+                    $"Non-integer format '{stateBlock.format}' is not supported for DiscreteButtonControl '{this}'");
+        }
+
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            var intValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+            // Note that all signed data in state buffers is in excess-K format.
+            var intValue = MemoryHelpers.ReadTwosComplementMultipleBitsAsInt(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
 
             var value = 0.0f;
             if (minValue > maxValue)
@@ -69,7 +82,9 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
-            throw new NotImplementedException();
+            // Also, the way these controls are usually used, the state is shared between multiple DiscreteButtons. So writing one
+            // may have unpredictable effects on the value of other buttons.
+            throw new NotSupportedException("Writing value states for DiscreteButtonControl is not supported as a single value may correspond to multiple states");
         }
     }
 }

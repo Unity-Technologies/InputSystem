@@ -1,0 +1,4 @@
+{
+  "displayName": "Input Recorder",
+  "description": "Shows how to capture and replay input events. Also useful by itself to debug input event sequences."
+} 

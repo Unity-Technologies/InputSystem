@@ -2,12 +2,14 @@
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.WebGL;
-using UnityEngine.InputSystem.Plugins.WebGL.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.WebGL;
+using UnityEngine.InputSystem.WebGL.LowLevel;
 
-internal class WebGLTests : InputTestFixture
+internal class WebGLTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -60,12 +62,70 @@ internal class WebGLTests : InputTestFixture
         AssertButtonPress(gamepad, new WebGLGamepadState().WithButton(GamepadButton.DpadRight), gamepad[GamepadButton.DpadRight]);
     }
 
+    struct TestJoystickState : IInputStateTypeInfo
+    {
+        public FourCC format => new FourCC("HTML");
+        public float x, y, z;
+        public float button1, button2, button3;
+    }
+
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_SupportsWebGLJoysticks()
+    public void Devices_SupportsWebGLJoysticks()
     {
-        Assert.Fail();
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "WebGL",
+            deviceClass = "Gamepad",
+            product = "WebGL test joystick",
+            capabilities = new WebGLDeviceCapabilities
+            {
+                mapping = "",
+                numAxes = 3,
+                numButtons = 3
+            }.ToJson()
+        });
+
+        InputSystem.Update();
+
+        var joystick = InputSystem.GetDevice<WebGLJoystick>();
+        Assert.That(joystick , Is.Not.Null);
+
+        // Test the sticks and triggers.
+        InputSystem.QueueStateEvent(joystick , new TestJoystickState {x = 0.1f, y = 0.2f, z = 0.3f});
+        InputSystem.Update();
+
+        Assert.That((joystick.TryGetChildControl("stick") as StickControl).ReadUnprocessedValue(), Is.EqualTo(new Vector2(0.1f, -0.2f))); // Y inverted on WebGL.
+        Assert.That((joystick.TryGetChildControl("Axis 1") as AxisControl).ReadUnprocessedValue(), Is.EqualTo(0.3).Within(0.0001));
+
+        // Test all buttons.
+        AssertButtonPress(joystick, new TestJoystickState {button1 = 1.0f}, joystick.TryGetChildControl("Trigger") as ButtonControl, joystick.TryGetChildControl("Button 1") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState {button2 = 1.0f}, joystick.TryGetChildControl("Trigger") as ButtonControl, joystick.TryGetChildControl("Button 2") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState {button3 = 1.0f}, joystick.TryGetChildControl("Trigger") as ButtonControl, joystick.TryGetChildControl("Button 3") as ButtonControl);
+        AssertButtonPress(joystick, new TestJoystickState());
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanHaveWebGLJoystickWithBadRegexInName()
+    {
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "WebGL",
+            deviceClass = "Gamepad",
+            product = "Bad(Regex",
+            capabilities = new WebGLDeviceCapabilities
+            {
+                mapping = "",
+                numAxes = 3,
+                numButtons = 3
+            }.ToJson()
+        });
+
+        InputSystem.Update();
+
+        var joystick = InputSystem.GetDevice<WebGLJoystick>();
+        Assert.That(joystick , Is.Not.Null);
     }
 }
 #endif // UNITY_WEBGL || UNITY_EDITOR

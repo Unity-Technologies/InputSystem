@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct WarpMousePositionCommand : IInputDeviceCommandInfo
+    internal struct WarpMousePositionCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('W', 'P', 'M', 'S'); } }
 
@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public Vector2 warpPositionInPlayerDisplaySpace;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static WarpMousePositionCommand Create(Vector2 position)

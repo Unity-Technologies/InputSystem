@@ -1,5 +1,5 @@
 #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// Support for various forms of on-screen controls.

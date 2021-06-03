@@ -1,13 +1,14 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using NUnit.Framework;
 using System.Runtime.InteropServices;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Plugins.Linux;
+using UnityEngine.InputSystem.Linux;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
-internal class LinuxTests : InputTestFixture
+internal class LinuxTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -130,7 +131,6 @@ internal class LinuxTests : InputTestFixture
 
         // Control properties.
         Assert.That(joystick.trigger, Is.SameAs(joystick["Trigger"]));
-        Assert.That(joystick.hat, Is.SameAs(joystick["Hat"]));
         Assert.That(joystick.stick, Is.SameAs(joystick["Stick"]));
         Assert.That(joystick.twist, Is.SameAs(joystick["RotateZ"]));
 
@@ -178,10 +178,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.True);
         Assert.That(joystick.stick.left.isPressed, Is.True);
         Assert.That(joystick.stick.right.isPressed, Is.False);
-        Assert.That(joystick.hat.up.isPressed, Is.True);
-        Assert.That(joystick.hat.down.isPressed, Is.False);
-        Assert.That(joystick.hat.left.isPressed, Is.False);
-        Assert.That(joystick.hat.right.isPressed, Is.True);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.00001));
 
@@ -202,10 +198,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.False);
         Assert.That(joystick.stick.left.isPressed, Is.False);
         Assert.That(joystick.stick.right.isPressed, Is.True);
-        Assert.That(joystick.hat.up.isPressed, Is.False);
-        Assert.That(joystick.hat.down.isPressed, Is.True);
-        Assert.That(joystick.hat.left.isPressed, Is.True);
-        Assert.That(joystick.hat.right.isPressed, Is.False);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(-1).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
 
@@ -218,10 +210,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.False);
         Assert.That(joystick.stick.left.isPressed, Is.False);
         Assert.That(joystick.stick.right.isPressed, Is.False);
-        Assert.That(joystick.hat.up.isPressed, Is.False);
-        Assert.That(joystick.hat.down.isPressed, Is.False);
-        Assert.That(joystick.hat.left.isPressed, Is.False);
-        Assert.That(joystick.hat.right.isPressed, Is.False);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(0).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
     }
@@ -229,7 +217,7 @@ internal class LinuxTests : InputTestFixture
     [StructLayout(LayoutKind.Explicit)]
     private struct TestSDLJoystick : IInputStateTypeInfo
     {
-        [FieldOffset(0)] public int buttons;
+        [FieldOffset(0)] public uint buttons;
         [FieldOffset(4)] public int xAxis;
         [FieldOffset(8)] public int yAxis;
         [FieldOffset(12)] public int rotateZAxis;
@@ -239,7 +227,9 @@ internal class LinuxTests : InputTestFixture
 
         public TestSDLJoystick WithButton(SDLButtonUsage usage, bool value = true)
         {
-            var bitMask = 1 << ((int)usage - 1);
+            // checking <= here because Count equals to largest button value + 1, so the actual value will be < 32
+            Debug.Assert((int)SDLButtonUsage.Count <= 32, $"Expected SDLButtonUsage.Count <= 32, so we fit into the 32 bit wide bitmask");
+            var bitMask = 1U << ((int)usage - 1);
 
             if (value)
                 buttons |= bitMask;
@@ -248,9 +238,9 @@ internal class LinuxTests : InputTestFixture
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('L', 'J', 'O', 'Y');
+            get { return new FourCC('L', 'J', 'O', 'Y'); }
         }
 
         public static readonly string descriptorString =

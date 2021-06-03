@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(bitIndex >= 0);
             Debug.Assert(bitIndex < length);
 
-            array[bitIndex / 64] |= (ulong)1 << (bitIndex % 64);
+            array[bitIndex / 64] |= 1UL << (bitIndex % 64);
         }
 
         public bool TestBit(int bitIndex)
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(bitIndex >= 0);
             Debug.Assert(bitIndex < length);
 
-            return (array[bitIndex / 64] & ((ulong)1 << (bitIndex % 64))) != 0;
+            return (array[bitIndex / 64] & (1UL << (bitIndex % 64))) != 0;
         }
 
         public void ClearBit(int bitIndex)
@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(bitIndex >= 0);
             Debug.Assert(bitIndex < length);
 
-            array[bitIndex / 64] &= ~((ulong)1 << (bitIndex % 64));
+            array[bitIndex / 64] &= ~(1UL << (bitIndex % 64));
         }
 
         private static int BitCountToULongCount(int bitCount)

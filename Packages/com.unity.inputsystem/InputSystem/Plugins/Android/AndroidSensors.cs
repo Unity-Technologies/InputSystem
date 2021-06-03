@@ -1,15 +1,20 @@
-#if UNITY_EDITOR || UNITY_ANDROID
+#if UNITY_EDITOR || UNITY_ANDROID || PACKAGE_DOCS_GENERATION
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
+////TODO: make all the sensor class types internal
+
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    public enum AndroidSensorType
+    internal enum AndroidSensorType
     {
+        None = 0,
         Accelerometer = 1,
         MagneticField = 2,
         Orientation = 3,            // Was deprecated in API 8 https://developer.android.com/reference/android/hardware/Sensor#TYPE_ORIENTATION
@@ -40,7 +45,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 
     [Serializable]
-    public struct AndroidSensorCapabilities
+    internal struct AndroidSensorCapabilities
     {
         public AndroidSensorType sensorType;
 
@@ -63,7 +68,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct AndroidSensorState : IInputStateTypeInfo
+    internal unsafe struct AndroidSensorState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
 
@@ -102,25 +107,24 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
 
         public AndroidSensorState WithData(params float[] data)
         {
-            fixed(float* dataPtr = this.data)
-            {
-                for (var i = 0; i < data.Length && i < 16; i++)
-                    dataPtr[i] = data[i];
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
 
-                // Fill the rest with zeroes
-                for (var i = data.Length; i < 16; i++)
-                    dataPtr[i] = 0.0f;
-            }
+            for (var i = 0; i < data.Length && i < 16; i++)
+                this.data[i] = data[i];
+
+            // Fill the rest with zeroes
+            for (var i = data.Length; i < 16; i++)
+                this.data[i] = 0.0f;
 
             return this;
         }
 
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
+        public FourCC format => kFormat;
     }
 
+    [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
         // Taken from platforms\android-<API>\arch-arm\usr\include\android\sensor.h
@@ -128,15 +132,17 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public override Vector3 Process(Vector3 vector, InputControl<Vector3> control)
+        public override Vector3 Process(Vector3 vector, InputControl control)
         {
             return base.Process(vector * kAccelerationMultiplier, control);
         }
     }
 
+    [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
-        public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
+        public override Quaternion Process(Quaternion value, InputControl control)
         {
             // https://developer.android.com/reference/android/hardware/SensorEvent#values
             // "...The rotation vector represents the orientation of the device as a combination of an angle and an axis, in which the device has rotated through an angle theta around an axis <x, y, z>."
@@ -152,64 +158,124 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
+    /// <summary>
+    /// Accelerometer device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_ACCELEROMETER"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidAccelerometer : Accelerometer
     {
     }
 
+    /// <summary>
+    /// Magnetic field sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_MAGNETIC_FIELD"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidMagneticFieldSensor : MagneticFieldSensor
     {
     }
 
+    /// <summary>
+    /// Gyroscope device on android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GYROSCOPE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidGyroscope : Gyroscope
     {
     }
 
+    /// <summary>
+    /// Light sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_LIGHT"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidLightSensor : LightSensor
     {
     }
 
+    /// <summary>
+    /// Pressure sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_PRESSURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidPressureSensor : PressureSensor
     {
     }
 
+    /// <summary>
+    /// Proximity sensor type on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_PROXIMITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidProximity : ProximitySensor
     {
     }
 
+    /// <summary>
+    /// Gravity sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GRAVITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidGravitySensor : GravitySensor
     {
     }
 
+    /// <summary>
+    /// Linear acceleration sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_LINEAR_ACCELERATION"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidLinearAccelerationSensor : LinearAccelerationSensor
     {
     }
 
+    /// <summary>
+    /// Rotation vector sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidRotationVector : AttitudeSensor
     {
     }
 
+    /// <summary>
+    /// Relative humidity sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_RELATIVE_HUMIDITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidRelativeHumidity : HumiditySensor
     {
     }
 
+    /// <summary>
+    /// Ambient temperature sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_AMBIENT_TEMPERATURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidAmbientTemperature : AmbientTemperatureSensor
     {
     }
 
+    /// <summary>
+    /// Step counter sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_STEP_COUNTER"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidStepCounter : StepCounter
     {
     }

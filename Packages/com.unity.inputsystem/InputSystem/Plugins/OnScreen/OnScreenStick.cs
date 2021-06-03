@@ -1,23 +1,28 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenStick component
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// A stick control displayed on screen and moved around by touch or other pointer
     /// input.
     /// </summary>
     [AddComponentMenu("Input/On-Screen Stick")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
-        
+       
         public bool relativeMode;
          
         public void OnPointerDown(PointerEventData data)
         {
+            if (eventData == null)
+                throw new System.ArgumentNullException(nameof(eventData));
+            
             if (relativeMode)
                 {
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
@@ -29,9 +34,12 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
                 }        
         }
 
-        public void OnDrag(PointerEventData data)
+        public void OnDrag(PointerEventData eventData)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out var position);
+            if (eventData == null)
+                throw new System.ArgumentNullException(nameof(eventData));
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), eventData.position, eventData.pressEventCamera, out var position);
             var delta = position - m_PointerDownPos;
 
             delta = Vector2.ClampMagnitude(delta, movementRange);
@@ -41,7 +49,7 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
             SendValueToControl(newPos);
         }
 
-        public void OnPointerUp(PointerEventData data)
+        public void OnPointerUp(PointerEventData eventData)
         {
             ((RectTransform)transform).anchoredPosition = m_StartPos;
             SendValueToControl(Vector2.zero);
@@ -76,3 +84,4 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
         }
     }
 }
+#endif

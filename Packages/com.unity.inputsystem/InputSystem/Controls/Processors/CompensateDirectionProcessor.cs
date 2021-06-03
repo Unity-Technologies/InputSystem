@@ -1,10 +1,13 @@
+using System.ComponentModel;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Processors
 {
-    public class CompensateDirectionProcessor : InputProcessor<Vector3>
+    [DesignTimeVisible(false)]
+    [Scripting.Preserve]
+    internal class CompensateDirectionProcessor : InputProcessor<Vector3>
     {
-        public override Vector3 Process(Vector3 value, InputControl<Vector3> control)
+        public override Vector3 Process(Vector3 value, InputControl control)
         {
             if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;
@@ -17,6 +20,11 @@ namespace UnityEngine.InputSystem.Processors
                 case ScreenOrientation.LandscapeRight: rotation = Quaternion.Euler(0, 0, 270); break;
             }
             return rotation * value;
+        }
+
+        public override string ToString()
+        {
+            return "CompensateDirection()";
         }
     }
 }

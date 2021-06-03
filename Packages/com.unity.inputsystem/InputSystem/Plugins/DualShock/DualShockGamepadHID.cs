@@ -1,41 +1,41 @@
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA || PACKAGE_DOCS_GENERATION
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock.LowLevel;
+using UnityEngine.InputSystem.DualShock.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: figure out sensor formats and add support for acceleration, angularVelocity, and orientation (also add to base layout then)
 
-namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
+namespace UnityEngine.InputSystem.DualShock.LowLevel
 {
     /// <summary>
-    /// Structure of HID input reports for PS4 DualShock controllers.
+    /// Structure of HID input reports for PS4 DualShock 4 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct DualShockHIDInputReport : IInputStateTypeInfo
+    internal struct DualShock4HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
         [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
         [FieldOffset(1)] public byte leftStickX;
         [FieldOffset(2)] public byte leftStickY;
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
         [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
         [FieldOffset(3)] public byte rightStickX;
         [FieldOffset(4)] public byte rightStickY;
 
@@ -51,8 +51,8 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
         [FieldOffset(5)] public byte buttons1;
         [InputControl(name = "leftShoulder", bit = 0)]
         [InputControl(name = "rightShoulder", bit = 1)]
-        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2)]
-        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3)]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2, synthetic = true)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3, synthetic = true)]
         [InputControl(name = "select", displayName = "Share", bit = 4)]
         [InputControl(name = "start", displayName = "Options", bit = 5)]
         [InputControl(name = "leftStickPress", bit = 6)]
@@ -71,9 +71,73 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
 
         ////TODO: touchpad
 
-        public FourCC GetFormat()
+        public FourCC format => new FourCC('H', 'I', 'D');
+    }
+
+    /// <summary>
+    /// Structure of HID input reports for PS3 DualShock 3 controllers.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 32)]
+    internal unsafe struct DualShock3HIDInputReport : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] private ushort padding1;
+
+        [InputControl(name = "select", displayName = "Share", bit = 0)]
+        [InputControl(name = "leftStickPress", bit = 1)]
+        [InputControl(name = "rightStickPress", bit = 2)]
+        [InputControl(name = "start", displayName = "Options", bit = 3)]
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", bit = 4, sizeInBits = 4)]
+        [InputControl(name = "dpad/up", bit = 4)]
+        [InputControl(name = "dpad/right", bit = 5)]
+        [InputControl(name = "dpad/down", bit = 6)]
+        [InputControl(name = "dpad/left", bit = 7)]
+        [FieldOffset(2)] public byte buttons1;
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 0, synthetic = true)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 1, synthetic = true)]
+        [InputControl(name = "leftShoulder", bit = 2)]
+        [InputControl(name = "rightShoulder", bit = 3)]
+        [InputControl(name = "buttonNorth", displayName = "Triangle", bit = 4)]
+        [InputControl(name = "buttonEast", displayName = "Circle", bit = 5)]
+        [InputControl(name = "buttonSouth", displayName = "Cross", bit = 6)]
+        [InputControl(name = "buttonWest", displayName = "Square", bit = 7)]
+        [FieldOffset(3)] public byte buttons2;
+
+        [InputControl(name = "systemButton", layout = "Button", displayName = "System", bit = 0)]
+        [InputControl(name = "touchpadButton", layout = "Button", displayName = "Touchpad Press", bit = 1)] // always 0, does not exist on DualShock 3
+        [FieldOffset(4)] public byte buttons3;
+
+        [FieldOffset(5)] private byte padding2;
+
+        [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
+        [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
+        [FieldOffset(6)] public byte leftStickX;
+        [FieldOffset(7)] public byte leftStickY;
+
+        [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
+        [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
+        [FieldOffset(8)] public byte rightStickX;
+        [FieldOffset(9)] public byte rightStickY;
+
+        [FieldOffset(10)] private fixed byte padding3[8];
+
+        [InputControl(name = "leftTrigger", format = "BYTE")]
+        [FieldOffset(18)] public byte leftTrigger;
+        [InputControl(name = "rightTrigger", format = "BYTE")]
+        [FieldOffset(19)] public byte rightTrigger;
+
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -81,13 +145,14 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
     /// PS4 output report sent as command to HID backend.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
+    internal unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         internal const int kReportId = 5;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -98,6 +163,7 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte reportId;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public fixed byte unknown1[2];
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte highFrequencyMotorSpeed;
@@ -107,10 +173,7 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public byte blueColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 9)] public fixed byte unknown2[23];
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public void SetMotorSpeeds(float lowFreq, float highFreq)
         {
@@ -138,25 +201,26 @@ namespace UnityEngine.InputSystem.Plugins.DualShock.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputControlLayout(stateType = typeof(DualShockHIDInputReport), hideInUI = true)]
-    public class DualShockGamepadHID : DualShockGamepad
+    [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true)]
+    [Scripting.Preserve]
+    public class DualShock4GamepadHID : DualShockGamepad
     {
-        public ButtonControl leftTriggerButton { get; private set; }
-        public ButtonControl rightTriggerButton { get; private set; }
-        public ButtonControl playStationButton { get; private set; }
+        public ButtonControl leftTriggerButton { get; protected set; }
+        public ButtonControl rightTriggerButton { get; protected set; }
+        public ButtonControl playStationButton { get; protected set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void PauseHaptics()
@@ -205,6 +269,8 @@ namespace UnityEngine.InputSystem.Plugins.DualShock
             ExecuteCommand(ref command);
         }
 
+        ////FIXME: SetLightBarColor and SetMotorSpeeds to not mutually respect their settings
+
         public override void SetLightBarColor(Color color)
         {
             var command = DualShockHIDOutputReport.Create();
@@ -229,6 +295,26 @@ namespace UnityEngine.InputSystem.Plugins.DualShock
         private float? m_LowFrequencyMotorSpeed;
         private float? m_HighFrequenceyMotorSpeed;
         private Color? m_LightBarColor;
+    }
+
+    [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true, displayName = "PS3 Controller")]
+    [Scripting.Preserve]
+    public class DualShock3GamepadHID : DualShockGamepad
+    {
+        public ButtonControl leftTriggerButton { get; private set; }
+        public ButtonControl rightTriggerButton { get; private set; }
+        public ButtonControl playStationButton { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
+
+            base.FinishSetup();
+        }
+
+        // TODO: see if we can implement rumble support on DualShock 3
     }
 }
 

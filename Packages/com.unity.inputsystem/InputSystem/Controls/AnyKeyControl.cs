@@ -1,4 +1,7 @@
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+
+////REVIEW: generalize this to AnyButton and add to more devices?
 
 namespace UnityEngine.InputSystem.Controls
 {
@@ -7,18 +10,28 @@ namespace UnityEngine.InputSystem.Controls
     /// for whether there's any non-zero bytes. If there are, the control
     /// returns 1.0; otherwise it returns 0.0.
     /// </summary>
-    public class AnyKeyControl : InputControl<float>////TODO: this should be a ButtonControl
+    /// <remarks>
+    /// This control is used by <see cref="Keyboard.anyKey"/> to create a button
+    /// that is toggled on as long as any of the keys on the keyboard is pressed.
+    /// </remarks>
+    /// <seealso cref="Keyboard.anyKey"/>
+    [InputControlLayout(hideInUI = true)]
+    [Scripting.Preserve]
+    public class AnyKeyControl : ButtonControl
     {
-        public bool isPressed => ReadValue() > 0.0f;
-
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame
 
+        /// <summary>
+        /// Default initialization. Sets state size to 1 bit and format to
+        /// <see cref="InputStateBlock.FormatBit"/>.
+        /// </summary>
         public AnyKeyControl()
         {
             m_StateBlock.sizeInBits = 1; // Should be overridden by whoever uses the control.
             m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
+        /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             return this.CheckStateIsAtDefault(statePtr) ? 0.0f : 1.0f;

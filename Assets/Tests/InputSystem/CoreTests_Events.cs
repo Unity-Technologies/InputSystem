@@ -1,20 +1,27 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
-using Property = NUnit.Framework.PropertyAttribute;
+using Random = UnityEngine.Random;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
 partial class CoreTests
@@ -43,8 +50,35 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
-        Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanChangeStateOfDeviceDirectlyUsingEvent()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        using (StateEvent.From(mouse, out var eventPtr))
+        {
+            var stateChangeMonitorTriggered = false;
+            InputState.AddChangeMonitor(mouse.delta,
+                (c, t, e, i) => stateChangeMonitorTriggered = true);
+
+            mouse.delta.WriteValueIntoEvent(new Vector2(123, 234), eventPtr);
+
+            InputState.Change(mouse, eventPtr);
+
+            Assert.That(stateChangeMonitorTriggered, Is.True);
+            Assert.That(mouse.delta.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    [Ignore("TODO")]
+    public void TODO_Events_CanUpdateStateOfDeviceWithBatchEvent()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -79,19 +113,24 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_ProcessingStateEvent_DoesNotAllocateMemory()
+    public void Events_QueuingAndProcessingStateEvent_DoesNotAllocateMemory()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        ////REVIEW: We do some analytics stuff on the first update that allocates. Probably there's
-        ////        a better way to handle this.
+        // Warm up JIT and get rid of GC noise from initial input system update.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
         InputSystem.Update();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        // Make sure we don't get an allocation from the string literal.
+        var kProfilerRegion = "Events_ProcessingStateEvent_DoesNotAllocateMemory";
 
-        ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
-        Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+            InputSystem.Update();
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
     }
 
     [Test]
@@ -134,7 +173,7 @@ partial class CoreTests
         double? receivedTime = null;
         double? receivedInternalTime = null;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             receivedTime = eventPtr.time;
             receivedInternalTime = eventPtr.internalTime;
@@ -150,33 +189,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
-    public void Events_AreProcessedInBothFixedAndDynamicUpdateByDefault()
-    {
-        var mouse = InputSystem.AddDevice<Mouse>();
-
-        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
-
-        // Push event through in fixed update.
-        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-        InputSystem.Update(InputUpdateType.Fixed);
-
-        Assert.That(mouse.leftButton.isPressed, Is.True);
-
-        // Push event through in dynamic update.
-        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
-        InputSystem.Update(InputUpdateType.Dynamic);
-
-        Assert.That(mouse.leftButton.isPressed, Is.False);
-        Assert.That(mouse.rightButton.isPressed, Is.True);
-    }
-
-    [Test]
-    [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_CanSwitchToFullyManualUpdates()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -188,13 +200,6 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsManually));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.True);
 
         #if UNITY_EDITOR
         // Edit mode updates shouldn't have been disabled in editor.
@@ -205,34 +210,35 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Manual);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
+
+        Assert.That(() => InputSystem.Update(InputUpdateType.Fixed), Throws.InvalidOperationException);
+        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
-    public void Events_CanSwitchToProcessingInFixedUpdatesOnly()
+    public void Events_CanSwitchToProcessingInFixedUpdates()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var receivedOnChange = true;
         InputSystem.onSettingsChange += () => receivedOnChange = true;
 
-        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly));
+        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdate));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         InputSystem.Update(InputUpdateType.Fixed);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
+
+        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic), Throws.InvalidOperationException);
+        Assert.That(() => InputSystem.Update(InputUpdateType.Manual), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -260,47 +266,22 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanSwitchToProcessingInDynamicUpdatesOnly()
+    public unsafe void Events_InFixedUpdate_AreTimesliced()
     {
-        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-        var receivedOnChange = true;
-        InputSystem.onSettingsChange += () => receivedOnChange = true;
-
-        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly;
-
-        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly));
-        Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.GetMetrics().currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.GetMetrics().maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
-
-        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-        InputSystem.Update(InputUpdateType.Dynamic);
-
-        Assert.That(mouse.leftButton.isPressed, Is.True);
-    }
-
-    [Test]
-    [Category("Events")]
-    public unsafe void Events_AreTimeslicedByDefault()
-    {
         runtime.currentTimeForFixedUpdate = 1;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.data);
+            (eventPtr, _) => receivedEvents.Add(*eventPtr.data);
 
         // First fixed update should just take everything.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 2);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 2.9);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.1234f}, 1);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.2345f}, 2);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.3456f}, 2.9);
 
         runtime.currentTimeForFixedUpdate = 3;
 
@@ -319,10 +300,10 @@ partial class CoreTests
         runtime.currentTimeForFixedUpdate += 1 / 60.0f;
 
         // From now on, fixed updates should only take what falls in their slice.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 3 + 0.001);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 3 + 0.002);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3 + 1.0 / 60 + 0.001);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.4567f }, 3 + 2 * (1.0 / 60) + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.1234f}, 3 + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.2345f}, 3 + 0.002);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.3456f}, 3 + 1.0 / 60 + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.4567f}, 3 + 2 * (1.0 / 60) + 0.001);
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -371,46 +352,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public unsafe void Events_TimeslicingCanBeTurnedOff()
-    {
-        // Get first update out of the way with timeslicing on. First fixed update will consume all
-        // input so we can't really tell the difference.
-        InputSystem.Update(InputUpdateType.Fixed);
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var receivedEvents = new List<InputEvent>();
-        InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.data);
-
-        bool? receivedOnSettingsChange = null;
-        InputSystem.onSettingsChange += () => receivedOnSettingsChange = true;
-
-        runtime.currentTime = 3;
-
-        InputSystem.settings.timesliceEvents = false;
-
-        Assert.That(receivedOnSettingsChange, Is.True);
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 3 + 0.001);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 3 + 0.002);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.3456f}, 3 + 1.0 / 60 + 0.001);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.4567f}, 3 + 2 * (1.0 / 60) + 0.001);
-
-        InputSystem.Update(InputUpdateType.Fixed);
-
-        Assert.That(receivedEvents, Has.Count.EqualTo(4));
-        Assert.That(receivedEvents[0].time, Is.EqualTo(3 + 0.001).Within(0.00001));
-        Assert.That(receivedEvents[1].time, Is.EqualTo(3 + 0.002).Within(0.00001));
-        Assert.That(receivedEvents[2].time, Is.EqualTo(3 + 1.0 / 60 + 0.001).Within(0.00001));
-        Assert.That(receivedEvents[3].time, Is.EqualTo(3 + 2 * (1.0 / 60) + 0.001).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
-
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
-    }
-
-    [Test]
-    [Category("Events")]
     public void Events_CanGetAverageEventLag()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -427,14 +368,14 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.234f, 0.345f)}, 3);
         InputSystem.Update();
 
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(metrics.averageLagTimePerEvent, Is.EqualTo((9 + 7 + 4 + 0) / 4.0).Within(0.0001));
     }
 
     [Test]
     [Category("Events")]
-    public unsafe void Events_CanInitializeStateEventFromDevice()
+    public unsafe void Events_CanCreateStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -443,14 +384,15 @@ partial class CoreTests
 
         using (var buffer = StateEvent.From(mouse, out var eventPtr))
         {
-            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out var xVal));
+            Assert.That(mouse.delta.x.ReadValueFromEvent(eventPtr, out var xVal), Is.True);
             Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
 
-            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out var yVal));
+            Assert.That(mouse.delta.y.ReadValueFromEvent(eventPtr, out var yVal), Is.True);
             Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
-            Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
+
+            Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.deviceId));
             Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes,
@@ -462,9 +404,362 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
+    public unsafe void Events_CanCreateDeltaStateEventFromControl()
+    {
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.buttonSouth, 1);
+        Set(gamepad.buttonNorth, 1);
+        Set(gamepad.leftTrigger, 0.123f);
+
+        using (DeltaStateEvent.From(gamepad.buttonNorth, out var eventPtr))
+        {
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(eventPtr, out var val), Is.True);
+            Assert.That(val, Is.EqualTo(1).Within(0.00001));
+
+            gamepad.buttonNorth.WriteValueIntoEvent(0f, eventPtr);
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonNorth.ReadValue(), Is.Zero);
+        }
+
+        // More in-depth check on whether we get the offsetting right.
+        using (DeltaStateEvent.From(gamepad.leftStick, out var eventPtr))
+        {
+            var deltaEventPtr = (DeltaStateEvent*)eventPtr.data;
+            var statePtr = (byte*)gamepad.leftStick.GetStatePtrFromStateEvent(eventPtr);
+
+            Assert.That((ulong)(statePtr + gamepad.leftStick.stateBlock.byteOffset), Is.EqualTo((ulong)deltaEventPtr->deltaState));
+
+            InputSystem.settings.defaultDeadzoneMin = 0;
+            InputSystem.settings.defaultDeadzoneMax = 1;
+
+            gamepad.leftStick.WriteValueIntoEvent(new Vector2(0.123f, 0.234f), eventPtr);
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(gamepad.leftStick.ReadValue(),
+                Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    [TestCase(false, "Gamepad")] // No changed controls.
+    [TestCase(false, "Gamepad", "buttonSouth", 0f)] // Default value.
+    [TestCase(true, "Gamepad", "buttonSouth", 0f)] // Default value.
+    [TestCase(false, "Gamepad", "buttonSouth", 1f)]
+    [TestCase(true, "Gamepad", "buttonSouth", 1f)]
+    [TestCase(false, "Gamepad", "buttonSouth", 1f, "buttonNorth", 1f)]
+    [TestCase(true, "Gamepad", "leftTrigger", 1f, "rightTrigger", 1f)] // Using buttons here will lead to problems because delta events do not work at the level of individual bits.
+    public void Events_CanIterateOverChangedControlsInEvent(bool deltaEvent, string layoutName, params object[] controlsAndValues)
+    {
+        Assert.That(controlsAndValues.Length % 2, Is.Zero, "Must have even pairing of controls and values");
+
+        var device = InputSystem.AddDevice(layoutName);
+        var controls = controlsAndValues.EveryNth(2, start: 0).Select(path => device[(string)path]).ToArray();
+        var values = controlsAndValues.EveryNth(2, start: 1).ToArray();
+        var controlsNotAtDefaultValue = controls
+            .Zip(values, (control, value) => !control.ReadDefaultValueAsObject().Equals(value) ? control : null).Where(v => v != null).ToArray();
+
+        var eventHandlerWasCalled = false;
+        var numChangedControls = 0;
+        InputSystem.onEvent +=
+            (eventPtrReceived, deviceForEvent) =>
+        {
+            eventHandlerWasCalled = true;
+
+            Assert.That(deviceForEvent, Is.SameAs(device));
+            Assert.That(eventPtrReceived.IsA<StateEvent>() || deltaEvent);
+            Assert.That(eventPtrReceived.IsA<DeltaStateEvent>() || !deltaEvent);
+
+            var result = eventPtrReceived.EnumerateChangedControls().ToList();
+            Assert.That(result, Has.Count.EqualTo(deltaEvent ? Math.Min(controlsNotAtDefaultValue.Length, 1) : controlsNotAtDefaultValue.Length));
+            numChangedControls += result.Count;
+        };
+
+        NativeArray<byte> tempMemory = default;
+        InputEventPtr stateEventPtr = default;
+
+        if (!deltaEvent)
+            tempMemory = StateEvent.From(device, out stateEventPtr);
+
+        for (var i = 0; i < controls.Length; ++i)
+        {
+            var control = controls[i];
+            var value = values[i];
+
+            if (deltaEvent)
+            {
+                using (DeltaStateEvent.From(control, out var eventPtr))
+                {
+                    control.WriteValueFromObjectIntoEvent(eventPtr, value);
+                    InputSystem.QueueEvent(eventPtr);
+                }
+            }
+            else
+            {
+                control.WriteValueFromObjectIntoEvent(stateEventPtr, value);
+            }
+        }
+
+        if (!deltaEvent)
+            InputSystem.QueueEvent(stateEventPtr);
+        if (tempMemory.IsCreated)
+            tempMemory.Dispose();
+
+        InputSystem.Update();
+
+        Assert.That(eventHandlerWasCalled, Is.True);
+        Assert.That(numChangedControls, Is.EqualTo(controlsNotAtDefaultValue.Length));
+    }
+
+    // Touchscreen, as usual, is a troublemaker. We send it TouchState events and not TouchscreenState events
+    // and it has its own (involved) logic for incorporating them into state. From a control enumeration
+    // perspective, though, this is still just a matter of narrowing down the set of controls to consider
+    // and taking their relative offsets into account.
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanIterateOverChangedControlsInEvent_WithDeviceThatIsStateCallbackReceiver()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        var eventHandlerWasCalled = false;
+        InputSystem.onEvent +=
+            (eventPtrReceived, deviceForEvent) =>
+        {
+            eventHandlerWasCalled = true;
+
+            Assert.That(deviceForEvent, Is.SameAs(touchscreen));
+            Assert.That(eventPtrReceived.IsA<StateEvent>());
+            Assert.That(StateEvent.From(eventPtrReceived)->stateFormat, Is.EqualTo(TouchState.Format));
+
+            var result = eventPtrReceived.EnumerateChangedControls().ToList();
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result, Has.Exactly(1).SameAs(touchscreen.touches[0].position.x));
+            Assert.That(result, Has.Exactly(1).SameAs(touchscreen.touches[0].position.y));
+        };
+
+        InputSystem.QueueStateEvent(touchscreen, new TouchState { position = new Vector2(123, 234) });
+        InputSystem.Update();
+
+        Assert.That(eventHandlerWasCalled, Is.True);
+    }
+
+    // A control may employ useStateFrom to point itself at the state of another control. The
+    // control enumerator by default ignores useStateFrom controls and returns only the ones that have
+    // their "own" state.
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverChangedControlsInEvent_IgnoresControlsUsingStateFromOtherControls()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""Button2"", ""layout"" : ""Button"", ""useStateFrom"" : ""Button1"" },
+                    { ""name"" : ""Button1"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        var eventHandlerWasCalled = false;
+        InputSystem.onEvent +=
+            (eventPtrReceived, deviceForEvent) =>
+        {
+            eventHandlerWasCalled = true;
+
+            Assert.That(deviceForEvent, Is.SameAs(device));
+            Assert.That(eventPtrReceived.IsA<StateEvent>());
+
+            var result = eventPtrReceived.EnumerateChangedControls().ToList();
+            Assert.That(result, Is.EquivalentTo(new[] { device["Button1"] }));
+        };
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            device["Button1"].WriteValueFromObjectIntoEvent(eventPtr, 1f);
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+        }
+
+        InputSystem.Update();
+
+        Assert.That(eventHandlerWasCalled, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverChangedControlsInEvent_IncludingParentControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.leftStick.x, 0.5f);
+
+        using (StateEvent.From(gamepad, out var eventPtr))
+        {
+            Set(gamepad.leftStick.x, 0f);
+
+            var result =
+                eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IgnoreControlsInCurrentState
+                    | InputControlExtensions.Enumerate.IncludeNonLeafControls).ToList();
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result, Has.Exactly(1).SameAs(gamepad.leftStick.x));
+            Assert.That(result, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverChangedControlsInEvent_IncludingSyntheticControls()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Press(mouse.leftButton);
+
+        using (StateEvent.From(mouse, out var eventPtr))
+        {
+            Release(mouse.leftButton);
+
+            var result =
+                eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IgnoreControlsInCurrentState
+                    | InputControlExtensions.Enumerate.IncludeSyntheticControls).ToList();
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            Assert.That(result, Has.Exactly(1).SameAs(mouse.leftButton));
+            Assert.That(result, Has.Exactly(1).SameAs(mouse.press));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverControlsInEvent_AboveSpecifiedThreshold()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftTrigger, 0.25f);
+        Set(gamepad.rightTrigger, 0.75f);
+
+        using (StateEvent.From(gamepad, out var eventPtr))
+        {
+            Set(gamepad.leftTrigger, 0f);
+            Set(gamepad.rightTrigger, 0f);
+
+            var result = eventPtr.EnumerateChangedControls(magnitudeThreshold: 0.5f);
+            Assert.That(result, Is.EquivalentTo(new[] { gamepad.rightTrigger }));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanIterateOverControlsInEvent_WhenDeltaEventContainsOnlyPartialStateForControl()
+    {
+        // The keyboard's AnyKey control spans all keys on the keyboard. Thus, if we send
+        // a DeltaStateEvent, it will have partial state for AnyKey. This should be treated
+        // equivalent to the control *not* being in the event and thus not getting returned
+        // by enumeration.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(keyboard.spaceKey.stateBlock.byteOffset, Is.Zero);
+        Assert.That(keyboard.spaceKey.stateBlock.bitOffset, Is.LessThan(8));
+        var allKeysInFirstByte = keyboard.allControls.Where(x => x.stateBlock.byteOffset == 0 && x.stateBlock.bitOffset < 8 && !x.synthetic).ToList();
+
+        using (DeltaStateEvent.From(keyboard.spaceKey, out var eventPtr))
+        {
+            var result = eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IncludeSyntheticControls).ToList();
+
+            Assert.That(result, Has.Count.EqualTo(allKeysInFirstByte.Count));
+            Assert.That(result, Has.Exactly(0).SameAs(keyboard.anyKey));
+            Assert.That(result, Has.Exactly(1).SameAs(keyboard.spaceKey));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    [Retry(2)] // Warm up JIT.
+    public void Events_CanIterateOverControlsInEvent_WithoutAllocatingGC()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        using (StateEvent.From(touchscreen, out var eventPtr))
+        {
+            // Alter current state after we grabbed the default state above.
+            BeginTouch(1, new Vector2(123, 234));
+
+            var list = new List<InputControl>(512);
+            Assert.That(() =>
+            {
+                foreach (var control in eventPtr.EnumerateChangedControls())
+                    list.Add(control);
+            }, Is.Not.AllocatingGCMemory());
+            Assert.That(list, Is.Not.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanResetControlToDefaultState()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""Button"", ""layout"" : ""Button"" },
+                    { ""name"" : ""ButtonWithDefaultState"", ""layout"" : ""Button"", ""defaultState"" : ""1"" },
+                    { ""name"" : ""Axis"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""AxisWithDefaultState"", ""layout"" : ""Axis"", ""defaultState"" : ""0.5"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        Press((ButtonControl)device["Button"]);
+        Release((ButtonControl)device["ButtonWithDefaultState"]);
+        Set((AxisControl)device["Axis"], 0.123f);
+        Set((AxisControl)device["AxisWithDefaultState"], 0.234f);
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            device["Button"].ResetToDefaultStateInEvent(eventPtr);
+            device["ButtonWithDefaultState"].ResetToDefaultStateInEvent(eventPtr);
+            device["Axis"].ResetToDefaultStateInEvent(eventPtr);
+            device["AxisWithDefaultState"].ResetToDefaultStateInEvent(eventPtr);
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(device["Button"].CheckStateIsAtDefault());
+            Assert.That(device["ButtonWithDefaultState"].CheckStateIsAtDefault());
+            Assert.That(device["Axis"].CheckStateIsAtDefault());
+            Assert.That(device["AxisWithDefaultState"].CheckStateIsAtDefault());
+        }
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
+        // We need one device that has before-render updates enabled for the update to enable
+        // at all.
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterLayout(deviceJson);
+        InputSystem.AddDevice("CustomGamepad");
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
 
@@ -476,7 +771,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
         const string deviceJson = @"
@@ -505,11 +799,11 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
-        InputSystem.onEvent += inputEvent =>
+        InputSystem.onEvent += (inputEvent, _) =>
         {
             ++receivedCalls;
             Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
-            Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
+            Assert.That(inputEvent.deviceId, Is.EqualTo(device.deviceId));
         };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
@@ -532,7 +826,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_AreProcessedInOrderTheyAreQueuedIn()
     {
         const double kFirstTime = 0.5;
@@ -545,7 +838,7 @@ partial class CoreTests
         var receivedThirdTime = 0.0;
 
         InputSystem.onEvent +=
-            inputEvent =>
+            (inputEvent, _) =>
         {
             ++receivedCalls;
             if (receivedCalls == 1)
@@ -572,18 +865,15 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
-    public void Events_CanQueueAndReceiveEventsAgainstNonExistingDevices()
+    public void Events_WillNotReceiveEventsAgainstNonExistingDevices()
     {
         // Device IDs are looked up only *after* the system shows the event to us.
 
         var receivedCalls = 0;
-        var receivedDeviceId = InputDevice.InvalidDeviceId;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
-            receivedDeviceId = eventPtr.deviceId;
         };
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
@@ -591,26 +881,26 @@ partial class CoreTests
 
         InputSystem.Update();
 
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedDeviceId, Is.EqualTo(4));
+        Assert.That(receivedCalls, Is.EqualTo(0));
     }
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_HandledFlagIsResetWhenEventIsQueued()
     {
         var receivedCalls = 0;
         var wasHandled = true;
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             wasHandled = eventPtr.handled;
         };
 
-        var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var inputEvent = DeviceConfigurationEvent.Create(device.deviceId, 1.0);
 
         // This should go back to false when we inputEvent goes on the queue.
         // The way the behavior is implemented is a side-effect of how we store
@@ -631,7 +921,7 @@ partial class CoreTests
     public void Events_CanPreventEventsFromBeingProcessed()
     {
         InputSystem.onEvent +=
-            inputEvent =>
+            (inputEvent, _) =>
         {
             // If we mark the event handled, the system should skip it and not
             // let it go to the device.
@@ -651,13 +941,12 @@ partial class CoreTests
     {
         [InputControl(layout = "Axis")]
         [FieldOffset(0)] public ushort value;
-        public FourCC GetFormat()
-        {
-            return new FourCC('T', 'E', 'S', 'T');
-        }
+
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(StateWith2Bytes))]
+    [Preserve]
     class DeviceWith2ByteState : InputDevice
     {
     }
@@ -685,7 +974,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new StateWith2Bytes());
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
             Assert.That((Int64)eventPtr.data % 4, Is.EqualTo(0));
@@ -697,13 +986,12 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public unsafe void Events_CanTraceEventsOfDevice()
     {
         var device = InputSystem.AddDevice<Gamepad>();
         var noise = InputSystem.AddDevice<Gamepad>();
 
-        using (var trace = new InputEventTrace {deviceId = device.id})
+        using (var trace = new InputEventTrace {deviceId = device.deviceId})
         {
             trace.Enable();
             Assert.That(trace.enabled, Is.True);
@@ -724,14 +1012,14 @@ partial class CoreTests
             Assert.That(events, Has.Count.EqualTo(2));
 
             Assert.That(events[0].type, Is.EqualTo((FourCC)StateEvent.Type));
-            Assert.That(events[0].deviceId, Is.EqualTo(device.id));
+            Assert.That(events[0].deviceId, Is.EqualTo(device.deviceId));
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
                 StateEvent.From(events[0])->state, UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
-            Assert.That(events[1].deviceId, Is.EqualTo(device.id));
+            Assert.That(events[1].deviceId, Is.EqualTo(device.deviceId));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
@@ -741,12 +1029,89 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
+    public unsafe void Events_CanTraceEventsOfDevice_AndFilterEventsThroughCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.onFilterEvent +=
+                (eventPtr, device) => gamepad.buttonSouth.ReadValueFromEvent(eventPtr, out var value) && value > 0;
+
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(1));
+            Assert.That(*(GamepadState*)StateEvent.From(trace.ToArray()[0])->state, Is.EqualTo(new GamepadState(GamepadButton.South)));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanTraceEventsOfDevice_AndGrowBufferAsNeeded()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(10, growBuffer: true, growIncrementSizeInBytes: 2048) {deviceId = device.deviceId})
+        {
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.A));
+            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.B));
+
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(trace.allocatedSizeInBytes, Is.EqualTo(2048 + 10));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanTraceEventsOfDevice_AndRecordFrameBoundaries()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad) { recordFrameMarkers = true })
+        {
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(trace.ToArray()[0].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(3));
+            Assert.That(trace.ToArray()[0].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+            Assert.That(trace.ToArray()[2].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(5));
+            Assert.That(trace.ToArray()[0].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+            Assert.That(trace.ToArray()[2].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[3].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[4].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_WhenTraceIsFull_WillStartOverwritingOldEvents()
     {
         var device = InputSystem.AddDevice<Gamepad>();
         using (var trace =
-                   new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.id})
+                   new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.deviceId})
         {
             trace.Enable();
 
@@ -783,11 +1148,476 @@ partial class CoreTests
             InputSystem.QueueStateEvent(device, new GamepadState());
             InputSystem.Update();
 
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(trace.totalEventSizeInBytes, Is.GreaterThan(0));
             Assert.That(trace.ToList(), Has.Count.EqualTo(2));
 
             trace.Clear();
 
+            Assert.That(trace.eventCount, Is.EqualTo(0));
+            Assert.That(trace.totalEventSizeInBytes, Is.EqualTo(0));
             Assert.That(trace.ToList(), Has.Count.EqualTo(0));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanPersistEventTracesInStream()
+    {
+        var pen = InputSystem.AddDevice<Pen>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var originalTrace = new InputEventTrace())
+        {
+            originalTrace.Enable();
+
+            InputSystem.QueueStateEvent(pen, new PenState { position = new Vector2(123, 234) });
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+            InputSystem.QueueStateEvent(pen, new PenState { position = new Vector2(234, 345) });
+
+            InputSystem.Update();
+
+            Assert.That(originalTrace.eventCount, Is.EqualTo(3));
+
+            using (var memoryStream = new MemoryStream())
+            {
+                originalTrace.WriteTo(memoryStream);
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                using (var loadedTrace = InputEventTrace.LoadFrom(memoryStream))
+                {
+                    Assert.That(loadedTrace, Is.EquivalentTo(originalTrace));
+                    Assert.That(loadedTrace.totalEventSizeInBytes, Is.EqualTo(originalTrace.totalEventSizeInBytes));
+                }
+            }
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonNorth);
+
+            trace.Disable();
+
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            trace.Replay().PlayAllEvents();
+            Assert.That(runtime.eventCount, Is.EqualTo(2));
+
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_EventByEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonNorth);
+
+            trace.Disable();
+
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            var replay = trace.Replay();
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+
+            Assert.That(() => replay.PlayOneEvent(), Throws.InvalidOperationException);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_FrameByFrame()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad) { recordFrameMarkers = true })
+        {
+            Assert.That(trace.recordFrameMarkers, Is.True);
+
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            InputSystem.Update();
+            Release(gamepad.buttonSouth);
+
+            trace.Disable();
+
+            var replay = trace.Replay().PlayAllFramesOneByOne();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.True);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_UsingGivenDevice()
+    {
+        // Capture events from one device and replay them on another.
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad1))
+        {
+            trace.Enable();
+
+            Press(gamepad1.buttonSouth);
+            Release(gamepad1.buttonSouth);
+
+            var replay = trace.Replay()
+                .WithDeviceMappedFromTo(gamepad1, gamepad2);
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad2.buttonSouth.isPressed, Is.True);
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad2.buttonSouth.isPressed, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_UsingSyntheticDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+
+            trace.Disable();
+
+            InputDevice addedDevice = null;
+            InputDevice removedDevice = null;
+            using (var trace2 = new InputEventTrace())
+            {
+                InputSystem.onDeviceChange +=
+                    (device, change) =>
+                {
+                    if (change == InputDeviceChange.Added)
+                    {
+                        Assert.That(addedDevice, Is.Null);
+                        addedDevice = device;
+                        trace2.deviceId = device.deviceId;
+                        trace2.Enable();
+                    }
+                    else if (change == InputDeviceChange.Removed)
+                    {
+                        Assert.That(removedDevice, Is.Null);
+                        removedDevice = device;
+                    }
+                };
+
+                var replay = trace.Replay().WithAllDevicesMappedToNewInstances().PlayAllEvents();
+                InputSystem.Update();
+
+                Assert.That(addedDevice, Is.Not.Null);
+                Assert.That(addedDevice, Is.TypeOf<Gamepad>());
+                Assert.That(addedDevice, Is.Not.SameAs(gamepad));
+                Assert.That(trace2.eventCount, Is.EqualTo(trace.eventCount));
+                Assert.That(trace2.deviceInfos, Has.Count.EqualTo(1));
+                Assert.That(trace2.deviceInfos, Has.All.Property("deviceId").EqualTo(addedDevice.deviceId));
+                Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[0]), Is.EqualTo(1));
+                Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[1]), Is.EqualTo(0));
+                Assert.That(removedDevice, Is.Null);
+                Assert.That(replay.createdDevices, Is.EquivalentTo(new[] { addedDevice }));
+
+                replay.Dispose();
+
+                Assert.That(removedDevice, Is.SameAs(addedDevice));
+                Assert.That(replay.createdDevices, Is.Empty);
+            }
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_AndGetInfoOnRecordedDevices()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+            Set(mouse.position, Vector2.one);
+
+            trace.Disable();
+
+            Assert.That(trace.deviceInfos, Has.Count.EqualTo(2));
+            Assert.That(trace.deviceInfos,
+                Has.Exactly(1).With.Property("deviceId").EqualTo(gamepad.deviceId).And.Property("layout").EqualTo(gamepad.layout).And
+                    .Property("stateFormat").EqualTo(gamepad.stateBlock.format).And.Property("stateSizeInBytes").EqualTo(gamepad.stateBlock.alignedSizeInBytes));
+            Assert.That(trace.deviceInfos,
+                Has.Exactly(1).With.Property("deviceId").EqualTo(mouse.deviceId).And.Property("layout").EqualTo(mouse.layout).And
+                    .Property("stateFormat").EqualTo(mouse.stateBlock.format).And.Property("stateSizeInBytes").EqualTo(mouse.stateBlock.alignedSizeInBytes));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_AndRewindAndPlayAgain()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+
+            trace.Disable();
+
+            var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+            action.Enable();
+
+            var replay = trace.Replay().PlayAllEvents();
+            InputSystem.Update();
+
+            Assert.That(action.triggered, Is.True);
+
+            InputSystem.Update();
+            Assert.That(action.triggered, Is.False);
+
+            replay.Rewind();
+            Assert.That(replay.position, Is.Zero);
+
+            replay.PlayAllEvents();
+            InputSystem.Update();
+
+            Assert.That(action.triggered, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_AndUseOriginalEventTiming()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            currentTime = 1;
+            Press(gamepad.buttonSouth);
+
+            currentTime = 3;
+            Press(gamepad.buttonNorth);
+            Release(gamepad.buttonSouth);
+
+            currentTime = 4;
+            Release(gamepad.buttonNorth);
+
+            var replay = trace.Replay();
+
+            replay.PlayAllEventsAccordingToTimestamps();
+
+            Assert.That(replay.position, Is.EqualTo(0));
+            Assert.That(replay.finished, Is.False);
+
+            // First update becomes starting point of replay, i.e. everything is
+            // relative to time=1 now.
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(replay.position, Is.EqualTo(1));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            currentTime += 1;
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(replay.position, Is.EqualTo(1));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            currentTime += 1.5f;
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(replay.position, Is.EqualTo(3));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+
+            currentTime += 1;
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.True);
+            Assert.That(replay.position, Is.EqualTo(4));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.True);
+            Assert.That(replay.position, Is.EqualTo(4));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanResizeEventTrace()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Allocate a trace for 2.5 GamepadState events to get wrap-around in the buffer.
+        using (var trace = new InputEventTrace((int)(2.5f * StateEvent.GetEventSizeWithPayload<GamepadState>())))
+        {
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.North));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.East));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(2)); // Make sure we wrapped around.
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonEast.ReadValueFromEvent(trace.ToArray()[1]), Is.EqualTo(1).Within(0.00001));
+
+            trace.Resize(4096);
+
+            // Contents should remain unchanged.
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonEast.ReadValueFromEvent(trace.ToArray()[1]), Is.EqualTo(1).Within(0.00001));
+
+            // Recording new events should append as expected.
+            Press(gamepad.buttonWest);
+
+            Assert.That(trace.eventCount, Is.EqualTo(3));
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonEast.ReadValueFromEvent(trace.ToArray()[1]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonWest.ReadValueFromEvent(trace.ToArray()[2]), Is.EqualTo(1).Within(0.00001));
+
+            // Resize back down so we just barely fit one event.
+            trace.Resize(StateEvent.GetEventSizeWithPayload<GamepadState>() + 4);
+
+            Assert.That(trace.eventCount, Is.EqualTo(1));
+            Assert.That(gamepad.buttonWest.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+        }
+    }
+
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Events")]
+    public void Events_EventTraceCanSurviveDomainReload()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+
+            // All that's necessary to survive the reload is for the serialized data to come through fine.
+            // We use the JSON serializer to test that. Technically, it's not quite the same as Unity internally
+            // serializes such that private, otherwise non-serialized data gets captured, too, but for our
+            // purposes here it's close enough.
+
+            var json = JsonUtility.ToJson(trace, prettyPrint: true); // Prettyprint for debugging.
+            var traceFromJson = JsonUtility.FromJson<InputEventTrace>(json);
+
+            Assert.That(traceFromJson.eventCount, Is.EqualTo(trace.eventCount));
+            Assert.That(traceFromJson.ToArray(), Is.EquivalentTo(trace.ToArray()));
+        }
+    }
+
+    #endif
+
+    // To simplify matters, rather than supporting some kind of buffer modifications while not supporting others,
+    // we just reject all of them. When playback is in progress, the buffer must not change. Period.
+    [Test]
+    [Category("Events")]
+    public void Events_WhenReplayingEvents_ModifyingTraceInvalidatesReplayController()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+
+            var replay = trace.Replay();
+
+            replay.PlayOneEvent();
+
+            Release(gamepad.buttonSouth);
+
+            Assert.That(() => replay.PlayOneEvent(), Throws.InvalidOperationException);
         }
     }
 
@@ -801,11 +1631,11 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new GamepadState());
 
         var receivedCalls = 0;
-        var firstId = InputEvent.InvalidId;
-        var secondId = InputEvent.InvalidId;
+        var firstId = InputEvent.InvalidEventId;
+        var secondId = InputEvent.InvalidEventId;
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             if (receivedCalls == 1)
@@ -821,7 +1651,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_IfOldStateEventIsSentToDevice_IsIgnored()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -842,7 +1671,6 @@ partial class CoreTests
     // a sorting pass over all events before queueing them.
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_IfOldStateEventIsSentToDevice_IsIgnored_ExceptIfEventIsHandledByIInputStateCallbackReceiver()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
@@ -851,8 +1679,8 @@ partial class CoreTests
         Assert.That(device is IInputStateCallbackReceiver,
             "Test assumes that Touchscreen implements IInputStateCallbackReceiver");
 
-        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.123f, 0.234f) }, 2);
-        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.234f, 0.345f) }, 1);// Goes back in time.
+        InputSystem.QueueStateEvent(device, new TouchState { touchId = 1, phase = TouchPhase.Began, position = new Vector2(0.123f, 0.234f) }, 2);
+        InputSystem.QueueStateEvent(device, new TouchState { touchId = 1, phase = TouchPhase.Moved, position = new Vector2(0.234f, 0.345f) }, 1);// Goes back in time.
         InputSystem.Update();
 
         Assert.That(device.lastUpdateTime, Is.EqualTo(2).Within(0.00001));
@@ -865,10 +1693,7 @@ partial class CoreTests
         public int buttons;
         [InputControl(layout = "Axis")] public float axis2;
 
-        public FourCC GetFormat()
-        {
-            return new FourCC('N', 'S', 'T', 'D');
-        }
+        public FourCC format => new FourCC('N', 'S', 'T', 'D');
     }
 
     private struct CustomDeviceState : IInputStateTypeInfo
@@ -877,34 +1702,31 @@ partial class CoreTests
 
         public CustomNestedDeviceState nested;
 
-        public FourCC GetFormat()
-        {
-            return new FourCC('C', 'U', 'S', 'T');
-        }
+        public FourCC format => new FourCC('C', 'U', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
+    [Preserve]
     private class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            axis = builder.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(builder);
+            axis = GetChildControl<AxisControl>("axis");
+            base.FinishSetup();
         }
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
+    [Preserve]
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;
-        public InputUpdateType onUpdateType;
 
-        public void OnUpdate(InputUpdateType updateType)
+        public void OnUpdate()
         {
             ++onUpdateCallCount;
-            onUpdateType = updateType;
             InputSystem.QueueStateEvent(this, new CustomDeviceState {axis = 0.234f});
         }
     }
@@ -940,10 +1762,7 @@ partial class CoreTests
         public CustomDeviceState baseState;
         public int extra;
 
-        public FourCC GetFormat()
-        {
-            return baseState.GetFormat();
-        }
+        public FourCC format => baseState.format;
     }
 
     // HIDs rely on this behavior as we may only use a subset of a HID's set of
@@ -964,20 +1783,19 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public unsafe void Events_CanDetectWhetherControlIsPartOfEvent()
+    public unsafe void Events_CanGetStatePointerFromEventThroughControl()
     {
         // We use a mouse here as it has several controls that are "parked" outside MouseState.
         var mouse = InputSystem.AddDevice<Mouse>();
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             // For every control that isn't contained in a state event, GetStatePtrFromStateEvent() should
             // return IntPtr.Zero.
             if (eventPtr.IsA<StateEvent>())
             {
                 Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr) != null);
-                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr) == null);
             }
             else if (eventPtr.IsA<DeltaStateEvent>())
             {
@@ -995,30 +1813,52 @@ partial class CoreTests
         InputSystem.Update();
     }
 
+    // For devices that implement IStateCallbackReceiver (such as Touchscreen), things get tricky. We may be looking
+    // at an event in a state format different from that of the device and with only the device knowing how it
+    // correlates to the state of an individual control.
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanGetStatePointerFromEventThroughControl_EvenIfDeviceIsStateCallbackReceiver()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        using (var trace = new InputEventTrace { deviceId = touchscreen.deviceId })
+        {
+            trace.Enable();
+
+            BeginTouch(1, new Vector2(123, 234));
+
+            var statePtr = touchscreen.primaryTouch.position.GetStatePtrFromStateEvent(trace.ToArray()[0]);
+            Assert.That(statePtr != null);
+
+            // Attempt reading the position value from the touch event.
+            Assert.That(touchscreen.primaryTouch.position.ReadValueFromState(statePtr),
+                Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+
+            // It only works with primaryTouch. See Touchscreen.GetStateOffsetForEvent for details.
+            Assert.That(touchscreen.touches[1].position.GetStatePtrFromStateEvent(trace.ToArray()[0]) == null);
+        }
+    }
+
     [Test]
     [Category("Events")]
     public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
     {
-        InputUpdateType? receivedUpdateType = null;
-        Action<InputUpdateType> callback =
-            type =>
-        {
-            Assert.That(receivedUpdateType, Is.Null);
-            receivedUpdateType = type;
-        };
+        var receivedCalls = 0;
+        void callback() => ++ receivedCalls;
 
         InputSystem.onAfterUpdate += callback;
 
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+        Assert.That(receivedCalls, Is.EqualTo(1));
 
-        receivedUpdateType = null;
+        receivedCalls = 0;
         InputSystem.onAfterUpdate -= callback;
 
         InputSystem.Update();
 
-        Assert.That(receivedUpdateType, Is.Null);
+        Assert.That(receivedCalls, Is.Zero);
     }
 
     [Test]
@@ -1079,8 +1919,8 @@ partial class CoreTests
                 Assert.That(events[1].id, Is.EqualTo(222));
                 Assert.That(events[0].handled, Is.False);
                 Assert.That(events[1].handled, Is.True);
-                Assert.That(events[0].deviceId, Is.EqualTo(gamepad.id));
-                Assert.That(events[1].deviceId, Is.EqualTo(gamepad.id));
+                Assert.That(events[0].deviceId, Is.EqualTo(gamepad.deviceId));
+                Assert.That(events[1].deviceId, Is.EqualTo(gamepad.deviceId));
                 Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[0]), Is.EqualTo(Vector2.one));
                 Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[1]), Is.EqualTo(Vector2.zero));
             }
@@ -1097,8 +1937,8 @@ partial class CoreTests
         {
             using (var buffer = new InputEventBuffer())
             {
-                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.id, 123).ToEventPtr());
-                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.id, 234).ToEventPtr());
+                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.deviceId, 123).ToEventPtr());
+                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.deviceId, 234).ToEventPtr());
 
                 var events = buffer.ToArray();
                 Assert.That(events, Has.Length.EqualTo(2));
@@ -1109,7 +1949,7 @@ partial class CoreTests
 
                 Assert.That(buffer.eventCount, Is.Zero);
 
-                buffer.AppendEvent(DeviceRemoveEvent.Create(gamepad.id, 432).ToEventPtr());
+                buffer.AppendEvent(DeviceRemoveEvent.Create(gamepad.deviceId, 432).ToEventPtr());
 
                 events = buffer.ToArray();
 
@@ -1136,4 +1976,132 @@ partial class CoreTests
             }
         }
     }
+
+    [UnityTest]
+    [Category("Events")]
+    public IEnumerator Events_CanTestInputDistributedOverFrames()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Press(gamepad.buttonSouth, queueEventOnly: true);
+
+        yield return null;
+
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_MaximumEventLoadPerUpdateIsLimited()
+    {
+        // Default setting is 5MB.
+        Assert.That(InputSystem.settings.maxEventBytesPerUpdate, Is.EqualTo(5 * 1024 * 1024));
+
+        InputSystem.settings.maxEventBytesPerUpdate = StateEvent.GetEventSizeWithPayload<MouseState>() * 2;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
+
+        var eventCount = 0;
+        InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
+
+        LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+
+        InputSystem.Update();
+
+        Assert.That(eventCount, Is.EqualTo(2));
+        Assert.That(mouse.rightButton.isPressed, Is.True);
+        Assert.That(mouse.middleButton.isPressed, Is.False);
+
+        eventCount = 0;
+
+        // Disable the limit.
+        InputSystem.settings.maxEventBytesPerUpdate = 0;
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
+
+        InputSystem.Update();
+
+        Assert.That(eventCount, Is.EqualTo(3));
+        Assert.That(mouse.rightButton.isPressed, Is.False);
+        Assert.That(mouse.middleButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanQueueEventsFromWithinEventProcessing()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var numMouseEventsQueued = InputTestRuntime.kDefaultEventBufferSize / StateEvent.GetEventSizeWithPayload<MouseState>() + 1;
+
+        // allow all these events
+        InputSystem.settings.maxQueuedEventsPerUpdate = numMouseEventsQueued;
+
+        var numMouseEventsReceived = 0;
+        InputSystem.onEvent +=
+            (eventPtr, device) =>
+        {
+            if (device == mouse)
+                ++numMouseEventsReceived;
+        };
+
+        var action = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/space");
+        action.performed +=
+            _ =>
+        {
+            // Queue enough events to make sure we overflow the current event buffer size.
+            // This way we not only test whether the events make it into the queue at all but
+            // also that they still make it if we have to re-allocate the buffer.
+            for (var i = 0; i < numMouseEventsQueued; ++i)
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(123, 234) }.WithButton(MouseButton.Left));
+        };
+        action.Enable();
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_MaximumQueuedEventsDuringEventProcessingIsLimited()
+    {
+        // Default setting is 1000.
+        Assert.That(InputSystem.settings.maxQueuedEventsPerUpdate, Is.EqualTo(1000));
+
+        InputSystem.settings.maxQueuedEventsPerUpdate = 20;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var callbackCount = 0;
+        var action = new InputAction(type: InputActionType.Value, binding: "<mouse>/position");
+        action.performed +=
+            _ =>
+        {
+            if (callbackCount > InputSystem.settings.maxQueuedEventsPerUpdate)
+                Assert.Fail("Maximum queued event count exceeded");
+
+            callbackCount++;
+            Set(mouse.position, Random.insideUnitCircle * 100, queueEventOnly: true);
+        };
+        action.Enable();
+
+        Set(mouse.position, Random.insideUnitCircle * 100);
+
+        LogAssert.Expect(LogType.Error, $"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' setting to a higher value if you " +
+            $"need to queue more events than this. Current limit is '{InputSystem.settings.maxQueuedEventsPerUpdate}'.");
+        Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
+    }
+
+    ////TODO: test thread-safe QueueEvent
 }

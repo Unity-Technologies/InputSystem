@@ -5,8 +5,12 @@ namespace UnityEngine.InputSystem.Utilities
 {
     internal static class TypeHelpers
     {
-        public static TObject As<TObject>(this System.Object obj)
+        public static TObject As<TObject>(this object obj)
         {
+            // This avoid NREs for value types. For example, trying to do "(Vector3)null" will
+            // result in an NRE. Doing "null.As<Vector3>()" will result in "default(Vector3)".
+            if (obj == null)
+                return default;
             return (TObject)obj;
         }
 
@@ -43,7 +47,7 @@ namespace UnityEngine.InputSystem.Utilities
             return null;
         }
 
-        public static string GetNiceTypeName(Type type)
+        public static string GetNiceTypeName(this Type type)
         {
             if (type.IsPrimitive)
             {
@@ -125,7 +129,6 @@ namespace UnityEngine.InputSystem.Utilities
                         return null;
                 }
             }
-
 
             return type.GenericTypeArguments[argumentIndex];
         }

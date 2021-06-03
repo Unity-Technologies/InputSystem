@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 
+////TODO: event diagnostics should have a bool here
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -11,12 +13,24 @@ namespace UnityEngine.InputSystem.Editor
     /// These settings are not stored in assets in the project along with the other input settings.
     /// Instead, they are serialized to JSON and stored in the project's Library/ folder.
     /// </remarks>
-    public static class InputEditorUserSettings
+    internal static class InputEditorUserSettings
     {
         /// <summary>
         /// Where the settings are stored in the user's project.
         /// </summary>
         private const string kSavePath = "Library/InputUserSettings.json";
+
+        public static bool simulateTouch
+        {
+            get => s_Settings.simulateTouch;
+            set
+            {
+                if (s_Settings.simulateTouch == value)
+                    return;
+                s_Settings.simulateTouch = value;
+                OnChange();
+            }
+        }
 
         public static bool lockInputToGameView
         {
@@ -78,6 +92,7 @@ namespace UnityEngine.InputSystem.Editor
             public bool lockInputToGameView;
             public bool addDevicesNotSupportedByProject;
             public bool autoSaveInputActionAssets;
+            public bool simulateTouch;
         }
 
         internal static SerializedState s_Settings;
@@ -90,12 +105,16 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static void Load()
         {
+            s_Settings = new SerializedState();
+            if (!File.Exists(kSavePath))
+                return;
+
             try
             {
                 var json = File.ReadAllText(kSavePath);
                 s_Settings = JsonUtility.FromJson<SerializedState>(json);
             }
-            catch (Exception)
+            catch
             {
                 s_Settings = new SerializedState();
             }

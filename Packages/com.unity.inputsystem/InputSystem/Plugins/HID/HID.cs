@@ -7,6 +7,12 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.Scripting;
+
+// HID support is currently broken in 32-bit Windows standalone players. Consider 32bit Windows players unsupported for now.
+#if UNITY_STANDALONE_WIN && !UNITY_64
+#warning The 32-bit Windows player is not currently supported by the Input System. HID input will not work in the player. Please use x86_64, if possible.
+#endif
 
 ////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
 ////        have better mechanism to do that without requiring to replace the entire process wholesale
@@ -21,8 +27,10 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
+////TODO: enable this to handle devices that split their input into multiple reports
+
 #pragma warning disable CS0649, CS0219
-namespace UnityEngine.InputSystem.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
     /// <summary>
     /// A generic HID input device.
@@ -33,6 +41,8 @@ namespace UnityEngine.InputSystem.Plugins.HID
     /// match the device to a specific product we know of. Wherever possible we
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
+    [Preserve]
     public class HID : InputDevice
     {
         internal const string kHIDInterface = "HID";
@@ -76,7 +86,8 @@ namespace UnityEngine.InputSystem.Plugins.HID
         // If the system cannot find a more specific layout for a given HID, this method will try
         // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description, string matchedLayout,
+            InputDeviceExecuteCommandDelegate executeDeviceCommand)
         {
             // If the system found a matching layout, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedLayout))
@@ -87,12 +98,9 @@ namespace UnityEngine.InputSystem.Plugins.HID
                 return null;
 
             // Read HID descriptor.
-            var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
+            var hidDeviceDescriptor = ReadHIDDeviceDescriptor(ref description, executeDeviceCommand);
 
-            // Check callbacks to see whether we should actually create a device for this specific HID.
-            // If no callback says yes or one says no, we ignore the device.
-            if (HIDSupport.s_ShouldCreateHID.All(f => f(hidDeviceDescriptor) != true) ||
-                HIDSupport.s_ShouldCreateHID.Any(f => f(hidDeviceDescriptor) == false))
+            if (!HIDSupport.supportedHIDUsages.Contains(new HIDSupport.HIDPageUsage(hidDeviceDescriptor.usagePage, hidDeviceDescriptor.usage)))
                 return null;
 
             // Determine if there's any usable elements on the device.
@@ -113,6 +121,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             if (!hasUsableElements)
                 return null;
 
+            ////TODO: we should be able to differentiate a HID joystick from other joysticks in bindings alone
             // Determine base layout.
             var baseType = typeof(HID);
             var baseLayout = "HID";
@@ -123,27 +132,35 @@ namespace UnityEngine.InputSystem.Plugins.HID
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
                 }
-                ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
-                /*
-                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Mouse)
-                    baseLayout = "Mouse";
-                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Pointer)
-                    baseLayout = "Pointer";
-                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Keyboard)
-                    baseLayout = "Keyboard";
-                */
             }
 
+            // A HID may implement the HID interface arbitrary many times, each time with a different
+            // usage page + usage combination. In a OS, this will typically come out as multiple separate
+            // devices. Thus, to make layout names unique, we have to take usages into account. What we do
+            // is we tag the usage name onto the layout name *except* if it's a joystick or gamepad. This
+            // gives us nicer names for joysticks while still disambiguating other devices correctly.
+            var usageName = "";
+            if (baseLayout != "Joystick")
+            {
+                usageName = hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop
+                    ? $" {(GenericDesktop) hidDeviceDescriptor.usage}"
+                    : $" {hidDeviceDescriptor.usagePage}-{hidDeviceDescriptor.usage}";
+            }
+
+            ////REVIEW: these layout names are impossible to bind to; come up with a better way
             ////TODO: match HID layouts by vendor and product ID
             ////REVIEW: this probably works fine for most products out there but I'm not sure it works reliably for all cases
             // Come up with a unique template name. HIDs are required to have product and vendor IDs.
             // We go with the string versions if we have them and with the numeric versions if we don't.
             string layoutName;
             var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
-            var usageName = hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop ? ((GenericDesktop)hidDeviceDescriptor.usage).ToString() : hidDeviceDescriptor.usagePage.ToString();
             if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
             {
-                layoutName = $"{kHIDNamespace}::{description.manufacturer} {description.product} {usageName}";
+                layoutName = $"{kHIDNamespace}::{description.manufacturer} {description.product}{usageName}";
+            }
+            else if (!string.IsNullOrEmpty(description.product))
+            {
+                layoutName = $"{kHIDNamespace}::{description.product}{usageName}";
             }
             else
             {
@@ -151,44 +168,35 @@ namespace UnityEngine.InputSystem.Plugins.HID
                 if (hidDeviceDescriptor.vendorId == 0)
                     return null;
                 layoutName =
-                    $"{kHIDNamespace}::{hidDeviceDescriptor.vendorId:X}-{hidDeviceDescriptor.productId:X} {usageName}";
+                    $"{kHIDNamespace}::{hidDeviceDescriptor.vendorId:X}-{hidDeviceDescriptor.productId:X}{usageName}";
 
                 deviceMatcher = deviceMatcher
                     .WithCapability("productId", hidDeviceDescriptor.productId)
                     .WithCapability("vendorId", hidDeviceDescriptor.vendorId);
             }
 
-            // We also need to match the devices usage. This is because some physical devices may report multiple
-            // logical devices with different, incompatible properties (this is the case for the MacBook keyboard/mouse
-            // and touch bar devices). These devices will then match by vendor/product ids, but get different usages.
-            // Incorrectly matching them would generate garbage devices and errors on domain reload.
+            // Also match by usage. See comment above about multiple HID interfaces on the same device.
             deviceMatcher = deviceMatcher
                 .WithCapability("usage", hidDeviceDescriptor.usage)
                 .WithCapability("usagePage", hidDeviceDescriptor.usagePage);
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
-            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, parentLayout = baseLayout, deviceType = baseType ?? typeof(HID)};
+            var layout = new HIDLayoutBuilder
+            {
+                displayName = description.product,
+                hidDescriptor = hidDeviceDescriptor,
+                parentLayout = baseLayout,
+                deviceType = baseType ?? typeof(HID)
+            };
             InputSystem.RegisterLayoutBuilder(() => layout.Build(),
                 layoutName, baseLayout, deviceMatcher);
 
             return layoutName;
         }
 
-        public static HIDDeviceDescriptor ReadHIDDeviceDescriptor(InputDevice device, IInputRuntime runtime)
-        {
-            if (device == null)
-                throw new ArgumentNullException(nameof(device));
-
-            var deviceDescription = device.description;
-            if (deviceDescription.interfaceName != kHIDInterface)
-                throw new ArgumentException(
-                    $"Device '{device}' is not a HID (interface is '{deviceDescription.interfaceName}')", nameof(device));
-
-            return ReadHIDDeviceDescriptor(device.id, ref deviceDescription, runtime);
-        }
-
-        public static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(int deviceId, ref InputDeviceDescription deviceDescription, IInputRuntime runtime)
+        internal static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(ref InputDeviceDescription deviceDescription,
+            InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             if (deviceDescription.interfaceName != kHIDInterface)
                 throw new ArgumentException(
@@ -224,14 +232,9 @@ namespace UnityEngine.InputSystem.Plugins.HID
             // Request descriptor, if necessary.
             if (needToRequestDescriptor)
             {
-                // If the device has no assigned ID yet, we can't perform IOCTLs on the
-                // device so no way to get a report descriptor.
-                if (deviceId == InvalidDeviceId)
-                    return new HIDDeviceDescriptor();
-
                 // Try to get the size of the HID descriptor from the device.
                 var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
-                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
+                var sizeOfDescriptorInBytes = executeCommandDelegate(ref sizeOfDescriptorCommand);
                 if (sizeOfDescriptorInBytes > 0)
                 {
                     // Now try to fetch the HID descriptor.
@@ -239,7 +242,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                                InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
                     {
                         var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
-                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
+                        if (executeCommandDelegate(ref *commandPtr) != sizeOfDescriptorInBytes)
                             return new HIDDeviceDescriptor();
 
                         // Try to parse the HID report descriptor.
@@ -264,7 +267,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                                InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
                     {
                         var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
-                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
+                        var utf8Length = executeCommandDelegate(ref *commandPtr);
                         if (utf8Length < 0)
                             return new HIDDeviceDescriptor();
 
@@ -298,38 +301,28 @@ namespace UnityEngine.InputSystem.Plugins.HID
             return hidDeviceDescriptor;
         }
 
-        public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
+        public static string UsagePageToString(UsagePage usagePage)
         {
-            const string kVendorDefined = "Vendor-Defined";
+            return (int)usagePage >= 0xFF00 ? "Vendor-Defined" : usagePage.ToString();
+        }
 
-            if ((int)usagePage >= 0xFF00)
-            {
-                usagePageString = kVendorDefined;
-                usageString = kVendorDefined;
-                return true;
-            }
-
-            usagePageString = usagePage.ToString();
-            usageString = null;
-
+        public static string UsageToString(UsagePage usagePage, int usage)
+        {
             switch (usagePage)
             {
                 case UsagePage.GenericDesktop:
-                    usageString = ((GenericDesktop)usage).ToString();
-                    break;
+                    return ((GenericDesktop)usage).ToString();
                 case UsagePage.Simulation:
-                    usageString = ((Simulation)usage).ToString();
-                    break;
+                    return ((Simulation)usage).ToString();
                 default:
-                    return false;
+                    return null;
             }
-
-            return true;
         }
 
         [Serializable]
         private class HIDLayoutBuilder
         {
+            public string displayName;
             public HIDDeviceDescriptor hidDescriptor;
             public string parentLayout;
             public Type deviceType;
@@ -338,85 +331,99 @@ namespace UnityEngine.InputSystem.Plugins.HID
             {
                 var builder = new InputControlLayout.Builder
                 {
+                    displayName = displayName,
                     type = deviceType,
                     extendsLayout = parentLayout,
-                    stateFormat = new FourCC('H', 'I', 'D'),
+                    stateFormat = new FourCC('H', 'I', 'D')
                 };
 
-                var xElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.X);
-                var yElement = Array.Find(hidDescriptor.elements, element => element.usagePage == UsagePage.GenericDesktop && element.usage == (int)GenericDesktop.Y);
-                //Since HIDElementDescriptor is a struct and not nullable, the easiest way to verify we found an element is to double check it's usage is what we were looking for.
-                if ((xElement.usage == (int)GenericDesktop.X) && (yElement.usage == (int)GenericDesktop.Y))
+                var xElement = Array.Find(hidDescriptor.elements,
+                    element => element.usagePage == UsagePage.GenericDesktop &&
+                    element.usage == (int)GenericDesktop.X);
+                var yElement = Array.Find(hidDescriptor.elements,
+                    element => element.usagePage == UsagePage.GenericDesktop &&
+                    element.usage == (int)GenericDesktop.Y);
+
+                ////REVIEW: in case the X and Y control are non-contiguous, should we even turn them into a stick
+                ////REVIEW: there *has* to be an X and a Y for us to be able to successfully create a joystick
+                // If GenericDesktop.X and GenericDesktop.Y are both present, turn the controls
+                // into a stick.
+                var haveStick = xElement.usage == (int)GenericDesktop.X && yElement.usage == (int)GenericDesktop.Y;
+                if (haveStick)
                 {
                     int bitOffset, byteOffset, sizeInBits;
                     if (xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
                     {
                         bitOffset = xElement.reportOffsetInBits % 8;
                         byteOffset = xElement.reportOffsetInBits / 8;
-                        sizeInBits = yElement.reportOffsetInBits - xElement.reportOffsetInBits + yElement.reportSizeInBits;
+                        sizeInBits = (yElement.reportOffsetInBits + yElement.reportSizeInBits) -
+                            xElement.reportOffsetInBits;
                     }
                     else
                     {
                         bitOffset = yElement.reportOffsetInBits % 8;
                         byteOffset = yElement.reportOffsetInBits / 8;
-                        sizeInBits = xElement.reportOffsetInBits - yElement.reportOffsetInBits + xElement.reportSizeInBits;
+                        sizeInBits = (xElement.reportOffsetInBits + xElement.reportSizeInBits) -
+                            yElement.reportSizeInBits;
                     }
 
-                    var stickName = "Stick";
-                    var control = builder.AddControl(stickName)
+                    const string stickName = "stick";
+                    builder.AddControl(stickName)
+                        .WithDisplayName("Stick")
                         .WithLayout("Stick")
                         .WithBitOffset((uint)bitOffset)
                         .WithByteOffset((uint)byteOffset)
                         .WithSizeInBits((uint)sizeInBits)
-                        .WithUsages(new InternedString[] { CommonUsages.Primary2DMotion });
+                        .WithUsages(CommonUsages.Primary2DMotion);
+
+                    var xElementParameters = xElement.DetermineParameters();
+                    var yElementParameters = yElement.DetermineParameters();
 
                     builder.AddControl(stickName + "/x")
-                        .WithFormat(InputStateBlock.FormatSBit)
-                        .WithLayout("Axis")
-                        .WithBitOffset(0)
-                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(xElement.isSigned ? InputStateBlock.FormatSBit : InputStateBlock.FormatBit)
+                        .WithByteOffset((uint)(xElement.reportOffsetInBits / 8 - byteOffset))
+                        .WithBitOffset((uint)(xElement.reportOffsetInBits % 8))
+                        .WithSizeInBits((uint)xElement.reportSizeInBits)
+                        .WithParameters(xElementParameters)
+                        .WithDefaultState(xElement.DetermineDefaultState())
+                        .WithProcessors(xElement.DetermineProcessors());
 
                     builder.AddControl(stickName + "/y")
-                        .WithFormat(InputStateBlock.FormatSBit)
-                        .WithLayout("Axis")
-                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
-                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithFormat(yElement.isSigned ? InputStateBlock.FormatSBit : InputStateBlock.FormatBit)
+                        .WithByteOffset((uint)(yElement.reportOffsetInBits / 8 - byteOffset))
+                        .WithBitOffset((uint)(yElement.reportOffsetInBits % 8))
+                        .WithSizeInBits((uint)yElement.reportSizeInBits)
+                        .WithParameters(yElementParameters)
+                        .WithDefaultState(yElement.DetermineDefaultState())
+                        .WithProcessors(yElement.DetermineProcessors());
 
-                    //Need to handle Up/Down/Left/Right
+                    // Propagate parameters needed on x and y to the four button controls.
                     builder.AddControl(stickName + "/up")
-                        .WithFormat(InputStateBlock.FormatSBit)
-                        .WithLayout("Button")
-                        .WithParameters("clampMin=0,clampMax=1")
-                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
-                        .WithSizeInBits((uint)xElement.reportSizeInBits);
-
+                        .WithParameters(
+                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert=true"));
                     builder.AddControl(stickName + "/down")
-                        .WithFormat(InputStateBlock.FormatSBit)
-                        .WithLayout("Button")
-                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
-                        .WithBitOffset((uint)(yElement.reportOffsetInBits - xElement.reportOffsetInBits))
-                        .WithSizeInBits((uint)xElement.reportSizeInBits);
-
+                        .WithParameters(
+                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=0,clampMax=1,invert=false"));
                     builder.AddControl(stickName + "/left")
-                        .WithFormat(InputStateBlock.FormatSBit)
-                        .WithLayout("Button")
-                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
-                        .WithBitOffset(0)
-                        .WithSizeInBits((uint)xElement.reportSizeInBits);
-
+                        .WithParameters(
+                            StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert"));
                     builder.AddControl(stickName + "/right")
-                        .WithFormat(InputStateBlock.FormatSBit)
-                        .WithLayout("Button")
-                        .WithParameters("clampMin=0,clampMax=1")
-                        .WithBitOffset(0)
-                        .WithSizeInBits((uint)xElement.reportSizeInBits);
+                        .WithParameters(
+                            StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=0,clampMax=1"));
                 }
 
-
                 // Process HID descriptor.
-                foreach (var element in hidDescriptor.elements)
+                var elements = hidDescriptor.elements;
+                var elementCount = elements.Length;
+                for (var i = 0; i < elementCount; ++i)
                 {
+                    ref var element = ref elements[i];
                     if (element.reportType != HIDReportType.Input)
+                        continue;
+
+                    // Skip X and Y if we already turned them into a stick.
+                    if (haveStick && (element.Is(UsagePage.GenericDesktop, (int)GenericDesktop.X) ||
+                                      element.Is(UsagePage.GenericDesktop, (int)GenericDesktop.Y)))
                         continue;
 
                     var layout = element.DetermineLayout();
@@ -430,12 +437,14 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         // Add control.
                         var control =
                             builder.AddControl(name)
+                                .WithDisplayName(element.DetermineDisplayName())
                                 .WithLayout(layout)
                                 .WithByteOffset((uint)element.reportOffsetInBits / 8)
                                 .WithBitOffset((uint)element.reportOffsetInBits % 8)
                                 .WithSizeInBits((uint)element.reportSizeInBits)
                                 .WithFormat(element.DetermineFormat())
-                                .WithDefaultState(element.DetermineDefaultState());
+                                .WithDefaultState(element.DetermineDefaultState())
+                                .WithProcessors(element.DetermineProcessors());
 
                         var parameters = element.DetermineParameters();
                         if (!string.IsNullOrEmpty(parameters))
@@ -445,7 +454,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         if (usages != null)
                             control.WithUsages(usages);
 
-                        element.AddChildControls(name, ref builder);
+                        element.AddChildControls(ref element, name, ref builder);
                     }
                 }
 
@@ -472,6 +481,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             UsageModifier = 0x06
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum HIDElementFlags
         {
@@ -505,6 +515,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             public int reportId;
             public int reportSizeInBits;
             public int reportOffsetInBits;
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
@@ -525,65 +536,49 @@ namespace UnityEngine.InputSystem.Plugins.HID
 
             public bool isWrapping => (flags & HIDElementFlags.Wrap) == HIDElementFlags.Wrap;
 
-            public float resolution
-            {
-                get
-                {
-                    var min = physicalMin;
-                    var max = physicalMax;
-
-                    if (min == 0.0f && max == 0.0f)
-                    {
-                        min = logicalMin;
-                        max = logicalMax;
-                    }
-
-                    return (logicalMax - logicalMin) / ((max - min) * Mathf.Pow(10, unitExponent));
-                }
-            }
-
             internal bool isSigned => logicalMin < 0;
 
-            internal float minFloat
+            internal float minFloatValue
             {
                 get
                 {
-                    switch (reportSizeInBits)
+                    if (isSigned)
                     {
-                        case 8:
-                            if (isSigned)
-                                return (sbyte)logicalMin / 128.0f;
-                            return (byte)logicalMin / 255.0f;
-
-                        case 16:
-                            if (isSigned)
-                                return (short)logicalMin / 32768.0f;
-                            return (ushort)logicalMin / 65536.0f;
+                        var minValue = (int)-(long)(1UL << (reportSizeInBits - 1));
+                        var maxValue = (int)((1UL << (reportSizeInBits - 1)) - 1);
+                        return NumberHelpers.IntToNormalizedFloat(logicalMin, minValue, maxValue) * 2.0f - 1.0f;
                     }
-
-                    return 0.0f;
+                    else
+                    {
+                        Debug.Assert(logicalMin >= 0, $"Expected logicalMin to be unsigned");
+                        var maxValue = (uint)((1UL << reportSizeInBits) - 1);
+                        return NumberHelpers.UIntToNormalizedFloat((uint)logicalMin, 0, maxValue);
+                    }
                 }
             }
 
-            internal float maxFloat
+            internal float maxFloatValue
             {
                 get
                 {
-                    switch (reportSizeInBits)
+                    if (isSigned)
                     {
-                        case 8:
-                            if (isSigned)
-                                return (sbyte)logicalMax / 128.0f;
-                            return (byte)logicalMax / 255.0f;
-
-                        case 16:
-                            if (isSigned)
-                                return (short)logicalMax / 32768.0f;
-                            return (ushort)logicalMax / 65536.0f;
+                        var minValue = (int)-(long)(1UL << (reportSizeInBits - 1));
+                        var maxValue = (int)((1UL << (reportSizeInBits - 1)) - 1);
+                        return NumberHelpers.IntToNormalizedFloat(logicalMax, minValue, maxValue) * 2.0f - 1.0f;
                     }
-
-                    return 1.0f;
+                    else
+                    {
+                        Debug.Assert(logicalMax >= 0, $"Expected logicalMax to be unsigned");
+                        var maxValue = (uint)((1UL << reportSizeInBits) - 1);
+                        return NumberHelpers.UIntToNormalizedFloat((uint)logicalMax, 0, maxValue);
+                    }
                 }
+            }
+
+            public bool Is(UsagePage usagePage, int usage)
+            {
+                return usagePage == this.usagePage && usage == this.usage;
             }
 
             internal string DetermineName()
@@ -595,10 +590,12 @@ namespace UnityEngine.InputSystem.Plugins.HID
                 switch (usagePage)
                 {
                     case UsagePage.Button:
+                        if (usage == 1)
+                            return "trigger";
                         return $"button{usage}";
                     case UsagePage.GenericDesktop:
                         if (usage == (int)GenericDesktop.HatSwitch)
-                            return "dpad";
+                            return "hat";
                         var text = ((GenericDesktop)usage).ToString();
                         // Lower-case first letter.
                         text = char.ToLowerInvariant(text[0]) + text.Substring(1);
@@ -607,6 +604,21 @@ namespace UnityEngine.InputSystem.Plugins.HID
 
                 // Fallback that generates a somewhat useless but at least very informative name.
                 return $"UsagePage({usagePage:X}) Usage({usage:X})";
+            }
+
+            internal string DetermineDisplayName()
+            {
+                switch (usagePage)
+                {
+                    case UsagePage.Button:
+                        if (usage == 1)
+                            return "Trigger";
+                        return $"Button {usage}";
+                    case UsagePage.GenericDesktop:
+                        return ((GenericDesktop)usage).ToString();
+                }
+
+                return null;
             }
 
             internal bool IsUsableElement()
@@ -677,17 +689,11 @@ namespace UnityEngine.InputSystem.Plugins.HID
                 switch (reportSizeInBits)
                 {
                     case 8:
-                        if (isSigned)
-                            return InputStateBlock.FormatSByte;
-                        return InputStateBlock.FormatByte;
+                        return isSigned ? InputStateBlock.FormatSByte : InputStateBlock.FormatByte;
                     case 16:
-                        if (isSigned)
-                            return InputStateBlock.FormatShort;
-                        return InputStateBlock.FormatUShort;
+                        return isSigned ? InputStateBlock.FormatShort : InputStateBlock.FormatUShort;
                     case 32:
-                        if (isSigned)
-                            return InputStateBlock.FormatInt;
-                        return InputStateBlock.FormatUInt;
+                        return isSigned ? InputStateBlock.FormatInt : InputStateBlock.FormatUInt;
                     default:
                         // Generic bitfield value.
                         return InputStateBlock.FormatBit;
@@ -713,33 +719,73 @@ namespace UnityEngine.InputSystem.Plugins.HID
                     switch (usage)
                     {
                         case (int)GenericDesktop.X:
-                        case (int)GenericDesktop.Y:
                         case (int)GenericDesktop.Z:
                         case (int)GenericDesktop.Rx:
-                        case (int)GenericDesktop.Ry:
                         case (int)GenericDesktop.Rz:
                         case (int)GenericDesktop.Vx:
-                        case (int)GenericDesktop.Vy:
                         case (int)GenericDesktop.Vz:
                         case (int)GenericDesktop.Vbrx:
-                        case (int)GenericDesktop.Vbry:
                         case (int)GenericDesktop.Vbrz:
                         case (int)GenericDesktop.Slider:
                         case (int)GenericDesktop.Dial:
                         case (int)GenericDesktop.Wheel:
-                            // If we have min/max bounds on the axis values, set up normalization on the axis.
-                            // NOTE: We put the center in the middle between min/max as we can't know where the
-                            //       resting point of the axis is (may be on min if it's a trigger, for example).
-                            if (logicalMin == 0 && logicalMax == 0)
-                                return null;
-                            var min = minFloat;
-                            var max = maxFloat;
-                            // Do nothing if result of floating-point conversion is already normalized.
-                            if (Mathf.Approximately(0f, minFloat) && Mathf.Approximately(0f, maxFloat))
-                                return null;
-                            var zero = min + (max - min) / 2.0f;
-                            return string.Format(CultureInfo.InvariantCulture, "normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min, max, zero);
+                            return DetermineAxisNormalizationParameters();
+
+                        // Our Ys tend to be the opposite of what most HIDs do. We can't be sure and may well
+                        // end up inverting a value here when we shouldn't but as always with the HID fallback,
+                        // let's try to do what *seems* to work with the majority of devices.
+                        case (int)GenericDesktop.Y:
+                        case (int)GenericDesktop.Ry:
+                        case (int)GenericDesktop.Vy:
+                        case (int)GenericDesktop.Vbry:
+                            return StringHelpers.Join(",", "invert", DetermineAxisNormalizationParameters());
                     }
+                }
+
+                return null;
+            }
+
+            private string DetermineAxisNormalizationParameters()
+            {
+                // If we have min/max bounds on the axis values, set up normalization on the axis.
+                // NOTE: We put the center in the middle between min/max as we can't know where the
+                //       resting point of the axis is (may be on min if it's a trigger, for example).
+                if (logicalMin == 0 && logicalMax == 0)
+                    return "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5";
+                var min = minFloatValue;
+                var max = maxFloatValue;
+                // Do nothing if result of floating-point conversion is already normalized.
+                if (Mathf.Approximately(0f, min) && Mathf.Approximately(0f, max))
+                    return null;
+                var zero = min + (max - min) / 2.0f;
+                return string.Format(CultureInfo.InvariantCulture, "normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min, max, zero);
+            }
+
+            internal string DetermineProcessors()
+            {
+                switch (usagePage)
+                {
+                    case UsagePage.GenericDesktop:
+                        switch (usage)
+                        {
+                            case (int)GenericDesktop.X:
+                            case (int)GenericDesktop.Y:
+                            case (int)GenericDesktop.Z:
+                            case (int)GenericDesktop.Rx:
+                            case (int)GenericDesktop.Ry:
+                            case (int)GenericDesktop.Rz:
+                            case (int)GenericDesktop.Vx:
+                            case (int)GenericDesktop.Vy:
+                            case (int)GenericDesktop.Vz:
+                            case (int)GenericDesktop.Vbrx:
+                            case (int)GenericDesktop.Vbry:
+                            case (int)GenericDesktop.Vbrz:
+                            case (int)GenericDesktop.Slider:
+                            case (int)GenericDesktop.Dial:
+                            case (int)GenericDesktop.Wheel:
+                                return "axisDeadzone";
+                        }
+                        break;
                 }
 
                 return null;
@@ -747,31 +793,62 @@ namespace UnityEngine.InputSystem.Plugins.HID
 
             internal PrimitiveValue DetermineDefaultState()
             {
-                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
+                switch (usagePage)
                 {
-                    // Figure out null state for hat switches.
-                    if (hasNullState)
-                    {
-                        // We're looking for a value that is out-of-range with respect to the
-                        // logical min and max but in range with respect to what we can store
-                        // in the bits we have.
+                    case UsagePage.GenericDesktop:
+                        switch (usage)
+                        {
+                            case (int)GenericDesktop.HatSwitch:
+                                // Figure out null state for hat switches.
+                                if (hasNullState)
+                                {
+                                    // We're looking for a value that is out-of-range with respect to the
+                                    // logical min and max but in range with respect to what we can store
+                                    // in the bits we have.
 
-                        // Test lower bound.
-                        var minMinusOne = logicalMin - 1;
-                        if (minMinusOne >= 0)
-                            return new PrimitiveValue(minMinusOne);
+                                    // Test lower bound, we can store >= 0.
+                                    if (logicalMin >= 1)
+                                        return new PrimitiveValue(logicalMin - 1);
 
-                        // Test upper bound.
-                        var maxPlusOne = logicalMax + 1;
-                        if (maxPlusOne <= ((1 << reportSizeInBits) - 1))
-                            return new PrimitiveValue(maxPlusOne);
-                    }
+                                    // Test upper bound, we can store <= maxValue.
+                                    var maxValue = (1UL << reportSizeInBits) - 1;
+                                    if ((ulong)logicalMax < maxValue)
+                                        return new PrimitiveValue(logicalMax + 1);
+                                }
+                                break;
+
+                            case (int)GenericDesktop.X:
+                            case (int)GenericDesktop.Y:
+                            case (int)GenericDesktop.Z:
+                            case (int)GenericDesktop.Rx:
+                            case (int)GenericDesktop.Ry:
+                            case (int)GenericDesktop.Rz:
+                            case (int)GenericDesktop.Vx:
+                            case (int)GenericDesktop.Vy:
+                            case (int)GenericDesktop.Vz:
+                            case (int)GenericDesktop.Vbrx:
+                            case (int)GenericDesktop.Vbry:
+                            case (int)GenericDesktop.Vbrz:
+                            case (int)GenericDesktop.Slider:
+                            case (int)GenericDesktop.Dial:
+                            case (int)GenericDesktop.Wheel:
+                                // For axes that are *NOT* stored as signed values (which we assume are
+                                // centered on 0), put the default state in the middle between the min and max.
+                                if (!isSigned)
+                                {
+                                    var defaultValue = logicalMin + (logicalMax - logicalMin) / 2;
+                                    if (defaultValue != 0)
+                                        return new PrimitiveValue(defaultValue);
+                                }
+                                break;
+                        }
+                        break;
                 }
 
                 return new PrimitiveValue();
             }
 
-            internal void AddChildControls(string controlName, ref InputControlLayout.Builder builder)
+            internal void AddChildControls(ref HIDElementDescriptor element, string controlName, ref InputControlLayout.Builder builder)
             {
                 if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
                 {
@@ -799,7 +876,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1},nullValue={2},wrapAtValue={3}",
                             logicalMax, logicalMin + 1, nullValue.ToString(), logicalMax))
-                        .WithBitOffset(0)
+                        .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/right")
@@ -808,7 +885,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
                             logicalMin + 1, logicalMin + 3))
-                        .WithBitOffset(0)
+                        .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/down")
@@ -817,7 +894,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
                             logicalMin + 3, logicalMin + 5))
-                        .WithBitOffset(0)
+                        .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
 
                     builder.AddControl(controlName + "/left")
@@ -826,7 +903,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
                             logicalMin + 5, logicalMin + 7))
-                        .WithBitOffset(0)
+                        .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
                 }
             }
@@ -1029,7 +1106,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
         /// <remarks>
         /// Note that some of the values are actually ranges.
         /// </remarks>
-        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
+        /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum UsagePage
         {
             Undefined = 0x00,
@@ -1062,7 +1139,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
         /// <summary>
         /// Usages in the GenericDesktop HID usage page.
         /// </summary>
-        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
+        /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum GenericDesktop
         {
             Undefined = 0x00,
@@ -1074,6 +1151,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             Keypad = 0x07,
             MultiAxisController = 0x08,
             TabletPCControls = 0x09,
+            AssistiveControl = 0x0A,
             X = 0x30,
             Y = 0x31,
             Z = 0x32,
@@ -1177,7 +1255,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
             Trigger = 0xC0,
             WeaponsArm = 0xC1,
             WeaponsSelect = 0xC2,
-            WingFlags = 0xC3,
+            WingFlaps = 0xC3,
             Accelerator = 0xC4,
             Brake = 0xC5,
             Clutch = 0xC6,

@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
-using UnityEngine.InputSystem.Plugins.Steam.Editor;
+using UnityEngine.InputSystem.Steam.Editor;
 #endif
 
 ////TODO: support action set layers
 
-namespace UnityEngine.InputSystem.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
     /// <summary>
     /// Base class for controllers made available through the Steam controller API.
@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam
     /// E.g. a Unity action map called "gameplay" will be looked up as a Steam action set
     /// using the same name "gameplay".
     /// </remarks>
+    [Scripting.Preserve]
     public abstract class SteamController : InputDevice
     {
         internal const string kSteamInterface = "Steam";
@@ -66,10 +67,12 @@ namespace UnityEngine.InputSystem.Plugins.Steam
         /// </summary>
         public SteamHandle<SteamController> steamControllerHandle { get; internal set; }
 
+        /*
+         * TODO
         public SteamControllerType steamControllerType
         {
             get { throw new NotImplementedException(); }
-        }
+        }*/
 
         /// <summary>
         /// The list of Steam action sets supported by this controller.
@@ -94,7 +97,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam
         /// </remarks>
         public bool autoActivateSets { get; set; }
 
-        public SteamController()
+        protected SteamController()
         {
             autoActivateSets = true;
         }
@@ -104,24 +107,9 @@ namespace UnityEngine.InputSystem.Plugins.Steam
             SteamSupport.GetAPIAndRequireItToBeSet().ActivateActionSet(steamControllerHandle, actionSet);
         }
 
-        public SteamHandle<InputActionMap> GetCurrentSteamActionSet()
+        public SteamHandle<InputActionMap> currentSteamActionSet
         {
-            return SteamSupport.GetAPIAndRequireItToBeSet().GetCurrentActionSet(steamControllerHandle);
-        }
-
-        public void ActivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateSteamActionSetLayer(SteamHandle<InputActionMap> actionSet)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeactivateAllSteamActionSetLayers()
-        {
-            throw new NotImplementedException();
+            get { return SteamSupport.GetAPIAndRequireItToBeSet().GetCurrentActionSet(steamControllerHandle); }
         }
 
         protected abstract void ResolveSteamActions(ISteamControllerAPI api);

@@ -1,7 +1,8 @@
+#if ENABLE_VR || ENABLE_AR
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UnityEngine.InputSystem.Plugins.XR;
+using UnityEngine.InputSystem.XR;
 
 public class Handedness : MonoBehaviour
 {
@@ -24,3 +25,4 @@ public class Handedness : MonoBehaviour
         statusText.text = handedness;
     }
 }
+#endif

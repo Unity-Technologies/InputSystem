@@ -1,23 +1,26 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
+using System;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenButton component
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// A button that is visually represented on-screen and triggered by touch or other pointer
     /// input.
     /// </summary>
     [AddComponentMenu("Input/On-Screen Button")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-buttons")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
-        public void OnPointerUp(PointerEventData data)
+        public void OnPointerUp(PointerEventData eventData)
         {
             SendValueToControl(0.0f);
         }
 
-        public void OnPointerDown(PointerEventData data)
+        public void OnPointerDown(PointerEventData eventData)
         {
             SendValueToControl(1.0f);
         }
@@ -44,3 +47,4 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
         }
     }
 }
+#endif

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Ruleset for Unity package code in the UnityEngine and UnityEditor namespaces" Description="Code analysis rules for code published by Unity Technologies." ToolsVersion="15.0">
+  <Include Path="api-analyzers/UnityEngineAndUnityEditorCodeInPackages.ruleset" Action="Default" />
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1051" Action="None" />  <!-- We have many instance fields, which we cannot easily turn into properties due to needs of serialization systems and il2cpp stripping requirements. -->
+    <Rule Id="CA1815" Action="None" /> <!-- Can fix later -->
+    <Rule Id="CA1030" Action="None" /> <!-- false positive due to our event property syntax -->    
+  </Rules>
+</RuleSet>

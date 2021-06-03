@@ -2,7 +2,7 @@
 
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
     /// Adds support for XInput controllers.
@@ -19,22 +19,16 @@ namespace UnityEngine.InputSystem.Plugins.XInput
             // Base layout for Xbox-style gamepad.
             InputSystem.RegisterLayout<XInputController>();
 
-#if UNITY_EDITOR || UNITY_XBOXONE
-            InputSystem.RegisterLayout<XboxOneGamepad>(
-                matches: new InputDeviceMatcher()
-                    .WithDeviceClass("XboxOneGamepad")
-                    .WithInterface("Xbox"));
-#endif
             ////FIXME: layouts should always be available in the editor (mac/win/linux)
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             InputSystem.RegisterLayout<XInputControllerWindows>(
                 matches: new InputDeviceMatcher().WithInterface("XInput"));
 #endif
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-            InputSystem.RegisterLayout<XInputControllerOSX>(
+            InputSystem.RegisterLayout<XboxGamepadMacOS>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wired Controller"));
-            InputSystem.RegisterLayout<XInputControllerWirelessOSX>(
+            InputSystem.RegisterLayout<XboxOneGampadMacOSWireless>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wireless Controller"));
 #endif

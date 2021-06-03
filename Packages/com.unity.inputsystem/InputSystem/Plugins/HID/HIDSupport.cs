@@ -1,14 +1,15 @@
-using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.Plugins.HID.Editor;
+using UnityEngine.InputSystem.HID.Editor;
 #endif
-using UnityEngine.InputSystem.Utilities;
-using ShouldCreateHIDCallback = System.Func<UnityEngine.InputSystem.Plugins.HID.HID.HIDDeviceDescriptor, bool?>;
 
-namespace UnityEngine.InputSystem.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
+    using ShouldCreateHIDCallback = System.Func<HID.HIDDeviceDescriptor, bool?>;
+
     /// <summary>
     /// Adds support for generic HID devices to the input system.
     /// </summary>
@@ -28,27 +29,85 @@ namespace UnityEngine.InputSystem.Plugins.HID
     /// </remarks>
     public static class HIDSupport
     {
-        public static event ShouldCreateHIDCallback shouldCreateHID
+        /// <summary>
+        /// A pair of HID usage page and HID usage number.
+        /// </summary>
+        /// <remarks>
+        /// Used to describe a HID usage for the <see cref="supportedHIDUsages"/> property.
+        /// </remarks>
+        public struct HIDPageUsage
         {
-            add => s_ShouldCreateHID.Append(value);
-            remove => s_ShouldCreateHID.Remove(value);
+            /// <summary>
+            /// The usage page.
+            /// </summary>
+            public HID.UsagePage page;
+
+            /// <summary>
+            /// A number specifying the usage on the usage page.
+            /// </summary>
+            public int usage;
+
+            /// <summary>
+            /// Create a HIDPageUsage struct by specifying a page and usage.
+            /// </summary>
+            public HIDPageUsage(HID.UsagePage page, int usage)
+            {
+                this.page = page;
+                this.usage = usage;
+            }
+
+            /// <summary>
+            /// Create a HIDPageUsage struct from the GenericDesktop usage page by specifying the usage.
+            /// </summary>
+            public HIDPageUsage(HID.GenericDesktop usage)
+            {
+                page = HID.UsagePage.GenericDesktop;
+                this.usage = (int)usage;
+            }
         }
 
-        internal static InlinedArray<ShouldCreateHIDCallback> s_ShouldCreateHID;
+        private static HIDPageUsage[] s_SupportedHIDUsages;
 
-        private static bool? DefaultShouldCreateHIDCallback(HID.HIDDeviceDescriptor descriptor)
+        /// <summary>
+        /// An array of HID usages the input is configured to support.
+        /// </summary>
+        /// <remarks>
+        /// The input system will only create <see cref="InputDevice"/>s for HIDs with usages
+        /// listed in this array. Any other HID will be ignored. This saves the input system from
+        /// spending resources on creating layouts and devices for HIDs which are not supported or
+        /// not usable for game input.
+        ///
+        /// By default, this includes only <see cref="HID.GenericDesktop.Joystick"/>,
+        /// <see cref="HID.GenericDesktop.Gamepad"/> and <see cref="HID.GenericDesktop.MultiAxisController"/>,
+        /// but you can set this property to include any other HID usages.
+        ///
+        /// Note that currently on macOS, the only HID usages which can be enabled are
+        /// <see cref="HID.GenericDesktop.Joystick"/>, <see cref="HID.GenericDesktop.Gamepad"/>,
+        /// <see cref="HID.GenericDesktop.MultiAxisController"/>, <see cref="HID.GenericDesktop.TabletPCControls"/>,
+        /// and <see cref="HID.GenericDesktop.AssistiveControl"/>.
+        /// </remarks>
+        public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages
         {
-            if (descriptor.usagePage == HID.UsagePage.GenericDesktop)
+            get => s_SupportedHIDUsages;
+            set
             {
-                switch (descriptor.usage)
+                s_SupportedHIDUsages = value.ToArray();
+
+                // Add HIDs we now support.
+                InputSystem.s_Manager.AddAvailableDevicesThatAreNowRecognized();
+
+                // Remove HIDs we no longer support.
+                for (var i = 0; i < InputSystem.devices.Count; ++i)
                 {
-                    case (int)HID.GenericDesktop.Joystick:
-                    case (int)HID.GenericDesktop.Gamepad:
-                    case (int)HID.GenericDesktop.MultiAxisController:
-                        return true;
+                    var device = InputSystem.devices[i];
+                    if (device is HID hid && !s_SupportedHIDUsages.Contains(new HIDPageUsage(hid.hidDescriptor.usagePage, hid.hidDescriptor.usage)))
+                    {
+                        // Remove the entire generated layout. This will also remove all devices based on it.
+                        InputSystem.RemoveLayout(device.layout);
+                        --i;
+                    }
                 }
             }
-            return null;
         }
 
         /// <summary>
@@ -61,7 +120,12 @@ namespace UnityEngine.InputSystem.Plugins.HID
 #endif
         static void Initialize()
         {
-            s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
+            s_SupportedHIDUsages = new[]
+            {
+                new HIDPageUsage(HID.GenericDesktop.Joystick),
+                new HIDPageUsage(HID.GenericDesktop.Gamepad),
+                new HIDPageUsage(HID.GenericDesktop.MultiAxisController),
+            };
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
@@ -76,7 +140,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
                 {
                     if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
                     {
-                        HIDDescriptorWindow.CreateOrShowExisting(device.id, device.description);
+                        HIDDescriptorWindow.CreateOrShowExisting(device.deviceId, device.description);
                     }
                 }
             };
@@ -84,7 +148,7 @@ namespace UnityEngine.InputSystem.Plugins.HID
         }
 
         #if UNITY_EDITOR
-        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
+        private static readonly GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
         #endif
     }
 }

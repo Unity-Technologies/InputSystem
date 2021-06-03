@@ -1,0 +1,23 @@
+{
+    "name": "XRDeviceActions",
+    "references": [
+        "GUID:28d8685fae23c21419ef42894cb9b075",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:2bafac87e7f4b9b418d9448d219b01ab"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.magicleap",
+            "expression": "",
+            "define": "UNITY_MAGIC_LEAP"
+        }
+    ],
+    "noEngineReferences": false
+}

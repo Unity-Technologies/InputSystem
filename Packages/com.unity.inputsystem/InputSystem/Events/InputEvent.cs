@@ -1,28 +1,72 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 ////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
-#if !UNITY_2019_2
-// NativeInputEventType/NativeInputEvent are marked obsolete in 19.1, because they are becoming internal in 19.2
-#pragma warning disable 618
-#endif
 
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A chunk of memory signaling a data transfer in the input system.
     /// </summary>
+    /// <remarks>
+    /// Input events are raw memory buffers akin to a byte array. For most uses of the input
+    /// system, it is not necessary to be aware of the event stream in the background. Events
+    /// are written to the internal event buffer by producers -- usually by the platform-specific
+    /// backends sitting in the Unity runtime. Once per fixed or dynamic update (depending on
+    /// what <see cref="InputSettings.updateMode"/> is set to), the input system then goes and
+    /// flushes out the internal event buffer to process pending events.
+    ///
+    /// Events may signal general device-related occurrences (such as <see cref="DeviceConfigurationEvent"/>
+    /// or <see cref="DeviceRemoveEvent"/>) or they may signal input activity. The latter kind of
+    /// event is called "state events". In particular, these events are either <see cref="StateEvent"/>,
+    /// only.
+    ///
+    /// Events are solely focused on input. To effect output on an input device (e.g. haptics
+    /// effects), "commands" (see <see cref="InputDeviceCommand"/>) are used.
+    ///
+    /// Event processing can be listened to using <see cref="InputSystem.onEvent"/>. This callback
+    /// will get triggered for each event as it is processed by the input system.
+    ///
+    /// Note that there is no "routing" mechanism for events, i.e. no mechanism by which the input
+    /// system looks for a handler for a specific event. Instead, events represent low-level activity
+    /// that the input system directly integrates into the state of its <see cref="InputDevice"/>
+    /// instances.
+    ///
+    /// Each type of event is distinguished by its own <see cref="FourCC"/> type tag. The tag can
+    /// be queried from the <see cref="type"/> property.
+    ///
+    /// Each event will receive a unique ID when queued to the internal event buffer. The ID can
+    /// be queried using the <see cref="eventId"/> property. Over the lifetime of the input system,
+    /// no two events will receive the same ID. If you repeatedly queue an event from the same
+    /// memory buffer, each individual call of <see cref="InputSystem.QueueEvent"/> will result in
+    /// its own unique event ID.
+    ///
+    /// All events are device-specific meaning that <see cref="deviceId"/> will always reference
+    /// some device (which, however, may or may not translate to an <see cref="InputDevice"/>; that
+    /// part depends on whether the input system was able to create an <see cref="InputDevice"/>
+    /// based on the information received from the backend).
+    ///
+    /// To implement your own type of event, TODO (manual?)
+    /// </remarks>
+    /// <seealso cref="InputEventPtr"/>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize, Pack = 1)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
         private const uint kIdMask = 0x7FFFFFFF;
 
-        internal const int kBaseEventSize = 20;
-        public const int InvalidId = 0;
+        internal const int kBaseEventSize = NativeInputEvent.structSize;
+
+        /// <summary>
+        /// Default, invalid value for <see cref="eventId"/>. Upon being queued with
+        /// <see cref="InputSystem.QueueEvent"/>, no event will receive this ID.
+        /// </summary>
+        public const int InvalidEventId = 0;
+
         internal const int kAlignment = 4;
 
         [FieldOffset(0)]
@@ -31,6 +75,13 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Type code for the event.
         /// </summary>
+        /// <remarks>
+        /// Each type of event has its own unique FourCC tag. For example, state events (see <see cref="StateEvent"/>)
+        /// are tagged with "STAT". The type tag for a specific type of event can be queried from its <c>Type</c>
+        /// property (for example, <see cref="StateEvent.Type"/>).
+        ///
+        /// To check whether an event has a specific type tag, you can use <see cref="InputEventPtr.IsA{T}"/>.
+        /// </remarks>
         public FourCC type
         {
             get => new FourCC((int)m_Event.type);
@@ -40,14 +91,15 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Total size of the event in bytes.
         /// </summary>
+        /// <value>Size of the event in bytes.</value>
         /// <remarks>
         /// Events are variable-size structs. This field denotes the total size of the event
         /// as stored in memory. This includes the full size of this struct and not just the
         /// "payload" of the event.
-        /// </remarks>
+        ///
         /// <example>
-        /// Store event in private buffer:
         /// <code>
+        /// // Store event in private buffer:
         /// unsafe byte[] CopyEventData(InputEventPtr eventPtr)
         /// {
         ///     var sizeInBytes = eventPtr.sizeInBytes;
@@ -60,6 +112,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// }
         /// </code>
         /// </example>
+        ///
+        /// The maximum supported size of events is <c>ushort.MaxValue</c>, i.e. events cannot
+        /// be larger than 64KB.
+        /// </remarks>
+        /// <exception cref="ArgumentException"><paramref name="value"/> exceeds <c>ushort.MaxValue</c>.</exception>
         public uint sizeInBytes
         {
             get => m_Event.sizeInBytes;
@@ -75,12 +132,14 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Unique serial ID of the event.
         /// </summary>
         /// <remarks>
-        /// Events are assigned running IDs when they are put on an event queue.
+        /// Events are assigned running IDs when they are put on an event queue (see
+        /// <see cref="InputSystem.QueueEvent"/>).
         /// </remarks>
+        /// <seealso cref="InvalidEventId"/>
         public int eventId
         {
             get => (int)(m_Event.eventId & kIdMask);
-            set => m_Event.eventId = (int)(value | (int)(m_Event.eventId & ~kIdMask));
+            set => m_Event.eventId = value | (int)(m_Event.eventId & ~kIdMask);
         }
 
         /// <summary>
@@ -91,8 +150,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// will receive the same ID over an application lifecycle regardless of whether the devices
         /// existed at the same time or not.
         /// </remarks>
-        /// <seealso cref="InputDevice.id"/>
+        /// <seealso cref="InputDevice.deviceId"/>
         /// <seealso cref="InputSystem.GetDeviceById"/>
+        /// <seealso cref="InputDevice.InvalidDeviceId"/>
         public int deviceId
         {
             get => m_Event.deviceId;
@@ -105,6 +165,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// Times are in seconds and progress linearly in real-time. The timeline is the
         /// same as for <see cref="Time.realtimeSinceStartup"/>.
+        ///
+        /// Note that this implies that event times will reset in the editor every time you
+        /// go into play mode. In effect, this can result in events appearing with negative
+        /// timestamps (i.e. the event was generated before the current zero point for
+        /// <see cref="Time.realtimeSinceStartup"/>).
         /// </remarks>
         public double time
         {
@@ -126,14 +191,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set => m_Event.time = value;
         }
 
-        static InputEvent()
-        {
-            unsafe
-            {
-                Debug.Assert(kBaseEventSize == sizeof(NativeInputEvent), "kBaseEventSize sizemust match NativeInputEvent struct size.");
-            }
-        }
-
+        ////FIXME: this API isn't consistent; time seems to be internalTime whereas time property is external time
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
         {
             if (time < 0)
@@ -143,7 +201,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_Event.sizeInBytes = (ushort)sizeInBytes;
             m_Event.deviceId = (ushort)deviceId;
             m_Event.time = time;
-            m_Event.eventId = InvalidId;
+            m_Event.eventId = InvalidEventId;
         }
 
         // We internally use bits inside m_EventId as flags. IDs are linearly counted up by the
@@ -181,8 +239,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="GetNextInMemoryChecked"/>
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
-            Debug.Assert(currentPtr != null);
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
+            var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
         }
 
@@ -196,10 +254,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <exception cref="InvalidOperationException">There are no more events in the given buffer.</exception>
         internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
         {
-            Debug.Assert(currentPtr != null);
+            Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
             Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
 
             if (!buffer.Contains(nextPtr))
@@ -207,6 +265,19 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"Event '{new InputEventPtr(currentPtr)}' is last event in given buffer with size {buffer.sizeInBytes}");
 
             return nextPtr;
+        }
+
+        public static unsafe bool Equals(InputEvent* first, InputEvent* second)
+        {
+            if (first == second)
+                return true;
+            if (first == null || second == null)
+                return false;
+
+            if (first->m_Event.sizeInBytes != second->m_Event.sizeInBytes)
+                return false;
+
+            return UnsafeUtility.MemCmp(first, second, first->m_Event.sizeInBytes) == 0;
         }
     }
 }

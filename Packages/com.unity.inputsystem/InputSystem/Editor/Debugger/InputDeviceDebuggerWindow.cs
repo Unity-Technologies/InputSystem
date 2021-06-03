@@ -7,11 +7,13 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: allow selecting events and saving out only the selected ones
+
+////TODO: add the ability for the debugger to just generate input on the device according to the controls it finds; good for testing
+
 ////TODO: add commands to event trace (also clickable)
 
 ////TODO: add diff-to-previous-event ability to event window
-
-////FIXME: doesn't survive domain reload correctly
 
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
@@ -22,7 +24,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add toggle to that switches to displaying raw control values
 
-////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputHistory)
+////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputStateHistory)
 
 ////TODO: show default states of controls
 
@@ -33,9 +35,12 @@ namespace UnityEngine.InputSystem.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
-    public class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
+    internal sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
-        internal const int kMaxNumEventsInTrace = 64;
+        // ATM the debugger window is super slow and repaints are very expensive. So keep the total
+        // number of events we can fit at a relatively low size until we have fixed that problem.
+        private const int kDefaultEventTraceSizeInKB = 512;
+        private const int kMaxEventsPerTrace = 1024;
 
         internal static InlinedArray<Action<InputDevice>> s_OnToolbarGUIActions;
 
@@ -47,6 +52,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void CreateOrShowExisting(InputDevice device)
         {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
             // See if we have an existing window for the device and if so pop it
             // in front.
             if (s_OpenDebuggerWindows != null)
@@ -54,7 +62,7 @@ namespace UnityEngine.InputSystem.Editor
                 for (var i = 0; i < s_OpenDebuggerWindows.Count; ++i)
                 {
                     var existingWindow = s_OpenDebuggerWindows[i];
-                    if (existingWindow.m_DeviceId == device.id)
+                    if (existingWindow.m_DeviceId == device.deviceId)
                     {
                         existingWindow.Show();
                         existingWindow.Focus();
@@ -77,10 +85,21 @@ namespace UnityEngine.InputSystem.Editor
             {
                 RemoveFromList();
 
-                m_EventTrace?.Dispose();
-
                 InputSystem.onDeviceChange -= OnDeviceChange;
+                InputState.onChange -= OnDeviceStateChange;
             }
+
+            m_EventTrace?.Dispose();
+            m_EventTrace = null;
+
+            m_ReplayController?.Dispose();
+            m_ReplayController = null;
+        }
+
+        public void Dispose()
+        {
+            m_EventTrace?.Dispose();
+            m_ReplayController?.Dispose();
         }
 
         internal void OnGUI()
@@ -104,13 +123,21 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Layout", m_Device.layout);
             EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
-            EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
-            EditorGUILayout.LabelField("Product", m_Device.description.product);
-            EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
-            EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
+            if (!string.IsNullOrEmpty(m_Device.description.interfaceName))
+                EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
+            if (!string.IsNullOrEmpty(m_Device.description.product))
+                EditorGUILayout.LabelField("Product", m_Device.description.product);
+            if (!string.IsNullOrEmpty(m_Device.description.manufacturer))
+                EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
+            if (!string.IsNullOrEmpty(m_Device.description.serial))
+                EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
-            EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
-            EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
+            if (!string.IsNullOrEmpty(m_DeviceUsagesString))
+                EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
+            if (!string.IsNullOrEmpty(m_DeviceFlagsString))
+                EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
+            if (m_Device is Keyboard)
+                EditorGUILayout.LabelField("Keyboard Layout", ((Keyboard)m_Device).keyboardLayout);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -119,8 +146,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DrawControlTree()
         {
+            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.Label($"Controls ({updateTypeToShow} State)", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
             // Allow plugins to add toolbar buttons.
@@ -136,25 +165,20 @@ namespace UnityEngine.InputSystem.Editor
 
             GUILayout.EndHorizontal();
 
-            ////TODO: detect if dynamic is disabled and fall back to fixed
-            var updateTypeToShow = EditorApplication.isPlaying ? InputUpdateType.Dynamic : InputUpdateType.Editor;
-
-            try
+            if (m_NeedControlValueRefresh)
             {
-                // Switch to buffers that we want to display in the control tree.
-                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
+                RefreshControlTreeValues();
+                m_NeedControlValueRefresh = false;
+            }
 
-                ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
-                m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
-                var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
-                m_ControlTree.OnGUI(rect);
-                EditorGUILayout.EndScrollView();
-            }
-            finally
-            {
-                // Switch back to editor buffers.
-                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, InputUpdateType.Editor);
-            }
+            ////TODO: The help box could use some richText styling but all the effing Unity APIs to do this are internal. Would have
+            ////      to roll our own help box from scratch. Sigh.
+            if (!m_Device.enabled)
+                EditorGUILayout.HelpBox("Device is DISABLED. Control values will not receives updates. "
+                    + "To force-enable the device, you can right-click it in the input debugger and use 'Enable Device'.", MessageType.Info);
+
+            var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
+            m_ControlTree.OnGUI(rect);
         }
 
         private void DrawEventList()
@@ -163,23 +187,89 @@ namespace UnityEngine.InputSystem.Editor
             GUILayout.Label("Events", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button(Contents.clearContent, EditorStyles.toolbarButton))
+            if (m_ReplayController != null && !m_ReplayController.finished)
+                EditorGUILayout.LabelField("Playing...", EditorStyles.miniLabel);
+
+            // Text field to determine size of event trace.
+            var currentTraceSizeInKb = m_EventTrace.allocatedSizeInBytes / 1024;
+            var oldSizeText = currentTraceSizeInKb + " KB";
+            var newSizeText = EditorGUILayout.DelayedTextField(oldSizeText, Styles.toolbarTextField, GUILayout.Width(75));
+            if (oldSizeText != newSizeText && StringHelpers.FromNicifiedMemorySize(newSizeText, out var newSizeInBytes, defaultMultiplier: 1024))
+                m_EventTrace.Resize(newSizeInBytes);
+
+            // Button to clear event trace.
+            if (GUILayout.Button(Contents.clearContent, Styles.toolbarButton))
             {
                 m_EventTrace.Clear();
                 m_EventTree.Reload();
             }
 
-            var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, EditorStyles.toolbarButton);
-            if (eventTraceDisabledNow != m_EventTraceDisabled)
+            // Button to disable event tracing.
+            // NOTE: We force-disable event tracing while a replay is in progress.
+            using (new EditorGUI.DisabledScope(m_ReplayController != null && !m_ReplayController.finished))
             {
-                m_EventTraceDisabled = eventTraceDisabledNow;
-                if (eventTraceDisabledNow)
+                var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, Styles.toolbarButton);
+                if (eventTraceDisabledNow != m_EventTraceDisabled)
+                {
+                    m_EventTraceDisabled = eventTraceDisabledNow;
+                    if (eventTraceDisabledNow)
+                        m_EventTrace.Disable();
+                    else
+                        m_EventTrace.Enable();
+                }
+            }
+
+            // Button to toggle recording of frame markers.
+            m_EventTrace.recordFrameMarkers =
+                GUILayout.Toggle(m_EventTrace.recordFrameMarkers, Contents.recordFramesContent, Styles.toolbarButton);
+
+            // Button to save event trace to file.
+            if (GUILayout.Button(Contents.saveContent, Styles.toolbarButton))
+            {
+                var defaultName = m_Device?.displayName + ".inputtrace";
+                var fileName = EditorUtility.SaveFilePanel("Choose where to save event trace", string.Empty, defaultName, "inputtrace");
+                if (!string.IsNullOrEmpty(fileName))
+                    m_EventTrace.WriteTo(fileName);
+            }
+
+            // Button to load event trace from file.
+            if (GUILayout.Button(Contents.loadContent, Styles.toolbarButton))
+            {
+                var fileName = EditorUtility.OpenFilePanel("Choose event trace to load", string.Empty, "inputtrace");
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    // If replay is in progress, stop it.
+                    if (m_ReplayController != null)
+                    {
+                        m_ReplayController.Dispose();
+                        m_ReplayController = null;
+                    }
+
+                    // Make sure event trace isn't recording while we're playing.
                     m_EventTrace.Disable();
-                else
-                    m_EventTrace.Enable();
+                    m_EventTraceDisabled = true;
+
+                    m_EventTrace.ReadFrom(fileName);
+                    m_EventTree.Reload();
+
+                    m_ReplayController = m_EventTrace.Replay()
+                        .PlayAllFramesOneByOne()
+                        .OnFinished(() =>
+                        {
+                            m_ReplayController.Dispose();
+                            m_ReplayController = null;
+                            Repaint();
+                        });
+                }
             }
 
             GUILayout.EndHorizontal();
+
+            if (m_ReloadEventTree)
+            {
+                m_ReloadEventTree = false;
+                m_EventTree.Reload();
+            }
 
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_EventTree.OnGUI(rect);
@@ -189,33 +279,30 @@ namespace UnityEngine.InputSystem.Editor
         private void InitializeWith(InputDevice device)
         {
             m_Device = device;
-            m_DeviceId = device.id;
-            m_DeviceIdString = device.id.ToString();
+            m_DeviceId = device.deviceId;
+            m_DeviceIdString = device.deviceId.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
-            var flags = new List<string>();
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Native) == InputDevice.DeviceFlags.Native)
-                flags.Add("Native");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Remote) == InputDevice.DeviceFlags.Remote)
-                flags.Add("Remote");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.UpdateBeforeRender) == InputDevice.DeviceFlags.UpdateBeforeRender)
-                flags.Add("UpdateBeforeRender");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
-                flags.Add("HasStateCallbacks");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Disabled) == InputDevice.DeviceFlags.Disabled)
-                flags.Add("Disabled");
-            m_DeviceFlagsString = string.Join(", ", flags.ToArray());
+            UpdateDeviceFlags();
 
-            // Set up event trace. The default trace size of 1mb fits a ton of events and will
+            // Set up event trace. The default trace size of 512kb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.id};
-            m_EventTrace.onEvent += _ =>
             {
-                ////FIXME: this is very inefficient
-                m_EventTree.Reload();
-            };
+                var deviceStateSize = (int)device.stateBlock.alignedSizeInBytes;
+                var traceSizeInBytes = (kDefaultEventTraceSizeInKB * 1024).AlignToMultipleOf(deviceStateSize);
+                if (traceSizeInBytes / deviceStateSize > kMaxEventsPerTrace)
+                    traceSizeInBytes = kMaxEventsPerTrace * deviceStateSize;
+
+                m_EventTrace =
+                    new InputEventTrace(traceSizeInBytes)
+                {
+                    deviceId = device.deviceId
+                };
+            }
+
+            m_EventTrace.onEvent += _ => m_ReloadEventTree = true;
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
 
@@ -228,26 +315,58 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlTree.ExpandAll();
 
             AddToList();
+
             InputSystem.onDeviceChange += OnDeviceChange;
+            InputState.onChange += OnDeviceStateChange;
+        }
+
+        private void UpdateDeviceFlags()
+        {
+            var flags = new List<string>();
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Native) == InputDevice.DeviceFlags.Native)
+                flags.Add("Native");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Remote) == InputDevice.DeviceFlags.Remote)
+                flags.Add("Remote");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.UpdateBeforeRender) == InputDevice.DeviceFlags.UpdateBeforeRender)
+                flags.Add("UpdateBeforeRender");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
+                flags.Add("HasStateCallbacks");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Disabled) == InputDevice.DeviceFlags.Disabled)
+                flags.Add("Disabled");
+            m_DeviceFlags = m_Device.m_DeviceFlags;
+            m_DeviceFlagsString = string.Join(", ", flags.ToArray());
+        }
+
+        private void RefreshControlTreeValues()
+        {
+            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+            var currentUpdateType = InputState.currentUpdateType;
+
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
+            m_ControlTree.RefreshControlValues();
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
         }
 
         // We will lose our device on domain reload and then look it back up the first
         // time we hit a repaint after a reload. By that time, the input system should have
         // fully come back to life as well.
-        [NonSerialized] private InputDevice m_Device;
-        [NonSerialized] private string m_DeviceIdString;
-        [NonSerialized] private string m_DeviceUsagesString;
-        [NonSerialized] private string m_DeviceFlagsString;
-        [NonSerialized] private InputControlTreeView m_ControlTree;
-        [NonSerialized] private InputEventTreeView m_EventTree;
+        private InputDevice m_Device;
+        private string m_DeviceIdString;
+        private string m_DeviceUsagesString;
+        private string m_DeviceFlagsString;
+        private InputDevice.DeviceFlags m_DeviceFlags;
+        private InputControlTreeView m_ControlTree;
+        private InputEventTreeView m_EventTree;
+        private bool m_NeedControlValueRefresh;
+        private bool m_ReloadEventTree;
+        private InputEventTrace.ReplayController m_ReplayController;
+        private InputEventTrace m_EventTrace;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private TreeViewState m_EventTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
-        [SerializeField] private Vector2 m_ControlTreeScrollPosition;
-        [SerializeField] private InputEventTrace m_EventTrace;
         [SerializeField] private bool m_EventTraceDisabled;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;
@@ -267,7 +386,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            if (device.id != m_DeviceId)
+            if (device.deviceId != m_DeviceId)
                 return;
 
             if (change == InputDeviceChange.Removed)
@@ -276,23 +395,44 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
+                if (m_DeviceFlags != device.m_DeviceFlags)
+                    UpdateDeviceFlags();
                 Repaint();
-
-                // If the state of the device changed, refresh control values in the control tree.
-                if (change == InputDeviceChange.StateChanged)
-                    m_ControlTree?.RefreshControlValues();
             }
+        }
+
+        private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
+        {
+            if (InputState.currentUpdateType != InputSystem.s_Manager.defaultUpdateType)
+                return;
+            m_NeedControlValueRefresh = true;
+            Repaint();
         }
 
         private static class Styles
         {
             public static string notFoundHelpText = "Device could not be found.";
+
+            public static GUIStyle toolbarTextField;
+            public static GUIStyle toolbarButton;
+
+            static Styles()
+            {
+                toolbarTextField = new GUIStyle(EditorStyles.toolbarTextField);
+                toolbarTextField.alignment = TextAnchor.MiddleRight;
+
+                toolbarButton = new GUIStyle(EditorStyles.toolbarButton);
+                toolbarButton.alignment = TextAnchor.MiddleCenter;
+            }
         }
 
         private static class Contents
         {
             public static GUIContent clearContent = new GUIContent("Clear");
             public static GUIContent pauseContent = new GUIContent("Pause");
+            public static GUIContent saveContent = new GUIContent("Save");
+            public static GUIContent loadContent = new GUIContent("Load");
+            public static GUIContent recordFramesContent = new GUIContent("Record Frames");
             public static GUIContent stateContent = new GUIContent("State");
         }
 

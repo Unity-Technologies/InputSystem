@@ -4,57 +4,59 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
-////REVIEW: allow associating control schemes with platforms, too?
+////TODO: introduce the concept of a "variation"
+////      - a variation is just a variant of a control scheme, not a full control scheme by itself
+////      - an individual variation can be toggled on and off independently
+////      - while a control is is active, all its variations that are toggled on are also active
+////      - assignment to variations works the same as assignment to control schemes
+////  use case: left/right stick toggles, left/right bumper toggles, etc
 
-////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
-////        (and thus support it only input assets only)
+////TODO: introduce concept of precedence where one control scheme will be preferred over another that is also a match
+////      (might be its enough to represent this simply through ordering by giving the user control over the ordering through the UI)
+
+////REVIEW: allow associating control schemes with platforms, too?
 
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A named set of zero or more device requirements along an associated binding group.
+    /// A named set of zero or more device requirements along with an associated binding group.
     /// </summary>
     /// <remarks>
     /// Control schemes provide an additional layer on top of binding groups. While binding
     /// groups allow differentiating sets of bindings (e.g. a "Keyboard&amp;Mouse" group versus
     /// a "Gamepad" group), control schemes impose a set of devices requirements that must be
     /// met in order for a specific set of bindings to be usable.
+    ///
+    /// Note that control schemes can only be defined at the <see cref="InputActionAsset"/> level.
     /// </remarks>
     /// <seealso cref="InputActionAsset.controlSchemes"/>
+    /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
     [Serializable]
     public struct InputControlScheme : IEquatable<InputControlScheme>
     {
         /// <summary>
-        /// Name of the control scheme.
+        /// Name of the control scheme. Not <c>null</c> or empty except if InputControlScheme
+        /// instance is invalid (i.e. default-initialized).
         /// </summary>
+        /// <value>Name of the scheme.</value>
         /// <remarks>
         /// May be empty or null except if the control scheme is part of an <see cref="InputActionAsset"/>.
         /// </remarks>
-        /// <seealso cref="InputActionAsset.AddControlScheme"/>
+        /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
         public string name => m_Name;
 
-        ////REVIEW: is this actually functional? if not, kill
-        //problem: how do you do any subtractive operation? should we care?
-        //problem: this won't allow resolving things on just an InputControlScheme itself; needs context
         /// <summary>
-        /// Name of control scheme that this scheme is based on.
+        /// Binding group that is associated with the control scheme. Not <c>null</c> or empty
+        /// except if InputControlScheme is invalid (i.e. default-initialized).
         /// </summary>
+        /// <value>Binding group for the scheme.</value>
         /// <remarks>
-        /// When the control scheme is enabled, all bindings from the base control
-        /// scheme will also be enabled. At the same time, bindings act as overrides on
-        /// bindings coming through from the base scheme.
+        /// All bindings in this group are considered to be part of the control scheme.
         /// </remarks>
-        public string baseScheme => m_BaseSchemeName;
-
-        /// <summary>
-        /// Binding group that is associated with the control scheme.
-        /// </summary>
-        /// <remarks>
-        /// All bindings in this group as well as in groups inherited from base control schemes
-        /// are considered to be part of the control scheme.
-        /// </remarks>
+        /// <seealso cref="InputBinding.groups"/>
         public string bindingGroup
         {
             get => m_BindingGroup;
@@ -64,6 +66,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Devices used by the control scheme.
         /// </summary>
+        /// <value>Device requirements of the scheme.</value>
         /// <remarks>
         /// No two entries will be allowed to match the same control or device at runtime in order for the requirements
         /// of the control scheme to be considered satisfied. If, for example, one entry requires a "&lt;Gamepad&gt;" and
@@ -71,17 +74,33 @@ namespace UnityEngine.InputSystem
         /// one will match both requirements individually. However, if, for example, one entry requires "&lt;Gamepad&gt;/leftStick"
         /// and another requires "&lt;Gamepad&gt;, the same device can match both requirements as each one resolves to
         /// a different control.
+        ///
+        /// It it allowed to define control schemes without device requirements, i.e. for which this
+        /// property will be an empty array. Note, however, that features such as automatic control scheme
+        /// switching in <see cref="PlayerInput"/> will not work with such control schemes.
         /// </remarks>
-        public ReadOnlyArray<DeviceRequirement> deviceRequirements => new ReadOnlyArray<DeviceRequirement>(m_DeviceRequirements);
+        public ReadOnlyArray<DeviceRequirement> deviceRequirements =>
+            new ReadOnlyArray<DeviceRequirement>(m_DeviceRequirements);
 
-        public InputControlScheme(string name, string basedOn = null, IEnumerable<DeviceRequirement> devices = null)
+        /// <summary>
+        /// Initialize the control scheme with the given name, device requirements,
+        /// and binding group.
+        /// </summary>
+        /// <param name="name">Name to use for the scheme. Required.</param>
+        /// <param name="devices">List of device requirements.</param>
+        /// <param name="bindingGroup">Name to use for the binding group (see <see cref="InputBinding.groups"/>)
+        /// associated with the control scheme. If this is <c>null</c> or empty, <paramref name="name"/> is
+        /// used instead (with <see cref="InputBinding.Separator"/> characters stripped from the name).</param>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c> or empty.</exception>
+        public InputControlScheme(string name, IEnumerable<DeviceRequirement> devices = null, string bindingGroup = null)
+            : this()
         {
-            m_Name = name;
-            m_BaseSchemeName = string.Empty;
-            m_BindingGroup = name; // Defaults to name.
-            m_BaseSchemeName = basedOn;
-            m_DeviceRequirements = null;
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
 
+            SetNameAndBindingGroup(name, bindingGroup);
+
+            m_DeviceRequirements = null;
             if (devices != null)
             {
                 m_DeviceRequirements = devices.ToArray();
@@ -90,22 +109,199 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public static InputControlScheme? FindControlSchemeForDevice<TList>(InputDevice device, TList schemes)
-            where TList : IEnumerable<InputControlScheme>
+        internal void SetNameAndBindingGroup(string name, string bindingGroup = null)
         {
-            foreach (var scheme in schemes)
-                if (scheme.SupportsDevice(device))
-                    return scheme;
-
-            return null;
+            m_Name = name;
+            if (!string.IsNullOrEmpty(bindingGroup))
+                m_BindingGroup = bindingGroup;
+            else
+                m_BindingGroup = name.Contains(InputBinding.Separator)
+                    ? name.Replace(InputBinding.kSeparatorString, "")
+                    : name;
         }
 
+        /// <summary>
+        /// Given a list of devices and a list of control schemes, find the most suitable control
+        /// scheme to use with the devices.
+        /// </summary>
+        /// <param name="devices">A list of devices. If the list is empty, only schemes with
+        /// empty <see cref="deviceRequirements"/> lists will get matched.</param>
+        /// <param name="schemes">A list of control schemes.</param>
+        /// <param name="mustIncludeDevice">If not <c>null</c>, a successful match has to include the given device.</param>
+        /// <param name="allowUnsuccesfulMatch">If true, then allow returning a match that has unsatisfied requirements but still
+        /// matched at least some requirement. If there are several unsuccessful matches, the returned scheme is still the highest
+        /// scoring one among those.</param>
+        /// <typeparam name="TDevices">Collection type to use for the list of devices.</typeparam>
+        /// <typeparam name="TSchemes">Collection type to use for the list of schemes.</typeparam>
+        /// <returns>The control scheme that best matched the given devices or <c>null</c> if no
+        /// scheme was found suitable.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="devices"/> is <c>null</c> -or-
+        /// <paramref name="schemes"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// Any successful match (see <see cref="MatchResult.isSuccessfulMatch"/>) will be considered.
+        /// The one that matches the most amount of devices (see <see cref="MatchResult.devices"/>)
+        /// will be returned. If more than one schemes matches equally well, the first one encountered
+        /// in the list is returned.
+        ///
+        /// Note that schemes are not required to match all devices available in the list. The result
+        /// will simply be the scheme that matched the most devices of what was devices. Use <see
+        /// cref="PickDevicesFrom{TDevices}"/> to find the devices that a control scheme selects.
+        ///
+        /// This method is parameterized over <typeparamref name="TDevices"/> and <typeparamref name="TSchemes"/>
+        /// to allow avoiding GC heap allocations from boxing of structs such as <see cref="ReadOnlyArray{TValue}"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create an .inputactions asset.
+        /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+        ///
+        /// // Add some control schemes to the asset.
+        /// asset.AddControlScheme("KeyboardMouse")
+        ///     .WithRequiredDevice&lt;Keyboard&gt;()
+        ///     .WithRequiredDevice&lt;Mouse&gt;());
+        /// asset.AddControlScheme("Gamepad")
+        ///     .WithRequiredDevice&lt;Gamepad&gt;());
+        /// asset.AddControlScheme("DualGamepad")
+        ///     .WithRequiredDevice&lt;Gamepad&gt;())
+        ///     .WithOptionalGamepad&lt;Gamepad&gt;());
+        ///
+        /// // Add some devices that we can test with.
+        /// var keyboard = InputSystem.AddDevice&lt;Keyboard&gt;();
+        /// var mouse = InputSystem.AddDevice&lt;Mouse&gt;();
+        /// var gamepad1 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// var gamepad2 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// // Matching with just a keyboard won't match any scheme.
+        /// InputControlScheme.FindControlSchemeForDevices(
+        ///     new InputDevice[] { keyboard }, asset.controlSchemes);
+        ///
+        /// // Matching with a keyboard and mouse with match the "KeyboardMouse" scheme.
+        /// InputControlScheme.FindControlSchemeForDevices(
+        ///     new InputDevice[] { keyboard, mouse }, asset.controlSchemes);
+        ///
+        /// // Matching with a single gamepad will match the "Gamepad" scheme.
+        /// // Note that since the second gamepad is optional in "DualGamepad" could
+        /// // match the same set of devices but it doesn't match any better than
+        /// // "Gamepad" and that one comes first in the list.
+        /// InputControlScheme.FindControlSchemeForDevices(
+        ///     new InputDevice[] { gamepad1 }, asset.controlSchemes);
+        ///
+        /// // Matching with two gamepads will match the "DualGamepad" scheme.
+        /// // Note that "Gamepad" will match this device list as well. If "DualGamepad"
+        /// // didn't exist, "Gamepad" would be the result here. However, "DualGamepad"
+        /// // matches the list better than "Gamepad" so that's what gets returned here.
+        /// InputControlScheme.FindControlSchemeForDevices(
+        ///     new InputDevice[] { gamepad1, gamepad2 }, asset.controlSchemes);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes, InputDevice mustIncludeDevice = null, bool allowUnsuccesfulMatch = false)
+            where TDevices : IReadOnlyList<InputDevice>
+            where TSchemes : IEnumerable<InputControlScheme>
+        {
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
+            if (!FindControlSchemeForDevices(devices, schemes, out var controlScheme, out var matchResult, mustIncludeDevice, allowUnsuccesfulMatch))
+                return null;
+
+            matchResult.Dispose();
+            return controlScheme;
+        }
+
+        public static bool FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes,
+            out InputControlScheme controlScheme, out MatchResult matchResult, InputDevice mustIncludeDevice = null, bool allowUnsuccessfulMatch = false)
+            where TDevices : IReadOnlyList<InputDevice>
+            where TSchemes : IEnumerable<InputControlScheme>
+        {
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
+            MatchResult? bestResult = null;
+            InputControlScheme? bestScheme = null;
+
+            foreach (var scheme in schemes)
+            {
+                var result = scheme.PickDevicesFrom(devices, favorDevice: mustIncludeDevice);
+
+                // Ignore if scheme doesn't fit devices.
+                if (!result.isSuccessfulMatch && (!allowUnsuccessfulMatch || result.score <= 0))
+                {
+                    result.Dispose();
+                    continue;
+                }
+
+                // Ignore if we have a device we specifically want to be part of the result and
+                // the current match doesn't have it.
+                if (mustIncludeDevice != null && !result.devices.Contains(mustIncludeDevice))
+                {
+                    result.Dispose();
+                    continue;
+                }
+
+                // Ignore if it does fit but we already have a better fit.
+                if (bestResult != null && bestResult.Value.score >= result.score)
+                {
+                    result.Dispose();
+                    continue;
+                }
+
+                bestResult?.Dispose();
+
+                bestResult = result;
+                bestScheme = scheme;
+            }
+
+            matchResult = bestResult ?? default;
+            controlScheme = bestScheme ?? default;
+
+            return bestResult.HasValue;
+        }
+
+        /// <summary>
+        /// Return the first control schemes from the given list that supports the given
+        /// device (see <see cref="SupportsDevice"/>).
+        /// </summary>
+        /// <param name="device">An input device.</param>
+        /// <param name="schemes">A list of control schemes. Can be empty.</param>
+        /// <typeparam name="TSchemes">Collection type to use for the list of schemes.</typeparam>
+        /// <returns>The first schemes from <paramref name="schemes"/> that supports <paramref name="device"/>
+        /// or <c>null</c> if none of the schemes is usable with the device.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c> -or-
+        /// <paramref name="schemes"/> is <c>null</c>.</exception>
+        public static InputControlScheme? FindControlSchemeForDevice<TSchemes>(InputDevice device, TSchemes schemes)
+            where TSchemes : IEnumerable<InputControlScheme>
+        {
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            return FindControlSchemeForDevices(new OneOrMore<InputDevice, ReadOnlyArray<InputDevice>>(device), schemes);
+        }
+
+        /// <summary>
+        /// Whether the control scheme has a requirement in <see cref="deviceRequirements"/> that
+        /// targets the given device.
+        /// </summary>
+        /// <param name="device">An input device.</param>
+        /// <returns>True if the control scheme has a device requirement matching the device.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// Note that both optional (see <see cref="DeviceRequirement.isOptional"/>) and non-optional
+        /// device requirements are taken into account.
+        ///
+        /// </remarks>
         public bool SupportsDevice(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
 
-            ////FIXME: this does not take AND and OR into account
+            ////REVIEW: does this need to take AND and OR into account?
             for (var i = 0; i < m_DeviceRequirements.Length; ++i)
             {
                 var control = InputControlPath.TryFindControl(device, m_DeviceRequirements[i].controlPath);
@@ -123,12 +319,14 @@ namespace UnityEngine.InputSystem
         /// imposed by the control scheme.
         /// </summary>
         /// <param name="devices">A list of devices to choose from.</param>
+        /// <param name="favorDevice">If not null, the device will be favored over other devices in <paramref name="devices"/>.
+        /// Note that the device must be present in the list also.</param>
         /// <returns>A <see cref="MatchResult"/> structure containing the result of the pick. Note that this structure
         /// must be manually <see cref="MatchResult.Dispose">disposed</see> or unmanaged memory will be leaked.</returns>
         /// <remarks>
         /// Does not allocate managed memory.
         /// </remarks>
-        public MatchResult PickDevicesFrom<TDevices>(TDevices devices)
+        public MatchResult PickDevicesFrom<TDevices>(TDevices devices, InputDevice favorDevice = null)
             where TDevices : IReadOnlyList<InputDevice>
         {
             // Empty device requirements match anything while not really picking anything.
@@ -137,6 +335,9 @@ namespace UnityEngine.InputSystem
                 return new MatchResult
                 {
                     m_Result = MatchResult.Result.AllSatisfied,
+                    // Prevent zero score on successful match but make less than one which would
+                    // result from having a single requirement.
+                    m_Score = 0.5f,
                 };
             }
 
@@ -146,6 +347,7 @@ namespace UnityEngine.InputSystem
             var haveAllRequired = true;
             var haveAllOptional = true;
             var requirementCount = m_DeviceRequirements.Length;
+            var score = 0f;
             var controls = new InputControlList<InputControl>(Allocator.Persistent, requirementCount);
             try
             {
@@ -170,6 +372,7 @@ namespace UnityEngine.InputSystem
                     var path = m_DeviceRequirements[i].controlPath;
                     if (string.IsNullOrEmpty(path))
                     {
+                        score += 1;
                         controls.Add(null);
                         continue;
                     }
@@ -180,17 +383,51 @@ namespace UnityEngine.InputSystem
                     {
                         var device = devices[n];
 
+                        // If we should favor a device, we swap it in at index #0 regardless
+                        // of where in the list the device occurs (it MUST, however, occur in the list).
+                        if (favorDevice != null)
+                        {
+                            if (n == 0)
+                                device = favorDevice;
+                            else if (device == favorDevice)
+                                device = devices[0];
+                        }
+
                         // See if we have a match.
                         var matchedControl = InputControlPath.TryFindControl(device, path);
                         if (matchedControl == null)
                             continue; // No.
 
-                        // We have a match but if we've already match the same control through another requirement,
+                        // We have a match but if we've already matched the same control through another requirement,
                         // we can't use the match.
                         if (controls.Contains(matchedControl))
                             continue;
 
                         match = matchedControl;
+
+                        // Compute score for match.
+                        var deviceLayoutOfControlPath = new InternedString(InputControlPath.TryGetDeviceLayout(path));
+                        if (deviceLayoutOfControlPath.IsEmpty())
+                        {
+                            // Generic match adds 1 to score.
+                            score += 1;
+                        }
+                        else
+                        {
+                            var deviceLayoutOfControl = matchedControl.device.m_Layout;
+                            if (InputControlLayout.s_Layouts.ComputeDistanceInInheritanceHierarchy(deviceLayoutOfControlPath,
+                                deviceLayoutOfControl, out var distance))
+                            {
+                                score += 1 + 1f / (Math.Abs(distance) + 1);
+                            }
+                            else
+                            {
+                                // Shouldn't really get here as for the control to be a match for the path, the device layouts
+                                // would be expected to be related to each other. But just add 1 for a generic match and go on.
+                                score += 1;
+                            }
+                        }
+
                         break;
                     }
 
@@ -282,23 +519,13 @@ namespace UnityEngine.InputSystem
                     : MatchResult.Result.AllSatisfied,
                 m_Controls = controls,
                 m_Requirements = m_DeviceRequirements,
+                m_Score = score,
             };
-        }
-
-        public string ToJson()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static InputControlScheme FromJson(string json)
-        {
-            throw new NotImplementedException();
         }
 
         public bool Equals(InputControlScheme other)
         {
             if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
-                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName, StringComparison.InvariantCultureIgnoreCase) &&
                   string.Equals(m_BindingGroup, other.m_BindingGroup, StringComparison.InvariantCultureIgnoreCase)))
                 return false;
 
@@ -313,7 +540,7 @@ namespace UnityEngine.InputSystem
             {
                 var device = m_DeviceRequirements[i];
                 var haveMatch = false;
-                for (var n = 0; i < deviceCount; ++n)
+                for (var n = 0; n < deviceCount; ++n)
                 {
                     if (other.m_DeviceRequirements[n] == device)
                     {
@@ -342,7 +569,6 @@ namespace UnityEngine.InputSystem
             unchecked
             {
                 var hashCode = (m_Name != null ? m_Name.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (m_BaseSchemeName != null ? m_BaseSchemeName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (m_BindingGroup != null ? m_BindingGroup.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (m_DeviceRequirements != null ? m_DeviceRequirements.GetHashCode() : 0);
                 return hashCode;
@@ -386,7 +612,6 @@ namespace UnityEngine.InputSystem
         }
 
         [SerializeField] internal string m_Name;
-        [SerializeField] internal string m_BaseSchemeName;
         [SerializeField] internal string m_BindingGroup;
         [SerializeField] internal DeviceRequirement[] m_DeviceRequirements;
 
@@ -394,23 +619,61 @@ namespace UnityEngine.InputSystem
         /// The result of matching a list of <see cref="InputDevice">devices</see> against a list of
         /// <see cref="DeviceRequirement">requirements</see> in an <see cref="InputControlScheme"/>.
         /// </summary>
-        /// <seealso cref="InputControlScheme.PickDevicesFrom"/>
+        /// <remarks>
+        /// This struct uses <see cref="InputControlList{TControl}"/> which allocates unmanaged memory
+        /// and thus must be disposed in order to not leak unmanaged heap memory.
+        /// </remarks>
+        /// <seealso cref="InputControlScheme.PickDevicesFrom{TDevices}"/>
         public struct MatchResult : IEnumerable<MatchResult.Match>, IDisposable
         {
             /// <summary>
+            /// Overall, relative measure for how well the control scheme matches.
+            /// </summary>
+            /// <value>Scoring value for the control scheme match.</value>
+            /// <remarks>
+            /// Two control schemes may, for example, both support gamepads but one may be tailored to a specific
+            /// gamepad whereas the other one is a generic gamepad control scheme. To differentiate the two, we need
+            /// to know not only that a control schemes but how well it matches relative to other schemes. This is
+            /// what the score value is used for.
+            ///
+            /// Scores are computed primarily based on layouts referenced from device requirements. To start with, each
+            /// matching device requirement (whether optional or mandatory) will add 1 to the score. This the base
+            /// score of a match. Then, for each requirement a delta is computed from the device layout referenced by
+            /// the requirement to the device layout used by the matching control. For example, if the requirement is
+            /// <c>"&lt;Gamepad&gt;</c> and the matching control uses the <see cref="DualShock.DualShock4GamepadHID"/>
+            /// layout, the delta is 2 as the latter layout is derived from <see cref="Gamepad"/> via the intermediate
+            /// <see cref="DualShock.DualShockGamepad"/> layout, i.e. two steps in the inheritance hierarchy. The
+            /// <em>inverse</em> of the delta plus one, i.e. <c>1/(delta+1)</c> is then added to the score. This means
+            /// that an exact match will add an additional 1 to the score and less exact matches will add progressively
+            /// smaller values to the score (proportional to the distance of the actual layout to the one used in the
+            /// requirement).
+            ///
+            /// What this leads to is that, for example, a control scheme with a <c>"&lt;Gamepad&gt;"</c> requirement
+            /// will match a <see cref="DualShock.DualShock4GamepadHID"/> with a <em>lower</em> score than a control
+            /// scheme with a <c>"&lt;DualShockGamepad&gt;"</c> requirement as the <see cref="Gamepad"/> layout is
+            /// further removed (i.e. smaller inverse delta) from <see cref="DualShock.DualShock4GamepadHID"/> than
+            /// <see cref="DualShock.DualShockGamepad"/>.
+            /// </remarks>
+            public float score => m_Score;
+
+            /// <summary>
             /// Whether the device requirements got successfully matched.
             /// </summary>
+            /// <value>True if the scheme's device requirements were satisfied.</value>
             public bool isSuccessfulMatch => m_Result != Result.MissingRequired;
 
             /// <summary>
             /// Whether there are missing required devices.
             /// </summary>
+            /// <value>True if there are missing, non-optional devices.</value>
             /// <seealso cref="DeviceRequirement.isOptional"/>
             public bool hasMissingRequiredDevices => m_Result == Result.MissingRequired;
 
             /// <summary>
-            /// Whether there are missing optional devices.
+            /// Whether there are missing optional devices. This does not prevent
+            /// a successful match.
             /// </summary>
+            /// <value>True if there are missing optional devices.</value>
             /// <seealso cref="DeviceRequirement.isOptional"/>
             public bool hasMissingOptionalDevices => m_Result == Result.MissingOptional;
 
@@ -498,6 +761,7 @@ namespace UnityEngine.InputSystem
             }
 
             internal Result m_Result;
+            internal float m_Score;
             internal InputControlList<InputDevice> m_Devices;
             internal InputControlList<InputControl> m_Controls;
             internal DeviceRequirement[] m_Requirements;
@@ -517,6 +781,7 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// Links the control that was matched with the respective device requirement.
             /// </remarks>
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Conflicts with UnityEngine.Networking.Match, which is deprecated and will go away.")]
             public struct Match
             {
                 /// <summary>
@@ -779,8 +1044,6 @@ namespace UnityEngine.InputSystem
         internal struct SchemeJson
         {
             public string name;
-            ////TODO: nuke 'basedOn'
-            public string basedOn;
             public string bindingGroup;
             public DeviceJson[] devices;
 
@@ -826,7 +1089,6 @@ namespace UnityEngine.InputSystem
                 return new InputControlScheme
                 {
                     m_Name = string.IsNullOrEmpty(name) ? null : name,
-                    m_BaseSchemeName = string.IsNullOrEmpty(basedOn) ? null : basedOn,
                     m_BindingGroup = string.IsNullOrEmpty(bindingGroup) ? null : bindingGroup,
                     m_DeviceRequirements = deviceRequirements,
                 };
@@ -846,7 +1108,6 @@ namespace UnityEngine.InputSystem
                 return new SchemeJson
                 {
                     name = scheme.m_Name,
-                    basedOn = scheme.m_BaseSchemeName,
                     bindingGroup = scheme.m_BindingGroup,
                     devices = devices,
                 };

@@ -1,5 +1,8 @@
+using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -25,7 +28,8 @@ namespace UnityEngine.InputSystem.Composites
     ///
     /// If both buttons are pressed at the same time, the behavior depends on <see cref="whichSideWins"/>.
     /// By default, neither side will win (<see cref="WhichSideWins.Neither"/>) and the result
-    /// will be 0. This can be customized to make the positive side win (<see cref="WhichSideWins.Positive"/>)
+    /// will be 0 (or, more precisely, the midpoint between <see cref="minValue"/> and <see cref="maxValue"/>).
+    /// This can be customized to make the positive side win (<see cref="WhichSideWins.Positive"/>)
     /// or the negative one (<see cref="WhichSideWins.Negative"/>).
     ///
     /// This is useful, for example, in a driving game where break should cancel out accelerate.
@@ -37,11 +41,17 @@ namespace UnityEngine.InputSystem.Composites
     /// and inverted for <see cref="negative"/>. This means that if the buttons are actual axes (e.g.
     /// the triggers on gamepads), then the values correspond to how much the axis is actuated.
     /// </remarks>
+    [Preserve]
+    [DisplayStringFormat("{negative}/{positive}")]
+    [DisplayName("Positive/Negative Binding")]
     public class AxisComposite : InputBindingComposite<float>
     {
         /// <summary>
         /// Binding for the button that controls the positive direction of the axis.
         /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
         [InputControl(layout = "Button")] public int negative = 0;
@@ -49,6 +59,9 @@ namespace UnityEngine.InputSystem.Composites
         /// <summary>
         /// Binding for the button that controls the negative direction of the axis.
         /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
         [InputControl(layout = "Button")] public int positive = 0;
@@ -58,6 +71,15 @@ namespace UnityEngine.InputSystem.Composites
         /// </summary>
         /// <remarks>
         /// This value corresponds to the full actuation of the control(s) bound to <see cref="negative"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+        ///     .With("Negative", "&lt;Keyboard&gt;/a")
+        ///     .With("Positive", "&lt;Keyboard&gt;/d");
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="maxValue"/>
         /// <seealso cref="negative"/>
@@ -71,6 +93,15 @@ namespace UnityEngine.InputSystem.Composites
         /// </summary>
         /// <remarks>
         /// This value corresponds to the full actuation of the control(s) bound to <see cref="positive"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        /// action.AddCompositeBinding("Axis(minValue=0,maxValue=2")
+        ///     .With("Negative", "&lt;Keyboard&gt;/a")
+        ///     .With("Positive", "&lt;Keyboard&gt;/d");
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="minValue"/>
         /// <seealso cref="positive"/>
@@ -88,6 +119,12 @@ namespace UnityEngine.InputSystem.Composites
             "min will be returned.")]
         public WhichSideWins whichSideWins = WhichSideWins.Neither;
 
+        /// <summary>
+        /// The value that is returned if the composite is in a neutral position, that is, if
+        /// neither <see cref="positive"/> nor <see cref="negative"/> are actuated or if
+        /// <see cref="whichSideWins"/> is set to <see cref="WhichSideWins.Neither"/> and
+        /// both <see cref="positive"/> and <see cref="negative"/> are actuated.
+        /// </summary>
         public float midPoint => (maxValue + minValue) / 2;
 
         ////TODO: add parameters to control ramp up&down
@@ -143,6 +180,7 @@ namespace UnityEngine.InputSystem.Composites
         /// What happens to the value of an <see cref="AxisComposite"/> if both <see cref="positive"/>
         /// and <see cref="negative"/> are actuated at the same time.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:OnlyFlagsEnumsShouldHavePluralNames", Justification = "False positive: `Wins` is not a plural form.")]
         public enum WhichSideWins
         {
             /// <summary>

@@ -1,10 +1,12 @@
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Determines how the triggering of an action or other input-related events are relayed to other GameObjects.
     /// </summary>
     public enum PlayerNotifications
     {
+        ////TODO: add a "None" behavior; for actions, users may want to poll (or use the generated interfaces)
+
         /// <summary>
         /// Use <see cref="GameObject.SendMessage(string,object)"/> to send a message to the <see cref="GameObject"/>
         /// that <see cref="PlayerInput"/> belongs to.

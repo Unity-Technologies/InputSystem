@@ -1,8 +1,9 @@
+#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     /// <summary>
     /// A device command sent to a device to set it's motor rumble amplitude for a set duration.
@@ -11,26 +12,23 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SendHapticImpulseCommand : IInputDeviceCommandInfo
     {
-        static FourCC Type { get { return new FourCC('X', 'H', 'I', '0'); } }
+        static FourCC Type => new FourCC('X', 'H', 'I', '0');
 
-        const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(float) * 2);
+        private const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(float) * 2);
 
         [FieldOffset(0)]
         InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        int channel;
+        private int channel;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int))]
-        float amplitude;
+        private float amplitude;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(float)))]
-        float duration;
+        private float duration;
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         /// <summary>
         /// Creates a device command that can then be sent to a specific device.
@@ -51,3 +49,4 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
         }
     }
 }
+#endif // (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION

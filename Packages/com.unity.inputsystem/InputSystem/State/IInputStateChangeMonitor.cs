@@ -3,6 +3,14 @@
 
 namespace UnityEngine.InputSystem.LowLevel
 {
+    /// <summary>
+    /// Interface used to monitor input system state changes.
+    /// </summary>
+    /// <remarks>
+    /// Use <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/> to install a state change monitor receiving state change
+    /// callbacks for a specific control.
+    /// </remarks>
+    /// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
     public interface IInputStateChangeMonitor
     {
         /// <summary>
@@ -23,7 +31,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <param name="time"></param>
         /// <param name="monitorIndex"></param>
         /// <param name="timerIndex"></param>
-        /// <seealso cref="InputSystem.AddStateChangeMonitorTimeout"/>
+        /// <seealso cref="InputState.AddChangeMonitorTimeout"/>
         void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex);
     }
 }

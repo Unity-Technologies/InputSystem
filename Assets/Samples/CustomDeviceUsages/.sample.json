@@ -1,0 +1,4 @@
+{
+  "displayName": "Custom Device Usages",
+  "description": "Shows how to tag devices with custom usage strings that can be used, for example, to distinguish multiple instances of the same type of device (e.g. 'Gamepad') based on how the device is used (e.g. 'Player1' vs 'Player2' or 'LeftHand' vs 'RightHand')."
+} 

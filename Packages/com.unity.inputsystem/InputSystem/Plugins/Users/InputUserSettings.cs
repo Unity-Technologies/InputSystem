@@ -16,7 +16,7 @@ using System;
 
 ////REVIEW: add ability to have per-device (or device layout?) settings?
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// A user profile may alter select aspects of input behavior at runtime.
@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
     /// This class implements several user adjustable input behaviors commonly found in games, such
     /// as mouse sensitivity and axis inversion.
     ///
-    /// Note that the behaviors only work in combination with actions, i.e. for users that have
+    /// Note that the behaviors only work in combination with actions, that is, for users that have
     /// actions associated with them via <see cref="InputUser.AssociateActionsWithUser(IInputActionCollection)"/>.
     /// The behaviors do not alter the input as present directly on the devices. Meaning that, for example,
     /// <see cref="invertMouseX"/> will not impact <see cref="Vector2.x"/> of <see cref="Mouse.delta"/> but will
@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
     /// ////REVIEW: does this really make sense?
     /// </remarks>
     [Serializable]
-    public class InputUserSettings
+    internal class InputUserSettings
     {
         /// <summary>
         /// Customized bindings for the user.

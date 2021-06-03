@@ -5,18 +5,24 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.CodeDom.Compiler;
+using System.Text.RegularExpressions;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEngine.Scripting;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
@@ -24,27 +30,78 @@ using UnityEngine.TestTools;
 partial class CoreTests
 {
     [Serializable]
-    private struct PackageJson
+    internal struct PackageJson
     {
         public string version;
+
+        public static Version ReadVersion()
+        {
+            var packageJsonFile = File.ReadAllText("Packages/com.unity.inputsystem/package.json");
+            var packageJson = JsonUtility.FromJson<PackageJson>(packageJsonFile);
+
+            // Snip -preview off the end. System.Version doesn't support semantic versioning.
+            var versionString = packageJson.version;
+            if (versionString.Contains("-preview"))
+                versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
+            else if (versionString.Contains("-pre"))
+                versionString = versionString.Substring(0, versionString.IndexOf("-pre"));
+            return new Version(versionString);
+        }
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_PackageVersionAndAssemblyVersionAreTheSame()
     {
-        var packageJsonFile = File.ReadAllText("Packages/com.unity.inputsystem/package.json");
-        var packageJson = JsonUtility.FromJson<PackageJson>(packageJsonFile);
-
-        // Snip -preview off the end. System.Version doesn't support semantic versioning.
-        var versionString = packageJson.version;
-        if (versionString.EndsWith("-preview"))
-            versionString = versionString.Substring(0, versionString.Length - "-preview".Length);
-        var version = new Version(versionString);
+        var version = PackageJson.ReadVersion();
 
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
         Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Minor));
         Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_HelpUrlsPointToCurrentVersion()
+    {
+        var version = PackageJson.ReadVersion();
+
+        Assert.That(InputSystem.kDocUrl, Does.Contain($"@{version.Major}.{version.Minor}"));
+    }
+
+    // upm-ci has this as a warning; turn it into an error in our CI.
+    [Test]
+    [Category("Editor")]
+    public void Editor_ChangelogDatesConformToISO8601()
+    {
+        var changelog = File.ReadAllLines("Packages/com.unity.inputsystem/CHANGELOG.md");
+        var regex = new Regex(@"^##\s+\[.*\]\s+-\s+(?<date>[0-9\-]+)");
+        var dateRegex = new Regex(@"(?<year>[0-9][0-9][0-9][0-9])-(?<month>[0-9][0-9])-(?<day>[0-9][0-9])");
+
+        DateTime? lastDate = null;
+        foreach (var line in changelog)
+        {
+            var match = regex.Match(line);
+            if (!match.Success)
+                continue;
+
+            var date = match.Groups["date"].Value;
+            var dateMatch = dateRegex.Match(date);
+            Assert.That(dateMatch.Success, Is.True, $"'{date}' in '{line}' is not in ISO 8601 format");
+
+            Assert.That(int.Parse(dateMatch.Groups["year"].Value), Is.GreaterThanOrEqualTo(2018));
+            Assert.That(int.Parse(dateMatch.Groups["month"].Value), Is.GreaterThanOrEqualTo(1).And.LessThanOrEqualTo(12));
+            Assert.That(int.Parse(dateMatch.Groups["day"].Value), Is.GreaterThanOrEqualTo(1).And.LessThanOrEqualTo(31));
+
+            // Also ensure dates are ordered.
+            var dateTime = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+            if (lastDate != null)
+                Assert.That(lastDate.Value, Is.GreaterThan(dateTime));
+
+            lastDate = dateTime;
+        }
+
+        Assert.That(lastDate, Is.Not.Null, "Could not find any changelog dates in the changelog file");
     }
 
     [Test]
@@ -140,49 +197,108 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        SimulateDomainReload();
 
-        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+        var newDevice = InputSystem.devices[0];
 
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
     }
 
+    // We have code that will automatically query the enabled state of devices on creation
+    // but if the IOCTL is not implemented, we still need to be able to maintain a device's
+    // enabled state.
     [Test]
     [Category("Editor")]
-    public void Editor_DomainReload_FirstPlayerLoopUpdateCausesDevicesToBeRecreated()
+    public void Editor_DomainReload_PreservesEnabledState()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.DisableDevice(device);
+
+        Assert.That(device.enabled, Is.False);
+
+        SimulateDomainReload();
+
+        var newDevice = InputSystem.devices[0];
+
+        Assert.That(newDevice.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_InputSystemInitializationCausesDevicesToBeRecreated()
     {
         InputSystem.AddDevice<Gamepad>();
 
-        // This test quite invasively goes into InputSystem internals. Unfortunately, we
-        // have no proper way of simulating domain reloads ATM. So we directly call various
-        // internal methods here in a sequence similar to what we'd get during a domain reload.
-
-        InputSystem.s_SystemObject.OnBeforeSerialize();
-        runtime.onPlayModeChanged(PlayModeStateChange.ExitingEditMode);
-        runtime.isInPlayMode = false;
-        InputSystem.s_SystemObject = null;
-        InputSystem.InitializeInEditor(runtime);
-        runtime.isInPlayMode = true;
-        runtime.onPlayModeChanged(PlayModeStateChange.EnteredPlayMode);
+        SimulateDomainReload();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1192379/
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_CustomDevicesAreRestoredAsLayoutsBecomeAvailable()
+    {
+        ////REVIEW: Consider switching away from explicit registration and switch to implicit discovery
+        ////        through reflection. Explicit registration has proven surprisingly fickle and puts the
+        ////        burden squarely on users.
+
+        // We may have several [InitializeOnLoad] classes each registering a piece of data
+        // with the input system. The first [InitializeOnLoad] code that gets picked by the
+        // Unity runtime is the one that will trigger initialization of the input system.
+        //
+        // However, if we have a later one in the sequence registering a device layout, we
+        // cannot successfully recreate devices using that layout until that code has executed,
+        // too.
+        //
+        // What we do to solve this is to keep information on devices that we fail to restore
+        // after a domain around until the very first full input update. At that point, we
+        // warn about every
+
+        const string kLayout = @"
+            {
+                ""name"" : ""CustomDevice"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterLayout(kLayout);
+        InputSystem.AddDevice("CustomDevice");
+
+        SimulateDomainReload();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        InputSystem.RegisterLayout(kLayout);
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices[0].layout, Is.EqualTo("CustomDevice"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_RetainsUnsupportedDevices()
+    {
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "SomethingUnknown",
+            product = "UnknownProduct"
+        });
+        InputSystem.Update();
+
+        SimulateDomainReload();
+
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetUnsupportedDevices()[0].interfaceName, Is.EqualTo("SomethingUnknown"));
+        Assert.That(InputSystem.GetUnsupportedDevices()[0].product, Is.EqualTo("UnknownProduct"));
     }
 
     [Test]
     [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Editor")]
-    [Ignore("TODO")]
-    public void TODO_Editor_DomainReload_PreservesCurrentStatusOfDevices()
     {
         Assert.Fail();
     }
@@ -196,7 +312,7 @@ partial class CoreTests
         var receivedOnEvent = 0;
         var receivedOnDeviceChange = 0;
 
-        InputSystem.onEvent += _ => ++ receivedOnEvent;
+        InputSystem.onEvent += (e, d) => ++ receivedOnEvent;
         InputSystem.onDeviceChange += (c, d) => ++ receivedOnDeviceChange;
 
         InputSystem.Restore();
@@ -276,6 +392,82 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_InputAsset_CanAddAndRemoveElementThroughSerialization()
+    {
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction(name: "action1", binding: "<Gamepad>/leftStick");
+        var action2 = map.AddAction(name: "action2", binding: "<Gamepad>/rightStick");
+        action2.AddBinding("<Gamepad>/dpad");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var mapId = map.id;
+        var action1Id = action1.id;
+        var action2Id = action2.id;
+        var binding1Id = map.bindings[0].id;
+        var binding2Id = map.bindings[1].id;
+        var binding3Id = map.bindings[2].id;
+
+        var obj = new SerializedObject(asset);
+
+        var maps = obj.FindProperty("m_ActionMaps");
+        InputActionSerializationHelpers.AddElement(maps, "new map", 0);
+
+        var actions = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Actions");
+        var bindings = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Bindings");
+        InputActionSerializationHelpers.AddElement(actions, "new action", 1);
+        InputActionSerializationHelpers.AddElement(bindings, "new binding", 1);
+
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        // By the nature of Unity serialization, only the connection to UnityEngine.Objects is maintained
+        // for C# objects. So map, action1, and action2 are all no longer the objects inside the asset.
+        map = asset.actionMaps[1];
+
+        Assert.That(asset.actionMaps.Count, Is.EqualTo(2));
+        Assert.That(asset.actionMaps[0].name, Is.EqualTo("new map"));
+        Assert.That(asset.actionMaps[1].name, Is.EqualTo("map"));
+        Assert.That(asset.actionMaps[0].id, Is.Not.EqualTo(mapId));
+        Assert.That(asset.actionMaps[1].id, Is.EqualTo(mapId));
+
+        Assert.That(map.actions, Has.Count.EqualTo(3));
+        Assert.That(map.actions[0].name, Is.EqualTo("action1"));
+        Assert.That(map.actions[1].name, Is.EqualTo("new action"));
+        Assert.That(map.actions[2].name, Is.EqualTo("action2"));
+        Assert.That(map.actions[0].id, Is.EqualTo(action1Id));
+        Assert.That(map.actions[1].id, Is.Not.EqualTo(action1Id));
+        Assert.That(map.actions[1].id, Is.Not.EqualTo(action2Id));
+        Assert.That(map.actions[2].id, Is.EqualTo(action2Id));
+        Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(map.actions[1].bindings, Has.Count.Zero);
+        Assert.That(map.actions[2].bindings, Has.Count.EqualTo(2));
+        Assert.That(map.actions[0].bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(map.actions[2].bindings[0].path, Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(map.actions[2].bindings[1].path, Is.EqualTo("<Gamepad>/dpad"));
+
+        Assert.That(map.bindings, Has.Count.EqualTo(4));
+        Assert.That(map.bindings[0].id, Is.EqualTo(binding1Id));
+        Assert.That(map.bindings[1].id, Is.Not.EqualTo(binding1Id));
+        Assert.That(map.bindings[1].id, Is.Not.EqualTo(binding2Id));
+        Assert.That(map.bindings[1].id, Is.Not.EqualTo(binding3Id));
+        Assert.That(map.bindings[2].id, Is.EqualTo(binding2Id));
+        Assert.That(map.bindings[3].id, Is.EqualTo(binding3Id));
+        Assert.That(map.bindings[0].name, Is.Not.EqualTo("new binding"));
+        Assert.That(map.bindings[1].name, Is.EqualTo("new binding"));
+        Assert.That(map.bindings[2].name, Is.Not.EqualTo("new binding"));
+        Assert.That(map.bindings[3].name, Is.Not.EqualTo("new binding"));
+        Assert.That(map.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(map.bindings[1].path, Is.Empty);
+        Assert.That(map.bindings[2].path, Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(map.bindings[3].path, Is.EqualTo("<Gamepad>/dpad"));
+        Assert.That(map.bindings[0].action, Is.EqualTo("action1"));
+        Assert.That(map.bindings[1].action, Is.Empty);
+        Assert.That(map.bindings[2].action, Is.EqualTo("action2"));
+        Assert.That(map.bindings[3].action, Is.EqualTo("action2"));
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveActionThroughSerialization()
     {
         var map = new InputActionMap("set");
@@ -292,6 +484,8 @@ partial class CoreTests
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
         Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("New action"));
+        Assert.That(asset.actionMaps[0].actions[2].type, Is.EqualTo(InputActionType.Button));
+        Assert.That(asset.actionMaps[0].actions[2].expectedControlType, Is.EqualTo("Button"));
         Assert.That(asset.actionMaps[0].actions[2].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
@@ -322,8 +516,8 @@ partial class CoreTests
 
         // Maps and actions aren't UnityEngine.Objects so the modifications will not
         // be in-place. Look up the actions after each apply.
-        var action1 = asset.actionMaps[0].TryGetAction("action1");
-        var action2 = asset.actionMaps[0].TryGetAction("action2");
+        var action1 = asset.actionMaps[0].FindAction("action1");
+        var action2 = asset.actionMaps[0].FindAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(2));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -337,8 +531,8 @@ partial class CoreTests
             action1.bindings[1].id);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        action1 = asset.actionMaps[0].TryGetAction("action1");
-        action2 = asset.actionMaps[0].TryGetAction("action2");
+        action1 = asset.actionMaps[0].FindAction("action1");
+        action2 = asset.actionMaps[0].FindAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -361,7 +555,7 @@ partial class CoreTests
         InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        var action1 = asset.actionMaps[0].TryGetAction("action1");
+        var action1 = asset.actionMaps[0].FindAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(3));
         Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
         Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
@@ -410,7 +604,7 @@ partial class CoreTests
             NameAndParameters.Parse("Dpad(normalize=false)"));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        var action1 = asset.actionMaps[0].GetAction("action1");
+        var action1 = asset.actionMaps[0].FindAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(6)); // Composite + 4 parts + noise added above.
         Assert.That(action1.bindings[0].path, Is.EqualTo("Dpad(normalize=false)"));
         Assert.That(action1.bindings, Has.None.Matches((InputBinding x) =>
@@ -449,6 +643,70 @@ partial class CoreTests
         Assert.That(action1.bindings[4].processors, Is.Empty);
         Assert.That(action1.bindings[5].path, Is.EqualTo("foobar"));
         Assert.That(action1.bindings[5].name, Is.Empty);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanReplaceBindingGroupThroughSerialization()
+    {
+        var map = new InputActionMap("map");
+        var action = map.AddAction(name: "action1");
+        action.AddBinding("Foo", groups: "A");
+        action.AddBinding("Bar", groups: "B");
+        action.AddBinding("Flub", groups: "A;B");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        InputActionSerializationHelpers.ReplaceBindingGroup(obj, "A", "C");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(action.bindings[0].groups, Is.EqualTo("C"));
+        Assert.That(action.bindings[1].groups, Is.EqualTo("B"));
+        Assert.That(action.bindings[2].groups, Is.EqualTo("C;B"));
+
+        InputActionSerializationHelpers.ReplaceBindingGroup(obj, "C", "");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(action.bindings[0].groups, Is.EqualTo(""));
+        Assert.That(action.bindings[1].groups, Is.EqualTo("B"));
+        Assert.That(action.bindings[2].groups, Is.EqualTo("B"));
+
+        InputActionSerializationHelpers.ReplaceBindingGroup(obj, "B", "", deleteOrphanedBindings: true);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.bindings, Has.Count.EqualTo(1));
+        Assert.That(map.bindings[0].groups, Is.EqualTo(""));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
+    {
+        const string kAssetPath = "Assets/DirectoryBeforeRename/InputAsset." + InputActionAsset.Extension;
+        const string kAssetPathAfterMove = "Assets/DirectoryAfterRename/InputAsset." + InputActionAsset.Extension;
+        const string kDefaultContents = "{}";
+
+        AssetDatabase.CreateFolder("Assets", "DirectoryBeforeRename");
+        File.WriteAllText(kAssetPath, kDefaultContents);
+        AssetDatabase.ImportAsset(kAssetPath);
+
+        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(kAssetPath);
+        Assert.NotNull(asset, "Could not load asset: " + kAssetPath);
+
+        var inputActionAssetManager = new InputActionAssetManager(asset);
+        inputActionAssetManager.Initialize();
+        inputActionAssetManager.onDirtyChanged = (bool dirty) => {};
+
+        FileUtil.MoveFileOrDirectory("Assets/DirectoryBeforeRename", "Assets/DirectoryAfterRename");
+        AssetDatabase.Refresh();
+
+        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+
+        var fileContents = File.ReadAllText(kAssetPathAfterMove);
+        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+
+        AssetDatabase.DeleteAsset("Assets/DirectoryAfterRename");
     }
 
     private class MonoBehaviourWithEmbeddedAction : MonoBehaviour
@@ -1255,7 +1513,7 @@ partial class CoreTests
         action1.AddCompositeBinding("Axis")
             .With("Positive", "<Keyboard>/a")
             .With("Negative", "<Keyboard>/b");
-        map2.AddAction("action2", "<Keyboard>/space");
+        map2.AddAction("action2", binding: "<Keyboard>/space");
 
         var so = new SerializedObject(asset);
         var selectionChanged = false;
@@ -1314,6 +1572,43 @@ partial class CoreTests
                 Is.EqualTo("Positive"));
             Assert.That(tree["map2/action1"].children[1].children[1].As<PartOfCompositeBindingTreeItem>().name,
                 Is.EqualTo("Negative"));
+        }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1228000/
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCutAndPasteAction_WithControlSchemeFilterActive()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+        action1.AddBinding("<Gamepad>/buttonSouth", groups: "scheme1");
+        action1.AddBinding("<Keyboard>/space", groups: "scheme2");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+        };
+        tree.SetItemSearchFilterAndReload("g:scheme1");
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem("map/action1");
+            tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_CutCommand));
+            tree.SelectItem("map/action2");
+            tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_PasteCommand));
+
+            Assert.That(tree.FindItemByPath("map/action1"), Is.Not.Null);
+            Assert.That(tree["map/action1"].childrenIncludingHidden.Count(), Is.EqualTo(2));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/space"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().groups, Is.EqualTo("scheme1"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().groups, Is.EqualTo("scheme2"));
         }
     }
 
@@ -1635,6 +1930,57 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_ActionTree_CanDeleteMultipleBindings()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map1");
+        var action1 = map1.AddAction("action1");
+        action1.AddBinding("<Gamepad>/leftStick");
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Gamepad>/dpad");
+
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"), true);
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"), true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
+
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action1"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Is.Null);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_ActionTree_CanDeleteComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1707,34 +2053,33 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
-#if NET_4_6
+    #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
+                         // still affected by the current platform.
     [Test]
     [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset()
+    [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
+    [TestCase("MyControls (2)", "MyNamespace", "MyClassName", "MyNamespace.MyClassName")]
+    [TestCase("MyControls", "", "MyClassName", "MyClassName")]
+    [TestCase("interface", "", "class", "class")] // Make sure we can deal with C# reserved keywords.
+    public void Editor_CanGenerateCodeWrapperForInputAsset(string assetName, string namespaceName, string className, string typeName)
     {
         var map1 = new InputActionMap("set1");
         map1.AddAction("action1", binding: "/gamepad/leftStick");
         map1.AddAction("action2", binding: "/gamepad/rightStick");
         var map2 = new InputActionMap("set2");
         map2.AddAction("action1", binding: "/gamepad/buttonSouth");
+        // Add an action that has a C# reserved keyword name.
+        map2.AddAction("return");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
-        asset.name = "My Controls (2)";
+        asset.name = assetName;
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-            new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
+            new InputActionCodeGenerator.Options {namespaceName = namespaceName, className = className, sourceAssetPath = "test"});
 
-        var codeProvider = CodeDomProvider.CreateProvider("CSharp");
-        var cp = new CompilerParameters();
-        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
-        cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
-        var cr = codeProvider.CompileAssemblyFromSource(cp, code);
-        Assert.That(cr.Errors, Is.Empty);
-        var assembly = cr.CompiledAssembly;
-        Assert.That(assembly, Is.Not.Null);
-        var type = assembly.GetType("MyNamespace.MyControls2");
-        Assert.That(type, Is.Not.Null);
+        var type = Compile(code, typeName);
+
         var set1Property = type.GetProperty("set1");
         Assert.That(set1Property, Is.Not.Null);
         var set1MapGetter = set1Property.PropertyType.GetMethod("Get");
@@ -1744,11 +2089,12 @@ partial class CoreTests
         Assert.That(set1Instance, Is.Not.Null);
         var set1map = set1MapGetter.Invoke(set1Instance, null) as InputActionMap;
         Assert.That(set1map, Is.Not.Null);
+        Assert.That(typeof(IInputActionCollection2).IsAssignableFrom(type));
 
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
-#endif
+    #endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
@@ -1885,6 +2231,7 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
+    [Preserve]
     private class TestInteractionWithValueType : IInputInteraction<float>
     {
         public void Process(ref InputInteractionContext context)
@@ -2010,6 +2357,25 @@ partial class CoreTests
             Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Pen" + scalePostFix + ".png")));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_AddingAndRemovingLayoutRefreshesLayoutCache()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout""
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        Assert.That(EditorInputControlLayoutCache.allLayouts, Has.Exactly(1).With.Property("name").EqualTo(new InternedString("TestLayout")));
+
+        InputSystem.RemoveLayout("TestLayout");
+
+        Assert.That(EditorInputControlLayoutCache.allLayouts, Has.None.With.Property("name").EqualTo(new InternedString("TestLayout")));
+    }
+
     private class TestEditorWindow : EditorWindow
     {
         public Vector2 mousePosition;
@@ -2046,6 +2412,362 @@ partial class CoreTests
     public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
     {
         throw new NotImplementedException();
+    }
+
+    // While going into play mode, the editor will be unresponsive. So what will happen is that when the user clicks the
+    // play mode button and then moves the mouse around while Unity is busy going into play mode, the game will receive
+    // a huge pointer motion delta in one of its first frames. If pointer motion is tied to camera motion, for example,
+    // this will usually lead to the camera looking down at the ground because after clicking the play mode button at the
+    // top of the UI, the user will likely move the pointer down towards the game view area thus generating a large down
+    // motion delta.
+    //
+    // What we do to counter this is to record the time of when we enter play mode and then record the time again when
+    // we have fully entered play mode. All the events in-between we discard.
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputEventsOccurringWhileGoingIntoPlayMode_AreDiscarded()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // We need to actually pass time and have a non-zero start time for this to work.
+        currentTime = 1;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(234, 345) });
+        currentTime = 2;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        InputSystem.Update();
+
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Make sure the event was not left in the buffer.
+        Assert.That(runtime.m_EventCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_DestroysAllActionStates()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        Assert.That(InputActionState.s_GlobalList.length, Is.EqualTo(1));
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_RemovesAllInputUsersAndStopsListeningForUnpairedDeviceActivity()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed += (control, ptr) => {};
+
+        Assert.That(user.valid, Is.True);
+        Assert.That(InputUser.all, Has.Count.EqualTo(1));
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(user.valid, Is.False);
+        Assert.That(InputUser.all, Has.Count.Zero);
+
+        // Send an event to make sure InputUser removed its event hook.
+        Press(gamepad.buttonSouth);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_DiscardsInputActionAssetChanges()
+    {
+        // Control schemes
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .AddControlScheme("AddedControlScheme"), "Add control scheme");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .RemoveControlScheme("ControlSchemeToRemove"), "Remove control scheme");
+
+        // Action maps
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .AddActionMap("NewActionMap"), "Add action map");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .RemoveActionMap("ActionMapToRemove"), "Remove action map");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("ActionMapToModify")
+            .AddAction("NewAction"), "Add action");
+
+        // Actions
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .RemoveAction(), "Remove action");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .Rename("New Action"), "Modify action");
+
+        // Bindings
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("ActionMapToModify")
+            .AddBinding("<Gamepad>/buttonNorth"), "Add new binding");
+
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .ApplyBindingOverride("<Gamepad>/buttonNorth"), "Modify binding");
+    }
+
+    private void AssertAssetIsUnmodifiedAfterExitingPlayMode(Action<InputActionAsset> action, string message = "")
+    {
+        var m_TestAssetPath = $"Assets/__TestInputAsset.{InputActionAsset.Extension}";
+
+        var inputActionMap = new InputActionMap("DefaultActionMap");
+        var inputAction = inputActionMap.AddAction("DefaultAction");
+        inputAction.AddBinding("<Gamepad>/buttonSouth");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(inputActionMap);
+
+        asset.AddActionMap("ActionMapToRemove");
+        asset.AddActionMap("ActionMapToModify");
+        asset.AddControlScheme("ControlSchemeToRemove");
+
+        File.WriteAllText(m_TestAssetPath, asset.ToJson());
+        AssetDatabase.ImportAsset(m_TestAssetPath);
+        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        var originalJson = asset.ToJson();
+        AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var assetGuid, out long _);
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        action?.Invoke(asset);
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);
+    }
+
+#if UNITY_STANDALONE // CodeDom API not available in most players.
+    [Test]
+    [Category("Editor")]
+    [TestCase("Mouse", typeof(Mouse))]
+    [TestCase("Pen", typeof(Pen))]
+    [TestCase("Keyboard", typeof(Keyboard))]
+    [TestCase("Gamepad", typeof(Gamepad))]
+    [TestCase("Touchscreen", typeof(Touchscreen))]
+    [TestCase("DualShock4GamepadHID", typeof(DualShock4GamepadHID))]
+    public void Editor_CanGenerateCodeForInputDeviceLayout(string layoutName, Type deviceType)
+    {
+        var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST", @namespace: "TestNamespace");
+
+        var type = Compile(code,  "TestNamespace.Fast" + deviceType.Name, options: "-define:FIRST -define:UNITY_EDITOR");
+        var device = (InputDevice)Activator.CreateInstance(type);
+
+        Assert.That(device, Is.InstanceOf(deviceType));
+
+        // Compare the mouse to one created by InputDeviceBuilder.
+        var original = InputDevice.Build<InputDevice>(layoutName, noPrecompiledLayouts: true);
+
+        Assert.That(device.name, Is.EqualTo(original.name));
+        Assert.That(device.displayName, Is.EqualTo(original.displayName));
+        Assert.That(device.shortDisplayName, Is.EqualTo(original.shortDisplayName));
+        Assert.That(device.layout, Is.EqualTo(original.layout));
+        Assert.That(device.noisy, Is.EqualTo(original.noisy));
+        Assert.That(device.synthetic, Is.False);
+        Assert.That(device.isSetupFinished, Is.True);
+        Assert.That(device.stateBlock.format, Is.EqualTo(original.stateBlock.format));
+        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(original.stateBlock.sizeInBits));
+        Assert.That(device.usages, Is.EquivalentTo(original.usages));
+        Assert.That(device.aliases, Is.EquivalentTo(original.aliases));
+        Assert.That(device.parent, Is.Null);
+        Assert.That(device.device, Is.SameAs(device));
+        Assert.That(device.children.Select(x => x.path), Is.EquivalentTo(original.children.Select(x => x.path)));
+
+        Assert.That(device.allControls.Count, Is.EqualTo(original.allControls.Count));
+        Assert.That(device.allControls.Select(x => x.name), Is.EquivalentTo(original.allControls.Select(x => x.name)));
+        Assert.That(device.allControls.Select(x => x.displayName), Is.EquivalentTo(original.allControls.Select(x => x.displayName)));
+        Assert.That(device.allControls.Select(x => x.shortDisplayName), Is.EquivalentTo(original.allControls.Select(x => x.shortDisplayName)));
+        Assert.That(device.allControls.Select(x => x.path), Is.EquivalentTo(original.allControls.Select(x => x.path)));
+        Assert.That(device.allControls.Select(x => x.parent.path), Is.EquivalentTo(original.allControls.Select(x => x.parent.path)));
+        Assert.That(device.allControls.Select(x => x.parent != device ? x.parent.GetType() : null),
+            Is.EquivalentTo(original.allControls.Select(x => x.parent != original ? x.parent.GetType() : null)));
+        Assert.That(device.allControls.SelectMany(x => x.children.Select(c => c.path)),
+            Is.EquivalentTo(original.allControls.SelectMany(x => x.children.Select(c => c.path))));
+        Assert.That(device.allControls.Select(x => x.stateBlock.format), Is.EquivalentTo(original.allControls.Select(x => x.stateBlock.format)));
+        Assert.That(device.allControls.Select(x => x.stateBlock.sizeInBits), Is.EquivalentTo(original.allControls.Select(x => x.stateBlock.sizeInBits)));
+        Assert.That(device.allControls.Select(x => x.stateBlock.byteOffset), Is.EquivalentTo(original.allControls.Select(x => x.stateBlock.byteOffset)));
+        Assert.That(device.allControls.Select(x => x.stateBlock.bitOffset), Is.EquivalentTo(original.allControls.Select(x => x.stateBlock.bitOffset)));
+        Assert.That(device.allControls.Select(x => x.noisy), Is.EquivalentTo(original.allControls.Select(x => x.noisy)));
+        Assert.That(device.allControls.Select(x => x.synthetic), Is.EquivalentTo(original.allControls.Select(x => x.synthetic)));
+        Assert.That(device.allControls.Select(x => x.isSetupFinished), Is.EquivalentTo(original.allControls.Select(x => x.isSetupFinished)));
+        Assert.That(device.allControls.Select(x => x.usages), Is.EquivalentTo(original.allControls.Select(x => x.usages)));
+        Assert.That(device.allControls.Select(x => x.aliases), Is.EquivalentTo(original.allControls.Select(x => x.aliases)));
+
+        // Check that all InputControl getters were initialized correctly.
+        Assert.That(
+            device.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x =>
+                typeof(InputControl).IsAssignableFrom(x.PropertyType) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0 &&
+                x.Name != "device" && x.Name != "parent")
+                .Select(x => ((InputControl)(x.GetValue(device)))?.path),
+            Is.EqualTo(original.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x =>
+                typeof(InputControl).IsAssignableFrom(x.PropertyType) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0 &&
+                x.Name != "device" && x.Name != "parent")
+                .Select(x => ((InputControl)(x.GetValue(original)))?.path)));
+        Assert.That(
+            device.allControls.Select(c => c.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x =>
+                typeof(InputControl).IsAssignableFrom(x.PropertyType) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0 &&
+                x.Name != "device" && x.Name != "parent")
+                .Select(x => ((InputControl)(x.GetValue(c)))?.path)),
+            Is.EqualTo(original.allControls.Select(c => c.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x =>
+                typeof(InputControl).IsAssignableFrom(x.PropertyType) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0 &&
+                x.Name != "device" && x.Name != "parent")
+                .Select(x => ((InputControl)(x.GetValue(c)))?.path))));
+
+        // Check children array of each control.
+        Assert.That(
+            device.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((Array)(x.GetValue(device)))?.Length),
+            Is.EqualTo(original.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((Array)(x.GetValue(original)))?.Length)));
+        Assert.That(
+            device.allControls.Select(c => GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((Array)(x.GetValue(c)))?.Length)),
+            Is.EqualTo(original.allControls.Select(c => c.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((Array)(x.GetValue(c)))?.Length))));
+        Assert.That(
+            device.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((InputControl[])(x.GetValue(device))).Select(v => v?.path)),
+            Is.EqualTo(original.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((InputControl[])(x.GetValue(original))).Select(v => v?.path))));
+        Assert.That(
+            device.allControls.Select(c => GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((InputControl[])(x.GetValue(c)))?.Select(v => v?.path))),
+            Is.EqualTo(original.allControls.Select(c => GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
+                x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
+                .Select(x => ((InputControl[])(x.GetValue(c)))?.Select(v => v?.path)))));
+
+        // Check processors on each control.
+        Assert.That(
+            device.allControls.Select(c => c.GetProcessors()).Where(l => l.Count() != 0).SelectMany(l => l.Select(p => p.ToString())),
+            Is.EquivalentTo(original.allControls.Select(c => c.GetProcessors()).Where(l => l.Count() != 0)
+                .SelectMany(l => l.Select(p => p.ToString()))));
+
+        // Check AxisControl parameters (assumption here is that if those parameters are correct, parameters
+        // on other control types are correct, too).
+        Assert.That(
+            device.allControls.OfType<AxisControl>().Select(c =>
+                $"{c.clamp},{c.clampMin},{c.clampMax},{c.clampConstant},{c.invert},{c.normalize},{c.normalizeMin},{c.normalizeMax},{c.normalizeZero},{c.scale},{c.scaleFactor}"),
+            Is.EquivalentTo(
+                original.allControls.OfType<AxisControl>().Select(c =>
+                    $"{c.clamp},{c.clampMin},{c.clampMax},{c.clampConstant},{c.invert},{c.normalize},{c.normalizeMin},{c.normalizeMax},{c.normalizeZero},{c.scale},{c.scaleFactor}")));
+
+        // Check min and max values.
+        Assert.That(device.allControls.Select(c => $"{c.m_MinValue},{c.m_MaxValue}"),
+            Is.EquivalentTo(original.allControls.Select(c => $"{c.m_MinValue},{c.m_MaxValue}")));
+
+        // Check that all KeyControls have key codes.
+        Assert.That(device.allControls.OfType<KeyControl>().Select(x => x.keyCode),
+            Is.EquivalentTo(original.allControls.OfType<KeyControl>().Select(x => x.keyCode)));
+
+        // Check that all DpadAxisControls have "component" indices.
+        Assert.That(device.allControls.OfType<DpadControl.DpadAxisControl>().Select(x => x.component),
+            Is.EquivalentTo(original.allControls.OfType<DpadControl.DpadAxisControl>().Select(x => x.component)));
+
+        // Add both the original and the code-generated device.
+        InputSystem.AddDevice(original);
+        InputSystem.AddDevice(device);
+
+        // Press every non-synthetic button on the device.
+        var allNonSyntheticButtons = device.allControls.OfType<ButtonControl>().Where(x => !x.synthetic).ToList();
+        foreach (var button in allNonSyntheticButtons)
+        {
+            using (StateEvent.FromDefaultStateFor(device, out var eventPtr))
+            {
+                unsafe
+                {
+                    var statePtr = StateEvent.From(eventPtr)->stateData;
+                    try
+                    {
+                        button.WriteValueIntoEvent(1f, eventPtr);
+                    }
+                    // Some controls don't support writing.
+                    catch (NotSupportedException)
+                    {
+                        continue;
+                    }
+
+                    // Make sure it leads to only a single button being pressed in the event.
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
+                    Assert.That(allNonSyntheticButtons.Where(b => b.ReadValueFromEvent(eventPtr) != 0f),
+                        Is.EquivalentTo(new[] { button }));
+                }
+
+                InputSystem.QueueEvent(eventPtr);
+                InputSystem.Update();
+
+                // Make sure the button is pressed and is the only one on the device.
+                Assert.That(allNonSyntheticButtons.Where(b => b.isPressed),
+                    Is.EquivalentTo(new[] { button }));
+            }
+        }
+    }
+
+    internal static Type Compile(string code, string typeName, string options = null)
+    {
+        var codeProvider = CodeDomProvider.CreateProvider("CSharp");
+        var cp = new CompilerParameters();
+        cp.CompilerOptions = options;
+        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+        var cr = codeProvider.CompileAssemblyFromSource(cp, code);
+        Assert.That(cr.Errors, Is.Empty);
+        var assembly = cr.CompiledAssembly;
+        Assert.That(assembly, Is.Not.Null);
+        var type = assembly.GetType(typeName);
+        Assert.That(type, Is.Not.Null);
+        return type;
+    }
+
+#endif
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanRestartEditorThroughReflection()
+    {
+        EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB

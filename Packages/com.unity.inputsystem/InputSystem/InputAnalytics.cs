@@ -6,6 +6,8 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////FIXME: apparently shutdown events are not coming through in the analytics backend
+
 namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics
@@ -31,8 +33,6 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < devices.Count; ++i)
             {
                 var device = devices[i];
-                if (IsIgnoredDevice(device.description))
-                    continue;
 
                 deviceList.Add(
                     StartupEventData.DeviceInfo.FromDescription(device.description, device.native, device.layout));
@@ -64,10 +64,6 @@ namespace UnityEngine.InputSystem
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
-        public static void OnFirstUserInteraction(InputManager manager, double time, InputControl control)
-        {
-        }
-
         public static void OnShutdown(InputManager manager)
         {
             var metrics = manager.metrics;
@@ -83,14 +79,6 @@ namespace UnityEngine.InputSystem
 
             manager.m_Runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
-        }
-
-        private static bool IsIgnoredDevice(InputDeviceDescription description)
-        {
-            #if UNITY_STANDALONE_WIN
-            #endif
-
-            return false;
         }
 
         /// <summary>

@@ -1,8 +1,12 @@
 using System;
+using System.Diagnostics;
+using UnityEngine.InputSystem.Controls;
+
+////TODO: API to get the control and device from the internal context
 
 ////TODO: ToString()
 
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Wraps around values provided by input actions.
@@ -14,6 +18,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
     /// the receiver from having to know about action callback specifics.
     /// </remarks>
     /// <seealso cref="InputAction"/>
+    [DebuggerDisplay("Value = {Get()}")]
     public class InputValue
     {
         /// <summary>
@@ -40,7 +45,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         }
 
         ////TODO: proper message if value type isn't right
-        public bool isPressed => Get<float>() >= InputSystem.settings.defaultButtonPressPoint;
+        public bool isPressed => Get<float>() >= ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         internal InputAction.CallbackContext? m_Context;
     }

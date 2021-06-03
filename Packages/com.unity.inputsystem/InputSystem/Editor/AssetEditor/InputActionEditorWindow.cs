@@ -17,6 +17,8 @@ using UnityEditor.ShortcutManagement;
 
 ////FIXME: when saving, processor/interaction selection is cleared
 
+////TODO: persist view state of asset in Library/ folder
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -26,12 +28,13 @@ namespace UnityEngine.InputSystem.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow
+    internal class InputActionEditorWindow : EditorWindow, IDisposable
     {
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it or
         /// if someone hits the "Edit Asset" button in the importer inspector.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
@@ -43,6 +46,8 @@ namespace UnityEngine.InputSystem.Editor
             string actionToSelect = null;
 
             // Grab InputActionAsset.
+            // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
+            //       without forcing a checkout.
             var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
             if (asset == null)
@@ -202,12 +207,19 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.onSelectedDeviceChanged = OnControlSchemeSelectionChanged;
             m_Toolbar.onSave = SaveChangesToAsset;
             m_Toolbar.onControlSchemesChanged = OnControlSchemesModified;
+            m_Toolbar.onControlSchemeRenamed = OnControlSchemeRenamed;
+            m_Toolbar.onControlSchemeDeleted = OnControlSchemeDeleted;
             EditorApplication.wantsToQuit += EditorWantsToQuit;
 
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
             {
-                m_ActionAssetManager.Initialize();
+                if (!m_ActionAssetManager.Initialize())
+                {
+                    // The asset we want to edit no longer exists.
+                    Close();
+                    return;
+                }
                 m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
 
                 InitializeTrees();
@@ -285,6 +297,44 @@ namespace UnityEngine.InputSystem.Editor
         private void OnControlSchemesModified()
         {
             TransferControlSchemes(save: true);
+
+            // Control scheme changes may affect the search filter.
+            OnToolbarSearchChanged();
+
+            ApplyAndReloadTrees();
+        }
+
+        private void OnControlSchemeRenamed(string oldBindingGroup, string newBindingGroup)
+        {
+            InputActionSerializationHelpers.ReplaceBindingGroup(m_ActionAssetManager.serializedObject,
+                oldBindingGroup, newBindingGroup);
+            ApplyAndReloadTrees();
+        }
+
+        private void OnControlSchemeDeleted(string name, string bindingGroup)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(name), "Control scheme name should not be empty");
+            Debug.Assert(!string.IsNullOrEmpty(bindingGroup), "Binding group should not be empty");
+
+            var asset = m_ActionAssetManager.m_AssetObjectForEditing;
+
+            var bindingMask = InputBinding.MaskByGroup(bindingGroup);
+            var schemeHasBindings = asset.actionMaps.Any(m => m.bindings.Any(b => bindingMask.Matches(ref b)));
+            if (!schemeHasBindings)
+                return;
+
+            ////FIXME: this does not delete composites that have bindings in only one control scheme
+            ////REVIEW: offer to do nothing and leave all bindings as is?
+            var deleteBindings =
+                EditorUtility.DisplayDialog("Delete Bindings?",
+                    $"Delete bindings for '{name}' as well? If you select 'No', the bindings will only "
+                    + $"be unassigned from the '{name}' control scheme but otherwise left as is. Note that bindings "
+                    + $"that are assigned to '{name}' but also to other control schemes will be left in place either way.",
+                    "Yes", "No");
+
+            InputActionSerializationHelpers.ReplaceBindingGroup(m_ActionAssetManager.serializedObject, bindingGroup, "",
+                deleteOrphanedBindings: deleteBindings);
+
             ApplyAndReloadTrees();
         }
 
@@ -305,7 +355,8 @@ namespace UnityEngine.InputSystem.Editor
                 onSelectionChanged = OnActionTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
-                title = "Actions",
+                title = ("Actions", "A list of InputActions in the InputActionMap selected in the left pane. Also, for each InputAction, the list "
+                    + "of bindings that determine the controls that can trigger the action.\n\nThe name of each action must be unique within its InputActionMap."),
             };
 
             // Create tree in left pane showing action maps.
@@ -317,7 +368,8 @@ namespace UnityEngine.InputSystem.Editor
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 onHandleAddNewAction = m_ActionsTree.AddNewAction,
                 drawMinusButton = false,
-                title = "Action Maps",
+                title = ("Action Maps", "A list of InputActionMaps in the asset. Each map can be enabled and disabled separately at runtime and holds "
+                    + "its own collection of InputActions which are listed in the middle pane (along with their InputBindings).")
             };
             m_ActionMapsTree.Reload();
             m_ActionMapsTree.ExpandAll();
@@ -404,7 +456,7 @@ namespace UnityEngine.InputSystem.Editor
             if (selectedActionMapItem == null)
             {
                 // Nothing selected. Wipe middle and right pane.
-                m_ActionsTree.onBuildTree = () => new TreeViewItem(0, -1, "");
+                m_ActionsTree.onBuildTree = null;
             }
             else
             {
@@ -414,7 +466,6 @@ namespace UnityEngine.InputSystem.Editor
 
             // Rebuild tree.
             m_ActionsTree.Reload();
-            m_ActionsTree.ExpandAll();
         }
 
         private void OnActionTreeSelectionChanged()
@@ -440,7 +491,6 @@ namespace UnityEngine.InputSystem.Editor
                 // Grab the action for the binding and see if we have an expected control layout
                 // set on it. Pass that on to the control picking machinery.
                 var isCompositePartBinding = item is PartOfCompositeBindingTreeItem;
-                var isCompositeBinding = item is CompositeBindingTreeItem;
                 var actionItem = (isCompositePartBinding ? item.parent.parent : item.parent) as ActionTreeItem;
                 Debug.Assert(actionItem != null);
 
@@ -450,7 +500,7 @@ namespace UnityEngine.InputSystem.Editor
                 // The toolbar may constrain the set of devices we're currently interested in by either
                 // having one specific device selected from the current scheme or having at least a control
                 // scheme selected.
-                var controlPathsToMatch = (IEnumerable<string>)null;
+                IEnumerable<string> controlPathsToMatch;
                 if (m_Toolbar.selectedDeviceRequirement != null)
                 {
                     // Single device selected from set of devices in control scheme.
@@ -466,7 +516,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // If there's no device filter coming from a control scheme, filter by supported
                     // devices as given by settings.
-                    controlPathsToMatch = InputSystem.settings.supportedDevices;
+                    controlPathsToMatch = InputSystem.settings.supportedDevices.Select(x => $"<{x}>");
                 }
 
                 // Show properties for binding.
@@ -477,7 +527,8 @@ namespace UnityEngine.InputSystem.Editor
                         {
                             if (change == InputBindingPropertiesView.k_PathChanged ||
                                 change == InputBindingPropertiesView.k_CompositePartAssignmentChanged ||
-                                change == InputBindingPropertiesView.k_CompositeTypeChanged)
+                                change == InputBindingPropertiesView.k_CompositeTypeChanged ||
+                                change == InputBindingPropertiesView.k_GroupsChanged)
                             {
                                 ApplyAndReloadTrees();
                             }
@@ -542,6 +593,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnGUI()
         {
+            // If the actions tree has lost the filters (because they would not match an item it tried to highlight),
+            // update the Toolbar UI to remove them.
+            if (!m_ActionsTree.hasFilter)
+                m_Toolbar.ResetSearchFilters();
+
             // Allow switching between action map tree and action tree using arrow keys.
             ToggleFocusUsingKeyboard(KeyCode.RightArrow, m_ActionMapsTree, m_ActionsTree);
             ToggleFocusUsingKeyboard(KeyCode.LeftArrow, m_ActionsTree, m_ActionMapsTree);
@@ -637,16 +693,23 @@ namespace UnityEngine.InputSystem.Editor
 
             EditorGUI.LabelField(rect, GUIContent.none, InputActionTreeView.Styles.backgroundWithBorder);
             var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
-            EditorGUI.LabelField(headerRect, "Properties", InputActionTreeView.Styles.columnHeaderLabel);
 
             if (m_BindingPropertyView != null)
             {
+                if (m_BindingPropertiesTitle == null)
+                    m_BindingPropertiesTitle = new GUIContent("Binding Properties", "The properties for the InputBinding selected in the "
+                        + "'Actions' pane on the left.");
+                EditorGUI.LabelField(headerRect, m_BindingPropertiesTitle, InputActionTreeView.Styles.columnHeaderLabel);
                 m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
                 m_BindingPropertyView.OnGUI();
                 EditorGUILayout.EndScrollView();
             }
             else if (m_ActionPropertyView != null)
             {
+                if (m_ActionPropertiesTitle == null)
+                    m_ActionPropertiesTitle = new GUIContent("Action Properties", "The properties for the InputAction selected in the "
+                        + "'Actions' pane on the left.");
+                EditorGUI.LabelField(headerRect, m_ActionPropertiesTitle, InputActionTreeView.Styles.columnHeaderLabel);
                 m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
                 m_ActionPropertyView.OnGUI();
                 EditorGUILayout.EndScrollView();
@@ -663,6 +726,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_ActionAssetManager.dirty)
                 return;
+
+            // If our asset has disappeared from disk, just close the window.
+            if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(m_ActionAssetManager.guid)))
+            {
+                Close();
+                return;
+            }
 
             // Don't touch the UI state if the serialized data is still the same.
             if (!m_ActionAssetManager.ReInitializeIfAssetHasChanged())
@@ -714,6 +784,11 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.isDirty = dirty;
         }
 
+        public void Dispose()
+        {
+            m_BindingPropertyView?.Dispose();
+        }
+
         [SerializeField] private TreeViewState m_ActionMapsTreeState;
         [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private InputControlPickerState m_ControlPickerViewState;
@@ -721,6 +796,8 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputActionEditorToolbar m_Toolbar;
         [SerializeField] private GUIContent m_DirtyTitle;
         [SerializeField] private GUIContent m_Title;
+        [NonSerialized] private GUIContent m_ActionPropertiesTitle;
+        [NonSerialized] private GUIContent m_BindingPropertiesTitle;
 
         private InputBindingPropertiesView m_BindingPropertyView;
         private InputActionPropertiesView m_ActionPropertyView;
@@ -733,10 +810,12 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
                 if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
@@ -768,6 +847,8 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
+            #pragma warning disable CA1801 // unused parameters
+
             // Handle .inputactions asset being moved.
             // ReSharper disable once UnusedMember.Local
             public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
@@ -779,12 +860,13 @@ namespace UnityEngine.InputSystem.Editor
                 var window = FindEditorForAssetWithGUID(guid);
                 if (window != null)
                 {
-                    window.m_ActionAssetManager.path = destinationPath;
                     window.UpdateWindowTitle();
                 }
 
                 return default;
             }
+
+            #pragma warning restore CA1801
         }
     }
 }

@@ -52,12 +52,15 @@ namespace UnityEngine.InputSystem
         ActionCanceled,
 
         /// <summary>
-        ///
+        /// Bindings on an action or set of actions are about to be re-resolved. This is called while <see cref="InputAction.controls"/>
+        /// for actions are still untouched and thus still reflect the old binding state of each action.
         /// </summary>
+        /// <seealso cref="InputAction.controls"/>
         BoundControlsAboutToChange,
 
         /// <summary>
-        ///
+        /// Bindings on an action or set of actions have been resolved. This is called after <see cref="InputAction.controls"/>
+        /// have been updated.
         /// </summary>
         /// <seealso cref="InputAction.controls"/>
         BoundControlsChanged,

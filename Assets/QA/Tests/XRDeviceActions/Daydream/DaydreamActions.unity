@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.49641275, b: 0.57481736, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -166,7 +166,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 157157}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -246,7 +245,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 69666135}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -368,7 +366,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 98191456}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -443,7 +440,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 149126086}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -526,7 +522,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 153422665}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -604,7 +599,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 210670481}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -679,7 +673,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 216644145}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -760,7 +753,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 233203665}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -768,8 +760,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/deviceVelocity
       m_Interactions: 
       m_Processors: 
@@ -824,7 +820,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 233233211}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: afdaa9101ba4ed04aa43fe4573bcc28f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -876,7 +871,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 267376729}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -884,8 +878,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/devicePosition
       m_Interactions: 
       m_Processors: 
@@ -957,7 +955,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 279862104}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 1301386320, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -975,7 +972,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 279862104}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 1980459831, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1078,7 +1074,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 316052477}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1158,7 +1153,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 324160516}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1233,7 +1227,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 355060381}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1314,7 +1307,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 394396501}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1322,8 +1314,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/isTracked
       m_Interactions: 
       m_Processors: 
@@ -1334,6 +1330,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 324160518}
 --- !u!1 &468623206
@@ -1382,7 +1381,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 468623206}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1465,7 +1463,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 469894015}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1541,7 +1538,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 509033313}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1549,8 +1545,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamHMD>/centerEyePosition
       m_Interactions: 
       m_Processors: 
@@ -1604,7 +1604,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 531690152}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1685,7 +1684,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 554403521}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1693,8 +1691,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/touchpadClicked
       m_Interactions: 
       m_Processors: 
@@ -1705,8 +1707,12 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/touchpadTouched
       m_Interactions: 
       m_Processors: 
@@ -1760,7 +1766,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 554787234}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1840,7 +1845,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 587466530}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -1915,7 +1919,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 620830169}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2031,7 +2034,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 633194994}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2149,7 +2151,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 736836512}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2157,6 +2158,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 149126088}
 --- !u!1 &743859430
@@ -2205,7 +2209,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 743859430}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2285,7 +2288,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 754708001}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2361,7 +2363,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 764659984}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2369,6 +2370,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 743859432}
 --- !u!1 &770602966
@@ -2417,7 +2421,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 770602966}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2498,7 +2501,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 786629654}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2506,6 +2508,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 890023466}
 --- !u!1 &805372307
@@ -2554,7 +2559,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 805372307}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2673,7 +2677,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 816572191}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2754,7 +2757,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 821363206}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2797,11 +2799,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 821363206}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 3717868bc57654927bb040ee91c2dbdb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textObject: {fileID: 821363208}
 --- !u!1 &822734490
 GameObject:
   m_ObjectHideFlags: 0
@@ -2851,7 +2851,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 822734490}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2927,7 +2926,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 848530308}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -2935,6 +2933,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 885557292}
 --- !u!1 &869467545
@@ -2983,7 +2984,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 869467545}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3058,7 +3058,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 885557290}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3138,7 +3137,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 890023464}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3218,7 +3216,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 894690673}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3298,7 +3295,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 895208561}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3378,7 +3374,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 905691355}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3458,7 +3453,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 950283880}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3538,7 +3532,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 966526412}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3618,7 +3611,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 968586721}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3694,7 +3686,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 981197692}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3702,8 +3693,12 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/deviceRotation
       m_Interactions: 
       m_Processors: 
@@ -3759,7 +3754,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1046052075}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3835,7 +3829,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1057046408}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3843,8 +3836,12 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamHMD>/deviceRotation
       m_Interactions: 
       m_Processors: 
@@ -3898,7 +3895,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1064110838}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -3978,7 +3974,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1073219553}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4058,7 +4053,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1077542753}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4174,7 +4168,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1093650741}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4249,7 +4242,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1099111986}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4329,7 +4321,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1141360589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4410,7 +4401,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1161499115}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4418,8 +4408,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamHMD>/isTracked
       m_Interactions: 
       m_Processors: 
@@ -4430,6 +4424,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 2030432490}
 --- !u!1 &1165355387
@@ -4478,7 +4475,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1165355387}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4539,7 +4535,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1178896024}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 1077351063, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4559,7 +4554,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1178896024}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -619905303, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4626,7 +4620,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1249485522}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4707,7 +4700,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1262839480}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4715,6 +4707,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 1422969350}
 --- !u!1 &1282581081
@@ -4764,7 +4759,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1282581081}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: d8e0c773fb7747e45aa579988881f0f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4772,8 +4766,12 @@ MonoBehaviour:
     m_Name: Integer
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamHMD>/trackingState
       m_Interactions: 
       m_Processors: 
@@ -4827,7 +4825,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1299731724}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -4943,7 +4940,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1353709091}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5064,7 +5060,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1385977954}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5155,7 +5150,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1395529967}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: d8e0c773fb7747e45aa579988881f0f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5163,8 +5157,12 @@ MonoBehaviour:
     m_Name: Integer
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/trackingState
       m_Interactions: 
       m_Processors: 
@@ -5218,7 +5216,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1422969348}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5298,7 +5295,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1425588286}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5379,7 +5375,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1434744044}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5387,8 +5382,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/deviceAcceleration
       m_Interactions: 
       m_Processors: 
@@ -5442,7 +5441,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1493438907}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5518,7 +5516,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1500244994}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 77f32b28edf2acb468bad975bc117575, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5526,8 +5523,12 @@ MonoBehaviour:
     m_Name: Quaternion
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamHMD>/centerEyeRotation
       m_Interactions: 
       m_Processors: 
@@ -5581,7 +5582,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1511796011}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5656,7 +5656,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1599590713}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5736,7 +5735,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1602418828}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5811,6 +5809,24 @@ Light:
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -5818,12 +5834,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1631735060
@@ -5888,7 +5907,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1632131995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -113659843, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -5978,7 +5996,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1651932551}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6054,7 +6071,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1654346912}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6062,6 +6078,9 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusText: {fileID: 216644147}
 --- !u!1 &1660725451
@@ -6113,7 +6132,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1660725451}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6188,7 +6206,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1703018613}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6268,7 +6285,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1722547108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6345,7 +6361,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1790091602}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6423,7 +6438,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1840715260}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6498,7 +6512,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1842769036}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6578,7 +6591,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1860169648}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6659,7 +6671,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1888361720}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6667,8 +6678,12 @@ MonoBehaviour:
     m_Name: Button Press
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/app
       m_Interactions: 
       m_Processors: 
@@ -6679,6 +6694,9 @@ MonoBehaviour:
     m_Name: Button Touch
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings: []
   statusImage: {fileID: 1493438909}
 --- !u!1 &1933772068
@@ -6727,7 +6745,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1933772068}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6807,7 +6824,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1986512429}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6887,7 +6903,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2030432488}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6963,7 +6978,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2034786405}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: f15e9c8175aea5044be410f9ae44c1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -6971,8 +6985,12 @@ MonoBehaviour:
     m_Name: Vector 2
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamController>/touchpad
       m_Interactions: 
       m_Processors: 
@@ -7027,7 +7045,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2049427172}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7108,7 +7125,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2058824255}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: 03e9c6afa5d3bad4eaae958068de9ae0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7116,8 +7132,12 @@ MonoBehaviour:
     m_Name: Vector 3
     m_ExpectedControlLayout: 
     m_Id: 
+    m_Flags: 0
+    m_Processors: 
+    m_Interactions: 
     m_SingletonActionBindings:
     - m_Name: 
+      m_Id: 
       m_Path: <DaydreamHMD>/devicePosition
       m_Interactions: 
       m_Processors: 
@@ -7201,13 +7221,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2065835747}
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2075349397
 GameObject:
   m_ObjectHideFlags: 0
@@ -7254,7 +7274,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2075349397}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -7334,7 +7353,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2085891670}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

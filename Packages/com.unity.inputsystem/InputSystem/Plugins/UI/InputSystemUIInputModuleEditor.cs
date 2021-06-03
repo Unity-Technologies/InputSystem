@@ -1,11 +1,11 @@
-#if UNITY_EDITOR
-
+#if UNITY_INPUT_SYSTEM_ENABLE_UI && UNITY_EDITOR
 using System;
 using System.Linq;
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.InputSystem.Plugins.UI.Editor
+////TODO: add button to automatically set up gamepad mouse cursor support
+
+namespace UnityEngine.InputSystem.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
             {
                 foreach (var action in actions)
                 {
-                    if (string.Compare(action.action.name, actionName, true) == 0)
+                    if (string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return action;
                 }
             }
@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
             return null;
         }
 
-        static private string[] m_ActionNames = new[]
+        private static readonly string[] s_ActionNames =
         {
             "Point",
             "LeftClick",
@@ -43,7 +43,23 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
             "ScrollWheel",
             "Move",
             "Submit",
-            "Cancel"
+            "Cancel",
+            "TrackedDevicePosition",
+            "TrackedDeviceOrientation"
+        };
+
+        private static readonly string[] s_ActionNiceNames =
+        {
+            "Point",
+            "Left Click",
+            "Middle Click",
+            "Right Click",
+            "Scroll Wheel",
+            "Move",
+            "Submit",
+            "Cancel",
+            "Tracked Position",
+            "Tracked Orientation"
         };
 
         private SerializedProperty[] m_ReferenceProperties;
@@ -53,15 +69,15 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
 
         public void OnEnable()
         {
-            var numActions = m_ActionNames.Length;
+            var numActions = s_ActionNames.Length;
             m_ReferenceProperties = new SerializedProperty[numActions];
             for (var i = 0; i < numActions; i++)
-                m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}Action");
+                m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{s_ActionNames[i]}Action");
 
             m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
             m_AvailableActionsInAsset = GetAllActionsFromAsset(m_ActionsAsset.objectReferenceValue as InputActionAsset);
-            // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
-            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215")) ?? new string[0]).ToArray();
+            // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\uFF0F")) ?? new string[0]).ToArray();
         }
 
         public static void ReassignActions(InputSystemUIInputModule module, InputActionAsset action)
@@ -78,6 +94,8 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
                 module.move = GetActionReferenceFromAssets(assets, module.move?.action?.name, "Navigate", "Move");
                 module.submit = GetActionReferenceFromAssets(assets, module.submit?.action?.name, "Submit");
                 module.cancel = GetActionReferenceFromAssets(assets, module.cancel?.action?.name, "Cancel", "Esc", "Escape");
+                module.trackedDevicePosition = GetActionReferenceFromAssets(assets, module.trackedDevicePosition?.action?.name, "TrackedDevicePosition", "Position");
+                module.trackedDeviceOrientation = GetActionReferenceFromAssets(assets, module.trackedDeviceOrientation?.action?.name, "TrackedDeviceOrientation", "Orientation");
             }
         }
 
@@ -103,18 +121,18 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
                 OnEnable();
             }
 
-            var numActions = m_ActionNames.Length;
+            var numActions = s_ActionNames.Length;
             for (var i = 0; i < numActions; i++)
             {
-                if (m_AvailableActionsInAsset != null)
-                {
-                    int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
-                    EditorGUI.BeginChangeCheck();
-                    index = EditorGUILayout.Popup(m_ActionNames[i], index, m_AvailableActionsInAssetNames);
+                if (m_AvailableActionsInAsset == null)
+                    continue;
 
-                    if (EditorGUI.EndChangeCheck())
-                        m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
-                }
+                var index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
+                EditorGUI.BeginChangeCheck();
+                index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
+
+                if (EditorGUI.EndChangeCheck())
+                    m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
             }
 
             if (GUI.changed)

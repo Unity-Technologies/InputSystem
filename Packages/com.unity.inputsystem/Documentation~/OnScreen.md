@@ -1,41 +1,54 @@
-# On-Screen Controls
+# On-screen Controls
 
-On-Screen controls can be used to simulate input devices using UI controls that are displayed and interacted with on the screen. The most prominent example is the use of stick and button controls on touchscreens to emulate a joystick or gamepad.
+You can use on-screen Controls to simulate Input Devices with UI widgets that the user interacts with on the screen. The most prominent example is the use of stick and button widgets on touchscreens to emulate a joystick or gamepad.
 
-There are currently two control types implemented out of the box, [buttons](#on-screen-buttons) and [sticks](#on-screen-sticks). Custom controls can be implemented by extending the the base `OnScreenControl` MonoBehaviour (see [details](#writing-custom-on-screen-controls)).
+There are currently two Control types implemented out of the box: [buttons](#on-screen-buttons) and [sticks](#on-screen-sticks). You can implement custom Controls by extending the base [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html) class (see documentation on [writing custom on screen Controls](#writing-custom-on-screen-controls) to learn more).
 
->NOTE: On-Screen controls do not have a predefined visual representation. Instead, setting up the visual aspect of a control is up to you (e.g. by adding a sprite or UI component to the `GameObject`). The On-Screen controls take care of the interaction logic and of setting up and generating input from interactions.
+>__Note__: On-screen Controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a Control (for example, by adding a sprite or UI component to the GameObject). On-screen Controls take care of the interaction logic and of setting up and generating input from interactions.
 
-Each on-screen control references the control that it should feed input to using a [control path](Controls.md#control-paths). For example, the following on-screen button will feed input to the right shoulder button of a gamepad:
-
-![OnScreenButton](Images/OnScreenButton.png)
-
-The collection of on-screen controls present in a scene together forms one or more [input devices](Devices.md). One input device is created for each distinct type of device referenced by the controls. For example, if one on-screen button references `<Gamepad>/buttonSouth` and another on-screen button references `<Keyboard>/a`, then both a `Gamepad` and a `Keyboard` will be created. This happens automatically when the components are enabled. When disabled, the devices will automatically be removed again.
-
-The control -- and thus implicitly the device -- that an on-screen control feeds into can be queried using the `OnScreenControl.control` property.
-
-Note that this design allows you to use on-screen controls to create input for arbitrary input devices, not just joysticks or gamepads.
-
-## On-Screen Buttons
-
-The `OnScreenButton` component requires the target control to be a `Button` control. The target control will be set to 1 when a pointer-down (`IPointerDownHandler.OnPointerDown`) is received and will be set to 0 when a pointer-up (`IPointerUpHandler.OnPointerUp`) is received.
+Each on-screen Control uses a [Control path](Controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
 ![OnScreenButton](Images/OnScreenButton.png)
 
-## On-Screen Sticks
+The collection of on-screen Controls present in a Scene forms one or more [Input Devices](Devices.md). The Input System creates one Input Device for each distinct type of Device the Controls reference. For example, if one on-screen button references `<Gamepad>/buttonSouth` and another on-screen button references `<Keyboard>/a`, the Input System creates both a `Gamepad` and a `Keyboard`. This happens automatically when the components are enabled. When disabled, the Input System automatically removes the Devices again.
 
-The `OnScreenStick` component requires the target control to be a `Vector2`
-control. Movement of the stick control is started on receiving a pointer-down (`IPointerDownHandler.OnPointerDown`) event and stopped on received a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
+To query the Control (and, implicitly, the Device) that an on-screen Control feeds into, you can use the [`OnScreenControl.control`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_control) property.
 
-In-between, the stick is moved according to the pointer being dragged (`IDragHandler.OnDrag`) within a box centered on the pointer down screen point and with an edge length of "Movement Range" as defined in the component's properties. A movement range of 50, for example, means that the stick's on-screen area is 25 pixels up, down, left, and right of the pointer-down point on screen.
+>__Note__: This design allows you to use on-screen Controls to create input for arbitrary Input Devices, in addition to joysticks and gamepads.
+
+## On-screen buttons
+
+To create an on-screen button:
+
+1. Add a UI `Button` object.
+2. Add the [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component to it.
+3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) (for example, `<Gamepad>/buttonSouth`). The type of device referenced by the control path determines the type of virtual device created by the component.
+
+![OnScreenButton](Images/OnScreenButton.png)
+
+The [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component requires the target Control to be a `Button` Control. [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) sets the target Control value to 1 when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, or 0 when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
+
+## On-screen sticks
+
+To create an on-screen stick:
+
+1. Create a UI `Image` object.
+2. Add the [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component to it.
+3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) (for example, `<Gamepad>/leftStick`). The type of device referenced by the control path determines the type of virtual device created by the component.
 
 ![OnScreenStick](Images/OnScreenStick.png)
 
-## Writing Custom On-Screen Controls
+The [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component requires the target Control to be a `Vector2` Control. [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) starts the movement of the stick Control when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, and stops it when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
 
-Support for new types of [input controls](Controls.md) can be added by extending `OnScreenControl`. An easy example to follow is `OnScreenButton` itself.
+In-between, the stick moves according to the pointer being dragged (`IDragHandler.OnDrag`) within a box centered on the pointer-down screen point, and with an edge length  defined in the component's __Movement Range__ property. A movement range of 50, for example, means that the stick's on-screen area is 25 pixels up, down, left, and right of the pointer-down point on screen.
 
-```
+If you want to be notified when the user starts and/or stops touching the on-screen stick, implement `IPointerDownHandler` and/or `IPointerUpHandler` on a component and add it to the stick `GameObject`.
+
+## Writing custom on-screen Controls
+
+You can add support for new types of [Input Controls](Controls.md) by extending [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html). An easy example to follow is [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html).
+
+```CSharp
     [AddComponentMenu("Input/On-Screen Button")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {

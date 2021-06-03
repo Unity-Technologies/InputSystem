@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: better method for creating display names than InputControlPath.TryGetDeviceLayout
 
+////FIXME: Device requirements list in control scheme popup must mention explicitly that that is what it is
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -49,7 +51,13 @@ namespace UnityEngine.InputSystem.Editor
 
             if (GUI.Button(buttonRect, buttonGUI, EditorStyles.toolbarPopup))
             {
-                buttonRect = new Rect(EditorGUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y)), Vector2.zero);
+                // PopupWindow.Show already takes the current OnGUI EditorWindow context into account for window coordinates.
+                // However, on macOS, menu commands are performed asynchronously, so we don't have a current OnGUI context.
+                // So in that case, we need to translate the rect to screen coordinates. Don't do that on windows, as we will
+                // overcompensate otherwise.
+                if (Application.platform == RuntimePlatform.OSXEditor)
+                    buttonRect = new Rect(EditorGUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y)), Vector2.zero);
+
                 var menu = new GenericMenu();
 
                 // Add entries to select control scheme, if we have some.
@@ -204,8 +212,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
 
-            // Ask for confirmation.
             var name = m_ControlSchemes[m_SelectedControlSchemeIndex].name;
+            var bindingGroup = m_ControlSchemes[m_SelectedControlSchemeIndex].bindingGroup;
+
+            // Ask for confirmation.
             if (!EditorUtility.DisplayDialog("Delete scheme?", $"Do you want to delete control scheme '{name}'?",
                 "Delete", "Cancel"))
                 return;
@@ -222,8 +232,10 @@ namespace UnityEngine.InputSystem.Editor
 
             onControlSchemesChanged?.Invoke();
             onSelectedSchemeChanged?.Invoke();
+            onControlSchemeDeleted?.Invoke(name, bindingGroup);
         }
 
+        ////REVIEW: this does nothing to bindings; should this ask to duplicate bindings as well?
         private void OnDuplicateControlScheme(object position)
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
@@ -236,7 +248,6 @@ namespace UnityEngine.InputSystem.Editor
                 (s, _) => AddAndSelectControlScheme(s));
         }
 
-        ////REVIEW: renaming a control scheme should probably update the binding group (also on all bindings)
         private void OnEditSelectedControlScheme(object position)
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
@@ -266,6 +277,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             Debug.Assert(index >= 0 && index < m_ControlSchemes.LengthSafe(), "Control scheme index out of range");
 
+            var renamed = false;
+            string oldBindingGroup = null;
+            string newBindingGroup = null;
+
             // If given scheme has no name, preserve the existing one on the control scheme.
             if (string.IsNullOrEmpty(scheme.name))
                 scheme.m_Name = m_ControlSchemes[index].name;
@@ -273,12 +288,19 @@ namespace UnityEngine.InputSystem.Editor
             // If name is changing, make sure it's unique.
             else if (scheme.name != m_ControlSchemes[index].name)
             {
+                renamed = true;
+                oldBindingGroup = m_ControlSchemes[index].bindingGroup;
                 m_ControlSchemes[index].m_Name = ""; // Don't want this to interfere with finding a unique name.
-                m_ControlSchemes[index].m_Name = MakeUniqueControlSchemeName(scheme.name);
+                var newName = MakeUniqueControlSchemeName(scheme.name);
+                m_ControlSchemes[index].SetNameAndBindingGroup(newName);
+                newBindingGroup = m_ControlSchemes[index].bindingGroup;
             }
 
             m_ControlSchemes[index] = scheme;
             onControlSchemesChanged?.Invoke();
+
+            if (renamed)
+                onControlSchemeRenamed?.Invoke(oldBindingGroup, newBindingGroup);
         }
 
         private void SelectControlScheme(int index)
@@ -299,19 +321,25 @@ namespace UnityEngine.InputSystem.Editor
 
         private string MakeUniqueControlSchemeName(string name)
         {
-            return StringHelpers.MakeUniqueName(name, m_ControlSchemes, x => x.name);
+            const string presetName = "All Control Schemes";
+            if (m_ControlSchemes == null)
+                return StringHelpers.MakeUniqueName(name, new[] {presetName}, x => x);
+            return StringHelpers.MakeUniqueName(name, m_ControlSchemes.Select(x => x.name).Append(presetName), x => x);
         }
 
         private static string DeviceRequirementToDisplayString(InputControlScheme.DeviceRequirement requirement)
         {
             ////TODO: need something more flexible to produce correct results for more than the simple string we produce here
             var deviceLayout = InputControlPath.TryGetDeviceLayout(requirement.controlPath);
-            var usage = InputControlPath.TryGetDeviceUsage(requirement.controlPath);
+            var deviceLayoutText = !string.IsNullOrEmpty(deviceLayout)
+                ? EditorInputControlLayoutCache.GetDisplayName(deviceLayout)
+                : string.Empty;
+            var usages = InputControlPath.TryGetDeviceUsages(requirement.controlPath);
 
-            if (!string.IsNullOrEmpty(usage))
-                return $"{deviceLayout} {usage}";
+            if (usages != null && usages.Length > 0)
+                return $"{deviceLayoutText} {string.Join("}{", usages)}";
 
-            return deviceLayout;
+            return deviceLayoutText;
         }
 
         // Notifications.
@@ -319,6 +347,8 @@ namespace UnityEngine.InputSystem.Editor
         public Action onSelectedSchemeChanged;
         public Action onSelectedDeviceChanged;
         public Action onControlSchemesChanged;
+        public Action<string, string> onControlSchemeRenamed;
+        public Action<string, string> onControlSchemeDeleted;
         public Action onSave;
 
         [SerializeField] private bool m_IsDirty;
@@ -349,7 +379,7 @@ namespace UnityEngine.InputSystem.Editor
             get => m_ControlSchemes;
             set
             {
-                m_ControlSchemes = controlSchemes.ToArray();
+                m_ControlSchemes = value.ToArray();
                 m_SelectedSchemeDeviceRequirementNames = null;
             }
         }
@@ -374,6 +404,13 @@ namespace UnityEngine.InputSystem.Editor
         /// The search text currently entered in the toolbar or null.
         /// </summary>
         public string searchText => m_SearchText;
+
+        internal void ResetSearchFilters()
+        {
+            m_SearchText = null;
+            m_SelectedControlSchemeIndex = -1;
+            m_SelectedDeviceRequirementIndex = -1;
+        }
 
         public bool isDirty
         {
@@ -417,8 +454,20 @@ namespace UnityEngine.InputSystem.Editor
                 m_DeviceView.headerHeight = 2;
                 m_DeviceView.onAddCallback += list =>
                 {
-                    var a = new AddDeviceDropdown(AddDeviceRequirement);
-                    a.Show(new Rect(Event.current.mousePosition, Vector2.zero));
+                    var dropdown = new InputControlPickerDropdown(
+                        new InputControlPickerState(),
+                        path =>
+                        {
+                            var requirement = new InputControlScheme.DeviceRequirement
+                            {
+                                controlPath = path,
+                                isOptional = false
+                            };
+
+                            AddDeviceRequirement(requirement);
+                        },
+                        mode: InputControlPicker.Mode.PickDevice);
+                    dropdown.Show(new Rect(Event.current.mousePosition, Vector2.zero));
                 };
                 m_DeviceView.onRemoveCallback += list =>
                 {
@@ -459,11 +508,20 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 if (GUILayout.Button("Save", GUILayout.ExpandWidth(true)))
                 {
-                    m_ControlScheme = new InputControlScheme(m_ControlScheme.name,
-                        devices: m_DeviceList.Select(a => a.deviceRequirement));
+                    // Don't allow control scheme name to be empty.
+                    if (string.IsNullOrEmpty(m_ControlScheme.name))
+                    {
+                        ////FIXME: On 2019.1 this doesn't display properly in the window; check 2019.3
+                        editorWindow.ShowNotification(new GUIContent("Control scheme must have a name"));
+                    }
+                    else
+                    {
+                        m_ControlScheme = new InputControlScheme(m_ControlScheme.name,
+                            devices: m_DeviceList.Select(a => a.deviceRequirement));
 
-                    editorWindow.Close();
-                    m_OnApply(m_ControlScheme, m_ControlSchemeIndex);
+                        editorWindow.Close();
+                        m_OnApply(m_ControlScheme, m_ControlSchemeIndex);
+                    }
                 }
                 if (Event.current.type == EventType.Repaint)
                     m_ButtonsAndLabelsHeights += GUILayoutUtility.GetLastRect().height;
@@ -511,7 +569,7 @@ namespace UnityEngine.InputSystem.Editor
             private void DrawNameEditTextField()
             {
                 EditorGUILayout.BeginHorizontal();
-                var labelSize = EditorStyles.label.CalcSize(s_RequirementsLabel);
+                var labelSize = EditorStyles.label.CalcSize(s_ControlSchemeNameLabel);
                 EditorGUILayout.LabelField(s_ControlSchemeNameLabel, GUILayout.Width(labelSize.x));
 
                 GUI.SetNextControlName("ControlSchemeName");
@@ -588,13 +646,10 @@ namespace UnityEngine.InputSystem.Editor
 
             private static class Styles
             {
-                public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar);
-                static Styles()
-                {
-                    headerLabel.alignment = TextAnchor.MiddleCenter;
-                    headerLabel.fontStyle = FontStyle.Bold;
-                    headerLabel.padding.left = 10;
-                }
+                public static readonly GUIStyle headerLabel = new GUIStyle(EditorStyles.toolbar)
+                    .WithAlignment(TextAnchor.MiddleCenter)
+                    .WithFontStyle(FontStyle.Bold)
+                    .WithPadding(new RectOffset(10, 6, 0, 0));
             }
 
             private class DeviceEntry
@@ -611,59 +666,6 @@ namespace UnityEngine.InputSystem.Editor
                 public override string ToString()
                 {
                     return displayText;
-                }
-            }
-
-            private class AddDeviceDropdown : AdvancedDropdown
-            {
-                private readonly Action<InputControlScheme.DeviceRequirement> m_OnAddRequirement;
-
-                public AddDeviceDropdown(Action<InputControlScheme.DeviceRequirement> onAddRequirement)
-                    : base(new AdvancedDropdownState())
-                {
-                    m_OnAddRequirement = onAddRequirement;
-                }
-
-                protected override AdvancedDropdownItem BuildRoot()
-                {
-                    var root = new AdvancedDropdownItem(string.Empty);
-                    foreach (var layout in EditorInputControlLayoutCache.allLayouts.Where(x => x.isDeviceLayout).OrderBy(x => x.name))
-                    {
-                        root.AddChild(new DeviceItem(layout.name));
-                        foreach (var usage in layout.commonUsages.OrderBy(x => x))
-                            root.AddChild(new DeviceItem(layout.name, usage));
-                    }
-                    return root;
-                }
-
-                protected override void ItemSelected(AdvancedDropdownItem item)
-                {
-                    var deviceItem = (DeviceItem)item;
-                    var requirement = new InputControlScheme.DeviceRequirement
-                    {
-                        controlPath = deviceItem.ToString(),
-                        isOptional = false
-                    };
-
-                    m_OnAddRequirement(requirement);
-                }
-
-                private class DeviceItem : AdvancedDropdownItem
-                {
-                    public string layoutName { get; }
-                    public string usage { get; }
-
-                    public DeviceItem(string layoutName, string usage = null)
-                        : base(string.IsNullOrEmpty(usage) ? layoutName : $"{layoutName} {usage}")
-                    {
-                        this.layoutName = layoutName;
-                        this.usage = usage;
-                    }
-
-                    public override string ToString()
-                    {
-                        return !string.IsNullOrEmpty(usage) ? $"<{layoutName}>{{{usage}}}" : $"<{layoutName}>";
-                    }
                 }
             }
         }

@@ -272,9 +272,9 @@ namespace UnityEngine.InputSystem.Editor
                     parser.ParseStringValue(out var propertyName);
                     parser.ParseToken(':');
 
-                    var childProperty = property.FindPropertyRelative(propertyName);
+                    var childProperty = property.FindPropertyRelative(propertyName.ToString());
                     if (childProperty == null)
-                        throw new Exception($"Cannot find property '{propertyName}' in {property}");
+                        throw new ArgumentException($"Cannot find property '{propertyName}' in {property}", nameof(property));
 
                     RestoreFromJson(childProperty, ref parser);
                     parser.ParseToken(',');
@@ -287,21 +287,21 @@ namespace UnityEngine.InputSystem.Editor
                     case SerializedPropertyType.Float:
                     {
                         parser.ParseNumber(out var num);
-                        property.floatValue = Convert.ToSingle(num);
+                        property.floatValue = (float)num.ToDouble();
                         break;
                     }
 
                     case SerializedPropertyType.String:
                     {
                         parser.ParseStringValue(out var str);
-                        property.stringValue = str;
+                        property.stringValue = str.ToString();
                         break;
                     }
 
                     case SerializedPropertyType.Boolean:
                     {
                         parser.ParseBooleanValue(out var b);
-                        property.boolValue = b;
+                        property.boolValue = b.ToBoolean();
                         break;
                     }
 
@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem.Editor
                     case SerializedPropertyType.Integer:
                     {
                         parser.ParseNumber(out var num);
-                        property.intValue = Convert.ToInt32(num);
+                        property.intValue = (int)num.ToInteger();
                         break;
                     }
 
@@ -378,6 +378,13 @@ namespace UnityEngine.InputSystem.Editor
         public static Type GetFieldType(this SerializedProperty property)
         {
             return GetField(property)?.FieldType;
+        }
+
+        public static void SetStringValue(this SerializedProperty property, string propertyName, string value)
+        {
+            var propertyRelative = property?.FindPropertyRelative(propertyName);
+            if (propertyRelative != null)
+                propertyRelative.stringValue = value;
         }
     }
 }

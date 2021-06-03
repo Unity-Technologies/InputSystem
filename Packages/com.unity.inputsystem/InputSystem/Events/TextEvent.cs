@@ -7,6 +7,13 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// A single character text input event.
     /// </summary>
+    /// <remarks>
+    /// Text input does not fit the control-based input model well and thus is
+    /// represented as its own form of input. A device that is capable of receiving
+    /// text input (such as <see cref="Keyboard"/>) receives text input events
+    /// and should implement <see cref="ITextInputReceiver"/> in order for the
+    /// input system to be able to relay these events to the device.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 4)]
     public struct TextEvent : IInputEventTypeInfo
     {
@@ -21,15 +28,12 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize)]
         public int character;
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public static unsafe TextEvent* From(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(eventPtr));
             if (!eventPtr.IsA<TextEvent>())
                 throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into TextEvent",
                     eventPtr.type));

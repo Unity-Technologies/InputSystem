@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Layouts;
 
@@ -21,10 +22,15 @@ namespace UnityEngine.InputSystem.Editor
     /// </example>
     /// </remarks>
     [CustomPropertyDrawer(typeof(InputControlAttribute))]
-    public class InputControlPathDrawer : PropertyDrawer
+    internal sealed class InputControlPathDrawer : PropertyDrawer, IDisposable
     {
         private InputControlPathEditor m_Editor;
         private InputControlPickerState m_PickerState;
+
+        public void Dispose()
+        {
+            m_Editor?.Dispose();
+        }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -33,7 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             if (m_Editor == null)
             {
                 m_Editor = new InputControlPathEditor(property, m_PickerState,
-                    () => property.serializedObject.ApplyModifiedProperties());
+                    () => property.serializedObject.ApplyModifiedProperties(),
+                    label: label);
                 m_Editor.SetExpectedControlLayoutFromAttribute();
             }
 

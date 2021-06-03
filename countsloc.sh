@@ -2,5 +2,4 @@
 echo "----- System ------"
 wc `find Packages/com.unity.inputsystem/InputSystem -name "*.cs"`
 echo "----- Tests -------"
-wc `find Packages/com.unity.inputsystem/Tests -name "*.cs"`
-
+wc `find Packages/com.unity.inputsystem/Tests -name "*.cs"` `find Assets/Tests -name "*.cs"`

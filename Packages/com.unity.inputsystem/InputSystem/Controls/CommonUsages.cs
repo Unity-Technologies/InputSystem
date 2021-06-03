@@ -2,14 +2,25 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
+    /// <summary>
+    /// A collection of common usage string values as reported by <see cref="InputControl.usages"/>.
+    /// </summary>
     public static class CommonUsages
     {
-        // Primary 2D motion control.
-        // Example: left stick on gamepad.
+        /// <summary>
+        /// Primary 2D motion control.
+        /// </summary>
+        /// <remarks>
+        /// Example: left stick on gamepad.
+        /// </remarks>
         public static readonly InternedString Primary2DMotion = new InternedString("Primary2DMotion");
 
-        // Secondary 2D motion control.
-        // Example: right stick on gamepad.
+        /// <summary>
+        /// Secondary 2D motion control.
+        /// </summary>
+        /// <remarks>
+        /// Example: right stick on gamepad.
+        /// </remarks>
         public static readonly InternedString Secondary2DMotion = new InternedString("Secondary2DMotion");
 
         public static readonly InternedString PrimaryAction = new InternedString("PrimaryAction");
@@ -21,43 +32,80 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString Orientation = new InternedString("Orientation");
         public static readonly InternedString Hatswitch = new InternedString("Hatswitch");
 
-        // Button to navigate to previous location.
-        // Example: Escape on keyboard, B button on gamepad.
+        /// <summary>
+        /// Button to navigate to previous location.
+        /// </summary>
+        /// <remarks>
+        /// Example: Escape on keyboard, B button on gamepad.
+        ///
+        /// In general, the "Back" control is used for moving backwards in the navigation history
+        /// of a UI. This is used, for example, in hierarchical menu structures to move back to parent menus
+        /// (e.g. from the "Settings" menu back to the "Main" menu). Consoles generally have stringent requirements
+        /// as to which button has to fulfill this role.
+        /// </remarks>
         public static readonly InternedString Back = new InternedString("Back");
 
-        // Button to navigate to next location.
+        /// <summary>
+        /// Button to navigate to next location.
+        /// </summary>
         public static readonly InternedString Forward = new InternedString("Forward");
 
-        // Button to bring up menu.
+        /// <summary>
+        /// Button to bring up menu.
+        /// </summary>
         public static readonly InternedString Menu = new InternedString("Menu");
 
-        // Button to confirm the current choice.
-        public static readonly InternedString Accept = new InternedString("Accept");
+        /// <summary>
+        /// Button to confirm the current choice.
+        /// </summary>
+        public static readonly InternedString Submit = new InternedString("Submit");
 
         ////REVIEW: isn't this the same as "Back"?
-        // Button to not accept the current choice.
+        /// <summary>
+        /// Button to not accept the current choice.
+        /// </summary>
         public static readonly InternedString Cancel = new InternedString("Cancel");
 
-        // Horizontal motion axis.
-        // Example: X axis on mouse.
+        /// <summary>
+        /// Horizontal motion axis.
+        /// </summary>
+        /// <remarks>
+        /// Example: X axis on mouse.
+        /// </remarks>
         public static readonly InternedString Horizontal = new InternedString("Horizontal");
 
-        // Vertical motion axis.
-        // Example: Y axis on mouse.
+        /// <summary>
+        /// Vertical motion axis.
+        /// </summary>
+        /// <remarks>
+        /// Example: Y axis on mouse.
+        /// </remarks>
         public static readonly InternedString Vertical = new InternedString("Vertical");
 
-        // Rotation around single, fixed axis.
-        // Example: twist on joystick or twist of pen (few pens support that).
+        /// <summary>
+        /// Rotation around single, fixed axis.
+        /// </summary>
+        /// <remarks>
+        /// Example: twist on joystick or twist of pen (few pens support that).
+        /// </remarks>
         public static readonly InternedString Twist = new InternedString("Twist");
 
-        // Pressure level axis.
-        // Example: pen pressure.
+        /// <summary>
+        /// Pressure level axis.
+        /// </summary>
+        /// <remarks>
+        /// Example: pen pressure.
+        /// </remarks>
         public static readonly InternedString Pressure = new InternedString("Pressure");
 
-        // Axis to scroll horizontally.
+        /// <summary>
+        /// Axis to scroll horizontally.
+        /// </summary>
         public static readonly InternedString ScrollHorizontal = new InternedString("ScrollHorizontal");
 
-        // Axis to scroll vertically.
+        /// <summary>
+        /// Axis to scroll vertically.
+        /// </summary>
         public static readonly InternedString ScrollVertical = new InternedString("ScrollVertical");
 
         public static readonly InternedString Point = new InternedString("Point");
@@ -65,15 +113,25 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString LowFreqMotor = new InternedString("LowFreqMotor");
         public static readonly InternedString HighFreqMotor = new InternedString("HighFreqMotor");
 
-        // Device in left hand.
-        // Example: left hand XR controller.
+        /// <summary>
+        /// Device in left hand.
+        /// </summary>
+        /// <remarks>
+        /// Example: left hand XR controller.
+        /// </remarks>
         public static readonly InternedString LeftHand = new InternedString("LeftHand");
 
-        // Device in right hand.
-        // Example: right hand XR controller.
+        /// <summary>
+        /// Device in right hand.
+        /// </summary>
+        /// <remarks>
+        /// Example: right hand XR controller.
+        /// </remarks>
         public static readonly InternedString RightHand = new InternedString("RightHand");
 
-        // Axis representing charge of battery (1=full, 0=empty).
+        /// <summary>
+        /// Axis representing charge of battery (1=full, 0=empty).
+        /// </summary>
         public static readonly InternedString BatteryStrength = new InternedString("BatteryStrength");
     }
 }

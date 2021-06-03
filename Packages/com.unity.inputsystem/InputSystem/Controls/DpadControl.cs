@@ -15,16 +15,18 @@ namespace UnityEngine.InputSystem.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
+    [Scripting.Preserve]
     public class DpadControl : Vector2Control
     {
         [InputControlLayout(hideInUI = true)]
-        internal class DpadAxisControl : AxisControl
+        [Scripting.Preserve]
+        public class DpadAxisControl : AxisControl
         {
-            public int component;
+            public int component { get; set; }
 
-            protected override void FinishSetup(InputDeviceBuilder builder)
+            protected override void FinishSetup()
             {
-                base.FinishSetup(builder);
+                base.FinishSetup();
                 component = name == "x" ? 0 : 1;
 
                 // Set the state block to be the parent's state block. We don't use that to read
@@ -35,7 +37,7 @@ namespace UnityEngine.InputSystem.Controls
 
             public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
             {
-                var value = (m_Parent as DpadControl).ReadUnprocessedValueFromState(statePtr);
+                var value = ((DpadControl)m_Parent).ReadUnprocessedValueFromState(statePtr);
                 return value[component];
             }
         }
@@ -49,26 +51,26 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// The button representing the vertical upwards state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Up, displayName = "Up", shortDisplayName = "\u2191")]
-        public ButtonControl up { get; private set; }
+        [InputControl(bit = (int)ButtonBits.Up, displayName = "Up")]
+        public ButtonControl up { get; set; }
 
         /// <summary>
         /// The button representing the vertical downwards state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Down, displayName = "Down", shortDisplayName = "\u2193")]
-        public ButtonControl down { get; private set; }
+        [InputControl(bit = (int)ButtonBits.Down, displayName = "Down")]
+        public ButtonControl down { get; set; }
 
         /// <summary>
         /// The button representing the horizontal left state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Left, displayName = "Left", shortDisplayName = "\u2190")]
-        public ButtonControl left { get; private set; }
+        [InputControl(bit = (int)ButtonBits.Left, displayName = "Left")]
+        public ButtonControl left { get; set; }
 
         /// <summary>
         /// The button representing the horizontal right state of the D-Pad.
         /// </summary>
-        [InputControl(bit = (int)ButtonBits.Right, displayName = "Right", shortDisplayName = "\u2192")]
-        public ButtonControl right { get; private set; }
+        [InputControl(bit = (int)ButtonBits.Right, displayName = "Right")]
+        public ButtonControl right { get; set; }
 
         ////TODO: should have X and Y child controls as well
 
@@ -78,13 +80,13 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            up = builder.GetControl<ButtonControl>(this, "up");
-            down = builder.GetControl<ButtonControl>(this, "down");
-            left = builder.GetControl<ButtonControl>(this, "left");
-            right = builder.GetControl<ButtonControl>(this, "right");
-            base.FinishSetup(builder);
+            up = GetChildControl<ButtonControl>("up");
+            down = GetChildControl<ButtonControl>("down");
+            left = GetChildControl<ButtonControl>("left");
+            right = GetChildControl<ButtonControl>("right");
+            base.FinishSetup();
         }
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
@@ -105,12 +107,13 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Create a direction vector from the given four button states.
         /// </summary>
-        /// <param name="up"></param>
-        /// <param name="down"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="normalize"></param>
-        /// <returns>A normalized 2D direction vector.</returns>
+        /// <param name="up">Whether button representing the up direction is pressed.</param>
+        /// <param name="down">Whether button representing the down direction is pressed.</param>
+        /// <param name="left">Whether button representing the left direction is pressed.</param>
+        /// <param name="right">Whether button representing the right direction is pressed.</param>
+        /// <param name="normalize">Whether to normalize the resulting vector. If this is false, vectors in the diagonal
+        /// directions will have a magnitude of greater than 1. For example, up-left will be (-1,1).</param>
+        /// <returns>A 2D direction vector.</returns>
         public static Vector2 MakeDpadVector(bool up, bool down, bool left, bool right, bool normalize = true)
         {
             var upValue = up ? 1.0f : 0.0f;
@@ -130,6 +133,19 @@ namespace UnityEngine.InputSystem.Controls
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Create a direction vector from the given axis states.
+        /// </summary>
+        /// <param name="up">Axis value representing the up direction.</param>
+        /// <param name="down">Axis value representing the down direction.</param>
+        /// <param name="left">Axis value representing the left direction.</param>
+        /// <param name="right">Axis value representing the right direction.</param>
+        /// <returns>A 2D direction vector.</returns>
+        public static Vector2 MakeDpadVector(float up, float down, float left, float right)
+        {
+            return new Vector2(-left + right, up - down);
         }
 
         internal enum ButtonBits

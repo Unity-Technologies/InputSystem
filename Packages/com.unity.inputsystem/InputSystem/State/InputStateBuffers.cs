@@ -22,51 +22,11 @@ namespace UnityEngine.InputSystem.LowLevel
         // Edit mode and play mode each get their own double buffering. Updates to them
         // are tied to focus and only one mode will actually receive state events while the
         // other mode is dormant. In the player, we only get play mode buffers, of course.
-        //
-        // For edit mode, we only need a single set of front and back buffers.
-        //
-        // For play mode, things are complicated by the fact that we can have several
-        // update slices (dynamic, fixed, before-render) in a single frame. Each such
-        // update type has its own point in time it considers the "previous" point in time.
-        // So, in the worst case where multiple update types are enabled concurrently,
-        // we have to keep multiple separate buffers for play mode.
-        //
-        // If, however, only a single update type is enabled (e.g. either fixed or dynamic),
-        // we operate the same way as edit mode with only one front and one back buffer.
-        //
-        // Buffer swapping happens differently than it does for graphics as we have to
-        // carry forward the current state of a device. In a scheme where you simply swap
-        // the meaning of front and back buffer every frame, every swap brings back the
-        // state from two frames ago. In graphics, this isn't a problem as you are expected
-        // to either clear or render over the entire frame. For us, it'd be okay as well
-        // if we could guarantee that every device gets a state event every frame -- which,
-        // however, we can't guarantee.
-        //
-        // We solve this by making buffer swapping *per device* rather than global. Only
-        // when a device actually receives a state event will we swap the front and back
-        // buffer for it. This means that what is the "current" buffer to one device may
-        // be the "previous" buffer to another. This avoids having to do any copying of
-        // state between the buffers.
-        //
-        // In play mode, when we do have multiple types of updates enabled at the same time,
-        // some additional rules apply.
-        //
-        // Before render updates never get their own state buffers. If enabled, they will
-        // process into the state buffers of the fixed and/or dynamic updates (depending
-        // on whether only one or both are enabled).
-        //
-        // Fixed and dynamic each get their own buffers. We specifically want to *NOT*
-        // optimize for this case as doing input processing from game scripts in both
-        // updates is a bad setup -- a game should decide where it wants to process input
-        // and then disable the update type that it does not need. This will put the
-        // game in a simple double buffering configuration.
-
 
         ////TODO: need to clear the current buffers when switching between edit and play mode
         ////      (i.e. if you click an editor window while in play mode, the play mode
         ////      device states will all go back to default)
         ////      actually, if we really reset on mode change, can't we just keep a single set buffers?
-
 
         public uint sizePerBuffer;
         public uint totalSize;
@@ -133,36 +93,28 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        internal DoubleBuffers m_DynamicUpdateBuffers;
-        internal DoubleBuffers m_FixedUpdateBuffers;
-        internal DoubleBuffers m_ManualUpdateBuffers;
+        internal DoubleBuffers m_PlayerStateBuffers;
 
 #if UNITY_EDITOR
-        internal DoubleBuffers m_EditorUpdateBuffers;
+        internal DoubleBuffers m_EditorStateBuffers;
 #endif
 
         public DoubleBuffers GetDoubleBuffersFor(InputUpdateType updateType)
         {
             switch (updateType)
             {
-                case InputUpdateType.Dynamic:
-                    return m_DynamicUpdateBuffers;
-                case InputUpdateType.Fixed:
-                    return m_FixedUpdateBuffers;
                 case InputUpdateType.BeforeRender:
-                    if (m_DynamicUpdateBuffers.valid)
-                        return m_DynamicUpdateBuffers;
-                    else
-                        return m_FixedUpdateBuffers;
+                case InputUpdateType.Fixed:
+                case InputUpdateType.Dynamic:
                 case InputUpdateType.Manual:
-                    return m_ManualUpdateBuffers;
+                    return m_PlayerStateBuffers;
 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
-                    return m_EditorUpdateBuffers;
+                    return m_EditorStateBuffers;
 #endif
             }
 
-            throw new Exception("Unrecognized InputUpdateType: " + updateType);
+            throw new ArgumentException("Unrecognized InputUpdateType: " + updateType, nameof(updateType));
         }
 
         internal static void* s_DefaultStateBuffer;
@@ -188,44 +140,27 @@ namespace UnityEngine.InputSystem.LowLevel
         // Allocates all buffers to serve the given updates and comes up with a spot
         // for the state block of each device. Returns the new state blocks for the
         // devices (it will *NOT* install them on the devices).
-        public uint[] AllocateAll(InputUpdateType updateMask, InputDevice[] devices, int deviceCount)
+        public void AllocateAll(InputDevice[] devices, int deviceCount)
         {
-            uint[] newDeviceOffsets = null;
-            sizePerBuffer = ComputeSizeOfSingleBufferAndOffsetForEachDevice(devices, deviceCount, ref newDeviceOffsets);
+            sizePerBuffer = ComputeSizeOfSingleStateBuffer(devices, deviceCount);
             if (sizePerBuffer == 0)
-                return null;
-            sizePerBuffer = NumberHelpers.AlignToMultiple(sizePerBuffer, 4);
-
-            var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) != 0;
-            var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) != 0;
-            var isManualUpdateEnabled = (updateMask & InputUpdateType.Manual) != 0;
+                return;
+            sizePerBuffer = sizePerBuffer.AlignToMultipleOf(4);
 
             // Determine how much memory we need.
             var mappingTableSizePerBuffer = (uint)(deviceCount * sizeof(void*) * 2);
 
-            if (isDynamicUpdateEnabled)
-            {
-                totalSize += sizePerBuffer * 2;
-                totalSize += mappingTableSizePerBuffer;
-            }
-            if (isFixedUpdateEnabled)
-            {
-                totalSize += sizePerBuffer * 2;
-                totalSize += mappingTableSizePerBuffer;
-            }
-            if (isManualUpdateEnabled)
-            {
-                totalSize += sizePerBuffer * 2;
-                totalSize += mappingTableSizePerBuffer;
-            }
-            // Before render doesn't have its own buffers.
+            totalSize = 0;
+
+            totalSize += sizePerBuffer * 2;
+            totalSize += mappingTableSizePerBuffer;
 
             #if UNITY_EDITOR
             totalSize += sizePerBuffer * 2;
             totalSize += mappingTableSizePerBuffer;
             #endif
 
-            // Plus 2 more buffers (1 for default states, and one for noise filters).
+            // Plus 2 more buffers (1 for default states, and one for noise masks).
             totalSize += sizePerBuffer * 2;
 
             // Allocate.
@@ -234,38 +169,21 @@ namespace UnityEngine.InputSystem.LowLevel
 
             // Set up device to buffer mappings.
             var ptr = (byte*)m_AllBuffers;
-            if (isDynamicUpdateEnabled)
-            {
-                m_DynamicUpdateBuffers =
-                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
-                        mappingTableSizePerBuffer);
-            }
-            if (isFixedUpdateEnabled)
-            {
-                m_FixedUpdateBuffers =
-                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
-                        mappingTableSizePerBuffer);
-            }
-            if (isManualUpdateEnabled)
-            {
-                m_ManualUpdateBuffers =
-                    SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
-                        mappingTableSizePerBuffer);
-            }
+            m_PlayerStateBuffers =
+                SetUpDeviceToBufferMappings(deviceCount, ref ptr, sizePerBuffer,
+                    mappingTableSizePerBuffer);
 
             #if UNITY_EDITOR
-            m_EditorUpdateBuffers =
-                SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
+            m_EditorStateBuffers =
+                SetUpDeviceToBufferMappings(deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
             #endif
 
             // Default state and noise filter buffers go last.
             defaultStateBuffer = ptr;
             noiseMaskBuffer = ptr + sizePerBuffer;
-
-            return newDeviceOffsets;
         }
 
-        private static DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
+        private static DoubleBuffers SetUpDeviceToBufferMappings(int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
         {
             var front = bufferPtr;
             var back = bufferPtr + sizePerBuffer;
@@ -276,8 +194,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
             for (var i = 0; i < deviceCount; ++i)
             {
-                var deviceIndex = devices[i].m_DeviceIndex;
-
+                var deviceIndex = i;
                 buffers.SetFrontBuffer(deviceIndex, front);
                 buffers.SetBackBuffer(deviceIndex, back);
             }
@@ -293,11 +210,10 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_AllBuffers = null;
             }
 
-            m_DynamicUpdateBuffers = new DoubleBuffers();
-            m_FixedUpdateBuffers = new DoubleBuffers();
+            m_PlayerStateBuffers = new DoubleBuffers();
 
 #if UNITY_EDITOR
-            m_EditorUpdateBuffers = new DoubleBuffers();
+            m_EditorStateBuffers = new DoubleBuffers();
 #endif
 
             s_CurrentBuffers = new DoubleBuffers();
@@ -319,51 +235,57 @@ namespace UnityEngine.InputSystem.LowLevel
         // Migrate state data for all devices from a previous set of buffers to the current set of buffers.
         // Copies all state from their old locations to their new locations and bakes the new offsets into
         // the control hierarchies of the given devices.
-        // NOTE: oldDeviceIndices is only required if devices have been removed; otherwise it can be null.
-        public void MigrateAll(InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, InputStateBuffers oldBuffers, int[] oldDeviceIndices)
+        // NOTE: When having oldBuffers, this method only works properly if the only alteration compared to the
+        //       new buffers is that either devices have been removed or devices have been added. Cannot be
+        //       a mix of the two. Also, new devices MUST be added to the end and cannot be inserted in the middle.
+        // NOTE: Also, state formats MUST not change from before. A device that has changed its format must
+        //       be treated as a newly device that didn't exist before.
+        public void MigrateAll(InputDevice[] devices, int deviceCount, InputStateBuffers oldBuffers)
         {
             // If we have old data, perform migration.
-            // Note that the enabled update types don't need to match between the old set of buffers
-            // and the new set of buffers.
             if (oldBuffers.totalSize > 0)
             {
-                MigrateDoubleBuffer(m_DynamicUpdateBuffers, devices, deviceCount, newStateBlockOffsets, oldBuffers.m_DynamicUpdateBuffers,
-                    oldDeviceIndices);
-                MigrateDoubleBuffer(m_FixedUpdateBuffers, devices, deviceCount, newStateBlockOffsets, oldBuffers.m_FixedUpdateBuffers,
-                    oldDeviceIndices);
+                MigrateDoubleBuffer(m_PlayerStateBuffers, devices, deviceCount, oldBuffers.m_PlayerStateBuffers);
 
 #if UNITY_EDITOR
-                MigrateDoubleBuffer(m_EditorUpdateBuffers, devices, deviceCount, newStateBlockOffsets, oldBuffers.m_EditorUpdateBuffers,
-                    oldDeviceIndices);
+                MigrateDoubleBuffer(m_EditorStateBuffers, devices, deviceCount, oldBuffers.m_EditorStateBuffers);
 #endif
 
-                MigrateSingleBuffer(defaultStateBuffer, devices, deviceCount, newStateBlockOffsets, oldBuffers.defaultStateBuffer);
-                MigrateSingleBuffer(noiseMaskBuffer, devices, deviceCount, newStateBlockOffsets, oldBuffers.noiseMaskBuffer);
+                MigrateSingleBuffer(defaultStateBuffer, devices, deviceCount, oldBuffers.defaultStateBuffer);
+                MigrateSingleBuffer(noiseMaskBuffer, devices, deviceCount, oldBuffers.noiseMaskBuffer);
             }
 
-            // Assign state blocks.
+            // Assign state blocks. This is where devices will receive their updates state offsets. Up
+            // until now we've left any previous m_StateBlocks alone.
+            var newOffset = 0u;
             for (var i = 0; i < deviceCount; ++i)
             {
-                var newOffset = newStateBlockOffsets[i];
                 var device = devices[i];
                 var oldOffset = device.m_StateBlock.byteOffset;
 
                 if (oldOffset == InputStateBlock.InvalidOffset)
                 {
+                    // Device is new and has no offset yet baked into it.
                     device.m_StateBlock.byteOffset = 0;
                     if (newOffset != 0)
                         device.BakeOffsetIntoStateBlockRecursive(newOffset);
                 }
                 else
                 {
+                    // Device is not new and still has its old offset baked into it. We could first unbake the old offset
+                    // and then bake the new one but instead just bake a relative offset.
                     var delta = newOffset - oldOffset;
                     if (delta != 0)
                         device.BakeOffsetIntoStateBlockRecursive(delta);
                 }
+
+                Debug.Assert(device.m_StateBlock.byteOffset == newOffset, "Device state offset not set correctly");
+
+                newOffset = NextDeviceOffset(newOffset, device);
             }
         }
 
-        private static void MigrateDoubleBuffer(DoubleBuffers newBuffer, InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
+        private static void MigrateDoubleBuffer(DoubleBuffers newBuffer, InputDevice[] devices, int deviceCount, DoubleBuffers oldBuffer)
         {
             // Nothing to migrate if we no longer keep a buffer of the corresponding type.
             if (!newBuffer.valid)
@@ -373,84 +295,80 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!oldBuffer.valid)
                 return;
 
-            ////TOOD: if we assume linear layouts of devices in 'devices' and assume that new devices are only added
-            ////      at the end and only single devices can be removed, we can copy state buffers much more efficiently
-            ////      in bulk rather than device-by-device
-
             // Migrate every device that has allocated state blocks.
-            var newDeviceCount = deviceCount;
-            var oldDeviceCount = oldDeviceIndices?.Length ?? newDeviceCount;
-            for (var i = 0; i < newDeviceCount && i < oldDeviceCount; ++i)
+            var newStateBlockOffset = 0u;
+            for (var i = 0; i < deviceCount; ++i)
             {
                 var device = devices[i];
-                Debug.Assert(device.m_DeviceIndex == i);
 
-                // Skip device if it's a newly added device.
+                // Stop as soon as we're hitting a new device. Newly added devices *must* be *appended* to the
+                // array as otherwise our computing of offsets into the old buffer may be wrong.
+                // NOTE: This also means that device indices of
                 if (device.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset)
-                    continue;
+                {
+                    #if DEVELOPMENT_BUILD || UNITY_EDITOR
+                    for (var n = i + 1; n < deviceCount; ++n)
+                        Debug.Assert(devices[n].m_StateBlock.byteOffset == InputStateBlock.InvalidOffset,
+                            "New devices must be appended to the array; found an old device coming in the array after a newly added device");
+                    #endif
+                    break;
+                }
 
-                ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
-
-                var oldDeviceIndex = oldDeviceIndices ? [i] ?? i;
+                var oldDeviceIndex = device.m_DeviceIndex;
                 var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
 
-                var oldFrontPtr = (byte*)oldBuffer.GetFrontBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset;
+                var oldFrontPtr = (byte*)oldBuffer.GetFrontBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset; // m_StateBlock still refers to oldBuffer.
                 var oldBackPtr = (byte*)oldBuffer.GetBackBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset;
 
-                var newFrontPtr = (byte*)newBuffer.GetFrontBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
-                var newBackPtr = (byte*)newBuffer.GetBackBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
+                var newFrontPtr = (byte*)newBuffer.GetFrontBuffer(newDeviceIndex) + (int)newStateBlockOffset;
+                var newBackPtr = (byte*)newBuffer.GetBackBuffer(newDeviceIndex) + (int)newStateBlockOffset;
 
                 // Copy state.
                 UnsafeUtility.MemCpy(newFrontPtr, oldFrontPtr, numBytes);
                 UnsafeUtility.MemCpy(newBackPtr, oldBackPtr, numBytes);
+
+                newStateBlockOffset = NextDeviceOffset(newStateBlockOffset, device);
             }
         }
 
-        private static void MigrateSingleBuffer(void* newBuffer, InputDevice[] devices, int deviceCount, uint[] newStateBlockOffsets, void* oldBuffer)
+        private static void MigrateSingleBuffer(void* newBuffer, InputDevice[] devices, int deviceCount, void* oldBuffer)
         {
             // Migrate every device that has allocated state blocks.
             var newDeviceCount = deviceCount;
+            var newStateBlockOffset = 0u;
             for (var i = 0; i < newDeviceCount; ++i)
             {
                 var device = devices[i];
-                Debug.Assert(device.m_DeviceIndex == i);
 
-                // Skip device if it's a newly added device.
+                // Stop if we've reached newly added devices.
                 if (device.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset)
-                    continue;
+                    break;
 
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
                 var oldStatePtr = (byte*)oldBuffer + (int)device.m_StateBlock.byteOffset;
-                var newStatePtr = (byte*)newBuffer + (int)newStateBlockOffsets[i];
+                var newStatePtr = (byte*)newBuffer + (int)newStateBlockOffset;
 
                 UnsafeUtility.MemCpy(newStatePtr, oldStatePtr, numBytes);
+
+                newStateBlockOffset = NextDeviceOffset(newStateBlockOffset, device);
             }
         }
 
-        // Compute the total size of we need for a single state buffer to encompass
-        // all devices we have and also linearly assign offsets to all the devices
-        // within such a buffer.
-        private static uint ComputeSizeOfSingleBufferAndOffsetForEachDevice(InputDevice[] devices, int deviceCount, ref uint[] offsets)
+        private static uint ComputeSizeOfSingleStateBuffer(InputDevice[] devices, int deviceCount)
         {
-            if (devices == null)
-                return 0;
-
-            var result = new uint[deviceCount];
             var sizeInBytes = 0u;
-
             for (var i = 0; i < deviceCount; ++i)
-            {
-                var sizeOfDevice = devices[i].m_StateBlock.alignedSizeInBytes;
-                sizeOfDevice = NumberHelpers.AlignToMultiple(sizeOfDevice, 4);
-                if (sizeOfDevice == 0) // Shouldn't happen as we don't allow empty layouts but make sure we catch this if something slips through.
-                    throw new Exception($"Device '{devices[i]}' has a zero-size state buffer");
-                result[i] = sizeInBytes;
-                sizeInBytes += sizeOfDevice;
-            }
-
-            offsets = result;
+                sizeInBytes = NextDeviceOffset(sizeInBytes, devices[i]);
             return sizeInBytes;
+        }
+
+        private static uint NextDeviceOffset(uint currentOffset, InputDevice device)
+        {
+            var sizeOfDevice = device.m_StateBlock.alignedSizeInBytes;
+            if (sizeOfDevice == 0) // Shouldn't happen as we don't allow empty layouts but make sure we catch this if something slips through.
+                throw new ArgumentException($"Device '{device}' has a zero-size state buffer", nameof(device));
+            return currentOffset + sizeOfDevice.AlignToMultipleOf(4);
         }
     }
 }

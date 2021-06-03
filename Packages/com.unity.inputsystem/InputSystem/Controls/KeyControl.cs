@@ -1,4 +1,6 @@
+using System.Globalization;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Controls
 {
@@ -12,8 +14,9 @@ namespace UnityEngine.InputSystem.Controls
     ///
     /// Note that there is no text input associated with individual keys as text composition is highly
     /// layout specific and does not need to be key-by-key. For general text input, see <see cref="Keyboard.onTextInput"/>.
-    /// To find the text displayed on a key, use <see cref="KeyControl.displayName"/>.
+    /// To find the text displayed on a key, use <see cref="InputControl.displayName"/>.
     /// </remarks>
+    [Preserve]
     public class KeyControl : ButtonControl
     {
         /// <summary>
@@ -48,7 +51,26 @@ namespace UnityEngine.InputSystem.Controls
             if (device.ExecuteCommand(ref command) > 0)
             {
                 m_ScanCode = command.scanOrKeyCode;
-                displayName = command.ReadKeyName();
+
+                var rawKeyName = command.ReadKeyName();
+                if (string.IsNullOrEmpty(rawKeyName))
+                {
+                    displayName = rawKeyName;
+                    return;
+                }
+
+                var textInfo = CultureInfo.InvariantCulture.TextInfo;
+                // We need to lower case first because ToTitleCase preserves upper casing.
+                // For example on Swedish Windows layout right shift display name is "HÖGER SKIFT".
+                // Just passing it to ToTitleCase won't change anything. But passing "höger skift" will return "Höger Skift".
+                var keyNameLowerCase = textInfo.ToLower(rawKeyName);
+                if (string.IsNullOrEmpty(keyNameLowerCase))
+                {
+                    displayName = rawKeyName;
+                    return;
+                }
+
+                displayName = textInfo.ToTitleCase(keyNameLowerCase);
             }
         }
 

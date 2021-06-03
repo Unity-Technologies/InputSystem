@@ -1,8 +1,13 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
+#if UNITY_2020_2_OR_NEWER
+using UnityEditor.AssetImporters;
+#else
 using UnityEditor.Experimental.AssetImporters;
+#endif
 using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
@@ -20,9 +25,9 @@ namespace UnityEngine.InputSystem.Editor
     /// Will not overwrite existing wrappers except if the generated code actually differs.
     /// </remarks>
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
-    public class InputActionImporter : ScriptedImporter
+    internal class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 6;
+        private const int kVersion = 13;
 
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
@@ -42,6 +47,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx));
+
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 
@@ -74,6 +82,10 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
+            // Force name of asset to be that on the file on disk instead of what may be serialized
+            // as the 'name' property in JSON.
+            asset.name = Path.GetFileNameWithoutExtension(assetPath);
+
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
             var assetIcon = (Texture2D)EditorGUIUtility.Load(kAssetIcon);
@@ -83,25 +95,27 @@ namespace UnityEngine.InputSystem.Editor
             ctx.AddObjectToAsset("<root>", asset, assetIcon);
             ctx.SetMainObject(asset);
 
-            // Make sure all the elements in the asset have GUIDs.
+            // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
             var maps = asset.actionMaps;
             foreach (var map in maps)
             {
                 // Make sure action map has GUID.
-                if (string.IsNullOrEmpty(map.m_Id))
+                if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
                     map.GenerateId();
 
                 // Make sure all actions have GUIDs.
                 foreach (var action in map.actions)
                 {
-                    if (string.IsNullOrEmpty(action.m_Id))
+                    var actionId = action.m_Id;
+                    if (string.IsNullOrEmpty(actionId) || asset.actionMaps.Sum(m => m.actions.Count(a => a.m_Id == actionId)) > 1)
                         action.GenerateId();
                 }
 
                 // Make sure all bindings have GUIDs.
                 for (var i = 0; i < map.m_Bindings.LengthSafe(); ++i)
                 {
-                    if (string.IsNullOrEmpty(map.m_Bindings[i].m_Id))
+                    var bindingId = map.m_Bindings[i].m_Id;
+                    if (string.IsNullOrEmpty(bindingId) || asset.actionMaps.Sum(m => m.bindings.Count(b => b.m_Id == bindingId)) > 1)
                         map.m_Bindings[i].GenerateId();
                 }
             }
@@ -121,43 +135,84 @@ namespace UnityEngine.InputSystem.Editor
                         objectName = $"{map.name}/{action.name}";
 
                     actionReference.name = objectName;
-                    ctx.AddObjectToAsset(objectName, actionReference, actionIcon);
+                    ctx.AddObjectToAsset(action.m_Id, actionReference, actionIcon);
+
+                    // Backwards-compatibility (added for 1.0.0-preview.7).
+                    // We used to call AddObjectToAsset using objectName instead of action.m_Id as the object name. This fed
+                    // the action name (*and* map name) into the hash generation that was used as the basis for the file ID
+                    // object the InputActionReference object. Thus, if the map and/or action name changed, the file ID would
+                    // change and existing references to the InputActionReference object would become invalid.
+                    //
+                    // What we do here is add another *hidden* InputActionReference object with the same content to the
+                    // asset. This one will use the old file ID and thus preserve backwards-compatibility. We should be able
+                    // to remove this for 2.0.
+                    //
+                    // Case: https://fogbugz.unity3d.com/f/cases/1229145/
+                    var backcompatActionReference = Instantiate(actionReference);
+                    backcompatActionReference.name = objectName; // Get rid of the (Clone) suffix.
+                    backcompatActionReference.hideFlags = HideFlags.HideInHierarchy;
+                    ctx.AddObjectToAsset(objectName, backcompatActionReference, actionIcon);
                 }
             }
 
             // Generate wrapper code, if enabled.
             if (m_GenerateWrapperCode)
             {
-                var wrapperFilePath = m_WrapperCodePath;
-                if (string.IsNullOrEmpty(wrapperFilePath))
+                // When using code generation, it is an error for any action map to be named the same as the asset itself.
+                // https://fogbugz.unity3d.com/f/cases/1212052/
+                var className = !string.IsNullOrEmpty(m_WrapperClassName) ? m_WrapperClassName : CSharpCodeHelpers.MakeTypeName(asset.name);
+                if (maps.Any(x =>
+                    CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
                 {
-                    var assetPath = ctx.assetPath;
-                    var directory = Path.GetDirectoryName(assetPath);
-                    var fileName = Path.GetFileNameWithoutExtension(assetPath);
-                    wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
+                    ctx.LogImportError(
+                        $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
+                        + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
                 }
-
-                var options = new InputActionCodeGenerator.Options
+                else
                 {
-                    sourceAssetPath = ctx.assetPath,
-                    namespaceName = m_WrapperCodeNamespace,
-                    className = m_WrapperClassName,
-                };
+                    var wrapperFilePath = m_WrapperCodePath;
+                    if (string.IsNullOrEmpty(wrapperFilePath))
+                    {
+                        // Placed next to .inputactions file.
+                        var assetPath = ctx.assetPath;
+                        var directory = Path.GetDirectoryName(assetPath);
+                        var fileName = Path.GetFileNameWithoutExtension(assetPath);
+                        wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
+                    }
+                    else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
+                             wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
+                    {
+                        // User-specified file relative to location of .inputactions file.
+                        var assetPath = ctx.assetPath;
+                        var directory = Path.GetDirectoryName(assetPath);
+                        wrapperFilePath = Path.Combine(directory, wrapperFilePath);
+                    }
+                    else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
+                             !wrapperFilePath.ToLower().StartsWith("assets\\"))
+                    {
+                        // User-specified file in Assets/ folder.
+                        wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+                    }
 
-                if (!wrapperFilePath.ToLower().StartsWith("assets/"))
-                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+                    var dir = Path.GetDirectoryName(wrapperFilePath);
+                    if (!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
 
-                var dir = Path.GetDirectoryName(wrapperFilePath);
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                    var options = new InputActionCodeGenerator.Options
+                    {
+                        sourceAssetPath = ctx.assetPath,
+                        namespaceName = m_WrapperCodeNamespace,
+                        className = m_WrapperClassName,
+                    };
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
-                {
-                    // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
-                    // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
-                    // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
-                    // changed/added script, and trigger a new import.
-                    EditorApplication.delayCall += AssetDatabase.Refresh;
+                    if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
+                    {
+                        // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
+                        // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
+                        // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
+                        // changed/added script, and trigger a new import.
+                        EditorApplication.delayCall += AssetDatabase.Refresh;
+                    }
                 }
             }
 

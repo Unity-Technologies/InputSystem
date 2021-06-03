@@ -12,9 +12,11 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: find better way to present controls when filtering to specific devices
 
+////REVIEW: if there's only a single device in the picker, automatically go into it?
+
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputControlPickerDropdown : AdvancedDropdown
+    internal class InputControlPickerDropdown : AdvancedDropdown, IDisposable
     {
         public InputControlPickerDropdown(
             InputControlPickerState state,
@@ -40,9 +42,19 @@ namespace UnityEngine.InputSystem.Editor
         public void SetExpectedControlLayout(string expectedControlLayout)
         {
             m_ExpectedControlLayout = expectedControlLayout;
-            m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlLayout)
-                ? InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
-                : null;
+
+            if (string.Equals(expectedControlLayout, "InputDevice", StringComparison.InvariantCultureIgnoreCase))
+                m_ExpectedControlType = typeof(InputDevice);
+            else
+                m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlLayout)
+                    ? InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
+                    : null;
+
+            // If the layout is for a device, automatically switch to device
+            // picking mode.
+            if (m_ExpectedControlType != null && typeof(InputDevice).IsAssignableFrom(m_ExpectedControlType))
+                m_Mode = InputControlPicker.Mode.PickDevice;
+
             Reload();
         }
 
@@ -50,6 +62,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_RebindingOperation?.Dispose();
             m_RebindingOperation = null;
+        }
+
+        public void Dispose()
+        {
+            m_RebindingOperation?.Dispose();
         }
 
         protected override AdvancedDropdownItem BuildRoot()
@@ -121,7 +138,7 @@ namespace UnityEngine.InputSystem.Editor
             // Add devices that are marked as generic types of devices directly to the parent.
             // E.g. adds "Gamepad" and then underneath all the more specific types of gamepads.
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
-                     .Where(x => x.isDeviceLayout && x.isGenericTypeOfDevice && !x.hideInUI).OrderBy(a => a.displayName))
+                     .Where(x => x.isDeviceLayout && !x.isOverride && x.isGenericTypeOfDevice && !x.hideInUI).OrderBy(a => a.displayName))
                 AddDeviceTreeItemRecursive(deviceLayout, parent);
 
             // We have devices that are based directly on InputDevice but are not marked as generic types
@@ -129,7 +146,7 @@ namespace UnityEngine.InputSystem.Editor
             // all of them in a group called "Other" at the end of the list.
             var otherGroup = new AdvancedDropdownItem("Other");
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
-                     .Where(x => x.isDeviceLayout && !x.isGenericTypeOfDevice && x.type.BaseType == typeof(InputDevice) &&
+                     .Where(x => x.isDeviceLayout && !x.isOverride && !x.isGenericTypeOfDevice && x.type.BaseType == typeof(InputDevice) &&
                          !x.hideInUI && !x.baseLayouts.Any()).OrderBy(a => a.displayName))
                 AddDeviceTreeItemRecursive(deviceLayout, otherGroup);
 
@@ -139,9 +156,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void AddDeviceTreeItemRecursive(InputControlLayout layout, AdvancedDropdownItem parent, bool searchable = true)
         {
-            // Find all layouts directly based on this one.
+            // Find all layouts directly based on this one (ignoring overrides).
             var childLayouts = EditorInputControlLayoutCache.allLayouts
-                .Where(x => x.isDeviceLayout && !x.hideInUI && x.baseLayouts.Contains(layout.name)).OrderBy(x => x.displayName);
+                .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(layout.name)).OrderBy(x => x.displayName);
 
             // See if the entire tree should be excluded.
             var shouldIncludeDeviceLayout = ShouldIncludeDeviceLayout(layout);
@@ -151,27 +168,25 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             // Add toplevel item for device.
-            var deviceItem = new DeviceDropdownItem(layout);
+            var deviceItem = new DeviceDropdownItem(layout, searchable: searchable);
             parent.AddChild(deviceItem);
 
             // Add common usage variants.
-            if (m_Mode != InputControlPicker.Mode.PickDevice && layout.commonUsages.Count > 0)
+            if (layout.commonUsages.Count > 0)
             {
                 foreach (var usage in layout.commonUsages)
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
-                    AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
+                    if (m_Mode == InputControlPicker.Mode.PickControl)
+                        AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
                     deviceItem.AddChild(usageItem);
                 }
                 deviceItem.AddSeparator();
             }
 
             // Add controls.
-            var haveControls = false;
-            if (shouldIncludeDeviceLayout && m_Mode != InputControlPicker.Mode.PickDevice)
+            if (m_Mode != InputControlPicker.Mode.PickDevice)
             {
-                var childCountBefore = deviceItem.children.Count();
-
                 // The keyboard is special in that we want to allow binding by display name (i.e. character
                 // generated by a key) instead of only by physical key location. Also, we want to give an indication
                 // of which specific key an entry refers to by taking the current keyboard layout into account.
@@ -191,13 +206,15 @@ namespace UnityEngine.InputSystem.Editor
 
                     AddCharacterKeyBindingsTo(byCharacterGroup, keyboard);
                     AddPhysicalKeyBindingsTo(byLocationGroup, keyboard, searchable);
+
+                    // AnyKey won't appear in either group. Add it explicitly.
+                    AddControlItem(deviceItem, null,
+                        layout.FindControl(new InternedString("anyKey")).Value, layout.name, null, searchable);
                 }
                 else
                 {
                     AddControlTreeItemsRecursive(layout, deviceItem, layout.name, null, searchable);
                 }
-
-                haveControls = deviceItem.children.Count() != childCountBefore;
             }
 
             // Add child items.
@@ -207,7 +224,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!ShouldIncludeDeviceLayout(childLayout))
                     continue;
 
-                if (isFirstChild && haveControls)
+                if (isFirstChild)
                     deviceItem.AddSeparator("More Specific " + deviceItem.name.GetPlural());
                 isFirstChild = false;
 
@@ -230,7 +247,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             foreach (var control in layout.controls.OrderBy(a => a.name))
             {
-                if (control.isModifyingChildControlByPath)
+                if (control.isModifyingExistingControl)
                     continue;
 
                 // Skip variants except the default variant and variants dictated by the layout itself.
@@ -240,17 +257,7 @@ namespace UnityEngine.InputSystem.Editor
                     continue;
                 }
 
-                var child = new ControlDropdownItem(parentControl, control.name, control.displayName,
-                    device, usage, searchable);
-                child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
-
-                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
-                    parent.AddChild(child);
-
-                var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
-                if (controlLayout != null)
-                    AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
-                        searchable, child);
+                AddControlItem(parent, parentControl, control, device, usage, searchable);
             }
 
             // Add optional controls for devices.
@@ -260,6 +267,8 @@ namespace UnityEngine.InputSystem.Editor
                 var optionalGroup = new AdvancedDropdownItem("Optional Controls");
                 foreach (var optionalControl in optionalControls)
                 {
+                    ////FIXME: this should list children, too
+                    ////FIXME: this should handle arrays, too
                     if (LayoutMatchesExpectedControlLayoutFilter(optionalControl.layout))
                     {
                         var child = new OptionalControlDropdownItem(optionalControl, device, usage);
@@ -278,15 +287,58 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void AddControlItem(DeviceDropdownItem parent, ControlDropdownItem parentControl,
+            InputControlLayout.ControlItem control, string device, string usage, bool searchable)
+        {
+            // If it's an array, generate a control entry for each array element.
+            for (var i = 0; i < (control.isArray ? control.arraySize : 1); ++i)
+            {
+                var name = control.isArray ? control.name + i : control.name;
+                var displayName = !string.IsNullOrEmpty(control.displayName)
+                    ? (control.isArray ? $"{control.displayName} #{i}" : control.displayName)
+                    : name;
+
+                var child = new ControlDropdownItem(parentControl, name, displayName,
+                    device, usage, searchable);
+                child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
+                var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
+
+                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
+                    parent.AddChild(child);
+                else if (controlLayout.controls.Any(x => LayoutMatchesExpectedControlLayoutFilter(x.layout)))
+                {
+                    child.enabled = false;
+                    parent.AddChild(child);
+                }
+                // Add children.
+                if (controlLayout != null)
+                    AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
+                        searchable, child);
+            }
+        }
+
         private static void AddPhysicalKeyBindingsTo(AdvancedDropdownItem parent, Keyboard keyboard, bool searchable)
         {
             foreach (var key in keyboard.children.OfType<KeyControl>())
             {
                 // If the key has a display name that differs from the key name, show it in the UI.
-                var displayName = key.name;
+                var displayName = key.m_DisplayNameFromLayout;
                 var keyDisplayName = key.displayName;
-                if (keyDisplayName.All(x => x.IsPrintable()) && keyDisplayName != key.name)
-                    displayName = $"{key.name} (Current Layout: {key.displayName})";
+                if (keyDisplayName.All(x => x.IsPrintable()) && string.Compare(keyDisplayName, displayName,
+                    StringComparison.InvariantCultureIgnoreCase) != 0)
+                    displayName = $"{displayName} (Current Layout: {key.displayName})";
+
+                // For left/right modifier keys, prepend artificial combined version.
+                ButtonControl combinedVersion = null;
+                if (key == keyboard.leftShiftKey)
+                    combinedVersion = keyboard.shiftKey;
+                else if (key == keyboard.leftAltKey)
+                    combinedVersion = keyboard.altKey;
+                else if (key == keyboard.leftCtrlKey)
+                    combinedVersion = keyboard.ctrlKey;
+                if (combinedVersion != null)
+                    parent.AddChild(new ControlDropdownItem(null, combinedVersion.name, combinedVersion.displayName, keyboard.layout,
+                        "", searchable));
 
                 var item = new ControlDropdownItem(null, key.name, displayName,
                     keyboard.layout, "", searchable);
@@ -334,7 +386,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // By default, if a device has no (usable) controls, we don't want it listed in the control picker
             // except if we're picking devices.
-            if (!layout.controls.Any(x => LayoutMatchesExpectedControlLayoutFilter(x.layout)) && m_Mode != InputControlPicker.Mode.PickDevice)
+            if (!layout.controls.Any(x => LayoutMatchesExpectedControlLayoutFilter(x.layout)) && layout.controls.Any(x => true) &&
+                m_Mode != InputControlPicker.Mode.PickDevice)
                 return false;
 
             // If we have a device filter, see if we should ignore the device.
@@ -343,21 +396,16 @@ namespace UnityEngine.InputSystem.Editor
                 var matchesAnyInDeviceFilter = false;
                 foreach (var entry in m_ControlPathsToMatch)
                 {
-                    if (entry == layout.name ||
-                        InputControlLayout.s_Layouts.IsBasedOn(new InternedString(entry), layout.name))
+                    // Include the layout if it's in the inheritance hierarchy of the layout we expect (either below
+                    // or above it or, well, just right on it).
+                    var expectedLayout = InputControlPath.TryGetDeviceLayout(entry);
+                    if (!string.IsNullOrEmpty(expectedLayout) &&
+                        (expectedLayout == layout.name ||
+                         InputControlLayout.s_Layouts.IsBasedOn(layout.name, new InternedString(expectedLayout)) ||
+                         InputControlLayout.s_Layouts.IsBasedOn(new InternedString(expectedLayout), layout.name)))
                     {
                         matchesAnyInDeviceFilter = true;
-                    }
-                    else
-                    {
-                        ////FIXME: this also needs to work for full control paths and not just stuff like "<Gamepad>"
-                        var expectedLayout = InputControlPath.TryGetDeviceLayout(entry);
-                        if (!string.IsNullOrEmpty(expectedLayout) &&
-                            (expectedLayout == layout.name ||
-                             InputControlLayout.s_Layouts.IsBasedOn(new InternedString(expectedLayout), layout.name)))
-                        {
-                            matchesAnyInDeviceFilter = true;
-                        }
+                        break;
                     }
                 }
 
@@ -373,8 +421,11 @@ namespace UnityEngine.InputSystem.Editor
             if (m_RebindingOperation == null)
                 m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
 
+            ////TODO: for keyboard, generate both possible paths (physical and by display name)
+
+            m_RebindingOperation.Reset();
             m_RebindingOperation
-                .WithExpectedControlLayout(m_ExpectedControlLayout)
+                .WithExpectedControlType(m_ExpectedControlLayout)
                 // Require minimum actuation of 0.15f. This is after deadzoning has been applied.
                 .WithMagnitudeHavingToBeGreaterThan(0.15f)
                 ////REVIEW: should we exclude only the system's active pointing device?
@@ -383,8 +434,9 @@ namespace UnityEngine.InputSystem.Editor
                 // NOTE: We go for all types of pointers here, not just mice.
                 .WithControlsExcluding("<Pointer>/position")
                 .WithControlsExcluding("<Pointer>/delta")
-                .WithControlsExcluding("<Pointer>/button")
-                .WithControlsExcluding("<Mouse>/leftButton")
+                .WithControlsExcluding("<Pointer>/press")
+                .WithControlsExcluding("<Pointer>/clickCount")
+                .WithControlsExcluding("<Pointer>/{PrimaryAction}")
                 .WithControlsExcluding("<Mouse>/scroll")
                 .OnPotentialMatch(
                     operation =>
@@ -407,7 +459,6 @@ namespace UnityEngine.InputSystem.Editor
                     });
 
             // If we have control paths to match, pass them on.
-            m_RebindingOperation.WithoutControlsHavingToMatchPath();
             if (m_ControlPathsToMatch.LengthSafe() > 0)
                 m_ControlPathsToMatch.Select(x => m_RebindingOperation.WithControlsHavingToMatchPath(x));
 
@@ -439,7 +490,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly Action<string> m_OnPickCallback;
-        private readonly InputControlPicker.Mode m_Mode;
+        private InputControlPicker.Mode m_Mode;
         private string[] m_ControlPathsToMatch;
         private string m_ExpectedControlLayout;
         private Type m_ExpectedControlType;
@@ -482,12 +533,12 @@ namespace UnityEngine.InputSystem.Editor
                     // When picking controls, have a "Listen" button that allows listening for input.
                     if (m_Owner.m_Mode == InputControlPicker.Mode.PickControl)
                     {
-                        using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(42)))
+                        using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(50)))
                         {
                             GUILayout.Space(4);
                             var isListeningOld = m_Owner.isListening;
                             var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
-                                EditorStyles.miniButton, GUILayout.MaxWidth(40));
+                                EditorStyles.miniButton, GUILayout.MaxWidth(50));
 
                             if (isListeningOld != isListeningNew)
                             {
@@ -545,12 +596,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Styles
         {
-            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
-
-            static Styles()
-            {
-                waitingForInputLabel.fontSize = 22;
-            }
+            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel").WithFontSize(22);
         }
     }
 }

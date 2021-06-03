@@ -5,16 +5,17 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.Plugins.UI;
-using UnityEngine.InputSystem.Plugins.UI.Editor;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.UI.Editor;
+#endif
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.
@@ -29,6 +30,22 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
         {
             InputActionImporter.onImport += Refresh;
             InputUser.onChange += OnUserChange;
+
+            // Look up properties.
+            m_ActionsProperty = serializedObject.FindProperty("m_Actions");
+            m_DefaultControlSchemeProperty = serializedObject.FindProperty("m_DefaultControlScheme");
+            m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty("m_NeverAutoSwitchControlSchemes");
+            m_DefaultActionMapProperty = serializedObject.FindProperty("m_DefaultActionMap");
+            m_NotificationBehaviorProperty = serializedObject.FindProperty("m_NotificationBehavior");
+            m_CameraProperty = serializedObject.FindProperty("m_Camera");
+            m_ActionEventsProperty = serializedObject.FindProperty("m_ActionEvents");
+            m_DeviceLostEventProperty = serializedObject.FindProperty("m_DeviceLostEvent");
+            m_DeviceRegainedEventProperty = serializedObject.FindProperty("m_DeviceRegainedEvent");
+            m_ControlsChangedEventProperty = serializedObject.FindProperty("m_ControlsChangedEvent");
+
+            #if UNITY_INPUT_SYSTEM_ENABLE_UI
+            m_UIInputModuleProperty = serializedObject.FindProperty("m_UIInputModule");
+            #endif
         }
 
         public void OnDestroy()
@@ -51,18 +68,15 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 
         public override void OnInspectorGUI()
         {
-            ////TODO: cache properties
-
             EditorGUI.BeginChangeCheck();
 
             // Action config section.
             EditorGUI.BeginChangeCheck();
-            var actionsProperty = serializedObject.FindProperty("m_Actions");
-            EditorGUILayout.PropertyField(actionsProperty);
+            EditorGUILayout.PropertyField(m_ActionsProperty);
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
                 OnActionAssetChange();
             ++EditorGUI.indentLevel;
-            if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 0)
+            if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 1) // Don't show if <Any> is the only option.
             {
                 // Default control scheme picker.
 
@@ -70,17 +84,24 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                     m_ControlSchemeOptions);
                 if (selected != m_SelectedDefaultControlScheme)
                 {
-                    var defaultControlSchemeProperty = serializedObject.FindProperty("m_DefaultControlScheme");
                     if (selected == 0)
                     {
-                        defaultControlSchemeProperty.stringValue = null;
+                        m_DefaultControlSchemeProperty.stringValue = null;
                     }
                     else
                     {
-                        defaultControlSchemeProperty.stringValue =
+                        m_DefaultControlSchemeProperty.stringValue =
                             m_ControlSchemeOptions[selected].text;
                     }
                     m_SelectedDefaultControlScheme = selected;
+                }
+
+                var neverAutoSwitchValueOld = m_NeverAutoSwitchControlSchemesProperty.boolValue;
+                var neverAutoSwitchValueNew = !EditorGUILayout.Toggle(m_AutoSwitchText, !neverAutoSwitchValueOld);
+                if (neverAutoSwitchValueOld != neverAutoSwitchValueNew)
+                {
+                    m_NeverAutoSwitchControlSchemesProperty.boolValue = neverAutoSwitchValueNew;
+                    serializedObject.ApplyModifiedProperties();
                 }
             }
             if (m_ActionMapOptions != null && m_ActionMapOptions.Length > 0)
@@ -91,18 +112,17 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                     m_ActionMapOptions);
                 if (selected != m_SelectedDefaultActionMap)
                 {
-                    var defaultActionMapProperty = serializedObject.FindProperty("m_DefaultActionMap");
                     if (selected == 0)
                     {
-                        defaultActionMapProperty.stringValue = null;
+                        m_DefaultActionMapProperty.stringValue = null;
                     }
                     else
                     {
                         // Use ID rather than name.
-                        var asset = (InputActionAsset)serializedObject.FindProperty("m_Actions").objectReferenceValue;
-                        var actionMap = asset.TryGetActionMap(m_ActionMapOptions[selected].text);
+                        var asset = (InputActionAsset)m_ActionsProperty.objectReferenceValue;
+                        var actionMap = asset.FindActionMap(m_ActionMapOptions[selected].text);
                         if (actionMap != null)
-                            defaultActionMapProperty.stringValue = actionMap.id.ToString();
+                            m_DefaultActionMapProperty.stringValue = actionMap.id.ToString();
                     }
                     m_SelectedDefaultActionMap = selected;
                 }
@@ -110,42 +130,41 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             --EditorGUI.indentLevel;
             DoHelpCreateAssetUI();
 
+            #if UNITY_INPUT_SYSTEM_ENABLE_UI
             // UI config section.
-            var uiModuleProperty = serializedObject.FindProperty("m_UIInputModule");
             if (m_UIPropertyText == null)
-                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", uiModuleProperty.tooltip);
+                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", m_UIInputModuleProperty.GetTooltip());
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(uiModuleProperty, m_UIPropertyText);
+            EditorGUILayout.PropertyField(m_UIInputModuleProperty, m_UIPropertyText);
             if (EditorGUI.EndChangeCheck())
                 serializedObject.ApplyModifiedProperties();
 
-            if (uiModuleProperty.objectReferenceValue != null)
+            if (m_UIInputModuleProperty.objectReferenceValue != null)
             {
-                var uiModule = uiModuleProperty.objectReferenceValue as InputSystemUIInputModule;
-                if (actionsProperty.objectReferenceValue != null && uiModule.actionsAsset != actionsProperty.objectReferenceValue)
+                var uiModule = m_UIInputModuleProperty.objectReferenceValue as InputSystemUIInputModule;
+                if (m_ActionsProperty.objectReferenceValue != null && uiModule.actionsAsset != m_ActionsProperty.objectReferenceValue)
                 {
-                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using differnet input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
                     if (GUILayout.Button(m_FixInputModuleText))
-                        InputSystemUIInputModuleEditor.ReassignActions(uiModule, actionsProperty.objectReferenceValue as InputActionAsset);
+                        InputSystemUIInputModuleEditor.ReassignActions(uiModule, m_ActionsProperty.objectReferenceValue as InputActionAsset);
                 }
             }
+            #endif
 
             // Camera section.
-            var cameraProperty = serializedObject.FindProperty("m_Camera");
             if (m_CameraPropertyText == null)
-                m_CameraPropertyText = EditorGUIUtility.TrTextContent("Camera", cameraProperty.tooltip);
+                m_CameraPropertyText = EditorGUIUtility.TrTextContent("Camera", m_CameraProperty.GetTooltip());
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(cameraProperty, m_CameraPropertyText);
+            EditorGUILayout.PropertyField(m_CameraProperty, m_CameraPropertyText);
             if (EditorGUI.EndChangeCheck())
                 serializedObject.ApplyModifiedProperties();
 
             // Notifications/event section.
             EditorGUI.BeginChangeCheck();
-            var notificationsProperty = serializedObject.FindProperty("m_NotificationBehavior");
-            EditorGUILayout.PropertyField(notificationsProperty, m_NotificationBehaviorText);
+            EditorGUILayout.PropertyField(m_NotificationBehaviorProperty, m_NotificationBehaviorText);
             if (EditorGUI.EndChangeCheck() || !m_NotificationBehaviorInitialized)
                 OnNotificationBehaviorChange();
-            switch ((PlayerNotifications)notificationsProperty.intValue)
+            switch ((PlayerNotifications)m_NotificationBehaviorProperty.intValue)
             {
                 case PlayerNotifications.SendMessages:
                 case PlayerNotifications.BroadcastMessages:
@@ -154,7 +173,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                     break;
 
                 case PlayerNotifications.InvokeUnityEvents:
-                    m_EventsGroupUnfolded = EditorGUILayout.Foldout(m_EventsGroupUnfolded, m_EventsGroupText);
+                    m_EventsGroupUnfolded = EditorGUILayout.Foldout(m_EventsGroupUnfolded, m_EventsGroupText, toggleOnLabelClick: true);
                     if (m_EventsGroupUnfolded)
                     {
                         // Action events. Group by action map.
@@ -162,11 +181,10 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                         {
                             using (new EditorGUI.IndentLevelScope())
                             {
-                                var actionEvents = serializedObject.FindProperty("m_ActionEvents");
                                 for (var n = 0; n < m_NumActionMaps; ++n)
                                 {
                                     m_ActionMapEventsUnfolded[n] = EditorGUILayout.Foldout(m_ActionMapEventsUnfolded[n],
-                                        m_ActionMapNames[n]);
+                                        m_ActionMapNames[n], toggleOnLabelClick: true);
                                     using (new EditorGUI.IndentLevelScope())
                                     {
                                         if (m_ActionMapEventsUnfolded[n])
@@ -176,7 +194,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                                                 if (m_ActionMapIndices[i] != n)
                                                     continue;
 
-                                                EditorGUILayout.PropertyField(actionEvents.GetArrayElementAtIndex(i), m_ActionNames[i]);
+                                                EditorGUILayout.PropertyField(m_ActionEventsProperty.GetArrayElementAtIndex(i), m_ActionNames[i]);
                                             }
                                         }
                                     }
@@ -185,8 +203,9 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                         }
 
                         // Misc events.
-                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceLostEvent"));
-                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceRegainedEvent"));
+                        EditorGUILayout.PropertyField(m_DeviceLostEventProperty);
+                        EditorGUILayout.PropertyField(m_DeviceRegainedEventProperty);
+                        EditorGUILayout.PropertyField(m_ControlsChangedEventProperty);
                     }
                     break;
             }
@@ -204,7 +223,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 
         private void DoHelpCreateAssetUI()
         {
-            if (serializedObject.FindProperty("m_Actions").objectReferenceValue != null)
+            if (m_ActionsProperty.objectReferenceValue != null)
             {
                 // All good. We already have an asset.
                 return;
@@ -250,26 +269,20 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 
                     // Write it out and tell the asset DB to pick it up.
                     File.WriteAllText(fileName, newActionsText);
-                    AssetDatabase.Refresh();
 
-                    // Need to wait for import to happen. On next editor update, wire the asset
-                    // into our PlayerInput component and bring up the action editor.
-                    EditorApplication.delayCall +=
-                        () =>
-                    {
-                        var relativePath = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+                    // Import the new asset
+                    var relativePath = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+                    AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceSynchronousImport);
 
-                        // Load imported object.
-                        var importedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
+                    // Load imported object.
+                    var importedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
 
-                        // Set it on the PlayerInput component.
-                        var actionsProperty = serializedObject.FindProperty("m_Actions");
-                        actionsProperty.objectReferenceValue = importedObject;
-                        serializedObject.ApplyModifiedProperties();
+                    // Set it on the PlayerInput component.
+                    m_ActionsProperty.objectReferenceValue = importedObject;
+                    serializedObject.ApplyModifiedProperties();
 
-                        // Open the asset.
-                        AssetDatabase.OpenAsset(importedObject);
-                    };
+                    // Open the asset.
+                    AssetDatabase.OpenAsset(importedObject);
                 }
             }
             EditorGUILayout.EndHorizontal();
@@ -316,7 +329,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             Debug.Assert(m_ActionAssetInitialized);
             serializedObject.ApplyModifiedProperties();
 
-            var notificationBehavior = (PlayerNotifications)serializedObject.FindProperty("m_NotificationBehavior").intValue;
+            var notificationBehavior = (PlayerNotifications)m_NotificationBehaviorProperty.intValue;
             switch (notificationBehavior)
             {
                 // Create text that lists all the messages sent by the component.
@@ -333,6 +346,8 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                     builder.Append(PlayerInput.DeviceLostMessage);
                     builder.Append(", ");
                     builder.Append(PlayerInput.DeviceRegainedMessage);
+                    builder.Append(", ");
+                    builder.Append(PlayerInput.ControlsChangedMessage);
 
                     var playerInput = (PlayerInput)target;
                     var asset = playerInput.m_Actions;
@@ -356,6 +371,8 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                         playerInput.m_DeviceLostEvent = new PlayerInput.DeviceLostEvent();
                     if (playerInput.m_DeviceRegainedEvent == null)
                         playerInput.m_DeviceRegainedEvent = new PlayerInput.DeviceRegainedEvent();
+                    if (playerInput.m_ControlsChangedEvent == null)
+                        playerInput.m_ControlsChangedEvent = new PlayerInput.ControlsChangedEvent();
                     serializedObject.Update();
 
                     // Force action refresh.
@@ -374,7 +391,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             m_ActionAssetInitialized = true;
 
             var playerInput = (PlayerInput)target;
-            var asset = playerInput.actions;
+            var asset = (InputActionAsset)m_ActionsProperty.objectReferenceValue;
             if (asset == null)
             {
                 m_ControlSchemeOptions = null;
@@ -386,7 +403,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             }
 
             // If we're sending Unity events, read out the event list.
-            if ((PlayerNotifications)serializedObject.FindProperty("m_NotificationBehavior").intValue ==
+            if ((PlayerNotifications)m_NotificationBehaviorProperty.intValue ==
                 PlayerNotifications.InvokeUnityEvents)
             {
                 ////FIXME: this should preserve the same order that we have in the asset
@@ -432,9 +449,10 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
                 foreach (var action in asset)
                 {
                     // Skip if it was already in there.
-                    if (oldActionEvents.Any(x => x.actionId == action.id.ToString()))
+                    if (oldActionEvents != null && oldActionEvents.Any(x => x.actionId == action.id.ToString()))
                         continue;
 
+                    ////FIXME: adds bindings to the name
                     AddEntry(action, new PlayerInput.ActionEvent(action.id, action.ToString()));
                 }
 
@@ -449,7 +467,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             m_SelectedDefaultControlScheme = 0;
             var controlSchemes = asset.controlSchemes;
             m_ControlSchemeOptions = new GUIContent[controlSchemes.Count + 1];
-            m_ControlSchemeOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
+            m_ControlSchemeOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<Any>"));
             ////TODO: sort alphabetically
             for (var i = 0; i < controlSchemes.Count; ++i)
             {
@@ -465,9 +483,9 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
 
             // Read out action maps.
             var selectedDefaultActionMap = !string.IsNullOrEmpty(playerInput.defaultActionMap)
-                ? asset.TryGetActionMap(playerInput.defaultActionMap)
+                ? asset.FindActionMap(playerInput.defaultActionMap)
                 : null;
-            m_SelectedDefaultActionMap = 0;
+            m_SelectedDefaultActionMap = asset.actionMaps.Count > 0 ? 1 : 0;
             var actionMaps = asset.actionMaps;
             m_ActionMapOptions = new GUIContent[actionMaps.Count + 1];
             m_ActionMapOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
@@ -482,6 +500,8 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             }
             if (m_SelectedDefaultActionMap <= 0)
                 playerInput.defaultActionMap = null;
+            else
+                playerInput.defaultActionMap = m_ActionMapOptions[m_SelectedDefaultActionMap].text;
 
             serializedObject.Update();
         }
@@ -499,12 +519,18 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
             EditorGUIUtility.TrTextContent("Behavior",
                 "Determine how notifications should be sent when an input-related event associated with the player happens.");
         [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText =
-            EditorGUIUtility.TrTextContent("Default Control Scheme", "Which control scheme to try by default. If not set, PlayerInput "
+            EditorGUIUtility.TrTextContent("Default Scheme", "Which control scheme to try by default. If not set, PlayerInput "
                 + "will simply go through all control schemes in the action asset and try one after the other. If set, PlayerInput will try "
                 + "the given scheme first but if using that fails (e.g. when not required devices are missing) will fall back to trying the other "
                 + "control schemes in order.");
         [NonSerialized] private readonly GUIContent m_DefaultActionMapText =
-            EditorGUIUtility.TrTextContent("Default Action Map", "Action map to enable by default. If not set, no actions will be enabled by default.");
+            EditorGUIUtility.TrTextContent("Default Map", "Action map to enable by default. If not set, no actions will be enabled by default.");
+        [NonSerialized] private readonly GUIContent m_AutoSwitchText =
+            EditorGUIUtility.TrTextContent("Auto-Switch",
+                "By default, when there is only a single PlayerInput, the player "
+                + "is allowed to freely switch between control schemes simply by starting to use a different device. By toggling this property off, this "
+                + "behavior is disabled and even with a single player, the player will stay locked onto the explicitly selected control scheme. Note "
+                + "that you can still change control schemes explicitly through the PlayerInput API.\n\nWhen there are multiple PlayerInputs in the game, auto-switching is disabled automatically regardless of the value of this property.");
         [NonSerialized] private readonly GUIContent m_DebugText = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;
@@ -517,6 +543,20 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
         [NonSerialized] private GUIContent[] m_ControlSchemeOptions;
         [NonSerialized] private int m_SelectedDefaultActionMap;
         [NonSerialized] private GUIContent[] m_ActionMapOptions;
+
+        [NonSerialized] private SerializedProperty m_ActionsProperty;
+        [NonSerialized] private SerializedProperty m_DefaultControlSchemeProperty;
+        [NonSerialized] private SerializedProperty m_DefaultActionMapProperty;
+        [NonSerialized] private SerializedProperty m_NeverAutoSwitchControlSchemesProperty;
+        [NonSerialized] private SerializedProperty m_NotificationBehaviorProperty;
+        #if UNITY_INPUT_SYSTEM_ENABLE_UI
+        [NonSerialized] private SerializedProperty m_UIInputModuleProperty;
+        #endif
+        [NonSerialized] private SerializedProperty m_ActionEventsProperty;
+        [NonSerialized] private SerializedProperty m_CameraProperty;
+        [NonSerialized] private SerializedProperty m_DeviceLostEventProperty;
+        [NonSerialized] private SerializedProperty m_DeviceRegainedEventProperty;
+        [NonSerialized] private SerializedProperty m_ControlsChangedEventProperty;
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;

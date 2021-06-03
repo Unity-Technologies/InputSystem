@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
@@ -15,22 +14,15 @@ using UnityEngine.Profiling;
 
 ////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
 
-////TODO: implement support for sorting data by different property collumns (we currently always sort events by ID)
+////TODO: implement support for sorting data by different property columns (we currently always sort events by ID)
 
 namespace UnityEngine.InputSystem.Editor
 {
     // Multi-column TreeView that shows the events in a trace.
     internal class InputEventTreeView : TreeView
     {
-        private InputEventPtr[] m_Events;
         private readonly InputEventTrace m_EventTrace;
         private readonly InputControl m_RootControl;
-
-        private InputEventPtr GetEventPtrFromItemId(int id)
-        {
-            var eventIndex = id - 1;
-            return m_Events[eventIndex];
-        }
 
         private enum ColumnId
         {
@@ -124,13 +116,13 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void DoubleClickedItem(int id)
         {
-            if (m_Events.Length == 0)
+            var item = FindItem(id, rootItem) as EventItem;
+            if (item == null)
                 return;
-
-            var eventPtr = GetEventPtrFromItemId(id);
 
             // We can only inspect state events so ignore double-clicks on other
             // types of events.
+            var eventPtr = item.eventPtr;
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                 return;
 
@@ -140,7 +132,8 @@ namespace UnityEngine.InputSystem.Editor
         ////TODO: move inspect and compare from a context menu to the toolbar of the event view
         protected override void ContextClickedItem(int id)
         {
-            if (m_Events.Length == 0)
+            var item = FindItem(id, rootItem) as EventItem;
+            if (item == null)
                 return;
 
             var menu = new GenericMenu();
@@ -162,15 +155,17 @@ namespace UnityEngine.InputSystem.Editor
         {
             var selection = (IList<int>)userData;
             var window = ScriptableObject.CreateInstance<InputStateWindow>();
-            window.InitializeWithEvents(selection.Select(GetEventPtrFromItemId).ToArray(), m_RootControl);
+            window.InitializeWithEvents(selection.Select(id => ((EventItem)FindItem(id, rootItem)).eventPtr).ToArray(), m_RootControl);
             window.Show();
         }
 
         private void OnInspectMenuItem(object userData)
         {
             var itemId = (int)userData;
-            var eventPtr = GetEventPtrFromItemId(itemId);
-            PopUpStateWindow(eventPtr);
+            var item = FindItem(itemId, rootItem) as EventItem;
+            if (item == null)
+                return;
+            PopUpStateWindow(item.eventPtr);
         }
 
         private void PopUpStateWindow(InputEventPtr eventPtr)
@@ -182,7 +177,7 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override TreeViewItem BuildRoot()
         {
-            Profiler.BeginSample("BuildEventTree");
+            Profiler.BeginSample("InputEventTreeView.BuildRoot");
 
             var root = new TreeViewItem
             {
@@ -191,62 +186,56 @@ namespace UnityEngine.InputSystem.Editor
                 displayName = "Root"
             };
 
-            ////FIXME: doing this over and over is very inefficient
-            m_Events = m_EventTrace.ToArray();
-            Array.Sort(m_Events,
-                (a, b) =>
-                {
-                    var aId = a.id;
-                    var bId = b.id;
-                    if (aId > bId)
-                        return -1;
-                    if (aId < bId)
-                        return 1;
-                    return 0;
-                });
-
-            if (m_Events.Length == 0)
+            var eventCount = m_EventTrace.eventCount;
+            if (eventCount == 0)
             {
                 // TreeView doesn't allow having empty trees. Put a dummy item in here that we
                 // render without contents.
                 root.AddChild(new TreeViewItem(1));
             }
-
-            for (var i = 0; i < m_Events.Length; ++i)
+            else
             {
-                var eventPtr = m_Events[i];
-
-                var item = new TreeViewItem
+                var current = new InputEventPtr();
+                // Can't set List to a fixed size and then fill it from the back. So we do it
+                // the worse way... fill it in inverse order first, then reverse it :(
+                root.children = new List<TreeViewItem>((int)eventCount);
+                for (var i = 0; i < eventCount; ++i)
                 {
-                    id = i + 1,
-                    depth = 1,
-                    displayName = eventPtr.id.ToString()
-                };
+                    if (!m_EventTrace.GetNextEvent(ref current))
+                        break;
 
-                root.AddChild(item);
+                    var item = new EventItem
+                    {
+                        id = i + 1,
+                        depth = 1,
+                        displayName = current.id.ToString(),
+                        eventPtr = current
+                    };
+
+                    root.AddChild(item);
+                }
+                root.children.Reverse();
             }
 
             Profiler.EndSample();
-
             return root;
         }
 
         protected override void RowGUI(RowGUIArgs args)
         {
             // Render nothing if event list is empty.
-            if (m_Events.Length == 0 || args.item.id <= 0 || args.item.id > m_Events.Length)
+            if (m_EventTrace.eventCount == 0)
                 return;
-
-            var eventPtr = GetEventPtrFromItemId(args.item.id);
 
             var columnCount = args.GetNumVisibleColumns();
             for (var i = 0; i < columnCount; ++i)
             {
-                ColumnGUI(args.GetCellRect(i), eventPtr, args.GetColumn(i), ref args);
+                var item = (EventItem)args.item;
+                ColumnGUI(args.GetCellRect(i), item.eventPtr, args.GetColumn(i));
             }
         }
 
-        private unsafe void ColumnGUI(Rect cellRect, InputEventPtr eventPtr, int column, ref RowGUIArgs args)
+        private unsafe void ColumnGUI(Rect cellRect, InputEventPtr eventPtr, int column)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 
@@ -285,6 +274,11 @@ namespace UnityEngine.InputSystem.Editor
                     }
                     break;
             }
+        }
+
+        private class EventItem : TreeViewItem
+        {
+            public InputEventPtr eventPtr;
         }
     }
 }

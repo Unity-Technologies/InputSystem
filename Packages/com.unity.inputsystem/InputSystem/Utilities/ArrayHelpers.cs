@@ -22,7 +22,22 @@ namespace UnityEngine.InputSystem.Utilities
             return array.Length;
         }
 
-        public static void Clear<TValue>(TValue[] array, ref int count)
+        public static void Clear<TValue>(this TValue[] array)
+        {
+            if (array == null)
+                return;
+
+            Array.Clear(array, 0, array.Length);
+        }
+
+        public static void Clear<TValue>(this TValue[] array, int count)
+        {
+            if (array == null)
+                return;
+            Array.Clear(array, 0, count);
+        }
+
+        public static void Clear<TValue>(this TValue[] array, ref int count)
         {
             if (array == null)
                 return;
@@ -76,7 +91,7 @@ namespace UnityEngine.InputSystem.Utilities
             return false;
         }
 
-        public static bool ContainsReference<TValue>(TValue[] array, TValue value)
+        public static bool ContainsReference<TValue>(this TValue[] array, TValue value)
             where TValue : class
         {
             if (array == null)
@@ -85,19 +100,20 @@ namespace UnityEngine.InputSystem.Utilities
             return ContainsReference(array, array.Length, value);
         }
 
-        public static bool ContainsReference<TValue>(TValue[] array, int count, TValue value)
-            where TValue : class
+        public static bool ContainsReference<TFirst, TSecond>(this TFirst[] array, int count, TSecond value)
+            where TSecond : class
+            where TFirst : TSecond
         {
             return IndexOfReference(array, value, count) != -1;
         }
 
-        public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
+        public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second, int count = int.MaxValue)
         {
             if (first == null || second == null)
                 return second == first;
 
-            var lengthFirst = first.Length;
-            var lengthSecond = second.Length;
+            var lengthFirst = Math.Min(count, first.Length);
+            var lengthSecond = Math.Min(count, second.Length);
 
             if (lengthFirst != lengthSecond)
                 return false;
@@ -126,7 +142,7 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOf<TValue>(TValue[] array, Predicate<TValue> predicate)
+        public static int IndexOf<TValue>(this TValue[] array, Predicate<TValue> predicate)
         {
             if (array == null)
                 return -1;
@@ -139,14 +155,16 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int count = -1)
-            where TValue : class
+        public static int IndexOfReference<TFirst, TSecond>(this TFirst[] array, TSecond value, int count = -1)
+            where TSecond : class
+            where TFirst : TSecond
         {
             return IndexOfReference(array, value, 0, count);
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex, int count)
-            where TValue : class
+        public static int IndexOfReference<TFirst, TSecond>(this TFirst[] array, TSecond value, int startIndex, int count)
+            where TSecond : class
+            where TFirst : TSecond
         {
             if (array == null)
                 return -1;
@@ -160,7 +178,7 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOfValue<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
+        public static int IndexOfValue<TValue>(this TValue[] array, TValue value, int startIndex = 0, int count = -1)
             where TValue : struct, IEquatable<TValue>
         {
             if (array == null)
@@ -196,6 +214,7 @@ namespace UnityEngine.InputSystem.Utilities
                 // Copy contents from old array.
                 UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(),
                     UnsafeUtility.SizeOf<TValue>() * (newSize < oldSize ? newSize : oldSize));
+                array.Dispose();
             }
             array = newArray;
         }
@@ -332,7 +351,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 ////REVIEW: allow growing array to specific size by inserting at arbitrary index?
                 if (index != 0)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 array = new TValue[1];
                 array[0] = value;
@@ -348,6 +367,17 @@ namespace UnityEngine.InputSystem.Utilities
                 Array.Copy(array, index, array, index + 1, oldLength - index);
 
             array[index] = value;
+        }
+
+        public static void InsertAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index, TValue value, int capacityIncrement = 10)
+        {
+            EnsureCapacity(ref array, count, count + 1, capacityIncrement);
+
+            if (index != count)
+                Array.Copy(array, index, array, index + 1, count - index);
+
+            array[index] = value;
+            ++count;
         }
 
         public static void PutAtIfNotSet<TValue>(ref TValue[] array, int index, Func<TValue> valueFn)
@@ -512,7 +542,7 @@ namespace UnityEngine.InputSystem.Utilities
             Array.Resize(ref array, length - 1);
         }
 
-        public static void EraseAtWithCapacity<TValue>(TValue[] array, ref int count, int index)
+        public static void EraseAtWithCapacity<TValue>(this TValue[] array, ref int count, int index)
         {
             Debug.Assert(array != null);
             Debug.Assert(count <= array.Length);
@@ -585,7 +615,7 @@ namespace UnityEngine.InputSystem.Utilities
 
             // Destroy current tail.
             if (count >= 1)
-                array[count - 1] = default(TValue);
+                array[count - 1] = default;
             --count;
         }
 
@@ -681,8 +711,6 @@ namespace UnityEngine.InputSystem.Utilities
             if (sourceIndex > destinationIndex)
                 Swap(ref sourceIndex, ref destinationIndex);
 
-            var length = array.Length;
-
             while (destinationIndex != sourceIndex)
             {
                 // Swap source and destination slice. Afterwards, the source slice is the right, final
@@ -708,7 +736,7 @@ namespace UnityEngine.InputSystem.Utilities
         {
             // Move elements down.
             if (count < length)
-                Array.Copy(array, index + count, array, index, count);
+                Array.Copy(array, index + count, array, index, length - index - count);
 
             // Erase now vacant slots.
             for (var i = 0; i < count; ++i)

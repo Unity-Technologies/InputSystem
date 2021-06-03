@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.LowLevel;
 ////        associate a user account with each one, and recognize when a controller is passed from one user to the other?
 ////        (NUI on Xbox probably gives us that scenario)
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputUser"/> occurred.
@@ -130,8 +130,17 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// <seealso cref="InputUser.ActivateControlScheme(InputControlScheme)"/>
         ControlSchemeChanged,
 
-        BindingsChanged,//?????
+        /// <summary>
+        /// A user's bound controls have changed, either because the bindings of the user have changed (for example,
+        /// due to an override applied with <see cref="InputActionRebindingExtensions.ApplyBindingOverride(InputAction,InputBinding)"/>)
+        /// or because the controls themselves may have changed configuration (every time the device of the controls receives
+        /// an <see cref="DeviceConfigurationEvent"/>; for example, when the current keyboard layout on a <see cref="Keyboard"/>
+        /// changes which in turn modifies the <see cref="InputControl.displayName"/>s of the keys on the keyboard).
+        /// </summary>
+        ControlsChanged,
 
+        /*
+        ////TODO: this is waiting for InputUserSettings
         /// <summary>
         /// A setting in the user's <see cref="InputUserSettings"/> has changed.
         /// </summary>
@@ -140,5 +149,6 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// (<see cref="InputUserSettings.customBindings"/>). The reason is that binding changes often require
         /// </remarks>
         SettingsChanged,
+        */
     }
 }

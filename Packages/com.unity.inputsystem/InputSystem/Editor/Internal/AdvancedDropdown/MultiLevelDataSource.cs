@@ -18,12 +18,6 @@ namespace UnityEngine.InputSystem.Editor
             set { m_Label = value; }
         }
 
-        private static int m_SelectedIndex;
-        internal int selectedIndex
-        {
-            set { m_SelectedIndex = value; }
-        }
-
         internal MultiLevelDataSource()
         {
         }
@@ -53,20 +47,6 @@ namespace UnityEngine.InputSystem.Editor
                         element.elementIndex = i;
                         parent.AddChild(element);
                         m_SearchableElements.Add(element);
-
-                        if (i == m_SelectedIndex)
-                        {
-                            selectedIDs.Add(element.id);
-//                            var tempParent = parent;
-//                            AdvancedDropdownItem searchedItem = element;
-                            //TODO fix selecting
-//                            while (tempParent != null)
-//                            {
-//                                state.SetSelectedIndex(tempParent, tempParent.children.IndexOf(searchedItem));
-//                                searchedItem = tempParent;
-//                                tempParent = tempParent.parent;
-//                            }
-                        }
                         continue;
                     }
 

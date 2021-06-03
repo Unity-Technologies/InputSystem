@@ -447,7 +447,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Select the element the mouse cursor is over.
                 // Only do it on mouse move - keyboard controls are allowed to overwrite this until the next time the mouse moves.
-                if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag)
+                if ((Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag) && child.enabled)
                 {
                     if (!selected && r.Contains(Event.current.mousePosition))
                     {
@@ -455,7 +455,7 @@ namespace UnityEngine.InputSystem.Editor
                         Event.current.Use();
                     }
                 }
-                if (Event.current.type == EventType.MouseUp && r.Contains(Event.current.mousePosition))
+                if (Event.current.type == EventType.MouseUp && r.Contains(Event.current.mousePosition) && child.enabled)
                 {
                     m_State.SetSelectedIndex(item, i);
                     var selectedChild = m_State.GetSelectedChild(item);
@@ -518,7 +518,17 @@ namespace UnityEngine.InputSystem.Editor
             else
                 m_NewAnimTarget = -1;
             m_AnimationTree = m_CurrentlyRenderedTree;
-            m_CurrentlyRenderedTree = m_ViewsStack.Pop();
+            var parentItem = m_ViewsStack.Pop();
+
+            m_State.ClearSelectionOnItem(m_CurrentlyRenderedTree);
+
+            if (parentItem != null)
+            {
+                var suggestedIndex = parentItem.GetIndexOfChild(m_CurrentlyRenderedTree);
+                m_State.SetSelectionOnItem(parentItem, suggestedIndex);
+            }
+
+            m_CurrentlyRenderedTree = parentItem;
         }
 
         private void GoToChild()
@@ -557,19 +567,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Styles
         {
-            public static GUIStyle background = "grey_border";
-            public static GUIStyle previewHeader = new GUIStyle(EditorStyles.label);
-            public static GUIStyle previewText = new GUIStyle(EditorStyles.wordWrappedLabel);
-
-            static Styles()
-            {
-                previewText.padding.left += 3;
-                previewText.padding.right += 3;
-                previewHeader.padding.left += 3 - 2;
-                previewHeader.padding.right += 3;
-                previewHeader.padding.top += 3;
-                previewHeader.padding.bottom += 2;
-            }
+            public static readonly GUIStyle background = "grey_border";
+            public static readonly GUIStyle previewHeader = new GUIStyle(EditorStyles.label).WithPadding(new RectOffset(5, 5, 1, 2));
+            public static readonly GUIStyle previewText = new GUIStyle(EditorStyles.wordWrappedLabel).WithPadding(new RectOffset(3, 5, 4, 4));
         }
     }
 }

@@ -13,57 +13,96 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A mapping of <see cref="InputBinding">input bindings</see> to <see cref="InputAction">
-    /// input actions</see>.
+    /// A mechanism for collecting a series of input actions (see <see cref="InputAction"/>)
+    /// and treating them as a group.
     /// </summary>
     /// <remarks>
-    /// Also stores data for actions. All actions have to have an associated
-    /// action map. "Lose" actions constructed without a map will internally
-    /// create their own map to hold their data.
+    /// Each action map is a named collection of bindings and actions. Both are stored
+    /// as a flat list. The bindings are available through the <see cref="bindings"/>
+    /// property and the actions are available through the <see cref="actions"/> property.
     ///
-    /// A common usage pattern for action maps is to use them to group action
-    /// "contexts". So one map could hold "menu" actions, for example, whereas
-    /// another set holds "gameplay" actions. This kind of splitting can be
-    /// made arbitrarily complex. Like, you could have separate "driving" and
-    /// "walking" action maps, for example, that you enable and disable depending
-    /// on whether the player is walking or driving around.
+    /// The actions in a map are owned by the map. No action can appear in two maps
+    /// at the same time. To find the action map an action belongs to, use the
+    /// <see cref="InputAction.actionMap"/> property. Note that actions can also stand
+    /// on their own and thus do not necessarily need to belong to a map (in which case
+    /// the <see cref="InputAction.actionMap"/> property is <c>null</c>).
+    ///
+    /// Within a map, all actions have to have names and each action name must
+    /// be unique. The <see cref="InputBinding.action"/> property of bindings in a map
+    /// are resolved within the <see cref="actions"/> in the map. Looking up actions
+    /// by name can be done through <see cref="FindAction(string,bool)"/>.
+    ///
+    /// The <see cref="name"/> of the map itself can be empty, except if the map is part of
+    /// an <see cref="InputActionAsset"/> in which case it is required to have a name
+    /// which also must be unique within the asset.
+    ///
+    /// Action maps are most useful for grouping actions that contextually
+    /// belong together. For example, one common usage is to separate the actions
+    /// that can be performed in the UI or in the main menu from those that can
+    /// be performed during gameplay. However, even within gameplay, multiple action
+    /// maps can be employed. For example, one could have different action maps for
+    /// driving and for walking plus one more map for the actions shared between
+    /// the two modes.
+    ///
+    /// Action maps are usually created in the <a href="../manual/ActionAssets.html">action
+    /// editor</a> as part of <see cref="InputActionAsset"/>s. However, they can also be
+    /// created standing on their own directly in code or from JSON (see <see cref="FromJson"/>).
+    ///
+    /// <example>
+    /// <code>
+    /// // Create a free-standing action map.
+    /// var map = new InputActionMap();
+    ///
+    /// // Add some actions and bindings to it.
+    /// map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
+    /// map.AddAction("action2", binding: "&lt;Gamepad&gt;/buttonSouth");
+    /// </code>
+    /// </example>
+    ///
+    /// Actions in action maps, like actions existing by themselves outside of action
+    /// maps, do not actively process input except if enabled. Actions can either
+    /// be enabled individually (see <see cref="InputAction.Enable"/> and <see
+    /// cref="InputAction.Disable"/>) or in bulk by enabling and disabling the
+    /// entire map (see <see cref="Enable"/> and <see cref="Disable"/>).
     /// </remarks>
+    /// <seealso cref="InputActionAsset"/>
+    /// <seealso cref="InputAction"/>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
+    public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection2, IDisposable
     {
         /// <summary>
         /// Name of the action map.
         /// </summary>
+        /// <value>Name of the action map.</value>
+        /// <remarks>
+        /// For action maps that are part of <see cref="InputActionAsset"/>s, this will always be
+        /// a non-null, non-empty string that is unique within the maps in the asset. For action maps
+        /// that are standing on their own, this can be null or empty.
+        /// </remarks>
         public string name => m_Name;
 
         /// <summary>
         /// If the action map is part of an asset, this refers to the asset. Otherwise it is <c>null</c>.
         /// </summary>
+        /// <value>Asset to which the action map belongs.</value>
         public InputActionAsset asset => m_Asset;
 
         /// <summary>
         /// A stable, unique identifier for the map.
         /// </summary>
+        /// <value>Unique ID for the action map.</value>
         /// <remarks>
         /// This can be used instead of the name to refer to the action map. Doing so allows referring to the
         /// map such that renaming it does not break references.
         /// </remarks>
+        /// <seealso cref="InputAction.id"/>
         public Guid id
         {
             get
             {
-                if (m_Guid == Guid.Empty)
-                {
-                    if (m_Id == null)
-                    {
-                        GenerateId();
-                    }
-                    else
-                    {
-                        m_Guid = new Guid(m_Id);
-                    }
-                }
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    GenerateId();
+                return new Guid(m_Id);
             }
         }
 
@@ -71,42 +110,62 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
         }
 
         /// <summary>
         /// Whether any action in the map is currently enabled.
         /// </summary>
+        /// <value>True if any action in <see cref="actions"/> is currently enabled.</value>
+        /// <seealso cref="InputAction.enabled"/>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="InputAction.Enable"/>
         public bool enabled => m_EnabledActionsCount > 0;
 
         /// <summary>
         /// List of actions contained in the map.
         /// </summary>
+        /// <value>Collection of actions belonging to the map.</value>
         /// <remarks>
         /// Actions are owned by their map. The same action cannot appear in multiple maps.
         ///
-        /// Does not allocate. Note that values returned by the property become invalid if
-        /// the setup of actions in a set is changed.
+        /// Accessing this property. Note that values returned by the property become invalid if
+        /// the setup of actions in a map is changed.
         /// </remarks>
+        /// <seealso cref="InputAction.actionMap"/>
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
-
-        ////REVIEW: what about explicitly grouping bindings into named sets?
 
         /// <summary>
         /// List of bindings contained in the map.
         /// </summary>
+        /// <value>Collection of bindings in the map.</value>
         /// <remarks>
-        /// <see cref="InputBinding">InputBindings</see> are owned by action maps and not by individual
-        /// actions. The bindings in a map can form a tree and conceptually, this array represents a depth-first
-        /// traversal of the tree.
+        /// <see cref="InputBinding"/>s are owned by action maps and not by individual actions.
         ///
-        /// Bindings that trigger actions refer to the action by name.
+        /// Bindings that trigger actions refer to the action by <see cref="InputAction.name"/>
+        /// or <see cref="InputAction.id"/>.
+        ///
+        /// Accessing this property does not allocate. Note that values returned by the property
+        /// become invalid if the setup of bindings in a map is changed.
         /// </remarks>
+        /// <seealso cref="InputAction.bindings"/>
         public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings);
 
+        IEnumerable<InputBinding> IInputActionCollection2.bindings => bindings;
+
+        /// <summary>
+        /// Control schemes defined for the action map.
+        /// </summary>
+        /// <value>List of available control schemes.</value>
+        /// <remarks>
+        /// Control schemes can only be defined at the level of <see cref="InputActionAsset"/>s.
+        /// For action maps that are part of assets, this property will return the control schemes
+        /// from the asset. For free-standing action maps, this will return an empty list.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes
         {
             get
@@ -117,7 +176,36 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Binding mask to apply to all actions in the asset.
+        /// </summary>
+        /// <value>Optional mask that determines which bindings in the action map to enable.</value>
+        /// <remarks>
+        /// Binding masks can be applied at three different levels: for an entire asset through
+        /// <see cref="InputActionAsset.bindingMask"/>, for a specific map through this property,
+        /// and for single actions through <see cref="InputAction.bindingMask"/>. By default,
+        /// none of the masks will be set (that is, they will be <c>null</c>).
+        ///
+        /// When an action is enabled, all the binding masks that apply to it are taken into
+        /// account. Specifically, this means that any given binding on the action will be
+        /// enabled only if it matches the mask applied to the asset, the mask applied
+        /// to the map that contains the action, and the mask applied to the action itself.
+        /// All the masks are individually optional.
+        ///
+        /// Masks are matched against bindings using <see cref="InputBinding.Matches"/>.
+        ///
+        /// Note that if you modify the masks applicable to an action while it is
+        /// enabled, the action's <see cref="InputAction.controls"/> will get updated immediately to
+        /// respect the mask. To avoid repeated binding resolution, it is most efficient
+        /// to apply binding masks before enabling actions.
+        ///
+        /// Binding masks are non-destructive. All the bindings on the action are left
+        /// in place. Setting a mask will not affect the value of the <see cref="InputAction.bindings"/>
+        /// and <see cref="bindings"/> properties.
+        /// </remarks>
+        /// <seealso cref="InputBinding.MaskByGroup"/>
+        /// <seealso cref="InputAction.bindingMask"/>
+        /// <seealso cref="InputActionAsset.bindingMask"/>
         public InputBinding? bindingMask
         {
             get => m_BindingMask;
@@ -131,49 +219,86 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Set of devices that bindings in the action map can bind to.
+        /// </summary>
+        /// <value>Optional set of devices to use by bindings in the map.</value>
+        /// <remarks>
+        /// By default (with this property being <c>null</c>), bindings will bind to any of the
+        /// controls available through <see cref="InputSystem.devices"/>, that is, controls from all
+        /// devices in the system will be used.
+        ///
+        /// By setting this property, binding resolution can instead be restricted to just specific
+        /// devices. This restriction can either be applied to an entire asset using <see
+        /// cref="InputActionMap.devices"/> or to specific action maps by using this property. Note that
+        /// if both this property and <see cref="InputActionAsset.devices"/> is set for a specific action
+        /// map, the list of devices on the action map will take precedence and the list on the
+        /// asset will be ignored for bindings in that action map.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create an action map containing a single action with a gamepad binding.
+        /// var actionMap = new InputActionMap();
+        /// var fireAction = actionMap.AddAction("Fire", binding: "&lt;Gamepad&gt;/buttonSouth");
+        /// asset.AddActionMap(actionMap);
+        ///
+        /// // Let's assume we have two gamepads connected. If we enable the
+        /// // action map now, the 'Fire' action will bind to both.
+        /// actionMap.Enable();
+        ///
+        /// // This will print two controls.
+        /// Debug.Log(string.Join("\n", fireAction.controls));
+        ///
+        /// // To restrict the setup to just the first gamepad, we can assign
+        /// // to the 'devices' property.
+        /// actionMap.devices = new InputDevice[] { Gamepad.all[0] };
+        ///
+        /// // Now this will print only one control.
+        /// Debug.Log(string.Join("\n", fireAction.controls));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionAsset.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get
-            {
-                // Return asset's device list if we have none (only if we're part of an asset).
-                if (m_Devices == null && asset != null)
-                    return asset.devices;
-
-                return m_Devices;
-            }
+            // Return asset's device list if we have none (only if we're part of an asset).
+            get => m_Devices.Get() ?? m_Asset?.devices;
             set
             {
-                if (value == null)
-                {
-                    if (m_DevicesArray != null)
-                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = 0;
-                    m_Devices = null;
-                }
-                else
-                {
-                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
-                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
-                }
-
-                ////TODO: determine if this has *actually* changed things before firing off a re-resolve
-                LazyResolveBindings();
+                if (m_Devices.Set(value))
+                    LazyResolveBindings();
             }
         }
 
-        ////REVIEW: should this operate by binding path or by action name?
+        /// <summary>
+        /// Look up an action by name or ID.
+        /// </summary>
+        /// <param name="actionNameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
+        /// of the action. Note that matching of names is case-insensitive.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="KeyNotFoundException">No action with the name or ID of <paramref name="actionNameOrId"/>
+        /// was found in the action map.</exception>
+        /// <remarks>
+        /// This method is equivalent to <see cref="FindAction(string,bool)"/> except it throws <c>KeyNotFoundException</c>
+        /// if no action with the given name or ID can be found.
+        /// </remarks>
+        /// <seealso cref="FindAction(string,bool)"/>
+        /// <seealso cref="FindAction(Guid)"/>
+        /// <see cref="actions"/>
         public InputAction this[string actionNameOrId]
         {
             get
             {
-                if (string.IsNullOrEmpty(actionNameOrId))
+                if (actionNameOrId == null)
                     throw new ArgumentNullException(nameof(actionNameOrId));
-                return GetAction(actionNameOrId);
+                var action = FindAction(actionNameOrId);
+                if (action == null)
+                    throw new KeyNotFoundException($"Cannot find action '{actionNameOrId}'");
+                return action;
             }
         }
 
+        ////REVIEW: inconsistent naming; elsewhere we use "onActionTriggered" (which in turn is inconsistent with InputAction.started etc)
         /// <summary>
         /// Add or remove a callback that is triggered when an action in the map changes its <see cref="InputActionPhase">
         /// phase</see>.
@@ -187,17 +312,39 @@ namespace UnityEngine.InputSystem
             remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
         }
 
-        public InputActionMap(string name = null)
+        public InputActionMap()
+        {
+        }
+
+        /// <summary>
+        /// Construct an action map with the given name.
+        /// </summary>
+        /// <param name="name">Name to give to the action map. By default <c>null</c>, i.e. does
+        /// not assign a name to the map.</param>
+        public InputActionMap(string name)
+            : this()
         {
             m_Name = name;
         }
 
+        /// <summary>
+        /// Release internal state held on to by the action map.
+        /// </summary>
+        /// <remarks>
+        /// Once actions in a map are enabled, the map will allocate a block of state internally that
+        /// it will hold on to until disposed of. All actions in the map will share the same internal
+        /// state. Also, if the map is part of an <see cref="InputActionAsset"/> all maps and actions
+        /// in the same asset will share the same internal state.
+        ///
+        /// Note that the internal state holds on to GC heap memory as well as memory from the
+        /// unmanaged, C++ heap.
+        /// </remarks>
         public void Dispose()
         {
             m_State?.Dispose();
         }
 
-        internal int TryGetActionIndex(string nameOrId)
+        internal int FindActionIndex(string nameOrId)
         {
             ////REVIEW: have transient lookup table? worth optimizing this?
             ////   Ideally, this should at least be an InternedString comparison but due to serialization,
@@ -205,28 +352,33 @@ namespace UnityEngine.InputSystem
 
             if (string.IsNullOrEmpty(nameOrId))
                 return -1;
-
             if (m_Actions == null)
-                return InputActionState.kInvalidIndex;
+                return -1;
+
             var actionCount = m_Actions.Length;
 
-            // If it contains hyphens, it may be a GUID so try looking up that way.
-            if (nameOrId.Contains('-') && Guid.TryParse(nameOrId, out var id))
+            var isOldBracedFormat = nameOrId.StartsWith("{") && nameOrId.EndsWith("}");
+            if (isOldBracedFormat)
             {
+                var length = nameOrId.Length - 2;
                 for (var i = 0; i < actionCount; ++i)
-                    if (m_Actions[i].idDontGenerate == id)
+                {
+                    if (string.Compare(m_Actions[i].m_Id, 0, nameOrId, 1, length) == 0)
                         return i;
+                }
             }
 
-            // Default search goes by name (case insensitive).
             for (var i = 0; i < actionCount; ++i)
-                if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+            {
+                var action = m_Actions[i];
+                if (action.m_Id == nameOrId || string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
                     return i;
+            }
 
             return InputActionState.kInvalidIndex;
         }
 
-        private int TryGetActionIndex(Guid id)
+        private int FindActionIndex(Guid id)
         {
             if (m_Actions == null)
                 return InputActionState.kInvalidIndex;
@@ -238,38 +390,77 @@ namespace UnityEngine.InputSystem
             return InputActionState.kInvalidIndex;
         }
 
-        public InputAction TryGetAction(string nameOrId)
+        /// <summary>
+        /// Find an action in the map by name or ID.
+        /// </summary>
+        /// <param name="actionNameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
+        /// of the action. Note that matching of names is case-insensitive.</param>
+        /// <returns>The action with the given name or ID or <c>null</c> if no matching action
+        /// was found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
+        /// <seealso cref="FindAction(Guid)"/>
+        public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
-            var index = TryGetActionIndex(nameOrId);
+            if (actionNameOrId == null)
+                throw new ArgumentNullException(nameof(actionNameOrId));
+            var index = FindActionIndex(actionNameOrId);
+            if (index == -1)
+            {
+                if (throwIfNotFound)
+                    throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'", nameof(actionNameOrId));
+                return null;
+            }
+            return m_Actions[index];
+        }
+
+        /// <summary>
+        /// Find an action by ID.
+        /// </summary>
+        /// <param name="id">ID (as in <see cref="InputAction.id"/>) of the action.</param>
+        /// <returns>The action with the given ID or null if no action in the map has
+        /// the given ID.</returns>
+        /// <seealso cref="FindAction(string,bool)"/>
+        public InputAction FindAction(Guid id)
+        {
+            var index = FindActionIndex(id);
             if (index == -1)
                 return null;
             return m_Actions[index];
         }
 
-        public InputAction TryGetAction(Guid id)
-        {
-            var index = TryGetActionIndex(id);
-            if (index == -1)
-                return null;
-            return m_Actions[index];
-        }
-
-        public InputAction GetAction(string nameOrId)
-        {
-            var action = TryGetAction(nameOrId);
-            if (action == null)
-                throw new KeyNotFoundException($"Could not find action '{nameOrId}' in map '{name}'");
-            return action;
-        }
-
-        public InputAction GetAction(Guid id)
-        {
-            var action = TryGetAction(id);
-            if (action == null)
-                throw new KeyNotFoundException($"Could not find action with ID '{id}' in map '{name}'");
-            return action;
-        }
-
+        /// <summary>
+        /// Check whether there are any bindings in the action map that can bind to
+        /// controls on the given device.
+        /// </summary>
+        /// <param name="device">An input device.</param>
+        /// <returns>True if any of the bindings in the map can resolve to controls on the device, false otherwise.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// The logic is entirely based on the contents of <see cref="bindings"/> and, more specifically,
+        /// <see cref="InputBinding.effectivePath"/> of each binding. Each path is checked using <see
+        /// cref="InputControlPath.Matches"/>. If any path matches, the method returns <c>true</c>.
+        ///
+        /// Properties such as <see cref="devices"/> and <see cref="bindingMask"/> are ignored.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create action map with two actions and bindings.
+        /// var actionMap = new InputActionMap();
+        /// actionMap.AddAction("action1", binding: "&lt;Gamepad&gt;/buttonSouth");
+        /// actionMap.AddAction("action2", binding: "&lt;XRController{LeftHand}&gt;/{PrimaryAction}");
+        ///
+        /// //
+        /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// var xrController = InputSystem.AddDevice&lt;XRController&gt;();
+        ///
+        /// // Returns true:
+        /// actionMap.IsUsableWith(gamepad);
+        ///
+        /// // Returns false: (the XRController does not have the LeftHand usage assigned to it)
+        /// actionMap.IsUsableWith(xrController);
+        /// </code>
+        /// </example>
+        /// </remarks>
         public bool IsUsableWithDevice(InputDevice device)
         {
             if (device == null)
@@ -280,7 +471,7 @@ namespace UnityEngine.InputSystem
 
             foreach (var binding in m_Bindings)
             {
-                var path = binding.path;
+                var path = binding.effectivePath;
                 if (string.IsNullOrEmpty(path))
                     continue;
 
@@ -294,6 +485,13 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Enable all the actions in the map.
         /// </summary>
+        /// <remarks>
+        /// This is equivalent to calling <see cref="InputAction.Enable"/> on each
+        /// action in <see cref="actions"/>, but is more efficient as the actions
+        /// will get enabled in bulk.
+        /// </remarks>
+        /// <seealso cref="Disable"/>
+        /// <seealso cref="enabled"/>
         public void Enable()
         {
             if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)
@@ -306,6 +504,13 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Disable all the actions in the map.
         /// </summary>
+        /// <remarks>
+        /// This is equivalent to calling <see cref="InputAction.Disable"/> on each
+        /// action in <see cref="actions"/>, but is more efficient as the actions
+        /// will get disabled in bulk.
+        /// </remarks>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="enabled"/>
         public void Disable()
         {
             if (!enabled)
@@ -314,18 +519,25 @@ namespace UnityEngine.InputSystem
             m_State.DisableAllActions(this);
         }
 
-        ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
+        /// <summary>
+        /// Produce an identical copy of the action map with its actions and bindings.
+        /// </summary>
+        /// <returns>A copy of the action map.</returns>
+        /// <remarks>
+        /// If the action map is part of an <see cref="InputActionAsset"/>, the clone will <em>not</em>
+        /// be. It will be a free-standing action map and <see cref="asset"/> will be <c>null</c>.
+        ///
+        /// Note that the IDs for the map itself as well as for its <see cref="actions"/> and
+        /// <see cref="bindings"/> are not copied. Instead, new IDs will be assigned. Also, callbacks
+        /// installed on actions or on the map itself will not be copied over.
+        /// </remarks>
         public InputActionMap Clone()
         {
-            // Internal action sets from singleton actions should not be visible outside of
-            // them. Cloning them is not allowed.
-            if (m_SingletonAction != null)
-                throw new InvalidOperationException(
-                    $"Cloning internal map of singleton action '{m_SingletonAction}' is not allowed");
+            Debug.Assert(m_SingletonAction == null, "Internal (hidden) action maps of singleton actions should not be cloned");
 
             var clone = new InputActionMap
             {
-                m_Name = m_Name,
+                m_Name = m_Name
             };
 
             // Clone actions.
@@ -340,6 +552,10 @@ namespace UnityEngine.InputSystem
                     {
                         m_Name = original.m_Name,
                         m_ActionMap = clone,
+                        m_Type = original.m_Type,
+                        m_Interactions = original.m_Interactions,
+                        m_Processors = original.m_Processors,
+                        m_ExpectedControlType = original.m_ExpectedControlType,
                     };
                 }
                 clone.m_Actions = actions;
@@ -351,6 +567,8 @@ namespace UnityEngine.InputSystem
                 var bindingCount = m_Bindings.Length;
                 var bindings = new InputBinding[bindingCount];
                 Array.Copy(m_Bindings, 0, bindings, 0, bindingCount);
+                for (var i = 0; i < bindingCount; ++i)
+                    bindings[i].m_Id = default;
                 clone.m_Bindings = bindings;
             }
 
@@ -362,6 +580,11 @@ namespace UnityEngine.InputSystem
             return Clone();
         }
 
+        /// <summary>
+        /// Return <c>true</c> if the action map contains the given action.
+        /// </summary>
+        /// <param name="action">An input action. Can be <c>null</c>.</param>
+        /// <returns>True if the action map contains <paramref name="action"/>, false otherwise.</returns>
         public bool Contains(InputAction action)
         {
             if (action == null)
@@ -370,6 +593,13 @@ namespace UnityEngine.InputSystem
             return action.actionMap == this;
         }
 
+        /// <summary>
+        /// Return a string representation of the action map useful for debugging.
+        /// </summary>
+        /// <returns>A string representation of the action map.</returns>
+        /// <remarks>
+        /// For unnamed action maps, this will always be <c>"&lt;Unnamed Action Map&gt;"</c>.
+        /// </remarks>
         public override string ToString()
         {
             if (m_Asset != null)
@@ -446,12 +676,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         [NonSerialized] internal int m_EnabledActionsCount;
 
-        /// <summary>
-        /// GUID converted from <see cref="m_Id"/>.
-        /// </summary>
-        [NonSerialized] private Guid m_Guid;
-
-        // Action sets that are created internally by singleton actions to hold their data
+        // Action maps that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
@@ -468,11 +693,68 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_NeedToResolveBindings;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private ReadOnlyArray<InputDevice>? m_Devices;
-        [NonSerialized] private int m_DevicesCount;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal DeviceArray m_Devices;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
+
+        internal static int s_DeferBindingResolution;
+
+        internal struct DeviceArray
+        {
+            private bool m_HaveValue;
+            private int m_DeviceCount;
+            private InputDevice[] m_DeviceArray; // May have extra capacity; we won't let go once allocated.
+
+            public int IndexOf(InputDevice device)
+            {
+                return m_DeviceArray.IndexOfReference(device, m_DeviceCount);
+            }
+
+            public bool Remove(InputDevice device)
+            {
+                var index = IndexOf(device);
+                if (index < 0)
+                    return false;
+                m_DeviceArray.EraseAtWithCapacity(ref m_DeviceCount, index);
+                return true;
+            }
+
+            public ReadOnlyArray<InputDevice>? Get()
+            {
+                if (!m_HaveValue)
+                    return null;
+                return new ReadOnlyArray<InputDevice>(m_DeviceArray, 0, m_DeviceCount);
+            }
+
+            public bool Set(ReadOnlyArray<InputDevice>? devices)
+            {
+                if (!devices.HasValue)
+                {
+                    if (!m_HaveValue)
+                        return false; // No change.
+                    if (m_DeviceCount > 0)
+                        Array.Clear(m_DeviceArray, 0, m_DeviceCount);
+                    m_DeviceCount = 0;
+                    m_HaveValue = false;
+                }
+                else
+                {
+                    // See if the array actually changes content. Avoids re-resolving when there
+                    // is no need to.
+                    var array = devices.Value;
+                    if (m_HaveValue && array.Count == m_DeviceCount && array.HaveEqualReferences(m_DeviceArray, m_DeviceCount))
+                        return false;
+
+                    if (m_DeviceCount > 0)
+                        m_DeviceArray.Clear(ref m_DeviceCount);
+                    m_HaveValue = true;
+                    m_DeviceCount = 0;
+                    ArrayHelpers.AppendListWithCapacity(ref m_DeviceArray, ref m_DeviceCount, array);
+                }
+
+                return true;
+            }
+        }
 
         /// <summary>
         /// Return the list of bindings for just the given actions.
@@ -544,7 +826,8 @@ namespace UnityEngine.InputSystem
                 // Dead simple case: map is internally owned by action. The entire
                 // list of bindings is specific to the action.
 
-                Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings);
+                Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings,
+                    "For singleton action, bindings array must match that of the action");
 
                 m_BindingsForEachAction = m_Bindings;
                 m_ControlsForEachAction = m_State?.controls;
@@ -560,7 +843,7 @@ namespace UnityEngine.InputSystem
 
                 // Go through all bindings and slice them out to individual actions.
 
-                Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
+                Debug.Assert(m_Actions != null, "Action map is associated with action but action map has no array of actions"); // Action isn't a singleton so this has to be true.
                 var mapIndices = m_State?.FetchMapIndices(this) ?? new InputActionState.ActionMapIndices();
 
                 // Reset state on each action. Important if we have actions that are no longer
@@ -581,7 +864,7 @@ namespace UnityEngine.InputSystem
                 var bindingCount = m_Bindings.Length;
                 for (var i = 0; i < bindingCount; ++i)
                 {
-                    var action = TryGetAction(m_Bindings[i].action);
+                    var action = FindAction(m_Bindings[i].action);
                     if (action != null)
                         ++action.m_BindingsCount;
                 }
@@ -599,7 +882,7 @@ namespace UnityEngine.InputSystem
                 var currentControlIndex = 0;
                 for (var currentBindingIndex = 0; currentBindingIndex < m_Bindings.Length;)
                 {
-                    var currentAction = TryGetAction(m_Bindings[currentBindingIndex].action);
+                    var currentAction = FindAction(m_Bindings[currentBindingIndex].action);
                     if (currentAction == null || currentAction.m_BindingsStartIndex != -1)
                     {
                         // Skip bindings not targeting an action or bindings we have already processed
@@ -623,7 +906,7 @@ namespace UnityEngine.InputSystem
                     for (var i = 0; i < bindingCountForCurrentAction; ++i)
                     {
                         // See if we've come across a binding that doesn't belong to our currently looked at action.
-                        if (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
+                        if (FindAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
                         {
                             // Yes, we have. Means the bindings for our actions are scattered in m_Bindings and
                             // we need to collect them.
@@ -646,7 +929,7 @@ namespace UnityEngine.InputSystem
                                 ++sourceBindingToCopy;
                                 Debug.Assert(sourceBindingToCopy < m_Bindings.Length);
                             }
-                            while (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
+                            while (FindAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
                         }
                         else if (currentBindingIndex == sourceBindingToCopy)
                             ++currentBindingIndex;
@@ -700,18 +983,9 @@ namespace UnityEngine.InputSystem
             m_ControlsForEachAction = null;
         }
 
-        ////TODO: allow this; just disable temporarily
-        internal void ThrowIfModifyingBindingsIsNotAllowed()
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    $"Cannot modify bindings on action map '{this}' while the map is enabled");
-        }
-
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -720,14 +994,20 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal bool LazyResolveBindings()
         {
+            // Clear cached controls for actions. Don't need to necessarily clear m_BindingsForEachAction.
+            m_ControlsForEachAction = null;
+
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
             if (m_State == null)
                 return false;
 
-            // If we don't have enabled actions, defer binding resolution to when we next
-            // enable actions.
-            if (m_EnabledActionsCount == 0)
+            // We used to defer binding resolution here in case the map had no enabled actions. That behavior,
+            // however, leads to rather unpredictable BoundControlsChanged notifications (especially for
+            // rebinding UIs), so now we just always re-resolve anything that ever had an InputActionState
+            // created. Unfortunately, this can lead to some unnecessary re-resolving.
+
+            if (s_DeferBindingResolution > 0)
             {
                 m_NeedToResolveBindings = true;
                 return false;
@@ -746,7 +1026,15 @@ namespace UnityEngine.InputSystem
             //       this will still resolve bindings for *all* maps in the asset.
 
             if (m_State == null || m_NeedToResolveBindings)
+            {
+                if (m_State != null && m_State.isProcessingControlStateChange)
+                {
+                    Debug.Assert(s_DeferBindingResolution > 0);
+                    return;
+                }
+
                 ResolveBindings();
+            }
         }
 
         /// <summary>
@@ -768,137 +1056,194 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void ResolveBindings()
         {
-            // In case we have actions that are currently enabled, we temporarily retain the
-            // UnmanagedMemory of our InputActionState so that we can sync action states after
-            // we have re-resolved bindings.
-            var tempMemory = new InputActionState.UnmanagedMemory();
-            try
+            // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
+            // we don't trigger a re-resolve while we're already resolving bindings.
+            using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                OneOrMore<InputActionMap, ReadOnlyArray<InputActionMap>> actionMaps;
-
-                // Start resolving.
-                var resolver = new InputBindingResolver();
-
-                // If we're part of an asset, we share state and thus binding resolution with
-                // all maps in the asset.
-                if (m_Asset != null)
+                // In case we have actions that are currently enabled, we temporarily retain the
+                // UnmanagedMemory of our InputActionState so that we can sync action states after
+                // we have re-resolved bindings.
+                var tempMemory = new InputActionState.UnmanagedMemory();
+                try
                 {
-                    actionMaps = m_Asset.actionMaps;
-                    Debug.Assert(actionMaps.Count > 0, "Asset referred to by action map does not have action maps");
+                    OneOrMore<InputActionMap, ReadOnlyArray<InputActionMap>> actionMaps;
 
-                    // If there's a binding mask set on the asset, apply it.
-                    resolver.bindingMask = m_Asset.m_BindingMask;
-                }
-                else
-                {
-                    // Standalone action map (possibly a hidden one created for a singleton action).
-                    // Gets its own private state.
+                    // Start resolving.
+                    var resolver = new InputBindingResolver();
 
-                    actionMaps = this;
-                }
+                    // If we're part of an asset, we share state and thus binding resolution with
+                    // all maps in the asset.
+                    if (m_Asset != null)
+                    {
+                        actionMaps = m_Asset.actionMaps;
+                        Debug.Assert(actionMaps.Count > 0, "Asset referred to by action map does not have action maps");
 
-                // If we already have a state, re-use the arrays we have already allocated.
-                // NOTE: We will install the arrays on the very same InputActionState instance below. In the
-                //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
-                //       here.
-                var hasEnabledActions = false;
-                if (m_State != null)
-                {
-                    // Grab a clone of the current memory. We clone because disabling all the actions
-                    // in the map will alter the memory state and we want the state before we start
-                    // touching it.
-                    //
-                    // Technically, ATM we only need the phase values in the action states but duplicating
-                    // the unmanaged memory is cheap and avoids having to add yet more complication to the
-                    // code paths here.
-                    tempMemory = m_State.memory.Clone();
+                        // If there's a binding mask set on the asset, apply it.
+                        resolver.bindingMask = m_Asset.m_BindingMask;
 
-                    // If the state has enabled actions, temporarily disable them.
-                    hasEnabledActions = m_State.HasEnabledActions();
+                        for (var i = 0; i < actionMaps.Count; ++i)
+                            actionMaps[i].m_NeedToResolveBindings = false;
+                    }
+                    else
+                    {
+                        // Standalone action map (possibly a hidden one created for a singleton action).
+                        // Gets its own private state.
+
+                        actionMaps = this;
+                        m_NeedToResolveBindings = false;
+                    }
+
+                    // If we already have a state, re-use the arrays we have already allocated.
+                    // NOTE: We will install the arrays on the very same InputActionState instance below. In the
+                    //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
+                    //       here.
+                    var hasEnabledActions = false;
+                    if (m_State != null)
+                    {
+                        // Grab a clone of the current memory. We clone because disabling all the actions
+                        // in the map will alter the memory state and we want the state before we start
+                        // touching it.
+                        //
+                        // Technically, ATM we only need the phase values in the action states but duplicating
+                        // the unmanaged memory is cheap and avoids having to add yet more complication to the
+                        // code paths here.
+                        tempMemory = m_State.memory.Clone();
+
+                        // If the state has enabled actions, temporarily disable them.
+                        hasEnabledActions = m_State.HasEnabledActions();
+                        for (var i = 0; i < actionMaps.Count; ++i)
+                        {
+                            var map = actionMaps[i];
+
+                            if (hasEnabledActions)
+                                m_State.DisableAllActions(map);
+
+                            // Let listeners know we are about to modify bindings. Do this *after* we disabled the
+                            // actions so that cancellations happen first.
+                            if (map.m_SingletonAction != null)
+                                InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map.m_SingletonAction);
+                            else if (m_Asset == null)
+                                InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map);
+                        }
+                        if (m_Asset != null)
+                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, m_Asset);
+
+                        // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
+                        resolver.StartWithArraysFrom(m_State);
+
+                        // Throw away old memory.
+                        m_State.memory.Dispose();
+                    }
+
+                    // Resolve all maps in the asset.
+                    for (var i = 0; i < actionMaps.Count; ++i)
+                        resolver.AddActionMap(actionMaps[i]);
+
+                    // Install state.
+                    if (m_State == null)
+                    {
+                        if (m_Asset != null)
+                        {
+                            var state = new InputActionState();
+                            for (var i = 0; i < actionMaps.Count; ++i)
+                                actionMaps[i].m_State = state;
+                            m_Asset.m_SharedStateForAllMaps = state;
+                        }
+                        else
+                        {
+                            m_State = new InputActionState();
+                        }
+                        m_State.Initialize(resolver);
+                    }
+                    else
+                    {
+                        m_State.ClaimDataFrom(resolver);
+                    }
+
+                    // Wipe caches.
                     for (var i = 0; i < actionMaps.Count; ++i)
                     {
                         var map = actionMaps[i];
-                        if (hasEnabledActions)
-                            m_State.DisableAllActions(map);
 
-                        // Let listeners know we are about to modify bindings. Do this *after* we disabled the
-                        // actions so that cancellations happen first.
+                        ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
+                        map.m_ControlsForEachAction = null;
+
                         if (map.m_SingletonAction != null)
-                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map.m_SingletonAction);
-                        else
-                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map);
+                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);
+                        else if (m_Asset == null)
+                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map);
                     }
-
-                    // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
-                    resolver.StartWithArraysFrom(m_State);
-
-                    // Throw away old memory.
-                    m_State.memory.Dispose();
-                }
-
-                // Resolve all maps in the asset.
-                for (var i = 0; i < actionMaps.Count; ++i)
-                    resolver.AddActionMap(actionMaps[i]);
-
-                // Install state.
-                if (m_State == null)
-                {
                     if (m_Asset != null)
-                    {
-                        var state = new InputActionState();
-                        for (var i = 0; i < actionMaps.Count; ++i)
-                            actionMaps[i].m_State = state;
-                        m_Asset.m_SharedStateForAllMaps = state;
-                    }
-                    else
-                    {
-                        m_State = new InputActionState();
-                    }
-                    m_State.Initialize(resolver);
+                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_Asset);
+
+                    // Fire InputBindingComposite.FinishSetup() calls.
+                    m_State.FinishBindingCompositeSetups();
+
+                    // Re-enable actions.
+                    if (hasEnabledActions)
+                        m_State.RestoreActionStates(tempMemory);
                 }
-                else
+                finally
                 {
-                    m_State.ClaimDataFrom(resolver);
+                    tempMemory.Dispose();
                 }
-
-                // Wipe caches.
-                for (var i = 0; i < actionMaps.Count; ++i)
-                {
-                    var map = actionMaps[i];
-                    map.m_NeedToResolveBindings = false;
-
-                    ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
-                    map.m_ControlsForEachAction = null;
-
-                    if (map.m_SingletonAction != null)
-                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);
-                    else
-                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map);
-                }
-
-                // Re-enable actions.
-                if (hasEnabledActions)
-                    m_State.RestoreActionStates(tempMemory);
-            }
-            finally
-            {
-                tempMemory.Dispose();
             }
         }
 
-        internal int FindBinding(InputBinding match)
+        /// <inheritdoc/>
+        public int FindBinding(InputBinding mask, out InputAction action)
         {
-            var numBindings = m_Bindings.LengthSafe();
-            for (var i = 0; i < numBindings; ++i)
+            var bindings = m_Bindings;
+            var bindingsCount = bindings.LengthSafe();
+
+            for (var n = 0; n < bindingsCount; ++n)
             {
-                ref var binding = ref m_Bindings[i];
-                if (match.Matches(ref binding))
-                    return i;
+                ref var binding = ref bindings[n];
+                if (mask.Matches(ref binding))
+                {
+                    action = m_SingletonAction ?? FindAction(binding.action);
+                    return action.BindingIndexOnMapToBindingIndexOnAction(n);
+                }
             }
+
+            action = null;
             return -1;
         }
 
         #region Serialization
+
+        ////REVIEW: when GetParameter/SetParameter is coming, should these also be considered part of binding override data?
+
+        [Serializable]
+        internal struct BindingOverrideListJson
+        {
+            public List<BindingOverrideJson> bindings;
+        }
+
+        [Serializable]
+        internal struct BindingOverrideJson
+        {
+            // We save both the "map/action" path of the action as well as the binding ID.
+            // This gives us two avenues into finding our target binding to apply the override
+            // to.
+            public string action;
+            public string id;
+            public string path;
+            public string interactions;
+            public string processors;
+
+            public static BindingOverrideJson FromBinding(InputBinding binding)
+            {
+                return new BindingOverrideJson
+                {
+                    action = binding.action,
+                    id = binding.m_Id,
+                    path = binding.overridePath,
+                    interactions = binding.overrideInteractions,
+                    processors = binding.overrideProcessors,
+                };
+            }
+        }
 
         // Action maps are serialized in two different ways. For storage as imported assets in Unity's Library/ folder
         // and in player data and asset bundles as well as for surviving domain reloads, InputActionMaps are serialized
@@ -906,7 +1251,7 @@ namespace UnityEngine.InputSystem
         // as JSON by setting up a separate set of structs that are then read and written using Unity's JSON serializer.
 
         [Serializable]
-        public struct BindingJson
+        internal struct BindingJson
         {
             public string name;
             public string id;
@@ -915,77 +1260,114 @@ namespace UnityEngine.InputSystem
             public string processors;
             public string groups;
             public string action;
-            ////TODO: re-enable when chained bindings are implemented
-            //public bool chainWithPrevious;
             public bool isComposite;
             public bool isPartOfComposite;
-
-            // This is for backwards compatibility with existing serialized action data as of 0.0.1-preview.
-            // Ideally we should be able to nuke this before 1.0.
-            public string modifiers;
 
             public InputBinding ToBinding()
             {
                 return new InputBinding
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
-                    m_Id = string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString() : id,
-                    path = string.IsNullOrEmpty(path) ? null : path,
+                    m_Id = string.IsNullOrEmpty(id) ? null : id,
+                    path = path,
                     action = string.IsNullOrEmpty(action) ? null : action,
-                    interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
+                    interactions = string.IsNullOrEmpty(interactions) ? null : interactions,
                     processors = string.IsNullOrEmpty(processors) ? null : processors,
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
-                    //chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
                 };
             }
 
-            public static BindingJson FromBinding(InputBinding binding)
+            public static BindingJson FromBinding(ref InputBinding binding)
             {
                 return new BindingJson
                 {
                     name = binding.name,
-                    id = string.IsNullOrEmpty(binding.m_Id) ? Guid.NewGuid().ToString() : binding.m_Id,
+                    id = binding.m_Id,
                     path = binding.path,
                     action = binding.action,
                     interactions = binding.interactions,
                     processors = binding.processors,
                     groups = binding.groups,
-                    //chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
                 };
             }
         }
 
+        // Backwards-compatible read format.
         [Serializable]
-        internal struct ActionJson
+        internal struct ReadActionJson
         {
             public string name;
+            public string type;
             public string id;
+            public string expectedControlType;
             public string expectedControlLayout;
-            public bool continuous;
-            public bool passThrough;
-            public bool initialStateCheck;
             public string processors;
             public string interactions;
+            public bool passThrough;
+            public bool initialStateCheck;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
             public BindingJson[] bindings;
 
-            public static ActionJson FromAction(InputAction action)
+            public InputAction ToAction(string actionName = null)
             {
-                // Bindings don't go on the actions when we write them.
-                return new ActionJson
+                // FormerlySerializedAs doesn't seem to work as expected so manually
+                // handling the rename here.
+                if (!string.IsNullOrEmpty(expectedControlLayout))
+                    expectedControlType = expectedControlLayout;
+
+                // Determine type.
+                InputActionType actionType = default;
+                if (!string.IsNullOrEmpty(type))
+                    actionType = (InputActionType)Enum.Parse(typeof(InputActionType), type, true);
+                else
+                {
+                    // Old format that doesn't have type. Try to infer from settings.
+
+                    if (passThrough)
+                        actionType = InputActionType.PassThrough;
+                    else if (initialStateCheck)
+                        actionType = InputActionType.Value;
+                    else if (!string.IsNullOrEmpty(expectedControlType) &&
+                             (expectedControlType == "Button" || expectedControlType == "Key"))
+                        actionType = InputActionType.Button;
+                }
+
+                return new InputAction(actionName ?? name, actionType)
+                {
+                    m_Id = string.IsNullOrEmpty(id) ? null : id,
+                    m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlType)
+                        ? expectedControlType
+                        : null,
+                    m_Processors = processors,
+                    m_Interactions = interactions,
+                };
+            }
+        }
+
+        [Serializable]
+        internal struct WriteActionJson
+        {
+            public string name;
+            public string type;
+            public string id;
+            public string expectedControlType;
+            public string processors;
+            public string interactions;
+
+            public static WriteActionJson FromAction(InputAction action)
+            {
+                return new WriteActionJson
                 {
                     name = action.m_Name,
-                    id = action.id.ToString(),
-                    expectedControlLayout = action.m_ExpectedControlLayout,
-                    continuous = action.continuous,
-                    passThrough = action.passThrough,
-                    initialStateCheck = action.initialStateCheck,
+                    type = action.m_Type.ToString(),
+                    id = action.m_Id,
+                    expectedControlType = action.m_ExpectedControlType,
                     processors = action.processors,
                     interactions = action.interactions,
                 };
@@ -993,26 +1375,35 @@ namespace UnityEngine.InputSystem
         }
 
         [Serializable]
-        internal struct MapJson
+        internal struct ReadMapJson
         {
             public string name;
             public string id;
-            public ActionJson[] actions;
+            public ReadActionJson[] actions;
+            public BindingJson[] bindings;
+        }
+
+        [Serializable]
+        internal struct WriteMapJson
+        {
+            public string name;
+            public string id;
+            public WriteActionJson[] actions;
             public BindingJson[] bindings;
 
-            public static MapJson FromMap(InputActionMap map)
+            public static WriteMapJson FromMap(InputActionMap map)
             {
-                ActionJson[] jsonActions = null;
+                WriteActionJson[] jsonActions = null;
                 BindingJson[] jsonBindings = null;
 
                 var actions = map.m_Actions;
                 if (actions != null)
                 {
                     var actionCount = actions.Length;
-                    jsonActions = new ActionJson[actionCount];
+                    jsonActions = new WriteActionJson[actionCount];
 
                     for (var i = 0; i < actionCount; ++i)
-                        jsonActions[i] = ActionJson.FromAction(actions[i]);
+                        jsonActions[i] = WriteActionJson.FromAction(actions[i]);
                 }
 
                 var bindings = map.m_Bindings;
@@ -1022,10 +1413,10 @@ namespace UnityEngine.InputSystem
                     jsonBindings = new BindingJson[bindingCount];
 
                     for (var i = 0; i < bindingCount; ++i)
-                        jsonBindings[i] = BindingJson.FromBinding(bindings[i]);
+                        jsonBindings[i] = BindingJson.FromBinding(ref bindings[i]);
                 }
 
-                return new MapJson
+                return new WriteMapJson
                 {
                     name = map.name,
                     id = map.id.ToString(),
@@ -1042,13 +1433,13 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct WriteFileJson
         {
-            public MapJson[] maps;
+            public WriteMapJson[] maps;
 
             public static WriteFileJson FromMap(InputActionMap map)
             {
                 return new WriteFileJson
                 {
-                    maps = new[] {MapJson.FromMap(map)}
+                    maps = new[] {WriteMapJson.FromMap(map)}
                 };
             }
 
@@ -1058,10 +1449,10 @@ namespace UnityEngine.InputSystem
                 if (mapCount == 0)
                     return new WriteFileJson();
 
-                var mapsJson = new MapJson[mapCount];
+                var mapsJson = new WriteMapJson[mapCount];
                 var index = 0;
                 foreach (var map in maps)
-                    mapsJson[index++] = MapJson.FromMap(map);
+                    mapsJson[index++] = WriteMapJson.FromMap(map);
 
                 return new WriteFileJson {maps = mapsJson};
             }
@@ -1073,8 +1464,8 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
-            public ActionJson[] actions;
-            public MapJson[] maps;
+            public ReadActionJson[] actions;
+            public ReadMapJson[] maps;
 
             public InputActionMap[] ToMaps()
             {
@@ -1089,7 +1480,7 @@ namespace UnityEngine.InputSystem
                     var jsonAction = actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
-                        throw new Exception($"Action number {i + 1} has no name");
+                        throw new InvalidOperationException($"Action number {i + 1} has no name");
 
                     ////REVIEW: make sure all action names are unique?
 
@@ -1103,7 +1494,7 @@ namespace UnityEngine.InputSystem
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
-                            throw new Exception(
+                            throw new InvalidOperationException(
                                 $"Invalid action name '{jsonAction.name}' (missing action name after '/')");
                     }
 
@@ -1131,18 +1522,7 @@ namespace UnityEngine.InputSystem
                     }
 
                     // Create action.
-                    var action = new InputAction(actionName)
-                    {
-                        m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
-                        m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                            ? jsonAction.expectedControlLayout
-                            : null,
-                        continuous = jsonAction.continuous,
-                        passThrough = jsonAction.passThrough,
-                        initialStateCheck = jsonAction.initialStateCheck,
-                        m_Processors = jsonAction.processors,
-                        m_Interactions = jsonAction.interactions,
-                    };
+                    var action = jsonAction.ToAction(actionName);
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -1167,7 +1547,7 @@ namespace UnityEngine.InputSystem
 
                     var mapName = jsonMap.name;
                     if (string.IsNullOrEmpty(mapName))
-                        throw new Exception($"Map number {i + 1} has no name");
+                        throw new InvalidOperationException($"Map number {i + 1} has no name");
 
                     // Try to find existing map.
                     InputActionMap map = null;
@@ -1201,21 +1581,10 @@ namespace UnityEngine.InputSystem
                         var jsonAction = jsonMap.actions[n];
 
                         if (string.IsNullOrEmpty(jsonAction.name))
-                            throw new Exception($"Action number {i + 1} in map '{mapName}' has no name");
+                            throw new InvalidOperationException($"Action number {i + 1} in map '{mapName}' has no name");
 
                         // Create action.
-                        var action = new InputAction(jsonAction.name)
-                        {
-                            m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
-                            m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                                ? jsonAction.expectedControlLayout
-                                : null,
-                            continuous = jsonAction.continuous,
-                            passThrough = jsonAction.passThrough,
-                            initialStateCheck = jsonAction.initialStateCheck,
-                            m_Processors = jsonAction.processors,
-                            m_Interactions = jsonAction.interactions,
-                        };
+                        var action = jsonAction.ToAction();
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.
@@ -1265,29 +1634,102 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        // Load one or more action sets from JSON.
+        /// <summary>
+        /// Load one or more action maps from JSON.
+        /// </summary>
+        /// <param name="json">JSON representation of the action maps. Can be empty.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="json"/> is <c>null</c>.</exception>
+        /// <returns>The array of action maps (may be empty) read from the given JSON string. Will not be
+        /// <c>null</c>.</returns>
+        /// <remarks>
+        /// Note that the format used by this method is different than what you
+        /// get if you call <c>JsonUtility.ToJson</c> on an InputActionMap instance. In other
+        /// words, the JSON format is not identical to the Unity serialized object representation
+        /// of the asset.
+        ///
+        /// <example>
+        /// <code>
+        /// var maps = InputActionMap.FromJson(@"
+        ///     {
+        ///         ""maps"" : [
+        ///             {
+        ///                 ""name"" : ""Gameplay"",
+        ///                 ""actions"" : [
+        ///                     { ""name"" : ""fire"", ""type"" : ""button"" }
+        ///                 ],
+        ///                 ""bindings"" : [
+        ///                     { ""path"" : ""&lt;Gamepad&gt;/leftTrigger"", ""action"" : ""fire"" }
+        ///                 ],
+        ///             }
+        ///         ]
+        ///     }
+        /// ");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionAsset.FromJson"/>
+        /// <seealso cref="ToJson(IEnumerable{InputActionMap})"/>
         public static InputActionMap[] FromJson(string json)
         {
+            if (json == null)
+                throw new ArgumentNullException(nameof(json));
             var fileJson = JsonUtility.FromJson<ReadFileJson>(json);
             return fileJson.ToMaps();
         }
 
-        public static string ToJson(IEnumerable<InputActionMap> sets)
+        /// <summary>
+        /// Convert a set of action maps to JSON format.
+        /// </summary>
+        /// <param name="maps">List of action maps to serialize.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="maps"/> is <c>null</c>.</exception>
+        /// <returns>JSON representation of the given action maps.</returns>
+        /// <remarks>
+        /// The result of this method can be loaded with <see cref="FromJson"/>.
+        ///
+        /// Note that the format used by this method is different than what you
+        /// get if you call <c>JsonUtility.ToJson</c> on an InputActionMap instance. In other
+        /// words, the JSON format is not identical to the Unity serialized object representation
+        /// of the asset.
+        /// </remarks>
+        /// <seealso cref="FromJson"/>
+        public static string ToJson(IEnumerable<InputActionMap> maps)
         {
-            var fileJson = WriteFileJson.FromMaps(sets);
+            if (maps == null)
+                throw new ArgumentNullException(nameof(maps));
+            var fileJson = WriteFileJson.FromMaps(maps);
             return JsonUtility.ToJson(fileJson, true);
         }
 
+        /// <summary>
+        /// Convert the action map to JSON format.
+        /// </summary>
+        /// <returns>A JSON representation of the action map.</returns>
+        /// <remarks>
+        /// The result of this method can be loaded with <see cref="FromJson"/>.
+        ///
+        /// Note that the format used by this method is different than what you
+        /// get if you call <c>JsonUtility.ToJson</c> on an InputActionMap instance. In other
+        /// words, the JSON format is not identical to the Unity serialized object representation
+        /// of the asset.
+        /// </remarks>
         public string ToJson()
         {
             var fileJson = WriteFileJson.FromMap(this);
             return JsonUtility.ToJson(fileJson, true);
         }
 
+        /// <summary>
+        /// Called by Unity before the action map is serialized using Unity's
+        /// serialization system.
+        /// </summary>
         public void OnBeforeSerialize()
         {
         }
 
+        /// <summary>
+        /// Called by Unity after the action map has been deserialized using Unity's
+        /// serialization system.
+        /// </summary>
         public void OnAfterDeserialize()
         {
             m_State = null;

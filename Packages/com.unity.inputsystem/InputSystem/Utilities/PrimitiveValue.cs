@@ -3,11 +3,18 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: add Vector2 and Vector3 as primitive value types?
+
 namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A union holding a primitive value.
     /// </summary>
+    /// <remarks>
+    /// This structure is used for storing things such as default states for controls
+    /// (see <see cref="Layouts.InputControlLayout.ControlItem.defaultState"/>). It can
+    /// store one value of any primitive, non-reference C# type (bool, char, int, float, etc).
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit)]
     public struct PrimitiveValue : IEquatable<PrimitiveValue>, IConvertible
     {
@@ -25,13 +32,24 @@ namespace UnityEngine.InputSystem.Utilities
         [FieldOffset(4)] private float m_FloatValue;
         [FieldOffset(4)] private double m_DoubleValue;
 
+        /// <summary>
+        /// Type of value stored in the struct. <see cref="TypeCode.Empty"/>
+        /// if the struct does not hold a value (i.e. has been default-initialized).
+        /// </summary>
+        /// <value>Type of value stored in the struct.</value>
         public TypeCode type => m_Type;
 
         /// <summary>
-        /// If true, the struct does not contain a primitive value.
+        /// If true, the struct does not contain a primitive value (i.e. has <see cref="type"/>
+        /// <see cref="TypeCode.Empty"/>).
         /// </summary>
+        /// <value>Whether the struct is holding a value or not.</value>
         public bool isEmpty => type == TypeCode.Empty;
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a bool.
+        /// </summary>
+        /// <param name="value">A boolean value.</param>
         public PrimitiveValue(bool value)
             : this()
         {
@@ -39,6 +57,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_BoolValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a character.
+        /// </summary>
+        /// <param name="value">A character.</param>
         public PrimitiveValue(char value)
             : this()
         {
@@ -46,6 +68,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_CharValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a byte.
+        /// </summary>
+        /// <param name="value">A byte value.</param>
         public PrimitiveValue(byte value)
             : this()
         {
@@ -53,6 +79,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_ByteValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a signed byte.
+        /// </summary>
+        /// <param name="value">A signed byte value.</param>
         public PrimitiveValue(sbyte value)
             : this()
         {
@@ -60,6 +90,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_SByteValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a short.
+        /// </summary>
+        /// <param name="value">A short value.</param>
         public PrimitiveValue(short value)
             : this()
         {
@@ -67,6 +101,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_ShortValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding an unsigned short.
+        /// </summary>
+        /// <param name="value">An unsigned short value.</param>
         public PrimitiveValue(ushort value)
             : this()
         {
@@ -74,6 +112,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_UShortValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding an int.
+        /// </summary>
+        /// <param name="value">An int value.</param>
         public PrimitiveValue(int value)
             : this()
         {
@@ -81,6 +123,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_IntValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding an unsigned int.
+        /// </summary>
+        /// <param name="value">An unsigned int value.</param>
         public PrimitiveValue(uint value)
             : this()
         {
@@ -88,6 +134,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_UIntValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a long.
+        /// </summary>
+        /// <param name="value">A long value.</param>
         public PrimitiveValue(long value)
             : this()
         {
@@ -95,6 +145,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_LongValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a ulong.
+        /// </summary>
+        /// <param name="value">An unsigned long value.</param>
         public PrimitiveValue(ulong value)
             : this()
         {
@@ -102,6 +156,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_ULongValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a float.
+        /// </summary>
+        /// <param name="value">A float value.</param>
         public PrimitiveValue(float value)
             : this()
         {
@@ -109,6 +167,10 @@ namespace UnityEngine.InputSystem.Utilities
             m_FloatValue = value;
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a double.
+        /// </summary>
+        /// <param name="value">A double value.</param>
         public PrimitiveValue(double value)
             : this()
         {
@@ -116,6 +178,33 @@ namespace UnityEngine.InputSystem.Utilities
             m_DoubleValue = value;
         }
 
+        /// <summary>
+        /// Convert to another type of value.
+        /// </summary>
+        /// <param name="type">Type of value to convert to.</param>
+        /// <returns>The converted value.</returns>
+        /// <exception cref="ArgumentException">There is no conversion from the
+        /// PrimitiveValue's current <see cref="PrimitiveValue.type"/> to
+        /// <paramref name="type"/>.</exception>
+        /// <remarks>
+        /// This method simply calls the other conversion methods (<see cref="ToBoolean"/>,
+        /// <see cref="ToChar"/>, etc) based on the current type of value. <c>ArgumentException</c>
+        /// is thrown if there is no conversion from the current to the requested type.
+        ///
+        /// Every value can be converted to <c>TypeCode.Empty</c>.
+        /// </remarks>
+        /// <seealso cref="ToBoolean"/>
+        /// <seealso cref="ToChar"/>
+        /// <seealso cref="ToByte"/>
+        /// <seealso cref="ToSByte"/>
+        /// <seealso cref="ToInt16"/>
+        /// <seealso cref="ToInt32"/>
+        /// <seealso cref="ToInt64"/>
+        /// <seealso cref="ToUInt16"/>
+        /// <seealso cref="ToUInt32"/>
+        /// <seealso cref="ToUInt64"/>
+        /// <seealso cref="ToSingle"/>
+        /// <seealso cref="ToDouble"/>
         public PrimitiveValue ConvertTo(TypeCode type)
         {
             switch (type)
@@ -129,7 +218,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Int64: return ToInt64();
                 case TypeCode.UInt16: return ToInt16();
                 case TypeCode.UInt32: return ToInt32();
-                case TypeCode.UInt64: return ToInt64();
+                case TypeCode.UInt64: return ToUInt64();
                 case TypeCode.Single: return ToSingle();
                 case TypeCode.Double: return ToDouble();
                 case TypeCode.Empty: return new PrimitiveValue();
@@ -138,6 +227,17 @@ namespace UnityEngine.InputSystem.Utilities
             throw new ArgumentException($"Don't know how to convert PrimitiveValue to '{type}'", nameof(type));
         }
 
+        /// <summary>
+        /// Compare this value to <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">Another value.</param>
+        /// <returns>True if the two values are equal.</returns>
+        /// <remarks>
+        /// Equality is based on type and contents. The types of both values
+        /// must be identical and the memory contents of each value must be
+        /// bit-wise identical (i.e. things such as floating-point epsilons
+        /// are not taken into account).
+        /// </remarks>
         public unsafe bool Equals(PrimitiveValue other)
         {
             if (m_Type != other.m_Type)
@@ -149,6 +249,16 @@ namespace UnityEngine.InputSystem.Utilities
             return UnsafeUtility.MemCmp(thisValuePtr, otherValuePtr, sizeof(double)) == 0;
         }
 
+        /// <summary>
+        /// Compare this value to the value of <paramref name="obj"/>.
+        /// </summary>
+        /// <param name="obj">Either another PrimitiveValue or a boxed primitive
+        /// value such as a byte, bool, etc.</param>
+        /// <returns>True if the two values are equal.</returns>
+        /// <remarks>
+        /// If <paramref name="obj"/> is a boxed primitive value, it is automatically
+        /// converted to a PrimitiveValue.
+        /// </remarks>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -162,16 +272,34 @@ namespace UnityEngine.InputSystem.Utilities
             return false;
         }
 
+        /// <summary>
+        /// Compare two PrimitiveValues for equality.
+        /// </summary>
+        /// <param name="left">First value.</param>
+        /// <param name="right">Second value.</param>
+        /// <returns>True if the two values are equal.</returns>
+        /// <seealso cref="Equals(PrimitiveValue)"/>
         public static bool operator==(PrimitiveValue left, PrimitiveValue right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// Compare two PrimitiveValues for inequality.
+        /// </summary>
+        /// <param name="left">First value.</param>
+        /// <param name="right">Second value.</param>
+        /// <returns>True if the two values are not equal.</returns>
+        /// <seealso cref="Equals(PrimitiveValue)"/>
         public static bool operator!=(PrimitiveValue left, PrimitiveValue right)
         {
             return !left.Equals(right);
         }
 
+        /// <summary>
+        /// Compute a hash code for the value.
+        /// </summary>
+        /// <returns>A hash code.</returns>
         public override unsafe int GetHashCode()
         {
             unchecked
@@ -185,6 +313,16 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        /// <summary>
+        /// Return a string representation of the value.
+        /// </summary>
+        /// <returns>A string representation of the value.</returns>
+        /// <remarks>
+        /// String versions of PrimitiveValues are always culture invariant. This means that
+        /// floating-point values, for example, will <em>not</em> the decimal separator of
+        /// the current culture.
+        /// </remarks>
+        /// <seealso cref="FromString"/>
         public override string ToString()
         {
             switch (type)
@@ -219,6 +357,16 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        /// <summary>
+        /// Parse the given string into a PrimitiveValue.
+        /// </summary>
+        /// <param name="value">A string containing a value.</param>
+        /// <returns>The PrimitiveValue parsed from the string.</returns>
+        /// <remarks>
+        /// Integers are parsed as longs. Floating-point numbers are parsed as doubles.
+        /// Hexadecimal notation is supported for integers.
+        /// </remarks>
+        /// <seealso cref="ToString()"/>
         public static PrimitiveValue FromString(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -238,10 +386,10 @@ namespace UnityEngine.InputSystem.Utilities
                     return new PrimitiveValue(doubleResult);
             }
 
-            // Int.
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intResult))
+            // Long.
+            if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longResult))
             {
-                return new PrimitiveValue(intResult);
+                return new PrimitiveValue(longResult);
             }
             // Try hex format. For whatever reason, HexNumber does not allow a 0x prefix so we manually
             // get rid of it.
@@ -251,7 +399,7 @@ namespace UnityEngine.InputSystem.Utilities
                 if (hexDigits.StartsWith("0x"))
                     hexDigits = hexDigits.Substring(2);
 
-                if (int.TryParse(hexDigits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var hexResult))
+                if (long.TryParse(hexDigits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var hexResult))
                     return new PrimitiveValue(hexResult);
             }
 
@@ -259,11 +407,20 @@ namespace UnityEngine.InputSystem.Utilities
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Equivalent to <see cref="type"/>.
+        /// </summary>
+        /// <returns>Type code for value stored in struct.</returns>
         public TypeCode GetTypeCode()
         {
             return type;
         }
 
+        /// <summary>
+        /// Convert the value to a boolean.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted boolean value.</returns>
         public bool ToBoolean(IFormatProvider provider = null)
         {
             switch (type)
@@ -271,37 +428,47 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Boolean:
                     return m_BoolValue;
                 case TypeCode.Char:
-                    return m_CharValue != '\0';
+                    return m_CharValue != default;
                 case TypeCode.Byte:
-                    return m_ByteValue != 0;
+                    return m_ByteValue != default;
                 case TypeCode.SByte:
-                    return m_SByteValue != 0;
+                    return m_SByteValue != default;
                 case TypeCode.Int16:
-                    return m_ShortValue != 0;
+                    return m_ShortValue != default;
                 case TypeCode.UInt16:
-                    return m_UShortValue != 0;
+                    return m_UShortValue != default;
                 case TypeCode.Int32:
-                    return m_IntValue != 0;
+                    return m_IntValue != default;
                 case TypeCode.UInt32:
-                    return m_UIntValue != 0;
+                    return m_UIntValue != default;
                 case TypeCode.Int64:
-                    return m_LongValue != 0;
+                    return m_LongValue != default;
                 case TypeCode.UInt64:
-                    return m_ULongValue != 0;
+                    return m_ULongValue != default;
                 case TypeCode.Single:
-                    return !Mathf.Approximately(m_FloatValue, 0);
+                    return !Mathf.Approximately(m_FloatValue, default);
                 case TypeCode.Double:
-                    return NumberHelpers.Approximately(m_DoubleValue, 0);
+                    return NumberHelpers.Approximately(m_DoubleValue, default);
                 default:
-                    return default(bool);
+                    return default;
             }
         }
 
+        /// <summary>
+        /// Convert the value to a byte.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted byte value.</returns>
         public byte ToByte(IFormatProvider provider = null)
         {
             return (byte)ToInt64(provider);
         }
 
+        /// <summary>
+        /// Convert the value to a char.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted char value.</returns>
         public char ToChar(IFormatProvider provider = null)
         {
             switch (type)
@@ -316,20 +483,36 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.UInt64:
                     return (char)ToInt64(provider);
                 default:
-                    return default(char);
+                    return default;
             }
         }
 
+        /// <summary>
+        /// Not supported. Throws <c>NotSupportedException</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Does not return.</returns>
+        /// <exception cref="NotSupportedException">Always thrown.</exception>
         public DateTime ToDateTime(IFormatProvider provider = null)
         {
             throw new NotSupportedException("Converting PrimitiveValue to DateTime");
         }
 
+        /// <summary>
+        /// Convert the value to a decimal.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Value converted to decimal format.</returns>
         public decimal ToDecimal(IFormatProvider provider = null)
         {
             return new decimal(ToDouble(provider));
         }
 
+        /// <summary>
+        /// Convert the value to a double.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted double value.</returns>
         public double ToDouble(IFormatProvider provider = null)
         {
             switch (type)
@@ -361,20 +544,35 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Double:
                     return m_DoubleValue;
                 default:
-                    return default(double);
+                    return default;
             }
         }
 
+        /// <summary>
+        /// Convert the value to a <c>short</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>short</c> value.</returns>
         public short ToInt16(IFormatProvider provider = null)
         {
             return (short)ToInt64(provider);
         }
 
+        /// <summary>
+        /// Convert the value to an <c>int</c>
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>int</c> value.</returns>
         public int ToInt32(IFormatProvider provider = null)
         {
             return (int)ToInt64(provider);
         }
 
+        /// <summary>
+        /// Convert the value to a <c>long</c>
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>long</c> value.</returns>
         public long ToInt64(IFormatProvider provider = null)
         {
             switch (type)
@@ -406,40 +604,80 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Double:
                     return (long)m_DoubleValue;
                 default:
-                    return default(long);
+                    return default;
             }
         }
 
+        /// <summary>
+        /// Convert the value to a <c>sbyte</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>sbyte</c> value.</returns>
         public sbyte ToSByte(IFormatProvider provider = null)
         {
             return (sbyte)ToInt64(provider);
         }
 
+        /// <summary>
+        /// Convert the value to a <c>float</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>float</c> value.</returns>
         public float ToSingle(IFormatProvider provider = null)
         {
             return (float)ToDouble(provider);
         }
 
+        /// <summary>
+        /// Convert the value to a <c>string</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>string</c> value.</returns>
+        /// <remarks>
+        /// Same as calling <see cref="ToString()"/>.
+        /// </remarks>
         public string ToString(IFormatProvider provider)
         {
             return ToString();
         }
 
+        /// <summary>
+        /// Not supported.
+        /// </summary>
+        /// <param name="conversionType">Ignored.</param>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Does not return.</returns>
+        /// <exception cref="NotSupportedException">Always thrown.</exception>
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Convert the value to a <c>ushort</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>ushort</c> value.</returns>
         public ushort ToUInt16(IFormatProvider provider = null)
         {
-            return (ushort)ToUInt64(provider);
+            return (ushort)ToUInt64();
         }
 
+        /// <summary>
+        /// Convert the value to a <c>uint</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>uint</c> value.</returns>
         public uint ToUInt32(IFormatProvider provider = null)
         {
-            return (uint)ToUInt64(provider);
+            return (uint)ToUInt64();
         }
 
+        /// <summary>
+        /// Convert the value to a <c>ulong</c>.
+        /// </summary>
+        /// <param name="provider">Ignored.</param>
+        /// <returns>Converted <c>ulong</c> value.</returns>
         public ulong ToUInt64(IFormatProvider provider = null)
         {
             switch (type)
@@ -471,10 +709,17 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Double:
                     return (ulong)m_DoubleValue;
                 default:
-                    return default(ulong);
+                    return default;
             }
         }
 
+        /// <summary>
+        /// Return a boxed version of the value.
+        /// </summary>
+        /// <returns>A boxed GC heap object.</returns>
+        /// <remarks>
+        /// This method always allocates GC heap memory.
+        /// </remarks>
         public object ToObject()
         {
             switch (m_Type)
@@ -495,6 +740,17 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue from the given "blittable"/struct value.
+        /// </summary>
+        /// <param name="value">A value.</param>
+        /// <typeparam name="TValue">Type of value to convert. Must be either an <c>enum</c>
+        /// or one of the C# primitive value types (<c>bool</c>, <c>int</c>, <c>float</c>, etc.).</typeparam>
+        /// <returns>The PrimitiveValue converted from <paramref name="value"/>. If it is an
+        /// <c>enum</c> type, the PrimitiveValue will hold a value of the enum's underlying
+        /// type (i.e. <c>Type.GetEnumUnderlyingType</c>).</returns>
+        /// <exception cref="ArgumentException">No conversion exists from the given <typeparamref name="TValue"/>
+        /// type.</exception>
         public static PrimitiveValue From<TValue>(TValue value)
             where TValue : struct
         {
@@ -515,12 +771,23 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.UInt16: return new PrimitiveValue(Convert.ToUInt16(value));
                 case TypeCode.UInt32: return new PrimitiveValue(Convert.ToUInt32(value));
                 case TypeCode.UInt64: return new PrimitiveValue(Convert.ToUInt64(value));
+                case TypeCode.Single: return new PrimitiveValue(Convert.ToSingle(value));
+                case TypeCode.Double: return new PrimitiveValue(Convert.ToDouble(value));
             }
 
             throw new ArgumentException(
                 $"Cannot convert value '{value}' of type '{typeof(TValue).Name}' to PrimitiveValue", nameof(value));
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue from a boxed value.
+        /// </summary>
+        /// <param name="value">A value. If <c>null</c>, the result will be <c>default(PrimitiveValue)</c>.
+        /// If it is a <c>string</c>, <see cref="FromString"/> is used. Otherwise must be either an <c>enum</c>
+        /// or one of the C# primitive value types (<c>bool</c>, <c>int</c>, <c>float</c>, etc.). If it is an
+        /// <c>enum</c> type, the PrimitiveValue will hold a value of the enum's underlying
+        /// type (i.e. <c>Type.GetEnumUnderlyingType</c>).</param>
+        /// <exception cref="ArgumentException">No conversion exists from the type of <paramref name="value"/>.</exception>
         public static PrimitiveValue FromObject(object value)
         {
             if (value == null)
@@ -575,62 +842,172 @@ namespace UnityEngine.InputSystem.Utilities
             throw new ArgumentException($"Cannot convert '{value}' to primitive value", nameof(value));
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a bool.
+        /// </summary>
+        /// <param name="value">A boolean value.</param>
         public static implicit operator PrimitiveValue(bool value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a character.
+        /// </summary>
+        /// <param name="value">A character.</param>
         public static implicit operator PrimitiveValue(char value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a byte.
+        /// </summary>
+        /// <param name="value">A byte value.</param>
         public static implicit operator PrimitiveValue(byte value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a signed byte.
+        /// </summary>
+        /// <param name="value">A signed byte value.</param>
         public static implicit operator PrimitiveValue(sbyte value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a short.
+        /// </summary>
+        /// <param name="value">A short value.</param>
         public static implicit operator PrimitiveValue(short value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding an unsigned short.
+        /// </summary>
+        /// <param name="value">An unsigned short value.</param>
         public static implicit operator PrimitiveValue(ushort value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding an int.
+        /// </summary>
+        /// <param name="value">An int value.</param>
         public static implicit operator PrimitiveValue(int value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding an unsigned int.
+        /// </summary>
+        /// <param name="value">An unsigned int value.</param>
         public static implicit operator PrimitiveValue(uint value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a long.
+        /// </summary>
+        /// <param name="value">A long value.</param>
         public static implicit operator PrimitiveValue(long value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a ulong.
+        /// </summary>
+        /// <param name="value">An unsigned long value.</param>
         public static implicit operator PrimitiveValue(ulong value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a float.
+        /// </summary>
+        /// <param name="value">A float value.</param>
         public static implicit operator PrimitiveValue(float value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Create a PrimitiveValue holding a double.
+        /// </summary>
+        /// <param name="value">A double value.</param>
         public static implicit operator PrimitiveValue(double value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        // The following methods exist only to make the annoying Microsoft code analyzer happy.
+
+        public static PrimitiveValue FromBoolean(bool value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromChar(char value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromByte(byte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromSByte(sbyte value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromInt16(short value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromUInt16(ushort value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromInt32(int value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromUInt32(uint value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromInt64(long value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromUInt64(ulong value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromSingle(float value)
+        {
+            return new PrimitiveValue(value);
+        }
+
+        public static PrimitiveValue FromDouble(double value)
         {
             return new PrimitiveValue(value);
         }

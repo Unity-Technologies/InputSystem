@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
@@ -5,16 +8,36 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is pressed and released within the set
-    /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>).
+    /// Performs the action if the control is pressed held for at least the set
+    /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>)
+    /// and then released.
     /// </summary>
+    [Preserve]
+    [DisplayName("Tap")]
     public class TapInteraction : IInputInteraction
     {
+        ////REVIEW: this should be called tapTime
+        /// <summary>
+        /// The time in seconds within which the control needs to be pressed and released to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// If this value is equal to or smaller than zero, the input system will use (<see cref="InputSettings.defaultTapTime"/>) instead.
+        /// </remarks>
         public float duration;
+
+        /// <summary>
+        /// The press point required to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// For analog controls (such as trigger axes on a gamepad), the control needs to be engaged by at least this
+        /// value to perform the interaction.
+        /// If this value is equal to or smaller than zero, the input system will use (<see cref="InputSettings.defaultButtonPressPoint"/>) instead.
+        /// </remarks>
         public float pressPoint;
 
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
-        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
         private double m_TapStartTime;
 
@@ -33,16 +56,16 @@ namespace UnityEngine.InputSystem.Interactions
                 m_TapStartTime = context.time;
                 // Set timeout slightly after duration so that if tap comes in exactly at the expiration
                 // time, it still counts as a valid tap.
-                context.SetTimeout(durationOrDefault + 0.00001f);
                 context.Started();
+                context.SetTimeout(durationOrDefault + 0.00001f);
                 return;
             }
 
-            if (context.isStarted && !context.ControlIsActuated(pressPointOrDefault))
+            if (context.isStarted && !context.ControlIsActuated(releasePointOrDefault))
             {
                 if (context.time - m_TapStartTime <= durationOrDefault)
                 {
-                    context.PerformedAndGoBackToWaiting();
+                    context.Performed();
                 }
                 else
                 {

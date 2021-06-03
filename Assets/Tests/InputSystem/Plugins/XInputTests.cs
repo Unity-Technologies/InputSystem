@@ -1,5 +1,5 @@
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.XInput;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
@@ -8,17 +8,18 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Processors;
 
 #if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
-internal class XInputTests : InputTestFixture
+internal class XInputTests : CoreTestsFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XInputControllerOSX")]
+    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XboxGamepadMacOS")]
+    [TestCase("Xbox One Wireless Controller", "Microsoft", "HID", "XboxOneGampadMacOSWireless")]
 #endif
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
@@ -67,72 +68,6 @@ internal class XInputTests : InputTestFixture
 
 #endif
 
-#if UNITY_EDITOR || UNITY_XBOXONE
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsControllerOnXbox()
-    {
-        var device = InputSystem.AddDevice(new InputDeviceDescription
-        {
-            deviceClass = "XboxOneGamepad", ////REVIEW: this should be the product name instead
-            interfaceName = "Xbox"
-        });
-
-        Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XboxOneGamepad>());
-        var gamepad = (XboxOneGamepad)device;
-
-        InputSystem.QueueStateEvent(gamepad,
-            new XboxOneGamepadState
-            {
-                leftStick = new Vector2(0.123f, 0.456f),
-                rightStick = new Vector2(0.789f, 0.234f),
-                leftTrigger = 0.567f,
-                rightTrigger = 0.891f,
-            });
-        InputSystem.Update();
-
-        var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
-        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
-
-        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
-        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.789f, 0.234f))));
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.567).Within(0.00001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.891).Within(0.00001));
-
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.A), gamepad.aButton);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.A), gamepad.buttonSouth);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.B), gamepad.bButton);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.B), gamepad.buttonEast);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.X), gamepad.xButton);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.X), gamepad.buttonWest);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Y), gamepad.yButton);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Y), gamepad.buttonNorth);
-
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadDown), gamepad.dpad.down);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadUp), gamepad.dpad.up);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadLeft), gamepad.dpad.left);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadRight), gamepad.dpad.right);
-
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.LeftThumbstick), gamepad.leftStickButton);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.RightThumbstick), gamepad.rightStickButton);
-
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.LeftShoulder), gamepad.leftShoulder);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.RightShoulder), gamepad.rightShoulder);
-
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Menu), gamepad.menu);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Menu), gamepad.startButton);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.View), gamepad.view);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.View), gamepad.selectButton);
-
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle1), gamepad.paddle1);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle2), gamepad.paddle2);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle3), gamepad.paddle3);
-        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle4), gamepad.paddle4);
-    }
-
-#endif
-
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 
     [Test]
@@ -147,8 +82,8 @@ internal class XInputTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XInputControllerOSX>());
-        var gamepad = (XInputControllerOSX)device;
+        Assert.That(device, Is.AssignableTo<XboxGamepadMacOS>());
+        var gamepad = (XboxGamepadMacOS)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new XInputControllerOSXState
@@ -218,8 +153,8 @@ internal class XInputTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XInputControllerWirelessOSX>());
-        var gamepad = (XInputControllerWirelessOSX)device;
+        Assert.That(device, Is.AssignableTo<XboxOneGampadMacOSWireless>());
+        var gamepad = (XboxOneGampadMacOSWireless)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new XInputControllerWirelessOSXState
@@ -275,6 +210,25 @@ internal class XInputTests : InputTestFixture
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Start), gamepad.startButton);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Select), gamepad.view);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Select), gamepad.selectButton);
+
+        // Test to make sure that the default state is not set to input values of 0, but to the center of the sticks
+        InputSystem.QueueStateEvent(gamepad,
+            new XInputControllerWirelessOSXState
+            {
+                leftStickX = 0,
+                leftStickY = 0,
+                rightStickX = 0,
+                rightStickY = 0,
+                leftTrigger = 0,
+                rightTrigger = 0,
+            });
+        InputSystem.Update();
+        Assert.That(gamepad.leftStick.IsActuated());
+        Assert.That(gamepad.leftStick.x.IsActuated());
+        Assert.That(gamepad.leftStick.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gamepad.leftStick.x.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gamepad.leftTrigger.IsActuated(), Is.False);
+        Assert.That(gamepad.leftTrigger.CheckStateIsAtDefault());
     }
 
 #endif

@@ -20,18 +20,27 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public fixed byte nameBuffer[kMaxNameLength];
 
+        /// <summary>
+        /// Read the current keyboard layout name from <see cref="nameBuffer"/>.
+        /// </summary>
+        /// <returns></returns>
         public string ReadLayoutName()
         {
             fixed(QueryKeyboardLayoutCommand * thisPtr = &this)
-            {
-                return StringHelpers.ReadStringFromBuffer(new IntPtr(thisPtr->nameBuffer), kMaxNameLength);
-            }
+            return StringHelpers.ReadStringFromBuffer(new IntPtr(thisPtr->nameBuffer), kMaxNameLength);
         }
 
-        public FourCC GetTypeStatic()
+        /// <summary>
+        /// Write the given string to <see cref="nameBuffer"/>.
+        /// </summary>
+        /// <param name="name">Keyboard layout name.</param>
+        public void WriteLayoutName(string name)
         {
-            return Type;
+            fixed(QueryKeyboardLayoutCommand * thisPtr = &this)
+            StringHelpers.WriteStringToBuffer(name, new IntPtr(thisPtr->nameBuffer), kMaxNameLength);
         }
+
+        public FourCC typeStatic => Type;
 
         public static QueryKeyboardLayoutCommand Create()
         {
