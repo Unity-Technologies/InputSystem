@@ -2103,7 +2103,7 @@ namespace UnityEngine.InputSystem
                     {
                         m_Scores.SwapElements(j, j - 1);
                         m_Candidates.SwapElements(j, j - 1);
-                        m_Magnitudes.SwapElements(i, j - 1);
+                        m_Magnitudes.SwapElements(j, j - 1);
                     }
                 }
             }
