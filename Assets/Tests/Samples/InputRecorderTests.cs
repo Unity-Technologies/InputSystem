@@ -2,8 +2,9 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
-public class InputRecorderTests : InputTestFixture
+public class InputRecorderTests : CoreTestsFixture
 {
     [Test]
     [Category("Samples")]
@@ -34,6 +35,10 @@ public class InputRecorderTests : InputTestFixture
         Assert.That(keyboard.aKey.ReadValueFromEvent(events[1]), Is.EqualTo(0).Within(0.0001));
 
         recorder.StopCapture();
+
+        InputSystem.QueueStateEvent(keyboard, default(KeyboardState));
+        InputSystem.QueueStateEvent(mouse, default(MouseState));
+        InputSystem.Update();
 
         var keyboardAction = new InputAction(binding: "<Keyboard>/a");
         var mouseAction = new InputAction(binding: "<Mouse>/leftButton");

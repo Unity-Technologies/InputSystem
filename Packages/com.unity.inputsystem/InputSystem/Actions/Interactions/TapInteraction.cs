@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem.Interactions
     [DisplayName("Tap")]
     public class TapInteraction : IInputInteraction
     {
+        ////REVIEW: this should be called tapTime
         /// <summary>
         /// The time in seconds within which the control needs to be pressed and released to perform the interaction.
         /// </summary>
@@ -36,6 +37,7 @@ namespace UnityEngine.InputSystem.Interactions
 
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
         private double m_TapStartTime;
 
@@ -59,7 +61,7 @@ namespace UnityEngine.InputSystem.Interactions
                 return;
             }
 
-            if (context.isStarted && !context.ControlIsActuated(pressPointOrDefault))
+            if (context.isStarted && !context.ControlIsActuated(releasePointOrDefault))
             {
                 if (context.time - m_TapStartTime <= durationOrDefault)
                 {

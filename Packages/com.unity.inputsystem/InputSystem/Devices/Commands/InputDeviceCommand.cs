@@ -40,10 +40,10 @@ namespace UnityEngine.InputSystem.LowLevel
         public const int BaseCommandSize = 8;
 
         /// <summary>
-        /// Generic failure code for <see cref="IOCTL"/> calls.
+        /// Generic failure code for <see cref="InputDevice.ExecuteCommand{TCommand}"/> calls.
         /// </summary>
         /// <remarks>
-        /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
+        /// Any negative return value for an <see cref="InputDevice.ExecuteCommand{TCommand}"/> call should be considered failure.
         /// </remarks>
         public const long GenericFailure = -1;
 
@@ -52,10 +52,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)] public FourCC type;
         [FieldOffset(4)] public int sizeInBytes;
 
-        public int payloadSizeInBytes
-        {
-            get { return sizeInBytes - kBaseCommandSize; }
-        }
+        public int payloadSizeInBytes => sizeInBytes - kBaseCommandSize;
 
         public unsafe void* payloadPtr
         {

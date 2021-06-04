@@ -6,6 +6,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we make this ExecuteInEditMode?
 
+////TODO: handle display strings for this in some form; shouldn't display generic gamepad binding strings, for example, for OSCs
+
 ////TODO: give more control over when an OSC creates a new devices; going simply by name of layout only is inflexible
 
 ////TODO: make this survive domain reloads
@@ -35,13 +37,31 @@ namespace UnityEngine.InputSystem.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
+        /// <summary>
+        /// The control path (see <see cref="InputControlPath"/>) for the control that the on-screen
+        /// control will feed input into.
+        /// </summary>
+        /// <remarks>
+        /// A device will be created from the device layout referenced by the control path (see
+        /// <see cref="InputControlPath.TryGetDeviceLayout"/>). The path is then used to look up
+        /// <see cref="control"/> on the device. The resulting control will be fed values from
+        /// the on-screen control.
+        ///
+        /// Multiple on-screen controls sharing the same device layout will together create a single
+        /// virtual device. If, for example, one component uses <c>"&lt;Gamepad&gt;/buttonSouth"</c>
+        /// and another uses <c>"&lt;Gamepad&gt;/leftStick"</c> as the control path, a single
+        /// <see cref="Gamepad"/> will be created and the first component will feed data to
+        /// <see cref="Gamepad.buttonSouth"/> and the second component will feed data to
+        /// <see cref="Gamepad.leftStick"/>.
+        /// </remarks>
+        /// <seealso cref="InputControlPath"/>
         public string controlPath
         {
             get => controlPathInternal;
             set
             {
                 controlPathInternal = value;
-                if (enabled)
+                if (isActiveAndEnabled)
                     SetupInputControl();
             }
         }
@@ -50,8 +70,8 @@ namespace UnityEngine.InputSystem.OnScreen
         /// The actual control that is fed input from the on-screen control.
         /// </summary>
         /// <remarks>
-        /// This is only valid while the on-screen control is enabled. Otherwise, it is null. Also,
-        /// if no <see cref="controlPath"/> has been set, this will remain null even if the component is enabled.
+        /// This is only valid while the on-screen control is enabled. Otherwise, it is <c>null</c>. Also,
+        /// if no <see cref="controlPath"/> has been set, this will remain <c>null</c> even if the component is enabled.
         /// </remarks>
         public InputControl control => m_Control;
 
@@ -60,7 +80,7 @@ namespace UnityEngine.InputSystem.OnScreen
         private InputEventPtr m_InputEventPtr;
 
         /// <summary>
-        ///
+        /// Accessor for the <see cref="controlPath"/> of the component. Must be implemented by subclasses.
         /// </summary>
         /// <remarks>
         /// Moving the definition of how the control path is stored into subclasses allows them to
@@ -71,9 +91,9 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void SetupInputControl()
         {
-            Debug.Assert(m_Control == null);
-            Debug.Assert(m_NextControlOnDevice == null);
-            Debug.Assert(!m_InputEventPtr.valid);
+            Debug.Assert(m_Control == null, "InputControl already initialized");
+            Debug.Assert(m_NextControlOnDevice == null, "Previous InputControl has not been properly uninitialized (m_NextControlOnDevice still set)");
+            Debug.Assert(!m_InputEventPtr.valid, "Previous InputControl has not been properly uninitialized (m_InputEventPtr still set)");
 
             // Nothing to do if we don't have a control path.
             var path = controlPathInternal;
@@ -119,6 +139,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     Debug.LogException(exception);
                     return;
                 }
+                InputSystem.AddDeviceUsage(device, "OnScreen");
 
                 // Create event buffer.
                 var buffer = StateEvent.From(device, out var eventPtr, Allocator.Persistent);
@@ -166,22 +187,33 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Control == null)
                 return;
 
-            ////TODO: only cast once
             if (!(m_Control is InputControl<TValue> control))
                 throw new ArgumentException(
                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
+            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-        private void OnEnable()
+        protected void SentDefaultValueToControl()
+        {
+            if (m_Control == null)
+                return;
+
+            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
+            m_Control.ResetToDefaultStateInEvent(m_InputEventPtr);
+            InputSystem.QueueEvent(m_InputEventPtr);
+        }
+
+        protected virtual void OnEnable()
         {
             SetupInputControl();
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             if (m_Control == null)
                 return;
@@ -202,6 +234,14 @@ namespace UnityEngine.InputSystem.OnScreen
                 else
                 {
                     s_OnScreenDevices[i] = deviceInfo;
+
+                    // We're keeping the device but we're disabling the on-screen representation
+                    // for one of its controls. If the control isn't in default state, reset it
+                    // to that now. This is what ensures that if, for example, OnScreenButton is
+                    // disabled after OnPointerDown, we reset its button control to zero even
+                    // though we will not see an OnPointerUp.
+                    if (!m_Control.CheckStateIsAtDefault())
+                        SentDefaultValueToControl();
                 }
 
                 m_Control = null;

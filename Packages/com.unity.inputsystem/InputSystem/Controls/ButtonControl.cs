@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     [Preserve]
     public class ButtonControl : AxisControl
     {
+        ////REVIEW: are per-control press points really necessary? can we just drop them?
         /// <summary>
         /// The minimum value the button has to reach for it to be considered pressed.
         /// </summary>
@@ -99,5 +100,6 @@ namespace UnityEngine.InputSystem.Controls
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
         internal static float s_GlobalDefaultButtonPressPoint;
+        internal static float s_GlobalDefaultButtonReleaseThreshold;
     }
 }

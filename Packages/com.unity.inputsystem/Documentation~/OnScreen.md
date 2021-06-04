@@ -18,17 +18,31 @@ To query the Control (and, implicitly, the Device) that an on-screen Control fee
 
 ## On-screen buttons
 
-The [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component requires the target Control to be a `Button` Control. [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) sets the target Control value to 1 when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, or 0 when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
+To create an on-screen button:
+
+1. Add a UI `Button` object.
+2. Add the [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component to it.
+3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) (for example, `<Gamepad>/buttonSouth`). The type of device referenced by the control path determines the type of virtual device created by the component.
 
 ![OnScreenButton](Images/OnScreenButton.png)
 
+The [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component requires the target Control to be a `Button` Control. [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) sets the target Control value to 1 when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, or 0 when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
+
 ## On-screen sticks
+
+To create an on-screen stick:
+
+1. Create a UI `Image` object.
+2. Add the [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component to it.
+3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) (for example, `<Gamepad>/leftStick`). The type of device referenced by the control path determines the type of virtual device created by the component.
+
+![OnScreenStick](Images/OnScreenStick.png)
 
 The [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component requires the target Control to be a `Vector2` Control. [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) starts the movement of the stick Control when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, and stops it when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
 
 In-between, the stick moves according to the pointer being dragged (`IDragHandler.OnDrag`) within a box centered on the pointer-down screen point, and with an edge length  defined in the component's __Movement Range__ property. A movement range of 50, for example, means that the stick's on-screen area is 25 pixels up, down, left, and right of the pointer-down point on screen.
 
-![OnScreenStick](Images/OnScreenStick.png)
+If you want to be notified when the user starts and/or stops touching the on-screen stick, implement `IPointerDownHandler` and/or `IPointerUpHandler` on a component and add it to the stick `GameObject`.
 
 ## Writing custom on-screen Controls
 

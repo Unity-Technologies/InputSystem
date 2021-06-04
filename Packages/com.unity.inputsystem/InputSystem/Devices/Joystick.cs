@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
         /// This is the <see cref="ButtonControl"/> type control on the joystick
         /// that has the <see cref="CommonUsages.PrimaryTrigger"/> usage.
         /// </remarks>
-        public ButtonControl trigger { get; private set; }
+        public ButtonControl trigger { get; protected set; }
 
         /// <summary>
         /// The 2D axis of the stick itself.
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem
         /// This is the <see cref="StickControl"/> type control on the joystick
         /// that has the <see cref="CommonUsages.Primary2DMotion"/> usage.
         /// </remarks>
-        public StickControl stick { get; private set; }
+        public StickControl stick { get; protected set; }
 
         /// <summary>
         /// An optional control representing the rotation of the stick around its
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem
         /// This is the <see cref="AxisControl"/> type control on the joystick
         /// that has the <see cref="CommonUsages.Twist"/> usage.
         /// </remarks>
-        public AxisControl twist { get; private set; }
+        public AxisControl twist { get; protected set; }
 
         /// <summary>
         /// An optional control representing a four-way "hat switch" on the
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem
         /// If present, this is the <see cref="Vector2Control"/> type control on the
         /// joystick that has the <see cref="CommonUsages.Hatswitch"/> usage.
         /// </remarks>
-        public Vector2Control hatswitch { get; private set; }
+        public Vector2Control hatswitch { get; protected set; }
 
         /// <summary>
         /// The joystick that was added or used last. Null if there is none.
@@ -106,7 +106,22 @@ namespace UnityEngine.InputSystem
         /// See <see cref="InputDevice.MakeCurrent"/> for details about when a device
         /// is made current.
         /// </remarks>
+        /// <seealso cref="all"/>
         public static Joystick current { get; private set; }
+
+        /// <summary>
+        /// A list of joysticks currently connected to the system.
+        /// </summary>
+        /// <value>All currently connected joystick.</value>
+        /// <remarks>
+        /// Does not cause GC allocation.
+        ///
+        /// Do <em>not</em> hold on to the value returned by this getter but rather query it whenever
+        /// you need it. Whenever the joystick setup changes, the value returned by this getter
+        /// is invalidated.
+        /// </remarks>
+        /// <seealso cref="current"/>
+        public new static ReadOnlyArray<Joystick> all => new ReadOnlyArray<Joystick>(s_Joysticks, 0, s_JoystickCount);
 
         /// <summary>
         /// Called when the joystick has been created but before it is added
@@ -140,13 +155,35 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Called when the joystick is added to the system.
+        /// </summary>
+        protected override void OnAdded()
+        {
+            ArrayHelpers.AppendWithCapacity(ref s_Joysticks, ref s_JoystickCount, this);
+        }
+
+        /// <summary>
         /// Called when the joystick is removed from the system.
         /// </summary>
         protected override void OnRemoved()
         {
             base.OnRemoved();
+
             if (current == this)
                 current = null;
+
+            // Remove from `all`.
+            var index = ArrayHelpers.IndexOfReference(s_Joysticks, this, s_JoystickCount);
+            if (index != -1)
+                ArrayHelpers.EraseAtWithCapacity(s_Joysticks, ref s_JoystickCount, index);
+            else
+            {
+                Debug.Assert(false,
+                    $"Joystick {this} seems to not have been added but is being removed (joystick list: {string.Join(", ", all)})"); // Put in else to not allocate on normal path.
+            }
         }
+
+        private static int s_JoystickCount;
+        private static Joystick[] s_Joysticks;
     }
 }

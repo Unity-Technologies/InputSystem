@@ -6,6 +6,9 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////TODO: protect against the control *hovering* around the press point; this should not fire the press repeatedly; probably need a zone around the press point
+////TODO: also, for analog controls, we probably want a deadzone that gives just a tiny little buffer at the low end before the action starts
+
 ////REVIEW: shouldn't it use Canceled for release on PressAndRelease instead of triggering Performed again?
 
 namespace UnityEngine.InputSystem.Interactions
@@ -18,7 +21,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// button press threshold defined by <see cref="pressPoint"/>. The action then will not trigger again until the control
     /// is first released.
     ///
-    /// Can be set to instead trigger on release (i.e. when the control goes back below the button press threshold) using
+    /// Can be set to instead trigger on release (that is, when the control goes back below the button press threshold) using
     /// <see cref="PressBehavior.ReleaseOnly"/> or can be set to trigger on both press and release using <see cref="PressBehavior.PressAndRelease"/>).
     ///
     /// Note that using an explicit press interaction is only necessary if the goal is to either customize the press behavior
@@ -56,58 +59,84 @@ namespace UnityEngine.InputSystem.Interactions
         public PressBehavior behavior;
 
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
         private bool m_WaitingForRelease;
 
         public void Process(ref InputInteractionContext context)
         {
-            var isActuated = context.ControlIsActuated(pressPointOrDefault);
-
+            var actuation = context.ComputeMagnitude();
             switch (behavior)
             {
                 case PressBehavior.PressOnly:
                     if (m_WaitingForRelease)
                     {
-                        if (!isActuated)
+                        if (actuation <= releasePointOrDefault)
                         {
                             m_WaitingForRelease = false;
                             context.Canceled();
                         }
                     }
-                    else if (isActuated)
+                    else if (actuation >= pressPointOrDefault)
                     {
                         m_WaitingForRelease = true;
+                        // Stay performed until release.
                         context.PerformedAndStayPerformed();
+                    }
+                    else if (actuation > 0 && !context.isStarted)
+                    {
+                        context.Started();
                     }
                     break;
 
                 case PressBehavior.ReleaseOnly:
-                    if (m_WaitingForRelease && !isActuated)
+                    if (m_WaitingForRelease)
                     {
-                        m_WaitingForRelease = false;
-                        context.Performed();
-                        context.Canceled();
+                        if (actuation <= releasePointOrDefault)
+                        {
+                            m_WaitingForRelease = false;
+                            context.Performed();
+                            context.Canceled();
+                        }
                     }
-                    else if (isActuated)
+                    else if (actuation >= pressPointOrDefault)
                     {
                         m_WaitingForRelease = true;
-                        context.Started();
+                        if (!context.isStarted)
+                            context.Started();
+                    }
+                    else
+                    {
+                        var started = context.isStarted;
+                        if (actuation > 0 && !started)
+                            context.Started();
+                        else if (Mathf.Approximately(0, actuation) && started)
+                            context.Canceled();
                     }
                     break;
 
                 case PressBehavior.PressAndRelease:
                     if (m_WaitingForRelease)
                     {
-                        m_WaitingForRelease = isActuated;
-                        if (!isActuated)
+                        if (actuation <= releasePointOrDefault)
                         {
+                            m_WaitingForRelease = false;
                             context.Performed();
-                            context.Canceled();
+                            if (Mathf.Approximately(0, actuation))
+                                context.Canceled();
                         }
                     }
-                    else if (isActuated)
+                    else if (actuation >= pressPointOrDefault)
                     {
                         m_WaitingForRelease = true;
                         context.PerformedAndStayPerformed();
+                    }
+                    else
+                    {
+                        var started = context.isStarted;
+                        if (actuation > 0 && !started)
+                            context.Started();
+                        else if (Mathf.Approximately(0, actuation) && started)
+                            context.Canceled();
                     }
                     break;
             }

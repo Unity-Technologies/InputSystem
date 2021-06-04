@@ -81,10 +81,21 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        /// <inheritdoc />
-        public IEnumerator<TValue> GetEnumerator()
+        /// <summary>
+        /// Returns an enumerator that iterates through the read-only array.
+        /// <returns>
+        /// <see cref="ReadOnlyArray{TValue}.Enumerator"/>
+        /// An enumerator for the read-only array.
+        /// </returns>
+        /// </summary>
+        public Enumerator GetEnumerator()
         {
-            return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);
+            return new Enumerator(m_Array, m_StartIndex, m_Length);
+        }
+
+        IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -123,14 +134,18 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
-        internal class Enumerator<T> : IEnumerator<T>
+        /// <summary>
+        /// <see cref="ReadOnlyArray{TValue}"/>
+        /// Enumerates the elements of a read-only array.
+        /// </summary>
+        public struct Enumerator : IEnumerator<TValue>
         {
-            private readonly T[] m_Array;
+            private readonly TValue[] m_Array;
             private readonly int m_IndexStart;
             private readonly int m_IndexEnd;
             private int m_Index;
 
-            public Enumerator(T[] array, int index, int length)
+            internal Enumerator(TValue[] array, int index, int length)
             {
                 m_Array = array;
                 m_IndexStart = index - 1; // First call to MoveNext() moves us to first valid index.
@@ -138,23 +153,27 @@ namespace UnityEngine.InputSystem.Utilities
                 m_Index = m_IndexStart;
             }
 
+            /// <inheritdoc/>
             public void Dispose()
             {
             }
 
+            /// <inheritdoc/>
             public bool MoveNext()
             {
                 if (m_Index < m_IndexEnd)
                     ++m_Index;
-                return (m_Index != m_IndexEnd);
+                return m_Index != m_IndexEnd;
             }
 
+            /// <inheritdoc/>
             public void Reset()
             {
                 m_Index = m_IndexStart;
             }
 
-            public T Current
+            /// <inheritdoc/>
+            public TValue Current
             {
                 get
                 {
@@ -195,6 +214,21 @@ namespace UnityEngine.InputSystem.Utilities
                 if (ReferenceEquals(array.m_Array[array.m_StartIndex + i], value))
                     return i;
             return -1;
+        }
+
+        internal static bool HaveEqualReferences<TValue>(this ReadOnlyArray<TValue> array1, IReadOnlyList<TValue> array2, int count = int.MaxValue)
+        {
+            var length1 = Math.Min(array1.Count, count);
+            var length2 = Math.Min(array2.Count, count);
+
+            if (length1 != length2)
+                return false;
+
+            for (var i = 0; i < length1; ++i)
+                if (!ReferenceEquals(array1[i], array2[i]))
+                    return false;
+
+            return true;
         }
     }
 }

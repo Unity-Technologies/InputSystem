@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: record velocity on touches? or add method to very easily get the data?
 
+////REVIEW: do we need to keep old touches around on activeTouches like the old UnityEngine touch API?
+
 namespace UnityEngine.InputSystem.EnhancedTouch
 {
     /// <summary>
@@ -23,7 +25,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// <see cref="Touchscreen"/> may overwrite it with a new touch coming in in the same update whereas this class
     /// will retain all changes that happened on the touchscreen in any particular update.
     ///
-    /// The API makes a distinction between "fingers" and "touches". A touch refers to one contact state change event, i.e. a
+    /// The API makes a distinction between "fingers" and "touches". A touch refers to one contact state change event, that is, a
     /// finger beginning to touch the screen (<see cref="TouchPhase.Began"/>), moving on the screen (<see cref="TouchPhase.Moved"/>),
     /// or being lifted off the screen (<see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>).
     /// A finger, on the other hand, always refers to the Nth contact on the screen.
@@ -78,6 +80,32 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// <seealso cref="isInProgress"/>
         /// <seealso cref="TouchControl.phase"/>
         public TouchPhase phase => state.phase;
+
+        /// <summary>
+        /// Whether the touch has begun this frame, i.e. whether <see cref="phase"/> is <see cref="TouchPhase.Began"/>.
+        /// </summary>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="ended"/>
+        /// <seealso cref="inProgress"/>
+        public bool began => phase == TouchPhase.Began;
+
+        /// <summary>
+        /// Whether the touch is currently in progress, i.e. whether <see cref="phase"/> is either
+        /// <see cref="TouchPhase.Moved"/>, <see cref="TouchPhase.Stationary"/>, or <see cref="TouchPhase.Began"/>.
+        /// </summary>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="began"/>
+        /// <seealso cref="ended"/>
+        public bool inProgress => phase == TouchPhase.Moved || phase == TouchPhase.Stationary || phase == TouchPhase.Began;
+
+        /// <summary>
+        /// Whether the touch has ended this frame, i.e. whether <see cref="phase"/> is either
+        /// <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>.
+        /// </summary>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="began"/>
+        /// <seealso cref="isInProgress"/>
+        public bool ended => phase == TouchPhase.Ended || phase == TouchPhase.Canceled;
 
         /// <summary>
         /// Unique ID of the touch as (usually) assigned by the platform.
@@ -227,7 +255,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
         }
 
-        internal uint updateStepCount => extraData.updateStepCount;
+        internal uint updateStepCount => state.updateStepCount;
         internal uint uniqueId => extraData.uniqueId;
 
         private unsafe ref TouchState state => ref *(TouchState*)m_TouchRecord.GetUnsafeMemoryPtr();
@@ -254,13 +282,55 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// All touches that are either on-going as of the current frame or have ended in the current frame.
         /// </summary>
         /// <remarks>
-        /// Note that the fact that ended touches are being kept around until the end of a frame means that this
-        /// array may have more touches than the total number of concurrent touches supported by the system.
+        /// A touch that begins in a frame will always have its phase set to <see cref="TouchPhase.Began"/> even
+        /// if there was also movement (or even an end/cancellation) for the touch in the same frame.
+        ///
+        /// A touch that begins and ends in the same frame will have its <see cref="TouchPhase.Began"/> surface
+        /// in that frame and then another entry with <see cref="TouchPhase.Ended"/> surface in the
+        /// <em>next</em> frame. This logic implies that there can be more active touches than concurrent touches
+        /// supported by the hardware/platform.
+        ///
+        /// A touch that begins and moves in the same frame will have its <see cref="TouchPhase.Began"/> surface
+        /// in that frame and then another entry with <see cref="TouchPhase.Moved"/> and the screen motion
+        /// surface in the <em>next</em> frame <em>except</em> if the touch also ended in the frame (in which
+        /// case <see cref="phase"/> will be <see cref="TouchPhase.Ended"/> instead of <see cref="TouchPhase.Moved"/>).
+        ///
+        /// Note that the touches reported by this API do <em>not</em> necessarily have to match the contents of
+        /// <see href="https://docs.unity3d.com/ScriptReference/Input-touches.html">UnityEngine.Input.touches</see>.
+        /// The reason for this is that the <c>UnityEngine.Input</c> API and the Input System API flush their input
+        /// queues at different points in time and may thus have a different view on available input. In particular,
+        /// the Input System event queue is flushed <em>later</em> in the frame than inputs for <c>UnityEngine.Input</c>
+        /// and may thus have newer inputs available. On Android, for example, touch input is gathered from a separate
+        /// UI thread and fed into the input system via a "background" event queue that can gather input asynchronously.
+        /// Due to this setup, touch events that will reach <c>UnityEngine.Input</c> only in the next frame may have
+        /// already reached the Input System.
+        ///
+        /// <example>
+        /// <code>
+        /// void Awake()
+        /// {
+        ///     // Enable EnhancedTouch.
+        ///     EnhancedTouchSupport.Enable();
+        /// }
+        ///
+        /// void Update()
+        /// {
+        ///     foreach (var touch in Touch.activeTouches)
+        ///         if (touch.began)
+        ///             Debug.Log($"Touch {touch} started this frame");
+        ///         else if (touch.ended)
+        ///             Debug.Log($"Touch {touch} ended this frame");
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        /// <seealso cref="activeFingers"/>
         public static ReadOnlyArray<Touch> activeTouches
         {
             get
             {
+                EnhancedTouchSupport.CheckEnabled();
                 // We lazily construct the array of active touches.
                 s_PlayerState.UpdateActiveTouches();
                 return new ReadOnlyArray<Touch>(s_PlayerState.activeTouches, 0, s_PlayerState.activeTouchCount);
@@ -268,36 +338,76 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         }
 
         /// <summary>
-        ///
+        /// An array of all possible concurrent touch contacts, i.e. all concurrent touch contacts regardless of whether
+        /// they are currently active or not.
         /// </summary>
         /// <remarks>
+        /// For querying only active fingers, use <see cref="activeFingers"/>.
+        ///
         /// The length of this array will always correspond to the maximum number of concurrent touches supported by the system.
+        /// Note that the actual number of physically supported concurrent touches as determined by the current hardware and
+        /// operating system may be lower than this number.
         /// </remarks>
-        public static ReadOnlyArray<Finger> fingers =>
-            new ReadOnlyArray<Finger>(s_PlayerState.fingers, 0, s_PlayerState.totalFingerCount);
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        /// <seealso cref="activeTouches"/>
+        /// <seealso cref="activeFingers"/>
+        public static ReadOnlyArray<Finger> fingers
+        {
+            get
+            {
+                EnhancedTouchSupport.CheckEnabled();
+                return new ReadOnlyArray<Finger>(s_PlayerState.fingers, 0, s_PlayerState.totalFingerCount);
+            }
+        }
 
+        /// <summary>
+        /// Set of currently active fingers, i.e. touch contacts that currently have an active touch (as defined by <see cref="activeTouches"/>).
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        /// <seealso cref="activeTouches"/>
+        /// <seealso cref="fingers"/>
         public static ReadOnlyArray<Finger> activeFingers
         {
             get
             {
+                EnhancedTouchSupport.CheckEnabled();
                 // We lazily construct the array of active fingers.
                 s_PlayerState.UpdateActiveFingers();
                 return new ReadOnlyArray<Finger>(s_PlayerState.activeFingers, 0, s_PlayerState.activeFingerCount);
             }
         }
 
-        public static IEnumerable<Touchscreen> screens => s_Touchscreens;
+        /// <summary>
+        /// Return the set of <see cref="Touchscreen"/>s on which touch input is monitored.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        public static IEnumerable<Touchscreen> screens
+        {
+            get
+            {
+                EnhancedTouchSupport.CheckEnabled();
+                return s_Touchscreens;
+            }
+        }
 
+        /// <summary>
+        /// Event that is invoked when a finger touches a <see cref="Touchscreen"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        /// <seealso cref="onFingerUp"/>
+        /// <seealso cref="onFingerMove"/>
         public static event Action<Finger> onFingerDown
         {
             add
             {
+                EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 s_OnFingerDown.AppendWithCapacity(value);
             }
             remove
             {
+                EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 var index = s_OnFingerDown.IndexOf(value);
@@ -306,16 +416,24 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
         }
 
+        /// <summary>
+        /// Event that is invoked when a finger stops touching a <see cref="Touchscreen"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        /// <seealso cref="onFingerDown"/>
+        /// <seealso cref="onFingerMove"/>
         public static event Action<Finger> onFingerUp
         {
             add
             {
+                EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 s_OnFingerUp.AppendWithCapacity(value);
             }
             remove
             {
+                EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 var index = s_OnFingerUp.IndexOf(value);
@@ -324,16 +442,25 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
         }
 
+        /// <summary>
+        /// Event that is invoked when a finger that is in contact with a <see cref="Touchscreen"/> moves
+        /// on the screen.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><c>EnhancedTouch</c> has not been enabled via <see cref="EnhancedTouchSupport.Enable"/>.</exception>
+        /// <seealso cref="onFingerUp"/>
+        /// <seealso cref="onFingerDown"/>
         public static event Action<Finger> onFingerMove
         {
             add
             {
+                EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 s_OnFingerMove.AppendWithCapacity(value);
             }
             remove
             {
+                EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 var index = s_OnFingerMove.IndexOf(value);
@@ -377,7 +504,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             if (!valid)
                 return "<None>";
 
-            return $"{{finger={finger.index} touchId={touchId} phase={phase} position={screenPosition} time={time}}}";
+            return $"{{id={touchId} finger={finger.index} phase={phase} position={screenPosition} delta={delta} time={time}}}";
         }
 
         public bool Equals(Touch other)
@@ -425,7 +552,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             #endif
         }
 
-        //only have this hooked when we actually need it
+        ////TODO: only have this hooked when we actually need it
         internal static void BeginUpdate()
         {
             #if UNITY_EDITOR
@@ -438,8 +565,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
             #endif
 
-            ++s_PlayerState.updateStepCount;
-            s_PlayerState.haveBuiltActiveTouches = false;
+            // If we have any touches in activeTouches that are ended or canceled,
+            // we need to clear them in the next frame.
+            if (s_PlayerState.haveActiveTouchesNeedingRefreshNextUpdate)
+                s_PlayerState.haveBuiltActiveTouches = false;
         }
 
         private readonly Finger m_Finger;
@@ -467,7 +596,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         internal struct FingerAndTouchState
         {
             public InputUpdateType updateMask;
-            public uint updateStepCount;
             public Finger[] fingers;
             public Finger[] activeFingers;
             public Touch[] activeTouches;
@@ -476,6 +604,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             public int totalFingerCount;
             public uint lastId;
             public bool haveBuiltActiveTouches;
+            public bool haveActiveTouchesNeedingRefreshNextUpdate;
 
             // `activeTouches` adds yet another view of input state that is different from "normal" recorded
             // state history. In this view, touches become stationary in the next update and deltas reset
@@ -546,21 +675,36 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 // Clear activeTouches state.
                 if (activeTouchState == null)
                 {
-                    activeTouchState = new InputStateHistory<TouchState>();
-                    activeTouchState.extraMemoryPerRecord = UnsafeUtility.SizeOf<ExtraDataPerTouchState>();
+                    activeTouchState = new InputStateHistory<TouchState>
+                    {
+                        extraMemoryPerRecord = UnsafeUtility.SizeOf<ExtraDataPerTouchState>()
+                    };
                 }
                 else
+                {
                     activeTouchState.Clear();
+                    activeTouchState.m_ControlCount = 0;
+                    activeTouchState.m_Controls.Clear();
+                }
                 activeTouchCount = 0;
+                haveActiveTouchesNeedingRefreshNextUpdate = false;
+                var currentUpdateStepCount = InputUpdate.s_UpdateStepCount;
+
+                ////OPTIMIZE: Handle touchscreens that have no activity more efficiently
+                ////FIXME: This is sensitive to history size; we probably need to ensure that the Begans and Endeds/Canceleds of touches are always available to us
+                ////       (instead of rebuild activeTouches from scratch each time, may be more useful to update it)
 
                 // Go through fingers and for each one, get the touches that were active this update.
                 for (var i = 0; i < totalFingerCount; ++i)
                 {
-                    var finger = fingers[i];
+                    ref var finger = ref fingers[i];
 
-                    // Skip going through the finger's touches if the finger does not have an active touch.
-                    // Avoids doing unnecessary work of sifting through the finger's history.
-                    if (!finger.currentTouch.valid)
+                    // NOTE: Many of the operations here are inlined in order to not perform the same
+                    //       checks/computations repeatedly.
+
+                    var history = finger.m_StateHistory;
+                    var touchRecordCount = history.Count;
+                    if (touchRecordCount == 0)
                         continue;
 
                     // We're walking newest-first through the touch history but want the resulting list of
@@ -572,52 +716,118 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
                     // Go back in time through the touch records on the finger and collect any touch
                     // active in the current frame. Note that this may yield *multiple* touches for the
-                    // finger as there may be touched that have ended in the frame while in the same
+                    // finger as there may be touches that have ended in the frame while in the same
                     // frame, a new touch was started.
-                    var history = finger.m_StateHistory;
-                    var touchRecordCount = history.Count;
                     var currentTouchId = 0;
-                    for (var n = touchRecordCount - 1; n >= 0; --n)
+                    var currentTouchState = default(TouchState*);
+                    var touchRecordIndex = history.UserIndexToRecordIndex(touchRecordCount - 1); // Start with last record.
+                    var touchRecordHeader = history.GetRecordUnchecked(touchRecordIndex);
+                    var touchRecordSize = history.bytesPerRecord;
+                    var extraMemoryOffset = touchRecordSize - history.extraMemoryPerRecord;
+                    for (var n = 0; n < touchRecordCount; ++n)
                     {
-                        var record = history[n];
-                        var state = *(TouchState*)record.GetUnsafeMemoryPtr();
-                        var extra = (ExtraDataPerTouchState*)record.GetUnsafeExtraMemoryPtr();
+                        if (n != 0)
+                        {
+                            --touchRecordIndex;
+                            if (touchRecordIndex < 0)
+                            {
+                                // We're wrapping around so buffer must be full. Go to last record in buffer.
+                                //touchRecordIndex = history.historyDepth - history.m_HeadIndex - 1;
+                                touchRecordIndex = history.historyDepth - 1;
+                                touchRecordHeader = history.GetRecordUnchecked(touchRecordIndex);
+                            }
+                            else
+                            {
+                                touchRecordHeader = (InputStateHistory.RecordHeader*)((byte*)touchRecordHeader - touchRecordSize);
+                            }
+                        }
 
                         // Skip if part of an ongoing touch we've already recorded.
-                        if (state.touchId == currentTouchId && !state.phase.IsEndedOrCanceled())
+                        var touchState = (TouchState*)touchRecordHeader->statePtrWithoutControlIndex; // History is tied to a single TouchControl.
+                        var wasUpdatedThisFrame = touchState->updateStepCount == currentUpdateStepCount;
+                        if (touchState->touchId == currentTouchId && !touchState->phase.IsEndedOrCanceled())
+                        {
+                            // If this is the Began record for the touch and that one happened in
+                            // the current frame, we force the touch phase to Began.
+                            if (wasUpdatedThisFrame && touchState->phase == TouchPhase.Began)
+                            {
+                                Debug.Assert(currentTouchState != null, "Must have current touch record at this point");
+
+                                currentTouchState->phase = TouchPhase.Began;
+                                currentTouchState->position = touchState->position;
+                                currentTouchState->delta = default;
+
+                                haveActiveTouchesNeedingRefreshNextUpdate = true;
+                            }
+
+                            // Need to continue here as there may still be Ended touches that need to
+                            // be taken into account (as in, there may actually be multiple active touches
+                            // for the same finger due to how the polling API works).
                             continue;
+                        }
 
                         // If the touch is older than the current frame and it's a touch that has
                         // ended, we don't need to look further back into the history as anything
                         // coming before that will be equally outdated.
-                        var wasUpdatedThisFrame = extra->updateStepCount == updateStepCount;
-                        if (!wasUpdatedThisFrame && state.phase.IsEndedOrCanceled())
-                            break;
+                        if (touchState->phase.IsEndedOrCanceled())
+                        {
+                            // An exception are touches that both began *and* ended in the previous frame.
+                            // For these, we surface the Began in the previous update and the Ended in the
+                            // current frame.
+                            if (!(touchState->beganInSameFrame && touchState->updateStepCount == currentUpdateStepCount - 1) &&
+                                !wasUpdatedThisFrame)
+                                break;
+                        }
 
                         // Make a copy of the touch so that we can modify data like deltas and phase.
-                        var newRecord = activeTouchState.AddRecord(record);
-                        var newTouch = new Touch(finger, newRecord);
+                        // NOTE: Again, not using AddRecord() for speed.
+                        // NOTE: Unlike `history`, `activeTouchState` stores control indices as each active touch
+                        //       will correspond to a different TouchControl.
+                        var touchExtraState = (ExtraDataPerTouchState*)((byte*)touchRecordHeader + extraMemoryOffset);
+                        var newRecordHeader = activeTouchState.AllocateRecord(out var newRecordIndex);
+                        var newRecordState = (TouchState*)newRecordHeader->statePtrWithControlIndex;
+                        var newRecordExtraState = (ExtraDataPerTouchState*)((byte*)newRecordHeader + activeTouchState.bytesPerRecord - UnsafeUtility.SizeOf<ExtraDataPerTouchState>());
+                        newRecordHeader->time = touchRecordHeader->time;
+                        newRecordHeader->controlIndex = ArrayHelpers.AppendWithCapacity(ref activeTouchState.m_Controls,
+                            ref activeTouchState.m_ControlCount, finger.m_StateHistory.controls[0]);
+
+                        UnsafeUtility.MemCpy(newRecordState, touchState, UnsafeUtility.SizeOf<TouchState>());
+                        UnsafeUtility.MemCpy(newRecordExtraState, touchExtraState, UnsafeUtility.SizeOf<ExtraDataPerTouchState>());
 
                         // If the touch hasn't moved this frame, mark it stationary.
-                        if ((state.phase == TouchPhase.Moved || state.phase == TouchPhase.Began) &&
-                            !wasUpdatedThisFrame)
-                            ((TouchState*)newRecord.GetUnsafeMemoryPtr())->phase = TouchPhase.Stationary;
-
-                        // If the touch is hasn't moved or ended this frame, zero out its delta.
-                        if (!((state.phase == TouchPhase.Moved || state.phase == TouchPhase.Ended) &&
-                              wasUpdatedThisFrame))
+                        // EXCEPT: If we are looked at a Moved touch that also began in the same frame and that
+                        //         frame is the one immediately preceding us. In that case, we want to surface the Moved
+                        //         as if it happened this frame.
+                        var phase = touchState->phase;
+                        if ((phase == TouchPhase.Moved || phase == TouchPhase.Began) &&
+                            !wasUpdatedThisFrame && !(phase == TouchPhase.Moved && touchState->beganInSameFrame && touchState->updateStepCount == currentUpdateStepCount - 1))
                         {
-                            ((TouchState*)newRecord.GetUnsafeMemoryPtr())->delta = new Vector2();
+                            newRecordState->phase = TouchPhase.Stationary;
+                            newRecordState->delta = default;
+                        }
+                        // If the touch wasn't updated this frame, zero out its delta.
+                        else if (!wasUpdatedThisFrame && !touchState->beganInSameFrame)
+                        {
+                            newRecordState->delta = default;
                         }
                         else
                         {
                             // We want accumulated deltas only on activeTouches.
-                            ((TouchState*)newRecord.GetUnsafeMemoryPtr())->delta =
-                                ((ExtraDataPerTouchState*)newRecord.GetUnsafeExtraMemoryPtr())->accumulatedDelta;
+                            newRecordState->delta = newRecordExtraState->accumulatedDelta;
                         }
 
+                        var newRecord = new InputStateHistory<TouchState>.Record(activeTouchState, newRecordIndex, newRecordHeader);
+                        var newTouch = new Touch(finger, newRecord);
+
                         ArrayHelpers.InsertAtWithCapacity(ref activeTouches, ref activeTouchCount, insertAt, newTouch);
-                        currentTouchId = state.touchId;
+
+                        currentTouchId = touchState->touchId;
+                        currentTouchState = newRecordState;
+
+                        // For anything but stationary touches on the activeTouches list, we need a subsequent
+                        // update in the next frame.
+                        if (newTouch.phase != TouchPhase.Stationary)
+                            haveActiveTouchesNeedingRefreshNextUpdate = true;
                     }
                 }
 
@@ -628,10 +838,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         internal struct ExtraDataPerTouchState
         {
             public Vector2 accumulatedDelta;
-            public uint updateStepCount;
 
-            // We can't guarantee that the platform is not reusing touch IDs.
-            public uint uniqueId;
+            public uint uniqueId; // Unique ID for touch *record* (i.e. multiple TouchStates having the same touchId will still each have a unique ID).
 
             ////TODO
             //public uint tapCount;

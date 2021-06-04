@@ -1,8 +1,9 @@
+using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
-////TODO: generalize the WithModifier composites so that they work with any kind of control, not just buttons
+////TODO: remove this once we can break the API
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -45,6 +46,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </remarks>
     /// <seealso cref="ButtonWithTwoModifiers"/>
     [Preserve]
+    [DesignTimeVisible(false)] // Obsoleted by OneModifierComposite
     [DisplayStringFormat("{modifier}+{button}")]
     public class ButtonWithOneModifier : InputBindingComposite<float>
     {

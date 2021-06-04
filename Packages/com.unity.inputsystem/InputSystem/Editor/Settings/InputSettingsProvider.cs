@@ -108,6 +108,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
                 EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
                 EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
+                EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
                 EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
                 EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
                 EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
@@ -120,13 +121,23 @@ namespace UnityEngine.InputSystem.Editor
 
                 EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
                     + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                    + "and avoid picking up input from devices not relevant to the project.", MessageType.None);
+                    + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
+                    + "as support will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
                 m_SupportedDevices.DoLayoutList();
+
+                EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                m_iOSProvider.OnGUI();
 
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
+        }
+
+        private static void ShowPlatformSettings()
+        {
+            // Would be nice to get BuildTargetDiscovery.GetBuildTargetInfoList since that contains information about icons etc
         }
 
         private static void CreateNewSettingsAsset(string relativePath)
@@ -227,6 +238,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
             m_DefaultButtonPressPoint = m_SettingsObject.FindProperty("m_DefaultButtonPressPoint");
+            m_ButtonReleaseThreshold = m_SettingsObject.FindProperty("m_ButtonReleaseThreshold");
             m_DefaultTapTime = m_SettingsObject.FindProperty("m_DefaultTapTime");
             m_DefaultSlowTapTime = m_SettingsObject.FindProperty("m_DefaultSlowTapTime");
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
@@ -239,6 +251,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");
+            m_ButtonReleaseThresholdContent = new GUIContent("Button Release Threshold", "Percent of press point at which a Button is considered released again. At 1, release points are identical to press points. At 0, a Button must be fully released before it can be pressed again.");
             m_DefaultTapTimeContent = new GUIContent("Default Tap Time", "Default duration to be used for Tap and MultiTap interactions. Also used by by Touch screen devices to distinguish taps from to new touches.");
             m_DefaultSlowTapTimeContent = new GUIContent("Default Slow Tap Time", "Default duration to be used for SlowTap interactions.");
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
@@ -260,6 +273,8 @@ namespace UnityEngine.InputSystem.Editor
                         new InputControlPickerState(),
                         path =>
                         {
+                            ////REVIEW: Why are we converting from a layout into a plain string here instead of just using path strings in supportedDevices?
+                            ////        Why not just have InputSettings.supportedDevices be a list of paths?
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
                             var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
                             if (existingIndex != -1)
@@ -295,6 +310,8 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUI.LabelField(rect, m_Settings.supportedDevices[index]);
                 }
             };
+
+            m_iOSProvider = new InputSettingsiOSProvider(m_SettingsObject);
         }
 
         private void Apply()
@@ -334,6 +351,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
         [NonSerialized] private SerializedProperty m_DefaultButtonPressPoint;
+        [NonSerialized] private SerializedProperty m_ButtonReleaseThreshold;
         [NonSerialized] private SerializedProperty m_DefaultTapTime;
         [NonSerialized] private SerializedProperty m_DefaultSlowTapTime;
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
@@ -354,11 +372,14 @@ namespace UnityEngine.InputSystem.Editor
         GUIContent m_DefaultDeadzoneMinContent;
         GUIContent m_DefaultDeadzoneMaxContent;
         GUIContent m_DefaultButtonPressPointContent;
+        GUIContent m_ButtonReleaseThresholdContent;
         GUIContent m_DefaultTapTimeContent;
         GUIContent m_DefaultSlowTapTimeContent;
         GUIContent m_DefaultHoldTimeContent;
         GUIContent m_TapRadiusContent;
         GUIContent m_MultiTapDelayTimeContent;
+
+        [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 
         private static InputSettingsProvider s_Instance;
 

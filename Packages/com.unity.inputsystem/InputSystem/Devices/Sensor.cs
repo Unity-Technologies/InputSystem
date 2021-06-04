@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the sensors return values through their device
+////      (e.g. GravitySensor should itself be an InputControl returning a Vector3 value which is the gravity value)
+
 ////REVIEW: Is there a better way than having all the sensor classes?
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -620,6 +623,9 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Input device representing the foot steps taken by the user as measured by the device playing the content.
     /// </summary>
+    /// <remarks>
+    /// On iOS, access to the step counter must be enabled via <see cref="InputSettings.iOSSettings.motionUsage"/>.
+    /// </remarks>
     [InputControlLayout(displayName = "Step Counter")]
     [Scripting.Preserve]
     public class StepCounter : Sensor

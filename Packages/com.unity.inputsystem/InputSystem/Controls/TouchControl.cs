@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Controls
         /// or <see cref="TouchPhase.Stationary"/>.
         /// </remarks>
         /// <seealso cref="phase"/>
-        public TouchPressControl press { get; private set; }
+        public TouchPressControl press { get; set; }
 
         /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
@@ -49,14 +49,14 @@ namespace UnityEngine.InputSystem.Controls
         /// ongoing touches.
         /// </remarks>
         /// <seealso cref="TouchState.touchId"/>
-        public IntegerControl touchId { get; private set; }
+        public IntegerControl touchId { get; set; }
 
         /// <summary>
         /// Absolute screen-space position on the touch surface.
         /// </summary>
         /// <value>Control representing the screen-space of the touch.</value>
         /// <seealso cref="TouchState.position"/>
-        public Vector2Control position { get; private set; }
+        public Vector2Control position { get; set; }
 
         /// <summary>
         /// Screen-space motion delta of the touch.
@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Controls
         /// controls. See <see cref="Pointer.delta"/> for details.
         /// </remarks>
         /// <seealso cref="TouchState.delta"/>
-        public Vector2Control delta { get; private set; }
+        public Vector2Control delta { get; set; }
 
         /// <summary>
         /// Normalized pressure of the touch against the touch surface.
@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         /// <seealso cref="TouchState.pressure"/>
         /// <seealso cref="Pointer.pressure"/>
-        public AxisControl pressure { get; private set; }
+        public AxisControl pressure { get; set; }
 
         /// <summary>
         /// Screen-space radius of the touch.
@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <see cref="position"/> center point. If not supported, this will be <c>default(Vector2)</c>.
         /// </remarks>
         /// <seealso cref="Pointer.radius"/>
-        public Vector2Control radius { get; private set; }
+        public Vector2Control radius { get; set; }
 
         /// <summary>
         /// Current phase of the touch.
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.Controls
         /// yet or if the control has been reset to its default state.
         /// </remarks>
         /// <seealso cref="isInProgress"/>
-        public TouchPhaseControl phase { get; private set; }
+        public TouchPhaseControl phase { get; set; }
 
         /// <summary>
         /// Whether the touch comes from a source other than direct contact with the touch surface.
@@ -118,7 +118,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// Indirect touches can be generated with a stylus, for example.
         /// </remarks>
-        public ButtonControl indirectTouch { get; private set; }
+        public ButtonControl indirectTouch { get; set; }
 
         /// <summary>
         /// Whether the touch has performed a tap.
@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         /// <seealso cref="tapCount"/>
         /// <seealso cref="InputSettings.defaultTapTime"/>
-        public ButtonControl tap { get; private set; }
+        public ButtonControl tap { get; set; }
 
         /// <summary>
         /// Number of times that the touch has been tapped in succession.
@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.Controls
         /// of the previous touch, the tap count is increased by one. If more than <see cref="InputSettings.multiTapDelayTime"/>
         /// passes after a tap with no successive tap, the tap count is reset to zero.
         /// </remarks>
-        public IntegerControl tapCount { get; private set; }
+        public IntegerControl tapCount { get; set; }
 
         /// <summary>
         /// Time in seconds on the same timeline as <c>Time.realTimeSinceStartup</c> when the touch began.
@@ -158,14 +158,14 @@ namespace UnityEngine.InputSystem.Controls
         /// <see cref="phase"/> <see cref="TouchPhase.Began"/>.
         /// </remarks>
         /// <seealso cref="InputEvent.time"/>
-        public DoubleControl startTime { get; private set; }
+        public DoubleControl startTime { get; set; }
 
         /// <summary>
         /// Screen-space position where the touch started.
         /// </summary>
         /// <value>Control representing the start position of the touch.</value>
         /// <seealso cref="position"/>
-        public Vector2Control startPosition { get; private set; }
+        public Vector2Control startPosition { get; set; }
 
         /// <summary>
         /// Whether a touch on the control is currently is progress.

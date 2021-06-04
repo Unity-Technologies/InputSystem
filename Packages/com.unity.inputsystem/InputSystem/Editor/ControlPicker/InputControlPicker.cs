@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 
 ////REVIEW: should this be a PopupWindowContent?

@@ -15,17 +15,26 @@ Temp/
 *.DotSettings
 *.userprefs
 .idea/
+upm-ci~/
 obj/
 .DS_Store
 docerrors.log
 
+Assets/**/*.api
+Assets/**/*.api.meta
+
+Packages/packages-lock.json
 Packages/com.unity.inputsystem/artifacts/**
 Packages/com.unity.inputsystem/build/**
 Packages/com.unity.inputsystem/Documentation~/ApiDocs/**
 Packages/com.unity.inputsystem/.DS_Store
 Packages/com.unity.inputsystem/.npmrc
+Packages/com.unity.inputsystem/**/*.api
+Packages/com.unity.inputsystem/**/*.api.meta
 
-Packages/com.unity.package-manager-doctools/
 Packages/com.unity.package-manager-ui/
+Packages/com.unity.package-manager-doctools/
 
 .Editor
+.bin
+.download

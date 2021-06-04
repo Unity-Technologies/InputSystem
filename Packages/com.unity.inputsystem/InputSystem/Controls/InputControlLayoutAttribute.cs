@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
 ////REVIEW: should this *not* be inherited? inheritance can lead to surprises
@@ -19,9 +20,33 @@ namespace UnityEngine.InputSystem.Layouts
         /// <remarks>This is *only* useful if you have a state struct dictating a specific
         /// state layout and you want the device layout to automatically take offsets from
         /// the fields annotated with <see cref="InputControlAttribute"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// public struct MyStateStruct : IInputStateTypeInfo
+        /// {
+        ///     public FourCC format => new FourCC('M', 'Y', 'D', 'V');
+        ///
+        ///     [InputControl(name = "button1", layout = "Button", bit = 0)]
+        ///     [InputControl(name = "button2", layout = "Button", bit = 0)]
+        ///     public int buttons;
+        /// }
+        ///
+        /// [InputControlLayout(stateType = typeof(MyStateStruct)]
+        /// public class MyDevice : InputDevice
+        /// {
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="LowLevel.InputStateBlock"/>
+        /// <seealso cref="LowLevel.MouseState"/>
         public Type stateType { get; set; }
 
+        /// <summary>
+        /// <see cref="FourCC"/> identifier for the memory format associated with the layout.
+        /// </summary>
+        /// <seealso cref="LowLevel.InputStateBlock.format"/>
         public string stateFormat { get; set; }
 
         ////TODO: rename this to just "usages"; "commonUsages" is such a weird name

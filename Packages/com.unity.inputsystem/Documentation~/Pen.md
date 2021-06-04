@@ -9,8 +9,9 @@ Pens are represented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) Dev
 You can query the last used or last added pen with [`Pen.current`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_current).
 
 >__Note__:
->* Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. Support on macOS is coming in Unity 2020.1.
+>* Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. macOS is supported in Unity 2020.1+.
 >* Some devices support tracking multiple pens independently. Unity's Input System doesn't support this currently.
+>* iOS: The double-tap interaction on the side of the Apple Pencil is not surfaced as input at the moment. Also, no in-range detection is supported and [`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange) will remain at its default value.
 
 ## Controls
 
@@ -24,7 +25,7 @@ In addition to the [Controls inherited from `Pointer`](Pointers.md#controls), pe
 |[`secondBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_secondBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the second button on the barrel of the pen is pressed.|
 |[`thirdBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_thirdBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the third button on the barrel of the pen is pressed.|
 |[`fourthBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_fourthBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the forth button on the barrel of the pen is pressed.|
-|[`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the pen is currently in detection range of the tablet.|
+|[`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the pen is currently in detection range of the tablet. If unsupported, this control will remain at a value of 1.|
 |[`tilt`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_tilt)|[`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html)|Tilt of the pen relative to the surface.|
 |[`twist`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_twist)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|Rotation of the pen around its own axis. Only supported on a limited number of pens, such as the Wacom Art Pen.|
 

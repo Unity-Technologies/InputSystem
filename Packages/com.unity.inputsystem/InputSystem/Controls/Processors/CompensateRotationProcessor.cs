@@ -24,5 +24,10 @@ namespace UnityEngine.InputSystem.Processors
 
             return value * q;
         }
+
+        public override string ToString()
+        {
+            return "CompensateRotation()";
+        }
     }
 }

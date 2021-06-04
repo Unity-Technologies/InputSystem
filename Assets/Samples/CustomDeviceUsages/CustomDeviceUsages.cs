@@ -44,7 +44,7 @@ public static class InitCustomDeviceUsages
         Initialize();
     }
 
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
     {
         // Here we register the layout override with the system.

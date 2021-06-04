@@ -60,6 +60,11 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!ptr.IsA<DeltaStateEvent>())
                 throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into DeltaStateEvent");
 
+            return FromUnchecked(ptr);
+        }
+
+        internal static DeltaStateEvent* FromUnchecked(InputEventPtr ptr)
+        {
             return (DeltaStateEvent*)ptr.data;
         }
 

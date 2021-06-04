@@ -51,8 +51,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(5)] public byte buttons1;
         [InputControl(name = "leftShoulder", bit = 0)]
         [InputControl(name = "rightShoulder", bit = 1)]
-        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2)]
-        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3)]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2, synthetic = true)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3, synthetic = true)]
         [InputControl(name = "select", displayName = "Share", bit = 4)]
         [InputControl(name = "start", displayName = "Options", bit = 5)]
         [InputControl(name = "leftStickPress", bit = 6)]
@@ -92,8 +92,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "dpad/down", bit = 6)]
         [InputControl(name = "dpad/left", bit = 7)]
         [FieldOffset(2)] public byte buttons1;
-        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 0)]
-        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 1)]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 0, synthetic = true)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 1, synthetic = true)]
         [InputControl(name = "leftShoulder", bit = 2)]
         [InputControl(name = "rightShoulder", bit = 3)]
         [InputControl(name = "buttonNorth", displayName = "Triangle", bit = 4)]
@@ -210,9 +210,9 @@ namespace UnityEngine.InputSystem.DualShock
     [Scripting.Preserve]
     public class DualShock4GamepadHID : DualShockGamepad
     {
-        public ButtonControl leftTriggerButton { get; private set; }
-        public ButtonControl rightTriggerButton { get; private set; }
-        public ButtonControl playStationButton { get; private set; }
+        public ButtonControl leftTriggerButton { get; protected set; }
+        public ButtonControl rightTriggerButton { get; protected set; }
+        public ButtonControl playStationButton { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -269,6 +269,8 @@ namespace UnityEngine.InputSystem.DualShock
             ExecuteCommand(ref command);
         }
 
+        ////FIXME: SetLightBarColor and SetMotorSpeeds to not mutually respect their settings
+
         public override void SetLightBarColor(Color color)
         {
             var command = DualShockHIDOutputReport.Create();
@@ -295,7 +297,7 @@ namespace UnityEngine.InputSystem.DualShock
         private Color? m_LightBarColor;
     }
 
-    [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true)]
+    [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true, displayName = "PS3 Controller")]
     [Scripting.Preserve]
     public class DualShock3GamepadHID : DualShockGamepad
     {

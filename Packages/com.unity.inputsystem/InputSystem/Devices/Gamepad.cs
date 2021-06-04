@@ -34,33 +34,13 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC Format => new FourCC('G', 'P', 'A', 'D');
 
-        // On consoles, we use the platform defaults as the gamepad-wide default names.
-        #if UNITY_XBOX_ONE || UNITY_SWITCH
-        internal const string ButtonSouthDisplayName = "A";
-        internal const string ButtonNorthDisplayName = "Y";
-        internal const string ButtonWestDisplayName = "B";
-        internal const string ButtonEastDisplayName = "X";
-
-        internal const string ButtonSouthShortDisplayName = "A";
-        internal const string ButtonNorthShortDisplayName = "Y";
-        internal const string ButtonWestShortDisplayName = "X";
-        internal const string ButtonEastShortDisplayName = "B";
-        #elif UNITY_PS4
-        internal const string ButtonSouthDisplayName = "Cross";
-        internal const string ButtonNorthDisplayName = "Triangle";
-        internal const string ButtonWestDisplayName = "Square";
-        internal const string ButtonEastDisplayName = "Circle";
-
+        // On Sony consoles, we use the platform defaults as the gamepad-wide short default names.
+        #if UNITY_PS4 || UNITY_PS5
         internal const string ButtonSouthShortDisplayName = "Cross";
         internal const string ButtonNorthShortDisplayName = "Triangle";
         internal const string ButtonWestShortDisplayName = "Square";
         internal const string ButtonEastShortDisplayName = "East";
         #else
-        internal const string ButtonSouthDisplayName = "Button South";
-        internal const string ButtonNorthDisplayName = "Button North";
-        internal const string ButtonWestDisplayName = "Button West";
-        internal const string ButtonEastDisplayName = "Button East";
-
         internal const string ButtonSouthShortDisplayName = "A";
         internal const string ButtonNorthShortDisplayName = "Y";
         internal const string ButtonWestShortDisplayName = "X";
@@ -84,10 +64,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="Gamepad.rightStickButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad", format = "BIT", sizeInBits = 4, bit = 0)]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = ButtonSouthDisplayName, shortDisplayName = ButtonSouthShortDisplayName)]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = ButtonWestDisplayName, shortDisplayName = ButtonWestShortDisplayName)]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = ButtonNorthDisplayName, shortDisplayName = ButtonNorthShortDisplayName)]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = ButtonEastDisplayName, shortDisplayName = ButtonEastShortDisplayName)]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = ButtonSouthShortDisplayName)]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = ButtonWestShortDisplayName)]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = ButtonNorthShortDisplayName)]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = ButtonEastShortDisplayName)]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
@@ -158,7 +138,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
             foreach (var button in buttons)
             {
-                var bit = (uint)1 << (int)button;
+                Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+                var bit = 1U << (int)button;
                 this.buttons |= bit;
             }
         }
@@ -172,7 +153,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>GamepadState with a modified <see cref="buttons"/> mask.</returns>
         public GamepadState WithButton(GamepadButton button, bool value = true)
         {
-            var bit = (uint)1 << (int)button;
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (value)
                 buttons |= bit;
             else
@@ -394,7 +376,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="xButton"/>
         /// <seealso cref="squareButton"/>
-        public ButtonControl buttonWest { get; private set; }
+        public ButtonControl buttonWest { get; protected set; }
 
         /// <summary>
         /// The top face button of the gamepad.
@@ -406,7 +388,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="yButton"/>
         /// <seealso cref="triangleButton"/>
-        public ButtonControl buttonNorth { get; private set; }
+        public ButtonControl buttonNorth { get; protected set; }
 
         /// <summary>
         /// The bottom face button of the gamepad.
@@ -418,7 +400,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="aButton"/>
         /// <seealso cref="crossButton"/>
-        public ButtonControl buttonSouth { get; private set; }
+        public ButtonControl buttonSouth { get; protected set; }
 
         /// <summary>
         /// The right face button of the gamepad.
@@ -430,39 +412,39 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="bButton"/>
         /// <seealso cref="circleButton"/>
-        public ButtonControl buttonEast { get; private set; }
+        public ButtonControl buttonEast { get; protected set; }
 
         /// <summary>
         /// The button that gets triggered when <see cref="leftStick"/> is pressed down.
         /// </summary>
         /// <value>Control representing a click with the left stick.</value>
-        public ButtonControl leftStickButton { get; private set; }
+        public ButtonControl leftStickButton { get; protected set; }
 
         /// <summary>
         /// The button that gets triggered when <see cref="rightStick"/> is pressed down.
         /// </summary>
         /// <value>Control representing a click with the right stick.</value>
-        public ButtonControl rightStickButton { get; private set; }
+        public ButtonControl rightStickButton { get; protected set; }
 
         /// <summary>
         /// The right button in the middle section of the gamepad (called "menu" on Xbox
         /// controllers and "options" on PS4 controllers).
         /// </summary>
         /// <value>Control representing the right button in midsection.</value>
-        public ButtonControl startButton { get; private set; }
+        public ButtonControl startButton { get; protected set; }
 
         /// <summary>
         /// The left button in the middle section of the gamepad (called "view" on Xbox
         /// controllers and "share" on PS4 controllers).
         /// </summary>
         /// <value>Control representing the left button in midsection.</value>
-        public ButtonControl selectButton { get; private set; }
+        public ButtonControl selectButton { get; protected set; }
 
         /// <summary>
         /// The 4-way directional pad on the gamepad.
         /// </summary>
         /// <value>Control representing the d-pad.</value>
-        public DpadControl dpad { get; private set; }
+        public DpadControl dpad { get; protected set; }
 
         /// <summary>
         /// The left shoulder/bumper button that sits on top of <see cref="leftTrigger"/>.
@@ -472,7 +454,7 @@ namespace UnityEngine.InputSystem
         /// On Xbox controllers, this is usually called "left bumper" whereas on PS4
         /// controllers, this button is referred to as "L1".
         /// </remarks>
-        public ButtonControl leftShoulder { get; private set; }
+        public ButtonControl leftShoulder { get; protected set; }
 
         /// <summary>
         /// The right shoulder/bumper button that sits on top of <see cref="rightTrigger"/>.
@@ -482,19 +464,19 @@ namespace UnityEngine.InputSystem
         /// On Xbox controllers, this is usually called "right bumper" whereas on PS4
         /// controllers, this button is referred to as "R1".
         /// </remarks>
-        public ButtonControl rightShoulder { get; private set; }
+        public ButtonControl rightShoulder { get; protected set; }
 
         /// <summary>
         /// The left thumbstick on the gamepad.
         /// </summary>
         /// <value>Control representing the left thumbstick.</value>
-        public StickControl leftStick { get; private set; }
+        public StickControl leftStick { get; protected set; }
 
         /// <summary>
         /// The right thumbstick on the gamepad.
         /// </summary>
         /// <value>Control representing the right thumbstick.</value>
-        public StickControl rightStick { get; private set; }
+        public StickControl rightStick { get; protected set; }
 
         /// <summary>
         /// The left trigger button sitting below <see cref="leftShoulder"/>.
@@ -503,7 +485,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// On PS4 controllers, this button is referred to as "L2".
         /// </remarks>
-        public ButtonControl leftTrigger { get; private set; }
+        public ButtonControl leftTrigger { get; protected set; }
 
         /// <summary>
         /// The right trigger button sitting below <see cref="rightShoulder"/>.
@@ -512,7 +494,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// On PS4 controllers, this button is referred to as "R2".
         /// </remarks>
-        public ButtonControl rightTrigger { get; private set; }
+        public ButtonControl rightTrigger { get; protected set; }
 
         /// <summary>
         /// Same as <see cref="buttonSouth"/>. Xbox-style alias.
@@ -567,7 +549,7 @@ namespace UnityEngine.InputSystem
         /// constant.
         /// </summary>
         /// <param name="button">Button to retrieve.</param>
-        /// <exception cref="InvalidEnumArgumentException"><paramref name="button"/> is not a valid gamepad
+        /// <exception cref="ArgumentException"><paramref name="button"/> is not a valid gamepad
         /// button value.</exception>
         public ButtonControl this[GamepadButton button]
         {
@@ -601,8 +583,18 @@ namespace UnityEngine.InputSystem
         /// The gamepad last used/connected by the player or <c>null</c> if there is no gamepad connected
         /// to the system.
         /// </summary>
+        /// <remarks>
+        /// When added, a device is automatically made current (see <see cref="InputDevice.MakeCurrent"/>), so
+        /// when connecting a gamepad, it will also become current. After that, it will only become current again
+        /// when input on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
+        ///
+        /// For local multiplayer scenarios (or whenever there are multiple gamepads that need to be usable
+        /// in a concurrent fashion), it is not recommended to rely on this property. Instead, it is recommended
+        /// to use <see cref="PlayerInput"/> or <see cref="Users.InputUser"/>.
+        /// </remarks>
         /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="InputDevice.MakeCurrent"/>
+        /// <seealso cref="all"/>
         public static Gamepad current { get; private set; }
 
         /// <summary>
@@ -616,6 +608,7 @@ namespace UnityEngine.InputSystem
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
         /// </remarks>
+        /// <seealso cref="current"/>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
         /// <inheritdoc />
@@ -682,8 +675,7 @@ namespace UnityEngine.InputSystem
             else
             {
                 Debug.Assert(false,
-                    string.Format("Gamepad {0} seems to not have been added but is being removed (gamepad list: {1})",
-                        this, string.Join(", ", all))); // Put in else to not allocate on normal path.
+                    $"Gamepad {this} seems to not have been added but is being removed (gamepad list: {string.Join(", ", all)})"); // Put in else to not allocate on normal path.
             }
         }
 

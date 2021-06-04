@@ -1,5 +1,15 @@
 # Layouts
 
+* [Layout formats](#layout-formats)
+  * [Layout from type](#layout-from-type)
+  * [Layout from JSON](#layout-from-json)
+  * [Generated layouts](#generated-layouts)
+* [Layout inheritance](#layout-inheritance)
+* [Control items](#control-items)
+* [Layout overrides](#layout-overrides)
+* [Precompiled layouts](#precompiled-layouts)
+  * [Creating a precompiled layout](#creating-a-precompiled-layout)
+
 Layouts are the central mechanism by which the Input System learns about types of Input Devices and Input Controls. Each layout represents a specific composition of Input Controls. By matching the description of a Device to a layout, the Input System is able to create the correct type of Device and interpret the incoming input data correctly.
 
 >__Note__: Layouts are an advanced, mostly internal feature of the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
@@ -174,7 +184,7 @@ The same layout as above looks like this in JSON format:
 }
 ```
 
-### Layout builders
+### Generated layouts
 
 Finally, the Input System can also build layouts on the fly in code. This is useful for Device interfaces such as [HID](HID.md) that supply descriptive information for each Device.
 
@@ -295,3 +305,97 @@ const string json = @"
 
 InputSystem.RegisterLayoutOverride(json);
 ```
+
+## Precompiled layouts
+
+Building a device at runtime from an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) is a slow process. The layout instance itself has to be built (which might involve reflection) and then interpreted in order to put the final [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance together. This process usually involves the loading of multiple [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) instances, each of which might be the result of merging multiple layouts together (if the layout involves [inheritance](#layout-inheritance) or [overrides](#layout-overrides)).
+
+You can speed up this process up by "baking" the final form of a layout into a "precompiled layout". A precompiled layout is generated C# code that, when run, will build the corresponding device without relying on loading and interpreting an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html). Aside from running faster, this will also create far less garbage and will not involve C# reflection (which generally causes runtime overhead by inflating the number of objects internally kept by the C# runtime).
+
+>__NOTE__: Precompiled layouts must be device layouts. It is not possible to precompile the layout for an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html).
+
+### Creating a precompiled layout
+
+The first step in setting up a precompiled layout is to generate it. To do so, open the [Input Debugger](./Debugging.md), navigate to the layout you want to precompile within the **Layouts** branch, right-click it, and select **Generate Precompiled Layout**.
+
+![Generate Precompiled Layout](./Images/GeneratePrecompiledLayout.png)
+
+Unity will ask you where to store the generated code. Pick a directory in your project, enter a file name, and click **Save**.
+
+ Once generated, you can register the precompiled layout with the Input System using [`InputSystem.RegisterPrecompiledLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterPrecompiledLayout__1_System_String_). The method expects a string argument containing metadata for the precompiled layout. This string is automatically emitted as a `const` inside the generated class.
+
+ ```CSharp
+ InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);
+ ```
+
+>__IMPORTANT__: It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.
+
+Once registered, a precompiled layout is automatically used whenever the layout that the precompiled layout is based on is instantiated.
+
+```CSharp
+// Let's assume you have a custom device class.
+public class MyDevice : InputDevice
+{
+    // Setters for your control getters need to have at least `protected`
+    // or `internal` access so the precompiled version can use them.
+    [InputControl]
+    public ButtonControl button { get; protected set; }
+
+    // This method will *NOT* be invoked by the precompiled version. Instead, all the lookups
+    // performed here will get hardcoded into the generated C# code.
+    protected override void FinishSetup()
+    {
+        base.FinishSetup();
+
+        button = GetChildControl<ButtonControl>("button1");
+    }
+}
+
+// You register the device as a layout somewhere during startup.
+InputSystem.RegisterLayout<MyDevice>();
+
+// And you register a precompiled version of it then as well.
+InputSystem.RegisterPrecompiledLayout<PrecompiledMyDevice>(PrecompiledMyDevice.metadata);
+
+// Then the following will implicitly use the precompiled version.
+InputSystem.AddDevice<MyDevice>();
+```
+
+A precompiled layout will automatically be unregistered in the following cases:
+
+* A [layout override](#layout-overrides) is applied to one of the layouts used by the precompiled Device. This also extends to [controls](Controls.md) used by the Device.
+* A layout with the same name as one of the layouts used by the precompiled Device is registered (which replaces the layout already registered under the name).
+* A [processor](Processors.md) is registered that replaces a processor used by the precompiled Device.
+
+This causes the Input System to fall back to the non-precompiled version of the layout. Note also that a precompiled layout will not be used for layouts [derived](#layout-inheritance) from the layout the precompiled version is based on. In the example above, if someone derives a new layout from `MyDevice`, the precompiled version is unaffected (it will not be unregistered) but is also not used for the newly created type of device.
+
+```CSharp
+// Let's constinue from the example above and assume that sometime
+// later, someone replaces the built-in button with an extended version.
+InputSystem.RegisterLayout<ExtendedButtonControl>("Button");
+
+// PrecompiledMyDevice has implicitly been removed now, because the ButtonControl it uses
+// has now been replaced with ExtendedButtonControl.
+```
+
+If needed, you can add `#if` checks to the generated code, if needed. The code generator will scan the start of an existing file for a line starting with `#if` and, if found, preserve it in newly generated code and generate a corresponding `#endif` at the end of the file. Similarly, you can change the generated class from `public` to `internal` and the modifier will be preserved when regenerating the class. Finally, you can also modify the namespace in the generated file with the change being preserved.
+
+The generated class is marked as `partial`, which means you can add additional overloads and other code by  having a parallel, `partial` class definition.
+
+```CSharp
+// The next line will be preserved when regenerating the precompiled layout. A
+// corresponding #endif will be emitted at the end of the file.
+#if UNITY_EDITOR || UNITY_STANDALONE
+
+// If you change the namespace to a different one, the name of the namespace will be
+// preserved when you regenerate the precompiled layout.
+namepace MyNamespace
+{
+    // If you change `public` to `internal`, the change will be preserved
+    // when regenerating the precompiled layout.
+    public partial class PrecompiledMyDevice : MyDevice
+    {
+        //...
+```
+
+The namespace of the generated layout will correspond to the

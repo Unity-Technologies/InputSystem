@@ -57,7 +57,8 @@ namespace UnityEngine.InputSystem.Controls
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            var intValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+            // Note that all signed data in state buffers is in excess-K format.
+            var intValue = MemoryHelpers.ReadTwosComplementMultipleBitsAsInt(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
 
             var value = 0.0f;
             if (minValue > maxValue)
@@ -81,7 +82,9 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
-            throw new NotImplementedException();
+            // Also, the way these controls are usually used, the state is shared between multiple DiscreteButtons. So writing one
+            // may have unpredictable effects on the value of other buttons.
+            throw new NotSupportedException("Writing value states for DiscreteButtonControl is not supported as a single value may correspond to multiple states");
         }
     }
 }

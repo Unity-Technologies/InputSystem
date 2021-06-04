@@ -80,7 +80,7 @@ Use [`InputSystem.settings.compensateForScreenOrientation`](../api/UnityEngine.I
 
 ### [`UnityEngine.Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)
 
-Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_Vector2_).
+Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_UnityEngine_Vector2_).
 
 ### [`UnityEngine.Input.compositionString`](https://docs.unity3d.com/ScriptReference/Input-compositionString.html)
 
@@ -345,21 +345,30 @@ Not directly applicable. You can use [`InputControl<>.ReadUnprocessedValue()`](.
 
 ### [`UnityEngine.Input.GetButton`](https://docs.unity3d.com/ScriptReference/Input.GetButton.html)
 
-See [`UnityEngine.Input.GetAxis`](#getAxis) for how to set up a Binding to a button or axis.
+Use [`InputAction.IsPressed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed_).
 
-You can also use [`ButtonControl.isPressed`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_isPressed) to detect if a button Control is pressed directly without using Bindings.
+```CSharp
+if (playerInput.actions["fire"].IsPressed() && Time.time - m_LastFireTime >= kFireRate)
+    Fire();
+```
 
 ### [`UnityEngine.input.GetButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetButtonDown.html)
 
-See [`UnityEngine.Input.GetAxis`](#getAxis) for how to set up a Binding to a button or axis. You can use the [press Interaction](Interactions.md#press) to detect when a button is pressed.
+Use [`InputAction.WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_).
 
-You can also use [`ButtonControl.wasPressedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame) to detect if a button Control was pressed down this frame directly without using Bindings.
+```CSharp
+if (playerInput.actions["fire"].WasPressedThisFrame())
+    Fire();
+```
 
 ### [`UnityEngine.input.GetButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetButtonUp.html)
 
-See [`UnityEngine.Input.GetAxis`](#getAxis) for how to set up a Binding to a button or axis. You can use the [press Interaction](Interactions.md#press) with a `Release Only` trigger to detect when a button is released.
+Use [`InputAction.WasReleasedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame_).
 
-You can also use [`ButtonControl.wasReleasedThisFrame`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasReleasedThisFrame) to detect if a button Control was released this frame directly without using Bindings.
+```CSharp
+if (playerInput.actions["fire"].WasReleasedThisFrame())
+    StopFiring();
+```
 
 ### [`UnityEngine.Input.GetJoystickNames`](https://docs.unity3d.com/ScriptReference/Input.GetJoystickNames.html)
 

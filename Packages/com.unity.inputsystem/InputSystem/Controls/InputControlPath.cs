@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -318,10 +319,8 @@ namespace UnityEngine.InputSystem
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.usages != null && parser.current.usages.Length > 0)
-            {
-                return Array.ConvertAll(parser.current.usages, i => { return i.ToString(); });
-            }
+            if (parser.current.m_Usages.length > 0)
+                return parser.current.m_Usages.ToArray(x => x.ToString());
 
             return null;
         }
@@ -356,8 +355,8 @@ namespace UnityEngine.InputSystem
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.layout.length > 0)
-                return parser.current.layout.ToString();
+            if (parser.current.m_Layout.length > 0)
+                return parser.current.m_Layout.ToString();
 
             if (parser.current.isWildcard)
                 return Wildcard;
@@ -401,10 +400,10 @@ namespace UnityEngine.InputSystem
             if (parser.current.isWildcard)
                 throw new NotImplementedException();
 
-            if (parser.current.layout.length == 0)
+            if (parser.current.m_Layout.length == 0)
                 return null;
 
-            var deviceLayoutName = parser.current.layout.ToString();
+            var deviceLayoutName = parser.current.m_Layout.ToString();
             if (!parser.MoveToNextComponent())
                 return null; // No control component.
 
@@ -436,9 +435,6 @@ namespace UnityEngine.InputSystem
             var controlCount = layout.controls.Count;
             for (var i = 0; i < controlCount; ++i)
             {
-                if (layout.m_Controls[i].isModifyingExistingControl)
-                    throw new NotImplementedException();
-
                 ////TODO: shortcut the search if we have a match and there's no wildcards to consider
 
                 // Skip control layout if it doesn't match.
@@ -475,7 +471,7 @@ namespace UnityEngine.InputSystem
         private static bool ControlLayoutMatchesPathComponent(ref InputControlLayout.ControlItem controlItem, ref PathParser parser)
         {
             // Match layout.
-            var layout = parser.current.layout;
+            var layout = parser.current.m_Layout;
             if (layout.length > 0)
             {
                 if (!StringMatches(layout, controlItem.layout))
@@ -483,12 +479,12 @@ namespace UnityEngine.InputSystem
             }
 
             // Match usage.
-            if (parser.current.usages != null)
+            if (parser.current.m_Usages.length > 0)
             {
                 // All of usages should match to the one of usage in the control
-                for (int usageIndex = 0; usageIndex < parser.current.usages.Length; ++usageIndex)
+                for (int usageIndex = 0; usageIndex < parser.current.m_Usages.length; ++usageIndex)
                 {
-                    var usage = parser.current.usages[usageIndex];
+                    var usage = parser.current.m_Usages[usageIndex];
 
                     if (usage.length > 0)
                     {
@@ -510,7 +506,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Match name.
-            var name = parser.current.name;
+            var name = parser.current.m_Name;
             if (name.length > 0)
             {
                 if (!StringMatches(name, controlItem.name))
@@ -739,28 +735,24 @@ namespace UnityEngine.InputSystem
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
 
-            ////REVIEW: this can probably be done more efficiently
-            for (var current = control; current != null; current = current.parent)
-            {
-                var parser = new PathParser(expected);
-                if (MatchesRecursive(ref parser, current) && parser.isAtEnd)
-                    return true;
-            }
+            var parser = new PathParser(expected);
+            if (MatchesRecursive(ref parser, control, prefixOnly: true) && parser.isAtEnd)
+                return true;
 
             return false;
         }
 
-        private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl)
+        private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl, bool prefixOnly = false)
         {
             // Recurse into parent before looking at the current control. This
             // will advance the parser to where our control is in the path.
             var parent = currentControl.parent;
-            if (parent != null && !MatchesRecursive(ref parser, parent))
+            if (parent != null && !MatchesRecursive(ref parser, parent, prefixOnly))
                 return false;
 
-            // Fail if there's no more path left.
+            // Stop if there's no more path left.
             if (!parser.MoveToNextComponent())
-                return false;
+                return prefixOnly; // Failure if we match full path, success if we match prefix only.
 
             // Match current path component against current control.
             return parser.current.Matches(currentControl);
@@ -1102,7 +1094,8 @@ namespace UnityEngine.InputSystem
                     return false;
                 }
 
-                if (char.ToLower(component[indexInComponent]) == char.ToLower(nextCharInPath))
+                var charInComponent = component[indexInComponent];
+                if (charInComponent == nextCharInPath || char.ToLower(charInComponent) == char.ToLower(nextCharInPath))
                 {
                     ++indexInComponent;
                     ++indexInPath;
@@ -1132,18 +1125,62 @@ namespace UnityEngine.InputSystem
             return path.IndexOf('*', indexInPath, length) != -1 || path.IndexOf('<', indexInPath, length) != -1;
         }
 
-        // Parsed element between two '/../'.
-        internal struct ParsedPathComponent
+        /// <summary>
+        /// A single component of a parsed control path as returned by <see cref="Parse"/>. For example, in the
+        /// control path <c>"&lt;Gamepad&gt;/buttonSouth"</c>, there are two parts: <c>"&lt;Gamepad&gt;"</c>
+        /// and <c>"buttonSouth"</c>.
+        /// </summary>
+        /// <seealso cref="Parse"/>
+        public struct ParsedPathComponent
         {
-            public Substring layout;
-            public Substring[] usages;
-            public Substring name;
-            public Substring displayName;
+            // Accessing these means no allocations (except when there are multiple usages).
+            internal Substring m_Layout;
+            internal InlinedArray<Substring> m_Usages;
+            internal Substring m_Name;
+            internal Substring m_DisplayName;
 
-            public bool isWildcard => name == Wildcard;
-            public bool isDoubleWildcard => name == DoubleWildcard;
+            /// <summary>
+            /// Name of the layout (the part between '&lt;' and '&gt;') referenced in the component or <c>null</c> if no layout
+            /// is specified. In <c>"&lt;Gamepad&gt;/buttonSouth"</c> the first component will return
+            /// <c>"Gamepad"</c> from this property and the second component will return <c>null</c>.
+            /// </summary>
+            /// <seealso cref="InputControlLayout"/>
+            /// <seealso cref="InputSystem.LoadLayout"/>
+            /// <seealso cref="InputControl.layout"/>
+            public string layout => m_Layout.ToString();
 
-            public string ToHumanReadableString(string parentLayoutName, string parentControlPath, out string referencedLayoutName,
+            /// <summary>
+            /// List of device or control usages (the part between '{' and '}') referenced in the component or an empty
+            /// enumeration. In <c>"&lt;XRController&gt;{RightHand}/trigger"</c>, for example, the
+            /// first component will have a single element <c>"RightHand"</c> in the enumeration
+            /// and the second component will have an empty enumeration.
+            /// </summary>
+            /// <seealso cref="InputControl.usages"/>
+            /// <seealso cref="InputSystem.AddDeviceUsage(InputDevice,string)"/>
+            public IEnumerable<string> usages => m_Usages.Select(x => x.ToString());
+
+            /// <summary>
+            /// Name of the device or control referenced in the component or <c>null</c> In
+            /// <c>"&lt;Gamepad&gt;/buttonSouth"</c>, for example, the first component will
+            /// have a <c>null</c> name and the second component will have <c>"buttonSouth"</c>
+            /// in the name.
+            /// </summary>
+            /// <seealso cref="InputControl.name"/>
+            public string name => m_Name.ToString();
+
+            /// <summary>
+            /// Display name of the device or control (the part inside of '#(...)') referenced in the component
+            /// or <c>null</c>. In <c>"&lt;Keyboard&gt;/#(*)"</c>, for example, the first component will
+            /// have a null displayName and the second component will have a displayName of <c>"*"</c>.
+            /// </summary>
+            /// <seealso cref="InputControl.displayName"/>
+            public string displayName => m_DisplayName.ToString();
+
+            ////REVIEW: This one isn't well-designed enough yet to be exposed. And double-wildcards are not yet supported.
+            internal bool isWildcard => m_Name == Wildcard;
+            internal bool isDoubleWildcard => m_Name == DoubleWildcard;
+
+            internal string ToHumanReadableString(string parentLayoutName, string parentControlPath, out string referencedLayoutName,
                 out string controlPath, HumanReadableStringOptions options)
             {
                 referencedLayoutName = null;
@@ -1153,19 +1190,19 @@ namespace UnityEngine.InputSystem
                 if (isWildcard)
                     result += "Any";
 
-                if (usages != null)
+                if (m_Usages.length > 0)
                 {
                     var combinedUsages = string.Empty;
 
-                    for (var i = 0; i < usages.Length; ++i)
+                    for (var i = 0; i < m_Usages.length; ++i)
                     {
-                        if (usages[i].isEmpty)
+                        if (m_Usages[i].isEmpty)
                             continue;
 
                         if (combinedUsages != string.Empty)
-                            combinedUsages += " & " + ToHumanReadableString(usages[i]);
+                            combinedUsages += " & " + ToHumanReadableString(m_Usages[i]);
                         else
-                            combinedUsages = ToHumanReadableString(usages[i]);
+                            combinedUsages = ToHumanReadableString(m_Usages[i]);
                     }
                     if (combinedUsages != string.Empty)
                     {
@@ -1176,9 +1213,9 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                if (!layout.isEmpty)
+                if (!m_Layout.isEmpty)
                 {
-                    referencedLayoutName = layout.ToString();
+                    referencedLayoutName = m_Layout.ToString();
 
                     // Where possible, use the displayName of the given layout rather than
                     // just the internal layout name.
@@ -1187,7 +1224,7 @@ namespace UnityEngine.InputSystem
                     if (referencedLayout != null && !string.IsNullOrEmpty(referencedLayout.m_DisplayName))
                         layoutString = referencedLayout.m_DisplayName;
                     else
-                        layoutString = ToHumanReadableString(layout);
+                        layoutString = ToHumanReadableString(m_Layout);
 
                     if (!string.IsNullOrEmpty(result))
                         result += ' ' + layoutString;
@@ -1195,7 +1232,7 @@ namespace UnityEngine.InputSystem
                         result += layoutString;
                 }
 
-                if (!name.isEmpty && !isWildcard)
+                if (!m_Name.isEmpty && !isWildcard)
                 {
                     // If we have a layout from a preceding path component, try to find
                     // the control by name on the layout. If we find it, use its display
@@ -1209,7 +1246,7 @@ namespace UnityEngine.InputSystem
                             InputControlLayout.cache.FindOrLoadLayout(new InternedString(parentLayoutName), throwIfNotFound: false);
                         if (parentLayout != null)
                         {
-                            var controlName = new InternedString(name.ToString());
+                            var controlName = new InternedString(m_Name.ToString());
                             var control = parentLayout.FindControlIncludingArrayElements(controlName, out var arrayIndex);
                             if (control != null)
                             {
@@ -1256,7 +1293,7 @@ namespace UnityEngine.InputSystem
                     }
 
                     if (nameString == null)
-                        nameString = ToHumanReadableString(name);
+                        nameString = ToHumanReadableString(m_Name);
 
                     if (!string.IsNullOrEmpty(result))
                         result += ' ' + nameString;
@@ -1264,9 +1301,9 @@ namespace UnityEngine.InputSystem
                         result += nameString;
                 }
 
-                if (!displayName.isEmpty)
+                if (!m_DisplayName.isEmpty)
                 {
-                    var str = $"\"{ToHumanReadableString(displayName)}\"";
+                    var str = $"\"{ToHumanReadableString(m_DisplayName)}\"";
                     if (!string.IsNullOrEmpty(result))
                         result += ' ' + str;
                     else
@@ -1285,23 +1322,23 @@ namespace UnityEngine.InputSystem
             /// Whether the given control matches the constraints of this path component.
             /// </summary>
             /// <param name="control">Control to match against the path spec.</param>
-            /// <returns></returns>
+            /// <returns>True if <paramref name="control"/> matches the constraints.</returns>
             public bool Matches(InputControl control)
             {
                 // Match layout.
-                if (!layout.isEmpty)
+                if (!m_Layout.isEmpty)
                 {
                     // Check for direct match.
-                    var layoutMatches = Substring.Compare(layout, control.layout,
-                        StringComparison.InvariantCultureIgnoreCase) == 0;
+                    var layoutMatches = Substring.Compare(m_Layout, control.layout,
+                        StringComparison.OrdinalIgnoreCase) == 0;
                     if (!layoutMatches)
                     {
                         // No direct match but base layout may match.
                         var baseLayout = control.m_Layout;
                         while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout) && !layoutMatches)
                         {
-                            layoutMatches = Substring.Compare(layout, baseLayout.ToString(),
-                                StringComparison.InvariantCultureIgnoreCase) == 0;
+                            layoutMatches = Substring.Compare(m_Layout, baseLayout.ToString(),
+                                StringComparison.OrdinalIgnoreCase) == 0;
                         }
                     }
 
@@ -1310,16 +1347,16 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Match usage.
-                if (usages != null)
+                if (m_Usages.length > 0)
                 {
-                    for (int i = 0; i < usages.Length; ++i)
+                    for (var i = 0; i < m_Usages.length; ++i)
                     {
-                        if (!usages[i].isEmpty)
+                        if (!m_Usages[i].isEmpty)
                         {
                             var controlUsages = control.usages;
                             var haveUsageMatch = false;
                             for (var ci = 0; ci < controlUsages.Count; ++ci)
-                                if (Substring.Compare(controlUsages[ci].ToString(), usages[i], StringComparison.InvariantCultureIgnoreCase) == 0)
+                                if (Substring.Compare(controlUsages[ci].ToString(), m_Usages[i], StringComparison.OrdinalIgnoreCase) == 0)
                                 {
                                     haveUsageMatch = true;
                                     break;
@@ -1332,18 +1369,18 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Match name.
-                if (!name.isEmpty && !isWildcard)
+                if (!m_Name.isEmpty && !isWildcard)
                 {
                     ////FIXME: unlike the matching path we have in MatchControlsRecursive, this does not take aliases into account
-                    if (Substring.Compare(control.name, name, StringComparison.InvariantCultureIgnoreCase) != 0)
+                    if (Substring.Compare(control.name, m_Name, StringComparison.OrdinalIgnoreCase) != 0)
                         return false;
                 }
 
                 // Match display name.
-                if (!displayName.isEmpty)
+                if (!m_DisplayName.isEmpty)
                 {
-                    if (Substring.Compare(control.displayName, displayName,
-                        StringComparison.InvariantCultureIgnoreCase) != 0)
+                    if (Substring.Compare(control.displayName, m_DisplayName,
+                        StringComparison.OrdinalIgnoreCase) != 0)
                         return false;
                 }
 
@@ -1351,15 +1388,56 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        ////TODO: expose PathParser
+        /// <summary>
+        /// Splits a control path into its separate components.
+        /// </summary>
+        /// <param name="path">A control path such as <c>"&lt;Gamepad&gt;/buttonSouth"</c>.</param>
+        /// <returns>An enumeration of the parsed components. The enumeration is empty if the given
+        /// <paramref name="path"/> is empty.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// You can use this method, for example, to separate out the components in a binding's <see cref="InputBinding.path"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var parsed = InputControlPath.Parse("&lt;XRController&gt;{LeftHand}/trigger").ToArray();
+        ///
+        /// Debug.Log(parsed.Length); // Prints 2.
+        /// Debug.Log(parsed[0].layout); // Prints "XRController".
+        /// Debug.Log(parsed[0].name); // Prints an empty string.
+        /// Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
+        /// Debug.Log(parsed[1].layout); // Prints null.
+        /// Debug.Log(parsed[1].name); // Prints "trigger".
+        ///
+        /// // Find out if the given device layout is based on "TrackedDevice".
+        /// Debug.Log(InputSystem.IsFirstLayoutBasedOnSecond(parsed[0].layout, "TrackedDevice")); // Prints true.
+        ///
+        /// // Load the device layout referenced by the path.
+        /// var layout = InputSystem.LoadLayout(parsed[0].layout);
+        /// Debug.Log(layout.baseLayouts.First()); // Prints "TrackedDevice".
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.path"/>
+        /// <seealso cref="InputSystem.FindControl"/>
+        public static IEnumerable<ParsedPathComponent> Parse(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            var parser = new PathParser(path);
+            while (parser.MoveToNextComponent())
+                yield return parser.current;
+        }
 
         // NOTE: Must not allocate!
-        internal struct PathParser
+        private struct PathParser
         {
-            public string path;
-            public int length;
-            public int leftIndexInPath;
-            public int rightIndexInPath; // Points either to a '/' character or one past the end of the path string.
+            private string path;
+            private int length;
+            private int leftIndexInPath;
+            private int rightIndexInPath; // Points either to a '/' character or one past the end of the path string.
+
             public ParsedPathComponent current;
 
             public bool isAtEnd => rightIndexInPath == length;
@@ -1399,10 +1477,12 @@ namespace UnityEngine.InputSystem
                 if (rightIndexInPath < length && path[rightIndexInPath] == '<')
                     layout = ParseComponentPart('>');
 
+                ////FIXME: with multiple usages, this will allocate
+                ////FIXME: Why the heck is this allocating? Should not allocate here! Worse yet, we do ToArray() down there.
                 // Parse {...} usage part, if present.
-                var usages = new List<Substring>();
+                var usages = new InlinedArray<Substring>();
                 while (rightIndexInPath < length && path[rightIndexInPath] == '{')
-                    usages.Add(ParseComponentPart('}'));
+                    usages.AppendWithCapacity(ParseComponentPart('}'));
 
                 // Parse display name part, if present.
                 var displayName = new Substring();
@@ -1419,10 +1499,10 @@ namespace UnityEngine.InputSystem
 
                 current = new ParsedPathComponent
                 {
-                    layout = layout,
-                    usages = usages.ToArray(),
-                    name = name,
-                    displayName = displayName
+                    m_Layout = layout,
+                    m_Usages = usages,
+                    m_Name = name,
+                    m_DisplayName = displayName
                 };
 
                 return leftIndexInPath != rightIndexInPath;

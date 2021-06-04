@@ -197,6 +197,8 @@ namespace UnityEngine.InputSystem.LowLevel
             m_HeadIndex = 0;
             m_RecordCount = 0;
             ++m_CurrentVersion;
+
+            // NOTE: Won't clear controls that have been added on the fly.
         }
 
         public unsafe Record AddRecord(Record record)
@@ -323,29 +325,33 @@ namespace UnityEngine.InputSystem.LowLevel
                 NativeArrayOptions.UninitializedMemory);
         }
 
-        protected int RecordIndexToUserIndex(int index)
+        protected internal int RecordIndexToUserIndex(int index)
         {
             if (index < m_HeadIndex)
-                return m_HistoryDepth - m_HeadIndex + index; // 10 - 3 + 1
+                return m_HistoryDepth - m_HeadIndex + index;
             return index - m_HeadIndex;
         }
 
-        protected int UserIndexToRecordIndex(int index)
+        protected internal int UserIndexToRecordIndex(int index)
         {
             return (m_HeadIndex + index) % m_HistoryDepth;
         }
 
-        protected unsafe RecordHeader* GetRecord(int index)
+        protected internal unsafe RecordHeader* GetRecord(int index)
         {
             if (!m_RecordBuffer.IsCreated)
                 throw new InvalidOperationException("History buffer has been disposed");
             if (index < 0 || index >= m_HistoryDepth)
                 throw new ArgumentOutOfRangeException(nameof(index));
+            return GetRecordUnchecked(index);
+        }
 
+        internal unsafe RecordHeader* GetRecordUnchecked(int index)
+        {
             return (RecordHeader*)((byte*)m_RecordBuffer.GetUnsafePtr() + index * bytesPerRecord);
         }
 
-        protected unsafe RecordHeader* AllocateRecord(out int index)
+        protected internal unsafe RecordHeader* AllocateRecord(out int index)
         {
             if (!m_RecordBuffer.IsCreated)
                 Allocate();
@@ -425,8 +431,8 @@ namespace UnityEngine.InputSystem.LowLevel
         {
         }
 
-        private InputControl[] m_Controls;
-        private int m_ControlCount;
+        internal InputControl[] m_Controls;
+        internal int m_ControlCount;
         private NativeArray<byte> m_RecordBuffer;
         private int m_StateSizeInBytes;
         private int m_RecordCount;
@@ -438,11 +444,11 @@ namespace UnityEngine.InputSystem.LowLevel
         internal readonly bool m_AddNewControls;
 
         internal int bytesPerRecord =>
-            m_StateSizeInBytes +
-            m_ExtraMemoryPerRecord +
-            (m_ControlCount == 1 && !m_AddNewControls
-                ? RecordHeader.kSizeWithoutControlIndex
-                : RecordHeader.kSizeWithControlIndex);
+            (m_StateSizeInBytes +
+                m_ExtraMemoryPerRecord +
+                (m_ControlCount == 1 && !m_AddNewControls
+                    ? RecordHeader.kSizeWithoutControlIndex
+                    : RecordHeader.kSizeWithControlIndex)).AlignToMultipleOf(4);
 
         private struct Enumerator : IEnumerator<Record>
         {
@@ -603,6 +609,11 @@ namespace UnityEngine.InputSystem.LowLevel
             public void* GetUnsafeMemoryPtr()
             {
                 CheckValid();
+                return GetUnsafeMemoryPtrUnchecked();
+            }
+
+            internal void* GetUnsafeMemoryPtrUnchecked()
+            {
                 if (m_Owner.controls.Count == 1 && !m_Owner.m_AddNewControls)
                     return header->statePtrWithoutControlIndex;
                 return header->statePtrWithControlIndex;
@@ -611,6 +622,11 @@ namespace UnityEngine.InputSystem.LowLevel
             public void* GetUnsafeExtraMemoryPtr()
             {
                 CheckValid();
+                return GetUnsafeExtraMemoryPtrUnchecked();
+            }
+
+            internal void* GetUnsafeExtraMemoryPtrUnchecked()
+            {
                 if (m_Owner.extraMemoryPerRecord == 0)
                     throw new InvalidOperationException("No extra memory has been set up for history records; set extraMemoryPerRecord");
                 return (byte*)header + m_Owner.bytesPerRecord - m_Owner.extraMemoryPerRecord;
@@ -908,6 +924,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_Version = header->version;
             }
 
+            internal Record(InputStateHistory<TValue> owner, int index)
+            {
+                m_Owner = owner;
+                m_IndexPlusOne = index + 1;
+                m_Version = default;
+            }
+
             public TValue ReadValue()
             {
                 CheckValid();
@@ -917,6 +940,11 @@ namespace UnityEngine.InputSystem.LowLevel
             public void* GetUnsafeMemoryPtr()
             {
                 CheckValid();
+                return GetUnsafeMemoryPtrUnchecked();
+            }
+
+            internal void* GetUnsafeMemoryPtrUnchecked()
+            {
                 if (m_Owner.controls.Count == 1 && !m_Owner.m_AddNewControls)
                     return header->statePtrWithoutControlIndex;
                 return header->statePtrWithControlIndex;
@@ -925,6 +953,11 @@ namespace UnityEngine.InputSystem.LowLevel
             public void* GetUnsafeExtraMemoryPtr()
             {
                 CheckValid();
+                return GetUnsafeExtraMemoryPtrUnchecked();
+            }
+
+            internal void* GetUnsafeExtraMemoryPtrUnchecked()
+            {
                 if (m_Owner.extraMemoryPerRecord == 0)
                     throw new InvalidOperationException("No extra memory has been set up for history records; set extraMemoryPerRecord");
                 return (byte*)header + m_Owner.bytesPerRecord - m_Owner.extraMemoryPerRecord;

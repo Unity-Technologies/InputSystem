@@ -1,6 +1,9 @@
+using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
+
+////TODO: remove this once we can break the API
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -10,7 +13,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </summary>
     /// <remarks>
     /// This composite can be used to require two other buttons to be held while
-    /// pressing the button that triggers the action. This is most commonly used
+    /// using the control that triggers the action. This is most commonly used
     /// on keyboards to require two of the modifier keys (shift, ctrl, or alt)
     /// to be held in combination with another key, e.g. "CTRL+SHIFT+1".
     ///
@@ -19,7 +22,7 @@ namespace UnityEngine.InputSystem.Composites
     /// // Create a button action that triggers when CTRL+SHIFT+1
     /// // is pressed on the keyboard.
     /// var action = new InputAction(type: InputActionType.Button);
-    /// action.AddCompositeBinding("ButtonWithTwoModifiers")
+    /// action.AddCompositeBinding("TwoModifiers")
     ///     .With("Modifier1", "&lt;Keyboard&gt;/leftCtrl")
     ///     .With("Modifier1", "&lt;Keyboard&gt;/rightCtrl")
     ///     .With("Modifier2", "&lt;Keyboard&gt;/leftShift")
@@ -46,6 +49,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </remarks>
     /// <seealso cref="ButtonWithOneModifier"/>
     [Preserve]
+    [DesignTimeVisible(false)] // Obsoleted by TwoModifiersComposite
     [DisplayStringFormat("{modifier1}+{modifier2}+{button}")]
     public class ButtonWithTwoModifiers : InputBindingComposite<float>
     {
@@ -74,7 +78,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int modifier2;
 
         /// <summary>
-        /// Binding for the button that is gated by the <see cref="modifier1"/> and <see cref="modifier2"/>.
+        /// Binding for the button that is gated by <see cref="modifier1"/> and <see cref="modifier2"/>.
         /// The composite will assume the value of this button while both of the modifiers are pressed.
         /// </summary>
         /// <value>Part index to use with <see cref="InputBindingCompositeContext.ReadValue{T}(int)"/>.</value>

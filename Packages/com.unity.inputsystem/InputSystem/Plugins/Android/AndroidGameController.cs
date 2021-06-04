@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_ANDROID
+#if UNITY_EDITOR || UNITY_ANDROID || PACKAGE_DOCS_GENERATION
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -58,9 +58,9 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             fixed(uint* buttonsPtr = buttons)
             {
                 if (value)
-                    buttonsPtr[(int)code / 32] |= (uint)1 << ((int)code % 32);
+                    buttonsPtr[(int)code / 32] |= 1U << ((int)code % 32);
                 else
-                    buttonsPtr[(int)code / 32] &= ~((uint)1 << ((int)code % 32));
+                    buttonsPtr[(int)code / 32] &= ~(1U << ((int)code % 32));
             }
             return this;
         }
@@ -121,7 +121,11 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
 namespace UnityEngine.InputSystem.Android
 {
+    ////FIXME: This is messy! Clean up!
     /// <summary>
+    /// Gamepad on Android. Comprises all types of gamepads supported on Android.
+    /// </summary>
+    /// <remarks>
     /// Most of the gamepads:
     /// - NVIDIA Controller v01.03/v01.04
     /// - ELAN PLAYSTATION(R)3 Controller
@@ -168,13 +172,16 @@ namespace UnityEngine.InputSystem.Android
     ///  So even though Android version is 8.0 in both cases, Dualshock will only correctly work on NVidia Shield Console
     ///  It's obvious that this depends on the driver and not Android OS, thus we can only assume Samsung in this case doesn't properly support Dualshock in their drivers
     ///  While we can do custom mapping for Samsung, we can never now when will they try to update the driver for Dualshock or some other gamepad
-    /// </summary>
+    /// </remarks>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantGamepad)]
     [Scripting.Preserve]
     public class AndroidGamepad : Gamepad
     {
     }
 
+    /// <summary>
+    /// Joystick on Android.
+    /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantJoystick)]
     [Scripting.Preserve]
     public class AndroidJoystick : Joystick

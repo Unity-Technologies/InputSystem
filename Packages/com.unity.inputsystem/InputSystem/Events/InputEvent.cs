@@ -5,10 +5,6 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 ////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
-#if !UNITY_2019_2_OR_NEWER
-// NativeInputEventType/NativeInputEvent are marked obsolete in 19.1, because they are becoming internal in 19.2
-#pragma warning disable 618
-#endif
 
 namespace UnityEngine.InputSystem.LowLevel
 {
@@ -63,11 +59,7 @@ namespace UnityEngine.InputSystem.LowLevel
         private const uint kHandledMask = 0x80000000;
         private const uint kIdMask = 0x7FFFFFFF;
 
-#if UNITY_2019_2_OR_NEWER
         internal const int kBaseEventSize = NativeInputEvent.structSize;
-#else
-        internal const int kBaseEventSize = 20;
-#endif
 
         /// <summary>
         /// Default, invalid value for <see cref="eventId"/>. Upon being queued with

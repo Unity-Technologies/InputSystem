@@ -1,0 +1,26 @@
+# by convention everything should be LF
+* text eol=lf
+
+# VS can handle these as LF, but really wants them as CRLF
+*.vcproj          text eol=crlf
+*.vcxproj         text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.csproj          text eol=crlf
+*.props           text eol=crlf
+*.targets         text eol=crlf
+*.sln             text eol=crlf
+*.sln.template    text eol=crlf
+*.bat             text eol=crlf
+*.cmd             text eol=crlf
+*.xaml            text eol=crlf
+
+*.dll binary
+*.exe binary
+*.pdb binary
+*.png binary
+*.jpg binary
+*.exr binary
+*.ttf binary
+*.pdf binary
+*.xcf binary
+*.ico binary

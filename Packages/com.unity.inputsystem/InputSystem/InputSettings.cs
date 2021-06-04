@@ -21,6 +21,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: put default gamepad polling frequency here?
 
+////REVIEW: Have an InputActionAsset field in here that allows having a single default set of actions that are enabled with no further setup?
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -36,7 +38,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <seealso cref="InputSystem.settings"/>
     /// <seealso cref="InputSystem.onSettingsChange"/>
-    public class InputSettings : ScriptableObject
+    public partial class InputSettings : ScriptableObject
     {
         /// <summary>
         /// Determine how the input system updates, i.e. processes pending input events.
@@ -185,6 +187,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMin;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMin == value)
                     return;
                 m_DefaultDeadzoneMin = value;
@@ -229,6 +232,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMax;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMax == value)
                     return;
                 m_DefaultDeadzoneMax = value;
@@ -278,6 +282,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="buttonReleaseThreshold"/>
         /// <seealso cref="Controls.ButtonControl.pressPoint"/>
         /// <seealso cref="Controls.ButtonControl.isPressed"/>
         /// <seealso cref="Interactions.PressInteraction.pressPoint"/>
@@ -289,9 +294,39 @@ namespace UnityEngine.InputSystem
             get => m_DefaultButtonPressPoint;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
                 m_DefaultButtonPressPoint = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// The percentage of <see cref="defaultButtonPressPoint"/> at which a button that was pressed
+        /// is considered released again.
+        /// </summary>
+        /// <remarks>
+        /// This setting helps avoid flickering around the button press point by introducing something akin to a
+        /// "dead zone" below <see cref="defaultButtonPressPoint"/>. Once a button has been pressed to a magnitude
+        /// of at least <see cref="defaultButtonPressPoint"/>, it is considered pressed and keeps being considered pressed
+        /// until its magnitude falls back to a value of or below <see cref="buttonReleaseThreshold"/> percent of
+        /// <see cref="defaultButtonPressPoint"/>.
+        ///
+        /// This is a percentage rather than a fixed value so it allows computing release
+        /// points even when the press point has been customized. If, for example, a <see cref="Interactions.PressInteraction"/>
+        /// sets a custom <see cref="Interactions.PressInteraction.pressPoint"/>, the respective release point
+        /// can still be computed from the percentage set here.
+        /// </remarks>
+        public float buttonReleaseThreshold
+        {
+            get => m_ButtonReleaseThreshold;
+            set
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (m_ButtonReleaseThreshold == value)
+                    return;
+                m_ButtonReleaseThreshold = value;
                 OnChange();
             }
         }
@@ -310,12 +345,13 @@ namespace UnityEngine.InputSystem
         ///
         /// The default tap time is 0.2 seconds.
         /// </remarks>
-        /// <seealso cref="TapInteraction"/>
+        /// <seealso cref="Interactions.TapInteraction"/>
         public float defaultTapTime
         {
             get => m_DefaultTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultTapTime == value)
                     return;
                 m_DefaultTapTime = value;
@@ -328,6 +364,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultSlowTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultSlowTapTime == value)
                     return;
                 m_DefaultSlowTapTime = value;
@@ -340,6 +377,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultHoldTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultHoldTime == value)
                     return;
                 m_DefaultHoldTime = value;
@@ -352,6 +390,7 @@ namespace UnityEngine.InputSystem
             get => m_TapRadius;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_TapRadius == value)
                     return;
                 m_TapRadius = value;
@@ -364,9 +403,70 @@ namespace UnityEngine.InputSystem
             get => m_MultiTapDelayTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_MultiTapDelayTime == value)
                     return;
                 m_MultiTapDelayTime = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
+        /// <see cref="InputSystem.Update"/>.
+        /// </summary>
+        /// <remarks>
+        /// This setting establishes a bound on the amount of input event data processed in a single
+        /// update and thus limits throughput allowed for input. This prevents long stalls from
+        /// leading to long delays in input processing.
+        ///
+        /// When the limit is exceeded, all events remaining in the buffer are thrown away (the
+        /// <see cref="InputEventBuffer"/> is reset) and an error is logged. After that, the current
+        /// update will abort and early out.
+        ///
+        /// Setting this property to 0 or a negative value will disable the limit.
+        ///
+        /// The default value is 5MB.
+        /// </remarks>
+        /// <seealso cref="InputSystem.Update"/>
+        /// <see cref="InputEvent.sizeInBytes"/>
+        public int maxEventBytesPerUpdate
+        {
+            get => m_MaxEventBytesPerUpdate;
+            set
+            {
+                if (m_MaxEventBytesPerUpdate == value)
+                    return;
+                m_MaxEventBytesPerUpdate = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Upper limit on the number of <see cref="InputEvent"/>s that can be queued within one
+        /// <see cref="InputSystem.Update"/>.
+        /// <remarks>
+        /// This settings establishes an upper limit on the number of events that can be queued
+        /// using <see cref="InputSystem.QueueEvent"/> during a single update. This prevents infinite
+        /// loops where an action callback queues an event that causes the action callback to
+        /// be called again which queues an event...
+        ///
+        /// Note that this limit only applies while the input system is updating. There is no limit
+        /// on the number of events that can be queued outside of this time, but those will be queued
+        /// into the next frame where the <see cref="maxEventBytesPerUpdate"/> setting will apply.
+        ///
+        /// The default value is 1000.
+        /// </remarks>
+        /// </summary>
+        public int maxQueuedEventsPerUpdate
+        {
+            get => m_MaxQueuedEventsPerUpdate;
+            set
+            {
+                if (m_MaxQueuedEventsPerUpdate == value)
+                    return;
+
+                m_MaxQueuedEventsPerUpdate = value;
                 OnChange();
             }
         }
@@ -424,6 +524,8 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1024 * 1024;
+        [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
@@ -433,6 +535,7 @@ namespace UnityEngine.InputSystem
         // Having a higher value here also obsoletes the need for custom press points on stick buttons
         // (the up/down/left/right ones).
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
+        [SerializeField] private float m_ButtonReleaseThreshold = 0.75f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
@@ -452,8 +555,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// By default, the input system will run event processing as part of the player loop. In the default configuration,
-        /// the processing will happens once before every every dynamic update (<see cref="Update"/>), i.e. <see cref="ProcessEventsInDynamicUpdate"/>
-        /// is the default behavior.
+        /// the processing will happens once before every every dynamic update (<a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>),
+        /// i.e. <see cref="ProcessEventsInDynamicUpdate"/> is the default behavior.
         ///
         /// There are two types of updates not governed by UpdateMode. One is <see cref="InputUpdateType.Editor"/> which
         /// will always be enabled in the editor and govern input updates for <see cref="UnityEditor.EditorWindow"/>s in
@@ -465,42 +568,39 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputSystem.Update"/>
         /// <seealso cref="InputUpdateType"/>
-        /// <seealso cref="MonoBehaviour.FixedUpdate"/>
-        /// <seealso cref="MonoBehaviour.Update"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html"/>
         public enum UpdateMode
         {
             // Removed: ProcessEventsInBothFixedAndDynamicUpdate=0
 
             /// <summary>
-            /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
-            /// </summary>
-            /// <remarks>
+            /// Automatically run input updates right before every <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>.
+            ///
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
-            /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
+            /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
-            /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
-            /// </summary>
-            /// <remarks>
+            /// Automatically input run updates right before every <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a>.
+            ///
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
-            /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
+            /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInFixedUpdate,
 
             /// <summary>
             /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update"/> must be called
             /// manually to update input.
-            /// </summary>
-            /// <remarks>
+            ///
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
             /// Note that failing to call <see cref="InputSystem.Update"/> may result in a lot of events
             /// accumulating or some input getting lost.
-            /// </remarks>
+            /// </summary>
             ProcessEventsManually,
         }
     }

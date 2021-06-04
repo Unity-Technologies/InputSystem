@@ -34,8 +34,8 @@ namespace UnityEngine.InputSystem.Controls
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            var intValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
-            var phaseValue = (TouchPhase)intValue;
+            var uintValue = MemoryHelpers.ReadMultipleBitsAsUInt(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+            var phaseValue = (TouchPhase)uintValue;
 
             var value = 0.0f;
             if (phaseValue == TouchPhase.Began || phaseValue == TouchPhase.Stationary ||
@@ -43,6 +43,11 @@ namespace UnityEngine.InputSystem.Controls
                 value = 1;
 
             return Preprocess(value);
+        }
+
+        public override unsafe void WriteValueIntoState(float value, void* statePtr)
+        {
+            throw new NotSupportedException();
         }
     }
 }

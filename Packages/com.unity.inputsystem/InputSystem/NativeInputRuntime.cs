@@ -8,10 +8,6 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-#if !UNITY_2019_2_OR_NEWER
-// The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
-#pragma warning disable 618
-#endif
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
@@ -40,7 +36,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
             if (commandPtr == null)
-                throw new System.ArgumentNullException(nameof(commandPtr));
+                throw new ArgumentNullException(nameof(commandPtr));
 
             return NativeInputSystem.IOCTL(deviceId, commandPtr->type, new IntPtr(commandPtr->payloadPtr), commandPtr->payloadSizeInBytes);
         }
@@ -164,6 +160,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_FocusChangedMethod = value;
             }
         }
+
+        public bool isFocused => Application.isFocused;
 
         public float pollingFrequency
         {

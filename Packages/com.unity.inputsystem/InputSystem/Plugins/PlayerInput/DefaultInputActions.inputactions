@@ -259,7 +259,7 @@
             "actions": [
                 {
                     "name": "Navigate",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "c95b2375-e6d9-4b88-9c4c-c5e76515df4b",
                     "expectedControlType": "Vector2",
                     "processors": "",
@@ -309,7 +309,7 @@
                     "name": "MiddleClick",
                     "type": "PassThrough",
                     "id": "dad70c86-b58c-4b17-88ad-f5e53adf419e",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },
@@ -317,7 +317,7 @@
                     "name": "RightClick",
                     "type": "PassThrough",
                     "id": "44b200b1-1557-4083-816c-b22cbdf77ddf",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },

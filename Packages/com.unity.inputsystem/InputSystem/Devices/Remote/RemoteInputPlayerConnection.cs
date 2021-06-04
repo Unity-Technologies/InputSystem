@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem
     {
         public static readonly Guid kNewDeviceMsg = new Guid("fcd9651ded40425995dfa6aeb78f1f1c");
         public static readonly Guid kNewLayoutMsg = new Guid("fccfec2b7369466d88502a9dd38505f4");
-        public static readonly Guid kNewEventsMsg = new Guid("34d9b47f923142ff847c0d1f8b0554d9");
+        public static readonly Guid kNewEventsMsg = new Guid("53546641df1347bc8aa315278a603586");
         public static readonly Guid kRemoveDeviceMsg = new Guid("e5e299b2d9e44255b8990bb71af8922d");
         public static readonly Guid kChangeUsagesMsg = new Guid("b9fe706dfc854d7ca109a5e38d7db730");
         public static readonly Guid kStartSendingMsg = new Guid("0d58e99045904672b3ef34b8797d23cb");

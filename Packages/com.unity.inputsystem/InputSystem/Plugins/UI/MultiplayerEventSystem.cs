@@ -1,3 +1,4 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -12,6 +13,7 @@ namespace UnityEngine.InputSystem.UI
     /// Mouse selection will ignore any game objects not within this hierarchy. For gamepad/keyboard selection, you need to make sure that
     /// the navigation links stay within the player's hierarchy.
     /// </remarks>
+    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#multiplayereventsystem-component")]
     public class MultiplayerEventSystem : EventSystem
     {
         [Tooltip("If set, only process mouse events for any game objects which are children of this game object.")]
@@ -38,3 +40,4 @@ namespace UnityEngine.InputSystem.UI
         }
     }
 }
+#endif

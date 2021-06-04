@@ -46,7 +46,7 @@ Alternatively, you can use more generic Device queries using LINQ expressions or
     // Go through all devices and select gamepads.
     InputSystem.devices.Select(x => x is Gamepad);
 
-    // Query everything that is using the gamepad template or based on that template.
+    // Query everything that is using the gamepad layout or based on that layout.
     // NOTE: Don't forget to Dispose() the result.
     InputSystem.FindControls("<gamepad>");
 ```
@@ -324,7 +324,7 @@ Use this code:
     InputSystem.AddDevice<Gamepad>();
 ```
 
-An alternative way is to inform the Input System that a Device is available, and let the system create the Device from a matching template. If no template exists, the Input System doesn't create the Device until you add one.
+An alternative way is to inform the Input System that a Device is available, and let the system create the Device from a matching layout. If no layout exists, the Input System doesn't create the Device until you add one.
 
 ```C#
     InputSystem.ReportAvailableDevice(
@@ -340,7 +340,7 @@ An alternative way is to inform the Input System that a Device is available, and
 
 There are two possible ways to do this.
 
-If you want to use one of the existing C# [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) classes in code to interface with your Device, you can build on an existing template using JSON:
+If you want to use one of the existing C# [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) classes in code to interface with your Device, you can build on an existing layout using JSON:
 
 ```
     {
@@ -371,10 +371,10 @@ If you want to use one of the existing C# [`InputDevice`](../api/UnityEngine.Inp
         ]
     }
 ```
-You then register your template with the system and then instantiate it:
+You then register your layout with the system and then instantiate it:
 
 ```C#
-    InputSystem.RegisterTemplate(myDeviceJson);
+    InputSystem.RegisterControlLayout(myDeviceJson);
     var device = InputSystem.AddDevice("MyDevice");
 ```
 
@@ -386,10 +386,10 @@ Alternatively, you can create your own [`InputDevice`](../api/UnityEngine.InputS
         // FourCC type codes are used to identify the memory layouts of state blocks.
         public FourCC format => new FourCC('M', 'D', 'E', 'V');
 
-        [InputControl(name = "firstButton", template = "Button", bit = 0)]
-        [InputControl(name = "secondButton", template = "Button", bit = 1)]
+        [InputControl(name = "firstButton", layout = "Button", bit = 0)]
+        [InputControl(name = "secondButton", layout = "Button", bit = 1)]
         public int buttons;
-        [InputControl(template = "Analog", parameters="clamp=true,clampMin=0,clampMax=1")]
+        [InputControl(layout = "Analog", parameters="clamp=true,clampMin=0,clampMax=1")]
         public float axis;
     }
 
@@ -410,10 +410,10 @@ Alternatively, you can create your own [`InputDevice`](../api/UnityEngine.InputS
     }
 ```
 
-To create an instance of your Device, register it as a template and then instantiate it:
+To create an instance of your Device, register it as a layout and then instantiate it:
 
 ```C#
-    InputSystem.RegisterTemplate("MyDevice", typeof(MyDevice));
+    InputSystem.RegisterControlLayout("MyDevice", typeof(MyDevice));
     InputSystem.AddDevice("MyDevice");
 ```
 
@@ -423,9 +423,9 @@ For more information, see documentation on [HID](HID.md#overriding-the-hid-fallb
 
 # …deal with my gamepad data arriving in a format different from `GamepadState`?
 
-Extend the "Gamepad" template and customize its Controls.
+Extend the "Gamepad" layout and customize its Controls.
 
-A real-world example of this is the Xbox Controller on macOS, which is supported through HID. Its template looks like this:
+A real-world example of this is the Xbox Controller on macOS, which is supported through HID. Its layout looks like this:
 
 ```JSON
 {
@@ -449,7 +449,7 @@ A real-world example of this is the Xbox Controller on macOS, which is supported
         { "name" : "dpad/right", "offset" : 0, "bit" : 11 },
         { "name" : "start", "offset" : 2, "bit" : 4 },
         { "name" : "select", "offset" : 2, "bit" : 5 },
-        { "name" : "xbox", "offset" : 2, "bit" : 2, "template" : "Button" },
+        { "name" : "xbox", "offset" : 2, "bit" : 2, "layout" : "Button" },
         { "name" : "leftTrigger", "offset" : 4, "format" : "BYTE" },
         { "name" : "rightTrigger", "offset" : 5, "format" : "BYTE" },
         { "name" : "leftStick", "offset" : 6, "format" : "VC2S" },
@@ -464,9 +464,9 @@ A real-world example of this is the Xbox Controller on macOS, which is supported
 
 The same principle applies if some buttons on your Device are swapped, for example. In this case, you can remap their offsets.
 
-# …force the Input System to use my own template when the native backend discovers a specific Device?
+# …force the Input System to use my own layout when the native backend discovers a specific Device?
 
-Describe the Device in the template, like this:
+Describe the Device in the layout, like this:
 
 ```
      {
@@ -480,10 +480,10 @@ Describe the Device in the template, like this:
      }
 ```
 
-Note that you don't have to restart Unity in order for changes in your template to take effect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a template and your Device is recreated with the most up-to-date version every time scripts are recompiled.
+Note that you don't have to restart Unity in order for changes in your layout to take effect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a layout and your Device is recreated with the most up-to-date version every time scripts are recompiled.
 
 [//]: # (# …deal with my device being both a keyboard and a mouse?)
-[//]: # (////TODO: working on allowing templates to create more than one device which can share state)
+[//]: # (////TODO: working on allowing layouts to create more than one device which can share state)
 
 # …add deadzoning to my gamepad sticks?
 
@@ -518,7 +518,7 @@ You can do the same in your C# state structs.
     }
 ```
 
-The gamepad template already adds stick deadzone processors which take their min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
+The gamepad layout already adds stick deadzone processors which take their min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
 
 [//]: # (I'm still working on a way to do add a deadzone processor conveniently on the fly to an existing gamepad instance.)
 

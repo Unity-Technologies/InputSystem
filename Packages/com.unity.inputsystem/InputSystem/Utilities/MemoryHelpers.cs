@@ -55,64 +55,72 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static void WriteSingleBit(void* ptr, uint bitOffset, bool value)
         {
-            if (bitOffset < 8)
-            {
-                if (value)
-                    *(byte*)ptr |= (byte)(1 << (int)bitOffset);
-                else
-                    *(byte*)ptr &= (byte)~(1 << (int)bitOffset);
-            }
-            else if (bitOffset < 32)
-            {
-                if (value)
-                    *(int*)ptr |= 1 << (int)bitOffset;
-                else
-                    *(int*)ptr &= ~(1 << (int)bitOffset);
-            }
+            var byteOffset = bitOffset >> 3;
+            bitOffset &= 7;
+            if (value)
+                *((byte*)ptr + byteOffset) |= (byte)(1U << (int)bitOffset);
             else
-            {
-                var byteOffset = bitOffset / 8;
-                bitOffset %= 8;
-
-                if (value)
-                    *((byte*)ptr + byteOffset) |= (byte)(1 << (int)bitOffset);
-                else
-                    *((byte*)ptr + byteOffset) &= (byte)~(1 << (int)bitOffset);
-            }
+                *((byte*)ptr + byteOffset) &= (byte)~(1U << (int)bitOffset);
         }
 
         public static bool ReadSingleBit(void* ptr, uint bitOffset)
         {
-            ////TODO: currently this is not actually enforced...
-            // The layout code makes sure that bitfields are either 8bit or multiples
-            // of 32bits. So we always safely read either a byte or int. Handling
-            // the 8bit and 32bit case directly will lead to nicely aligned memory
-            // accesses if the state has been laid out that way.
+            var byteOffset = bitOffset >> 3;
+            bitOffset &= 7;
+            return (*((byte*)ptr + byteOffset) & (1U << (int)bitOffset)) != 0;
+        }
 
-            int bits;
+        public static void MemCpyBitRegion(void* destination, void* source, uint bitOffset, uint bitCount)
+        {
+            var destPtr = (byte*)destination;
+            var sourcePtr = (byte*)source;
 
-            if (bitOffset < 8)
+            // If we're offset by more than a byte, adjust our pointers.
+            if (bitOffset >= 8)
             {
-                bits = *(byte*)ptr;
-            }
-            else if (bitOffset < 32)
-            {
-                bits = *(int*)ptr;
-            }
-            else
-            {
-                // Long bitfield. Compute an offset to the byte we need and fetch
-                // only that byte. Adjust the bit offset to be for that byte.
-                // On this path, we may end up doing memory accesses that the CPU
-                // doesn't like much.
-
-                var byteOffset = bitOffset / 8;
+                var skipBytes = bitOffset / 8;
+                destPtr += skipBytes;
+                sourcePtr += skipBytes;
                 bitOffset %= 8;
-
-                bits = *((byte*)ptr + byteOffset);
             }
 
-            return (bits & (1 << (int)bitOffset)) != 0;
+            // Copy unaligned prefix, if any.
+            if (bitOffset > 0)
+            {
+                var byteMask = 0xFF << (int)bitOffset;
+                if (bitCount + bitOffset < 8)
+                    byteMask &= 0xFF >> (int)(8 - (bitCount + bitOffset));
+
+                *destPtr = (byte)(((*destPtr & ~byteMask) | (*sourcePtr & byteMask)) & 0xFF);
+
+                // If the total length of the memory region is equal or less than a byte,
+                // we're done.
+                if (bitCount + bitOffset <= 8)
+                    return;
+
+                ++destPtr;
+                ++sourcePtr;
+
+                bitCount -= 8 - bitOffset;
+            }
+
+            // Copy contiguous bytes in-between, if any.
+            var byteCount = bitCount / 8;
+            if (byteCount >= 1)
+                UnsafeUtility.MemCpy(destPtr, sourcePtr, byteCount);
+
+            // Copy unaligned suffix, if any.
+            var remainingBitCount = bitCount % 8;
+            if (remainingBitCount > 0)
+            {
+                destPtr += byteCount;
+                sourcePtr += byteCount;
+
+                // We want the lowest remaining bits.
+                var byteMask = 0xFF >> (int)(8 - remainingBitCount);
+
+                *destPtr = (byte)(((*destPtr & ~byteMask) | (*sourcePtr & byteMask)) & 0xFF);
+            }
         }
 
         /// <summary>
@@ -164,13 +172,13 @@ namespace UnityEngine.InputSystem.Utilities
                 if (byte1 != byte2)
                     return false;
 
-                ++bytePtr1;
-                ++bytePtr2;
-
                 // If the total length of the memory region is equal or less than a byte,
                 // we're done.
                 if (bitCount + bitOffset <= 8)
                     return true;
+
+                ++bytePtr1;
+                ++bytePtr2;
 
                 bitCount -= 8 - bitOffset;
             }
@@ -313,11 +321,18 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
-        public static int ReadIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount)
+        /// <summary>
+        /// Reads bits memory region as unsigned int, up to and including 32 bits, least-significant bit first (LSB).
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the unsigned integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <returns>Read unsigned integer.</returns>
+        public static uint ReadMultipleBitsAsUInt(void* ptr, uint bitOffset, uint bitCount)
         {
             if (ptr == null)
                 throw new ArgumentNullException(nameof(ptr));
-            if (bitCount >= sizeof(int) * 8)
+            if (bitCount > sizeof(int) * 8)
                 throw new ArgumentException("Trying to read more than 32 bits as int", nameof(bitCount));
 
             // Shift the pointer up on larger bitmasks and retry.
@@ -334,7 +349,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var value = *(byte*)ptr;
                 value >>= (int)bitOffset;
-                var mask = 0xFF >> (8 - (int)bitCount);
+                var mask = 0xFFu >> (8 - (int)bitCount);
                 return value & mask;
             }
 
@@ -343,7 +358,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var value = *(ushort*)ptr;
                 value >>= (int)bitOffset;
-                var mask = 0xFFFF >> (16 - (int)bitCount);
+                var mask = 0xFFFFu >> (16 - (int)bitCount);
                 return value & mask;
             }
 
@@ -352,18 +367,25 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var value = *(uint*)ptr;
                 value >>= (int)bitOffset;
-                var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
-                return (int)(value & mask);
+                var mask = 0xFFFFFFFFu >> (32 - (int)bitCount);
+                return value & mask;
             }
 
             throw new NotImplementedException("Reading int straddling int boundary");
         }
 
-        public static void WriteIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
+        /// <summary>
+        /// Writes unsigned int as bits to memory region, up to and including 32 bits, least-significant bit first (LSB).
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the unsigned integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <param name="value">Value to write.</param>
+        public static void WriteUIntAsMultipleBits(void* ptr, uint bitOffset, uint bitCount, uint value)
         {
             if (ptr == null)
                 throw new ArgumentNullException(nameof(ptr));
-            if (bitCount >= sizeof(int) * 8)
+            if (bitCount > sizeof(int) * 8)
                 throw new ArgumentException("Trying to write more than 32 bits as int", nameof(bitCount));
 
             // Bits out of byte.
@@ -371,7 +393,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var byteValue = (byte)value;
                 byteValue <<= (int)bitOffset;
-                var mask = ~((0xFF >> (8 - (int)bitCount)) << (int)bitOffset);
+                var mask = ~((0xFFU >> (8 - (int)bitCount)) << (int)bitOffset);
                 *(byte*)ptr = (byte)((*(byte*)ptr & mask) | byteValue);
                 return;
             }
@@ -379,24 +401,111 @@ namespace UnityEngine.InputSystem.Utilities
             // Bits out of short.
             if (bitOffset + bitCount <= 16)
             {
-                var shortValue = (ushort)value;
-                shortValue <<= (int)bitOffset;
-                var mask = ~((0xFFFF >> (16 - (int)bitCount)) << (int)bitOffset);
-                *(ushort*)ptr = (ushort)((*(ushort*)ptr & mask) | shortValue);
+                var ushortValue = (ushort)value;
+                ushortValue <<= (int)bitOffset;
+                var mask = ~((0xFFFFU >> (16 - (int)bitCount)) << (int)bitOffset);
+                *(ushort*)ptr = (ushort)((*(ushort*)ptr & mask) | ushortValue);
                 return;
             }
 
             // Bits out of int.
             if (bitOffset + bitCount <= 32)
             {
-                var intValue = (uint)value;
-                intValue <<= (int)bitOffset;
-                var mask = ~((0xFFFFFFFF >> (32 - (int)bitCount)) << (int)bitOffset);
-                *(int*)ptr = (int)((*(int*)ptr & mask) | intValue);
+                var uintValue = (uint)value;
+                uintValue <<= (int)bitOffset;
+                var mask = ~((0xFFFFFFFFU >> (32 - (int)bitCount)) << (int)bitOffset);
+                *(uint*)ptr = (*(uint*)ptr & mask) | uintValue;
                 return;
             }
 
             throw new NotImplementedException("Writing int straddling int boundary");
+        }
+
+        /// <summary>
+        /// Reads bits memory region as two's complement integer, up to and including 32 bits, least-significant bit first (LSB).
+        /// For example reading 0xff as 8 bits will result in -1.
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <returns>Read integer.</returns>
+        public static int ReadTwosComplementMultipleBitsAsInt(void* ptr, uint bitOffset, uint bitCount)
+        {
+            // int is already represented as two's complement
+            return (int)ReadMultipleBitsAsUInt(ptr, bitOffset, bitCount);
+        }
+
+        /// <summary>
+        /// Writes bits memory region as two's complement integer, up to and including 32 bits, least-significant bit first (LSB).
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <param name="value">Value to write.</param>
+        public static void WriteIntAsTwosComplementMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
+        {
+            // int is already represented as two's complement, so write as-is
+            WriteUIntAsMultipleBits(ptr, bitOffset, bitCount, (uint)value);
+        }
+
+        /// <summary>
+        /// Reads bits memory region as excess-K integer where K is set to (2^bitCount)/2, up to and including 32 bits, least-significant bit first (LSB).
+        /// For example reading 0 as 8 bits will result in -128. Reading 0xff as 8 bits will result in 127.
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <returns>Read integer.</returns>
+        public static int ReadExcessKMultipleBitsAsInt(void* ptr, uint bitOffset, uint bitCount)
+        {
+            // https://en.wikipedia.org/wiki/Signed_number_representations#Offset_binary
+            var value = (long)ReadMultipleBitsAsUInt(ptr, bitOffset, bitCount);
+            var halfMax = (long)((1UL << (int)bitCount) / 2);
+            return (int)(value - halfMax);
+        }
+
+        /// <summary>
+        /// Writes bits memory region as excess-K integer where K is set to (2^bitCount)/2, up to and including 32 bits, least-significant bit first (LSB).
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <param name="value">Value to write.</param>
+        public static void WriteIntAsExcessKMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
+        {
+            // https://en.wikipedia.org/wiki/Signed_number_representations#Offset_binary
+            var halfMax = (long)((1UL << (int)bitCount) / 2);
+            var unsignedValue = halfMax + value;
+            WriteUIntAsMultipleBits(ptr, bitOffset, bitCount, (uint)unsignedValue);
+        }
+
+        /// <summary>
+        /// Reads bits memory region as normalized unsigned integer, up to and including 32 bits, least-significant bit first (LSB).
+        /// For example reading 0 as 8 bits will result in 0.0f. Reading 0xff as 8 bits will result in 1.0f.
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the unsigned integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <returns>Normalized unsigned integer.</returns>
+        public static float ReadMultipleBitsAsNormalizedUInt(void* ptr, uint bitOffset, uint bitCount)
+        {
+            var uintValue = ReadMultipleBitsAsUInt(ptr, bitOffset, bitCount);
+            var maxValue = (uint)((1UL << (int)bitCount) - 1);
+            return NumberHelpers.UIntToNormalizedFloat(uintValue, 0, maxValue);
+        }
+
+        /// <summary>
+        /// Writes bits memory region as normalized unsigned integer, up to and including 32 bits, least-significant bit first (LSB).
+        /// </summary>
+        /// <param name="ptr">Pointer to memory region.</param>
+        /// <param name="bitOffset">Offset in bits from the pointer to the start of the unsigned integer.</param>
+        /// <param name="bitCount">Number of bits to read.</param>
+        /// <param name="value">Normalized value to write.</param>
+        public static void WriteNormalizedUIntAsMultipleBits(void* ptr, uint bitOffset, uint bitCount, float value)
+        {
+            var maxValue = (uint)((1UL << (int)bitCount) - 1);
+            var uintValue = NumberHelpers.NormalizedFloatToUInt(value, 0, maxValue);
+            WriteUIntAsMultipleBits(ptr, bitOffset, bitCount, uintValue);
         }
 
         public static void SetBitsInBuffer(void* buffer, int byteOffset, int bitOffset, int sizeInBits, bool value)
@@ -465,6 +574,12 @@ namespace UnityEngine.InputSystem.Utilities
             var temp = a;
             a = b;
             b = temp;
+        }
+
+        public static uint AlignNatural(uint offset, uint sizeInBytes)
+        {
+            var alignment = Math.Min(8, sizeInBytes);
+            return offset.AlignToMultipleOf(alignment);
         }
     }
 }

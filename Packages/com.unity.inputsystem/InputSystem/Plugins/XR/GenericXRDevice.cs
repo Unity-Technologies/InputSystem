@@ -1,4 +1,4 @@
-#if ENABLE_VR || PACKAGE_DOCS_GENERATION
+#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Layouts;
@@ -74,17 +74,10 @@ namespace UnityEngine.InputSystem.XR
 
             if (deviceDescriptor != null)
             {
-#if UNITY_2019_3_OR_NEWER
                 if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Left) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
-#else
-                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded)
-                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
-                else if (deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
-                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
-#endif //UNITY_2019_3_OR_NEWER
             }
         }
     }

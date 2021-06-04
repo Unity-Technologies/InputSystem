@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_ENABLE_UI && UNITY_EDITOR
 using System;
 using System.Linq;
 using UnityEditor;

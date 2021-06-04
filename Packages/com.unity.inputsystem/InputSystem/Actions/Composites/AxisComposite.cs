@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
@@ -42,6 +43,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </remarks>
     [Preserve]
     [DisplayStringFormat("{negative}/{positive}")]
+    [DisplayName("Positive/Negative Binding")]
     public class AxisComposite : InputBindingComposite<float>
     {
         /// <summary>
@@ -118,7 +120,7 @@ namespace UnityEngine.InputSystem.Composites
         public WhichSideWins whichSideWins = WhichSideWins.Neither;
 
         /// <summary>
-        /// The value that is returned if the composite is in a neutral position, i.e. if
+        /// The value that is returned if the composite is in a neutral position, that is, if
         /// neither <see cref="positive"/> nor <see cref="negative"/> are actuated or if
         /// <see cref="whichSideWins"/> is set to <see cref="WhichSideWins.Neither"/> and
         /// both <see cref="positive"/> and <see cref="negative"/> are actuated.

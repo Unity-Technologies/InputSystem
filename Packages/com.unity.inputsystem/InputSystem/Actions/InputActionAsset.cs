@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
+
 ////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
 
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
@@ -14,27 +16,33 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// An asset containing action maps and control schemes.
+    /// An asset that contains action maps and control schemes.
     /// </summary>
     /// <remarks>
     /// InputActionAssets can be created in code but are usually stored in JSON format on
-    /// disk with the ".inputactions" extension and are imported by Unity using a custom
+    /// disk with the ".inputactions" extension. Unity imports them with a custom
     /// importer.
     ///
     /// To create an InputActionAsset in code, use the <c>Singleton</c> API and populate the
     /// asset with the methods found in <see cref="InputActionSetupExtensions"/>. Alternatively,
-    /// you can load an InputActionAsset directly from a string in JSON format using <see cref="FromJson"/>.
+    /// you can use <see cref="FromJson"/> to load an InputActionAsset directly from a string in JSON format.
     ///
     /// <example>
     /// <code>
     /// // Create and configure an asset in code.
     /// var asset1 = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
-    /// var actionMap1 = asset1.CreateActionMap("map1");
+    /// var actionMap1 = asset1.AddActionMap("map1");
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>
     ///
-    /// Each asset can contain arbitrary many action maps that can be enabled and disabled individually
+    /// If you use the API to modify an InputActionAsset while in Play mode,
+    /// it does not survive the transition back to Edit Mode. Unity tracks and reloads modified assets
+    /// from disk when exiting Play mode. This is done so that you can realistically test the input
+    /// related functionality of your application i.e. control rebinding etc, without inadvertently changing
+    /// the input asset.
+    ///
+    /// Each asset can contain arbitrary many action maps that you can enable and disable individually
     /// (see <see cref="InputActionMap.Enable"/> and <see cref="InputActionMap.Disable"/>) or in bulk
     /// (see <see cref="Enable"/> and <see cref="Disable"/>). The name of each action map must be unique.
     /// The list of action maps can be queried from <see cref="actionMaps"/>.
@@ -63,7 +71,7 @@ namespace UnityEngine.InputSystem
     /// Note also that all action maps in an asset share binding state. This means that if
     /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
-    public class InputActionAsset : ScriptableObject, IInputActionCollection
+    public class InputActionAsset : ScriptableObject, IInputActionCollection2
     {
         /// <summary>
         /// File extension (without the dot) for InputActionAssets in JSON format.
@@ -110,6 +118,34 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
         /// <seealso cref="InputActionSetupExtensions.RemoveControlScheme"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);
+
+        /// <summary>
+        /// Iterate over all bindings in the asset.
+        /// </summary>
+        /// <remarks>
+        /// This iterates over all action maps in <see cref="actionMaps"/> and, within each
+        /// map, over the set of <see cref="InputActionMap.bindings"/>.
+        /// </remarks>
+        /// <seealso cref="InputActionMap.bindings"/>
+        public IEnumerable<InputBinding> bindings
+        {
+            get
+            {
+                var numActionMaps = m_ActionMaps.LengthSafe();
+                if (numActionMaps == 0)
+                    yield break;
+
+                for (var i = 0; i < numActionMaps; ++i)
+                {
+                    var actionMap = m_ActionMaps[i];
+                    var bindings = actionMap.m_Bindings;
+                    var numBindings = bindings.LengthSafe();
+
+                    for (var n = 0; n < numBindings; ++n)
+                        yield return bindings[n];
+                }
+            }
+        }
 
         /// <summary>
         /// Binding mask to apply to all action maps and actions in the asset.
@@ -200,49 +236,11 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionMap.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get
-            {
-                if (m_DevicesCount < 0)
-                    return null;
-                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
-            }
+            get => m_Devices.Get();
             set
             {
-                if (value == null)
-                {
-                    if (m_DevicesCount < 0)
-                        return; // No change.
-
-                    if (m_DevicesArray != null & m_DevicesCount > 0)
-                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = -1;
-                }
-                else
-                {
-                    // See if the array actually changes content. Avoids re-resolving when there
-                    // is no need to.
-                    if (m_DevicesCount == value.Value.Count)
-                    {
-                        var noChange = true;
-                        for (var i = 0; i < m_DevicesCount; ++i)
-                        {
-                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
-                            {
-                                noChange = false;
-                                break;
-                            }
-                        }
-                        if (noChange)
-                            return;
-                    }
-
-                    if (m_DevicesCount > 0)
-                        m_DevicesArray.Clear(ref m_DevicesCount);
-                    m_DevicesCount = 0;
-                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                }
-
-                ReResolveIfNecessary();
+                if (m_Devices.Set(value))
+                    ReResolveIfNecessary();
             }
         }
 
@@ -258,13 +256,13 @@ namespace UnityEngine.InputSystem
         /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
         /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
         /// <remarks>
-        /// This method is equivalent to <see cref="FindAction(string)"/> except that it throws
+        /// This method is equivalent to <see cref="FindAction(string,bool)"/> except that it throws
         /// <see cref="KeyNotFoundException"/> if no action with the given name or ID
         /// could be found.
         /// </remarks>
         /// <exception cref="KeyNotFoundException">No action was found matching <paramref name="actionNameOrId"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c> or empty.</exception>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         public InputAction this[string actionNameOrId]
         {
             get
@@ -483,6 +481,16 @@ namespace UnityEngine.InputSystem
         /// cannot be found, throw <c>ArgumentException</c>.</param>
         /// <returns>The action with the corresponding name or <c>null</c> if no matching action could be found.</returns>
         /// <remarks>
+        /// Note that no lookup structures are used internally to speed the operation up. Instead, the search is done
+        /// linearly. For repeated access of an action, it is thus generally best to look up actions once ahead of
+        /// time and cache the result.
+        ///
+        /// If multiple actions have the same name and <paramref name="actionNameOrId"/> is not an ID and not an
+        /// action name qualified by a map name (that is, in the form of <c>"mapName/actionName"</c>), the action that
+        /// is returned will be from the first map in <see cref="actionMaps"/> that has an action with the given name.
+        /// An exception is if, of the multiple actions with the same name, some are enabled and some are disabled. In
+        /// this case, the first action that is enabled is returned.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
@@ -529,13 +537,22 @@ namespace UnityEngine.InputSystem
                 var indexOfSlash = actionNameOrId.IndexOf('/');
                 if (indexOfSlash == -1)
                 {
-                    // No slash so it's just a simple action name.
+                    // No slash so it's just a simple action name. Return either first enabled action or, if
+                    // none are enabled, first action with the given name.
+                    InputAction firstActionFound = null;
                     for (var i = 0; i < m_ActionMaps.Length; ++i)
                     {
                         var action = m_ActionMaps[i].FindAction(actionNameOrId);
                         if (action != null)
-                            return action;
+                        {
+                            if (action.enabled || action.m_Id == actionNameOrId) // Match by ID is always exact.
+                                return action;
+                            if (firstActionFound == null)
+                                firstActionFound = action;
+                        }
                     }
+                    if (firstActionFound != null)
+                        return firstActionFound;
                 }
                 else
                 {
@@ -570,6 +587,24 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'");
 
             return null;
+        }
+
+        /// <inheritdoc/>
+        public int FindBinding(InputBinding mask, out InputAction action)
+        {
+            var numMaps = m_ActionMaps.LengthSafe();
+
+            for (var i = 0; i < numMaps; ++i)
+            {
+                var actionMap = m_ActionMaps[i];
+
+                var bindingIndex = actionMap.FindBinding(mask, out action);
+                if (bindingIndex >= 0)
+                    return bindingIndex;
+            }
+
+            action = null;
+            return -1;
         }
 
         /// <summary>
@@ -709,6 +744,52 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Return true if the asset contains bindings (in any of its action maps) that are usable
+        /// with the given <paramref name="device"/>.
+        /// </summary>
+        /// <param name="device">An arbitrary input device.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Find out if the actions of the given PlayerInput can be used with
+        /// // a gamepad.
+        /// if (playerInput.actions.IsUsableWithDevice(Gamepad.all[0]))
+        ///     /* ... */;
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.IsUsableWithDevice"/>
+        /// <seealso cref="InputControlScheme.SupportsDevice"/>
+        public bool IsUsableWithDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            // If we have control schemes, we let those dictate our search.
+            var numControlSchemes = m_ControlSchemes.LengthSafe();
+            if (numControlSchemes > 0)
+            {
+                for (var i = 0; i < numControlSchemes; ++i)
+                {
+                    if (m_ControlSchemes[i].SupportsDevice(device))
+                        return true;
+                }
+            }
+            else
+            {
+                // Otherwise, we'll go search bindings. Slow.
+                var actionMapCount = m_ActionMaps.LengthSafe();
+                for (var i = 0; i < actionMapCount; ++i)
+                    if (m_ActionMaps[i].IsUsableWithDevice(device))
+                        return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Enable all action maps in the asset.
         /// </summary>
         /// <remarks>
@@ -778,6 +859,13 @@ namespace UnityEngine.InputSystem
             return GetEnumerator();
         }
 
+        internal void MarkAsDirty()
+        {
+#if UNITY_EDITOR
+            InputSystem.TrackDirtyInputActionAsset(this);
+#endif
+        }
+
         private void ReResolveIfNecessary()
         {
             if (m_SharedStateForAllMaps == null)
@@ -811,8 +899,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private int m_DevicesCount = -1;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
 
         [Serializable]
         internal struct WriteFileJson

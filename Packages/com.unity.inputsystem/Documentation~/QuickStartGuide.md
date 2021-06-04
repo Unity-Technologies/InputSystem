@@ -72,7 +72,7 @@ For more details about the options, see documentation on [notification behaviors
 
 ![PlayerInput Action Events](Images/MyPlayerActionEvents.png)
 
-Each method takes an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) argument that gives access to the Control that triggered the Action and the Action's value. For more information, see documentation on [Action callbacks](Actions.md#started-performed-and-canceled-callbacks).
+Each method takes an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) argument that gives access to the Control that triggered the Action and the Action's value. For more information, see documentation on [Action callbacks](Actions.md#action-callbacks).
 
 ```CSharp
 public class MyPlayerScript : MonoBehaviour

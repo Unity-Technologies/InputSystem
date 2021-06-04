@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem
     ///
     ///     // This is only to trigger the static class constructor to automatically run
     ///     // in the player.
-    ///     [RuntimeInitializeOnLoadMethod]
+    ///     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     ///     private static void InitializeInPlayer() {}
     ///
     ///     protected override void FinishSetup()
@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem
         public InputDeviceDescription description => m_Description;
 
         /// <summary>
-        /// Whether the device is currently enabled (i.e. sends and receives events).
+        /// Whether the device is currently enabled (that is, sends and receives events).
         /// </summary>
         /// <remarks>
         /// A device that is disabled will not receive events. I.e. events that are being sent to the device
@@ -244,6 +244,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
+                ////TODO: make this a flag and query only once; also, allow C# devices to just set the flag directly and not perform an IOCTL at all
                 var command = QueryCanRunInBackground.Create();
                 if (ExecuteCommand(ref command) >= 0)
                     return command.canRunInBackground;
@@ -355,12 +356,9 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc/>
         public override int valueSizeInBytes => (int)m_StateBlock.alignedSizeInBytes;
 
-        /// <summary>
-        /// Return all input devices currently added to the system.
-        /// </summary>
-        /// <remarks>
-        /// This is equivalent to <see cref="InputSystem.devices"/>.
-        /// </remarks>
+        // This one just leads to confusion as you can access it from subclasses and then be surprised
+        // that it doesn't only include members of those classes.
+        [Obsolete("Use 'InputSystem.devices' instead. (UnityUpgradable) -> InputSystem.devices", error: false)]
         public static ReadOnlyArray<InputDevice> all => InputSystem.devices;
 
         /// <summary>
@@ -522,24 +520,30 @@ namespace UnityEngine.InputSystem
         /// the device API. This is most useful for devices implemented in the native Unity runtime
         /// which, through the command interface, may provide custom, device-specific functions.
         ///
-        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396"
-        /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
-        /// target="_blank">ioctl</a> on UNIX-like systems.
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// on UNIX-like systems.
         /// </remarks>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
             var callbacks = manager.m_DeviceCommandCallbacks;
             for (var i = 0; i < callbacks.length; ++i)
             {
-                var result = callbacks[i](this, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+                var result = callbacks[i](this, commandPtr);
                 if (result.HasValue)
                     return result.Value;
             }
 
-            return InputRuntime.s_Instance.DeviceCommand(deviceId, ref command);
+            return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+        }
+
+        protected virtual unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
+        {
+            return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);
         }
 
         [Flags]
@@ -588,6 +592,38 @@ namespace UnityEngine.InputSystem
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        // An ordered list of ints each containing a bit offset into the state of the device (*without* the added global
+        // offset), a bit count for the size of the state of the control, and an associated index into m_ChildrenForEachControl
+        // for the corresponding control.
+        // NOTE: This contains *leaf* controls only.
+        internal uint[] m_StateOffsetToControlMap;
+
+        // ATM we pack everything into 32 bits. Given we're operating on bit offsets and counts, this imposes some tight limits
+        // on controls and their associated state memory. Should this turn out to be a problem, bump m_StateOffsetToControlMap
+        // to a ulong[] and up the counts here to account for having 64 bits available instead of only 32.
+        internal const int kControlIndexBits = 10; // 1024 controls max.
+        internal const int kStateOffsetBits = 13; // 1024 bytes max state size for entire device.
+        internal const int kStateSizeBits = 9; // 64 bytes max for an individual leaf control.
+
+        internal static uint EncodeStateOffsetToControlMapEntry(uint controlIndex, uint stateOffsetInBits, uint stateSizeInBits)
+        {
+            Debug.Assert(kControlIndexBits < 32, $"Expected kControlIndexBits < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert(kStateOffsetBits < 32, $"Expected kStateOffsetBits < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert(kStateSizeBits < 32, $"Expected kStateSizeBits < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert(controlIndex < (1U << kControlIndexBits), "Control index beyond what is supported");
+            Debug.Assert(stateOffsetInBits < (1U << kStateOffsetBits), "State offset beyond what is supported");
+            Debug.Assert(stateSizeInBits < (1U << kStateSizeBits), "State size beyond what is supported");
+            return stateOffsetInBits << (kControlIndexBits + kStateSizeBits) | stateSizeInBits << kControlIndexBits | controlIndex;
+        }
+
+        internal static void DecodeStateOffsetToControlMapEntry(uint entry, out uint controlIndex,
+            out uint stateOffset, out uint stateSize)
+        {
+            controlIndex = entry & (1U << kControlIndexBits) - 1;
+            stateOffset = entry >> (kControlIndexBits + kStateSizeBits);
+            stateSize = (entry >> kControlIndexBits) & (((1U << (kControlIndexBits + kStateSizeBits)) - 1) >> kControlIndexBits);
+        }
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
@@ -670,19 +706,34 @@ namespace UnityEngine.InputSystem
             OnRemoved();
         }
 
-        internal static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default)
+        internal static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default, bool noPrecompiledLayouts = false)
             where TDevice : InputDevice
         {
-            if (string.IsNullOrEmpty(layoutName))
+            var internedLayoutName = new InternedString(layoutName);
+
+            if (internedLayoutName.IsEmpty())
             {
-                layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
-                if (string.IsNullOrEmpty(layoutName))
-                    layoutName = typeof(TDevice).Name;
+                internedLayoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
+                if (internedLayoutName.IsEmpty())
+                    internedLayoutName = new InternedString(typeof(TDevice).Name);
             }
 
+            // Fast path: see if we can use a precompiled version.
+            // NOTE: We currently do not support layout variants with precompiled layouts.
+            // NOTE: We remove precompiled layouts when they are invalidated by layout changes. So, we don't have to perform
+            //       checks here.
+            if (!noPrecompiledLayouts &&
+                string.IsNullOrEmpty(layoutVariants) &&
+                InputControlLayout.s_Layouts.precompiledLayouts.TryGetValue(internedLayoutName, out var precompiledLayout))
+            {
+                // Yes. This is pretty much a direct new() of the device.
+                return (TDevice)precompiledLayout.factoryMethod();
+            }
+
+            // Slow path: use InputDeviceBuilder to construct the device from the InputControlLayout.
             using (InputDeviceBuilder.Ref())
             {
-                InputDeviceBuilder.instance.Setup(new InternedString(layoutName), new InternedString(layoutVariants),
+                InputDeviceBuilder.instance.Setup(internedLayoutName, new InternedString(layoutVariants),
                     deviceDescription: deviceDescription);
                 var device = InputDeviceBuilder.instance.Finish();
                 if (!(device is TDevice deviceOfType))

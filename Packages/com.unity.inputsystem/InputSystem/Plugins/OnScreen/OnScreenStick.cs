@@ -1,3 +1,4 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.InputSystem.Layouts;
@@ -11,6 +12,7 @@ namespace UnityEngine.InputSystem.OnScreen
     /// input.
     /// </summary>
     [AddComponentMenu("Input/On-Screen Stick")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
         public void OnPointerDown(PointerEventData eventData)
@@ -71,3 +73,4 @@ namespace UnityEngine.InputSystem.OnScreen
         }
     }
 }
+#endif

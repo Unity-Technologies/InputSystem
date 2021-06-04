@@ -1,12 +1,14 @@
-using System.ComponentModel;
-#if UNITY_EDITOR || UNITY_ANDROID
+#if UNITY_EDITOR || UNITY_ANDROID || PACKAGE_DOCS_GENERATION
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Android.LowLevel;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
+
+////TODO: make all the sensor class types internal
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
@@ -158,72 +160,120 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
 namespace UnityEngine.InputSystem.Android
 {
+    /// <summary>
+    /// Accelerometer device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_ACCELEROMETER"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidAccelerometer : Accelerometer
     {
     }
 
+    /// <summary>
+    /// Magnetic field sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_MAGNETIC_FIELD"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidMagneticFieldSensor : MagneticFieldSensor
     {
     }
 
+    /// <summary>
+    /// Gyroscope device on android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GYROSCOPE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidGyroscope : Gyroscope
     {
     }
 
+    /// <summary>
+    /// Light sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_LIGHT"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidLightSensor : LightSensor
     {
     }
 
+    /// <summary>
+    /// Pressure sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_PRESSURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidPressureSensor : PressureSensor
     {
     }
 
+    /// <summary>
+    /// Proximity sensor type on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_PROXIMITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidProximity : ProximitySensor
     {
     }
 
+    /// <summary>
+    /// Gravity sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GRAVITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidGravitySensor : GravitySensor
     {
     }
 
+    /// <summary>
+    /// Linear acceleration sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_LINEAR_ACCELERATION"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidLinearAccelerationSensor : LinearAccelerationSensor
     {
     }
 
+    /// <summary>
+    /// Rotation vector sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidRotationVector : AttitudeSensor
     {
     }
 
+    /// <summary>
+    /// Relative humidity sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_RELATIVE_HUMIDITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidRelativeHumidity : HumiditySensor
     {
     }
 
+    /// <summary>
+    /// Ambient temperature sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_AMBIENT_TEMPERATURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidAmbientTemperature : AmbientTemperatureSensor
     {
     }
 
+    /// <summary>
+    /// Step counter sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_STEP_COUNTER"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter", hideInUI = true)]
     [Scripting.Preserve]
     public class AndroidStepCounter : StepCounter

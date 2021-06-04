@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)
 using System;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
 using DeviceRole = UnityEngine.XR.InputDeviceRole;
 
-internal class XRTests : InputTestFixture
+internal class XRTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -226,7 +226,7 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 7));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 9));
 
         var binaryControl = generatedLayout["Button"];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
@@ -430,7 +430,45 @@ internal class XRTests : InputTestFixture
         }
     }
 
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_PoseControlsCanBeCreatedBySubcontrols()
+    {
+        runtime.ReportNewInputDevice(PoseDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
+        Assert.That(generatedLayout, Is.Not.Null);
+
+        // A Pose control parent was created based off subcontrols
+        var pose = generatedLayout["PoseControl"];
+        Assert.That(pose.layout, Is.EqualTo(new InternedString("Pose")));
+    }
+
     private const int kNumBaseHMDControls = 10;
+
+    static InputDeviceCharacteristics CharacteristicsFromInputDeviceRole(InputDeviceRole role)
+    {
+        switch (role)
+        {
+            case InputDeviceRole.Generic:
+                return InputDeviceCharacteristics.HeadMounted;
+            case InputDeviceRole.LeftHanded:
+                return InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left;
+            case InputDeviceRole.RightHanded:
+                return InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Right;
+            case InputDeviceRole.GameController:
+                return InputDeviceCharacteristics.Controller;
+            case InputDeviceRole.TrackingReference:
+                return InputDeviceCharacteristics.TrackingReference;
+            case InputDeviceRole.HardwareTracker:
+                return InputDeviceCharacteristics.TrackedDevice;
+            case InputDeviceRole.LegacyController:
+                return InputDeviceCharacteristics.Controller;
+        }
+        return InputDeviceCharacteristics.None;
+    }
 
     private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
     {
@@ -441,9 +479,7 @@ internal class XRTests : InputTestFixture
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
             {
-#if !UNITY_2019_3_OR_NEWER
-                deviceRole = role,
-#endif
+                characteristics = CharacteristicsFromInputDeviceRole(role),
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -465,10 +501,7 @@ internal class XRTests : InputTestFixture
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
             {
-#if !UNITY_2019_3_OR_NEWER
-                deviceRole = InputDeviceRole.Generic,
-#endif
-
+                characteristics = CharacteristicsFromInputDeviceRole(InputDeviceRole.Generic),
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -502,9 +535,7 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-#if !UNITY_2019_3_OR_NEWER
-                    deviceRole = InputDeviceRole.Generic,
-#endif
+                    characteristics = CharacteristicsFromInputDeviceRole(InputDeviceRole.Generic),
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -576,9 +607,7 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-#if !UNITY_2019_3_OR_NEWER
-                    deviceRole = InputDeviceRole.Generic,
-#endif
+                    characteristics = CharacteristicsFromInputDeviceRole(InputDeviceRole.Generic),
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -692,5 +721,109 @@ internal class XRTests : InputTestFixture
             get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
+
+    [StructLayout(LayoutKind.Explicit)]
+    unsafe struct PoseDeviceState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte isTracked;
+        [FieldOffset(4)] public uint trackingState;
+        [FieldOffset(8)] public Vector3 position;
+        [FieldOffset(20)] public Quaternion rotation;
+        [FieldOffset(36)] public Vector3 velocity;
+        [FieldOffset(48)] public Vector3 angularVelocity;
+
+        public static InputDeviceDescription CreateDeviceDescription()
+        {
+            return new InputDeviceDescription()
+            {
+                interfaceName = XRUtilities.InterfaceCurrent,
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+#if !UNITY_2019_3_OR_NEWER
+                    deviceRole = InputDeviceRole.Generic,
+#endif
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                    {
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/isTracked",
+                            featureType = FeatureType.Binary,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/trackingState",
+                            featureType = FeatureType.DiscreteStates,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/position",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/rotation",
+                            featureType = FeatureType.Rotation,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/velocity",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "PoseControl/angularVelocity",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {}
+                        }
+                    }
+                }.ToJson()
+            };
+        }
+
+        public FourCC format
+        {
+            get { return new FourCC('X', 'R', 'S', '0'); }
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_XRAxisControls_AreClampedToOneMagnitude()
+    {
+        runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        InputSystem.QueueStateEvent(device, new TestXRDeviceState
+        {
+            button = 0,
+            discreteState = 0,
+            axis = -2f,
+            axis2D = -Vector2.one,
+            axis3D = Vector3.zero,
+            rotation = Quaternion.identity,
+            lastElement = 0,
+        });
+        InputSystem.Update();
+
+        Assert.That((device["Axis"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+        Assert.That((device["Vector2/x"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+        Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+    }
 }
-#endif // UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#endif // (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)

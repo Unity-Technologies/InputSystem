@@ -1,3 +1,5 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
+using System;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
 
@@ -10,6 +12,7 @@ namespace UnityEngine.InputSystem.OnScreen
     /// input.
     /// </summary>
     [AddComponentMenu("Input/On-Screen Button")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-buttons")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
         public void OnPointerUp(PointerEventData eventData)
@@ -44,3 +47,4 @@ namespace UnityEngine.InputSystem.OnScreen
         }
     }
 }
+#endif

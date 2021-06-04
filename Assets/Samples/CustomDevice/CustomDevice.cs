@@ -154,7 +154,7 @@ public class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
 
     // In the player, [RuntimeInitializeOnLoadMethod] will make sure our
     // initialization code gets called during startup.
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
     {
         // Register our device with the input system. We also register

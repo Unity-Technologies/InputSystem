@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Screen-space position of the mouse in pixels.
         /// </summary>
         /// <value>Position of mouse on screen.</value>
-        /// <seealso cref="Mouse.position"/>
+        /// <seealso cref="Pointer.position"/>
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
         public Vector2 position;
@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Screen-space motion delta of the mouse in pixels.
         /// </summary>
         /// <value>Mouse movement.</value>
-        /// <seealso cref="Mouse.delta"/>
+        /// <seealso cref="Pointer.delta"/>
         [InputControl(usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
@@ -47,8 +47,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <value>Scroll wheel delta.</value>
         /// <seealso cref="Mouse.scroll"/>
         [InputControl(displayName = "Scroll")]
-        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
-        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
+        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Left/Right")]
+        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
         public Vector2 scroll;
 
@@ -102,7 +102,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="buttons"/>
         public MouseState WithButton(MouseButton button, bool state = true)
         {
-            var bit = 1 << (int)button;
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (state)
                 buttons |= (ushort)bit;
             else
@@ -178,25 +179,25 @@ namespace UnityEngine.InputSystem
         /// <c>y</c> component to the vertical scroll wheel. Most mice do not have
         /// horizontal scroll wheels and will thus only see activity on <c>y</c>.
         /// </remarks>
-        public Vector2Control scroll { get; private set; }
+        public Vector2Control scroll { get; protected set; }
 
         /// <summary>
         /// The left mouse button.
         /// </summary>
         /// <value>Control representing the left mouse button.</value>
-        public ButtonControl leftButton { get; private set; }
+        public ButtonControl leftButton { get; protected set; }
 
         /// <summary>
         /// The middle mouse button.
         /// </summary>
         /// <value>Control representing the middle mouse button.</value>
-        public ButtonControl middleButton { get; private set; }
+        public ButtonControl middleButton { get; protected set; }
 
         /// <summary>
         /// The right mouse button.
         /// </summary>
         /// <value>Control representing the right mouse button.</value>
-        public ButtonControl rightButton { get; private set; }
+        public ButtonControl rightButton { get; protected set; }
 
         /// <summary>
         /// The first side button, often labeled/used as "back".
@@ -205,7 +206,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// On Windows, this corresponds to <c>RI_MOUSE_BUTTON_4</c>.
         /// </remarks>
-        public ButtonControl backButton { get; private set; }
+        public ButtonControl backButton { get; protected set; }
 
         /// <summary>
         /// The second side button, often labeled/used as "forward".
@@ -214,14 +215,14 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// On Windows, this corresponds to <c>RI_MOUSE_BUTTON_5</c>.
         /// </remarks>
-        public ButtonControl forwardButton { get; private set; }
+        public ButtonControl forwardButton { get; protected set; }
 
         /// <summary>
         /// Number of times any of the mouse buttons has been clicked in succession within
         /// the system-defined click time threshold.
         /// </summary>
         /// <value>Control representing the mouse click count.</value>
-        public IntegerControl clickCount { get; private set;  }
+        public IntegerControl clickCount { get; protected set;  }
 
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
@@ -305,11 +306,7 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr"></param>
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
-            var statePtr = currentStatePtr;
-
-            scroll.x.AccumulateValueInEvent(statePtr, eventPtr);
-            scroll.y.AccumulateValueInEvent(statePtr, eventPtr);
-
+            scroll.AccumulateValueInEvent(currentStatePtr, eventPtr);
             base.OnStateEvent(eventPtr);
         }
 

@@ -95,7 +95,27 @@ Finally, you can choose to manually edit the Binding path, instead of using the 
 
 Composite Bindings are Bindings consisting of multiple parts, which form a Control together. For instance, a [2D Vector Composite](ActionBindings.md#2d-vector) uses four buttons (left, right, up, down) to simulate a 2D stick input. See the [Composite Bindings](ActionBindings.md#composite-bindings) documentation to learn more.
 
-To create a Composite Binding, in the Input Action Asset editor window, select the Add (+) icon on the Action you want to add it to, and select the Composite Binding type from the popup menu. This creates multiple Binding entries for the Action: one for the Composite as a whole, and then, one level below that, one for each Composite part. The Composite itself doesn't have a Binding path property, but its individual parts do, and you can edit these parts like any other Binding. Once you bind all the Composite's parts, the Composite can work together as if you bound a single control to the Action.
+![2D Vector Composite](./Images/2DVectorComposite.png)
+
+To create a Composite Binding, in the Input Action Asset editor window, select the Add (+) icon on the Action you want to add it to, and select the Composite Binding type from the popup menu.
+
+>__Important__: The set of Composites displayed in the menu is filtered based on the value type of the Action. This means that, for example, if the Action is set to type "Button", then only Composites able of returning values of type `float` will be shown.
+
+![Add 2D Vector Composite](./Images/Add2DVectorComposite.png)
+
+This creates multiple Binding entries for the Action: one for the Composite as a whole, and then, one level below that, one for each Composite part. The Composite itself doesn't have a Binding path property, but its individual parts do, and you can edit these parts like any other Binding. Once you bind all the Composite's parts, the Composite can work together as if you bound a single control to the Action.
+
+To change the type of a Composite retroactively, select the Composite, then select the new type from the **Composite Type** drop-down in the **Properties** pane.
+
+![Composite Type](./Images/CompositeType.png)
+
+To can change the part of the Composite to which a particular Binding is assigned, use the **Composite Part** drop-down in the Binding's properties.
+
+![Composite Part](./Images/CompositePart.png)
+
+Multiple Bindings can be assigned to the same part. You can also duplicate individual part Bindings: right-click the Binding, then select **Duplicate** to create new part Bindings for the Composite. This can be used, for example, to create a single Composite for both "WASD" style controls and arrow keys.
+
+![Duplicated Part Bindings](./Images/DuplicatedPartBindings.png)
 
 ### Editing Control Schemes
 
@@ -169,3 +189,6 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 The [`PlayerInput`](Components.md#playerinput-component) component provides a convenient way to handle input for one or multiple players. It requires you to set up all your Actions in an Input Action Asset, which you can then assign to the [`PlayerInput`](Components.md#playerinput-component) component. [`PlayerInput`](Components.md#playerinput-component) can then automatically handle activating Action Maps and selecting Control Schemes for you. To learn more, see the documentation on [GameObject Components for Input](Components.md).
 
 ![PlayerInput](Images/PlayerInput.png)
+
+### Modifying Input Action Assets at runtime
+There are several ways to modify an Input Action Asset at runtime. Any modifications that you make during Play mode to an Input Action Asset do not persist in the Input Action Asset after you exit Play mode. This means you can test your application in a realistic manner in the Editor without having to worry about inadvertently modifying the asset. For examples on how to modify an Input Action Asset, see the documentation on [Creating Actions in code](Actions.md#creating-actions-in-code) and [Changing Bindings](ActionBindings.md#changing-bindings).

@@ -1,10 +1,21 @@
 # Gamepad Support
 
+* [Controls](#controls)
+* [Polling](#polling)
+* [Rumble](#rumble)
+  * [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
+* [PlayStation controllers](#playstation-controllers)
+* [Xbox controllers](#xbox-controllers)
+* [Switch controller](#switch-controllers)
+* [Cursor Control](#cursor-control)
+
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
 A gamepad can have additional Controls, such as a gyro, which the Device can expose. However, all gamepads are guaranteed to have at least the minimum set of Controls described above.
 
 Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. For example, a PS4 DualShock controller layout should look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
+
+>NOTE: Generic [HID](./HID.md) gamepads will __not__ be surfaced as [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) devices but rather be created as generic [joysticks](./Joystick.md). This is because the Input System cannot guarantee correct mapping of buttons and axes on the controller (the information is simply not available at the HID level). Only HID gamepads that are explicitly supported by the Input System (like the PS4 controller) will come out as gamepads. Note that you can set up the same kind of support for specific HID gamepads yourself (see ["Overriding the HID Fallback"](./HID.md#overriding-the-hid-fallback)).
 
 >NOTE: In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
@@ -108,13 +119,13 @@ PlayStation controllers are well supported on different Devices. The Input Syste
 
 [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class.
 
-* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Used to set the color of the light bar on the controller.
+* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_UnityEngine_Color_): Used to set the color of the light bar on the controller.
 
 >__Note__:
 >* Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other DualShock-specific functionality.
 >* Unity doesn't support connecting a PlayStation controller to a desktop machine using the DualShock 4 USB Wireless Adaptor. Use USB or Bluetooth to connect it.
 
-## Xbox
+## Xbox controllers
 
 Xbox controllers are well supported on different Devices. The Input System implements these using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, which derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html). On Windows and UWP, Unity uses the XInput API to connect to any type of supported XInput controller, including all Xbox One or Xbox 360-compatible controllers. These controllers are represented as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (for example, a wheel or a gamepad).
 
@@ -130,6 +141,14 @@ On other platforms Unity, uses derived classes to represent Xbox controllers:
 >* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.
 >* Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other Xbox-specific functionality.
 
-## Switch
+## Switch controllers
 
 The Input System support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.
+
+>__Note__: This support does not currently work for Switch Pro controllers connected via wired USB. Instead, the Switch Pro controller *must* be connected via Bluetooth. This is due to the controller using a prioprietary communication protocol on top of HID which does not allow treating the controller like any other HID.
+
+>__Note__: Switch Joy-Cons are not currently supported on desktop.
+
+## Cursor Control
+
+To give gamepads and joysticks control over a hardware or software cursor, you can use the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component. See [`VirtualMouseInput` component](UISupport.md#virtualmouseinput-component) in the UI section of the manual.

@@ -33,12 +33,12 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>The action object contained in the property.</value>
         /// <remarks>
-        /// This property will return <c>null</c> if the property using a <see cref="reference"/> and
+        /// This property will return <c>null</c> if the property is using a <see cref="reference"/> and
         /// the referenced action cannot be found. Also, it will be <c>null</c> if the property
         /// has been manually initialized with a <c>null</c> <see cref="InputAction"/> using
         /// <see cref="InputActionProperty(InputAction)"/>.
         /// </remarks>
-        public InputAction action => m_UseReference ? m_Reference.action : m_Action;
+        public InputAction action => m_UseReference ? m_Reference != null ? m_Reference.action : null : m_Action;
 
         /// <summary>
         /// If the property contains a reference to the action, this property returns
@@ -129,8 +129,8 @@ namespace UnityEngine.InputSystem
         public override int GetHashCode()
         {
             if (m_UseReference)
-                return m_Reference.GetHashCode();
-            return m_Action.GetHashCode();
+                return m_Reference != null ? m_Reference.GetHashCode() : 0;
+            return m_Action != null ? m_Action.GetHashCode() : 0;
         }
 
         /// <summary>

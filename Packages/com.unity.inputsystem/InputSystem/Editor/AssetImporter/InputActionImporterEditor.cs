@@ -3,7 +3,11 @@ using System;
 using System.IO;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
+#if UNITY_2020_2_OR_NEWER
+using UnityEditor.AssetImporters;
+#else
 using UnityEditor.Experimental.AssetImporters;
+#endif
 
 ////TODO: support for multi-editing
 
@@ -19,9 +23,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
             // like in other types of editors.
-            #if UNITY_2019_2_OR_NEWER
             serializedObject.Update();
-            #endif
 
             // Button to pop up window to edit the asset.
             if (GUILayout.Button("Edit asset"))
@@ -70,11 +72,9 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
             }
 
-            #if UNITY_2019_2_OR_NEWER
             // Using ApplyRevertGUI requires calling Update and ApplyModifiedProperties around the serializedObject,
             // and will print warning messages otherwise (see warning message in ApplyRevertGUI implementation).
             serializedObject.ApplyModifiedProperties();
-            #endif
 
             ApplyRevertGUI();
         }

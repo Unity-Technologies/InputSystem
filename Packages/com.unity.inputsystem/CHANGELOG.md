@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to the input system package will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
@@ -6,6 +7,403 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
+
+## [Unreleased]
+
+### Fixed
+
+- Fixed pairing devices to existing `InputUser`s potentially corrupting list of paired devices from other `InputUser`s ([case 1327628](https://issuetracker.unity3d.com/issues/input-system-devices-are-reassigned-to-the-wrong-users-after-adding-a-new-device)).
+- Fixed StackOverflowException caused by calling InputSystem.Update from inside an input action callback ([case 1316000](https://issuetracker.unity3d.com/issues/crash-when-adding-inputsystem-dot-update-to-inputsystem-command-handler-to-force-processing-an-event-and-sending-input)).
+
+#### Actions
+
+- Fixed binding paths being misaligned in UI when switching to text mode editing ([case 1200107](https://issuetracker.unity3d.com/issues/input-system-path-input-field-text-is-clipping-under-binding-in-the-properties-section)).
+
+### Added
+
+- Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+
+## [1.1.0-pre.4] - 2021-05-04
+
+### Changed
+
+- The `VirtualMouseInput` component is now part of the Input System assembly. It was previously packaged with the `Gamepad Mouse Cursor` sample.
+  * The component has a different GUID from before, so existing setups that use the component from the sample are not broken. To use the built-in component you must explicitly switch over.
+- `InputTestFixture` no longer deletes the `GameObject`s in the current scene in its `TearDown` ([case 1286987](https://issuetracker.unity3d.com/issues/input-system-inputtestfixture-destroys-test-scene)).
+  * This was added for the sake of the Input System's own tests but should not have been in the public fixture.
+- Generic `Gamepad` now has platform independent long button names. Previously it used different names if editor targeted PS4/Switch consoles (case 1321676).
+- When creating a new control scheme with a name `All Control Schemes`, `All Control Schemes1` will be created to avoid confusion with implicit `All Control Schemes` scheme ([case 1217379](https://issuetracker.unity3d.com/issues/control-scheme-cannot-be-selected-when-it-is-named-all-control-schemes)).
+- Display names of keyboard buttons are now passed through `ToLower` and `ToTitleCase` to enforce consistent casing between different platforms and keyboard layouts ([case 1254705](https://issuetracker.unity3d.com/issues/the-display-names-for-keyboard-keys-in-the-input-debugger-do-not-match-those-defined-in-input-system-package)).
+- Editor: All remaining `InputUser` instances are now removed automatically when exiting play mode. This means that all devices are automatically unpaired.
+  * In essence, like `InputAction`, `InputUser` is now considered a player-only feature.
+- Events queued __during__ event processing (i.e. `InputSystem.Update()`) are now processed in the same frame. This eliminates the 1-frame lag previously incurred by simulated input.
+  * Note that this does not extend to input queued __outside__ of event processing but in the same frame. For example, input queued by the UI (such as by `OnScreenButton` and `OnScreenStick`) will still see a 1-frame lag as UI event processing happens later in the frame and outside of input event processing.
+
+#### Actions
+
+- When removing/unplugging a device, it will now also be removed from the device list of `InputActionMap.devices` and `InputActionAsset.devices`.
+  ```CSharp
+  var gamepad = InputSystem.AddDevice<Gamepad>();
+  var actions = new MyGeneratedActions();
+  actions.devices = new[] { gamepad };
+  InputSystem.RemoveDevice(gamepad);
+  // `actions.devices` is now an empty array.
+  ```
+- Adding an action to a `InputActionMap` that is part of an `InputActionAsset` now requires all actions in the asset to be disabled ([case 1288335](https://issuetracker.unity3d.com/issues/adding-actions-at-runtime-to-existing-map-from-asset-triggers-assertion-error)).
+  * This used to trigger an `Assert` at runtime but now properly throws an `InvalidOperationException`.
+
+### Fixed
+
+- Fixed inputs in game view sometimes not working when running in the editor, as initial focus state could end up being incorrect.
+- Fixed bad performance in Input Debugger with high-frequency devices (e.g. 1+ KHz gaming mice). Before, high event volumes led to excessive refreshes of debugger data.
+- Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
+- Fixed PS4- and PS3-specific `rightTriggerButton` and `leftTriggerButton` controls not being marked as synthetic and thus conflicting with `rightTrigger` and `leftTrigger` input ([case 1293734](https://issuetracker.unity3d.com/issues/input-system-when-binding-gamepad-controls-triggerbutton-gets-bound-instead-of-triggeraxis)).
+  * This manifested itself, for example, when using interactive rebinding and seeing `rightTriggerButton` getting picked instead of the expected `rightTrigger` control.
+- Fixed changes to usages of devices in remote player not being reflected in Input Debugger.
+- Fixed exceptions and incorrect values with HIDs using 32-bit fields ([case 1189859](https://issuetracker.unity3d.com/issues/inputsystem-error-when-vjoy-is-installed)).
+  * This happened, for example, with vJoy installed.
+- Fixed `InputUser` no longer sending `InputUserChange.ControlsChanged` when adding a new user after previously, all users were removed.
+  * Fix contributed by [Sven Herrmann](https://github.com/SvenRH) in [1292](https://github.com/Unity-Technologies/InputSystem/pull/1292).
+- Fixed `AxisDeadzoneProcessor` min/max values not being settable to 0 in editor UI ([case 1293744](https://issuetracker.unity3d.com/issues/input-system-input-system-axis-deadzone-minimum-value-fallsback-to-default-value-if-its-set-to-0)).
+- Fixed blurry icons in input debugger, asset editor, input settings ([case 1299595](https://issuetracker.unity3d.com/issues/inputsystem-supported-device-list-dropdown-icons-present-under-project-settings-are-not-user-friendly)).
+- Fixed `clickCount` not being incremented correctly by `InputSystemUIInputModule` for successive mouse clicks ([case 1317239](https://issuetracker.unity3d.com/issues/eventdata-dot-clickcount-doesnt-increase-when-clicking-repeatedly-in-the-new-input-system)).
+- Fixed UI not working after additively loading scenes with additional InputSystemUIInputModule modules ([case 1251720](https://issuetracker.unity3d.com/issues/input-system-buttons-cannot-be-pressed-after-additively-loading-scenes-with-additional-event-systems)).
+- Fixed no `OnPointerExit` received when changing UI state without moving pointer ([case 1232705](https://issuetracker.unity3d.com/issues/input-system-onpointerexit-is-not-triggered-when-a-ui-element-interrupts-a-mouse-hover)).
+- Fixed reference to `.inputactions` of `Player Prefab` referenced by `PlayerInputManager` being destroyed on going into play mode, if the player prefab was a nested prefab ([case 1319756](https://issuetracker.unity3d.com/issues/playerinput-component-loses-its-reference-to-an-inputactionasset)).
+- Fixed "Scheme Name" label clipped in "Add Control Schema" popup window ([case 1199560]https://issuetracker.unity3d.com/issues/themes-input-system-scheme-name-is-clipped-in-add-control-schema-window-with-inter-default-font)).
+- Fixed `InputSystem.QueueEvent` calls from within `InputAction` callbacks getting dropped entirely ([case 1297339](https://issuetracker.unity3d.com/issues/input-system-ui-button-wont-click-when-simulating-a-mouse-click-with-inputsystem-dot-queueevent)).
+- Fixed `InputSystemUIInputModule` being in invalid state when added from `Awake` to a game object when entering playmode ([case 1323566](https://issuetracker.unity3d.com/issues/input-system-default-ui-actions-do-not-register-when-adding-inputsystemuiinputmodule-at-runtime-to-an-active-game-object)).
+- Fixed `Keyboard.current` becoming `null` after `OnScreenButton` is disabled or destroyed ([case 1305016](https://issuetracker.unity3d.com/issues/inputsystem-keyboard-dot-current-becomes-null-after-onscreenbutton-is-destroyed)).
+
+#### Actions
+
+- Fixed rebinding not working for any discrete control that was held when the rebinding operation started ([case 1317225](https://issuetracker.unity3d.com/issues/inputsystem-a-key-will-not-be-registered-after-rebinding-if-it-was-pressed-when-the-rebinding-operation-started)).
+- Fixed bindings being added to every InputAction in a collection when editing a collection of InputActions in the inspector. ([case 1258578](https://issuetracker.unity3d.com/issues/adding-a-binding-to-one-inputaction-element-in-a-list-adds-the-same-binding-to-all-the-other-elements-in-the-list))
+- Fixed `Retrieving array element that was out of bounds` and `SerializedProperty ... has disappeared!` errors when deleting multiple action bindings in the input asset editor ([case 1300506](https://issuetracker.unity3d.com/issues/errors-are-thrown-in-the-console-when-deleting-multiple-bindings)).
+- Fixed delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+- Fixed actions embedded into `MonoBehaviours` not showing bindings added directly from within constructors ([case 1291334](https://issuetracker.unity3d.com/issues/input-action-binding-doesnt-show-up-in-the-inspector-when-set-using-a-script)).
+  ```CSharp
+  public class MyMB : MonoBehaviour {
+    // This would end up not showing the binding in the inspector.
+    public InputAction action = new InputAction(binding: "<Gamepad>/leftStick");
+  ```
+- Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
+- Fixed `NullReferenceException` when reading values through `InputAction.CallbackContext` on a `OneModifierComposite` or `TwoModifierComposite` binding.
+- Fixed multi-taps not working when multiple controls were bound to an action ([case 1267805](https://issuetracker.unity3d.com/issues/input-system-multi-tap-interaction-doesnt-get-triggered-when-there-are-2-or-more-bindings-in-the-active-control-scheme)).
+  * When there were multiple controls bound to an action, this bug would get triggered by any interaction that did not result in a phase change on the action.
+- Fixed runtime rebinds added as new bindings from leaking into .inputactions assets when exiting play mode ([case 1190502](https://issuetracker.unity3d.com/issues/inputsystem-runtime-rebinds-are-leaking-into-inputactions-asset))
+- Fixed `IndexOutOfRangeException` and `null` elements in `InputUser.lostDevices` when an `InputUser` loses a devices from a control scheme with only optional devices ([case 1275148](https://issuetracker.unity3d.com/issues/disconnecting-and-reconnecting-input-device-causes-exception-in-inputuser)).
+- Fixed binding path selection windows not remembering navigation state when going up through hierarchy ([case 1254981](https://issuetracker.unity3d.com/issues/action-binding-path-selection-windows-doesnt-remember-navigation-state)).
+
+### Added
+
+- Support for Device Simulator touchscreen input.
+- Enabled XR device support on Magic Leap (Lumin).
+- Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
+- Added a warning message to PlayerInputManager editor when the attached input action asset won't work with Join Players When Button Is Pressed behaviour due to missing control scheme device requirements ([case 1265853](https://issuetracker.unity3d.com/issues/input-system-player-prefabs-are-not-instantiated-on-join-action-when-they-have-inputactionasset-assigned-to-them)).
+- Added support for [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) with Unity 2021.1+.
+  * UITK is now supported as a UI solution in players. Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) and [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is based on the same `InputSystemUIInputModule` code path. More details in the manual.
+- `InputSystemUIInputModule` now has an `xrTrackingOrigin` property. When assigned, this will transform all tracked device positions and rotations from it's local space into Unity's world space ([case 1308480](https://issuetracker.unity3d.com/issues/xr-sdk-tracked-device-raycaster-does-not-work-correctly-with-worldspace-canvas-when-xr-camera-is-offset-from-origin)).
+- Added `InputSystemUIInputModule.GetLastRaycastResult`. This returns the most recent raycast result and can be used to draw ray visualizations or get information on the most recent UI object hit.
+- Added `InputStateBlock` support for `kFormatSBit` when working with floats ([case 1258003](https://issuetracker.unity3d.com/issues/hid-exceptions-are-thrown-when-launching-a-project-while-analog-keyboard-is-connected-to-the-machine)).
+- Added an API to parse control paths.
+  ```CSharp
+  var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
+
+  Debug.Log(parsed.Length); // Prints 2.
+  Debug.Log(parsed[0].layout); // Prints "XRController".
+  Debug.Log(parsed[0].name); // Prints an empty string.
+  Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
+  Debug.Log(parsed[1].layout); // Prints null.
+  Debug.Log(parsed[1].name); // Prints "trigger".
+  ```
+  * Can, for example, be used with `InputBinding.path`.
+- Added a new API-only setting in the form of `InputSystem.settings.maxEventBytesPerUpdate`.
+  * Puts an upper limit on the number of event bytes processed in a single update.
+  * If exceeded, any additional event data will get thrown away and an error will be issued.
+  * Set to 5MB by default.
+- Added a new API-only setting called `InputSystem.settings.maxQueuedEventsPerUpdate`.
+  * This limits the number of events that can be queued during event processing using the `InputSystem.QueueEvent` method. This guards against infinite loops in the case where an action callback queues an event that causes the same action callback to be called again.
+- Added `InputSystemUIInputModule.AssignDefaultActions` to assign default actions when creating ui module in runtime.
+- Added `UNITY_INCLUDE_TESTS` define constraints to our test assemblies, which is 2019.2+ equivalent to `"optionalUnityReferences": ["TestAssemblies"]`.
+
+## [1.1.0-preview.3] - 2021-02-04
+
+### Changed
+
+- An upper limit of 1024 controls per device and 1kb of memory state per device has been introduced.
+  * This allows for certain optimizations.
+  * Should the limits prove too tight, they can be raised in the future.
+  * The most complex device we have at the moment (`Touchscreen`) has 242 controls and 616 bytes of state.
+- `TouchSimulation` now __disables__ the `Pointer` devices it reads input from.
+  * This is to address the problem of mouse input leading to __both__ mouse and touch input happening concurrently. Instead, enabling touch simulation will now effectively __replace__ mouse and pen input with touch input.
+  * Devices such `Mouse` and `Pen` will remain in place but will not get updated. Events received for them will be consumed by `TouchSimulation`.
+- Enabled XR device support on Switch.
+
+### Fixed
+
+- Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
+- Fixed `InputDevice.canRunInBackground` not being correctly set for VR devices (thus not allowing them to receive input while the application is not focused).
+- Fixed `InputUser.OnEvent` and `RebindingOperation.OnEvent` exhibiting bad performance profiles and leading to multi-millisecond input update times (case 1253371).
+  * In our own measurements, `InputUser.OnEvent` is >9 times faster than before and `RebindingOperation.OnEvent` is ~2.5 times faster.
+- Fixed PS4 controller not recognized on Mac when connected over Bluetooth ([case 1286449](https://issuetracker.unity3d.com/issues/input-system-dualshock-4-zct1e-dualshock-2-v1-devices-are-not-fully-recognised-over-bluetooth)).
+- Fixed `EnhancedTouch` leaking `NativeArray` memory on domain reloads ([case 1190150](https://issuetracker.unity3d.com/issues/new-input-system-simulated-touch-in-editor-doesnt-work)).
+- Fixed `TouchSimulation` leading to `"Pointer should have exited all objects before being removed"` errors ([case 1190150](https://issuetracker.unity3d.com/issues/new-input-system-simulated-touch-in-editor-doesnt-work)).
+- Fixed multi-touch not working with `InputSystemUIInputModule` ([case 1271942](https://issuetracker.unity3d.com/issues/android-onenddrag-not-being-called-when-there-are-at-least-2-touches-on-the-screen)).
+  * This also manifested itself when using On-Screen Controls and not being able to use multiple controls at the same time (for example, in the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors)).
+- Fixed restart prompt after package installation not appearing on Unity 2020.2+ ([case 1292513](https://issuetracker.unity3d.com/issues/input-system-after-package-install-the-update-slash-switch-and-restart-prompt-does-not-appear)).
+- Fixed action with multiple bindings getting stuck in `Performed` state when two or more controls are pressed at the same time ([case 1295535](https://issuetracker.unity3d.com/issues/input-system-not-registering-multiple-inputs)).
+  * Regression introduced in 1.1-preview.2.
+- Fixed `Touch.activeTouches` having incorrect touch phases after calling `EnhancedTouch.Disable()` and then `EnhancedTouch.Enable()` ([case 1286865](https://issuetracker.unity3d.com/issues/new-input-system-began-moved-and-ended-touch-phases-are-not-reported-when-a-second-scene-is-loaded)).
+- Fixed compile errors related to XR/AR on console platforms.
+
+#### Actions
+
+- Fixed actions not triggering correctly when multiple bindings on the same action were referencing the same control ([case 1293808](https://issuetracker.unity3d.com/product/unity/issues/guid/1293808/)).
+  * Bindings will now "claim" controls during resolution. If several bindings __on the same action__ resolve to the same control, only the first such binding will successfully resolve to the control. Subsequent bindings will only resolve to controls not already referenced by other bindings on the action.
+  ```CSharp
+  var action = new InputAction();
+  action.AddBinding("<Gamepad>/buttonSouth");
+  action.AddBinding("<Gamepad>/buttonSouth"); // Will be ignored.
+  action.AddBinding("<Gamepad>/button*"); // Will only receive buttonWest, buttonEast, and buttonNorth.
+  ```
+  * This also means that `InputAction.controls` will now only contain any control at most once.
+- Fixed JSON serialization of action maps not preserving empty binding paths ([case 1231968](https://issuetracker.unity3d.com/issues/cloning-actionmap-through-json-converts-empty-paths-to-null-which-is-not-allowed)).
+
+### Added
+
+- Added a new high-performance way to iterate over changed controls in an event.
+  ```CSharp
+  // Can optionally specify a magnitude threshold that controls must cross.
+  // NOTE: This will note allocate GC memory.
+  foreach (var control in eventPtr.EnumerateChangedControls(magnitudeThreshold: 0.1f))
+      Debug.Log($"Control {control} changed state");
+  ```
+  * This can be used, for example, to implement much more performant "any button pressed?" queries.
+  ```CSharp
+  InputSystem.onEvent +=
+      (eventPtr, device) =>
+      {
+          // Ignore anything that is not a state event.
+          var eventType = eventPtr.type;
+          if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
+              return;
+
+          // Find all changed controls actuated above the button press threshold.
+          foreach (var control in eventPtr.EnumerateChangedControls
+              (device: device, magnitudeThreshold: InputSystem.settings.defaultButtonPressThreshold))
+              // Check if it's a button.
+              if (control is ButtonControl button)
+                  Debug.Log($"Button {button} was pressed");
+      }
+  ```
+- Added support for Step Counter sensors for iOS.
+  * You need to enable **Motion Usage** under Input System settings before using the sensor. You can also manually add **Privacy - Motion Usage Description** to your application's Info.plist file.
+
+## [1.1.0-preview.2] - 2020-10-23
+
+### Changed
+
+- The `submit` and the `cancel` actions of the UI input module now trigger on __release__ instead of press. This makes the behavior consistent with clicks triggering UI response on release rather than press.
+- Removed the old "Tanks" demo (previously available from the samples shipped with the package).
+  * Added a new and improved demo project, which you can download from the [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) GitHub repository.
+
+#### Actions
+
+- Actions of type `InputActionType.Button` now respect button press (and release) points.
+  * Previously, button-type actions, when used without explicit "Press" interactions, would perform immediately when a bound control was actuated.
+  * Now, a button-type action will behave the same as if a "Press" interaction is applied with "Trigger Behavior" set to "Press Only".
+  * This means that a button-type action will now perform (and perform __once__ only) when a control crosses the button press threshold defined in the global settings or, if present, locally on a `ButtonControl`. It will then stay performed and finally cancel only when the control falls back to or below the release threshold.
+- `InputAction.ReadValue<T>()` now always returns `default<T>` when the action is canceled.
+  * This is to make it consistent with `InputAction.CallbackContext.ReadValue<T>()` which already returned `default<T>` when the action was canceled.
+  * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
+- If multiple actions in different action maps but in the same .inputactions asset have the same name, calling `InputActionAsset.FindAction()` with just an action name will now return the first __enabled__ action. If none of the actions are enabled, it will return the first action with a matching name as before ([case 1207550](https://issuetracker.unity3d.com/issues/input-system-action-can-only-be-triggered-by-one-of-the-action-maps-when-action-name-is-identical)).
+  ```CSharp
+  var map1 = new InputActionMap("map1");
+  var map2 = new InputActionMap("map2");
+  map1.AddAction("actionWithSameName");
+  map2.AddAction("actionWithSameName");
+  var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+  asset.AddActionMap(map1);
+  asset.AddActionMap(map2);
+
+  map2["actionWithSameName"].Enable();
+
+  var action = asset["actionWithSameName"];
+  // Before: "map1/actionWithSameName"
+  // Now: "map2/actionWithSameName"
+  ```
+
+### Fixed
+
+- Fixed player build causing `ProjectSettings.asset` to be checked out in Perforce ([case 1254502](https://issuetracker.unity3d.com/issues/projectsettings-dot-asset-is-checked-out-in-perforce-when-building-a-project-with-the-input-system-package-installed)).
+- Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
+- Fixed remoting in Input Debugger not working for devices in the player that are created from generated layouts (such as XR devices).
+- Fixed potential `NullReferenceException` in `InputActionProperty` when the `InputActionReference` is `null`.
+- Fixed "On-Screen Controls" sample still using `StandaloneInputModule` and thus throwing `InvalidOperationException` when used with "Active Input Handling" set to "Input System Package (New)" ([case 1201866](https://issuetracker.unity3d.com/issues/input-system-old-input-module-is-available-in-onscreencontrolssample-sample-scene-from-package)).
+- Fixed `OnScreenButton` leaving button controls in pressed state when disabled in-between receiving `OnPointerDown` and `OnPointerUp`. Usually manifested itself by having to click the button twice next time it was enabled.
+- Fixed exiting out of play mode in the Unity Editor while a test run is in progress leading to the Input System permanently losing all its state until the editor is restarted ([case 1251724](https://issuetracker.unity3d.com/issues/the-input-system-does-not-get-re-enabled-when-a-playmode-input-test-is-interrupted)).
+- Fixed max values for `Axis` and `Double` controls stored as multi-bit fields being off by one ([case 1223436](https://issuetracker.unity3d.com/issues/value-equal-to-1-is-not-returned-by-the-input-system-when-reading-a-multi-bit-control)).
+  * Fix contributed by [jamre](https://github.com/jamre) in [962](https://github.com/Unity-Technologies/InputSystem/pull/962). Thank you!
+- Fixed debug assert in `InputDeviceTester` sample when simultaneously pressing two buttons on gamepad ([case 1244988](https://issuetracker.unity3d.com/issues/input-system-runtime-errors-when-pressing-more-than-one-button-at-the-same-time)).
+- Fixed use of UI `Slider` causing drag thresholds to no longer work ([case 1275834](https://issuetracker.unity3d.com/issues/inputsystem-drag-threshold-value-is-ignored-for-scroll-view-after-interacting-with-a-slider-slash-scroll-bar)).
+- Fixed layout lists in Input Debugger not updating when removing layouts.
+- Fixed device connects leading to different but similar device being reported as reconnected.
+
+#### Actions
+
+- Fixed Action with multiple bindings becoming unresponsive after a Hold interaction was performed ([case 1239551](https://issuetracker.unity3d.com/issues/input-system-hold-interaction-makes-an-input-action-unresponsive-when-2-or-more-binding-are-attached-to-the-same-input-action)).
+- Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved ([case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)).
+- Fixed `InputActionTrace.ActionEventPtr.ReadValueAsObject` leading to `InvalidCastException` when trying to read values that came from composite bindings.
+- Fixed not being able to stack a `MultiTap` on top of a `Tap` ([case 1261462](https://issuetracker.unity3d.com/issues/multi-tap-and-tap-interactions-in-the-same-action-doesnt-work-properly)).
+- Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
+- Fixed `Map index on trigger` and `IndexOutOfRangeException` errors when using multiple Interactions on the same Action. ([case 1253034](https://issuetracker.unity3d.com/issues/map-index-on-trigger-and-indexoutofrangeexception-errors-when-using-multiple-interactions-on-the-same-action)).
+- Fixed context menu in action editor not filtering out composites the same way that the `+` icon menu does. This led to, for example, a "2D Vector" composite being shown as an option for a button type action.
+- Fixed initial state checks for composite bindings failing if performed repeatedly. For example, doing a `ReadValue<Vector2>` for a WASD binding would return an incorrect value after disabling the map twice while no input from the keyboard was received ([case 1274977](https://issuetracker.unity3d.com/issues/input-system-cannot-read-vector2-values-after-inputactionset-has-been-disabled-and-enabled-twice)).
+- Fixed "Add Interaction" menu in action editor not filtering out interactions with incompatible value types ([case 1272772](https://issuetracker.unity3d.com/issues/new-input-system-action-gets-called-only-once-when-using-mouse-press-interaction)).
+- Fixed `PlayerInput` no longer auto-switching control schemes if `neverAutoSwitchControlSchemes` was toggled off and back on after the component was first enabled ([case 1232039](https://issuetracker.unity3d.com/issues/input-system-auto-switch-locks-on-one-device-when-its-disabled-and-re-enabled-via-script)).
+- Fixed action map name being the same as .inputactions asset name leading to compile errors when `Generate C# Class` is used; now leads to import error ([case 1212052](https://issuetracker.unity3d.com/issues/input-system-user-can-name-inputaction-asset-and-action-map-the-same-creating-compilation-errors-on-generation)).
+- Fixed bindings not getting updated when binding by display name and there is no control with the given display name initially.
+  ```
+  // If at the time this action is enabled, there's no ä key on the keyboard,
+  // this did not update properly later when switched to a layout that does have the key.
+  var action = new InputAction(binding: "<Keyboard>/#(ä)");
+  ```
+
+### Added
+
+- Added tvOS documentation entries in 'Supported Input Devices' page.
+
+#### Actions
+
+- Added "release thresholds" for buttons.
+  * Release points are now separated from press points by a percentage threshold.
+  * The threshold is defined by `InputSettings.buttonReleaseThreshold`.
+  * Thresholds are defined as percentages of press points. A release is thus defined as a button, after having reached a value of at least `InputSettings.defaultButtonPressPoint` (or whatever local press is used), falling back to a value equal to or less than `InputSettings.buttonReleaseThreshold` percent of the press point.
+  * This is intended to solve the problem of buttons flickering around button press points.
+  * The default threshold is set at 75%, that is, buttons release at 3/4 of the press point.
+- Added new methods to the `InputAction` class:
+  * `InputAction.IsPressed()`: Whether a bound control has crossed the press threshold and has not yet fallen back below the release threshold.
+  * `InputAction.WasPressedThisFrame()`: Whether a bound control has crossed the press threshold this frame.
+  * `InputAction.WasReleasedThisFrame()`: Whether a bound control has fallen back below the release threshold this frame.
+  * `InputAction.WasPerformedThisFrame()`: Whether the action was performed at any point during the current frame. Equivalent to `InputAction.triggered`, which will be deprecated in the future.
+  * `InputAction.Reset()`: Forcibly reset the action state. Cancels the action, if it is currently in progress.
+- Added `InputAction.GetTimeoutCompletionPercentage` to query the amount left to complete a currently ongoing interaction.
+  ```CSharp
+  // Let's say there's a hold interaction on a "warp" action. The user presses a button bound
+  // to the action and then holds it. While the user holds the button, we want to know how much
+  // longer the user will have to hold it so that we can display feedback in the UI.
+  var holdCompleted = playerInput.actions["warp"].GetTimeoutCompletionPercentage();
+  ```
+- Added three new binding composite types:
+  * `OneModifierComposite`: This is a generalization of `ButtonWithOneModifier` (which is still available but now hidden from the UI) which also represents bindings such as "SHIFT+1" but now can be used to target bindings other than buttons (e.g. "SHIFT+delta").
+  * `TwoModifiersComposite`: This is a generalization of `ButtonWithTwoModifiers` (which is still available but now hidden from the UI) which also represents bindings such as "SHIFT+CTRL+1" but now can be used to target bindings other than buttons (e.g. "SHIFT+CTRL+delta").
+  * `Vector3Composite`: Works the same way `Vector2Composite` does. Adds a `forward` and `backward` binding in addition to `up`, `down`, `left`, and `right`.
+
+## [1.1.0-preview.1] - 2020-08-20
+
+>__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
+
+### Changed
+
+#### Actions
+
+- Auto-generated C# files now have `<auto-generated>` headers so they get ignored by Rider code analysis.
+- Auto-generated C# classes are now `partial` so that they can be manually extended.
+- Deleting a composite binding with `action.ChangeBinding(0).Erase()` now also erases all the bindings that are part of the composite.
+- Trigger binding resolution from within action callbacks (e.g. `InputAction.performed`) will now defer resolution until after the callback has completed.
+  * This fixes crashes such as [case 1242406](https://issuetracker.unity3d.com/issues/mecanim-crash-when-entering-or-exiting-play-mode-destroying-gameobjects) where disabling `PlayerInput` from within an action callback led to an action's state being released while the action was still in a callback.
+
+### Fixed
+
+- Fixed input history on Android mono build by alligning memory of history records
+- Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
+- Fixed clicking on help page button in Unity inspector for Input System components not going to relevant manual pages.
+- Fixed a bug that prevented DualShock controllers from working on tvOS. (case 1221223).
+- `GravitySensor`, `LinearAccelerationSensor`, and `AttitudeSensor` not being initialized on iOS ([case 1251382](https://issuetracker.unity3d.com/product/unity/issues/guid/1251382/)).
+- Fixed compilation issues with XR and VR references when building to platforms that do not have complete XR and VR implementations.
+- Fixed possible `NullReferenceException`s on ARMs with controls that receive automatic memory offsets.
+- Fixed `TouchControl.tapCount` resetting to 0 when "Script Debugging" is enabled (case 1194636).
+- Fixed `Touch.activeTouches` not having a `TouchPhase.Began` entry for touches that moved in the same frame that they began in ([case 1230656](https://issuetracker.unity3d.com/issues/input-system-mobile-enhancedtouch-screen-taps-start-with-moved-or-stationary-phase-instead-of-began)).
+- Fixed sequential taps causing touches to get stuck in `Touch.activeTouches`.
+- Improved performance of `Touch.activeTouches` (most notably, a lot of time was spent in endlessly repetitive safety checks).
+- Fixed `EnhancedTouch` APIs not indicating that they need to be enabled with `EnhancedTouchSupport.Enable()`.
+  - The APIs now throw `InvalidOperationException` when used without being enabled.
+- Fixed memory corruption in `InputEventTrace.AllocateEvent` ([case 1262496](https://issuetracker.unity3d.com/issues/input-system-crash-with-various-stack-traces-when-using-inputactiontrace-dot-subscribetoall))
+  * Manifested itself, for example, as crashes when using `InputActionTrace.SubscribeToAll`.
+- AxisControls and Vector2Controls' X and Y subcontrols on XR devices now have a minimum range of -1 and a maximum range of 1. This means they can now properly respond to modifiers and interactions in the binding system.
+
+#### Actions
+
+- Fixed drag&drop reordering actions while having one control scheme selected causing bindings from other control schemes to be lost ([case 122800](https://issuetracker.unity3d.com/issues/input-system-bindings-get-cleared-for-other-control-scheme-actions-when-reordering-an-action-in-a-specific-control-scheme)).
+- Fixed stack overflow in `PlayerInput.SwitchCurrentActionMap` when called from action callback ([case 1232893](https://issuetracker.unity3d.com/issues/inputsystem-switchcurrentactionmap-causes-a-stackoverflow-when-called-by-each-pahse-of-an-action)).
+- Fixed control picker ending up empty when listing devices in "Supported Devices" ([case 1254150](https://issuetracker.unity3d.com/product/unity/issues/guid/1254150/)).
+
+### Added
+
+- Device layouts can now be "precompiled" for speed. `Keyboard`, `Mouse`, and `Touchscreen` are now included as precompiled layouts greatly reducing instantiation time and GC heap cost for these devices. For `Touchscreen`, this results in a >20x speed-up for `InputSystem.AddDevice<Touchscreen>()`.
+- Added Pose Control layout. The Pose Control is used on XR Devices and wraps tracking state, position, rotation, and velocity information.
+
+#### Actions
+
+- Can now save binding overrides as JSON strings and restore them from such using the newly added `SaveBindingOverridesAsJson` and `LoadBindingOverridesFromJson` extension methods.
+  ```CSharp
+  void SaveUserRebinds(PlayerInput player)
+  {
+      var rebinds = player.actions.SaveBindingOverridesAsJson();
+      PlayerPrefs.SetString("rebinds", rebinds);
+  }
+
+  void LoadUserRebinds(PlayerInput player)
+  {
+      var rebinds = PlayerPrefs.GetString("rebinds");
+      player.actions.LoadBindingOverridesFromJson(rebinds);
+  }
+  ```
+
+## [1.0.0] - 2020-04-23
+
+### Fixed
+
+- Fixed compilation issues in `TrackedDeviceRaycaster` when disabling built-in XR module.
+
+## [1.0.0-preview.7] - 2020-04-17
+
+### Fixed
+
+- `VirtualMouseInput` not moving the software cursor when set to `HardwareCursorIsAvailable` but not having a hardware cursor ()
+- Can now override built-in Android gamepad layouts. Previously, the input system would always choose its default defaults even after registering more specific layouts using `InputSystem.RegisterLayout`.
+- `InputControlPath.TryGetControlLayout` no longer throws `NotImplementedException` for `<Mouse>/scroll/x` and similar paths where the layout is modifying a control it inherited from its base layout ([thread](https://forum.unity.com/threads/notimplementedexception-when-using-inputcontrolpath-trygetcontrollayout-on-mouse-controls.847129/)).
+- Fixed compilation errors when disabling built-in VR and XR modules. ([case 1214248](https://issuetracker.unity3d.com/issues/enable-input-system-symbol-is-not-being-updated-when-the-input-system-is-changed-in-player-settings/)).
+- Fixed compilation errors when disabling built-in Physics and Physics2D modules. ([case 1191392](https://issuetracker.unity3d.com/issues/inputsystem-trackeddeviceraycaster-has-hard-references-on-both-physics-and-physics2d)).
+- No longer throws `NotImplementedException` when matching against a field of `InputDeviceDescription.capabilities` when the value of the field used scientific notation.
+- No longer incorrectly matches fields of `InputDeviceDescription.capabilities` by prefix only (i.e. previously it would find the field "foo" when actually looking for "foobar").
+- Input device debugger window slowing editor to a crawl when opened on PS4 DualShock controller.
+- `InputUser.UnpairDevices()` corrupting user device list.
+
+#### Actions
+
+- Controls are now re-resolved after adding or removing bindings from actions ([case 1218544](https://issuetracker.unity3d.com/issues/input-system-package-does-not-re-resolve-bindings-when-adding-a-new-binding-to-a-map-that-has-already-generated-its-state)).
+- Can now have spaces and special characters in action names when using `PlayerInput` with the `SendMessages` or `BroadcastMessages` behavior. Previously, an incorrect method name was generated (fix contributed by [BHSPitMonkey](https://github.com/BHSPitMonkey) in [#1022](https://github.com/Unity-Technologies/InputSystem/pull/1022); [case 1214519](https://issuetracker.unity3d.com/issues/player-input-send-messages-wont-trigger-when-input-action-name-contains-spaces)).
+- Adding a new action now sets `expectedControlType` to `Button` as expected ([case 1221015](https://issuetracker.unity3d.com/issues/input-system-default-value-of-expectedcontroltype-is-not-being-set-when-creating-a-new-action)).
+- Player joins with `PlayerInputManager` from button presses no longer fail if there are multiple devices of the same type present and the join was not on the first gamepad ([case 226920](https://fogbugz.unity3d.com/f/cases/1226920/)).
+- `PlayerInputEditor` no longer leads to the player's `InputActionAsset` mistakenly getting replaced with a clone when the inspector is open on a `PlayerInput` component ([case 1228636](https://issuetracker.unity3d.com/issues/action-map-gets-lost-on-play-when-prefab-is-highlighted-in-inspector)).
+- The control picker in the .inputactions editor will no longer incorrectly filter out layouts such as `Xbox One Gamepad (on XB1)` when using them in control schemes. Also, it will no longer filter out controls from base layouts (such as `Gamepad`) ([case 1219415](https://issuetracker.unity3d.com/issues/impossible-to-choose-gamepad-as-binding-path-when-control-scheme-is-set-as-xboxone-scheme)).
+- `RebindOperation`s will no longer pick controls right away that are already actuated above the magnitude threshold when the operation starts. Instead, these controls will have to change their actuation from their initial level such that they cross the magnitude threshold configured in the operation ([case 1215784](https://issuetracker.unity3d.com/issues/unnecessary-slash-unwanted-binding-candidates-are-found-when-detecting-and-changing-an-input-value-of-an-input-device)).
+- Newly added actions and action maps are now scrolled to when there are more items than fit into view. Previously newly added item was appended but outside of the visible area.
+- Actions and bindings in the `.inputactions` editor are no longer force-expanded on every domain reload and whenever a new action or binding is added.
+- The importer for `.inputactions` assets will now check out from version control the generated .cs file when overwriting it &ndash; which only happens if the contents differ ([case 1222972](https://issuetracker.unity3d.com/issues/inputsystem-editor-generated-c-number-file-is-not-checked-out-when-overwriting)).
+- The editor for `.inputactions` assets will now check out from version control the asset before saving it.
+- Drag-reordering action maps no longer throws "Should have drop target" asserts in the console (case [1229146](https://issuetracker.unity3d.com/issues/inputsystem-reordering-of-actionmaps-in-input-action-window-fails-and-throws-should-have-drop-target-error)).
+- Drag-reordering actions no longer changes action IDs of some of the existing actions ([case 1231233](https://issuetracker.unity3d.com/issues/input-systems-action-ids-dont-stick-with-action-names-when-input-actions-are-reorganized)).
+- References to `InputActionReference` objects created by the importer for `.inputactions` files are no longer broken when the action referenced by the object is renamed ([case 1229145](https://issuetracker.unity3d.com/issues/inputsystem-inputactionreference-loses-guid-when-its-action-is-moved-or-renamed-in-the-inputaction-asset)).
+  * __NOTE: This fix does not apply to existing `InputActionReference` instances.__ The problem was inherent in the internal file IDs generated for actions &ndash; which were affected by action and map names. Thus, changing the name of an action or map would change the resulting file ID of the `InputActionReference`.<br>However, changing file IDs will break any existing reference to the object. Thus we had to preserve the existing `InputActionReference` objects under their original file ID. We hide them in the Project Browser, however. The ones that are visible now have the new, fixed file IDs.<br>To switch existing `InputActionReference` properties to the new file IDs, simply replace them with the newly created `InputActionReference`.
+
+### Changed
+
+- `InputDevice.all` has been deprecated due to the confusion it creates with other getters like `Gamepad.all`. Use `InputSystem.devices` instead ([case 1231216](https://issuetracker.unity3d.com/issues/joystick-dot-all-lists-more-than-just-joysticks)).
+  * In the same vein, we added a new `Joystick.all` getter that works the same as `Gamepad.all`.
+- Changed UI Package to be optional dependency. Removing the package will now disable all UI relevant Input code.
 
 ## [1.0.0-preview.6] - 2020-03-06
 
@@ -214,7 +612,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This was an bug in an internal data structure that impacted a number of code paths that were using the data structure.
 - Fixed `LayoutNotFoundException` being thrown when `InputControlPath.ToHumanReadableString` referenced a layout that could not be found.
 
-## [1.0.0-preview.2] - 2019-11-4
+## [1.0.0-preview.2] - 2019-11-04
 
 ### Changed
 
@@ -281,7 +679,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Added a new sample called "Custom Device Usages" that shows how to use a layout override on `Gamepad` to allow distinguishing two gamepads in bindings based on which player the gamepad is assigned to.
 - Added abstract `TrackedDevice` input device class as the basis for various kinds of tracked devices.
 
-## [1.0.0-preview] - 2019-9-20
+## [1.0.0-preview] - 2019-09-20
 
 ### Fixed
 
@@ -296,7 +694,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 ### Changed
 ### Added
 
-## [0.9.6-preview] - 2019-9-6
+## [0.9.6-preview] - 2019-09-06
 
 ### Fixed
 
@@ -320,7 +718,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Added `PlayerInput.neverAutoSwitchControlSchemes` to disable logic that automatically enables control scheme switching when there is only a single `PlayerInput` in the game.
 - Added `PlayerInput.SwitchControlScheme` to switch schemes manually.
 
-## [0.9.5-preview] - 2019-8-29
+## [0.9.5-preview] - 2019-08-29
 
 ### Fixed
 
@@ -367,7 +765,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This information is helpful for us to debug problems related to specific devices.
 - If a device description has been copied to the clipboard, a new menu "Paste Device Description as Device" entry in the "Options" menu of the input debugger appears. This instantiates the device from the description as if it was reported locally by the Unity runtime.
 
-## [0.9.3-preview] - 2019-8-15
+## [0.9.3-preview] - 2019-08-15
 
 ### Fixed
 
@@ -394,7 +792,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
   * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
 
-## [0.9.2-preview] - 2019-8-9
+## [0.9.2-preview] - 2019-08-09
 
 ### Fixed
 
@@ -415,7 +813,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 - Added a new sample to the package called `SimpleDemo`. You can install the sample from the package manager. See the [README.md](https://github.com/Unity-Technologies/InputSystem/Assets/Samples/SimpleDemo/README.md) file for details about the sample.
 
-## [0.9.1-preview] - 2019-8-8
+## [0.9.1-preview] - 2019-08-08
 
 ### Fixed
 
@@ -491,7 +889,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Added `InputAction.ReadValueAsObject` API.
 - Added `InputAction.activeControl` API.
 
-## [0.9.0-preview] - 2019-7-18
+## [0.9.0-preview] - 2019-07-18
 
 ### Fixed
 
@@ -600,7 +998,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * The previous `Initial State Check` toggle is now implicit in the action type now. `Value` actions perform an initial state check (i.e. trigger if their control is already actuated when the action is enabled). Other types of actions don't.
   * The previous `Pass Through` toggle is now rolled into the action type.
 
-## [0.2.10-preview] - 2019-5-17
+## [0.2.10-preview] - 2019-05-17
 
 ### Added
 
@@ -655,7 +1053,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - `PlayerInput` can now handle `.inputactions` assets that have no control schemes.
   * Will pair __all__ devices mentioned by any of the bindings except if already paired to another player.
 
-## [0.2.8-preview] - 2019-4-23
+## [0.2.8-preview] - 2019-04-23
 
 ### Added
 
@@ -710,7 +1108,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * Controls now have icons displayed for them.
 - There is new support for binding to keys on the keyboard by their generated character rather than by their location. \
   ![Keyboard Binding](Documentation~/Images/KeyboardBindByLocationVsCharacter.png)
-  * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
+  * At the toplevel of the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
   * Binding by location shows differences between the local keyboard layout and the US reference layout.
   * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
 - `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.
@@ -1036,6 +1434,6 @@ Actions:
 Misc:
 - Documentation no longer picked up as assets in user project
 
-## [0.0.13-preview] - 2018-12-5
+## [0.0.13-preview] - 2018-12-05
 
 First release from stable branch.

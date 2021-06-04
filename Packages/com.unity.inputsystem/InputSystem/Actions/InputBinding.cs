@@ -98,15 +98,12 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                ////REVIEW: this is inconsistent with InputActionMap and InputAction which generate IDs, if necessary
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
-            set
-            {
-                m_Guid = value;
-                m_Id = m_Guid.ToString();
-            }
+            set => m_Id = value.ToString();
         }
 
         /// <summary>
@@ -131,6 +128,11 @@ namespace UnityEngine.InputSystem
         /// new InputBinding { path = "&lt;Mouse&gt;/leftButton" }
         /// </code>
         /// </example>
+        /// <seealso cref="overridePath"/>
+        /// <seealso cref="InputControlPath"/>
+        /// <seealso cref="InputControlPath.Parse"/>
+        /// <seealso cref="InputControl.path"/>
+        /// <seealso cref="InputSystem.FindControl"/>
         public string path
         {
             get => m_Path;
@@ -139,7 +141,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// If the binding is overridden, this is the overriding path.
-        /// Otherwise it is null.
+        /// Otherwise it is <c>null</c>.
         /// </summary>
         /// <value>Path to override the <see cref="path"/> property with.</value>
         /// <remarks>
@@ -165,6 +167,13 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="path"/>
+        /// <seealso cref="overrideInteractions"/>
+        /// <seealso cref="overrideProcessors"/>
+        /// <seealso cref="hasOverrides"/>
+        /// <seealso cref="InputActionRebindingExtensions.SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputActionRebindingExtensions.LoadBindingOverridesFromJson(IInputActionCollection2,string,bool)"/>
+        /// <seealso cref="InputActionRebindingExtensions.ApplyBindingOverride(InputAction,int,InputBinding)"/>
         public string overridePath
         {
             get => m_OverridePath;
@@ -191,6 +200,11 @@ namespace UnityEngine.InputSystem
         /// on the binding. See <see cref="IInputInteraction"/> for why the order matters.
         /// </remarks>
         /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="overrideInteractions"/>
+        /// <seealso cref="hasOverrides"/>
+        /// <seealso cref="InputActionRebindingExtensions.SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputActionRebindingExtensions.LoadBindingOverridesFromJson(IInputActionCollection2,string,bool)"/>
+        /// <seealso cref="InputActionRebindingExtensions.ApplyBindingOverride(InputAction,int,InputBinding)"/>
         public string interactions
         {
             get => m_Interactions;
@@ -205,6 +219,13 @@ namespace UnityEngine.InputSystem
         /// If this is not <c>null</c>, it replaces the value of <see cref="interactions"/>.
         /// </remarks>
         /// <seealso cref="effectiveInteractions"/>
+        /// <seealso cref="interactions"/>
+        /// <seealso cref="overridePath"/>
+        /// <seealso cref="overrideProcessors"/>
+        /// <seealso cref="hasOverrides"/>
+        /// <seealso cref="InputActionRebindingExtensions.SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputActionRebindingExtensions.LoadBindingOverridesFromJson(IInputActionCollection2,string,bool)"/>
+        /// <seealso cref="InputActionRebindingExtensions.ApplyBindingOverride(InputAction,int,InputBinding)"/>
         public string overrideInteractions
         {
             get => m_OverrideInteractions;
@@ -219,6 +240,7 @@ namespace UnityEngine.InputSystem
         /// This string has the same format as <see cref="InputControlAttribute.processors"/>.
         /// </remarks>
         /// <seealso cref="InputProcessor{TValue}"/>
+        /// <seealso cref="overrideProcessors"/>
         public string processors
         {
             get => m_Processors;
@@ -233,6 +255,10 @@ namespace UnityEngine.InputSystem
         /// If this is not <c>null</c>, it replaces the value of <see cref="processors"/>.
         /// </remarks>
         /// <seealso cref="effectiveProcessors"/>
+        /// <seealso cref="processors"/>
+        /// <seealso cref="overridePath"/>
+        /// <seealso cref="overrideInteractions"/>
+        /// <seealso cref="hasOverrides"/>
         public string overrideProcessors
         {
             get => m_OverrideProcessors;
@@ -341,6 +367,12 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// True if any of the override properties, that is, <see cref="overridePath"/>, <see cref="overrideProcessors"/>,
+        /// and/or <see cref="overrideInteractions"/>, are set (not <c>null</c>).
+        /// </summary>
+        public bool hasOverrides => overridePath != null || overrideProcessors != null || overrideInteractions != null;
+
+        /// <summary>
         /// Initialize a new binding.
         /// </summary>
         /// <param name="path">Path for the binding.</param>
@@ -359,7 +391,6 @@ namespace UnityEngine.InputSystem
             m_Processors = processors;
             m_Interactions = interactions;
             m_Name = name;
-            m_Guid = default;
             m_Id = default;
             m_Flags = default;
             m_OverridePath = default;
@@ -376,21 +407,14 @@ namespace UnityEngine.InputSystem
 
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
+            m_Id = Guid.NewGuid().ToString();
         }
 
-        internal string MakeSureIdIsInPlace()
+        internal void RemoveOverrides()
         {
-            if (m_Guid != Guid.Empty)
-                return m_Id;
-
-            if (string.IsNullOrEmpty(m_Id))
-                GenerateId();
-            else
-                m_Guid = new Guid(m_Id);
-
-            return m_Id;
+            m_OverridePath = null;
+            m_OverrideInteractions = null;
+            m_OverrideProcessors = null;
         }
 
         public static InputBinding MaskByGroup(string group)
@@ -405,6 +429,9 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] private string m_Name;
         [SerializeField] internal string m_Id;
+        [Tooltip("Path of the control to bind to. Matched at runtime to controls from InputDevices present at the time.\n\nCan either be "
+            + "graphically from the control picker dropdown UI or edited manually in text mode by clicking the 'T' button. Internally, both "
+            + "methods result in control path strings that look like, for example, \"<Gamepad>/buttonSouth\".")]
         [SerializeField] private string m_Path;
         [SerializeField] private string m_Interactions;
         [SerializeField] private string m_Processors;
@@ -415,8 +442,6 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private string m_OverridePath;
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
-        ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
-        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// This is the bindings path which is effectively being used.
@@ -723,6 +748,13 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        internal bool TriggersAction(InputAction action)
+        {
+            // Match both name and ID on binding.
+            return string.Compare(action.name, this.action, StringComparison.InvariantCultureIgnoreCase) == 0
+                || this.action == action.m_Id;
+        }
+
         ////TODO: also support matching by name (taking the binding tree into account so that components
         ////      of composites can be referenced through their parent)
 
@@ -813,8 +845,15 @@ namespace UnityEngine.InputSystem
         // Internally we pass by reference to not unnecessarily copy the struct.
         internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
-            ////TODO: add matching by ID
+            // Match name.
+            if (name != null)
+            {
+                if (binding.name == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(name, binding.name, Separator))
+                    return false;
+            }
 
+            // Match path.
             if (path != null)
             {
                 ////REVIEW: should this use binding.effectivePath?
@@ -825,6 +864,7 @@ namespace UnityEngine.InputSystem
                     return false;
             }
 
+            // Match action.
             if (action != null)
             {
                 ////TODO: handle "map/action" format
@@ -835,6 +875,7 @@ namespace UnityEngine.InputSystem
                     return false;
             }
 
+            // Match groups.
             if (groups != null)
             {
                 var haveGroupsOnBinding = !string.IsNullOrEmpty(binding.groups);
@@ -846,6 +887,7 @@ namespace UnityEngine.InputSystem
                     return false;
             }
 
+            // Match ID.
             if (!string.IsNullOrEmpty(m_Id))
             {
                 if (binding.id != id)

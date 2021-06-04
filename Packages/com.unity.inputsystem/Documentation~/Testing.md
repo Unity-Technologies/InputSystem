@@ -7,7 +7,7 @@ The Input System has built-in support for writing automated input tests. You can
 To set up a test assembly that uses the Input System's automation framework, follow these steps:
 
 1. In the `Packages/manifest.json` file of your project, `com.unity.inputsystem` must be listed in `testables`. This is necessary for test code that comes with the package to be included with test builds of your project.<br><br>You can, for example, add this after the `dependencies` property like so:
-    ```JSON
+    ```
     },
     "testables" : [
         "com.unity.inputsystem"
@@ -22,6 +22,8 @@ To set up a test assembly that uses the Input System's automation framework, fol
 
 Use [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) to create an isolated version of the Input System for tests. The fixture sets up a blank, default-initialized version of the Input System for each test, and restores the Input System to its original state after the test completes. The default-initialized version has all built-in registrations (such as layout and processors), but doesn't have any pre-existing Input Devices.
 
+>__NOTE:__ [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) will not have custom registrations performed from Unity startup code such as `[InitializeOnLoad]` or `[RuntimeInitializeOnLoadMethod]`. Layouts needed during tests have to be manually registered as part of the test setup.
+
 You can use the fixture as a base class for your own fixture:
 
 ```CSharp
@@ -33,8 +35,28 @@ class MyTests : InputTestFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
         Press(gamepad.buttonSouth);
     }
+
+    // If you need custom setup and tear-down logic, override the methods inherited
+    // from InputTestFixture.
+    // IMPORTANT: If you use NUnit's [Setup] and [TearDown] attributes on methods in your
+    //            test fixture, this will *override* the methods inherited from
+    //            InputTestFixture and thus cause them to not get executed. Either
+    //            override the methods as illustrated here or call the Setup() and
+    //            TearDown() methods of InputTestFixture explicitly.
+    public override void Setup()
+    {
+        base.Setup();
+        // Add setup code here.
+    }
+    public override void TearDown()
+    {
+        // Add teardown code here.
+        base.TearDown();
+    }
 }
 ```
+
+>__IMPORTANT:__ If you do this, do __not__ add a `[SetUp]` or `[TearDown]` method. Doing so will cause the methods in [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) to not be called, thus leading to the test fixture not properly initializing or shutting down. Instead, override the `Setup` and/or `TearDown` method inherited from `InputTestFixture`.
 
 Alternatively, you can instantiate it in your fixture:
 
@@ -43,6 +65,20 @@ Alternatively, you can instantiate it in your fixture:
 class MyTestFixture
 {
     private InputTestFixture input = new InputTestFixture();
+
+    // NOTE: You have to manually call Setup() and TearDown() in this scenario.
+
+    [SetUp]
+    void Setup()
+    {
+        input.Setup();
+    }
+
+    [TearDown]
+    void TearDown()
+    {
+        input.TearDown();
+    }
 }
 ```
 
@@ -76,6 +112,8 @@ public class GameTestPrebuildSetup : IPrebuildSetup
 }
 #endif
 ```
+
+Note that you do __not__ generally need to clean up any input-related data you set up. This includes devices you add, layouts you registered, [`InputSettings`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_settings) you modify, and any other alteration to the state of [`InputSystem`](../api/UnityEngine.InputSystem.InputSystem.html). [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) will automatically throw away the current state of the Input System and restore the state from before the test was started.
 
 ## Writing tests
 

@@ -1,6 +1,5 @@
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.EnhancedTouch
@@ -13,7 +12,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// touches supported by the screen. Unlike a <see cref="Touch"/>, a <see cref="Finger"/> will stay the same and valid for the
     /// lifetime of its <see cref="Touchscreen"/>.
     ///
-    /// Note that a Finger does not represent an actual physical finger in the world. I.e. the same Finger instance might be used,
+    /// Note that a Finger does not represent an actual physical finger in the world. That is, the same Finger instance might be used,
     /// for example, for a touch from the index finger at one point and then for a touch from the ring finger. Each Finger simply
     /// corresponds to the Nth touch on the given screen.
     /// </remarks>
@@ -79,7 +78,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         }
 
         /// <summary>
-        /// The currently ongoing for the finger or <c>default(Touch)</c> (with <see cref="Touch.valid"/> abeing false)
+        /// The currently ongoing touch for the finger or <c>default(Touch)</c> (with <see cref="Touch.valid"/> being false)
         /// if no touch is currently in progress on the finger.
         /// </summary>
         public Touch currentTouch
@@ -92,7 +91,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 if (touch.isInProgress)
                     return touch;
                 // Ended touches stay current in the frame they ended in.
-                if (touch.updateStepCount == Touch.s_PlayerState.updateStepCount)
+                if (touch.updateStepCount == InputUpdate.s_UpdateStepCount)
                     return touch;
                 return default;
             }
@@ -125,9 +124,13 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 updateMask = updateMask,
             };
             m_StateHistory.StartRecording();
+
+            // record the current state if touch is already in progress
+            if (screen.touches[index].isInProgress)
+                m_StateHistory.RecordStateChange(screen.touches[index], screen.touches[index].ReadValue());
         }
 
-        private static bool ShouldRecordTouch(InputControl control, double time, InputEventPtr eventPtr)
+        private static unsafe bool ShouldRecordTouch(InputControl control, double time, InputEventPtr eventPtr)
         {
             // We only want to record changes that come from events. We ignore internal state
             // changes that Touchscreen itself generates. This includes the resetting of deltas.
@@ -135,12 +138,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             if (!eventPtr.valid)
                 return false;
 
-            var touchControl = (TouchControl)control;
-            var touch = touchControl.ReadValue();
+            // Direct memory access for speed.
+            var currentTouchState = (TouchState*)((byte*)control.currentStatePtr + control.stateBlock.byteOffset);
 
-            // Touchscreen will record a button down and button up a TouchControl when a tap occurs.
+            // Touchscreen will record a button down and button up on a TouchControl when a tap occurs.
             // We only want to record the button down, not the button up.
-            if (touch.phase == TouchPhase.Ended && !touch.isTap && touch.tapCount > 0)
+            if (currentTouchState->isTapRelease)
                 return false;
 
             return true;
@@ -148,12 +151,17 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         private unsafe void OnTouchRecorded(InputStateHistory.Record record)
         {
-            var touchState = (TouchState*)record.GetUnsafeMemoryPtr();
+            var recordIndex = record.recordIndex;
+            var touchHeader = m_StateHistory.GetRecordUnchecked(recordIndex);
+            var touchState = (TouchState*)touchHeader->statePtrWithoutControlIndex; // m_StateHistory is bound to a single TouchControl.
+            touchState->updateStepCount = InputUpdate.s_UpdateStepCount;
+
+            // Invalidate activeTouches.
             Touch.s_PlayerState.haveBuiltActiveTouches = false;
 
             // Record the extra data we maintain for each touch.
-            var extraData = (Touch.ExtraDataPerTouchState*)record.GetUnsafeExtraMemoryPtr();
-            extraData->updateStepCount = Touch.s_PlayerState.updateStepCount;
+            var extraData = (Touch.ExtraDataPerTouchState*)((byte*)touchHeader + m_StateHistory.bytesPerRecord -
+                UnsafeUtility.SizeOf<Touch.ExtraDataPerTouchState>());
             extraData->uniqueId = ++Touch.s_PlayerState.lastId;
 
             // We get accumulated deltas from Touchscreen. Store the accumulated
@@ -161,14 +169,25 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             extraData->accumulatedDelta = touchState->delta;
             if (touchState->phase != TouchPhase.Began)
             {
-                var previous = record.previous;
-                if (previous.valid)
-                    touchState->delta -= ((TouchState*)previous.GetUnsafeMemoryPtr())->delta;
+                // Inlined (instead of just using record.previous) for speed. Bypassing
+                // the safety checks here.
+                if (recordIndex != m_StateHistory.m_HeadIndex)
+                {
+                    var previousRecordIndex = recordIndex == 0 ? m_StateHistory.historyDepth - 1 : recordIndex - 1;
+                    var previousTouchHeader = m_StateHistory.GetRecordUnchecked(previousRecordIndex);
+                    var previousTouchState = (TouchState*)previousTouchHeader->statePtrWithoutControlIndex;
+                    touchState->delta -= previousTouchState->delta;
+                    touchState->beganInSameFrame = previousTouchState->beganInSameFrame &&
+                        previousTouchState->updateStepCount == touchState->updateStepCount;
+                }
+            }
+            else
+            {
+                touchState->beganInSameFrame = true;
             }
 
             // Trigger callback.
-            var statePtr = (TouchState*)record.GetUnsafeMemoryPtr();
-            switch (statePtr->phase)
+            switch (touchState->phase)
             {
                 case TouchPhase.Began:
                     DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_OnFingerDown, this, "Touch.onFingerDown");
@@ -188,7 +207,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             Debug.Assert(uniqueId != default, "0 is not a valid ID");
             foreach (var record in m_StateHistory)
             {
-                if (((Touch.ExtraDataPerTouchState*)record.GetUnsafeExtraMemoryPtr())->uniqueId == uniqueId)
+                if (((Touch.ExtraDataPerTouchState*)record.GetUnsafeExtraMemoryPtrUnchecked())->uniqueId == uniqueId)
                     return new Touch(this, record);
             }
 

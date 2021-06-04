@@ -9,6 +9,89 @@ using UnityEngine.Scripting;
 
 internal partial class CoreTests
 {
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetCompletionPercentageOfTimeoutOnInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var actionWithoutInteraction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        var holdAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=2)");
+        var tapAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "tap(duration=2)");
+        var multiTapAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "multitap(tapCount=2,tapTime=2,tapDelay=2)");
+
+        actionWithoutInteraction.Enable();
+        holdAction.Enable();
+        tapAction.Enable();
+        multiTapAction.Enable();
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        currentTime = 1;
+        Press(gamepad.buttonSouth);
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        currentTime = 2;
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0.5).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0.5).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1f / (3f * 2f)).Within(0.0001));
+
+        // Note that just advancing time is enough to advance towards completion. No InputSystem.Update()
+        // is required.
+        currentTime = 4;
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001)); // Has not yet canceled because we haven't updated.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(2f / (3f * 2f)).Within(0.0001));
+
+        InputSystem.Update();
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001)); // Has cancelled now.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001)); // Also cancelled because we went past tap delay.
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(actionWithoutInteraction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(holdAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(tapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        // Check with multiple timeouts on MultiTap.
+
+        currentTime = 6;
+        Press(gamepad.buttonSouth);
+
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(0).Within(0.0001));
+
+        currentTime = 7;
+        Release(gamepad.buttonSouth);
+
+        // Note the system now treats the first timeout as complete.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(2f / (3f * 2f)).Within(0.0001));
+
+        currentTime = 8;
+        Press(gamepad.buttonSouth);
+
+        // Same here.
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(4f / (3f * 2f)).Within(0.0001));
+
+        currentTime = 10;
+
+        Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
+    }
+
     [Preserve]
     class InteractionThatOnlyPerforms : IInputInteraction<float>
     {
@@ -89,6 +172,30 @@ internal partial class CoreTests
             Assert.That(trace5, Performed(action5)); // Any value change performs.
             Assert.That(trace6, Canceled(action6));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Action_WithMultipleInteractions_DoesNotThrowWhenUsingMultipleMaps()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        map1.AddAction(name: "action1", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "press,hold(duration=0.4)");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map2.Enable();
+
+        Assert.DoesNotThrow(() =>
+        {
+            Press(gamepad.buttonNorth);
+            Release(gamepad.buttonNorth);
+        });
     }
 
     [Test]
@@ -187,6 +294,46 @@ internal partial class CoreTests
             Assert.That(pressAndRelease,
                 Started<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, value: 1.0)
                     .AndThen(Performed<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, duration: 0, value: 1.0)));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformPressInteraction_UsingReleasePointWhenBoundToAxisControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        InputSystem.settings.buttonReleaseThreshold = 0.75f; // Puts release point at 0.375.
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger", interactions: "press");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftTrigger, 0.35f);
+
+            Assert.That(trace, Started(action, control: gamepad.leftTrigger, value: 0.35f));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.5f);
+
+            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.5f));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.4f);
+
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.3f);
+
+            Assert.That(trace, Canceled(action, control: gamepad.leftTrigger, value: 0f));
         }
     }
 
@@ -290,6 +437,47 @@ internal partial class CoreTests
             Release(gamepad.buttonSouth, time: 11.5);
 
             Assert.That(trace, Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 11.5, duration: 1, value: 0.0));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ReleasedHoldInteractionIsCancelled_WithMultipleBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction(binding: "<Keyboard>/space", interactions: "hold(duration=0.4)");
+        action.AddBinding("<Keyboard>/s");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Press and hold.
+            Press(keyboard.spaceKey, time: 10);
+
+            Assert.That(trace, Started<HoldInteraction>(action, keyboard.spaceKey, time: 10, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+
+            trace.Clear();
+
+            // Exceed hold time. Make sure action performs and *stays* performed.
+            currentTime = 10.5;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Performed<HoldInteraction>(action, keyboard.spaceKey, time: 10.5, duration: 0.5, value: 1.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+
+            trace.Clear();
+
+            // Release.
+            Release(keyboard.spaceKey, time: 10.6);
+
+            Assert.That(trace, Canceled<HoldInteraction>(action, keyboard.spaceKey, duration: 0.6, time: 10.6, value: 0.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(action.ReadValue<float>(), Is.Zero);
         }
     }
 
@@ -497,11 +685,13 @@ internal partial class CoreTests
 
             Set(gamepad.leftTrigger, 0.123f);
 
-            Assert.That(trace, Is.Empty);
+            Assert.That(trace, Started<PressInteraction>(pressAction));
+
+            trace.Clear();
 
             Set(gamepad.leftTrigger, 0.3f);
 
-            Assert.That(trace, Started<PressInteraction>(pressAction).AndThen(Performed<PressInteraction>(pressAction)));
+            Assert.That(trace, Performed<PressInteraction>(pressAction));
 
             trace.Clear();
 

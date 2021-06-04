@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Read a value from the composite without having to know the value type (unlike
-        /// <see cref="InputBindingComposite{TValue}.ReadValue(InputBindingCompositeContext)"/> and
+        /// <see cref="InputBindingComposite{TValue}.ReadValue(ref InputBindingCompositeContext)"/> and
         /// without allocating GC heap memory (unlike <see cref="ReadValueAsObject"/>).
         /// </summary>
         /// <param name="context">Callback context for the binding composite. Use this
@@ -112,6 +112,42 @@ namespace UnityEngine.InputSystem
         public virtual float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
             return -1;
+        }
+
+        /// <summary>
+        /// Called after binding resolution for an <see cref="InputActionMap"/> is complete.
+        /// </summary>
+        /// <remarks>
+        /// Some composites do not have predetermine value types. Two examples of this are
+        /// <see cref="Composites.OneModifierComposite"/> and <see cref="Composites.TwoModifiersComposite"/>, which
+        /// both have a <c>"binding"</c> part that can be bound to arbitrary controls. This means that the
+        /// value type of these bindings can only be determined at runtime.
+        ///
+        /// Overriding this method allows accessing the actual controls bound to each part
+        /// at runtime.
+        ///
+        /// <example>
+        /// <code>
+        /// [InputControl] public int binding;
+        ///
+        /// protected override void FinishSetup(ref InputBindingContext context)
+        /// {
+        ///     // Get all controls bound to the 'binding' part.
+        ///     var controls = context.controls
+        ///         .Where(x => x.part == binding)
+        ///         .Select(x => x.control);
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        protected virtual void FinishSetup(ref InputBindingCompositeContext context)
+        {
+        }
+
+        // Avoid having to expose internal modifier.
+        internal void CallFinishSetup(ref InputBindingCompositeContext context)
+        {
+            FinishSetup(ref context);
         }
 
         internal static TypeTable s_Composites;
@@ -207,7 +243,7 @@ namespace UnityEngine.InputSystem
     /// A binding composite arranges several bindings such that they form a "virtual control".
     /// </summary>
     /// <typeparam name="TValue">Type of value returned by the composite. This must be a "blittable"
-    /// type, i.e. a type whose values can simply be copied around.</typeparam>
+    /// type, that is, a type whose values can simply be copied around.</typeparam>
     /// <remarks>
     /// Composite bindings are a special type of <see cref="InputBinding"/>. Whereas normally
     /// an input binding simply references a set of controls and returns whatever input values are
@@ -303,10 +339,10 @@ namespace UnityEngine.InputSystem
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            var valueSize = valueSizeInBytes;
+            var valueSize = UnsafeUtility.SizeOf<TValue>();
             if (bufferSize < valueSize)
                 throw new ArgumentException(
-                    $"Expected buffer of at least {valueSizeInBytes} bytes but got buffer of only {bufferSize} bytes instead",
+                    $"Expected buffer of at least {UnsafeUtility.SizeOf<TValue>()} bytes but got buffer of only {bufferSize} bytes instead",
                     nameof(bufferSize));
 
             var value = ReadValue(ref context);

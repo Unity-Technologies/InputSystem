@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Utilities
 {
@@ -87,7 +86,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
 
                 // See if we have a match.
-                if (m_Position < m_Length && m_Text[m_Position] == '"')
+                if (m_Position < m_Length && m_Text[m_Position] == '"' && (pathPosition >= pathLength || path[pathPosition] == '/' || path[pathPosition] == '['))
                 {
                     // Have matched a property name. Navigate to value.
                     ++m_Position;
@@ -95,7 +94,7 @@ namespace UnityEngine.InputSystem.Utilities
                         return false;
 
                     // Check if we have matched everything in the path.
-                    if (pathPosition == pathLength)
+                    if (pathPosition >= pathLength)
                         return true;
                     if (path[pathPosition] == '/')
                     {
@@ -374,6 +373,7 @@ namespace UnityEngine.InputSystem.Utilities
             var integralPart = 0L;
             var fractionalPart = 0.0;
             var fractionalDivisor = 10.0;
+            var exponent = 0;
 
             // Parse sign.
             if (m_Text[m_Position] == '-')
@@ -416,11 +416,36 @@ namespace UnityEngine.InputSystem.Utilities
             }
 
             if (m_Position < m_Length && (m_Text[m_Position] == 'e' || m_Text[m_Position] == 'E'))
-                throw new NotImplementedException("exponents");
+            {
+                ++m_Position;
+                var isNegative = false;
+                if (m_Position < m_Length && m_Text[m_Position] == '-')
+                {
+                    isNegative = true;
+                    ++m_Position;
+                }
+                else if (m_Position < m_Length && m_Text[m_Position] == '+')
+                {
+                    ++m_Position;
+                }
+
+                var multiplier = 1;
+                while (m_Position < m_Length && char.IsDigit(m_Text[m_Position]))
+                {
+                    var digit = m_Text[m_Position] - '0';
+                    exponent *= multiplier;
+                    exponent += digit;
+                    multiplier *= 10;
+                    ++m_Position;
+                }
+
+                if (isNegative)
+                    exponent *= -1;
+            }
 
             if (!m_DryRun)
             {
-                if (!haveFractionalPart)
+                if (!haveFractionalPart && exponent == 0)
                 {
                     if (negative)
                         result = -integralPart;
@@ -429,10 +454,14 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 else
                 {
+                    float value;
                     if (negative)
-                        result = (float)-(integralPart + fractionalPart);
+                        value = (float)-(integralPart + fractionalPart);
                     else
-                        result = (float)(integralPart + fractionalPart);
+                        value = (float)(integralPart + fractionalPart);
+                    if (exponent != 0)
+                        value *= Mathf.Pow(10, exponent);
+                    result = value;
                 }
             }
 

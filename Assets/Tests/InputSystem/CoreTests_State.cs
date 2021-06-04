@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -309,6 +311,60 @@ partial class CoreTests
         var device = InputDevice.Build<Gamepad>("CustomGamepad");
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
+    }
+
+    [Test]
+    [Category("State")]
+    [TestCase("Axis")]
+    [TestCase("Double")]
+    public void State_CanStoreControlAsMultiBitfield(string controlType)
+    {
+        var json = @"
+        {
+            ""name"" : ""TestDevice"",
+            ""controls"" : [
+                {
+                    ""name"" : ""max"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 0,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 127
+                },
+                {
+                    ""name"" : ""min"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 1,
+                    ""bit"" : 0,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 0
+                },
+                {
+                    ""name"" : ""mid"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 2,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 63
+                }
+            ]
+        }".Replace("__CONTROLTYPE__", controlType);
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        var min = device["min"];
+        var max = device["max"];
+        var mid = device["mid"];
+
+        var minValue = min.ReadValueAsObject();
+        var maxValue = max.ReadValueAsObject();
+        var midValue = mid.ReadValueAsObject();
+
+        Assert.That(minValue, Is.EqualTo(0).Within(0.00001));
+        Assert.That(maxValue, Is.EqualTo(1).Within(0.00001));
+        Assert.That(midValue, Is.EqualTo(0.5).Within(1 / 128f)); // Precision dictated by number of bits we have available.
     }
 
     [Test]
@@ -758,6 +814,17 @@ partial class CoreTests
         Assert.That(positionMonitorFired);
     }
 
+    [Test]
+    [Category("State")]
+    public void State_CurrentTimeTakesOffsetToRealtimeSinceStartupIntoAccount()
+    {
+        runtime.currentTime += 2;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 1;
+
+        Assert.That(InputState.currentTime, Is.EqualTo(1));
+        Assert.Greater(InputRuntime.s_Instance.currentTime, InputState.currentTime);
+    }
+
     // For certain actions, we want to be able to tell whether a specific input arrives in time.
     // For example, we may want to only trigger an action if a specific button was released within
     // a certain amount of time. To support this, the system allows putting timeouts on individual
@@ -1088,8 +1155,10 @@ partial class CoreTests
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
         var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
-        var combinedDeviceStateSize = (device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
-            device3.stateBlock.alignedSizeInBytes).AlignToMultipleOf(4);
+        var combinedDeviceStateSize =
+            device1.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device2.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
 
@@ -1113,7 +1182,7 @@ partial class CoreTests
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
-        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.0000001));
+        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.000001));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.0000001));
     }
@@ -1595,6 +1664,162 @@ partial class CoreTests
     }
 
     #endif
+
+    [Test]
+    [Category("State")]
+    // single bit
+    [TestCase(InputStateBlock.kFormatBit, 5, 1, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatBit, 10, 1, 1u, 1, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 1, 0u, -1, -1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 25, 1, 1u, 1, 1.0f)]
+    // multiple bits/
+    [TestCase(InputStateBlock.kFormatBit, 5, 16, 0b1101010101010101u, 0b1101010101010101, 0.8333282470703125f)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 16, 0b1101010101010101u, 0b1101010101010101 + short.MinValue, 0.666656494140625f)]
+    [TestCase(InputStateBlock.kFormatBit, 16, 31, 0x7fffffffu, int.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, 1073741823, 1.0f)] // excess-K
+    [TestCase(InputStateBlock.kFormatBit, 16, 32, uint.MaxValue, -1, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, int.MaxValue, 1.0f)] // excess-K
+    // primitive types
+    [TestCase(InputStateBlock.kFormatInt, 32, 32, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatInt, 64, 32, 1231231231u, 1231231231, 0.573336720466613769531f)]
+    [TestCase(InputStateBlock.kFormatInt, 96, 32, 0x7fffffffu, int.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatInt, 32, 32, 0x80000000u, int.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatUInt, 32, 32, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatUInt, 64, 32, 1231231231u, 1231231231, 0.286668360233306884766f)]
+    [TestCase(InputStateBlock.kFormatUInt, 96, 32, 0x7fffffffu, int.MaxValue, 0.5f)] // no test for uint.MaxValue
+    [TestCase(InputStateBlock.kFormatShort, 16, 16, 0u, 0, 0.0000152587890625f)]
+    [TestCase(InputStateBlock.kFormatShort, 32, 16, 12312u, 12312, 0.3757534027099609375f)]
+    [TestCase(InputStateBlock.kFormatShort, 48, 16, 0x7fffu, (int)short.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatShort, 48, 16, 0x8000u, (int)short.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatUShort, 16, 16, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatUShort, 32, 16, 12312u, 12312, 0.18786907196044921875f)]
+    [TestCase(InputStateBlock.kFormatUShort, 48, 16, 0xffffu, (int)ushort.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatByte, 8, 8, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatByte, 16, 8, 123u, 123, 0.482352942228317260742f)]
+    [TestCase(InputStateBlock.kFormatByte, 24, 8, 0xffu, 255, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSByte, 8, 8, 0u, 0, 0.00392156885936856269836f)]
+    [TestCase(InputStateBlock.kFormatSByte, 16, 8, 123u, 123, 0.968627452850341796875f)]
+    [TestCase(InputStateBlock.kFormatSByte, 24, 8, 0x7fu, (int)sbyte.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSByte, 24, 8, 0x80u, (int)sbyte.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x0u, null, 0.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x3f800000u, null, 1.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0xbf800000u, null, -1.0f)]
+    [TestCase(InputStateBlock.kFormatDouble, 64, 64, 0x0u, null, 0.0f)]
+    public unsafe void State_CanReadAndWriteBitFormat(int format, int bitOffset, int bitSize, uint bitValue, int? expectedIntValue = null, float? expectedFloatValue = null)
+    {
+        const int bufferSize = 16; // make buffer a bit larger to have guard bits
+        if (bitOffset + bitSize > bufferSize * 8)
+            throw new ArgumentException(
+                $"bit offset and bit size are outside of data buffer range ({bitOffset}, {bitSize})");
+
+        var dataRead = (byte*)UnsafeUtility.Malloc(bufferSize, 8, Allocator.Temp);
+        var dataWrite = (byte*)UnsafeUtility.Malloc(bufferSize, 8, Allocator.Temp);
+
+        for (var testOperation = 0; testOperation < 3; ++testOperation)
+        {
+            // write all 1's so we can track some false negatives
+            UnsafeUtility.MemSet(dataRead, 0xff, bufferSize);
+
+            // clear bits that are 0
+            for (var i = 0; i < bitSize; ++i)
+            {
+                var value = (bitValue >> i) & 1;
+                if (value != 0)
+                    continue;
+                var bytePosition = (i + bitOffset) / 8;
+                var bitPosition = (i + bitOffset) % 8;
+                dataRead[bytePosition] &= (byte)~(1UL << bitPosition);
+            }
+
+            // prepare write array
+            for (var i = 0; i < bufferSize; ++i)
+                dataWrite[i] = (byte)~dataRead[i];
+
+            var block = new InputStateBlock
+            {
+                format = new FourCC(format),
+                byteOffset = (uint)(bitOffset / 8),
+                bitOffset = (uint)(bitOffset % 8),
+                sizeInBits = (uint)bitSize
+            };
+
+            var testWrittenBinaryData = false;
+
+            switch (testOperation)
+            {
+                case 0:
+                    if (expectedIntValue.HasValue)
+                    {
+                        testWrittenBinaryData = true;
+                        Assert.That(block.ReadInt(dataRead), Is.EqualTo(expectedIntValue.Value));
+                        block.WriteInt(dataWrite, expectedIntValue.Value);
+                        Assert.That(block.ReadInt(dataWrite), Is.EqualTo(expectedIntValue.Value));
+                    }
+                    break;
+                case 1:
+                    if (expectedFloatValue.HasValue)
+                    {
+                        // While this test should be able to test precise floats, we do some computations with hard to predict precision.
+                        // Hence leaving some precision slack for now.
+                        testWrittenBinaryData = expectedFloatValue == -1.0f || expectedFloatValue == 0.0f || expectedFloatValue == 1.0f;
+
+                        var desiredPrecision = testWrittenBinaryData ? 0.0f : 0.00005f;
+                        Assert.That(block.ReadFloat(dataRead), Is.EqualTo(expectedFloatValue.Value).Within(desiredPrecision));
+                        block.WriteFloat(dataWrite, expectedFloatValue.Value);
+                        Assert.That(block.ReadFloat(dataWrite), Is.EqualTo(expectedFloatValue.Value).Within(desiredPrecision));
+                    }
+                    break;
+                case 2:
+                    if (expectedFloatValue.HasValue)
+                    {
+                        var expectedDoubleValue = (double)expectedFloatValue;
+
+                        // While this test should be able to test precise floats, we do some computations with hard to predict precision.
+                        // Hence leaving some precision slack for now.
+                        testWrittenBinaryData = expectedDoubleValue == -1.0f || expectedDoubleValue == 0.0f || expectedDoubleValue == 1.0f;
+
+                        var desiredPrecision = testWrittenBinaryData ? 0.0 : 0.00005;
+                        Assert.That(block.ReadDouble(dataRead), Is.EqualTo(expectedDoubleValue).Within(desiredPrecision));
+                        block.WriteDouble(dataWrite, expectedDoubleValue);
+                        Assert.That(block.ReadDouble(dataWrite), Is.EqualTo(expectedDoubleValue).Within(desiredPrecision));
+                    }
+                    break;
+            }
+
+            if (!testWrittenBinaryData) continue;
+
+            // now all bits except for expected bits should be different
+            var validWrite = true;
+            for (var i = 0; i < bufferSize * 8; ++i)
+            {
+                var bytePosition = i / 8;
+                var bitPosition = i % 8;
+                var readBit = (dataRead[bytePosition] & (byte)(1UL << bitPosition)) != 0 ? 1 : 0;
+                var writeBit = (dataWrite[bytePosition] & (byte)(1UL << bitPosition)) != 0 ? 1 : 0;
+                validWrite &= (i >= bitOffset && i < bitOffset + bitSize)
+                    ? readBit == writeBit
+                    : readBit != writeBit;
+            }
+
+            if (!validWrite)
+            {
+                var sb = new StringBuilder();
+                sb.Append($"Offset {bitOffset} size {bitSize} in bits, read, write, xor:\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append((dataRead[i / 8] & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
+                sb.Append("\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append((dataWrite[i / 8] & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
+                sb.Append("\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append(((dataRead[i / 8] ^ dataWrite[i / 8]) & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
+                throw new AssertionException($"Written data is not matching expected data: {sb}");
+            }
+        }
+
+        UnsafeUtility.Free(dataRead, Allocator.Temp);
+        UnsafeUtility.Free(dataWrite, Allocator.Temp);
+    }
 
     [Test]
     [Category("State")]

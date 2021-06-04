@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem
     /// Also, unlike both <see cref="Button"/> and <see cref="PassThrough"/> actions, <see cref="Value"/>
     /// actions perform what's called "initial state check" on the first input update after the action
     /// was enabled. What this does is check controls bound to the action and if they are already actuated
-    /// (i.e. at non-default value), the action will immediately be started and performed. What
+    /// (that is, at non-default value), the action will immediately be started and performed. What
     /// this means in practice is that when a value action is bound to, say, the left stick on a
     /// gamepad and the stick is already moved out of its resting position, then the action will
     /// immediately trigger instead of first requiring the stick to be moved slightly.
@@ -133,8 +133,7 @@ namespace UnityEngine.InputSystem
         /// actuate at the same time, performs disambiguation (see <see
         /// href="../manual/ActionBindings.html#disambiguation"/>) to detect the highest value contributor
         /// at any one time.
-        /// </summary>
-        /// <remarks>
+        ///
         /// A value action starts (<see cref="InputActionPhase.Started"/>) and then performs (<see cref="InputActionPhase.Performed"/>)
         /// as soon as a bound control changes to a non-default value. For example, if an action is bound to <see cref="Gamepad.leftStick"/>
         /// and the stick moves from (0,0) to (0.5,0.5), the action starts and performs.
@@ -144,13 +143,12 @@ namespace UnityEngine.InputSystem
         ///
         /// Finally, if the control value changes back to the default value, the action is canceled (<see cref="InputActionPhase.Canceled"/>).
         /// Meaning that if the stick moves back to (0,0), <see cref="InputAction.canceled"/> will be triggered.
-        /// </remarks>
+        /// </summary>
         Value,
 
         /// <summary>
         /// An action that acts as a trigger.
-        /// </summary>
-        /// <remarks>
+        ///
         /// A button action has a defined trigger point that corresponds to <see cref="InputActionPhase.Performed"/>.
         /// After being performed, the action goes back to waiting state to await the next triggering.
         ///
@@ -158,14 +156,13 @@ namespace UnityEngine.InputSystem
         /// trigger immediately on input. For example, if <see cref="Interactions.HoldInteraction"/> is used, the
         /// action will start as soon as a bound button crosses its press threshold but will not trigger until the
         /// button is held for the set hold duration (<see cref="Interactions.HoldInteraction.duration"/>).
-        /// </remarks>
+        /// </summary>
         Button,
 
         /// <summary>
         /// An action that has no specific type of behavior and instead acts as a simple pass-through for
         /// any value change on any bound control.
-        /// </summary>
-        /// <remarks>
+        ///
         /// This is in some ways similar to <see cref="Value"/>. However, there are two key differences.
         ///
         /// For one,  the action will not perform any disambiguation when bound to multiple controls concurrently.
@@ -179,7 +176,7 @@ namespace UnityEngine.InputSystem
         /// on every value change regardless of what the value is. This is different from <see cref="Value"/> where the
         /// action will trigger <see cref="InputActionPhase.Started"/> when moving away from its default value and will
         /// trigger <see cref="InputActionPhase.Canceled"/> when going back to the default value.
-        /// </remarks>
+        /// </summary>
         PassThrough,
     }
 }

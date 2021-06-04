@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem
         /// been assigned to the control.
         ///
         /// For nested controls, the short display name will include the short display names of all parent controls,
-        /// i.e. the display name will fully identify the control on the device. For example, the display
+        /// that is, the display name will fully identify the control on the device. For example, the display
         /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
         /// control has no short name, its long name will be used instead.
         /// </remarks>
@@ -402,7 +402,7 @@ namespace UnityEngine.InputSystem
         /// <code>
         /// gamepad["leftStick"] // Returns Gamepad.leftStick
         /// gamepad["leftStick/x"] // Returns Gamepad.leftStick.x
-        /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, i.e. Gamepad.aButton
+        /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, that is, Gamepad.aButton
         /// </code>
         /// </example>
         /// <exception cref="KeyNotFoundException"><paramref name="path"/> cannot be found.</exception>
@@ -465,6 +465,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////REVIEW: The -1 behavior seems bad; probably better to just return 1 for controls that do not support finer levels of actuation
         /// <summary>
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
         /// is actuated.
@@ -577,14 +578,14 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the value of the control is equal in both <paramref name="firstStatePtr"/> and
         /// <paramref name="secondStatePtr"/>.</returns>
         /// <remarks>
-        /// Unlike <see cref="CompareState"/>, this method will have to do more than just compare the memory
+        /// Unlike <see cref="CompareValue"/>, this method will have to do more than just compare the memory
         /// for the control in the two state buffers. It will have to read out state for the control and run
         /// the full processing machinery for the control to turn the state into a final, processed value.
-        /// CompareValue is thus more costly than <see cref="CompareState"/>.
+        /// CompareValue is thus more costly than <see cref="CompareValue"/>.
         ///
         /// This method will apply epsilons (<see cref="Mathf.Epsilon"/>) when comparing floats.
         /// </remarks>
-        /// <seealso cref="CompareState"/>
+        /// <seealso cref="CompareValue"/>
         public abstract unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr);
 
         /// <summary>
@@ -781,12 +782,13 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        ////TODO: drop protected access
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
-        protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
+        protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(GetDeviceIndex());
 
-        protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex());
+        protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(GetDeviceIndex());
 
         protected internal unsafe void* defaultStatePtr => InputStateBuffers.s_DefaultStateBuffer;
 
@@ -855,6 +857,33 @@ namespace UnityEngine.InputSystem
             ConfigUpToDate = 1 << 0,
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
+            IsButton = 1 << 3,
+            SetupFinished = 1 << 5, // Can't be modified once this is set.
+            UsesStateFromOtherControl = 1 << 6,
+        }
+
+        internal bool isSetupFinished
+        {
+            get => (m_ControlFlags & ControlFlags.SetupFinished) == ControlFlags.SetupFinished;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.SetupFinished;
+                else
+                    m_ControlFlags &= ~ControlFlags.SetupFinished;
+            }
+        }
+
+        internal bool isButton
+        {
+            get => (m_ControlFlags & ControlFlags.IsButton) == ControlFlags.IsButton;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsButton;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsButton;
+            }
         }
 
         internal bool isConfigUpToDate
@@ -866,6 +895,18 @@ namespace UnityEngine.InputSystem
                     m_ControlFlags |= ControlFlags.ConfigUpToDate;
                 else
                     m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool usesStateFromOtherControl
+        {
+            get => (m_ControlFlags & ControlFlags.UsesStateFromOtherControl) == ControlFlags.UsesStateFromOtherControl;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.UsesStateFromOtherControl;
+                else
+                    m_ControlFlags &= ~ControlFlags.UsesStateFromOtherControl;
             }
         }
 
@@ -897,7 +938,7 @@ namespace UnityEngine.InputSystem
                 list[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
-        internal int ResolveDeviceIndex()
+        internal int GetDeviceIndex()
         {
             var deviceIndex = m_Device.m_DeviceIndex;
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
@@ -909,6 +950,14 @@ namespace UnityEngine.InputSystem
         internal virtual void AddProcessor(object first)
         {
         }
+
+        #if UNITY_EDITOR
+        internal virtual IEnumerable<object> GetProcessors()
+        {
+            yield return null;
+        }
+
+        #endif
     }
 
     /// <summary>
@@ -1129,6 +1178,15 @@ namespace UnityEngine.InputSystem
                     $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'", nameof(processor));
             m_ProcessorStack.Append(processorOfType);
         }
+
+        #if UNITY_EDITOR
+        internal override IEnumerable<object> GetProcessors()
+        {
+            foreach (var processor in m_ProcessorStack)
+                yield return processor;
+        }
+
+        #endif
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
     }

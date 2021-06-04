@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -110,10 +111,12 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>Same PenState with an updated <see cref="buttons"/> mask.</returns>
         public PenState WithButton(PenButton button, bool state = true)
         {
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (state)
-                buttons |= (ushort)(1 << (int)button);
+                buttons |= (ushort)bit;
             else
-                buttons &= (ushort)~(1 << (int)button);
+                buttons &= (ushort)~bit;
             return this;
         }
 
@@ -219,7 +222,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Control representing the tip button.</value>
         /// <seealso cref="PenButton.Tip"/>
-        public ButtonControl tip { get; private set; }
+        public ButtonControl tip { get; protected set; }
 
         /// <summary>
         /// The eraser button of the pen, i.e. the button on the end opposite to the tip.
@@ -230,7 +233,7 @@ namespace UnityEngine.InputSystem
         /// but will not trigger.
         /// </remarks>
         /// <seealso cref="PenButton.Eraser"/>
-        public ButtonControl eraser { get; private set; }
+        public ButtonControl eraser { get; protected set; }
 
         /// <summary>
         /// The button on the side of the pen barrel and located closer to the tip of the pen.
@@ -241,7 +244,7 @@ namespace UnityEngine.InputSystem
         /// but will not trigger.
         /// </remarks>
         /// <seealso cref="PenButton.BarrelFirst"/>
-        public ButtonControl firstBarrelButton { get; private set; }
+        public ButtonControl firstBarrelButton { get; protected set; }
 
         /// <summary>
         /// The button on the side of the pen barrel and located closer to the eraser end of the pen.
@@ -252,7 +255,7 @@ namespace UnityEngine.InputSystem
         /// but will not trigger.
         /// </remarks>
         /// <seealso cref="PenButton.BarrelSecond"/>
-        public ButtonControl secondBarrelButton { get; private set; }
+        public ButtonControl secondBarrelButton { get; protected set; }
 
         /// <summary>
         /// Third button the side of the pen barrel.
@@ -263,7 +266,7 @@ namespace UnityEngine.InputSystem
         /// but will not trigger.
         /// </remarks>
         /// <seealso cref="PenButton.BarrelThird"/>
-        public ButtonControl thirdBarrelButton { get; private set; }
+        public ButtonControl thirdBarrelButton { get; protected set; }
 
         /// <summary>
         /// Fourth button the side of the pen barrel.
@@ -274,7 +277,7 @@ namespace UnityEngine.InputSystem
         /// but will not trigger.
         /// </remarks>
         /// <seealso cref="PenButton.BarrelFourth"/>
-        public ButtonControl fourthBarrelButton { get; private set; }
+        public ButtonControl fourthBarrelButton { get; protected set; }
 
         /// <summary>
         /// Button control that indicates whether the pen is in range of the tablet surface or not.
@@ -285,7 +288,7 @@ namespace UnityEngine.InputSystem
         /// If range detection is not supported by the pen, this button will always be "pressed".
         /// </remarks>
         /// <seealso cref="PenButton.InRange"/>
-        public ButtonControl inRange { get; private set; }
+        public ButtonControl inRange { get; protected set; }
 
         /// <summary>
         /// Orientation of the pen relative to the tablet surface, i.e. the amount by which it is leaning
@@ -296,7 +299,7 @@ namespace UnityEngine.InputSystem
         /// X axis goes from [-1..1] left to right with -1 and 1 meaning the pen is flush with the tablet surface. Y axis
         /// goes from [-1..1] bottom to top.
         /// </remarks>
-        public Vector2Control tilt { get; private set; }
+        public Vector2Control tilt { get; protected set; }
 
         /// <summary>
         /// Rotation of the pointer around its own axis. 0 means the pointer is facing away from the user (12 'o clock position)
@@ -311,7 +314,7 @@ namespace UnityEngine.InputSystem
         /// (i.e. the surface normal of the pointer surface). When the pointer is tilted, the rotation axis is tilted along
         /// with it.
         /// </remarks>
-        public AxisControl twist { get; private set; }
+        public AxisControl twist { get; protected set; }
 
         /// <summary>
         /// The pen that was active or connected last or <c>null</c> if there is no pen.
@@ -322,7 +325,7 @@ namespace UnityEngine.InputSystem
         /// Return the given pen button.
         /// </summary>
         /// <param name="button">Pen button to return.</param>
-        /// <exception cref="InvalidEnumArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
+        /// <exception cref="ArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
         public ButtonControl this[PenButton button]
         {
             get

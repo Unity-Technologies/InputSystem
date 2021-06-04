@@ -6,8 +6,11 @@
     * [Embedding Actions in MonoBehaviours](#embedding-actions-in-monobehaviours)
     * [Loading Actions from JSON](#loading-actions-from-json)
     * [Creating Actions in code](#creating-actions-in-code)
+      * [Default Actions](#default-actions)
 * [Using Actions](#using-actions)
     * [Responding to Actions](#responding-to-actions)
+      * [Action callbacks](#action-callbacks)
+      * [Polling Actions](#polling-actions)
     * [Action types](#action-types)
     * [Debugging Actions](#debugging-actions)
     * [Using Actions with multiple players](#using-actions-with-multiple-players)
@@ -44,7 +47,7 @@ You can then use the visual editor to establish the mapping:
 
 ![Look Action Binding](Images/LookActionBinding.png)
 
-This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#runtime-rebinding).
+This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#interactive-rebinding).
 
 >__Note__:
 >* Actions are a game-time only feature. You can't use them in `EditorWindow` code.
@@ -181,6 +184,23 @@ asset.AddActionMap(gameplayMap);
 var lookAction = gameplayMap.AddAction("look", "<Gamepad>/leftStick");
 ```
 
+Any action that you create in this way during Play mode do not persist in the Input Action Asset after you exit Play mode. This means you can test your application in a realistic manner in the Editor without having to worry about inadvertently modifying the asset.
+
+#### Default Actions
+
+An [asset](./ActionAssets.md) called `DefaultInputActions.inputactions` containing a default setup of Actions comes with the Input System Package. You can reference this asset directly in your projects like any other Unity asset. However, the asset is also available in code form through the [`DefaultInputActions`](../api/UnityEngine.InputSystem.DefaultInputActions.html) class.
+
+```CSharp
+void Start()
+{
+    // Create an instance of the default actions.
+    var actions = new DefaultInputActions();
+    actions.Player.Look.performed += OnLook;
+    actions.Player.Move.performed += OnMove;
+    actions.Enable();
+}
+```
+
 ## Using Actions
 
 For an Action to do something, you must first enable it. You can do this either by individually enabling Actions, or by enabling them in bulk through Action Maps. The second method is more efficient in all scenarios.
@@ -205,15 +225,15 @@ An Action doesn't represent an actual response to input by itself. Instead, an A
 
 There are several ways to do this:
 
-1. Each Action has a [`started`, `performed`, and `canceled` callback](#started-performed-and-canceled-callbacks).
+1. Each Action has a [`started`, `performed`, and `canceled` callback](#action-callbacks).
 2. Each Action Map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
 3. The Input System has a global [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback).
-4. You can poll the current state of an Action whenever you need it; to do this, use [`InputAction.ReadValue<>()`](#polling-actions).
+4. You can [poll the current state](#polling-actions) of an Action whenever you need it.
 5. [`InputActionTrace`](#inputactiontrace) can record changes happening on Actions.
 
 There are also two higher-level, more streamlined ways of picking up input from Actions: use [`PlayerInput`](Components.md#notification-behaviors), or [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
 
-#### `started`, `performed`, and `canceled` callbacks
+#### Action callbacks
 
 Every Action has a set of distinct phases it can go through in response to receiving input.
 
@@ -243,7 +263,7 @@ Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.Inp
 
 When and how the callbacks are triggered depends on the [Interactions](Interactions.md) present on the respective Bindings. If the Bindings have no Interactions that apply to them, the [default Interaction](Interactions.md#default-interaction) applies.
 
-#### `InputActionMap.actionTriggered` callback
+##### `InputActionMap.actionTriggered` callback
 
 Instead of listening to individual actions, you can listen on an entire Action Map for state changes on any of the Actions in the Action Map.
 
@@ -256,11 +276,11 @@ actionMap.actionTriggered +=
     context => { ... };
 ```
 
-The argument received is the same `InputAction.CallbackContext` structure that you receive through the [`started`, `performed`, and `canceled` callbacks](#started-performed-and-canceled-callbacks).
+The argument received is the same `InputAction.CallbackContext` structure that you receive through the [`started`, `performed`, and `canceled` callbacks](#action-callbacks).
 
 >__Note__: The Input System calls `InputActionMap.actionTriggered` for all three of the individual callbacks on Actions. That is, you get `started`, `performed`, and `canceled` all on a single callback.
 
-#### `InputSystem.onActionChange` callback
+##### `InputSystem.onActionChange` callback
 
 Similar to `InputSystem.onDeviceChange`, your app can listen for any action-related change globally.
 
@@ -283,7 +303,9 @@ InputSystem.onActionChange +=
 
 #### Polling Actions
 
-Instead of using callbacks, it might be simpler sometimes to poll the value of an Action where you need it in your code. You can poll the current value of an Action using [`InputAction.ReadValue<>()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1):
+Instead of using callbacks, it might be simpler sometimes to poll the value of an Action where you need it in your code.
+
+You can poll the current value of an Action using [`InputAction.ReadValue<>()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1):
 
 ```CSharp
     public InputAction moveAction;
@@ -302,31 +324,60 @@ Instead of using callbacks, it might be simpler sometimes to poll the value of a
     }
 ```
 
-For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered), which is true if the action was performed at any time in the current frame.
+Note that the value type has to correspond to the value type of the control that the value is being read from.
+
+To determine whether an action was performed in the current frame, you can use [`InputAction.WasPerformedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame):
 
 ```CSharp
-    private InputAction buttonAction;
+    private InputAction action;
 
     void Start()
     {
-        // Set up an action that triggers when the A button on
-        // the gamepad is released.
-        buttonAction = new InputAction(
+        // Set up an action that triggers when the A button is
+        // held for 1 second.
+        action = new InputAction(
             type: InputActionType.Button,
             binding: "<Gamepad>/buttonSouth",
-            interactions: "press(behavior=1)");
+            interactions: "hold(duration=1)");
 
-        buttonAction.Enable();
+        action.Enable();
     }
 
     void Update()
     {
-        if (buttonAction.triggered)
-            Debug.Log("A button on gamepad was released this frame");
+        if (action.WasPerformedThisFrame())
+            Debug.Log("A button on gamepad was held for one second");
     }
 ```
 
-[`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) is most useful with button-type actions, but can be used with any action.
+Finally, there are three methods you can use to poll for button presses and releases:
+
+|Method|Description|
+|------|-----------|
+|[`InputAction.IsPressed()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsPressed)|True if the level of [actuation](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude) on the action has crossed the [press point](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) and did not yet fall to or below the [release threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_buttonReleaseThreshold).|
+|[`InputAction.WasPressedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame)|True if the level of [actuation](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude) on the action has, at any point during the current frame, reached or gone above the [press point](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint).|
+|[`InputAction.WasReleasedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame)|True if the level of [actuation](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude) on the action has, at any point during the current frame, gone from being at or above the [press point](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) to at or below the [release threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_buttonReleaseThreshold).|
+
+Example:
+
+```CSharp
+    public PlayerInput playerInput;
+
+    public void Update()
+    {
+        // IsPressed
+        if (playerInput.actions["up"].IsPressed())
+            transform.Translate(0, 10 * Time.deltaTime, 0);
+
+        // WasPressedThisFrame
+        if (playerInput.actions["teleport"].WasPressedThisFrame())
+            Teleport();
+
+        // WasReleasedThisFrame
+        if (playerInput.actions["submit"].WasReleasedThisFrame())
+            ConfirmSelection();
+    }
+```
 
 #### `InputActionTrace`
 
@@ -388,23 +439,23 @@ Once recorded, a trace can be safely read from multiple threads as long as it is
 
 ### Action types
 
-Each Action can be one of three different Action types. You can select the Action type in the Input Action editor window, or by specifying the `type` parameter when calling the [`InputAction()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction__ctor_System_String_UnityEngine_InputSystem_InputActionType_System_String_System_String_System_String_System_String_) constructor. The Action type influences how the Input System processes state changes for the Action. The default Action type is `Value`.
+Each Action can be one of three different [Action types](../api/UnityEngine.InputSystem.InputActionType.html). You can select the Action type in the Input Action editor window, or by specifying the `type` parameter when calling the [`InputAction()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction__ctor_System_String_UnityEngine_InputSystem_InputActionType_System_String_System_String_System_String_System_String_) constructor. The Action type influences how the Input System processes state changes for the Action. The default Action type is `Value`.
 
 #### Value
 
 This is the default Action type. Use this for any inputs which should track continuous changes to the state of a Control.
 
-`Value` type actions continuously monitor all the Controls which are bound to the Action, and then choose the one which is the most actuated to be the Control driving the Action, and report the values from that Control in callbacks, triggered whenever the value changes. If a different bound Control actuated more, then that Control becomes the Control driving the Action, and the Action starts reporting values from that Control. This process is called [disambiguation](ActionBindings.md#disambiguation). This is useful if you want to allow different Controls to control an Action in the game, but only take input from one Control at the same time.
+ [`Value`](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_Value) type actions continuously monitor all the Controls which are bound to the Action, and then choose the one which is the most actuated to be the Control driving the Action, and report the values from that Control in callbacks, triggered whenever the value changes. If a different bound Control actuated more, then that Control becomes the Control driving the Action, and the Action starts reporting values from that Control. This process is called [disambiguation](ActionBindings.md#disambiguation). This is useful if you want to allow different Controls to control an Action in the game, but only take input from one Control at the same time.
 
 When the Action initially enables, it performs an [initial state check](ActionBindings.md#initial-state-check) of all bound Controls. If any of them is actuated, the Action then triggers a callback with the current value.
 
 #### Button
 
-This is very similar to `Value`, but `Button` type Actions can only be bound to [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) Controls, and don't perform an initial state check like `Value` Actions do (see the Value section above). Use this for inputs that trigger an Action once every time they are pressed. The initial state check is usually not useful in such cases,because it can trigger actions if the button is still held down from a previous press when the Action was enabled.
+This is very similar to [`Value`](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_Value), but [`Button`](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_Button) type Actions can only be bound to [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) Controls, and don't perform an initial state check like [`Value`](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_Value) Actions do (see the Value section above). Use this for inputs that trigger an Action once every time they are pressed. The initial state check is usually not useful in such cases, because it can trigger actions if the button is still held down from a previous press when the Action was enabled.
 
 #### Pass-Through
 
-`Pass-Through` Actions bypass the [disambiguation](ActionBindings.md#disambiguation) process described above for `Value` Actions and don't use the concept of a specific Control driving the Action. Instead, any change to any bound Control triggers a callback with that Control's value. This is useful if you want to process all input from a set of Controls.
+ [`Pass-Through`](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_PassThrough) Actions bypass the [disambiguation](ActionBindings.md#disambiguation) process described above for `Value` Actions and don't use the concept of a specific Control driving the Action. Instead, any change to any bound Control triggers a callback with that Control's value. This is useful if you want to process all input from a set of Controls.
 
 ### Debugging Actions
 
