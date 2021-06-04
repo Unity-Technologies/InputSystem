@@ -1,4 +1,4 @@
-#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#if (UNITY_XR_AVAILABLE && !UNITY_XR_FORCE_OFF) || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;

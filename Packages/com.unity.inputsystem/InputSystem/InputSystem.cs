@@ -1,8 +1,4 @@
 // Grouping up the XR defines since it's a pretty heavy sequence
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
-#define ENABLE_XR_COMBINED_DEFINE
-#endif
-
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Haptics;
@@ -3284,8 +3280,9 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
+      
 
-            #if ENABLE_XR_COMBINED_DEFINE
+            #if UNITY_XR_AVAILABLE && !UNITY_XR_FORCE_OFF
             XR.XRSupport.Initialize();
             #endif
 
