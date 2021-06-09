@@ -1,8 +1,6 @@
 #if UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
-#if ENABLE_VR
 using UnityEngine.InputSystem.XR.Haptics;
-#endif
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Scripting;
 using UnityEngine.XR;
@@ -92,10 +90,8 @@ namespace UnityEngine.InputSystem.XR
     {
         public void SendImpulse(float amplitude, float duration)
         {
-#if ENABLE_VR
             var command = SendHapticImpulseCommand.Create(0, amplitude, duration);
             ExecuteCommand(ref command);
-#endif
         }
     }
 }

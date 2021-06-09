@@ -2641,7 +2641,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
+#if UNITY_EDITOR
         /// <summary>
         /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
         /// </summary>
@@ -3282,7 +3282,7 @@ namespace UnityEngine.InputSystem
             #endif
       
 
-            #if UNITY_XR_AVAILABLE && !UNITY_XR_FORCE_OFF
+            #if UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();
             #endif
 

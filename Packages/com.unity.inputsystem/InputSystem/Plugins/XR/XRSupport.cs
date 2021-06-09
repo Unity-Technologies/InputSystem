@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
-#if !UNITY_XR_FORCE_OFF
+#if !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             InputSystem.RegisterLayout<PoseControl>("Pose");
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
@@ -424,4 +424,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // (UNITY_XR_AVAILABLE && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#endif // UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION

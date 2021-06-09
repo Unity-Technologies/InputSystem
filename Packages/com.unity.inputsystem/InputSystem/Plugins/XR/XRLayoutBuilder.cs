@@ -1,4 +1,4 @@
-#if UNITY_XR_AVAILABLE && !UNITY_XR_FORCE_OFF
+#if UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
@@ -340,4 +340,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // UNITY_XR_AVAILABLE && && !UNITY_XR_FORCE_OFF
+#endif // UNITY_XR_AVAILABLE && && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
