@@ -48,12 +48,8 @@ public class EditModeTests : InputTestFixture
     [TestCase(InputSettings.UpdateMode.ProcessEventsManually, InputUpdateType.Manual)]
     [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate, InputUpdateType.Dynamic)]
     [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
-#if !UNITY_EDITOR
-    [Ignore("Must be in the editor to run this test.")]
-#endif
     public void EditMode_RunUpdatesInEditMode_AllowsNonEditorUpdates(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
     {
-#if UNITY_EDITOR
         runtime.isInPlayMode = false;
         InputSystem.settings.updateMode = updateMode;
         var counter = new InputUpdateCounter();
@@ -79,7 +75,6 @@ public class EditModeTests : InputTestFixture
 
         runtime.isInPlayMode = true;
         counter.Stop();
-#endif
     }
 
     [Test]
