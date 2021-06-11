@@ -1471,8 +1471,9 @@ namespace UnityEngine.InputSystem
                 if (!binding.isPartOfComposite && !binding.isComposite)
                     throw new InvalidOperationException("Binding accessor must point to composite or part binding");
 
+                var bindingAction = m_ActionMap.m_Bindings[m_BindingIndexInMap].action;
                 AddBindingInternal(m_ActionMap,
-                    new InputBinding { path = path, isPartOfComposite = true, name = partName },
+                    new InputBinding { path = path, isPartOfComposite = true, name = partName, action = bindingAction },
                     m_BindingIndexInMap + 1);
 
                 return new BindingSyntax(m_ActionMap, m_BindingIndexInMap + 1, m_Action);
