@@ -22,31 +22,25 @@ namespace UnityEngine.InputSystem.Editor
     /// </example>
     /// </remarks>
     [CustomPropertyDrawer(typeof(InputControlAttribute))]
-    internal sealed class InputControlPathDrawer : PropertyDrawer, IDisposable
+    internal sealed class InputControlPathDrawer : PropertyDrawer
     {
-        private InputControlPathEditor m_Editor;
         private InputControlPickerState m_PickerState;
-
-        public void Dispose()
-        {
-            m_Editor?.Dispose();
-        }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             if (m_PickerState == null)
                 m_PickerState = new InputControlPickerState();
-            if (m_Editor == null)
-            {
-                m_Editor = new InputControlPathEditor(property, m_PickerState,
+                
+            var editor = new InputControlPathEditor(property, m_PickerState,
                     () => property.serializedObject.ApplyModifiedProperties(),
                     label: label);
-                m_Editor.SetExpectedControlLayoutFromAttribute();
-            }
+            editor.SetExpectedControlLayoutFromAttribute();
 
             EditorGUI.BeginProperty(position, label, property);
-            m_Editor.OnGUI(position);
+            editor.OnGUI(position);
             EditorGUI.EndProperty();
+            
+            editor.Dispose();
         }
     }
 }
