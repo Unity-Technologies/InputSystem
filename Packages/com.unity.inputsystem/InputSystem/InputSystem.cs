@@ -2641,7 +2641,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_XR_AVAILABLE
         /// <summary>
         /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
         /// </summary>
