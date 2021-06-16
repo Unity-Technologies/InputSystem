@@ -3280,7 +3280,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
-      
+
 
             #if UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();
