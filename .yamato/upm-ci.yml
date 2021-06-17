@@ -61,7 +61,7 @@ build_ios_{{ editor.version }}:
     logs:
         paths:
           - "build/logs/**"
- 
+
 run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
@@ -82,7 +82,7 @@ run_ios_{{ editor.version }}:
     logs:
         paths:
           - "build/test-results/**"
-		  
+
 build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
@@ -102,7 +102,7 @@ build_tvos_{{ editor.version }}:
     logs:
         paths:
           - "build/logs/**"
-  
+
 {% for backend in scripting_backends %}
 build_android_{{ editor.version }}_{{ backend.name }}:
   name: Build Tests on {{ editor.version }} on android {{ backend.name }}
