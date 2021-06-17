@@ -709,3 +709,7 @@ If you don't want your Action to perform disambiguation, you can set your Action
 Actions with the type set to [Value](Actions.md#value) perform an initial state check when they are first enabled, to check the current state of any bound Control, and to set the Action's value to the highest value of any bound Control.
 
 Actions with the type set to [Button](Actions.md#button) don't perform any initial state check, so that only buttons pressed after the Action was enabled have any effect on the Action.
+
+For both [Button](Actions.md#button) and [Pass-Through](Actions.md#pass-through) actions, initial state checks can be enabled explicitly in the action editor or by setting [`InputAction.wantsInitialStateCheck`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_wantsInitialStateCheck) to true.
+
+![Initial State Check](./Images/InitialStateCheck.png)

@@ -1346,6 +1346,7 @@ namespace UnityEngine.InputSystem
                         : null,
                     m_Processors = processors,
                     m_Interactions = interactions,
+                    wantsInitialStateCheck = initialStateCheck,
                 };
             }
         }
@@ -1359,6 +1360,7 @@ namespace UnityEngine.InputSystem
             public string expectedControlType;
             public string processors;
             public string interactions;
+            public bool initialStateCheck;
 
             public static WriteActionJson FromAction(InputAction action)
             {
@@ -1370,6 +1372,7 @@ namespace UnityEngine.InputSystem
                     expectedControlType = action.m_ExpectedControlType,
                     processors = action.processors,
                     interactions = action.interactions,
+                    initialStateCheck = action.wantsInitialStateCheck,
                 };
             }
         }

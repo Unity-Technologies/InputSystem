@@ -319,7 +319,7 @@ namespace UnityEngine.InputSystem.UI
             var currentPointerTarget =
                 // If the pointer is a touch that was released this frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == UIPointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
+                (eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && pointer.leftButton.wasReleasedThisFrame) ||
                 (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
@@ -1380,7 +1380,7 @@ namespace UnityEngine.InputSystem.UI
             inputActionReference.action.Enable();
         }
 
-        private void DisableInputAction(InputActionReference inputActionReference)
+        private static void DisableInputAction(InputActionReference inputActionReference)
         {
             if (!s_InputActionReferenceCounts.TryGetValue(inputActionReference?.m_ActionId ?? string.Empty,
                 out var referenceState))
@@ -1437,7 +1437,7 @@ namespace UnityEngine.InputSystem.UI
         //
         // Quite a lot going on in this method but we're dealing with three different UI interaction paradigms
         // here which we all support from a single input path and allow seamless switching between.
-        private int GetPointerStateIndexFor(InputControl control)
+        private int GetPointerStateIndexFor(InputControl control, bool createIfNotExists = true)
         {
             Debug.Assert(control != null, "Control must not be null");
 
@@ -1504,6 +1504,9 @@ namespace UnityEngine.InputSystem.UI
                     }
                 }
             }
+
+            if (!createIfNotExists)
+                return -1;
 
             // Determine pointer type.
             var pointerType = UIPointerType.None;
@@ -1754,6 +1757,8 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
+        // The pointer actions we unfortunately cannot poll as we may be sourcing input from multiple pointers.
+
         private void OnPoint(InputAction.CallbackContext context)
         {
             // When a pointer is removed, there's like a non-zero coordinate on the position control and thus
@@ -1763,7 +1768,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
         }
 
@@ -1776,7 +1785,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
         }
@@ -1786,7 +1799,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
         }
@@ -1796,7 +1813,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
         }

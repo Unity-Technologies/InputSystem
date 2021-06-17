@@ -509,6 +509,32 @@ partial class CoreTests
         }
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_ButtonAndPassThroughActions_CanTurnOnInitialStateCheck()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Press(gamepad.buttonSouth);
+
+        var buttonAction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        var passThroughAction = new InputAction(type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
+
+        buttonAction.wantsInitialStateCheck = true;
+        passThroughAction.wantsInitialStateCheck = true;
+
+        using (var buttonTrace = new InputActionTrace(buttonAction))
+        using (var passThroughTrace = new InputActionTrace(passThroughAction))
+        {
+            buttonAction.Enable();
+            passThroughAction.Enable();
+
+            InputSystem.Update();
+
+            Assert.That(buttonTrace, Started(buttonAction).AndThen(Performed(buttonAction)));
+            Assert.That(passThroughTrace, Performed(passThroughAction));
+        }
+    }
+
     // It can be useful to react to the value of a control immediately when an action is enabled rather
     // than wait for the first time the control changes value. To do so, "Initial State Check" needs to
     // be enabled on an action. If this is done and a bound is actuated at the time an action is enabled,
