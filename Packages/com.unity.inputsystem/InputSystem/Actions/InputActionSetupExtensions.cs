@@ -1423,6 +1423,40 @@ namespace UnityEngine.InputSystem
                 return default;
             }
 
+            /// <summary>
+            /// Remove part bindings from a composite binding.
+            /// </summary>
+            /// <remarks>
+            /// If the binding is not a composite (see <see cref="InputBinding.isComposite"/>), nothing
+            /// will be removed, and an invalid BindingSyntax is returned.
+            /// </remarks>
+            /// <exception cref="InvalidOperationException">The instance is not <see cref="valid"/>.</exception>
+            public BindingSyntax ClearPartBindings () {
+                if (!valid)
+                    throw new InvalidOperationException("Instance not valid");
+
+                ref var bindings = ref m_ActionMap.m_Bindings;
+                var index = m_BindingIndexInMap;
+
+                if (!bindings[index].isComposite)
+                    return default;
+
+                index++; // Skip to first part binding
+
+                while (index < bindings.Length && bindings[index].isPartOfComposite)
+                    ArrayHelpers.EraseAt(ref bindings, index);
+
+                m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
+
+                // We have switched to a different binding array. For singleton actions, we need to
+                // sync up the reference that the action itself has.
+                if (m_ActionMap.m_SingletonAction != null)
+                    m_ActionMap.m_SingletonAction.m_SingletonActionBindings = bindings;
+
+                return this;
+            }
+
             ////TODO: allow setting overrides through this accessor
 
             /// <summary>
