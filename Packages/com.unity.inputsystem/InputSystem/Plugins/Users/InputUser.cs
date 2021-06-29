@@ -1642,7 +1642,7 @@ namespace UnityEngine.InputSystem.Users
 
                         // Search for another user who had lost the same device.
                         deviceIndex =
-                            s_AllLostDevices.IndexOfReference(device, deviceIndex + 1, s_AllLostDeviceCount);
+                            s_AllLostDevices.IndexOfReference(device, deviceIndex + 1, s_AllLostDeviceCount - deviceIndex - 1);
                     }
                     break;
                 }
@@ -1698,7 +1698,7 @@ namespace UnityEngine.InputSystem.Users
                             UpdatePlatformUserAccount(userIndex, device);
 
                             // Search for another user paired to the same device.
-                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, deviceIndex + 1, s_AllPairedDeviceCount);
+                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, deviceIndex + 1, s_AllPairedDeviceCount - deviceIndex - 1);
                         }
                     }
                     break;
