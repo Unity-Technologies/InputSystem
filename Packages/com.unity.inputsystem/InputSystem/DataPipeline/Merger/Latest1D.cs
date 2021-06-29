@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Unity.Collections;
 
 namespace UnityEngine.InputSystem.DataPipeline.Merger
 {
@@ -9,6 +10,11 @@ namespace UnityEngine.InputSystem.DataPipeline.Merger
         public StepFunction1D src1, src2, dst;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Map(DatasetProxy datasetProxy, NativeSlice<float> foo)
+        {
+            datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+        }
+
         public void Map(DatasetProxy datasetProxy)
         {
             datasetProxy.MapNAndMToNPlusM(src1, src2, dst);

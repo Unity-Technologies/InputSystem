@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.DmytroRnD
 
             if (s_ValueCallback != null)
             {
-                var values = s_IngressPipeline.dataset.values.ToNativeSlice();
+                var values = s_IngressPipeline.dataset.values.ToManagedSpan();
 
                 var offset1 = s_IngressPipeline.dataset.valueAxisIndexToOffset[37];
                 var offset2 = s_IngressPipeline.dataset.valueAxisIndexToOffset[38];

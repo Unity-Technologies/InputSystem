@@ -9,21 +9,21 @@ namespace UnityEngine.InputSystem.DataPipeline
     {
         // TODO values before current ones?
 
-        public UnsafeNativeSlice<ulong> timestampsUnsafe;
-        public UnsafeNativeSlice<int> timestampAxisIndexToLengthUnsafe;
-        public UnsafeNativeSlice<int> timestampAxisIndexToMaxLengthUnsafe;
-        public UnsafeNativeSlice<int> timestampAxisIndexToOffsetUnsafe;
-        public UnsafeNativeSlice<ulong> timestampAxisIndexToPreviousRunValueUnsafe;
+        public NativeSlice<ulong> timestamps;
+        public NativeSlice<int> timestampAxisIndexToLength;
+        public NativeSlice<int> timestampAxisIndexToMaxLength;
+        public NativeSlice<int> timestampAxisIndexToOffset;
+        public NativeSlice<ulong> timestampAxisIndexToPreviousRunValue;
 
-        public UnsafeNativeSlice<float> valuesUnsafe;
-        public UnsafeNativeSlice<int> valueAxisIndexToOffsetUnsafe;
-        public UnsafeNativeSlice<int> valueAxisIndexToTimestampIndexUnsafe;
-        public UnsafeNativeSlice<float> valueAxisIndexToPreviousRunValueUnsafe;
+        public NativeSlice<float> values;
+        public NativeSlice<int> valueAxisIndexToOffset;
+        public NativeSlice<int> valueAxisIndexToTimestampIndex;
+        public NativeSlice<float> valueAxisIndexToPreviousRunValue;
 
         // Opaque offsets are in bytes.
-        public UnsafeNativeSlice<byte> opaqueValuesUnsafe;
-        public UnsafeNativeSlice<int> opaqueValueAxisIndexToOffsetUnsafe;
-        public UnsafeNativeSlice<int> opaqueValueIndexToTimestampIndexUnsafe;
+        public NativeSlice<byte> opaqueValues;
+        public NativeSlice<int> opaqueValueAxisIndexToOffset;
+        public NativeSlice<int> opaqueValueIndexToTimestampIndex;
 
         // Sets destination length to be equal to source length, and returns the length.
         // Destination should be pointing to the same timestamp index as the source.
@@ -33,9 +33,6 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             SanityCheck(src);
             SanityCheck(dst);
-
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var timestampAxisIndexToMaxLength = timestampAxisIndexToMaxLengthUnsafe.ToNativeSlice();
 
             var srcTimestampAxisIndex = GetTimestampIndex(src);
             var dstTimestampAxisIndex = GetTimestampIndex(dst);
@@ -56,9 +53,6 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             SanityCheck(src);
             SanityCheck(dst);
-
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var timestampAxisIndexToMaxLength = timestampAxisIndexToMaxLengthUnsafe.ToNativeSlice();
 
             var srcTimestampAxisIndex = GetTimestampIndex(src);
             var dstTimestampAxisIndex = GetTimestampIndex(dst);
@@ -88,9 +82,6 @@ namespace UnityEngine.InputSystem.DataPipeline
             SanityCheck(src2);
             SanityCheck(dst);
 
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var timestampAxisIndexToMaxLength = timestampAxisIndexToMaxLengthUnsafe.ToNativeSlice();
-
             var src1TimestampAxisIndex = GetTimestampIndex(src1);
             var src2TimestampAxisIndex = GetTimestampIndex(src2);
             var dstTimestampAxisIndex = GetTimestampIndex(dst);
@@ -116,9 +107,6 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             SanityCheck(stepfunction);
 
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var timestampAxisIndexToMaxLength = timestampAxisIndexToMaxLengthUnsafe.ToNativeSlice();
-
             var timestampAxisIndex = GetTimestampIndex(stepfunction);
             
             Debug.Assert(newLength <= timestampAxisIndexToLength[timestampAxisIndex]);
@@ -136,13 +124,10 @@ namespace UnityEngine.InputSystem.DataPipeline
 
             var timestampAxisIndex = GetTimestampIndex(stepfunction);
 
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var timestampAxisIndexToOffset = timestampAxisIndexToOffsetUnsafe.ToNativeSlice();
-
             var offset = timestampAxisIndexToOffset[timestampAxisIndex];
             var length = timestampAxisIndexToLength[timestampAxisIndex];
 
-            return timestampsUnsafe.ToNativeSlice(offset, length);
+            return timestamps.Slice(offset, length);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -152,7 +137,7 @@ namespace UnityEngine.InputSystem.DataPipeline
             SanityCheck(stepfunction);
 
             var timestampAxisIndex = GetTimestampIndex(stepfunction);
-            return timestampAxisIndexToPreviousRunValueUnsafe.ToNativeSlice()[timestampAxisIndex];
+            return timestampAxisIndexToPreviousRunValue[timestampAxisIndex];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -161,16 +146,12 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             Debug.Assert(stepfunction.dimensionsCount >= 1);
 
-            var valueAxisIndexToTimestampIndex = valueAxisIndexToTimestampIndexUnsafe.ToNativeSlice();
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var valueAxisIndexToOffset = valueAxisIndexToOffsetUnsafe.ToNativeSlice();
-
             var timestampAxisIndex = valueAxisIndexToTimestampIndex[stepfunction.valuesXProperty];
 
             var offset = valueAxisIndexToOffset[stepfunction.valuesXProperty];
             var length = timestampAxisIndexToLength[timestampAxisIndex];
 
-            return valuesUnsafe.ToNativeSlice(offset, length);
+            return values.Slice(offset, length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -179,16 +160,12 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             Debug.Assert(stepfunction.dimensionsCount >= 2);
 
-            var valueAxisIndexToTimestampIndex = valueAxisIndexToTimestampIndexUnsafe.ToNativeSlice();
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var valueAxisIndexToOffset = valueAxisIndexToOffsetUnsafe.ToNativeSlice();
-
             var timestampAxisIndex = valueAxisIndexToTimestampIndex[stepfunction.valuesYProperty];
 
             var offset = valueAxisIndexToOffset[stepfunction.valuesYProperty];
             var length = timestampAxisIndexToLength[timestampAxisIndex];
 
-            return valuesUnsafe.ToNativeSlice(offset, length);
+            return values.Slice(offset, length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,16 +174,12 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             Debug.Assert(stepfunction.dimensionsCount >= 3);
 
-            var valueAxisIndexToTimestampIndex = valueAxisIndexToTimestampIndexUnsafe.ToNativeSlice();
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-            var valueAxisIndexToOffset = valueAxisIndexToOffsetUnsafe.ToNativeSlice();
-
             var timestampAxisIndex = valueAxisIndexToTimestampIndex[stepfunction.valuesZProperty];
 
             var offset = valueAxisIndexToOffset[stepfunction.valuesZProperty];
             var length = timestampAxisIndexToLength[timestampAxisIndex];
 
-            return valuesUnsafe.ToNativeSlice(offset, length);
+            return values.Slice(offset, length);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -214,7 +187,7 @@ namespace UnityEngine.InputSystem.DataPipeline
             where T : IStepFunction
         {
             Debug.Assert(stepfunction.dimensionsCount >= 1);
-            return valueAxisIndexToPreviousRunValueUnsafe.ToNativeSlice()[stepfunction.valuesXProperty];
+            return valueAxisIndexToPreviousRunValue[stepfunction.valuesXProperty];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,7 +195,7 @@ namespace UnityEngine.InputSystem.DataPipeline
             where T : IStepFunction
         {
             Debug.Assert(stepfunction.dimensionsCount >= 2);
-            return valueAxisIndexToPreviousRunValueUnsafe.ToNativeSlice()[stepfunction.valuesYProperty];
+            return valueAxisIndexToPreviousRunValue[stepfunction.valuesYProperty];
         }
 
         
@@ -231,7 +204,7 @@ namespace UnityEngine.InputSystem.DataPipeline
             where T : IStepFunction
         {
             Debug.Assert(stepfunction.dimensionsCount >= 3);
-            return valueAxisIndexToPreviousRunValueUnsafe.ToNativeSlice()[stepfunction.valuesZProperty];
+            return valueAxisIndexToPreviousRunValue[stepfunction.valuesZProperty];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -240,10 +213,6 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             Debug.Assert(stepfunction.dimensionsCount == 0);
 
-            var opaqueValueAxisIndexToOffset = opaqueValueAxisIndexToOffsetUnsafe.ToNativeSlice();
-            var opaqueValueIndexToTimestampIndex = opaqueValueIndexToTimestampIndexUnsafe.ToNativeSlice();
-            var timestampAxisIndexToLength = timestampAxisIndexToLengthUnsafe.ToNativeSlice();
-
             var timestampAxisIndex = opaqueValueIndexToTimestampIndex[stepfunction.opaqueValuesProperty];
             Debug.Assert(timestampAxisIndexToLength[timestampAxisIndex] >= 1);
 
@@ -251,7 +220,8 @@ namespace UnityEngine.InputSystem.DataPipeline
             var stride = stepfunction.opaqueValuesStrideProperty;
             var length = timestampAxisIndexToLength[timestampAxisIndex];
 
-            return valuesUnsafe.ToNativeSlice<TResult>(offset, stride, length);
+            // TODO check me!
+            return values.Slice(offset, length).SliceConvert<TResult>();
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -277,8 +247,8 @@ namespace UnityEngine.InputSystem.DataPipeline
         private int GetTimestampIndex<T>(T stepfunction) where T : IStepFunction
         {
             return stepfunction.dimensionsCount > 0
-                ? valueAxisIndexToTimestampIndexUnsafe.ToNativeSlice()[stepfunction.valuesXProperty]
-                : opaqueValueAxisIndexToOffsetUnsafe.ToNativeSlice()[stepfunction.opaqueValuesProperty];
+                ? valueAxisIndexToTimestampIndex[stepfunction.valuesXProperty]
+                : opaqueValueAxisIndexToOffset[stepfunction.opaqueValuesProperty];
         }
 
         private void SanityCheck<T>(T stepfunction) where T : IStepFunction
@@ -287,7 +257,6 @@ namespace UnityEngine.InputSystem.DataPipeline
             if (stepfunction.dimensionsCount <= 0)
                 return;
 
-            var valueAxisIndexToTimestampIndex = valueAxisIndexToTimestampIndexUnsafe.ToNativeSlice();
             var timestampsAxisX = stepfunction.dimensionsCount >= 1
                 ? valueAxisIndexToTimestampIndex[stepfunction.valuesXProperty]
                 : -1;

@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.DataPipeline
                     accumulate1Ds[i].Map(datasetProxy);
 
                 for (var i = 0; i < latest1Ds.Length; ++i)
-                    latest1Ds[i].Map(datasetProxy);
+                    latest1Ds[i].Map(datasetProxy, new NativeSlice<float>());
 
                 for (var i = 0; i < maxValue1Ds.Length; ++i)
                     maxValue1Ds[i].Map(datasetProxy);

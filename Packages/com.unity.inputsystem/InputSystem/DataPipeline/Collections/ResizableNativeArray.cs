@@ -30,6 +30,7 @@ namespace UnityEngine.InputSystem.DataPipeline.Collections
 
         private const Allocator k_Label = Allocator.Persistent;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ResizableNativeArray(int minLength)
         {
             minAllocationLength = minLength;
@@ -46,6 +47,7 @@ namespace UnityEngine.InputSystem.DataPipeline.Collections
             };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             var data = m_Data[0];
@@ -53,6 +55,7 @@ namespace UnityEngine.InputSystem.DataPipeline.Collections
             m_Data[0] = data;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ResizeToFit(int newLength, bool growOnly = false)
         {
             var data = m_Data[0];
@@ -85,13 +88,15 @@ namespace UnityEngine.InputSystem.DataPipeline.Collections
             m_Data[0] = data;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Push(T value)
         {
             var length = m_Data[0].length;
             ResizeToFit(length + 1, true);
-            UnsafeUtility.ArrayElementAsRef<T>(GetUnsafePtr(), length) = value;
+            UnsafeUtility.ArrayElementAsRef<T>(m_Data[0].ptr, length) = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ShrinkToFit()
         {
             ResizeToFit(m_Data[0].length);
@@ -131,39 +136,38 @@ namespace UnityEngine.InputSystem.DataPipeline.Collections
             m_Data.Dispose();
         }
 
-        // Warning! Pointer might change if array is resized 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void* GetUnsafePtr()
-        {
-            return m_Data[0].ptr;
-        }
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-        public AtomicSafetyHandle GetAtomicSafetyHandle()
-        {
-            return NativeArrayUnsafeUtility.GetAtomicSafetyHandle(m_Data);
-        }
-#endif
-
+        // !!! DO NOT USE THIS IN NON-BURSTED CODE !!!
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeSlice<T> ToNativeSlice()
         {
             var data = m_Data[0];
 
-            var slice = NativeSliceUnsafeUtility.ConvertExistingDataToNativeSlice<T>(data.ptr,
-                UnsafeUtility.SizeOf<T>(),
-                data.length);
+            var slice = NativeSliceUnsafeUtility.ConvertExistingDataToNativeSlice<T>(data.ptr, UnsafeUtility.SizeOf<T>(), data.length);
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-            NativeSliceUnsafeUtility.SetAtomicSafetyHandle(ref slice,
-                NativeArrayUnsafeUtility.GetAtomicSafetyHandle(m_Data));
+            NativeSliceUnsafeUtility.SetAtomicSafetyHandle(ref slice, NativeArrayUnsafeUtility.GetAtomicSafetyHandle(m_Data));
 #endif
             return slice;
         }
+        
+        // !!! DO NOT USE THIS IN NON-BURSTED CODE !!!
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NativeSlice<T> ToNativeSlice(int offset, int length)
+        {
+            return new NativeSlice<T>(ToNativeSlice(), offset, length);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UnsafeNativeSlice<T> ToUnsafeNativeSlice()
+        public AlmostManagedSpan<T> ToManagedSpan()
         {
-            return new UnsafeNativeSlice<T>(this);
+            var data = m_Data[0];
+            return new AlmostManagedSpan<T>(data.ptr, data.length, 0, data.length);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public AlmostManagedSpan<T> ToManagedSpan(int offset, int length)
+        {
+            var data = m_Data[0];
+            return new AlmostManagedSpan<T>(data.ptr, data.length, offset, length);
         }
     }
 }

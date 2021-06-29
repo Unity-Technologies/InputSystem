@@ -161,20 +161,20 @@ namespace UnityEngine.InputSystem.DataPipeline
         {
             return new DatasetProxy
             {
-                timestampsUnsafe = timestamps.ToUnsafeNativeSlice(),
-                timestampAxisIndexToLengthUnsafe = timestampAxisIndexToLength.ToUnsafeNativeSlice(),
-                timestampAxisIndexToMaxLengthUnsafe = timestampAxisIndexToMaxLength.ToUnsafeNativeSlice(),
-                timestampAxisIndexToOffsetUnsafe = timestampAxisIndexToOffset.ToUnsafeNativeSlice(),
-                timestampAxisIndexToPreviousRunValueUnsafe = timestampAxisIndexToPreviousRunValue.ToUnsafeNativeSlice(),
+                timestamps = timestamps.ToNativeSlice(),
+                timestampAxisIndexToLength = timestampAxisIndexToLength.Slice(),
+                timestampAxisIndexToMaxLength = timestampAxisIndexToMaxLength.Slice(),
+                timestampAxisIndexToOffset = timestampAxisIndexToOffset.Slice(),
+                timestampAxisIndexToPreviousRunValue = timestampAxisIndexToPreviousRunValue.Slice(),
 
-                valuesUnsafe = values.ToUnsafeNativeSlice(),
-                valueAxisIndexToOffsetUnsafe = valueAxisIndexToOffset.ToUnsafeNativeSlice(),
-                valueAxisIndexToTimestampIndexUnsafe = valueAxisIndexToTimestampIndex.ToUnsafeNativeSlice(),
-                valueAxisIndexToPreviousRunValueUnsafe = valueAxisIndexToPreviousRunValue.ToUnsafeNativeSlice(),
+                values = values.ToNativeSlice(),
+                valueAxisIndexToOffset = valueAxisIndexToOffset.Slice(),
+                valueAxisIndexToTimestampIndex = valueAxisIndexToTimestampIndex.Slice(),
+                valueAxisIndexToPreviousRunValue = valueAxisIndexToPreviousRunValue.Slice(),
 
-                opaqueValuesUnsafe = opaqueValues.ToUnsafeNativeSlice(),
-                opaqueValueAxisIndexToOffsetUnsafe = opaqueValueAxisIndexToOffset.ToUnsafeNativeSlice(),
-                opaqueValueIndexToTimestampIndexUnsafe = opaqueValueIndexToTimestampIndex.ToUnsafeNativeSlice(),
+                opaqueValues = opaqueValues.ToNativeSlice(),
+                opaqueValueAxisIndexToOffset = opaqueValueAxisIndexToOffset.Slice(),
+                opaqueValueIndexToTimestampIndex = opaqueValueIndexToTimestampIndex.Slice(),
             };
         }
 

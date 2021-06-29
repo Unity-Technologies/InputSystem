@@ -62,8 +62,8 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 var prevTimestamp = dataset.timestampAxisIndexToPreviousRunValue[timestampsAxisIndex];
                 var prevValue = dataset.valueAxisIndexToPreviousRunValue[valuesAxisIndex];
                 
-                var timestamps = dataset.timestamps.ToNativeSlice().Slice(timestampOffset, length);
-                var values = dataset.values.ToNativeSlice().Slice(valuesOffset, length);
+                var timestamps = dataset.timestamps.ToManagedSpan(timestampOffset, length);
+                var values = dataset.values.ToManagedSpan(valuesOffset, length);
 
                 sb.Clear();
                 

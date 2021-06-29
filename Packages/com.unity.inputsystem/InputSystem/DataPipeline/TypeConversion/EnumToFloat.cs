@@ -11,7 +11,8 @@ namespace UnityEngine.InputSystem.DataPipeline.TypeConversion
     {
         public StepFunctionInt src;
         public StepFunction1D dst;
-        [ReadOnly] public UnsafeNativeSlice<float> lutUnsafe;
+        // TODO fix me
+        //[ReadOnly] public NativeSlice<float> lut;
 
         public int mask;
         
@@ -27,11 +28,10 @@ namespace UnityEngine.InputSystem.DataPipeline.TypeConversion
             var l = datasetProxy.MapNToN(src, dst);
             var v = datasetProxy.GetValuesOpaque(src);
             var r = datasetProxy.GetValuesX(dst);
-            var lut = lutUnsafe.ToNativeSlice();
 
             // TODO No SIMD here yet :( do we need AVX-512?
-            for (var i = 0; i < l; ++i)
-                r[i] = lut[(v[i] & mask)];
+            //for (var i = 0; i < l; ++i)
+            //    r[i] = lut[(v[i] & mask)];
         }
     }
 }
