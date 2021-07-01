@@ -29,17 +29,17 @@ namespace UnityEngine.InputSystem.DataPipeline.Processor
         public float processAsAbs;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNToN(src, dst);
+            dataset.MapNToN(src, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var l = datasetProxy.MapNToN(src, dst);
-            var v = datasetProxy.GetValuesX(src);
-            var r = datasetProxy.GetValuesX(dst);
+            var l = dataset.MapNToN(src, dst);
+            var v = dataset.GetValuesX(src);
+            var r = dataset.GetValuesX(dst);
 
             for (var i = 0; i < l; ++i)
             {

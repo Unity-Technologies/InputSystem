@@ -22,21 +22,21 @@ namespace UnityEngine.InputSystem.DataPipeline.Processor
         public Vector3 offset;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNToN(src, dst);
+            dataset.MapNToN(src, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var l = datasetProxy.MapNToN(src, dst);
-            var vx = datasetProxy.GetValuesX(src);
-            var vy = datasetProxy.GetValuesY(src);
-            var vz = datasetProxy.GetValuesZ(src);
-            var rx = datasetProxy.GetValuesX(dst);
-            var ry = datasetProxy.GetValuesY(dst);
-            var rz = datasetProxy.GetValuesZ(dst);
+            var l = dataset.MapNToN(src, dst);
+            var vx = dataset.GetValuesX(src);
+            var vy = dataset.GetValuesY(src);
+            var vz = dataset.GetValuesZ(src);
+            var rx = dataset.GetValuesX(dst);
+            var ry = dataset.GetValuesY(dst);
+            var rz = dataset.GetValuesZ(dst);
             
             for (var i = 0; i < l; ++i)
             {

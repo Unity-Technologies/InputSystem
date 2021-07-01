@@ -9,37 +9,37 @@ namespace UnityEngine.InputSystem.DataPipeline.Merger
         public StepFunction2D src1, src2, dst;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+            dataset.MapNAndMToNPlusM(src1, src2, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var (lengthSrc1, lengthSrc2) = datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+            var (lengthSrc1, lengthSrc2) = dataset.MapNAndMToNPlusM(src1, src2, dst);
 
-            var timestampsSrc1 = datasetProxy.GetTimestamps(src1);
-            var timestampsSrc2 = datasetProxy.GetTimestamps(src2);
-            var timestampsDst = datasetProxy.GetTimestamps(dst);
+            var timestampsSrc1 = dataset.GetTimestamps(src1);
+            var timestampsSrc2 = dataset.GetTimestamps(src2);
+            var timestampsDst = dataset.GetTimestamps(dst);
 
-            var valuesSrc1X = datasetProxy.GetValuesX(src1);
-            var valuesSrc1Y = datasetProxy.GetValuesY(src1);
-            var valuesSrc2X = datasetProxy.GetValuesX(src2);
-            var valuesSrc2Y = datasetProxy.GetValuesY(src2);
-            var valuesDstX = datasetProxy.GetValuesX(dst);
-            var valuesDstY = datasetProxy.GetValuesY(dst);
+            var valuesSrc1X = dataset.GetValuesX(src1);
+            var valuesSrc1Y = dataset.GetValuesY(src1);
+            var valuesSrc2X = dataset.GetValuesX(src2);
+            var valuesSrc2Y = dataset.GetValuesY(src2);
+            var valuesDstX = dataset.GetValuesX(dst);
+            var valuesDstY = dataset.GetValuesY(dst);
 
             var iSrc1 = 0;
             var iSrc2 = 0;
             var iDst = 0;
 
-            var valueSrc1X = datasetProxy.GetPreviousValueX(src1);
-            var valueSrc1Y = datasetProxy.GetPreviousValueY(src1);
-            var valueSrc2X = datasetProxy.GetPreviousValueX(src2);
-            var valueSrc2Y = datasetProxy.GetPreviousValueY(src2);
-            var valueDstX = datasetProxy.GetPreviousValueX(dst);
-            var valueDstY = datasetProxy.GetPreviousValueY(dst);
+            var valueSrc1X = dataset.GetPreviousValueX(src1);
+            var valueSrc1Y = dataset.GetPreviousValueY(src1);
+            var valueSrc2X = dataset.GetPreviousValueX(src2);
+            var valueSrc2Y = dataset.GetPreviousValueY(src2);
+            var valueDstX = dataset.GetPreviousValueX(dst);
+            var valueDstY = dataset.GetPreviousValueY(dst);
             
             var valueSrc1Mag = valueSrc1X * valueSrc1X + valueSrc1Y * valueSrc1Y;
             var valueSrc2Mag = valueSrc2X * valueSrc2X + valueSrc2Y * valueSrc2Y;
@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem.DataPipeline.Merger
                 iDst++;
             }
             
-            datasetProxy.ShrinkSizeTo(dst, iDst);
+            dataset.ShrinkSizeTo(dst, iDst);
         }
     }
 }

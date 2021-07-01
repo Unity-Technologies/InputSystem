@@ -2,7 +2,7 @@
 {
     public interface IPipelineStage
     {
-        public void Map(DatasetProxy datasetProxy);
-        public void Execute(DatasetProxy datasetProxy);
+        public void Map(Dataset dataset);
+        public void Execute(Dataset dataset);
     }
 }

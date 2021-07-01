@@ -17,17 +17,17 @@ namespace UnityEngine.InputSystem.DataPipeline.TypeConversion
         public int mask;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNToN(src, dst);
+            dataset.MapNToN(src, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var l = datasetProxy.MapNToN(src, dst);
-            var v = datasetProxy.GetValuesOpaque(src);
-            var r = datasetProxy.GetValuesX(dst);
+            var l = dataset.MapNToN(src, dst);
+            var v = dataset.GetValuesOpaque(src);
+            var r = dataset.GetValuesX(dst);
 
             // TODO No SIMD here yet :( do we need AVX-512?
             //for (var i = 0; i < l; ++i)

@@ -1,6 +1,6 @@
 ﻿namespace UnityEngine.InputSystem.DataPipeline.Demux
 {
-    internal struct DemuxedData
+    public struct DemuxedData
     {
         public int valueStepfunctionIndex;
         // TODO opaque values

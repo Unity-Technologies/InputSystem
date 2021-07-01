@@ -10,32 +10,32 @@ namespace UnityEngine.InputSystem.DataPipeline.TypeConversion
         public StepFunction2D dst;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNAndMToNPlusM(srcX, srcY, dst);
+            dataset.MapNAndMToNPlusM(srcX, srcY, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var (l1, l2) = datasetProxy.MapNAndMToNPlusM(srcX, srcY, dst);
+            var (l1, l2) = dataset.MapNAndMToNPlusM(srcX, srcY, dst);
 
-            var t1 = datasetProxy.GetTimestamps(srcX);
-            var t2 = datasetProxy.GetTimestamps(srcY);
-            var t3 = datasetProxy.GetTimestamps(dst);
+            var t1 = dataset.GetTimestamps(srcX);
+            var t2 = dataset.GetTimestamps(srcY);
+            var t3 = dataset.GetTimestamps(dst);
 
-            var v1 = datasetProxy.GetValuesX(srcX);
-            var v2 = datasetProxy.GetValuesX(srcY);
-            var rX = datasetProxy.GetValuesX(dst);
-            var rY = datasetProxy.GetValuesY(dst);
+            var v1 = dataset.GetValuesX(srcX);
+            var v2 = dataset.GetValuesX(srcY);
+            var rX = dataset.GetValuesX(dst);
+            var rY = dataset.GetValuesY(dst);
 
             var i1 = 0;
             var i2 = 0;
             var i3 = 0;
 
-            var t = datasetProxy.GetPreviousTimestamp(dst);
-            var x = datasetProxy.GetPreviousValueX(srcX);
-            var y = datasetProxy.GetPreviousValueX(srcY);
+            var t = dataset.GetPreviousTimestamp(dst);
+            var x = dataset.GetPreviousValueX(srcX);
+            var y = dataset.GetPreviousValueX(srcY);
 
             while(i1 < l1 || i2 < l2)
             {
@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.DataPipeline.TypeConversion
                 ++i3;
             }
 
-            datasetProxy.ShrinkSizeTo(dst, i3);
+            dataset.ShrinkSizeTo(dst, i3);
         }
     }
 }

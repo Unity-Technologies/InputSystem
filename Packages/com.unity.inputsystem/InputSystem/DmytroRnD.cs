@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEditor;
 //using UnityEditorInternal;
@@ -58,6 +59,8 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 NativeSetup();
 
             Profiler.BeginSample("DmytroRnD.NativeUpdate");
+
+            //UnsafeUtility.Malloc(1024 * 1024, 16, Allocator.Temp);
 
             s_IngressPipeline.eventBuffer = buffer;
 

@@ -9,31 +9,31 @@ namespace UnityEngine.InputSystem.DataPipeline.Merger
         public StepFunction1D src1, src2, dst;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+            dataset.MapNAndMToNPlusM(src1, src2, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var (lengthSrc1, lengthSrc2) = datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+            var (lengthSrc1, lengthSrc2) = dataset.MapNAndMToNPlusM(src1, src2, dst);
 
-            var timestampsSrc1 = datasetProxy.GetTimestamps(src1);
-            var timestampsSrc2 = datasetProxy.GetTimestamps(src2);
-            var timestampsDst = datasetProxy.GetTimestamps(dst);
+            var timestampsSrc1 = dataset.GetTimestamps(src1);
+            var timestampsSrc2 = dataset.GetTimestamps(src2);
+            var timestampsDst = dataset.GetTimestamps(dst);
 
-            var valuesSrc1 = datasetProxy.GetValuesX(src1);
-            var valuesSrc2 = datasetProxy.GetValuesX(src2);
-            var valuesDst = datasetProxy.GetValuesX(dst);
+            var valuesSrc1 = dataset.GetValuesX(src1);
+            var valuesSrc2 = dataset.GetValuesX(src2);
+            var valuesDst = dataset.GetValuesX(dst);
 
             var iSrc1 = 0;
             var iSrc2 = 0;
             var iDst = 0;
 
-            var valueSrc1 = datasetProxy.GetPreviousValueX(src1);
-            var valueSrc2 = datasetProxy.GetPreviousValueX(src2);
-            var valueDst = datasetProxy.GetPreviousValueX(dst);
+            var valueSrc1 = dataset.GetPreviousValueX(src1);
+            var valueSrc2 = dataset.GetPreviousValueX(src2);
+            var valueDst = dataset.GetPreviousValueX(dst);
 
             while(iSrc1 < lengthSrc1 || iSrc2 < lengthSrc2)
             {
@@ -66,7 +66,7 @@ namespace UnityEngine.InputSystem.DataPipeline.Merger
                 iDst++;
             }
             
-            datasetProxy.ShrinkSizeTo(dst, iDst);
+            dataset.ShrinkSizeTo(dst, iDst);
         }
     }
 }

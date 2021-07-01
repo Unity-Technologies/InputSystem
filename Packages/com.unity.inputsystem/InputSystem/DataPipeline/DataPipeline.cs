@@ -42,86 +42,86 @@ namespace UnityEngine.InputSystem.DataPipeline
         private static readonly ProfilerMarker s_MarkerMaxValue2D = new ProfilerMarker("MaxValue2D");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
             using (s_MarkerMap.Auto())
             {
                 for (var i = 0; i < enumsToFloats.Length; ++i)
-                    enumsToFloats[i].Map(datasetProxy);
+                    enumsToFloats[i].Map(dataset);
 
                 for (var i = 0; i < two1DsTo2Ds.Length; ++i)
-                    two1DsTo2Ds[i].Map(datasetProxy);
+                    two1DsTo2Ds[i].Map(dataset);
 
                 for (var i = 0; i < vec2sToMagnitudes.Length; ++i)
-                    vec2sToMagnitudes[i].Map(datasetProxy);
+                    vec2sToMagnitudes[i].Map(dataset);
 
                 for (var i = 0; i < process1Ds.Length; ++i)
-                    process1Ds[i].Map(datasetProxy);
+                    process1Ds[i].Map(dataset);
 
                 for (var i = 0; i < process2Ds.Length; ++i)
-                    process2Ds[i].Map(datasetProxy);
+                    process2Ds[i].Map(dataset);
 
                 for (var i = 0; i < process3Ds.Length; ++i)
-                    process3Ds[i].Map(datasetProxy);
+                    process3Ds[i].Map(dataset);
 
                 for (var i = 0; i < accumulate1Ds.Length; ++i)
-                    accumulate1Ds[i].Map(datasetProxy);
+                    accumulate1Ds[i].Map(dataset);
 
                 for (var i = 0; i < latest1Ds.Length; ++i)
-                    latest1Ds[i].Map(datasetProxy, new NativeSlice<float>());
+                    latest1Ds[i].Map(dataset);
 
                 for (var i = 0; i < maxValue1Ds.Length; ++i)
-                    maxValue1Ds[i].Map(datasetProxy);
+                    maxValue1Ds[i].Map(dataset);
 
                 for (var i = 0; i < maxValue2Ds.Length; ++i)
-                    maxValue2Ds[i].Map(datasetProxy);
+                    maxValue2Ds[i].Map(dataset);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
             using (s_MarkerExecute.Auto())
             {
                 using (s_MarkerEnumToFloat.Auto())
                     for (var i = 0; i < enumsToFloats.Length; ++i)
-                        enumsToFloats[i].Execute(datasetProxy);
+                        enumsToFloats[i].Execute(dataset);
 
                 using (s_MarkerTwo1DsTo2D.Auto())
                     for (var i = 0; i < two1DsTo2Ds.Length; ++i)
-                        two1DsTo2Ds[i].Execute(datasetProxy);
+                        two1DsTo2Ds[i].Execute(dataset);
 
                 using (s_MarkerVec2ToMagnitude.Auto())
                     for (var i = 0; i < vec2sToMagnitudes.Length; ++i)
-                        vec2sToMagnitudes[i].Execute(datasetProxy);
+                        vec2sToMagnitudes[i].Execute(dataset);
 
                 using (s_MarkerProcessor1D.Auto())
                     for (var i = 0; i < process1Ds.Length; ++i)
-                        process1Ds[i].Execute(datasetProxy);
+                        process1Ds[i].Execute(dataset);
 
                 using (s_MarkerProcessor2D.Auto())
                     for (var i = 0; i < process2Ds.Length; ++i)
-                        process2Ds[i].Execute(datasetProxy);
+                        process2Ds[i].Execute(dataset);
 
                 using (s_MarkerProcessor3D.Auto())
                     for (var i = 0; i < process3Ds.Length; ++i)
-                        process3Ds[i].Execute(datasetProxy);
+                        process3Ds[i].Execute(dataset);
 
                 using (s_MarkerAccumulate1D.Auto())
                     for (var i = 0; i < accumulate1Ds.Length; ++i)
-                        accumulate1Ds[i].Execute(datasetProxy);
+                        accumulate1Ds[i].Execute(dataset);
 
                 using (s_MarkerLatest1D.Auto())
                     for (var i = 0; i < latest1Ds.Length; ++i)
-                        latest1Ds[i].Execute(datasetProxy);
+                        latest1Ds[i].Execute(dataset);
 
                 using (s_MarkerMaxValue1D.Auto())
                     for (var i = 0; i < maxValue1Ds.Length; ++i)
-                        maxValue1Ds[i].Execute(datasetProxy);
+                        maxValue1Ds[i].Execute(dataset);
 
                 using (s_MarkerMaxValue2D.Auto())
                     for (var i = 0; i < maxValue2Ds.Length; ++i)
-                        maxValue2Ds[i].Execute(datasetProxy);
+                        maxValue2Ds[i].Execute(dataset);
             }
         }
 

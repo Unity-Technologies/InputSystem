@@ -10,28 +10,23 @@ namespace UnityEngine.InputSystem.DataPipeline.Merger
         public StepFunction1D src1, src2, dst;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy, NativeSlice<float> foo)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
-        }
-
-        public void Map(DatasetProxy datasetProxy)
-        {
-            datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+            dataset.MapNAndMToNPlusM(src1, src2, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var (l1, l2) = datasetProxy.MapNAndMToNPlusM(src1, src2, dst);
+            var (l1, l2) = dataset.MapNAndMToNPlusM(src1, src2, dst);
 
-            var t1 = datasetProxy.GetTimestamps(src1);
-            var t2 = datasetProxy.GetTimestamps(src2);
-            var t3 = datasetProxy.GetTimestamps(dst);
+            var t1 = dataset.GetTimestamps(src1);
+            var t2 = dataset.GetTimestamps(src2);
+            var t3 = dataset.GetTimestamps(dst);
 
-            var v1 = datasetProxy.GetValuesX(src1);
-            var v2 = datasetProxy.GetValuesX(src2);
-            var v3 = datasetProxy.GetValuesX(dst);
+            var v1 = dataset.GetValuesX(src1);
+            var v2 = dataset.GetValuesX(src2);
+            var v3 = dataset.GetValuesX(dst);
 
             var i1 = 0;
             var i2 = 0;

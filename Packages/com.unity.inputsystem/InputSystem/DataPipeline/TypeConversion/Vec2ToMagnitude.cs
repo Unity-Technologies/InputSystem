@@ -10,18 +10,18 @@ namespace UnityEngine.InputSystem.DataPipeline.TypeConversion
         public StepFunction1D dst;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Map(DatasetProxy datasetProxy)
+        public void Map(Dataset dataset)
         {
-            datasetProxy.MapNToN(src, dst);
+            dataset.MapNToN(src, dst);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(DatasetProxy datasetProxy)
+        public void Execute(Dataset dataset)
         {
-            var l = datasetProxy.MapNToN(src, dst);
-            var vx = datasetProxy.GetValuesX(src);
-            var vy = datasetProxy.GetValuesY(src);
-            var r = datasetProxy.GetValuesX(dst);
+            var l = dataset.MapNToN(src, dst);
+            var vx = dataset.GetValuesX(src);
+            var vy = dataset.GetValuesY(src);
+            var r = dataset.GetValuesX(dst);
 
             for (var i = 0; i < l; ++i)
                 // TODO use Unity.Mathematics to avoid doubles!

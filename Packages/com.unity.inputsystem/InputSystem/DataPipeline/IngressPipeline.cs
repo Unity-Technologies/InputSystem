@@ -28,12 +28,12 @@ namespace UnityEngine.InputSystem.DataPipeline
             // TODO maybe mapping needs to be done via some configuration rather relying on pipeline stages?
             // that way we wouldn't need to break out from bursted job here
             
-            dataPipeline.Map(dataset.ToDatasetProxy());
+            dataPipeline.Map(dataset);
             dataset.AoSToSoa(demuxedData);
 
             // <-- run user pipelines here, before our pipelines
             
-            dataPipeline.Execute(dataset.ToDatasetProxy());
+            dataPipeline.Execute(dataset);
             
             // <-- run user pipelines here, post our pipelines
         }
