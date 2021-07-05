@@ -65,8 +65,11 @@ namespace UnityEngine.InputSystem.Editor
                     m_ExpectedControlTypeProperty.stringValue = m_ControlTypeList[m_SelectedControlType];
 
                 m_ActionTypeProperty.intValue = (int)(InputActionType)m_SelectedActionType;
-                m_ActionFlagsProperty.intValue = m_ActionFlagsProperty.intValue |
-                    (int)(m_WantsInitialStateCheck ? InputAction.ActionFlags.WantsInitialStateCheck : default);
+
+                if (m_WantsInitialStateCheck)
+                    m_ActionFlagsProperty.intValue |= (int)InputAction.ActionFlags.WantsInitialStateCheck;
+                else
+                    m_ActionFlagsProperty.intValue &= ~(int)InputAction.ActionFlags.WantsInitialStateCheck;
 
                 m_ActionTypeProperty.serializedObject.ApplyModifiedProperties();
                 UpdateProcessors(m_ExpectedControlTypeProperty.stringValue);

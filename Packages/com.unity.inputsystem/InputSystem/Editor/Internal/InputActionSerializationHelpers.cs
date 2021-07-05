@@ -173,6 +173,7 @@ namespace UnityEngine.InputSystem.Editor
             actionProperty.FindPropertyRelative("m_Type").intValue = (int)InputActionType.Button;  // Default to creating button actions.
             actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
             actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue = "Button";
+            actionProperty.FindPropertyRelative("m_Flags").intValue = 0;
 
             return actionProperty;
         }
