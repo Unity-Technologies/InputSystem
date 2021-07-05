@@ -14,12 +14,12 @@ using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
-using UnityEditor;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 using PropertyAttribute = NUnit.Framework.PropertyAttribute;
@@ -448,6 +448,13 @@ class APIVerificationTests
     ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
     private static string GenerateDocsDirectory(out string log)
     {
+        // The dependency on `com.unity.modules.uielements` we have triggers a 404 error in doctools as it
+        // tries to retrieve information on the "package" from `packages.unity.com`. As it is a module and not a
+        // package, there's no metadata on the server and PacmanUtils.GetVersions() in doctools will log an
+        // error to the console. This doesn't impact the rest of the run so just ignore it.
+        // This is a workaround. Remove when fixed in doctools.
+        LogAssert.ignoreFailingMessages = true;
+
         // DocumentationBuilder users C:/temp on Windows to avoid deeply nested paths that go
         // beyond the Windows path limit. However, on Yamato agent, C:/temp does not exist.
         // Create it manually here.
