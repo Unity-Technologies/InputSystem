@@ -5984,6 +5984,20 @@ partial class CoreTests
         Assert.That(action.GetBindingDisplayString(8), Is.EqualTo("Left Shift|Right Shift+A"));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1321175/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_EmptyBindingsOnComposites_ArePrintedAsSpaces()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "");
+
+        Assert.That(action.GetBindingDisplayString(), Is.EqualTo("Up Arrow/ / / "));
+    }
+
     ////TODO: this will need to take localization into account (though this is part of a broader integration that also affects other features of the input system)
     [Test]
     [Category("Actions")]
