@@ -1644,7 +1644,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         // Just so that we can tell apart TreeViews containing only maps.
-        private class ActionMapListItem : TreeViewItem
+        internal class ActionMapListItem : TreeViewItem
         {
         }
     }
