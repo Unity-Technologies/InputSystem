@@ -301,6 +301,8 @@ namespace UnityEngine.InputSystem
             var bindings = action.bindings;
             for (var i = 0; i < bindings.Count; ++i)
             {
+                if (bindings[i].isPartOfComposite)
+                    continue;
                 if (!bindingMask.Matches(bindings[i]))
                     continue;
 
@@ -432,7 +434,12 @@ namespace UnityEngine.InputSystem
                 // Get the display string for each part.
                 var partStrings = new string[partCount];
                 for (var i = 0; i < partCount; ++i)
-                    partStrings[i] = action.GetBindingDisplayString(firstPartIndex + i, options);
+                {
+                    var partString = action.GetBindingDisplayString(firstPartIndex + i, options);
+                    if (string.IsNullOrEmpty(partString))
+                        partString = " ";
+                    partStrings[i] = partString;
+                }
 
                 // Put the parts together based on the display format string for
                 // the composite.
@@ -459,6 +466,9 @@ namespace UnityEngine.InputSystem
                             else
                                 result = partStrings[i];
                         }
+
+                        if (string.IsNullOrEmpty(result))
+                            result = " ";
 
                         return result;
                     });
