@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `MultiTapInteraction` not respecting `InputSettings.multiTapDelayTime` ([case 1292754](https://issuetracker.unity3d.com/issues/multitapdelaytime-does-not-influence-maxtapspacing-in-input-action-assets)).
 - Fixed changing values in `Input System Package` project settings not affecting default values displayed in `.inputactions` editor window ([case 1292754](https://issuetracker.unity3d.com/issues/multitapdelaytime-does-not-influence-maxtapspacing-in-input-action-assets)).
 - Fixed rebinding a part of a composite with `RebindingOperation.WithTargetBinding` not also changing the type of control being looked for ([case 1272563](https://issuetracker.unity3d.com/issues/input-system-performinteractiverebinding-method-doesnt-detect-button-input-when-rebinding-part-of-a-2d-vector-composite)).
+- Fixed `AxisComposite` not respecting `minValue` and `maxValue` properties ([case 1335838](https://issuetracker.unity3d.com/issues/inputsystem-1d-axis-composite-binding-will-return-a-incorrect-value-if-minvalue-and-maxvalue-is-not-1-and-1)).
 
 ### Added
 
