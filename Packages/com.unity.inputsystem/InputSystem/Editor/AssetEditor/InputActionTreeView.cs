@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.Editor
         public static TreeViewItem BuildWithJustActionMapsFromAsset(SerializedObject assetObject)
         {
             Debug.Assert(assetObject != null, "Asset object cannot be null");
-            var root = new TreeViewItem {id = 0, depth = -1};
+            var root = new ActionMapListItem {id = 0, depth = -1};
             ActionMapTreeItem.AddActionMapsFromAssetTo(root, assetObject);
             return root;
         }
@@ -702,6 +702,12 @@ namespace UnityEngine.InputSystem.Editor
             OnSerializedObjectModified();
         }
 
+        public bool HavePastableClipboardData()
+        {
+            var clipboard = EditorHelpers.GetSystemCopyBufferContents();
+            return clipboard.StartsWith(k_CopyPasteMarker);
+        }
+
         public void PasteDataFromClipboard()
         {
             PasteDataFrom(EditorHelpers.GetSystemCopyBufferContents());
@@ -712,9 +718,12 @@ namespace UnityEngine.InputSystem.Editor
             if (!copyBufferString.StartsWith(k_CopyPasteMarker))
                 return;
 
+            var locations = GetSelectedItemsWithChildrenFilteredOut().Select(x => new InsertLocation { item = x }).ToList();
+            if (locations.Count == 0)
+                locations.Add(new InsertLocation { item = rootItem });
+
             ////REVIEW: filtering out children may remove the very item we need to get the right match for a copy block?
-            PasteItems(copyBufferString,
-                GetSelectedItemsWithChildrenFilteredOut().Select(x => new InsertLocation {item = x}));
+            PasteItems(copyBufferString, locations);
         }
 
         public struct InsertLocation
@@ -885,7 +894,7 @@ namespace UnityEngine.InputSystem.Editor
 
         #region Context Menus
 
-        public void BuildContextMenuFor(Type itemType, GenericMenu menu, bool multiSelect, ActionTreeItem actionItem = null)
+        public void BuildContextMenuFor(Type itemType, GenericMenu menu, bool multiSelect, ActionTreeItem actionItem = null, bool noSelection = false)
         {
             var canRename = false;
             if (itemType == typeof(ActionMapTreeItem))
@@ -901,27 +910,46 @@ namespace UnityEngine.InputSystem.Editor
             {
                 canRename = true;
             }
+            else if (itemType == typeof(ActionMapListItem))
+            {
+                menu.AddItem(s_AddActionMapLabel, false, AddNewActionMap);
+            }
 
             // Common menu entries shared by all types of items.
             menu.AddSeparator("");
-            menu.AddItem(s_CutLabel, false, () =>
+            if (noSelection)
             {
-                CopySelectedItemsToClipboard();
-                DeleteDataOfSelectedItems();
-            });
-            menu.AddItem(s_CopyLabel, false, CopySelectedItemsToClipboard);
-            menu.AddItem(s_PasteLabel, false, PasteDataFromClipboard);
+                menu.AddDisabledItem(s_CutLabel);
+                menu.AddDisabledItem(s_CopyLabel);
+            }
+            else
+            {
+                menu.AddItem(s_CutLabel, false, () =>
+                {
+                    CopySelectedItemsToClipboard();
+                    DeleteDataOfSelectedItems();
+                });
+                menu.AddItem(s_CopyLabel, false, CopySelectedItemsToClipboard);
+            }
+            if (HavePastableClipboardData())
+                menu.AddItem(s_PasteLabel, false, PasteDataFromClipboard);
+            else
+                menu.AddDisabledItem(s_PasteLabel);
             menu.AddSeparator("");
-            if (canRename && !multiSelect)
-            {
+            if (!noSelection && canRename && !multiSelect)
                 menu.AddItem(s_RenameLabel, false, () => BeginRename(GetSelectedItems().First()));
-            }
             else if (canRename)
-            {
                 menu.AddDisabledItem(s_RenameLabel);
+            if (noSelection)
+            {
+                menu.AddDisabledItem(s_DuplicateLabel);
+                menu.AddDisabledItem(s_DeleteLabel);
             }
-            menu.AddItem(s_DuplicateLabel, false, DuplicateSelection);
-            menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
+            else
+            {
+                menu.AddItem(s_DuplicateLabel, false, DuplicateSelection);
+                menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
+            }
 
             if (itemType != typeof(ActionMapTreeItem))
             {
@@ -981,15 +1009,23 @@ namespace UnityEngine.InputSystem.Editor
         private void PopUpContextMenu()
         {
             // See if we have a selection of mixed types.
-            var mixedSelection = GetSelectedItems().Select(x => x.GetType()).Distinct().Count() > 1;
+            var selected = GetSelectedItems().ToList();
+            var mixedSelection = selected.Select(x => x.GetType()).Distinct().Count() > 1;
+            var noSelection = selected.Count == 0;
 
             // Create and pop up context menu.
             var menu = new GenericMenu();
-            if (mixedSelection)
-                BuildContextMenuFor(typeof(ActionTreeItemBase), menu, true);
+            if (noSelection)
+            {
+                BuildContextMenuFor(rootItem.GetType(), menu, true, noSelection: noSelection);
+            }
+            else if (mixedSelection)
+            {
+                BuildContextMenuFor(typeof(ActionTreeItemBase), menu, true, noSelection: noSelection);
+            }
             else
             {
-                var item = GetSelectedItems().First();
+                var item = selected.First();
                 BuildContextMenuFor(item.GetType(), menu, GetSelection().Count > 1, actionItem: item as ActionTreeItem);
             }
             menu.ShowAsContext();
@@ -1008,6 +1044,17 @@ namespace UnityEngine.InputSystem.Editor
 
             m_InitiateContextMenuOnNextRepaint = true;
             Repaint();
+
+            Event.current.Use();
+        }
+
+        protected override void ContextClicked()
+        {
+            ClearSelection();
+            m_InitiateContextMenuOnNextRepaint = true;
+            Repaint();
+
+            Event.current.Use();
         }
 
         #endregion
@@ -1398,6 +1445,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static readonly GUIContent s_AddBindingLabel = EditorGUIUtility.TrTextContent("Add Binding");
         private static readonly GUIContent s_AddActionLabel = EditorGUIUtility.TrTextContent("Add Action");
+        private static readonly GUIContent s_AddActionMapLabel = EditorGUIUtility.TrTextContent("Add Action Map");
         private static readonly GUIContent s_PlusBindingIcon = EditorGUIUtility.TrIconContent("Toolbar Plus More", "Add Binding");
         private static readonly GUIContent s_PlusActionIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
         private static readonly GUIContent s_PlusActionMapIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action Map");
@@ -1593,6 +1641,11 @@ namespace UnityEngine.InputSystem.Editor
                 .WithAlignment(TextAnchor.MiddleLeft)
                 .WithFontStyle(FontStyle.Bold)
                 .WithPadding(new RectOffset(10, 6, 0, 0));
+        }
+
+        // Just so that we can tell apart TreeViews containing only maps.
+        internal class ActionMapListItem : TreeViewItem
+        {
         }
     }
 }

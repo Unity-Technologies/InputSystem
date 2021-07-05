@@ -183,6 +183,10 @@ namespace UnityEngine.InputSystem.Editor
                             {
                                 for (var n = 0; n < m_NumActionMaps; ++n)
                                 {
+                                    // Skip action maps that have no names (case 1317735).
+                                    if (m_ActionMapNames[n] == null)
+                                        continue;
+
                                     m_ActionMapEventsUnfolded[n] = EditorGUILayout.Foldout(m_ActionMapEventsUnfolded[n],
                                         m_ActionMapNames[n], toggleOnLabelClick: true);
                                     using (new EditorGUI.IndentLevelScope())
@@ -428,9 +432,6 @@ namespace UnityEngine.InputSystem.Editor
                     ArrayHelpers.PutAtIfNotSet(ref m_ActionMapNames, actionMapIndex,
                         () => new GUIContent(action.actionMap.name));
                 }
-
-                ////REVIEW: this is destructive; we may be losing connections here that the user has set up
-                ////        if the action goes missing
 
                 // Bring over any action events that we already have and that are still in the asset.
                 var oldActionEvents = playerInput.m_ActionEvents;

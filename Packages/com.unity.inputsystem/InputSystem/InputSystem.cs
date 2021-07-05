@@ -3475,7 +3475,10 @@ namespace UnityEngine.InputSystem
             // Get devices that keep global lists (like Gamepad) to re-initialize them
             // by pretending the devices have been added.
             foreach (var device in devices)
+            {
                 device.NotifyAdded();
+                device.MakeCurrent();
+            }
         }
 
 #endif
