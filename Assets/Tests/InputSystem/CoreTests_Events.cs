@@ -721,6 +721,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(DpadState))]
+    [Preserve]
     private class DpadDevice : InputDevice
     {
     }
