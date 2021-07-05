@@ -30,6 +30,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
 
+## [1.1.0-pre.5] - 2021-05-11
+
+- Fixes a problem with the package's manifest missing a dependency on the UI Elements module.
+
 ## [1.1.0-pre.4] - 2021-05-04
 
 ### Changed
