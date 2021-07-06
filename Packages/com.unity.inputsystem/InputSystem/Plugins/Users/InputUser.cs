@@ -1641,8 +1641,10 @@ namespace UnityEngine.InputSystem.Users
                         AddDeviceToUser(userIndex, device);
 
                         // Search for another user who had lost the same device.
-                        deviceIndex =
-                            s_AllLostDevices.IndexOfReference(device, deviceIndex + 1, s_AllLostDeviceCount);
+                        // Note: s_AllLostDevices is modified (element erased) from within RemoveDeviceFromUser,
+                        //       hence, deviceIndex is not advanced and s_AllLostDeviceCount is one less than
+                        //       previous linear search iteration.
+                        deviceIndex = s_AllLostDevices.IndexOfReference(device, deviceIndex, s_AllLostDeviceCount);
                     }
                     break;
                 }
@@ -1698,7 +1700,10 @@ namespace UnityEngine.InputSystem.Users
                             UpdatePlatformUserAccount(userIndex, device);
 
                             // Search for another user paired to the same device.
-                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, deviceIndex + 1, s_AllPairedDeviceCount);
+                            // Note that action is tied to user and hence we can skip to end of slice associated
+                            // with the current user or at least one element forward.
+                            var offsetNextSlice = deviceIndex + Math.Max(1, s_AllUserData[userIndex].deviceCount);
+                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, offsetNextSlice, s_AllPairedDeviceCount - offsetNextSlice);
                         }
                     }
                     break;
@@ -1859,8 +1864,15 @@ namespace UnityEngine.InputSystem.Users
 
             public InputControlScheme.MatchResult controlSchemeMatch;
 
+            /// <summary>
+            /// Number of devices in <see cref="InputUser.s_AllLostDevices"/> assigned to the user.
+            /// </summary>
             public int lostDeviceCount;
 
+            /// <summary>
+            /// Index in <see cref="InputUser.s_AllLostDevices"/> where the lost devices for this user start. Only valid
+            /// if <see cref="lostDeviceCount"/> is greater than zero.
+            /// </summary>
             public int lostDeviceStartIndex;
 
             ////TODO
@@ -1916,7 +1928,7 @@ namespace UnityEngine.InputSystem.Users
         private static InputUser[] s_AllUsers;
         private static UserData[] s_AllUserData;
         private static InputDevice[] s_AllPairedDevices; // We keep a single array that we slice out to each user.
-        private static InputDevice[] s_AllLostDevices;
+        private static InputDevice[] s_AllLostDevices;   // We keep a single array that we slice out to each user.
         private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
         private static InlinedArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
