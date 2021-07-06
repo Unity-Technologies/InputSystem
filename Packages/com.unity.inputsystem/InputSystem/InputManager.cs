@@ -2833,7 +2833,7 @@ namespace UnityEngine.InputSystem
                     }
 
                     case DeviceConfigurationEvent.Type:
-                        device.OnConfigurationChanged();
+                        device.NotifyConfigurationChanged();
                         InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
                         DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
                             device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");

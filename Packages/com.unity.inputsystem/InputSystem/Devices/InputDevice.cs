@@ -432,7 +432,7 @@ namespace UnityEngine.InputSystem
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
-        internal void OnConfigurationChanged()
+        internal void NotifyConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
@@ -443,6 +443,8 @@ namespace UnityEngine.InputSystem
 
             // Make sure we fetch the enabled/disabled state again.
             m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+
+            OnConfigurationChanged();
         }
 
         /// <summary>
@@ -499,6 +501,24 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputDeviceChange.Removed"/>
         /// <seealso cref="OnRemoved"/>
         protected virtual void OnRemoved()
+        {
+        }
+
+        /// <summary>
+        /// Called by the system when the device configuration is changed. This happens when the backend sends
+        /// a <see cref="DeviceConfigurationEvent"/> for the device.
+        /// </summary>
+        /// <remarks>
+        /// This method can be used to flush out cached information. An example of where this happens is <see cref="Controls.KeyControl"/>
+        /// caching information about the display name of a control. As this depends on the current keyboard layout, the information
+        /// has to be fetched dynamically (this happens using <see cref="QueryKeyNameCommand"/>). Whenever the keyboard layout changes,
+        /// the system sends a <see cref="DeviceConfigurationEvent"/> for the <see cref="Keyboard"/> at which point the device flushes
+        /// all cached key names.
+        /// </remarks>
+        /// <seealso cref="InputManager.OnUpdate"/>
+        /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
+        /// <seealso cref="OnConfigurationChanged"/>///
+        protected virtual void OnConfigurationChanged()
         {
         }
 

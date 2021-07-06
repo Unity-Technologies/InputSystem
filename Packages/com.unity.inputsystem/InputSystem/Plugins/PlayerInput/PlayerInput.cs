@@ -1180,31 +1180,12 @@ namespace UnityEngine.InputSystem
 
                             // Find action for event.
                             var action = m_Actions.FindAction(id);
-                            if (action != null)
-                            {
-                                ////REVIEW: really wish we had a single callback
-                                action.performed += actionEvent.Invoke;
-                                action.canceled += actionEvent.Invoke;
-                                action.started += actionEvent.Invoke;
-                            }
-                            else
-                            {
-                                // Cannot find action. Log error.
-                                if (!string.IsNullOrEmpty(actionEvent.actionName))
-                                {
-                                    // We have an action name. Show in message.
-                                    Debug.LogError(
-                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                                else
-                                {
-                                    // We have no action name. Best we have is ID.
-                                    Debug.LogError(
-                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                            }
+                            if (action == null)
+                                continue;
+
+                            action.performed += actionEvent.Invoke;
+                            action.canceled += actionEvent.Invoke;
+                            action.started += actionEvent.Invoke;
                         }
                     }
                     break;
