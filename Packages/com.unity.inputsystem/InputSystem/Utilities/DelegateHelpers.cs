@@ -13,12 +13,12 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            var list = callbacks.PrepareExecution();
-            for (var i = 0; i < list.length; ++i)
+            callbacks.StartExecuting();
+            for (var i = 0; i < callbacks.length; ++i)
             {
                 try
                 {
-                    list[i]();
+                    callbacks[i]();
                 }
                 catch (Exception exception)
                 {
@@ -29,6 +29,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
+            callbacks.FinishExecuting();
             Profiler.EndSample();
         }
 
@@ -37,12 +38,12 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            var list = callbacks.PrepareExecution();
-            for (var i = 0; i < list.length; ++i)
+            callbacks.StartExecuting();
+            for (var i = 0; i < callbacks.length; ++i)
             {
                 try
                 {
-                    list[i](argument);
+                    callbacks[i](argument);
                 }
                 catch (Exception exception)
                 {
@@ -53,6 +54,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
+            callbacks.FinishExecuting();
             Profiler.EndSample();
         }
 
@@ -61,12 +63,12 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            var list = callbacks.PrepareExecution();
-            for (var i = 0; i < list.length; ++i)
+            callbacks.StartExecuting();
+            for (var i = 0; i < callbacks.length; ++i)
             {
                 try
                 {
-                    list[i](argument1, argument2);
+                    callbacks[i](argument1, argument2);
                 }
                 catch (Exception exception)
                 {
@@ -77,6 +79,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
+            callbacks.FinishExecuting();
             Profiler.EndSample();
         }
 
@@ -86,12 +89,12 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return true;
             Profiler.BeginSample(callbackName);
-            var list = callbacks.PrepareExecution();
-            for (var i = 0; i < list.length; ++i)
+            callbacks.StartExecuting();
+            for (var i = 0; i < callbacks.length; ++i)
             {
                 try
                 {
-                    if (list[i](argument1, argument2))
+                    if (callbacks[i](argument1, argument2))
                         return true;
                 }
                 catch (Exception exception)
@@ -103,6 +106,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
+            callbacks.FinishExecuting();
             Profiler.EndSample();
             return false;
         }

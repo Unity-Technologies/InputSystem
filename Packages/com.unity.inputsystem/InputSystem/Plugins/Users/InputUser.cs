@@ -1122,12 +1122,12 @@ namespace UnityEngine.InputSystem.Users
             if (s_OnChange.length == 0)
                 return;
             Profiler.BeginSample("InputUser.onChange");
-            var list = s_OnChange.PrepareExecution();
-            for (var i = 0; i < list.length; ++i)
+            s_OnChange.StartExecuting();
+            for (var i = 0; i < s_OnChange.length; ++i)
             {
                 try
                 {
-                    list[i](s_AllUsers[userIndex], change, device);
+                    s_OnChange[i](s_AllUsers[userIndex], change, device);
                 }
                 catch (Exception exception)
                 {
@@ -1135,6 +1135,7 @@ namespace UnityEngine.InputSystem.Users
                     Debug.LogException(exception);
                 }
             }
+            s_OnChange.FinishExecuting();
             Profiler.EndSample();
         }
 
@@ -1755,14 +1756,14 @@ namespace UnityEngine.InputSystem.Users
             foreach (var control in eventPtr.EnumerateChangedControls(device: device, magnitudeThreshold: 0.0001f))
             {
                 var deviceHasBeenPaired = false;
-                var list = s_OnUnpairedDeviceUsed.PrepareExecution();
-                for (var n = 0; n < list.length; ++n)
+                s_OnUnpairedDeviceUsed.StartExecuting();
+                for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
                 {
                     var pairingStateVersionBefore = s_PairingStateVersion;
 
                     try
                     {
-                        list[n](control, eventPtr);
+                        s_OnUnpairedDeviceUsed[n](control, eventPtr);
                     }
                     catch (Exception exception)
                     {
@@ -1777,6 +1778,7 @@ namespace UnityEngine.InputSystem.Users
                         break;
                     }
                 }
+                s_OnUnpairedDeviceUsed.FinishExecuting();
 
                 // If the device was paired in one of the callbacks, stop processing
                 // changes on it.

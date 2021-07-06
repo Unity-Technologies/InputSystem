@@ -817,12 +817,12 @@ namespace UnityEngine.InputSystem
                 m_DeviceFindExecuteCommandDeviceId = deviceId;
 
                 var haveOverriddenLayoutName = false;
-                var list = m_DeviceFindLayoutCallbacks.PrepareExecution();
-                for (var i = 0; i < list.length; ++i)
+                m_DeviceFindLayoutCallbacks.StartExecuting();
+                for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
                 {
                     try
                     {
-                        var newLayout = list[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
+                        var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
                         if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
                         {
                             layoutName = new InternedString(newLayout);
@@ -835,6 +835,7 @@ namespace UnityEngine.InputSystem
                         Debug.LogException(exception);
                     }
                 }
+                m_DeviceFindLayoutCallbacks.FinishExecuting();
             }
 
             Profiler.EndSample();
