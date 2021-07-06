@@ -79,9 +79,24 @@ namespace UnityEngine.InputSystem.Layouts
     /// </remarks>
     /// <seealso cref="InputControlLayout"/>
     /// <seealso cref="InputBindingComposite"/>
+
+    
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public sealed class InputControlAttribute : PropertyAttribute
     {
+        internal bool m_UseNewDataPipeline;
+        internal int m_NewDataPipelineChannelBaseId;
+
+        public InputControlAttribute()
+        {
+        }
+        
+        internal InputControlAttribute(int newDataPipelineChannelBaseId)
+        {
+            m_UseNewDataPipeline = true;
+            m_NewDataPipelineChannelBaseId = newDataPipelineChannelBaseId;
+        }
+        
         /// <summary>
         /// Layout to use for the control.
         /// </summary>

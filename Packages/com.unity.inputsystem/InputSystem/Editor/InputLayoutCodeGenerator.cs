@@ -140,6 +140,7 @@ namespace UnityEngine.InputSystem.Editor
             var usageCount = usagesForEachControl?.Length ?? 0;
             var aliasCount = aliasesForEachControl?.Length ?? 0;
 
+            // TODO!
             // Set up device control info.
             writer.WriteLine($"var builder = this.Setup({controlCount}, {usageCount}, {aliasCount})");
             writer.WriteLine($"    .WithName(\"{device.name}\")");
@@ -288,6 +289,8 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine("    .IsSynthetic(true)");
             if (control is ButtonControl)
                 writer.WriteLine("    .IsButton(true)");
+            if (control.m_UseNewDataPipeline)
+                writer.WriteLine($"    .WithNewDataPipelineChannelBaseId({control.m_NewDataPipelineChannelBaseId})");
             writer.WriteLine("    .WithStateBlock(new InputStateBlock");
             writer.WriteLine("    {");
             writer.WriteLine($"        format = new FourCC({(int) control.stateBlock.format}),");

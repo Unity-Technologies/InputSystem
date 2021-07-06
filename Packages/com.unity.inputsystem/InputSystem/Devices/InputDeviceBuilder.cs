@@ -395,6 +395,10 @@ namespace UnityEngine.InputSystem.Layouts
             if (control.noisy)
                 m_Device.noisy = true;
             control.isButton = control is ButtonControl;
+            
+            // ---------- TODO
+            control.m_UseNewDataPipeline = controlItem.m_UseNewDataPipeline;
+            control.m_NewDataPipelineChannelBaseId = controlItem.m_NewDataPipelineChannelBaseId;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.

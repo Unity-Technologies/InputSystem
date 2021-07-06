@@ -109,6 +109,10 @@ namespace UnityEngine.InputSystem
     [Scripting.Preserve]
     public abstract class InputControl
     {
+        // TODO
+        internal bool m_UseNewDataPipeline;
+        internal int m_NewDataPipelineChannelBaseId;
+        
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
         /// </summary>

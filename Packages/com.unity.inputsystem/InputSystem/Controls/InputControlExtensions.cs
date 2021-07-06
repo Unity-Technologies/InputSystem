@@ -1496,6 +1496,14 @@ namespace UnityEngine.InputSystem
         public struct ControlBuilder
         {
             public InputControl control { get; internal set; }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal ControlBuilder WithNewDataPipelineChannelBaseId(int newDataPipelineChannelBaseId)
+            {
+                control.m_UseNewDataPipeline = true;
+                control.m_NewDataPipelineChannelBaseId = newDataPipelineChannelBaseId;
+                return this;
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder At(InputDevice device, int index)

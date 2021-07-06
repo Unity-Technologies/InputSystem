@@ -27,7 +27,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Position of mouse on screen.</value>
         /// <seealso cref="Pointer.position"/>
-        [InputControl(usage = "Point")]
+        [InputControl(0, name = "position/x", usage = "Point")]
+        [InputControl(1, name = "position/y", usage = "Point")]
         [FieldOffset(0)]
         public Vector2 position;
 
@@ -36,7 +37,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Mouse movement.</value>
         /// <seealso cref="Pointer.delta"/>
-        [InputControl(usage = "Secondary2DMotion")]
+        [InputControl(2, name = "delta/x", usage = "Secondary2DMotion")]
+        [InputControl(3, name = "delta/y", usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
 
@@ -47,8 +49,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <value>Scroll wheel delta.</value>
         /// <seealso cref="Mouse.scroll"/>
         [InputControl(displayName = "Scroll")]
-        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Left/Right")]
-        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Up/Down", shortDisplayName = "Wheel")]
+        [InputControl(4, name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Left/Right")]
+        [InputControl(5, name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
         public Vector2 scroll;
 
@@ -63,11 +65,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="Mouse.forwardButton"/>
         /// <seealso cref="Mouse.backButton"/>
         [InputControl(name = "press", useStateFrom = "leftButton", synthetic = true, usages = new string[0])]
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usage = "PrimaryAction", displayName = "Left Button", shortDisplayName = "LMB")]
-        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usage = "SecondaryAction", displayName = "Right Button", shortDisplayName = "RMB")]
-        [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
-        [InputControl(name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usage = "Forward", displayName = "Forward")]
-        [InputControl(name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usage = "Back", displayName = "Back")]
+        [InputControl(6, name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usage = "PrimaryAction", displayName = "Left Button", shortDisplayName = "LMB")]
+        [InputControl(7, name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usage = "SecondaryAction", displayName = "Right Button", shortDisplayName = "RMB")]
+        [InputControl(8, name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
+        [InputControl(9, name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usage = "Forward", displayName = "Forward")]
+        [InputControl(10, name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usage = "Back", displayName = "Back")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
