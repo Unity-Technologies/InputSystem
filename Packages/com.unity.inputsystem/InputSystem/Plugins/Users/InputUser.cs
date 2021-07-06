@@ -1703,8 +1703,7 @@ namespace UnityEngine.InputSystem.Users
                             // Note that action is tied to user and hence we can skip to end of slice associated
                             // with the current user or at least one element forward.
                             var offsetNextSlice = deviceIndex + Math.Max(1, s_AllUserData[userIndex].deviceCount);
-                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, offsetNextSlice, 
-                                s_AllPairedDeviceCount - offsetNextSlice);
+                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, offsetNextSlice, s_AllPairedDeviceCount - offsetNextSlice);
                         }
                     }
                     break;
