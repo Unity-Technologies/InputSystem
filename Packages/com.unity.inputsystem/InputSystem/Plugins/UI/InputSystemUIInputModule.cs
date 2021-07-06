@@ -1684,18 +1684,26 @@ namespace UnityEngine.InputSystem.UI
             var eventData = m_PointerStates[index].eventData;
             Debug.Assert(eventData != null, "Pointer state should have an event instance!");
 
+            // Update current pointer, if necessary.
+            if (index == m_CurrentPointerIndex)
+            {
+                m_CurrentPointerId = -1;
+                m_CurrentPointerIndex = -1;
+                m_CurrentPointerType = default;
+            }
+            else if (m_CurrentPointerIndex == m_PointerIds.length - 1)
+            {
+                // We're about to move the last entry so update the index it will
+                // be at.
+                m_CurrentPointerIndex = index;
+            }
+
             // Remove. Note that we may change the order of pointers here. This can save us needless copying
             // and m_CurrentPointerIndex should be the only index we get around for longer.
             m_PointerIds.RemoveAtByMovingTailWithCapacity(index);
             m_PointerTouchControls.RemoveAtByMovingTailWithCapacity(index);
             m_PointerStates.RemoveAtByMovingTailWithCapacity(index);
             Debug.Assert(m_PointerIds.length == m_PointerStates.length, "Pointer ID array should match state array in length");
-
-            if (index == m_CurrentPointerIndex)
-            {
-                m_CurrentPointerId = -1;
-                m_CurrentPointerIndex = -1;
-            }
 
             // Put event instance back in place at one past last entry of array (which we know we have
             // as we just erased one entry). This entry will be the next one that will be used when we
