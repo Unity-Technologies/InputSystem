@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `PointerInput` composite in `TouchSamples` project being registered only after scenes already loaded ([case 1215048](https://issuetracker.unity3d.com/issues/mobile-input-system-custom-binding-broken-slash-not-registered-when-using-runtimeinitializeonloadmethod-and-loading-scene-directly)).
 - Fixed `InputControlExtensions.EnumerateChangedControls` skipping over `left`, `right`, and `down` controls on PS4 controller's dpad ([case 1315107](https://issuetracker.unity3d.com/issues/input-system-left-right-and-down-directional-pad-buttons-do-not-switch-controls-over-to-controller)).
 - Fixed undo not working in `Input System Package` project settings pane ([case 1291709](https://issuetracker.unity3d.com/issues/inputsystem-exception-thrown-continuously-when-undo-operation-is-performed-with-supported-devices-list-in-the-project-settings)).
+- Fixed UI issue where pressing the wrong button was possible while quickly moving through a UI because the submit action fired on action press instead of action release ([1333563](https://issuetracker.unity3d.com/issues/input-submit-action-is-called-on-release-rather-than-on-press-when-using-enter-key)).
 
 #### Actions
 
