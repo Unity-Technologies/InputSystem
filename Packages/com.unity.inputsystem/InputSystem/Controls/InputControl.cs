@@ -985,12 +985,32 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
         /// </remarks>
-        public TValue ReadValue()
+        public virtual TValue ReadValue()
         {
+            if (valueType == typeof(float) && m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            {
+                var result = NewPipelineReadCurrentFloatValue();
+                return UnsafeUtility.As<float, TValue>(ref result);
+            }
+
             unsafe
             {
                 return ReadValueFromState(currentStatePtr);
             }
+        }
+        
+        internal float NewPipelineReadCurrentFloatValue()
+        {
+            var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
+            var offset = dataset.valueAxisIndexToOffset[m_NewDataPipelineChannelBaseId];
+            var length = dataset.timestampAxisIndexToLength[dataset.valueAxisIndexToTimestampIndex[m_NewDataPipelineChannelBaseId]];
+            return length == 0 ? dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId] : dataset.values.ToManagedSpan(offset, length)[length - 1];
+        }
+        
+        internal float NewPipelineReadPrevFloatValue()
+        {
+            var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
+            return dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId];
         }
 
         ////REVIEW: is 'frame' really the best wording here?
@@ -1000,6 +1020,12 @@ namespace UnityEngine.InputSystem
         /// <returns>The control's value in the previous frame.</returns>
         public TValue ReadValueFromPreviousFrame()
         {
+            if (valueType == typeof(float) && m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            {
+                var result = NewPipelineReadPrevFloatValue();
+                return UnsafeUtility.As<float, TValue>(ref result);
+            }
+
             unsafe
             {
                 return ReadValueFromState(previousFrameStatePtr);
@@ -1032,6 +1058,12 @@ namespace UnityEngine.InputSystem
 
         public TValue ReadUnprocessedValue()
         {
+            if (valueType == typeof(float) && m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            {
+                var result = NewPipelineReadCurrentFloatValue();
+                return UnsafeUtility.As<float, TValue>(ref result);
+            }
+
             unsafe
             {
                 return ReadUnprocessedValueFromState(currentStatePtr);

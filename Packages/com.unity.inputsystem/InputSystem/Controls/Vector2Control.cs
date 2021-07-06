@@ -52,6 +52,14 @@ namespace UnityEngine.InputSystem.Controls
 
             base.FinishSetup();
         }
+        
+        public override Vector2 ReadValue()
+        {
+            return new Vector2(
+                x.ReadValue(),
+                y.ReadValue());
+        }
+
 
         /// <inheritdoc />
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
