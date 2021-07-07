@@ -817,7 +817,7 @@ namespace UnityEngine.InputSystem
                 m_DeviceFindExecuteCommandDeviceId = deviceId;
 
                 var haveOverriddenLayoutName = false;
-                m_DeviceFindLayoutCallbacks.StartExecuting();
+                m_DeviceFindLayoutCallbacks.LockForChanges();
                 for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
                 {
                     try
@@ -835,7 +835,7 @@ namespace UnityEngine.InputSystem
                         Debug.LogException(exception);
                     }
                 }
-                m_DeviceFindLayoutCallbacks.FinishExecuting();
+                m_DeviceFindLayoutCallbacks.UnlockForChanges();
             }
 
             Profiler.EndSample();

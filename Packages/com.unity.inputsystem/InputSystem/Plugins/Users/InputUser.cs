@@ -1122,7 +1122,7 @@ namespace UnityEngine.InputSystem.Users
             if (s_OnChange.length == 0)
                 return;
             Profiler.BeginSample("InputUser.onChange");
-            s_OnChange.StartExecuting();
+            s_OnChange.LockForChanges();
             for (var i = 0; i < s_OnChange.length; ++i)
             {
                 try
@@ -1135,7 +1135,7 @@ namespace UnityEngine.InputSystem.Users
                     Debug.LogException(exception);
                 }
             }
-            s_OnChange.FinishExecuting();
+            s_OnChange.UnlockForChanges();
             Profiler.EndSample();
         }
 
@@ -1761,7 +1761,7 @@ namespace UnityEngine.InputSystem.Users
             foreach (var control in eventPtr.EnumerateChangedControls(device: device, magnitudeThreshold: 0.0001f))
             {
                 var deviceHasBeenPaired = false;
-                s_OnUnpairedDeviceUsed.StartExecuting();
+                s_OnUnpairedDeviceUsed.LockForChanges();
                 for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
                 {
                     var pairingStateVersionBefore = s_PairingStateVersion;
@@ -1783,7 +1783,7 @@ namespace UnityEngine.InputSystem.Users
                         break;
                     }
                 }
-                s_OnUnpairedDeviceUsed.FinishExecuting();
+                s_OnUnpairedDeviceUsed.UnlockForChanges();
 
                 // If the device was paired in one of the callbacks, stop processing
                 // changes on it.

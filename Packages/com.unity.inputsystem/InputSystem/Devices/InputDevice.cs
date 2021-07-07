@@ -547,7 +547,7 @@ namespace UnityEngine.InputSystem
 
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
-            manager.m_DeviceCommandCallbacks.StartExecuting();
+            manager.m_DeviceCommandCallbacks.LockForChanges();
             for (var i = 0; i < manager.m_DeviceCommandCallbacks.length; ++i)
             {
                 try
@@ -562,7 +562,7 @@ namespace UnityEngine.InputSystem
                     Debug.LogException(exception);
                 }
             }
-            manager.m_DeviceCommandCallbacks.FinishExecuting();
+            manager.m_DeviceCommandCallbacks.UnlockForChanges();
 
             return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }

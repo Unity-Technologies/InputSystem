@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            callbacks.StartExecuting();
+            callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
                 try
@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
-            callbacks.FinishExecuting();
+            callbacks.UnlockForChanges();
             Profiler.EndSample();
         }
 
@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            callbacks.StartExecuting();
+            callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
                 try
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
-            callbacks.FinishExecuting();
+            callbacks.UnlockForChanges();
             Profiler.EndSample();
         }
 
@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            callbacks.StartExecuting();
+            callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
                 try
@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
-            callbacks.FinishExecuting();
+            callbacks.UnlockForChanges();
             Profiler.EndSample();
         }
 
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return true;
             Profiler.BeginSample(callbackName);
-            callbacks.StartExecuting();
+            callbacks.LockForChanges();
             for (var i = 0; i < callbacks.length; ++i)
             {
                 try
@@ -106,7 +106,7 @@ namespace UnityEngine.InputSystem.Utilities
                     Debug.LogException(exception);
                 }
             }
-            callbacks.FinishExecuting();
+            callbacks.UnlockForChanges();
             Profiler.EndSample();
             return false;
         }
