@@ -121,12 +121,12 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="ReadValueIntoBuffer"/>
         /// <seealso cref="InputControl{TValue}.ReadValue"/>
-        public static unsafe object ReadValueAsObject(this InputControl control)
+        public static object ReadValueAsObject(this InputControl control)
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
-
-            return control.ReadValueFromStateAsObject(control.currentStatePtr);
+            
+            return control.ReadValueAsObjectInternal();
         }
 
         /// <summary>

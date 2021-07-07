@@ -218,6 +218,36 @@ namespace UnityEngine.InputSystem.Controls
             if (!hasDefaultState && normalize && Mathf.Abs(normalizeZero) > Mathf.Epsilon)
                 m_DefaultState = stateBlock.FloatToPrimitiveValue(normalizeZero);
         }
+        
+        internal override float ReadValueInternal()
+        {
+            if (m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            {
+                var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
+                var offset = dataset.valueAxisIndexToOffset[m_NewDataPipelineChannelBaseId];
+                var length = dataset.timestampAxisIndexToLength[dataset.valueAxisIndexToTimestampIndex[m_NewDataPipelineChannelBaseId]];
+                return length == 0 ? dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId] : dataset.values.ToManagedSpan(offset, length)[length - 1];
+            }
+
+            unsafe
+            {
+                return ProcessValue(Preprocess(stateBlock.ReadFloat(currentStatePtr)));
+            }
+        }
+
+        internal override float ReadValueFromPreviousFrameInternal()
+        {
+            if (m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            {
+                var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
+                return dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId];
+            }
+
+            unsafe
+            {
+                return ProcessValue(Preprocess(stateBlock.ReadFloat(previousFrameStatePtr)));
+            }
+        }
 
         /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
@@ -230,6 +260,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
+            // TODO if we write to current/prev states, disable reading from new pipeline as data will be outdated 
             stateBlock.WriteFloat(statePtr, value);
         }
 
@@ -240,11 +271,20 @@ namespace UnityEngine.InputSystem.Controls
             var valueInState = ReadValueFromState(secondStatePtr);
             return !Mathf.Approximately(currentValue, valueInState);
         }
+        
+        internal override float EvaluateMagnitudeInternal()
+        {
+            return CalculateMagnitudeFromValue(ReadValueInternal());
+        }
 
         /// <inheritdoc />
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
-            var value = ReadValueFromState(statePtr);
+            return CalculateMagnitudeFromValue(ReadValueFromState(statePtr));
+        }
+        
+        internal float CalculateMagnitudeFromValue(float value)
+        {
             if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
                 return Mathf.Abs(value);
 

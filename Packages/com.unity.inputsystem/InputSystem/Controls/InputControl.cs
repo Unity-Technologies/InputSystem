@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -112,6 +113,14 @@ namespace UnityEngine.InputSystem
         // TODO
         internal bool m_UseNewDataPipeline;
         internal int m_NewDataPipelineChannelBaseId;
+
+        internal virtual object ReadValueAsObjectInternal()
+        {
+            unsafe
+            {
+                return ReadValueFromStateAsObject(currentStatePtr);
+            }
+        }
         
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
@@ -487,6 +496,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="EvaluateMagnitude(void*)"/>
         public unsafe float EvaluateMagnitude()
+        {
+            return EvaluateMagnitudeInternal();
+        }
+
+        internal virtual unsafe float EvaluateMagnitudeInternal()
         {
             return EvaluateMagnitude(currentStatePtr);
         }
@@ -985,32 +999,17 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
         /// </remarks>
-        public virtual TValue ReadValue()
+        public TValue ReadValue()
         {
-            if (valueType == typeof(float) && m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
-            {
-                var result = NewPipelineReadCurrentFloatValue();
-                return UnsafeUtility.As<float, TValue>(ref result);
-            }
+            return ReadValueInternal();
+        }
 
+        internal virtual TValue ReadValueInternal()
+        {
             unsafe
             {
                 return ReadValueFromState(currentStatePtr);
             }
-        }
-        
-        internal float NewPipelineReadCurrentFloatValue()
-        {
-            var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
-            var offset = dataset.valueAxisIndexToOffset[m_NewDataPipelineChannelBaseId];
-            var length = dataset.timestampAxisIndexToLength[dataset.valueAxisIndexToTimestampIndex[m_NewDataPipelineChannelBaseId]];
-            return length == 0 ? dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId] : dataset.values.ToManagedSpan(offset, length)[length - 1];
-        }
-        
-        internal float NewPipelineReadPrevFloatValue()
-        {
-            var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
-            return dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId];
         }
 
         ////REVIEW: is 'frame' really the best wording here?
@@ -1020,12 +1019,11 @@ namespace UnityEngine.InputSystem
         /// <returns>The control's value in the previous frame.</returns>
         public TValue ReadValueFromPreviousFrame()
         {
-            if (valueType == typeof(float) && m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
-            {
-                var result = NewPipelineReadPrevFloatValue();
-                return UnsafeUtility.As<float, TValue>(ref result);
-            }
-
+            return ReadValueFromPreviousFrameInternal();
+        }
+        
+        internal virtual TValue ReadValueFromPreviousFrameInternal()
+        {
             unsafe
             {
                 return ReadValueFromState(previousFrameStatePtr);
@@ -1048,22 +1046,22 @@ namespace UnityEngine.InputSystem
                 return ReadValueFromState(defaultStatePtr);
             }
         }
+        
+        internal override object ReadValueAsObjectInternal()
+        {
+            return ReadValue();
+        }
 
         public unsafe TValue ReadValueFromState(void* statePtr)
         {
             if (statePtr == null)
                 throw new ArgumentNullException(nameof(statePtr));
+
             return ProcessValue(ReadUnprocessedValueFromState(statePtr));
         }
 
         public TValue ReadUnprocessedValue()
         {
-            if (valueType == typeof(float) && m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
-            {
-                var result = NewPipelineReadCurrentFloatValue();
-                return UnsafeUtility.As<float, TValue>(ref result);
-            }
-
             unsafe
             {
                 return ReadUnprocessedValueFromState(currentStatePtr);

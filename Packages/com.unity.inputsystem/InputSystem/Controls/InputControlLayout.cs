@@ -1087,6 +1087,8 @@ namespace UnityEngine.InputSystem.Layouts
 
         private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute)
         {
+            // TODO add channel id here!
+            
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
             // Determine name.

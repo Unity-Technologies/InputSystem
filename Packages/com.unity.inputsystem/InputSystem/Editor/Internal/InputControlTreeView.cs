@@ -55,6 +55,7 @@ namespace UnityEngine.InputSystem.Editor
             Offset,
             Bit,
             Size,
+            NewPipelineChannelId,
             Value,
 
             COUNT
@@ -102,6 +103,8 @@ namespace UnityEngine.InputSystem.Editor
                 new MultiColumnHeaderState.Column {width = 40, headerContent = new GUIContent("Bit")};
             columns[(int)ColumnId.Size] =
                 new MultiColumnHeaderState.Column {headerContent = new GUIContent("Size (Bits)")};
+            columns[(int)ColumnId.NewPipelineChannelId] =
+                new MultiColumnHeaderState.Column {headerContent = new GUIContent("ChannelId")};
 
             if (numValueColumns == 1)
             {
@@ -203,6 +206,7 @@ namespace UnityEngine.InputSystem.Editor
                 bit = new GUIContent(control.stateBlock.bitOffset.ToString()),
                 sizeInBits = new GUIContent(control.stateBlock.sizeInBits.ToString()),
                 type = new GUIContent(control.GetType().Name),
+                channelId = new GUIContent(control.m_UseNewDataPipeline ? control.m_NewDataPipelineChannelBaseId.ToString() : "N/A"),
                 value = value,
                 values = values,
                 children = children
@@ -296,6 +300,9 @@ namespace UnityEngine.InputSystem.Editor
                 case (int)ColumnId.Type:
                     GUI.Label(cellRect, item.type);
                     break;
+                case (int)ColumnId.NewPipelineChannelId:
+                    GUI.Label(cellRect, item.channelId);
+                    break;
                 case (int)ColumnId.Value:
                     if (item.value != null)
                         GUI.Label(cellRect, item.value);
@@ -328,6 +335,7 @@ namespace UnityEngine.InputSystem.Editor
             public GUIContent bit;
             public GUIContent sizeInBits;
             public GUIContent type;
+            public GUIContent channelId;
             public GUIContent value;
             public GUIContent[] values;
         }

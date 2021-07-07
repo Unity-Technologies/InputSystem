@@ -53,13 +53,19 @@ namespace UnityEngine.InputSystem.Controls
             base.FinishSetup();
         }
         
-        public override Vector2 ReadValue()
+        internal override Vector2 ReadValueInternal()
         {
             return new Vector2(
-                x.ReadValue(),
-                y.ReadValue());
+                x.ReadValueInternal(),
+                y.ReadValueInternal());
         }
 
+        internal override Vector2 ReadValueFromPreviousFrameInternal()
+        {
+            return new Vector2(
+                x.ReadValueFromPreviousFrameInternal(),
+                y.ReadValueFromPreviousFrameInternal());
+        }
 
         /// <inheritdoc />
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
@@ -74,6 +80,11 @@ namespace UnityEngine.InputSystem.Controls
         {
             x.WriteValueIntoState(value.x, statePtr);
             y.WriteValueIntoState(value.y, statePtr);
+        }
+        
+        internal override float EvaluateMagnitudeInternal()
+        {
+            return ReadValueInternal().magnitude;
         }
 
         /// <inheritdoc />
