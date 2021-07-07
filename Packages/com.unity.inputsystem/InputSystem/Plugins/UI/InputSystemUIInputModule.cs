@@ -223,7 +223,7 @@ namespace UnityEngine.InputSystem.UI
 
             // Sync position.
             var pointerType = eventData.pointerType;
-            if (pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+            if (pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked && m_DisactivateWhenCursorStateIsLocked)
             {
                 eventData.position = new Vector2(-1, -1);
                 ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode seems wrong
@@ -320,7 +320,7 @@ namespace UnityEngine.InputSystem.UI
                 // If the pointer is a touch that was released this frame, we generate pointer-exit events
                 // and then later remove the pointer.
                 (eventData.pointerType == UIPointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
-                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked && m_DisactivateWhenCursorStateIsLocked)
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
 
@@ -503,7 +503,7 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessPointerButtonDrag(ref PointerModel.ButtonState button, ExtendedPointerEventData eventData)
         {
             if (!eventData.IsPointerMoving() ||
-                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked) ||
+                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked && m_DisactivateWhenCursorStateIsLocked) ||
                 eventData.pointerDrag == null)
                 return;
 
@@ -2027,6 +2027,7 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] private InputActionReference m_TrackedDevicePositionAction;
         [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceOrientationAction;
 
+        [SerializeField] private bool m_DisactivateWhenCursorStateIsLocked = true;
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
 
