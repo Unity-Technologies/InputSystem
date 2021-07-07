@@ -1863,7 +1863,9 @@ partial class CoreTests
             runtime.currentTime += 10;
             Release(gamepad.rightShoulder);
 
-            Assert.That(trace, Performed(holdAction, control: gamepad.rightShoulder, value: 0f));
+            Assert.That(trace,
+                Performed(holdAction, control: gamepad.rightShoulder, value: 0f)
+                    .AndThen(Canceled(holdAction, gamepad.rightShoulder, 0f)));
 
             trace.Clear();
 
@@ -5984,6 +5986,20 @@ partial class CoreTests
         Assert.That(action.GetBindingDisplayString(8), Is.EqualTo("Left Shift|Right Shift+A"));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1321175/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_EmptyBindingsOnComposites_ArePrintedAsSpaces()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "");
+
+        Assert.That(action.GetBindingDisplayString(), Is.EqualTo("Up Arrow/ / / "));
+    }
+
     ////TODO: this will need to take localization into account (though this is part of a broader integration that also affects other features of the input system)
     [Test]
     [Category("Actions")]
@@ -6383,6 +6399,46 @@ partial class CoreTests
             Assert.That(actions[3].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[3].ReadValue<float>(), Is.EqualTo(-0.567).Within(0.00001));
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1335838/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateAxisComposite_WithCustomMinMax()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("1DAxis(minValue=1,maxValue=2)")
+            .With("Positive", "<Gamepad>/rightTrigger")
+            .With("Negative", "<Gamepad>/leftTrigger");
+
+        action.Enable();
+
+        // Put left trigger at half value. Should push us from mid-poing (1.5) half-way
+        // towards minValue (1).
+        Set(gamepad.leftTrigger, 0.5f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1.25f).Within(0.00001));
+
+        // Push left trigger all the way. Should put us at minValue (1).
+        Set(gamepad.leftTrigger, 1f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+
+        Set(gamepad.leftTrigger, 0);
+
+        Assert.That(action.ReadValue<float>(), Is.Zero.Within(0.00001));
+
+        // Now go the opposite way.
+        Set(gamepad.rightTrigger, 0.5f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1.75f).Within(0.00001));
+
+        // And all the way.
+        Set(gamepad.rightTrigger, 1f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(2).Within(0.00001));
     }
 
     [Test]
