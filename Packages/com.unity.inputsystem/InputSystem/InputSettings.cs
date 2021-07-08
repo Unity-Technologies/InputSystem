@@ -470,6 +470,22 @@ namespace UnityEngine.InputSystem
                 OnChange();
             }
         }
+        
+        /// <summary>
+        /// Disables new faster data processing pipeline. Disable it if you observe any issues.
+        /// </summary>
+        public bool disableNewDataPipeline
+        {
+            get => m_DisableNewDataPipeline;
+            set
+            {
+                if (m_DisableNewDataPipeline == value)
+                    return;
+
+                m_DisableNewDataPipeline = value;
+                OnChange();
+            }
+        }
 
         /// <summary>
         /// List of device layouts used by the project.
@@ -541,6 +557,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+
+        [SerializeField] private bool m_DisableNewDataPipeline = false;
 
         internal void OnChange()
         {

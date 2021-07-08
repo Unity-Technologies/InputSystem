@@ -221,13 +221,17 @@ namespace UnityEngine.InputSystem.Controls
         
         internal override float ReadValueInternal()
         {
-            if (m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
-            {
-                var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
-                var offset = dataset.valueAxisIndexToOffset[m_NewDataPipelineChannelBaseId];
-                var length = dataset.timestampAxisIndexToLength[dataset.valueAxisIndexToTimestampIndex[m_NewDataPipelineChannelBaseId]];
-                return length == 0 ? dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId] : dataset.values.ToManagedSpan(offset, length)[length - 1];
-            }
+            // TODO fix proper!
+            // if (m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            // {
+            //     var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
+            //     
+            //     // TODO need to map currentState pointer to a specific index in the array
+            //     
+            //     var offset = dataset.valueAxisIndexToOffset[m_NewDataPipelineChannelBaseId];
+            //     var length = dataset.timestampAxisIndexToLength[dataset.valueAxisIndexToTimestampIndex[m_NewDataPipelineChannelBaseId]];
+            //     return length == 0 ? dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId] : dataset.values.ToManagedSpan(offset, length)[length - 1];
+            // }
 
             unsafe
             {
@@ -237,11 +241,12 @@ namespace UnityEngine.InputSystem.Controls
 
         internal override float ReadValueFromPreviousFrameInternal()
         {
-            if (m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
-            {
-                var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
-                return dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId];
-            }
+            // TODO fix proper!
+            // if (m_UseNewDataPipeline && m_Device is FastMouse && DmytroRnD.Core.s_IsInitialized)
+            // {
+            //     var dataset = DmytroRnD.Core.s_IngressPipeline.dataset;
+            //     return dataset.valueAxisIndexToPreviousRunValue[m_NewDataPipelineChannelBaseId];
+            // }
 
             unsafe
             {

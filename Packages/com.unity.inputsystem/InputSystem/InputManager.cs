@@ -6,6 +6,7 @@ using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.DataPipeline;
 using UnityEngine.Profiling;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -1574,6 +1575,7 @@ namespace UnityEngine.InputSystem
 
             m_Settings = settings;
 
+            InitializeDataPipeline();
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
@@ -1594,6 +1596,8 @@ namespace UnityEngine.InputSystem
 
             // Uninstall globals.
             UninstallGlobals();
+
+            DestroyDataPipeline();
 
             // Destroy settings if they are temporary.
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
@@ -1791,6 +1795,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal void InitializeDataPipeline()
+        {
+            m_IngressPipeline = new IngressPipeline2();
+        }
+
+        internal void DestroyDataPipeline()
+        {
+            m_IngressPipeline.Dispose();
+        }
+
         [Serializable]
         internal struct AvailableDevice
         {
@@ -1803,6 +1817,8 @@ namespace UnityEngine.InputSystem
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
         private float m_PollingFrequency;
+
+        internal IngressPipeline2 m_IngressPipeline;
 
         internal InputControlLayout.Collection m_Layouts;
         private TypeTable m_Processors;
@@ -2612,6 +2628,20 @@ namespace UnityEngine.InputSystem
                 m_HaveSentStartupAnalytics = true;
             }
             #endif
+            
+            // See if we're supposed to only take events up to a certain time.
+            // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
+            //       all events in the buffer each time. Note that if there are multiple events for the same
+            //       device, it depends on the producer of these events to queue them in correct order.
+            //       Otherwise, once an event with a newer timestamp has been processed, events coming later
+            //       in the buffer and having older timestamps will get rejected.
+
+            var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
+            var timesliceEvents = shouldProcessInputEvents && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+            
+            // ingress pipeline will modify event buffer in-place
+            if (!settings.disableNewDataPipeline)
+                m_IngressPipeline.ProcessEvents(updateType, timesliceEvents ? currentTime : -1.0f, ref eventBuffer);
 
             ////TODO: manual mode must be treated like lockInputToGameView in editor
 
@@ -2629,16 +2659,6 @@ namespace UnityEngine.InputSystem
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             InputUpdate.OnUpdate(updateType);
-
-            // See if we're supposed to only take events up to a certain time.
-            // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
-            //       all events in the buffer each time. Note that if there are multiple events for the same
-            //       device, it depends on the producer of these events to queue them in correct order.
-            //       Otherwise, once an event with a newer timestamp has been processed, events coming later
-            //       in the buffer and having older timestamps will get rejected.
-
-            var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = shouldProcessInputEvents && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)

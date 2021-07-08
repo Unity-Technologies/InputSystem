@@ -27,6 +27,5 @@ public class PerformanceTest : MonoBehaviour
 
     void Update()
     {
-        
     }
 }
