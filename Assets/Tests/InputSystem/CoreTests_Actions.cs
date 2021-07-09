@@ -1863,7 +1863,9 @@ partial class CoreTests
             runtime.currentTime += 10;
             Release(gamepad.rightShoulder);
 
-            Assert.That(trace, Performed(holdAction, control: gamepad.rightShoulder, value: 0f));
+            Assert.That(trace,
+                Performed(holdAction, control: gamepad.rightShoulder, value: 0f)
+                    .AndThen(Canceled(holdAction, gamepad.rightShoulder, 0f)));
 
             trace.Clear();
 
@@ -5984,6 +5986,20 @@ partial class CoreTests
         Assert.That(action.GetBindingDisplayString(8), Is.EqualTo("Left Shift|Right Shift+A"));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1321175/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_EmptyBindingsOnComposites_ArePrintedAsSpaces()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "");
+
+        Assert.That(action.GetBindingDisplayString(), Is.EqualTo("Up Arrow/ / / "));
+    }
+
     ////TODO: this will need to take localization into account (though this is part of a broader integration that also affects other features of the input system)
     [Test]
     [Category("Actions")]
@@ -6383,6 +6399,46 @@ partial class CoreTests
             Assert.That(actions[3].phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(actions[3].ReadValue<float>(), Is.EqualTo(-0.567).Within(0.00001));
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1335838/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateAxisComposite_WithCustomMinMax()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("1DAxis(minValue=1,maxValue=2)")
+            .With("Positive", "<Gamepad>/rightTrigger")
+            .With("Negative", "<Gamepad>/leftTrigger");
+
+        action.Enable();
+
+        // Put left trigger at half value. Should push us from mid-poing (1.5) half-way
+        // towards minValue (1).
+        Set(gamepad.leftTrigger, 0.5f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1.25f).Within(0.00001));
+
+        // Push left trigger all the way. Should put us at minValue (1).
+        Set(gamepad.leftTrigger, 1f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+
+        Set(gamepad.leftTrigger, 0);
+
+        Assert.That(action.ReadValue<float>(), Is.Zero.Within(0.00001));
+
+        // Now go the opposite way.
+        Set(gamepad.rightTrigger, 0.5f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1.75f).Within(0.00001));
+
+        // And all the way.
+        Set(gamepad.rightTrigger, 1f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(2).Within(0.00001));
     }
 
     [Test]
@@ -8657,6 +8713,44 @@ partial class CoreTests
                 .And.With.Message.Contains("map1")
                 .And.With.Message.Contains("map2"));
         Assert.That(map1.actions, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_RebindingCandidatesShouldBeSorted_IfAddingNewCandidate()
+    {
+        // Designed to trigger issue reported as part of:
+        // https://github.com/Unity-Technologies/InputSystem/pull/1359
+
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation())
+        {
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad1"), 2.0f, 10.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad2"), 3.0f, 8.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad3"), 1.0f, 22.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad4"), 1.5f, 35.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad5"), 0.1f, 40.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad6"), 8.0f, 80.0f);
+
+            // Expecting scores in descending order
+            var scores = rebind.scores;
+            Assert.AreEqual(6, scores.Count);
+            Assert.AreEqual(8.0f, scores[0]);
+            Assert.AreEqual(3.0f, scores[1]);
+            Assert.AreEqual(2.0f, scores[2]);
+            Assert.AreEqual(1.5f, scores[3]);
+            Assert.AreEqual(1.0f, scores[4]);
+            Assert.AreEqual(0.1f, scores[5]);
+
+            // Expecting magnitudes sorted based on descending score as well
+            var magnitudes = rebind.magnitudes;
+            Assert.AreEqual(6, magnitudes.Count);
+            Assert.AreEqual(80.0f, magnitudes[0]);
+            Assert.AreEqual(8.0f, magnitudes[1]);
+            Assert.AreEqual(10.0f, magnitudes[2]);
+            Assert.AreEqual(35.0f, magnitudes[3]);
+            Assert.AreEqual(22.0f, magnitudes[4]);
+            Assert.AreEqual(40.0f, magnitudes[5]);
+        }
     }
 
     [Test]
