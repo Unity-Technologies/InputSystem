@@ -45,6 +45,21 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+- Added `isEnabledByDefault` check to generated action sets, this way you don't need to do `IInputActionCollection.Enable()` explicitly if you don't need to. 
+ ```CSharp
+public sealed class InputsTest : MonoBehaviour
+{
+    //private and only exists in this scope, so why bother with .Enable() and .Disable()?
+    private SimpleControls controls;
+
+    private void Awake() => controls = new Inputs(isEnabledByDefault: true);
+
+    private void OnEnable()
+    {
+        controls.gameplay.fire.performed += _ => Debug.Log(message: "Badabing Badaboom");
+    }
+}
+ ```
 
 ### Changed
 

@@ -100,7 +100,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine($"public InputActionAsset asset {{ get; }}");
 
             // Default constructor.
-            writer.WriteLine($"public @{options.className}()");
+            writer.WriteLine($"public @{options.className}(bool isEnabledByDefault = false)");
             writer.BeginBlock();
             writer.WriteLine($"asset = InputActionAsset.FromJson(@\"{asset.ToJson().Replace("\"", "\"\"")}\");");
 
@@ -118,6 +118,9 @@ namespace UnityEngine.InputSystem.Editor
                     writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
                 }
             }
+            
+            writer.WriteLine(text: "if(isEnabledByDefault) Enable();");
+            
             writer.EndBlock();
             writer.WriteLine();
 
