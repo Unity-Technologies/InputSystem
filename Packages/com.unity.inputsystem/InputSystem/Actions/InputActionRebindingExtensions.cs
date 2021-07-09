@@ -2445,9 +2445,10 @@ namespace UnityEngine.InputSystem
                 {
                     for (var j = i; j > 0 && m_Scores[j - 1] < m_Scores[j]; --j)
                     {
-                        m_Scores.SwapElements(j, j - 1);
-                        m_Candidates.SwapElements(j, j - 1);
-                        m_Magnitudes.SwapElements(i, j - 1);
+                        var k = j - 1;
+                        m_Scores.SwapElements(j, k);
+                        m_Candidates.SwapElements(j, k);
+                        m_Magnitudes.SwapElements(j, k);
                     }
                 }
             }
