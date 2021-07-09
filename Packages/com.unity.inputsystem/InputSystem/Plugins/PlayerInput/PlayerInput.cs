@@ -819,6 +819,23 @@ namespace UnityEngine.InputSystem
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
 
         /// <summary>
+        /// Return the first device of the given type from <see cref="devices"/> paired to the player.
+        /// If no device of this type is paired to the player, return <c>null</c>.
+        /// </summary>
+        /// <typeparam name="TDevice">Type of device to look for (such as <see cref="Mouse"/>). Can be a supertype
+        /// of the actual device type. For example, querying for <see cref="Pointer"/>, may return a <see cref="Mouse"/>.</typeparam>
+        /// <returns>The first device paired to the player that is of the given type or <c>null</c> if the player
+        /// does not have a matching device.</returns>
+        public TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
+        {
+            foreach (var device in devices)
+                if (device is TDevice deviceOfType)
+                    return deviceOfType;
+            return null;
+        }
+
+        /// <summary>
         /// Enable input on the player.
         /// </summary>
         /// <remarks>
@@ -1600,6 +1617,8 @@ namespace UnityEngine.InputSystem
                     StartListeningForUnpairedDeviceActivity();
                 }
             }
+
+            HandleControlsChanged();
 
             // Trigger join event.
             PlayerInputManager.instance?.NotifyPlayerJoined(this);

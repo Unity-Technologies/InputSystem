@@ -40,6 +40,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+- Added a new "UI vs Game Input" sample to the package. The sample can be installed from the Unity Package Manager UI in the editor.
+  * The sample demonstrates how to deal with inputs that may both lead to UI actions as well as in-game actions.
 
 ### Changed
 
