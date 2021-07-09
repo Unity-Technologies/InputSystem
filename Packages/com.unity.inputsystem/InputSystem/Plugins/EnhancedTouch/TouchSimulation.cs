@@ -53,12 +53,20 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 instance.gameObject.SetActive(true);
             }
             instance.enabled = true;
+            if (s_needReEnable) {
+                s_needReEnable = false;
+                InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
+            }
         }
 
         public static void Disable()
         {
             if (instance != null)
                 instance.enabled = false;
+            if (s_needReEnable) {
+                s_needReEnable = false;
+                InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
+            }
         }
 
         public static void Destroy()
@@ -340,6 +348,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private Action<InputEventPtr, InputDevice> m_OnEvent;
 
         internal static TouchSimulation s_Instance;
+        static bool s_needReEnable = false;
 
         #if UNITY_EDITOR
         static TouchSimulation()
@@ -351,6 +360,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 () =>
             {
                 InputSystem.onSettingsChange += OnSettingsChanged;
+                s_needReEnable = true;
                 InputSystem.onBeforeUpdate += ReEnableAfterDomainReload;
             };
         }
@@ -358,6 +368,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         private static void ReEnableAfterDomainReload()
         {
             OnSettingsChanged();
+            s_needReEnable = false;
             InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;
         }
 
