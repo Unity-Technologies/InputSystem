@@ -607,15 +607,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ActionTriggeredCallbacks.AppendWithCapacity(value, 5);
+                m_ActionTriggeredCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ActionTriggeredCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ActionTriggeredCallbacks.RemoveAtWithCapacity(index);
+                m_ActionTriggeredCallbacks.RemoveCallback(value);
             }
         }
 
@@ -638,15 +636,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceLostCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceLostCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceLostCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceLostCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceLostCallbacks.RemoveCallback(value);
             }
         }
 
@@ -669,15 +665,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceRegainedCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceRegainedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceRegainedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceRegainedCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceRegainedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -698,15 +692,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ControlsChangedCallbacks.AppendWithCapacity(value, 5);
+                m_ControlsChangedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ControlsChangedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ControlsChangedCallbacks.RemoveAtWithCapacity(index);
+                m_ControlsChangedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -1110,10 +1102,10 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceLostCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
-        [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceLostCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
+        [NonSerialized] private CallbackArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private Func<InputDevice, InputEventPtr, bool> m_PreFilterUnpairedDeviceUsedDelegate;
         [NonSerialized] private bool m_OnUnpairedDeviceUsedHooked;

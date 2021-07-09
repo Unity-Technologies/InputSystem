@@ -726,6 +726,77 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1322530/
+    [Test]
+    [Category("Actions")]
+    [TestCase("started")]
+    [TestCase("performed")]
+    [TestCase("canceled")]
+    public void Actions_CanAddAndRemoveCallbacks_FromCallback(string callback)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        var invocations = new List<string>();
+        Action<InputAction.CallbackContext> delegate2 =
+            _ => invocations.Add("delegate2");
+        Action<InputAction.CallbackContext> delegate1 = null;
+        delegate1 =
+            _ =>
+        {
+            invocations.Add("delegate1");
+            switch (callback)
+            {
+                case "started":
+                    action.started -= delegate1;
+                    action.started += delegate2;
+                    break;
+                case "performed":
+                    action.performed -= delegate1;
+                    action.performed += delegate2;
+                    break;
+                case "canceled":
+                    action.canceled -= delegate1;
+                    action.canceled += delegate2;
+                    break;
+            }
+        };
+
+        switch (callback)
+        {
+            case "started":
+                action.started += _ => invocations.Add("first");
+                action.started += delegate1;
+                action.started += _ => invocations.Add("last");
+                break;
+            case "performed":
+                action.performed += _ => invocations.Add("first");
+                action.performed += delegate1;
+                action.performed += _ => invocations.Add("last");
+                break;
+            case "canceled":
+                action.canceled += _ => invocations.Add("first");
+                action.canceled += delegate1;
+                action.canceled += _ => invocations.Add("last");
+                break;
+            default:
+                Assert.Fail();
+                break;
+        }
+
+        action.Enable();
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(invocations, Is.EqualTo(new[] { "first", "delegate1", "last" }));
+
+        invocations.Clear();
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(invocations, Is.EquivalentTo(new[] { "first", "last", "delegate2" }));
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1242406/
     // Binding resolution destroys/recreates InputActionState data. When triggering this from within
     // an action callback, we must ensure that we're not pulling the rug from under an InputActionState
