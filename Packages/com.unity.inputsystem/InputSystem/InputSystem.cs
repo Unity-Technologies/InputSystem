@@ -3274,6 +3274,10 @@ namespace UnityEngine.InputSystem
             iOS.iOSSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX
+            OSX.OSXSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_WEBGL
             WebGL.WebGLSupport.Initialize();
             #endif
