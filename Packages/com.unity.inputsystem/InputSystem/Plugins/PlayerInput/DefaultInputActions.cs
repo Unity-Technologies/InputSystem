@@ -54,7 +54,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""351f2ccd-1f9f-44bf-9bec-d62ac5c5f408"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Look"",
@@ -62,7 +63,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""6b444451-8a00-4d00-a97e-f47457f736a8"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Fire"",
@@ -70,7 +72,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""6c2ab1b8-8984-453a-af3d-a3c78ae1679a"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -306,7 +309,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""c95b2375-e6d9-4b88-9c4c-c5e76515df4b"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""Submit"",
@@ -314,7 +318,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""7607c7b6-cd76-4816-beef-bd0341cfe950"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""Cancel"",
@@ -322,7 +327,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""15cef263-9014-4fd5-94d9-4e4a6234a6ef"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""Point"",
@@ -330,7 +336,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""32b35790-4ed0-4e9a-aa41-69ac6d629449"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Click"",
@@ -338,7 +345,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""3c7022bf-7922-4f7c-a998-c437916075ad"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""ScrollWheel"",
@@ -346,7 +354,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""0489e84a-4833-4c40-bfae-cea84b696689"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""MiddleClick"",
@@ -354,7 +363,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""dad70c86-b58c-4b17-88ad-f5e53adf419e"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""RightClick"",
@@ -362,7 +372,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""44b200b1-1557-4083-816c-b22cbdf77ddf"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""TrackedDevicePosition"",
@@ -370,7 +381,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""24908448-c609-4bc3-a128-ea258674378a"",
                     ""expectedControlType"": ""Vector3"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""TrackedDeviceOrientation"",
@@ -378,7 +390,8 @@ namespace UnityEngine.InputSystem
                     ""id"": ""9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be"",
                     ""expectedControlType"": ""Quaternion"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
