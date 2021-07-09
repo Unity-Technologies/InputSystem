@@ -219,15 +219,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerJoinedCallbacks.AppendWithCapacity(value, 4);
+                m_PlayerJoinedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_PlayerJoinedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_PlayerJoinedCallbacks.RemoveAtWithCapacity(index);
+                m_PlayerJoinedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -237,15 +235,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerLeftCallbacks.AppendWithCapacity(value, 4);
+                m_PlayerLeftCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_PlayerLeftCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_PlayerLeftCallbacks.RemoveAtWithCapacity(index);
+                m_PlayerLeftCallbacks.RemoveCallback(value);
             }
         }
 
@@ -461,8 +457,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
         internal static string[] messages => new[]
         {

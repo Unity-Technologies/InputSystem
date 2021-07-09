@@ -308,8 +308,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputAction.canceled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
-            add => m_ActionCallbacks.AppendWithCapacity(value);
-            remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
+            add => m_ActionCallbacks.AddCallback(value);
+            remove => m_ActionCallbacks.RemoveCallback(value);
         }
 
         public InputActionMap()
@@ -695,7 +695,7 @@ namespace UnityEngine.InputSystem
 
         [NonSerialized] internal DeviceArray m_Devices;
 
-        [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
+        [NonSerialized] internal CallbackArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 
         internal static int s_DeferBindingResolution;
 
