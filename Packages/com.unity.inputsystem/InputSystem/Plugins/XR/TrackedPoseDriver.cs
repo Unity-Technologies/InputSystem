@@ -49,28 +49,44 @@ namespace UnityEngine.InputSystem.XR
         }
 
         [SerializeField]
-        InputAction m_PositionAction;
-        public InputAction positionAction
+        InputActionProperty m_PositionAction;
+        public InputActionProperty positionAction
         {
             get { return m_PositionAction; }
             set
             {
-                UnbindPosition();
+                bool rebind = false;
+                if (m_PositionBound)
+                {
+                    UnbindPosition();
+                    rebind = true;
+                }
                 m_PositionAction = value;
-                BindActions();
+                if (rebind)
+                {
+                    BindPosition();
+                }
             }
         }
 
         [SerializeField]
-        InputAction m_RotationAction;
-        public InputAction rotationAction
+        InputActionProperty m_RotationAction;
+        public InputActionProperty rotationAction
         {
             get { return m_RotationAction; }
             set
             {
-                UnbindRotation();
+                bool rebind = false;
+                if (m_RotationBound)
+                {
+                    UnbindRotation();
+                    rebind = true;
+                }
                 m_RotationAction = value;
-                BindActions();
+                if (rebind)
+                {
+                    BindRotation();
+                }
             }
         }
 
@@ -79,7 +95,7 @@ namespace UnityEngine.InputSystem.XR
         bool m_RotationBound = false;
         bool m_PositionBound = false;
 
-        void BindActions()
+        public void BindActions()
         {
             BindPosition();
             BindRotation();
@@ -89,10 +105,13 @@ namespace UnityEngine.InputSystem.XR
         {
             if (!m_PositionBound && m_PositionAction != null)
             {
-                m_PositionAction.Rename($"{gameObject.name} - TPD - Position");
-                m_PositionAction.performed += OnPositionUpdate;
+                m_PositionAction.action?.Rename($"{gameObject.name} - TPD - Position");
+                if (m_PositionAction != null && m_PositionAction.action != null)
+                {
+                    m_PositionAction.action.performed += OnPositionUpdate;
+                }
                 m_PositionBound = true;
-                m_PositionAction.Enable();
+                m_PositionAction.action?.Enable();
             }
         }
 
@@ -100,14 +119,17 @@ namespace UnityEngine.InputSystem.XR
         {
             if (!m_RotationBound && m_RotationAction != null)
             {
-                m_RotationAction.Rename($"{gameObject.name} - TPD - Rotation");
-                m_RotationAction.performed += OnRotationUpdate;
+                m_RotationAction.action?.Rename($"{gameObject.name} - TPD - Rotation");
+                if (m_RotationAction != null && m_RotationAction.action != null)
+                {
+                    m_RotationAction.action.performed += OnRotationUpdate;
+                }
                 m_RotationBound = true;
-                m_RotationAction.Enable();
+                m_RotationAction.action?.Enable();
             }
         }
 
-        void UnbindActions()
+        public void UnbindActions()
         {
             UnbindPosition();
             UnbindRotation();
@@ -117,8 +139,11 @@ namespace UnityEngine.InputSystem.XR
         {
             if (m_PositionAction != null && m_PositionBound)
             {
-                m_PositionAction.Disable();
-                m_PositionAction.performed -= OnPositionUpdate;
+                m_PositionAction.action?.Disable();
+                if (m_PositionAction != null && m_PositionAction.action != null)
+                {
+                    m_PositionAction.action.performed -= OnPositionUpdate;
+                }
                 m_PositionBound = false;
             }
         }
@@ -127,8 +152,11 @@ namespace UnityEngine.InputSystem.XR
         {
             if (m_RotationAction != null && m_RotationBound)
             {
-                m_RotationAction.Disable();
-                m_RotationAction.performed -= OnRotationUpdate;
+                m_RotationAction.action?.Disable();
+                if (m_RotationAction != null && m_RotationAction.action != null)
+                {
+                    m_RotationAction.action.performed -= OnRotationUpdate;
+                }
                 m_RotationBound = false;
             }
         }
@@ -163,8 +191,8 @@ namespace UnityEngine.InputSystem.XR
 
         void OnDisable()
         {
-            UnbindActions();
             InputSystem.onAfterUpdate -= UpdateCallback;
+            UnbindActions();
         }
 
         protected virtual void OnDestroy()

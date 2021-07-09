@@ -355,14 +355,27 @@ internal class XRTests : CoreTestsFixture
 
         using (StateEvent.From(device, out var stateEvent))
         {
-            var positionAction = new InputAction();
-            positionAction.AddBinding("<TestHMD>/vector3");
+            InputActionAsset iaa = new InputActionAsset();
+            var amap = iaa.AddActionMap("test");
 
-            var rotationAction = new InputAction();
+            var rotationAction = amap.AddAction("rotation");
             rotationAction.AddBinding("<TestHMD>/quaternion");
 
-            tpd.positionAction = positionAction;
-            tpd.rotationAction = rotationAction;
+            var positionAction = amap.AddAction("position");
+            positionAction.AddBinding("<TestHMD>/vector3");
+
+            var pa = new InputActionReference();
+            pa.Set(positionAction);
+            pa.name = "PositionAction";
+
+            var ra = new InputActionReference();
+            ra.Set(rotationAction);
+            ra.name = "RotationAction";
+
+            tpd.positionAction = new InputActionProperty(pa);
+            tpd.rotationAction = new InputActionProperty(ra);
+
+            tpd.BindActions();
 
             // before render only
             var go1 = tpd.gameObject;
