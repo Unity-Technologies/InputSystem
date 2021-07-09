@@ -8717,6 +8717,44 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_RebindingCandidatesShouldBeSorted_IfAddingNewCandidate()
+    {
+        // Designed to trigger issue reported as part of:
+        // https://github.com/Unity-Technologies/InputSystem/pull/1359
+
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation())
+        {
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad1"), 2.0f, 10.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad2"), 3.0f, 8.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad3"), 1.0f, 22.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad4"), 1.5f, 35.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad5"), 0.1f, 40.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad6"), 8.0f, 80.0f);
+
+            // Expecting scores in descending order
+            var scores = rebind.scores;
+            Assert.AreEqual(6, scores.Count);
+            Assert.AreEqual(8.0f, scores[0]);
+            Assert.AreEqual(3.0f, scores[1]);
+            Assert.AreEqual(2.0f, scores[2]);
+            Assert.AreEqual(1.5f, scores[3]);
+            Assert.AreEqual(1.0f, scores[4]);
+            Assert.AreEqual(0.1f, scores[5]);
+
+            // Expecting magnitudes sorted based on descending score as well
+            var magnitudes = rebind.magnitudes;
+            Assert.AreEqual(6, magnitudes.Count);
+            Assert.AreEqual(80.0f, magnitudes[0]);
+            Assert.AreEqual(8.0f, magnitudes[1]);
+            Assert.AreEqual(10.0f, magnitudes[2]);
+            Assert.AreEqual(35.0f, magnitudes[3]);
+            Assert.AreEqual(22.0f, magnitudes[4]);
+            Assert.AreEqual(40.0f, magnitudes[5]);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {
