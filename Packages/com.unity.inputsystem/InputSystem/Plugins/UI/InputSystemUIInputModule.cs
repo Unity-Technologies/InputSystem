@@ -1885,6 +1885,9 @@ namespace UnityEngine.InputSystem.UI
                     ProcessPointer(ref state);
 
                     // If it's a touch and the touch has ended, release the pointer state.
+                    // NOTE: We defer this by one frame such that OnPointerUp happens in the frame of release
+                    //       and OnPointerExit happens one frame later. This is so that IsPointerOverGameObject()
+                    //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
                     if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
                         RemovePointerAtIndex(i);
