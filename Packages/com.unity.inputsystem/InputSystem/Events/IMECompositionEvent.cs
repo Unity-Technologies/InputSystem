@@ -2,35 +2,106 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
+    /// Helper methods to convert NativeArray objects to C# strings.
+    /// </summary>
+    static class NativeArrayStringExtension
+    {
+        /// <summary>
+        /// Extension method to convert a NativeArray/<char/> to a C# string.
+        /// </summary>
+        /// <param name="c">The NativeArray containing the string data.</param>
+        /// <returns>A string representation of the Native Array character buffer.</returns>
+        public static unsafe string ToString(this NativeArray<char> c)
+        {
+            return new string((char*)NativeArrayUnsafeUtility.GetUnsafePtr(c), 0, c.Length);
+        }
+    }
+
+    /// <summary>
     /// A specialized event that contains the current IME Composition string, if IME is enabled and active.
     /// This event contains the entire current string to date, and once a new composition is submitted will send a blank string event.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * kIMECharBufferSize))]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char)))]
     public struct IMECompositionEvent : IInputEventTypeInfo
     {
-        // These needs to match the native ImeCompositionStringInputEventData settings
         internal const int kIMECharBufferSize = 64;
-        public const int Type = 0x494D4553;
+        public const int Type = 0x494D4543;
 
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public IMECompositionString compositionString;
+        internal int length;
+
+        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
+        internal char bufferStart;
 
         public FourCC typeStatic => Type;
 
-        public static IMECompositionEvent Create(int deviceId, string compositionString, double time)
+        internal IMECompositionString GetComposition()
         {
-            var inputEvent = new IMECompositionEvent();
-            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * kIMECharBufferSize), deviceId, time);
-            inputEvent.compositionString = new IMECompositionString(compositionString);
-            return inputEvent;
+            var nativeArray = GetCharacters();
+            var str = new IMECompositionString(nativeArray);
+            nativeArray.Dispose();
+            return str;
+        }
+
+        /// <summary>
+        /// Gets the IME characters packed into a variable sized NativeArray.
+        /// </summary>
+        /// <remarks>
+        /// It is the callers responsibility to dispose of the NativeArray.
+        /// </remarks>
+        /// <returns>The IME Characters for this event.</returns>
+        public unsafe NativeArray<char> GetCharacters()
+        {
+            var characters = new NativeArray<char>(length + sizeof(char), Allocator.Temp);
+            var ptr = NativeArrayUnsafeUtility.GetUnsafePtr(characters);
+            fixed(char* buffer = &bufferStart)
+            {
+                UnsafeUtility.MemCpy(ptr, buffer, length + sizeof(char));
+            }
+            return characters;
+        }
+
+        /// <summary>
+        /// Queues up an IME Composition Event.  IME Event sizes are variable, and this simplifies the process of aligning up the Input Event information and actual IME composition string.
+        /// </summary>
+        /// <param name="deviceId">ID of the device (see <see cref="InputDevice.deviceId") to which the composition event should be sent to. Should be an <see cref="ITextInputReceiver"/> device. Will trigger <see cref="ITextInputReceiver.OnIMECompositionChanged"/> call when processed.</param>
+        /// <param name="str">The IME characters to be sent. This can be any length, or left blank to represent a resetting of the IME dialog.</param>
+        /// <param name="time">The time in seconds, the event was generated at.  This uses the same timeline as <see cref="Time.realtimeSinceStartup"/></param>
+        public static void QueueEvent(int deviceId, string str, double time)
+        {
+            unsafe
+            {
+                int sizeInBytes = (InputEvent.kBaseEventSize + sizeof(int) + sizeof(char)) + (sizeof(char) * str.Length);
+                NativeArray<Byte> eventBuffer = new NativeArray<byte>(sizeInBytes, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+
+                byte* ptr = (byte*)NativeArrayUnsafeUtility.GetUnsafePtr(eventBuffer);
+                InputEvent* evt = (InputEvent*)ptr;
+
+                *evt = new InputEvent(Type, sizeInBytes, deviceId, time);
+                ptr += InputEvent.kBaseEventSize;
+
+                int* lengthPtr = (int*)ptr;
+                *lengthPtr = str.Length;
+
+                ptr += sizeof(int);
+
+                fixed(char* p = str)
+                {
+                    UnsafeUtility.MemCpy(ptr, p, str.Length * sizeof(char));
+                }
+
+                InputSystem.QueueEvent(new InputEventPtr(evt));
+            }
         }
     }
 
@@ -110,6 +181,17 @@ namespace UnityEngine.InputSystem.LowLevel
 
         [FieldOffset(sizeof(int))]
         fixed char buffer[IMECompositionEvent.kIMECharBufferSize];
+
+        public IMECompositionString(NativeArray<char> characters)
+        {
+            int copySize = IMECompositionEvent.kIMECharBufferSize < characters.Length ? IMECompositionEvent.kIMECharBufferSize : characters.Length;
+            fixed(char* ptr = buffer)
+            {
+                void* arrayPtr = NativeArrayUnsafeUtility.GetUnsafePtr(characters);
+                UnsafeUtility.MemCpy(ptr, arrayPtr, copySize * sizeof(char));
+            }
+            size = copySize;
+        }
 
         public IMECompositionString(string characters)
         {
