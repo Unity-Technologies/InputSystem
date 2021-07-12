@@ -21,13 +21,22 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override void OnInspectorGUI()
         {
+            var inputActionAsset = GetAsset();
+
             // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
             // like in other types of editors.
             serializedObject.Update();
 
+            if (inputActionAsset == null)
+                EditorGUILayout.HelpBox("The currently selected object is not an editable input action asset.",
+                    MessageType.Info);
+
             // Button to pop up window to edit the asset.
-            if (GUILayout.Button("Edit asset"))
-                InputActionEditorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
+            using (new EditorGUI.DisabledScope(inputActionAsset == null))
+            {
+                if (GUILayout.Button("Edit asset"))
+                    InputActionEditorWindow.OpenEditor(inputActionAsset);
+            }
 
             EditorGUILayout.Space();
 
@@ -41,8 +50,13 @@ namespace UnityEngine.InputSystem.Editor
                 var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
                 EditorGUILayout.BeginHorizontal();
-                var assetPath = AssetDatabase.GetAssetPath(GetAsset());
-                var defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+
+                string defaultFileName = "";
+                if (inputActionAsset != null)
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(inputActionAsset);
+                    defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+                }
 
                 wrapperCodePathProperty.PropertyFieldWithDefaultText(m_WrapperCodePathLabel, defaultFileName);
 
@@ -61,7 +75,10 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 EditorGUILayout.EndHorizontal();
 
-                wrapperClassNameProperty.PropertyFieldWithDefaultText(m_WrapperClassNameLabel, CSharpCodeHelpers.MakeTypeName(GetAsset().name));
+                string typeName = null;
+                if (inputActionAsset != null)
+                    typeName = CSharpCodeHelpers.MakeTypeName(inputActionAsset?.name);
+                wrapperClassNameProperty.PropertyFieldWithDefaultText(m_WrapperClassNameLabel, typeName ?? "<Class name>");
 
                 if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
@@ -81,10 +98,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private InputActionAsset GetAsset()
         {
-            var asset = (InputActionAsset)assetTarget;
-            if (asset == null)
-                throw new InvalidOperationException("Asset editor has not been initialized yet");
-            return asset;
+            return assetTarget as InputActionAsset;
         }
 
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
