@@ -1,8 +1,4 @@
 // Grouping up the XR defines since it's a pretty heavy sequence
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
-#define ENABLE_XR_COMBINED_DEFINE
-#endif
-
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Haptics;
@@ -2645,7 +2641,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
+#if UNITY_EDITOR && UNITY_XR_AVAILABLE
         /// <summary>
         /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
         /// </summary>
@@ -3282,7 +3278,8 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if ENABLE_XR_COMBINED_DEFINE
+
+            #if UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();
             #endif
 
