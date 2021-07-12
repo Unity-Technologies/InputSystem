@@ -199,6 +199,18 @@ namespace UnityEngine.InputSystem.Utilities
             return index;
         }
 
+        public void AssignWithCapacity(InlinedArray<TValue> values)
+        {
+            if (Capacity < values.length && values.length > 1)
+                additionalValues = new TValue[values.length - 1];
+
+            length = values.length;
+            if (length > 0)
+                firstValue = values.firstValue;
+            if (length > 1)
+                Array.Copy(values.additionalValues, additionalValues, length - 1);
+        }
+
         public void Append(IEnumerable<TValue> values)
         {
             foreach (var value in values)
