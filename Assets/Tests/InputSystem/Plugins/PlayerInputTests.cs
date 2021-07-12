@@ -2053,6 +2053,47 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.Fail();
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1260625/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenJoinActionIsAReference_JoiningIsStillPossibleAfterDeviceAssignment()
+    {
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var actionMap = actions.AddActionMap("Default");
+        var joinAction = actionMap.AddAction("Fire", binding: "<Gamepad>/{PrimaryAction}");
+        joinAction.AddBinding("<Keyboard>/{PrimaryAction}");
+
+
+        var playerPrefab = new GameObject();
+        playerPrefab.SetActive(false);
+        var playerInput = playerPrefab.AddComponent<PlayerInput>();
+        playerInput.actions = actions;
+
+        var manager = new GameObject();
+        manager.SetActive(false);
+
+        var playerInputManager = manager.AddComponent<PlayerInputManager>();
+        playerInputManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInputManager.joinAction = new InputActionProperty(InputActionReference.Create(joinAction));
+        playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered;
+        playerInputManager.playerPrefab = playerPrefab;
+
+        manager.SetActive(true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        playerInputManager.JoinPlayer(pairWithDevice: keyboard);
+
+        var playerJoined = false;
+        playerInputManager.onPlayerJoined += input => playerJoined = true;
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(playerJoined, Is.True);
+    }
+
     // An action is either
     //   (a) button-like, or
     //   (b) axis-like, or
