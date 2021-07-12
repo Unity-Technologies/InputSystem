@@ -544,15 +544,25 @@ namespace UnityEngine.InputSystem
             where TCommand : struct, IInputDeviceCommandInfo
         {
             var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
-            var callbacks = manager.m_DeviceCommandCallbacks;
-            for (var i = 0; i < callbacks.length; ++i)
+            manager.m_DeviceCommandCallbacks.LockForChanges();
+            for (var i = 0; i < manager.m_DeviceCommandCallbacks.length; ++i)
             {
-                var result = callbacks[i](this, commandPtr);
-                if (result.HasValue)
-                    return result.Value;
+                try
+                {
+                    var result = manager.m_DeviceCommandCallbacks[i](this, commandPtr);
+                    if (result.HasValue)
+                        return result.Value;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onDeviceCommand' callbacks");
+                    Debug.LogException(exception);
+                }
             }
+            manager.m_DeviceCommandCallbacks.UnlockForChanges();
 
             return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }
