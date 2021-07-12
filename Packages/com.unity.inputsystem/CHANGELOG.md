@@ -49,6 +49,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+- Added 'IPlayerInputEventSystem' to remove the 'MultiplayerEventSystem' dependency in 'InputSystemUIInputModule'.
+   * This allows controlling what a 'PointerModel' can target.
+   * This can be used, for example, to create an event system that allows every player to use multiple 'playerRoot's across different scenes.
 
 ### Changed
 
