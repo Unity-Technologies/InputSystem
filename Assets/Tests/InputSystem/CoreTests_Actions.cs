@@ -726,6 +726,77 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1322530/
+    [Test]
+    [Category("Actions")]
+    [TestCase("started")]
+    [TestCase("performed")]
+    [TestCase("canceled")]
+    public void Actions_CanAddAndRemoveCallbacks_FromCallback(string callback)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        var invocations = new List<string>();
+        Action<InputAction.CallbackContext> delegate2 =
+            _ => invocations.Add("delegate2");
+        Action<InputAction.CallbackContext> delegate1 = null;
+        delegate1 =
+            _ =>
+        {
+            invocations.Add("delegate1");
+            switch (callback)
+            {
+                case "started":
+                    action.started -= delegate1;
+                    action.started += delegate2;
+                    break;
+                case "performed":
+                    action.performed -= delegate1;
+                    action.performed += delegate2;
+                    break;
+                case "canceled":
+                    action.canceled -= delegate1;
+                    action.canceled += delegate2;
+                    break;
+            }
+        };
+
+        switch (callback)
+        {
+            case "started":
+                action.started += _ => invocations.Add("first");
+                action.started += delegate1;
+                action.started += _ => invocations.Add("last");
+                break;
+            case "performed":
+                action.performed += _ => invocations.Add("first");
+                action.performed += delegate1;
+                action.performed += _ => invocations.Add("last");
+                break;
+            case "canceled":
+                action.canceled += _ => invocations.Add("first");
+                action.canceled += delegate1;
+                action.canceled += _ => invocations.Add("last");
+                break;
+            default:
+                Assert.Fail();
+                break;
+        }
+
+        action.Enable();
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(invocations, Is.EqualTo(new[] { "first", "delegate1", "last" }));
+
+        invocations.Clear();
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(invocations, Is.EquivalentTo(new[] { "first", "last", "delegate2" }));
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1242406/
     // Binding resolution destroys/recreates InputActionState data. When triggering this from within
     // an action callback, we must ensure that we're not pulling the rug from under an InputActionState
@@ -1863,7 +1934,9 @@ partial class CoreTests
             runtime.currentTime += 10;
             Release(gamepad.rightShoulder);
 
-            Assert.That(trace, Performed(holdAction, control: gamepad.rightShoulder, value: 0f));
+            Assert.That(trace,
+                Performed(holdAction, control: gamepad.rightShoulder, value: 0f)
+                    .AndThen(Canceled(holdAction, gamepad.rightShoulder, 0f)));
 
             trace.Clear();
 
@@ -8711,6 +8784,44 @@ partial class CoreTests
                 .And.With.Message.Contains("map1")
                 .And.With.Message.Contains("map2"));
         Assert.That(map1.actions, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_RebindingCandidatesShouldBeSorted_IfAddingNewCandidate()
+    {
+        // Designed to trigger issue reported as part of:
+        // https://github.com/Unity-Technologies/InputSystem/pull/1359
+
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation())
+        {
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad1"), 2.0f, 10.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad2"), 3.0f, 8.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad3"), 1.0f, 22.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad4"), 1.5f, 35.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad5"), 0.1f, 40.0f);
+            rebind.AddCandidate(InputSystem.AddDevice<Gamepad>("gamepad6"), 8.0f, 80.0f);
+
+            // Expecting scores in descending order
+            var scores = rebind.scores;
+            Assert.AreEqual(6, scores.Count);
+            Assert.AreEqual(8.0f, scores[0]);
+            Assert.AreEqual(3.0f, scores[1]);
+            Assert.AreEqual(2.0f, scores[2]);
+            Assert.AreEqual(1.5f, scores[3]);
+            Assert.AreEqual(1.0f, scores[4]);
+            Assert.AreEqual(0.1f, scores[5]);
+
+            // Expecting magnitudes sorted based on descending score as well
+            var magnitudes = rebind.magnitudes;
+            Assert.AreEqual(6, magnitudes.Count);
+            Assert.AreEqual(80.0f, magnitudes[0]);
+            Assert.AreEqual(8.0f, magnitudes[1]);
+            Assert.AreEqual(10.0f, magnitudes[2]);
+            Assert.AreEqual(35.0f, magnitudes[3]);
+            Assert.AreEqual(22.0f, magnitudes[4]);
+            Assert.AreEqual(40.0f, magnitudes[5]);
+        }
     }
 
     [Test]
