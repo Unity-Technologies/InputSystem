@@ -702,6 +702,56 @@ partial class CoreTests
         }
     }
 
+    private struct DpadState : IInputStateTypeInfo
+    {
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
+        [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
+        public int dpad;
+
+        [InputControl(layout = "Axis")]
+        public float axis1;
+
+        [InputControl(layout = "Axis")]
+        public float axis2;
+
+        public FourCC format => new FourCC("TEST");
+    }
+
+    [InputControlLayout(stateType = typeof(DpadState))]
+    [Preserve]
+    private class DpadDevice : InputDevice
+    {
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1315107/
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanIterateOverChangedControlsInEvent_EvenWhenMultipleControlsShareTheSameState()
+    {
+        // Create a device that has a dpad setup  where all buttons share the same four bits.
+        // To handle this correctly, the iteration code must not advance past a control until
+        // after having tried all possible controls using the state.
+        // (this setup is actually what's found on the PS4 controller)
+        var device = InputSystem.AddDevice<DpadDevice>();
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            var stateEventPtr = StateEvent.From(eventPtr);
+            var statePtr = (DpadState*)stateEventPtr->state;
+
+            statePtr->dpad = 6; // Press dpad left.
+            statePtr->axis2 = 1f;
+
+            // The code is checking only state, not values. The state for *all* dpad buttons is shared and thus
+            // has changed for all of them. So all the dpad buttons are in the list.
+            Assert.That(eventPtr.EnumerateChangedControls(),
+                Is.EquivalentTo(new[] { device["dpad/up"], device["dpad/right"], device["dpad/down"], device["dpad/left"], device["axis2"] }));
+        }
+    }
+
     [Test]
     [Category("Events")]
     public void Events_CanResetControlToDefaultState()

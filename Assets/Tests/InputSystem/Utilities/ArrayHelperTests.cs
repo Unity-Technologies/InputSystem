@@ -99,4 +99,22 @@ internal class ArrayHelperTests
             array3.Dispose();
         }
     }
+
+    [Test]
+    [Category("Utilities")]
+    public void Utilities_IndexOfReference__IsUsingReferenceEqualsAndConstrainedByStartIndexAndCount()
+    {
+        var arr = new object[] { new object(), new object(), new object(), new object(), new object() };
+
+        Assert.AreEqual(-1, arr.IndexOfReference(new object(), 0, arr.Length));
+        Assert.AreEqual(-1, arr.IndexOfReference(arr[4], 4, 0));
+
+        Assert.AreEqual(0, arr.IndexOfReference(arr[0], 0, arr.Length));
+        Assert.AreEqual(4, arr.IndexOfReference(arr[4], 0, arr.Length));
+
+        Assert.AreEqual(-1, arr.IndexOfReference(arr[0], 1, 3));
+        Assert.AreEqual(-1, arr.IndexOfReference(arr[4], 1, 3));
+        Assert.AreEqual(1, arr.IndexOfReference(arr[1], 1, 3));
+        Assert.AreEqual(2, arr.IndexOfReference(arr[2], 1, 3));
+    }
 }
