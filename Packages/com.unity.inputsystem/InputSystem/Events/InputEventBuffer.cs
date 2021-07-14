@@ -322,7 +322,7 @@ namespace UnityEngine.InputSystem.LowLevel
             --numRemainingEvents;
         }
 
-        internal void Shrink(int newEventsCount, int newSizeInBytes)
+        internal void Shrink(int newEventsCount, long newSizeInBytes)
         {
             m_EventCount = newEventsCount;
             m_SizeInBytes = newSizeInBytes;

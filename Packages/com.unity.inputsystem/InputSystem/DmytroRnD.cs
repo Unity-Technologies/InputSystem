@@ -51,6 +51,9 @@ namespace UnityEngine.InputSystem.DmytroRnD
 
         internal static unsafe void NativeUpdate(NativeInputUpdateType updateType, NativeInputEventBuffer* buffer)
         {
+            return;
+            
+            #if false
             // limit blast radius during development 
             if (!EditorApplication.isPlaying || EditorApplication.isPaused)
                 return;
@@ -102,7 +105,9 @@ namespace UnityEngine.InputSystem.DmytroRnD
 
             Profiler.EndSample();
 
-            DebuggerWindow.RefreshCurrent();
+#endif
+
+            //DebuggerWindow.RefreshCurrent();
         }
 
         // private static void PrintStepFunctionValues(int valuesAxisIndex)

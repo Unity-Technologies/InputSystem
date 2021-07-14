@@ -5,6 +5,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.DmytroRnD
 {
+    #if false
     internal class DebuggerWindow : EditorWindow
     {
         private static DebuggerWindow _instance;
@@ -101,4 +102,5 @@ namespace UnityEngine.InputSystem.DmytroRnD
             // GUILayout.Label($"buttonLeft wasReleasedInThisFrame {Core.Graph.DebugMouseLeftWasReleasedThisFrame()}");
         }
     }
+#endif
 }
