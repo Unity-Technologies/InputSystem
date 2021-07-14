@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -10,7 +11,7 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.DataPipeline
 {
     [BurstCompile(CompileSynchronously = true)]
-    internal unsafe struct TestBurstJob : IJob, IDisposable
+    internal unsafe struct CompressMouseEventsJob : IJob, IDisposable
     {
         internal struct Data
         {
@@ -21,103 +22,186 @@ namespace UnityEngine.InputSystem.DataPipeline
             public long eventSizeInBytes;
         }
 
+        // job fields are copied, so to read results back from a job we need to allocate a struct
         public NativeArray<Data> dataContainer;
-        public ResizableNativeArray<bool> shouldSkipArray;
 
-        public TestBurstJob(int minEventsCount)
+        public CompressMouseEventsJob(int minEventsCount)
         {
             dataContainer = new NativeArray<Data>(1, Allocator.Persistent);
-            shouldSkipArray = new ResizableNativeArray<bool>(minEventsCount);
         }
 
         public void Execute()
         {
             var data = dataContainer[0];
 
-            shouldSkipArray.ResizeToFit(data.eventCount, growOnly: true);
-            var shouldSkip = shouldSkipArray.ToNativeSlice();
-            for (var i = 0; i < shouldSkip.Length; ++i)
-                shouldSkip[i] = false;
-            
-            var current = (InputEvent*)data.eventPtr;
-            
+            // Step 1: early out if any mouse event is propagated via delta state event.
+            // It's a bit involved to support compression of delta state events,
+            // and given that no backend sends mouse delta events today it's probably safe to early out.
+            var currentEvent = data.eventPtr;
+            var eventPtrs = new NativeArray<IntPtr>(data.eventCount + 1, Allocator.Temp);
             for (var i = 0; i < data.eventCount; ++i)
             {
-                if (current->type == StateEvent.Type)
+                eventPtrs[i] = (IntPtr) currentEvent;
+
+                if (currentEvent->type == DeltaStateEvent.Type)
                 {
-                    var stateEvent = StateEvent.FromUnchecked(current);
+                    var stateEvent = DeltaStateEvent.FromUnchecked(currentEvent);
                     if (stateEvent->stateFormat == MouseState.Format)
-                        shouldSkip[i] = true;
+                        return;
                 }
-                else if (current->type == DeltaStateEvent.Type)
-                {
-                    var stateEvent = DeltaStateEvent.FromUnchecked(current);
-                    if (stateEvent->stateFormat == MouseState.Format)
-                        shouldSkip[i] = true;
-                }
-            
-                current = InputEvent.GetNextInMemory(current);
+
+                currentEvent = InputEvent.GetNextInMemory(currentEvent);
             }
 
-            current = (InputEvent*)data.eventPtr;
+            // Step 2: compress move events in-place, mark redundant events for skipping 
+            NativeMouseState2* previousState = null;
+            var previousStateIndex = 0;
+            var skipEvent = new NativeArray<bool>(data.eventCount, Allocator.Temp);
+            currentEvent = data.eventPtr;
             for (var i = 0; i < data.eventCount; ++i)
             {
-                var next = InputEvent.GetNextInMemory(current);
-            
-                current = next;
+                var nextEvent = InputEvent.GetNextInMemory(currentEvent);
+
+                if (currentEvent->type == StateEvent.Type)
+                {
+                    var stateEvent = StateEvent.FromUnchecked(currentEvent);
+                    if (stateEvent->stateFormat == MouseState.Format)
+                    {
+                        var currentState = (NativeMouseState2*) stateEvent->state;
+
+                        // If buttons and other states stay the same,
+                        // modify current event in-place and mark previous one for skipping
+                        if (previousState != null &&
+                            currentState->buttons == previousState->buttons &&
+                            currentState->displayIndex == previousState->displayIndex &&
+                            currentState->clickCount == previousState->clickCount)
+                        {
+                            currentState->delta += previousState->delta;
+                            currentState->scroll += previousState->scroll;
+                            skipEvent[previousStateIndex] = true;
+                        }
+
+                        // Remember current mouse state event
+                        previousState = currentState;
+                        previousStateIndex = i;
+                    }
+                }
+
+                currentEvent = nextEvent;
             }
 
-            data.eventCount = 0;
-            data.eventSizeInBytes = 0;
+            eventPtrs[data.eventCount] = (IntPtr) currentEvent;
+
+            // Step 3: move data around, think about it as RLE encoding of sorts
+            for (var i = 0; i < data.eventCount;)
+            {
+                if (!skipEvent[i])
+                {
+                    i++;
+                    continue;
+                }
+
+                // find how many events to skip first
+                var toSkip = 1;
+                for (var j = i + 1; j < data.eventCount; ++j)
+                {
+                    if (!skipEvent[i])
+                        break;
+                    toSkip++;
+                }
+
+                // find how much data we need to move
+                var toMove = 0;
+                for (var j = i + toSkip; j < data.eventCount; ++j)
+                {
+                    if (skipEvent[i])
+                        break;
+                    toMove++;
+                }
+
+                // do the actual moving
+                var dst = (byte*) eventPtrs[i];
+                var src = (byte*) eventPtrs[i + toSkip];
+                var next = (byte*) eventPtrs[i + toSkip + toMove];
+                var skipLength = src - dst;
+                var moveLength = next - src;
+                if (moveLength > 0)
+                    UnsafeUtility.MemMove(dst, src, moveLength);
+
+                // decrease amount of events and bytes
+                data.eventCount -= toSkip;
+                data.eventSizeInBytes -= skipLength;
+
+                // skip ahead of two sections
+                i += toSkip + toMove;
+            }
+
+            skipEvent.Dispose();
+            eventPtrs.Dispose();
+
             dataContainer[0] = data;
         }
 
         public void Dispose()
         {
             dataContainer.Dispose();
-            shouldSkipArray.Dispose();
-        }
-    }
-    
-    internal class IngressPipeline2 : IDisposable
-    {
-        //internal TestBurstJob job;
-        public IngressPipeline2()
-        {
-            //job = new TestBurstJob(1000);
         }
 
-        public unsafe void ProcessEvents(InputUpdateType updateType, double processUntilTimestamp, ref InputEventBuffer events)
+        // should be 30
+        [StructLayout(LayoutKind.Explicit, Size = 32)]
+        internal struct NativeMouseState2
         {
+            [FieldOffset(0)] public Vector2 position;
+            [FieldOffset(8)] public Vector2 delta;
+            [FieldOffset(16)] public Vector2 scroll;
+            [FieldOffset(24)] public ushort buttons;
+            [FieldOffset(26)] public ushort displayIndex; // unused
+            [FieldOffset(28)] public ushort clickCount; // unused
+        }
+    }
+
+    internal class IngressPipeline2 : IDisposable
+    {
+        internal CompressMouseEventsJob job;
+
+        public IngressPipeline2()
+        {
+            job = new CompressMouseEventsJob(1000);
+        }
+
+        public unsafe void ProcessEvents(InputUpdateType updateType, double processUntilTimestamp,
+            ref InputEventBuffer events)
+        {
+            // There are currently two problems in editor update loop:
+            // - burst compilation is not very happy, it fails to reliably replace managed job with bursted job
+            // - temp allocator is missing native guarding scope, so it might leak, this is also potentially true if we run a job on main thread
+            if (!EditorApplication.isPlaying || updateType == InputUpdateType.Editor)
+                return;
+
             if (events.sizeInBytes == InputEventBuffer.BufferSizeUnknown)
                 return;
 
             if (events.sizeInBytes == 0)
                 return;
 
-            // job.dataContainer[0] = new TestBurstJob.Data
-            // {
-            //     updateType = updateType,
-            //     processUntilTimestamp = processUntilTimestamp,
-            //     eventPtr = events.bufferPtr.ToPointer(),
-            //     eventCount = events.eventCount,
-            //     eventSizeInBytes = events.sizeInBytes
-            // };
-            //
-            // if (EditorApplication.isPlaying)
-            //     job.Run();
-            // else
-            //     job.Execute();
-            //
-            // var result = job.dataContainer[0];
-            //
-            // events.Shrink(result.eventCount, result.eventSizeInBytes);
-            events.Shrink(0, 0);
+            job.dataContainer[0] = new CompressMouseEventsJob.Data
+            {
+                updateType = updateType,
+                processUntilTimestamp = processUntilTimestamp,
+                eventPtr = events.bufferPtr.ToPointer(),
+                eventCount = events.eventCount,
+                eventSizeInBytes = events.sizeInBytes
+            };
+
+            job.Run();
+
+            var result = job.dataContainer[0];
+            events.Shrink(result.eventCount, result.eventSizeInBytes);
         }
 
         public void Dispose()
         {
-            //job.Dispose();
+            job.Dispose();
         }
     }
 }
