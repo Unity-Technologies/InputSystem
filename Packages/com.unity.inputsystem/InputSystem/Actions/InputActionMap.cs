@@ -1193,6 +1193,18 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc/>
         public int FindBinding(InputBinding mask, out InputAction action)
         {
+            var n = FindBindingRelativeToMap(mask);
+            if (n == -1) {
+                action = null;
+                return -1;
+            }
+
+            action = m_SingletonAction ?? FindAction(bindings[n].action);
+            return action.BindingIndexOnMapToBindingIndexOnAction(n);
+        }
+
+        public int FindBindingRelativeToMap(InputBinding mask)
+        {
             var bindings = m_Bindings;
             var bindingsCount = bindings.LengthSafe();
 
@@ -1200,13 +1212,9 @@ namespace UnityEngine.InputSystem
             {
                 ref var binding = ref bindings[n];
                 if (mask.Matches(ref binding))
-                {
-                    action = m_SingletonAction ?? FindAction(binding.action);
-                    return action.BindingIndexOnMapToBindingIndexOnAction(n);
-                }
+                    return n;
             }
 
-            action = null;
             return -1;
         }
 
