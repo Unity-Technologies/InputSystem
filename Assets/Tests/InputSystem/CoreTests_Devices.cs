@@ -4212,4 +4212,92 @@ partial class CoreTests
         InputSystem.RemoveDevice(pointer);
         Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
+    
+    [Test]
+    [Category("Devices")]
+    [TestCase(false)]
+    [TestCase(true)]
+    public unsafe void Devices_CanCompressMouseEvents(bool disableMouseMoveCompression)
+    {
+        InputSystem.settings.disableMouseMoveCompression = disableMouseMoveCompression;
+        var mouse = InputSystem.AddDevice<Mouse>();
+        
+        using (var trace = new InputEventTrace(mouse))
+        {
+            trace.Enable();
+            Assert.That(trace.enabled, Is.True);
+            
+            InputSystem.QueueStateEvent(mouse,
+                new MouseState
+                {
+                    position = new Vector2(1.0f, 2.0f),
+                    delta = new Vector2(1.0f, 1.0f),
+                }, time: 1);
+            InputSystem.QueueStateEvent(mouse,
+                new MouseState
+                {
+                    position = new Vector2(2.0f, 3.0f),
+                    delta = new Vector2(1.0f, 1.0f),
+                }, time: 2);
+            InputSystem.QueueStateEvent(mouse,
+                new MouseState
+                {
+                    position = new Vector2(3.0f, 4.0f),
+                    delta = new Vector2(1.0f, 1.0f),
+                }, time: 3);
+
+            InputSystem.Update();
+
+            trace.Disable();
+
+            var events = trace.ToList();
+
+            Assert.That(events, Has.Count.EqualTo(disableMouseMoveCompression ? 3 : 2));
+
+            // first event is always preserved as-is
+            {
+                var index = 0;
+                
+                Assert.That(events[index].type, Is.EqualTo((FourCC) StateEvent.Type));
+                Assert.That(events[index].deviceId, Is.EqualTo(mouse.deviceId));
+                Assert.That(events[index].time, Is.EqualTo(1).Within(0.000001));
+                Assert.That(events[index].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<MouseState>()));
+
+                var state = StateEvent.From(events[index])->GetState<MouseState>();
+                Assert.That(state.position.x, Is.EqualTo(1).Within(0.000001));
+                Assert.That(state.delta.x, Is.EqualTo(1).Within(0.000001));
+            }
+
+            // second event (only if compression is disabled) should be preserved as-is
+            if (disableMouseMoveCompression)
+            {
+                var index = 1;
+                
+                Assert.That(events[index].type, Is.EqualTo((FourCC) StateEvent.Type));
+                Assert.That(events[index].deviceId, Is.EqualTo(mouse.deviceId));
+                Assert.That(events[index].time, Is.EqualTo(2).Within(0.000001));
+                Assert.That(events[index].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<MouseState>()));
+
+                var state = StateEvent.From(events[index])->GetState<MouseState>();
+                Assert.That(state.position.x, Is.EqualTo(2).Within(0.000001));
+                Assert.That(state.delta.x, Is.EqualTo(1).Within(0.000001));
+            }
+
+            // last event should be either merged with previous one, or preserved as-is
+            {
+                var index = disableMouseMoveCompression ? 2 : 1;
+
+                Assert.That(events[index].type, Is.EqualTo((FourCC) StateEvent.Type));
+                Assert.That(events[index].deviceId, Is.EqualTo(mouse.deviceId));
+                Assert.That(events[index].time, Is.EqualTo(3).Within(0.000001));
+                Assert.That(events[index].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<MouseState>()));
+
+                var state = StateEvent.From(events[index])->GetState<MouseState>();
+                Assert.That(state.position.x, Is.EqualTo(3).Within(0.000001));
+                Assert.That(state.delta.x, Is.EqualTo(disableMouseMoveCompression ? 1 : 2).Within(0.000001));
+            }
+        }
+
+        InputSystem.settings.disableMouseMoveCompression = false;
+    }
 }

@@ -12,12 +12,12 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <remarks>
     /// This is a variable-sized event.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 4 + kStateDataSizeToSubtract, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Size = 32 /* make burst happy InputEvent.kBaseEventSize + 4 + kStateDataSizeToSubtract */)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x53544154; // 'STAT'
-
-        internal const int kStateDataSizeToSubtract = 1;
+        
+        internal const int kStateEventSize = InputEvent.kBaseEventSize + sizeof(int);
 
         [FieldOffset(0)]
         public InputEvent baseEvent;
@@ -29,9 +29,9 @@ namespace UnityEngine.InputSystem.LowLevel
         public FourCC stateFormat;
 
         [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
-        internal fixed byte stateData[kStateDataSizeToSubtract]; // Variable-sized.
+        internal fixed byte stateData[1]; // Variable-sized.
 
-        public uint stateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int));
+        public uint stateSizeInBytes => baseEvent.sizeInBytes - kStateEventSize;
 
         public void* state
         {
@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public static int GetEventSizeWithPayload<TState>()
             where TState : struct
         {
-            return UnsafeUtility.SizeOf<TState>() + InputEvent.kBaseEventSize + sizeof(int);
+            return UnsafeUtility.SizeOf<TState>() + kStateEventSize;
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var stateSize = device.m_StateBlock.alignedSizeInBytes;
             var stateOffset = device.m_StateBlock.byteOffset;
             var statePtr = (byte*)(useDefaultState ? device.defaultStatePtr : device.currentStatePtr) + (int)stateOffset;
-            var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
+            var eventSize = kStateEventSize + stateSize;
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();

@@ -53,13 +53,13 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     /// <seealso cref="InputEventPtr"/>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
         private const uint kIdMask = 0x7FFFFFFF;
 
-        internal const int kBaseEventSize = NativeInputEvent.structSize;
+        internal const int kBaseEventSize = NativeInputEventBurstFriendly.structSize;
 
         /// <summary>
         /// Default, invalid value for <see cref="eventId"/>. Upon being queued with
@@ -70,7 +70,23 @@ namespace UnityEngine.InputSystem.LowLevel
         internal const int kAlignment = 4;
 
         [FieldOffset(0)]
-        private NativeInputEvent m_Event;
+        private NativeInputEventBurstFriendly m_Event;
+        
+        [StructLayout(LayoutKind.Explicit, Size = 24 /* make burst happy */ )]
+        internal struct NativeInputEventBurstFriendly
+        {
+            public const int structSize = 20;
+            [FieldOffset(0)]
+            public NativeInputEventType type;
+            [FieldOffset(4)]
+            public ushort sizeInBytes;
+            [FieldOffset(6)]
+            public ushort deviceId;
+            [FieldOffset(8)]
+            public double time;
+            [FieldOffset(16)]
+            public int eventId;
+        }
 
         /// <summary>
         /// Type code for the event.

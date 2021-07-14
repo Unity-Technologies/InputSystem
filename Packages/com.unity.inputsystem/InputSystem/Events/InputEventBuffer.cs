@@ -322,6 +322,12 @@ namespace UnityEngine.InputSystem.LowLevel
             --numRemainingEvents;
         }
 
+        internal void Shrink(int newEventsCount, long newSizeInBytes)
+        {
+            m_EventCount = newEventsCount;
+            m_SizeInBytes = newSizeInBytes;
+        }
+
         public IEnumerator<InputEventPtr> GetEnumerator()
         {
             return new Enumerator(this);

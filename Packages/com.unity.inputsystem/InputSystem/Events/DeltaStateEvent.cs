@@ -13,10 +13,12 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Avoids having to send a full state memory snapshot when only a small
     /// part of the state has changed.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 9)]
+    [StructLayout(LayoutKind.Explicit, Size = 32 /* make burst happy InputEvent.kBaseEventSize + 9 */)]
     public unsafe struct DeltaStateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x444C5441; // 'DLTA'
+        
+        internal const int kDeltaStateEventSize = InputEvent.kBaseEventSize + sizeof(int) + sizeof(uint);
 
         [FieldOffset(0)]
         public InputEvent baseEvent;
@@ -30,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize + 8)]
         internal fixed byte stateData[1]; // Variable-sized.
 
-        public uint deltaStateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8);
+        public uint deltaStateSizeInBytes => baseEvent.sizeInBytes - kDeltaStateEventSize;
 
         public void* deltaState
         {
@@ -86,7 +88,7 @@ namespace UnityEngine.InputSystem.LowLevel
             stateSize += controlStateBlock.bitOffset / 8;
             var stateOffset = controlStateBlock.byteOffset;
             var statePtr = (byte*)control.currentStatePtr + (int)stateOffset;
-            var eventSize = InputEvent.kBaseEventSize + sizeof(int) * 2 + stateSize;
+            var eventSize = kDeltaStateEventSize + stateSize;
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (DeltaStateEvent*)buffer.GetUnsafePtr();

@@ -2404,7 +2404,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Size of '{typeof(TState).Name}' exceeds maximum supported state size of {StateEventBuffer.kMaxSize}",
                     nameof(state));
-            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - StateEvent.kStateDataSizeToSubtract;
+            var eventSize = StateEvent.kStateEventSize + stateSize;
 
             if (time < 0)
                 time = InputRuntime.s_Instance.currentTime;
@@ -2475,7 +2475,7 @@ namespace UnityEngine.InputSystem
                     $"Size {deltaSize} of delta state of type {typeof(TDelta).Name} provided for control '{control}' does not match size {control.stateBlock.alignedSizeInBytes} of control",
                     nameof(delta));
 
-            var eventSize = UnsafeUtility.SizeOf<DeltaStateEvent>() + deltaSize - 1;
+            var eventSize = DeltaStateEvent.kDeltaStateEventSize + deltaSize;
 
             DeltaStateEventBuffer eventBuffer;
             eventBuffer.stateEvent =

@@ -15,6 +15,7 @@
 		"xr"
 	],
 	"dependencies" : {
+		"com.unity.burst": "1.5.4",
 		"com.unity.modules.uielements": "1.0.0"
 	}
 }

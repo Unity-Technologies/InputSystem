@@ -31,6 +31,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed inconsistent behavior of WebGL gamepad left/right stick. Up/Down controls were reverse of X/Y controls. ([case 1348959](https://fogbugz.unity3d.com/f/cases/1348959))
 - Fixed `PlayerInputManager`s join action not triggering when using a referenced `InputAction` ([case 1260625](https://issuetracker.unity3d.com/issues/input-system-player-input-managers-join-action-is-not-triggered-when-using-a-referenced-input-action)).
 - Fixed UI issue where pressing the wrong button was possible while quickly moving through a UI because the submit action fired on action press instead of action release ([1333563](https://issuetracker.unity3d.com/issues/input-submit-action-is-called-on-release-rather-than-on-press-when-using-enter-key)).
+- Partially fixed performance issues with high frequency mice by compressing consecutive mouse move events together. Set `InputSystem.settings.disableMouseMoveCompression` to `true` if you want to keep receiving all mouse events ([case 1281266](https://issuetracker.unity3d.com/issues/many-input-events-when-using-1000hz-mouse)).
+
 
 #### Actions
 
@@ -50,6 +52,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
+- Added bursted job to compress compressing consecutive mouse move events together. If you observe any issues with burst, please set `UNITY_INPUT_SYSTEM_DO_NOT_USE_BURST` define to disable all burst usage.
 
 ### Changed
 

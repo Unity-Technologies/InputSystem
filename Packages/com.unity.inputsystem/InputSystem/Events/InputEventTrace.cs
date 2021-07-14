@@ -779,7 +779,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 {
                     type = FrameMarkerEvent,
                     internalTime = InputRuntime.s_Instance.currentTime,
-                    sizeInBytes = (uint)UnsafeUtility.SizeOf<InputEvent>()
+                    sizeInBytes = InputEvent.kBaseEventSize
                 };
 
                 OnInputEvent(new InputEventPtr((InputEvent*)UnsafeUtility.AddressOf(ref frameMarkerEvent)), null);
