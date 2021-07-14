@@ -11,9 +11,37 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.DataPipeline
 {
     [BurstCompile(CompileSynchronously = true)]
-    internal unsafe struct CompressMouseEventsJob : IJob, IDisposable
+    internal unsafe struct CompressMouseEventsJob : IJob
     {
-        internal struct Data
+        public static void ProcessEvents(InputUpdateType updateType, double processUntilTimestamp, ref InputEventBuffer events)
+        {
+            // There are currently two problems in editor update loop:
+            // - burst compilation is not very happy, it fails to reliably replace managed job with bursted job
+            // - temp allocator is missing native guarding scope, so it might leak, this is also potentially true if we run a job on main thread
+            if (!EditorApplication.isPlaying || updateType == InputUpdateType.Editor)
+                return;
+
+            if (events.sizeInBytes == 0 || events.sizeInBytes == InputEventBuffer.BufferSizeUnknown)
+                return;
+            
+            var data = new Data
+            {
+                updateType = updateType,
+                processUntilTimestamp = processUntilTimestamp,
+                eventPtr = events.bufferPtr.ToPointer(),
+                eventCount = events.eventCount,
+                eventSizeInBytes = events.sizeInBytes
+            };
+            
+            new CompressMouseEventsJob
+            {
+                data = &data
+            }.Run();
+
+            events.Shrink(data.eventCount, data.eventSizeInBytes);
+        }
+        
+        private struct Data
         {
             public InputUpdateType updateType;
             public double processUntilTimestamp;
@@ -22,24 +50,17 @@ namespace UnityEngine.InputSystem.DataPipeline
             public long eventSizeInBytes;
         }
 
-        // job fields are copied, so to read results back from a job we need to allocate a struct
-        public NativeArray<Data> dataContainer;
-
-        public CompressMouseEventsJob(int minEventsCount)
-        {
-            dataContainer = new NativeArray<Data>(1, Allocator.Persistent);
-        }
+        // job fields are copied, so to read results back from a job we need to write to a pointer
+        private Data* data;
 
         public void Execute()
         {
-            var data = dataContainer[0];
-
             // Step 1: early out if any mouse event is propagated via delta state event.
             // It's a bit involved to support compression of delta state events,
             // and given that no backend sends mouse delta events today it's probably safe to early out.
-            var currentEvent = data.eventPtr;
-            var eventPtrs = new NativeArray<IntPtr>(data.eventCount + 1, Allocator.Temp);
-            for (var i = 0; i < data.eventCount; ++i)
+            var currentEvent = data->eventPtr;
+            var eventPtrs = new NativeArray<IntPtr>(data->eventCount + 1, Allocator.Temp);
+            for (var i = 0; i < data->eventCount; ++i)
             {
                 eventPtrs[i] = (IntPtr) currentEvent;
 
@@ -56,9 +77,9 @@ namespace UnityEngine.InputSystem.DataPipeline
             // Step 2: compress move events in-place, mark redundant events for skipping 
             NativeMouseState2* previousState = null;
             var previousStateIndex = 0;
-            var skipEvent = new NativeArray<bool>(data.eventCount, Allocator.Temp);
-            currentEvent = data.eventPtr;
-            for (var i = 0; i < data.eventCount; ++i)
+            var skipEvent = new NativeArray<bool>(data->eventCount, Allocator.Temp);
+            currentEvent = data->eventPtr;
+            for (var i = 0; i < data->eventCount; ++i)
             {
                 var nextEvent = InputEvent.GetNextInMemory(currentEvent);
 
@@ -89,11 +110,10 @@ namespace UnityEngine.InputSystem.DataPipeline
 
                 currentEvent = nextEvent;
             }
-
-            eventPtrs[data.eventCount] = (IntPtr) currentEvent;
+            eventPtrs[data->eventCount] = (IntPtr) currentEvent; // remember the end pointer
 
             // Step 3: move data around, think about it as RLE encoding of sorts
-            for (var i = 0; i < data.eventCount;)
+            for (var i = 0; i < data->eventCount;)
             {
                 if (!skipEvent[i])
                 {
@@ -103,7 +123,7 @@ namespace UnityEngine.InputSystem.DataPipeline
 
                 // find how many events to skip first
                 var toSkip = 1;
-                for (var j = i + 1; j < data.eventCount; ++j)
+                for (var j = i + 1; j < data->eventCount; ++j)
                 {
                     if (!skipEvent[i])
                         break;
@@ -112,7 +132,7 @@ namespace UnityEngine.InputSystem.DataPipeline
 
                 // find how much data we need to move
                 var toMove = 0;
-                for (var j = i + toSkip; j < data.eventCount; ++j)
+                for (var j = i + toSkip; j < data->eventCount; ++j)
                 {
                     if (skipEvent[i])
                         break;
@@ -129,8 +149,8 @@ namespace UnityEngine.InputSystem.DataPipeline
                     UnsafeUtility.MemMove(dst, src, moveLength);
 
                 // decrease amount of events and bytes
-                data.eventCount -= toSkip;
-                data.eventSizeInBytes -= skipLength;
+                data->eventCount -= toSkip;
+                data->eventSizeInBytes -= skipLength;
 
                 // skip ahead of two sections
                 i += toSkip + toMove;
@@ -138,18 +158,11 @@ namespace UnityEngine.InputSystem.DataPipeline
 
             skipEvent.Dispose();
             eventPtrs.Dispose();
-
-            dataContainer[0] = data;
-        }
-
-        public void Dispose()
-        {
-            dataContainer.Dispose();
         }
 
         // should be 30
         [StructLayout(LayoutKind.Explicit, Size = 32)]
-        internal struct NativeMouseState2
+        private struct NativeMouseState2
         {
             [FieldOffset(0)] public Vector2 position;
             [FieldOffset(8)] public Vector2 delta;
@@ -157,51 +170,6 @@ namespace UnityEngine.InputSystem.DataPipeline
             [FieldOffset(24)] public ushort buttons;
             [FieldOffset(26)] public ushort displayIndex; // unused
             [FieldOffset(28)] public ushort clickCount; // unused
-        }
-    }
-
-    internal class IngressPipeline2 : IDisposable
-    {
-        internal CompressMouseEventsJob job;
-
-        public IngressPipeline2()
-        {
-            job = new CompressMouseEventsJob(1000);
-        }
-
-        public unsafe void ProcessEvents(InputUpdateType updateType, double processUntilTimestamp,
-            ref InputEventBuffer events)
-        {
-            // There are currently two problems in editor update loop:
-            // - burst compilation is not very happy, it fails to reliably replace managed job with bursted job
-            // - temp allocator is missing native guarding scope, so it might leak, this is also potentially true if we run a job on main thread
-            if (!EditorApplication.isPlaying || updateType == InputUpdateType.Editor)
-                return;
-
-            if (events.sizeInBytes == InputEventBuffer.BufferSizeUnknown)
-                return;
-
-            if (events.sizeInBytes == 0)
-                return;
-
-            job.dataContainer[0] = new CompressMouseEventsJob.Data
-            {
-                updateType = updateType,
-                processUntilTimestamp = processUntilTimestamp,
-                eventPtr = events.bufferPtr.ToPointer(),
-                eventCount = events.eventCount,
-                eventSizeInBytes = events.sizeInBytes
-            };
-
-            job.Run();
-
-            var result = job.dataContainer[0];
-            events.Shrink(result.eventCount, result.eventSizeInBytes);
-        }
-
-        public void Dispose()
-        {
-            job.Dispose();
         }
     }
 }
