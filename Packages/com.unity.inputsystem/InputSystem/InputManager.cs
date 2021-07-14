@@ -1575,7 +1575,6 @@ namespace UnityEngine.InputSystem
 
             m_Settings = settings;
 
-            InitializeDataPipeline();
             InitializeData();
             InstallRuntime(runtime);
             InstallGlobals();
@@ -1596,8 +1595,6 @@ namespace UnityEngine.InputSystem
 
             // Uninstall globals.
             UninstallGlobals();
-
-            DestroyDataPipeline();
 
             // Destroy settings if they are temporary.
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
@@ -1795,16 +1792,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void InitializeDataPipeline()
-        {
-            m_IngressPipeline = new IngressPipeline2();
-        }
-
-        internal void DestroyDataPipeline()
-        {
-            m_IngressPipeline.Dispose();
-        }
-
         [Serializable]
         internal struct AvailableDevice
         {
@@ -1817,8 +1804,6 @@ namespace UnityEngine.InputSystem
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
         private float m_PollingFrequency;
-
-        internal IngressPipeline2 m_IngressPipeline;
 
         internal InputControlLayout.Collection m_Layouts;
         private TypeTable m_Processors;
@@ -2641,7 +2626,7 @@ namespace UnityEngine.InputSystem
             
             // ingress pipeline will modify event buffer in-place
             if (!settings.disableNewDataPipeline)
-                m_IngressPipeline.ProcessEvents(updateType, timesliceEvents ? currentTime : -1.0f, ref eventBuffer);
+                CompressMouseEvents.ProcessEvents(updateType, timesliceEvents ? currentTime : -1.0f, ref eventBuffer);
 
             ////TODO: manual mode must be treated like lockInputToGameView in editor
 

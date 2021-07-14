@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.DataPipeline
 {
     [BurstCompile(CompileSynchronously = true)]
-    internal unsafe struct CompressMouseEventsJob : IJob
+    internal unsafe struct CompressMouseEvents : IJob
     {
         public static void ProcessEvents(InputUpdateType updateType, double processUntilTimestamp, ref InputEventBuffer events)
         {
@@ -23,44 +23,47 @@ namespace UnityEngine.InputSystem.DataPipeline
 
             if (events.sizeInBytes == 0 || events.sizeInBytes == InputEventBuffer.BufferSizeUnknown)
                 return;
-            
-            var data = new Data
+
+            var resultEventCount = 0;
+            var resultEventSizeInBytes = 0L;
+
+            new CompressMouseEvents
             {
                 updateType = updateType,
                 processUntilTimestamp = processUntilTimestamp,
                 eventPtr = events.bufferPtr.ToPointer(),
                 eventCount = events.eventCount,
-                eventSizeInBytes = events.sizeInBytes
-            };
-            
-            new CompressMouseEventsJob
-            {
-                data = &data
+                eventSizeInBytes = events.sizeInBytes,
+                resultEventCount = &resultEventCount,
+                resultEventSizeInBytes = &resultEventSizeInBytes
             }.Run();
 
-            events.Shrink(data.eventCount, data.eventSizeInBytes);
-        }
-        
-        private struct Data
-        {
-            public InputUpdateType updateType;
-            public double processUntilTimestamp;
-            public InputEvent* eventPtr;
-            public int eventCount;
-            public long eventSizeInBytes;
+            events.Shrink(resultEventCount, resultEventSizeInBytes);
         }
 
+        public InputUpdateType updateType;
+        public double processUntilTimestamp;
+
+        [NativeDisableUnsafePtrRestriction]
+        public InputEvent* eventPtr;
+
+        public int eventCount;
+        public long eventSizeInBytes;
+        
         // job fields are copied, so to read results back from a job we need to write to a pointer
-        private Data* data;
+        [NativeDisableUnsafePtrRestriction]
+        public int* resultEventCount;
+        [NativeDisableUnsafePtrRestriction]
+        public long* resultEventSizeInBytes;
 
         public void Execute()
         {
             // Step 1: early out if any mouse event is propagated via delta state event.
             // It's a bit involved to support compression of delta state events,
             // and given that no backend sends mouse delta events today it's probably safe to early out.
-            var currentEvent = data->eventPtr;
-            var eventPtrs = new NativeArray<IntPtr>(data->eventCount + 1, Allocator.Temp);
-            for (var i = 0; i < data->eventCount; ++i)
+            var currentEvent = eventPtr;
+            var eventPtrs = new NativeArray<IntPtr>(eventCount + 1, Allocator.Temp);
+            for (var i = 0; i < eventCount; ++i)
             {
                 eventPtrs[i] = (IntPtr) currentEvent;
 
@@ -77,9 +80,9 @@ namespace UnityEngine.InputSystem.DataPipeline
             // Step 2: compress move events in-place, mark redundant events for skipping 
             NativeMouseState2* previousState = null;
             var previousStateIndex = 0;
-            var skipEvent = new NativeArray<bool>(data->eventCount, Allocator.Temp);
-            currentEvent = data->eventPtr;
-            for (var i = 0; i < data->eventCount; ++i)
+            var skipEvent = new NativeArray<bool>(eventCount, Allocator.Temp);
+            currentEvent = eventPtr;
+            for (var i = 0; i < eventCount; ++i)
             {
                 var nextEvent = InputEvent.GetNextInMemory(currentEvent);
 
@@ -110,10 +113,10 @@ namespace UnityEngine.InputSystem.DataPipeline
 
                 currentEvent = nextEvent;
             }
-            eventPtrs[data->eventCount] = (IntPtr) currentEvent; // remember the end pointer
+            eventPtrs[eventCount] = (IntPtr) currentEvent; // remember the end pointer
 
             // Step 3: move data around, think about it as RLE encoding of sorts
-            for (var i = 0; i < data->eventCount;)
+            for (var i = 0; i < eventCount;)
             {
                 if (!skipEvent[i])
                 {
@@ -123,7 +126,7 @@ namespace UnityEngine.InputSystem.DataPipeline
 
                 // find how many events to skip first
                 var toSkip = 1;
-                for (var j = i + 1; j < data->eventCount; ++j)
+                for (var j = i + 1; j < eventCount; ++j)
                 {
                     if (!skipEvent[i])
                         break;
@@ -132,7 +135,7 @@ namespace UnityEngine.InputSystem.DataPipeline
 
                 // find how much data we need to move
                 var toMove = 0;
-                for (var j = i + toSkip; j < data->eventCount; ++j)
+                for (var j = i + toSkip; j < eventCount; ++j)
                 {
                     if (skipEvent[i])
                         break;
@@ -149,8 +152,8 @@ namespace UnityEngine.InputSystem.DataPipeline
                     UnsafeUtility.MemMove(dst, src, moveLength);
 
                 // decrease amount of events and bytes
-                data->eventCount -= toSkip;
-                data->eventSizeInBytes -= skipLength;
+                eventCount -= toSkip;
+                eventSizeInBytes -= skipLength;
 
                 // skip ahead of two sections
                 i += toSkip + toMove;
@@ -158,6 +161,9 @@ namespace UnityEngine.InputSystem.DataPipeline
 
             skipEvent.Dispose();
             eventPtrs.Dispose();
+
+            *resultEventCount = eventCount;
+            *resultEventSizeInBytes = eventSizeInBytes;
         }
 
         // should be 30
