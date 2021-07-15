@@ -219,7 +219,7 @@ internal class AndroidTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidXboxConttroller()
+    public void Devices_SupportsAndroidXboxController()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -275,7 +275,7 @@ internal class AndroidTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidXboxConttrollerWithDpad()
+    public void Devices_SupportsAndroidXboxControllerWithDpad()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -337,7 +337,7 @@ internal class AndroidTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidDualShockConttroller()
+    public void Devices_SupportsAndroidDualShockController()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -393,7 +393,7 @@ internal class AndroidTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidDualShockConttrollerWithDpad()
+    public void Devices_SupportsAndroidDualShockControllerWithDpad()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {

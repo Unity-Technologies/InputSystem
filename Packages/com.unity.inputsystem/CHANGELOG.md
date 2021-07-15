@@ -181,8 +181,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
-- Fixed Right stick to use AXIS.Z and AXIS.RZ for Android gamepads
-- Fixed triggers to always use Axis.Gas and Axis.Brake for Android gamepads
+- Fixed Right stick to use AXIS.Z and AXIS.RZ for Android gamepads.
+- Fixed triggers to always use Axis.Gas and Axis.Brake for Android gamepads.
 - Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
 - Fixed `InputDevice.canRunInBackground` not being correctly set for VR devices (thus not allowing them to receive input while the application is not focused).
 - Fixed `InputUser.OnEvent` and `RebindingOperation.OnEvent` exhibiting bad performance profiles and leading to multi-millisecond input update times (case 1253371).
