@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem.Android
     ///       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
     ///       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
     ///       Nvidia Shield also reports KEYCODE_BACK instead of KEYCODE_BUTTON_SELECT, so Options(XboxOne Controller)/View(DualShock)/Select buttons do not work
-    /// PS4 controller is officially supported from Android 10 and higher (https://www.playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android)
+    /// PS4 controller is officially supported from Android 10 and higher (https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android)
     /// However, some devices with older OS have fixed PS4 controller support on their drivers this leads to following situation:
     /// Some gamepads on Android devices (with same Android number version) might have different mappings
     ///  For ex., Dualshock, on NVidia Shield Console (OS 8.0) all buttons correctly map according to rules in AndroidGameControllerState
