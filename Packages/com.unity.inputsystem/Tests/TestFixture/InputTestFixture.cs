@@ -7,7 +7,6 @@ using NUnit.Framework.Constraints;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -146,17 +145,6 @@ namespace UnityEngine.InputSystem
 
             try
             {
-                // Destroy any GameObject in the current scene that isn't hidden and isn't the
-                // test runner object. Do this first so that any cleanup finds the system in the
-                // state it expects.
-                var scene = SceneManager.GetActiveScene();
-                foreach (var go in scene.GetRootGameObjects())
-                {
-                    if (go.hideFlags != 0 || go.name.Contains("tests runner"))
-                        continue;
-                    Object.DestroyImmediate(go);
-                }
-
                 InputSystem.Restore();
                 runtime.Dispose();
 
@@ -370,6 +358,8 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction), time: time,
                 duration: duration, value: value);
         }
+
+        ////REVIEW: Should we determine queueEventOnly automatically from whether we're in a UnityTest?
 
         // ReSharper disable once MemberCanBeProtected.Global
         public void Press(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
@@ -662,6 +652,16 @@ namespace UnityEngine.InputSystem
             {
                 runtime.currentTime = value;
                 runtime.dontAdvanceTimeNextDynamicUpdate = true;
+            }
+        }
+
+        internal float unscaledGameTime
+        {
+            get => runtime.unscaledGameTime;
+            set
+            {
+                runtime.unscaledGameTime = value;
+                runtime.dontAdvanceUnscaledGameTimeNextDynamicUpdate = true;
             }
         }
 

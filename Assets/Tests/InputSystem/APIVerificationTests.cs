@@ -8,14 +8,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Mono.Cecil;
+#if HAVE_DOCTOOLS_INSTALLED
 using UnityEditor.PackageManager.DocumentationTools.UI;
+#endif
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 using PropertyAttribute = NUnit.Framework.PropertyAttribute;
@@ -179,10 +183,15 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
     public void API_DoesNotHaveDisallowedPublicFields()
     {
+        #if HAVE_DOCTOOLS_INSTALLED
         var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !(field.IsInitOnly && field.IsStatic) && !IsTypeWhichCanHavePublicFields(field.DeclaringType));
         Assert.That(disallowedPublicFields, Is.Empty);
+        #endif
     }
 
     private static string DocsForType(TypeDefinition type, string docsFolder)
@@ -424,40 +433,92 @@ class APIVerificationTests
         if (type == typeof(FastKeyboard)
             || type == typeof(FastMouse)
             || type == typeof(FastTouchscreen)
-            || type == typeof(FastDualShock4GamepadHID))
+            || type == typeof(FastDualShock4GamepadHID)
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            // iOS Step Counter is created from C# code
+            || type == typeof(iOSStepCounter)
+#endif
+        )
             return true;
 
         return false;
     }
 
-    private static string GenerateDocsDirectory()
+    #if HAVE_DOCTOOLS_INSTALLED
+    ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
+    private static string GenerateDocsDirectory(out string log)
     {
-        const string docsFolder = "Temp/docstest";
+        // The dependency on `com.unity.modules.uielements` we have triggers a 404 error in doctools as it
+        // tries to retrieve information on the "package" from `packages.unity.com`. As it is a module and not a
+        // package, there's no metadata on the server and PacmanUtils.GetVersions() in doctools will log an
+        // error to the console. This doesn't impact the rest of the run so just ignore it.
+        // This is a workaround. Remove when fixed in doctools.
+        LogAssert.ignoreFailingMessages = true;
+
+        // DocumentationBuilder users C:/temp on Windows to avoid deeply nested paths that go
+        // beyond the Windows path limit. However, on Yamato agent, C:/temp does not exist.
+        // Create it manually here.
+        #if UNITY_EDITOR_WIN
+        Directory.CreateDirectory("C:/temp");
+        #endif
+        var docsFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/docstest"));
         Directory.CreateDirectory(docsFolder);
-        Documentation.Instance.Generate("com.unity.inputsystem", InputSystem.version.ToString(), docsFolder);
-        return docsFolder;
+        var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
+        var(buildLog, folderName) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
+        log = buildLog;
+        return Path.Combine(docsFolder, folderName);
+    }
+
+    #endif
+
+    [Test]
+    [Category("API")]
+    #if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+    #endif
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
+    public void API_DoesNotHaveUndocumentedPublicTypes()
+    {
+        #if HAVE_DOCTOOLS_INSTALLED
+        var docsFolder = GenerateDocsDirectory(out _);
+        var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
+        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types, the docs are generated in {docsFolder}");
+        #endif
     }
 
     [Test]
     [Category("API")]
-#if UNITY_EDITOR_OSX
+    #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
-#endif
-    public void API_DoesNotHaveUndocumentedPublicTypes()
+    #endif
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
+    public void API_DocsDoNotHaveXMLDocErrors()
     {
-        var docsFolder = GenerateDocsDirectory();
-        var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
-        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types.");
+        #if HAVE_DOCTOOLS_INSTALLED
+        GenerateDocsDirectory(out var log);
+        var lines = log.Split('\n');
+        Assert.That(lines.Where(l => l.Contains("Badly formed XML")), Is.Empty);
+        Assert.That(lines.Where(l => l.Contains("Invalid cref")), Is.Empty);
+        #endif
     }
 
     [Test]
     [Category("API")]
     [Ignore("Still needs a lot of documentation work to happen")]
+    #if !HAVE_DOCTOOLS_INSTALLED
+    //[Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
     public void API_DoesNotHaveUndocumentedPublicMethods()
     {
-        var docsFolder = GenerateDocsDirectory();
+        #if HAVE_DOCTOOLS_INSTALLED
+        var docsFolder = GenerateDocsDirectory(out _);
         var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
+        #endif
     }
 
     private static HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
@@ -554,8 +615,9 @@ class APIVerificationTests
         Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
 
+        #if HAVE_DOCTOOLS_INSTALLED
         // Ensure the links are actually valid.
-        var docsFolder = GenerateDocsDirectory();
+        var docsFolder = GenerateDocsDirectory(out _);
         var brokenHelpUrls =
             monoBehaviourTypesHelpUrls.Where(
                 s =>
@@ -577,6 +639,7 @@ class APIVerificationTests
                 });
 
         Assert.That(brokenHelpUrls, Is.Empty);
+        #endif
     }
 
     private const string kAPIDirectory = "Tools/API";
@@ -710,7 +773,12 @@ class APIVerificationTests
         public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Started(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>));
         public static UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax AddBinding(UnityEngine.InputSystem.InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
         public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
+        public static void DisableDevice(UnityEngine.InputSystem.InputDevice device);
+        public InputEventBuffer(Unity.Collections.NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1) {}
+        public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
+        public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(UnityEngine.Rect rect);")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
@@ -729,6 +797,11 @@ class APIVerificationTests
                 .Where(t => t.StartsWith(lastReleasedVersion.ToString())).SelectMany(t => t.Split(new[] { "\n", "\r\n", "\r" },
                     StringSplitOptions.None)).ToArray();
 
+        var scopedExclusions = TestContext.CurrentContext.Test.Properties[ScopedExclusionPropertyAttribute.ScopedExclusions].OfType<ScopedExclusion>()
+            .Where(s => s.Version == lastReleasedVersion.ToString())
+            .ToArray();
+
+
         if (currentVersion.Major == lastReleasedVersion.Major)
         {
             Unity.Coding.Editor.ApiScraping.ApiScraping.Scrape();
@@ -740,13 +813,14 @@ class APIVerificationTests
                 Is.Empty,
                 "Any API file existing for the last published release must also exist for the current one.");
 
-            var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions))
+            var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions, scopedExclusions))
                 .ToList();
             Assert.That(missingLines, Is.Empty);
         }
     }
 
-    private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions)
+    private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions,
+        ScopedExclusion[] scopedExclusions)
     {
         var oldApiFile = lastPublicApiFiles.First(p => Path.GetFileName(p) == apiFile);
         var newApiFile = currentApiFiles.First(p => Path.GetFileName(p) == apiFile);
@@ -754,9 +828,20 @@ class APIVerificationTests
         var oldApiContents = File.ReadAllLines(oldApiFile).Select(FilterIgnoredChanges).ToArray();
         var newApiContents = File.ReadAllLines(newApiFile).Select(FilterIgnoredChanges).ToArray();
 
-        foreach (var line in oldApiContents)
+        var scopeStack = new List<string>();
+        for (var i = 0; i < oldApiContents.Length; i++)
         {
-            if (!newApiContents.Contains(line) && !exclusions.Any(x => x.Trim() == line.Trim()))
+            var line = oldApiContents[i];
+            if (line.Trim().StartsWith("{"))
+            {
+                scopeStack.Add(oldApiContents[i - 1]);
+            }
+            else if (line.Trim().StartsWith("}"))
+            {
+                scopeStack.RemoveAt(scopeStack.Count - 1);
+            }
+
+            if (!newApiContents.Contains(line) && !exclusions.Any(x => x.Trim() == line.Trim()) && !scopedExclusions.Any(s => s.IsMatch(scopeStack, line)))
                 yield return line;
         }
     }
@@ -792,23 +877,71 @@ class APIVerificationTests
         }
     }
 
-    #endif // UNITY_EDITOR_WIN
+    internal readonly struct ScopedExclusion
+    {
+        public ScopedExclusion(string version, string ns, string type, string method)
+        {
+            Version = version;
+            Namespace = ns;
+            Type = type;
+            Method = method;
+        }
+
+        public string Version { get; }
+        public string Namespace { get; }
+        public string Type { get; }
+        public string Method { get; }
+
+        public bool IsMatch(List<string> scopeStack, string method)
+        {
+            var namespaceScope = string.Empty;
+            var typeScope = string.Empty;
+
+            for (var i = scopeStack.Count - 1; i >= 0; i--)
+            {
+                if (scopeStack[i].StartsWith("namespace"))
+                    namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1);
+                else
+                    typeScope = scopeStack[i].Trim();
+            }
+
+            return namespaceScope == Namespace && typeScope == Type && method.Trim() == Method;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public class ScopedExclusionPropertyAttribute : PropertyAttribute
+    {
+        public const string ScopedExclusions = "ScopedExclusions";
+
+        public ScopedExclusionPropertyAttribute(string version, string ns, string type, string method)
+        {
+            Properties.Add(ScopedExclusions, new ScopedExclusion(version, ns, type, method));
+        }
+    }
+
+#endif // UNITY_EDITOR_WIN
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
     ////      be great to have some way of diagnosing links that have gone stale
     [Test]
     [Category("API")]
-#if UNITY_EDITOR_OSX
+    #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
-#endif
+    #endif
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
     public void API_DocumentationManualDoesNotHaveMissingInternalLinks()
     {
-        var docsFolder = GenerateDocsDirectory();
+        #if HAVE_DOCTOOLS_INSTALLED
+        var docsFolder = GenerateDocsDirectory(out _);
         var unresolvedLinks = new List<string>();
         var htmlFileCache = new Dictionary<string, HtmlDocument>();
         foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
             CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
         Assert.That(unresolvedLinks, Is.Empty);
+        #endif
     }
 
     [Test]
@@ -820,7 +953,7 @@ class APIVerificationTests
         var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
 
         // Add files here if you want to ignore them being unreferenced.
-        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml", "InteractionsDiagram.sdxml" };
+        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml", "InputArchitectureHighLevel.sdxml", "InteractionsDiagram.sdxml" };
 
         var missingImages = false;
         var unusedImages = false;

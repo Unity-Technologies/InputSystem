@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.TestTools.Utils;
 
-internal class AndroidTests : InputTestFixture
+internal class AndroidTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]

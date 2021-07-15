@@ -40,12 +40,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             base.OnActivate(searchContext, rootElement);
             InputSystem.onSettingsChange += OnSettingsChange;
+            Undo.undoRedoPerformed += OnUndoRedo;
         }
 
         public override void OnDeactivate()
         {
             base.OnDeactivate();
             InputSystem.onSettingsChange -= OnSettingsChange;
+            Undo.undoRedoPerformed -= OnUndoRedo;
         }
 
         public void Dispose()
@@ -73,8 +75,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(string searchContext)
         {
-            if (m_Settings == null)
-                InitializeWithCurrentSettings();
+            InitializeWithCurrentSettingsIfNecessary();
 
             if (m_AvailableInputSettingsAssets.Length == 0)
             {
@@ -126,9 +127,18 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_SupportedDevices.DoLayoutList();
 
+                EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                m_iOSProvider.OnGUI();
+
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
+        }
+
+        private static void ShowPlatformSettings()
+        {
+            // Would be nice to get BuildTargetDiscovery.GetBuildTargetInfoList since that contains information about icons etc
         }
 
         private static void CreateNewSettingsAsset(string relativePath)
@@ -171,6 +181,14 @@ namespace UnityEngine.InputSystem.Editor
             CreateNewSettingsAsset(relativePath);
         }
 
+        private void InitializeWithCurrentSettingsIfNecessary()
+        {
+            if (InputSystem.settings == m_Settings && m_Settings != null && m_SettingsDirtyCount == EditorUtility.GetDirtyCount(m_Settings))
+                return;
+
+            InitializeWithCurrentSettings();
+        }
+
         /// <summary>
         /// Grab <see cref="InputSystem.settings"/> and set it up for editing.
         /// </summary>
@@ -181,6 +199,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // See which is the active one.
             m_Settings = InputSystem.settings;
+            m_SettingsDirtyCount = EditorUtility.GetDirtyCount(m_Settings);
             var currentSettingsPath = AssetDatabase.GetAssetPath(m_Settings);
             if (string.IsNullOrEmpty(currentSettingsPath))
             {
@@ -217,7 +236,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (name.EndsWith(".inputsettings"))
                     name = name.Substring(0, name.Length - ".inputsettings".Length);
 
-                // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+                // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
                 m_AvailableSettingsAssetsOptions[i] = new GUIContent(name.Replace("/", "\u29f8"));
             }
 
@@ -298,9 +317,11 @@ namespace UnityEngine.InputSystem.Editor
                         GUI.Label(iconRect, icon);
                     }
 
-                    EditorGUI.LabelField(rect, m_Settings.supportedDevices[index]);
+                    EditorGUI.LabelField(rect, layoutName);
                 }
             };
+
+            m_iOSProvider = new InputSettingsiOSProvider(m_SettingsObject);
         }
 
         private void Apply()
@@ -308,13 +329,20 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(m_Settings != null);
 
             m_SettingsObject.ApplyModifiedProperties();
+            m_SettingsObject.Update();
             m_Settings.OnChange();
+        }
+
+        private void OnUndoRedo()
+        {
+            if (m_Settings != null && EditorUtility.GetDirtyCount(m_Settings) != m_SettingsDirtyCount)
+                m_Settings.OnChange();
+            InitializeWithCurrentSettingsIfNecessary();
         }
 
         private void OnSettingsChange()
         {
-            if (InputSystem.settings != m_Settings)
-                InitializeWithCurrentSettings();
+            InitializeWithCurrentSettingsIfNecessary();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
             Repaint();
@@ -333,6 +361,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputSettings m_Settings;
         [SerializeField] private bool m_SettingsIsNotAnAsset;
 
+        [NonSerialized] private int m_SettingsDirtyCount;
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
@@ -355,18 +384,20 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
-        GUIContent m_UpdateModeContent;
-        GUIContent m_FilterNoiseOnCurrentContent;
-        GUIContent m_CompensateForScreenOrientationContent;
-        GUIContent m_DefaultDeadzoneMinContent;
-        GUIContent m_DefaultDeadzoneMaxContent;
-        GUIContent m_DefaultButtonPressPointContent;
-        GUIContent m_ButtonReleaseThresholdContent;
-        GUIContent m_DefaultTapTimeContent;
-        GUIContent m_DefaultSlowTapTimeContent;
-        GUIContent m_DefaultHoldTimeContent;
-        GUIContent m_TapRadiusContent;
-        GUIContent m_MultiTapDelayTimeContent;
+        private GUIContent m_UpdateModeContent;
+        private GUIContent m_FilterNoiseOnCurrentContent;
+        private GUIContent m_CompensateForScreenOrientationContent;
+        private GUIContent m_DefaultDeadzoneMinContent;
+        private GUIContent m_DefaultDeadzoneMaxContent;
+        private GUIContent m_DefaultButtonPressPointContent;
+        private GUIContent m_ButtonReleaseThresholdContent;
+        private GUIContent m_DefaultTapTimeContent;
+        private GUIContent m_DefaultSlowTapTimeContent;
+        private GUIContent m_DefaultHoldTimeContent;
+        private GUIContent m_TapRadiusContent;
+        private GUIContent m_MultiTapDelayTimeContent;
+
+        [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 
         private static InputSettingsProvider s_Instance;
 

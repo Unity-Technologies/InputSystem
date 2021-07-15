@@ -8,6 +8,8 @@ In the Input System, each [`InputUser`](../api/UnityEngine.InputSystem.Users.Inp
 
 The [`PlayerInputManager`](Components.md#playerinputmanager-component) class uses [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) internally to handle users.
 
+>__Note__: In the editor, all `InputUser` instances are automatically removed when exiting play mode thus also removing any device pairings. In essence, `InputUser` is considered a player-only API.
+
 ## Device pairing
 
 You can use the [`InputUser.PerformPairingWithDevice`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_PerformPairingWithDevice_UnityEngine_InputSystem_InputDevice_UnityEngine_InputSystem_Users_InputUser_UnityEngine_InputSystem_Users_InputUserPairingOptions_) method to create a new [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) instance and pair it with an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html). You can also optionally pass in an existing [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) instance to pair it with the Device, if you don't want to create a new user instance.

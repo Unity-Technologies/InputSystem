@@ -19,7 +19,11 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
         [InputControl(name = "leftStick", offset = 0)]
         [InputControl(name = "rightStick", offset = 8)]
         [InputControl(name = "leftStick/y", parameters = "invert")]
+        [InputControl(name = "leftStick/up", parameters = "invert")]
+        [InputControl(name = "leftStick/down", parameters = "invert=false")]
         [InputControl(name = "rightStick/y", parameters = "invert")]
+        [InputControl(name = "rightStick/up", parameters = "invert")]
+        [InputControl(name = "rightStick/down", parameters = "invert=false")]
         // All the buttons we need to bump from single bits to full floats and reset bit offsets.
         [InputControl(name = "buttonSouth", offset = ButtonOffset + 0 * 4, bit = 0, format = "FLT")]
         [InputControl(name = "buttonEast", offset = ButtonOffset + 1 * 4, bit = 0, format = "FLT")]

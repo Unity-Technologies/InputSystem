@@ -98,3 +98,12 @@ To force the Editor to add all locally available Devices, even if they're not in
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 
 This setting is stored as a user setting (that is, other users who open the same Project can't see the setting).
+
+## Platform-specific settings
+
+### iOS/tvOS
+
+![iOSSettings](Images/iOSSettings.png)
+
+* __Motion Usage__<br>
+  Governs access to the [pedometer](Sensors.md# on the device. If enabled, the __Description__ string supplied in the settings will be added to the application's Info.plist

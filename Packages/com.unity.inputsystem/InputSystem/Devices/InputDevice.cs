@@ -244,6 +244,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
+                ////TODO: make this a flag and query only once; also, allow C# devices to just set the flag directly and not perform an IOCTL at all
                 var command = QueryCanRunInBackground.Create();
                 if (ExecuteCommand(ref command) >= 0)
                     return command.canRunInBackground;
@@ -431,7 +432,7 @@ namespace UnityEngine.InputSystem
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
-        internal void OnConfigurationChanged()
+        internal void NotifyConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
@@ -442,6 +443,8 @@ namespace UnityEngine.InputSystem
 
             // Make sure we fetch the enabled/disabled state again.
             m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+
+            OnConfigurationChanged();
         }
 
         /// <summary>
@@ -501,6 +504,24 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device configuration is changed. This happens when the backend sends
+        /// a <see cref="DeviceConfigurationEvent"/> for the device.
+        /// </summary>
+        /// <remarks>
+        /// This method can be used to flush out cached information. An example of where this happens is <see cref="Controls.KeyControl"/>
+        /// caching information about the display name of a control. As this depends on the current keyboard layout, the information
+        /// has to be fetched dynamically (this happens using <see cref="QueryKeyNameCommand"/>). Whenever the keyboard layout changes,
+        /// the system sends a <see cref="DeviceConfigurationEvent"/> for the <see cref="Keyboard"/> at which point the device flushes
+        /// all cached key names.
+        /// </remarks>
+        /// <seealso cref="InputManager.OnUpdate"/>
+        /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
+        /// <seealso cref="OnConfigurationChanged"/>///
+        protected virtual void OnConfigurationChanged()
+        {
+        }
+
         ////TODO: add overridable OnDisable/OnEnable that fire the device commands
 
         ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
@@ -515,24 +536,40 @@ namespace UnityEngine.InputSystem
         /// the device API. This is most useful for devices implemented in the native Unity runtime
         /// which, through the command interface, may provide custom, device-specific functions.
         ///
-        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396"
-        /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
-        /// target="_blank">ioctl</a> on UNIX-like systems.
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// on UNIX-like systems.
         /// </remarks>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
-            var callbacks = manager.m_DeviceCommandCallbacks;
-            for (var i = 0; i < callbacks.length; ++i)
+            manager.m_DeviceCommandCallbacks.LockForChanges();
+            for (var i = 0; i < manager.m_DeviceCommandCallbacks.length; ++i)
             {
-                var result = callbacks[i](this, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
-                if (result.HasValue)
-                    return result.Value;
+                try
+                {
+                    var result = manager.m_DeviceCommandCallbacks[i](this, commandPtr);
+                    if (result.HasValue)
+                        return result.Value;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onDeviceCommand' callbacks");
+                    Debug.LogException(exception);
+                }
             }
+            manager.m_DeviceCommandCallbacks.UnlockForChanges();
 
-            return InputRuntime.s_Instance.DeviceCommand(deviceId, ref command);
+            return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+        }
+
+        protected virtual unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
+        {
+            return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);
         }
 
         [Flags]
@@ -597,18 +634,21 @@ namespace UnityEngine.InputSystem
 
         internal static uint EncodeStateOffsetToControlMapEntry(uint controlIndex, uint stateOffsetInBits, uint stateSizeInBits)
         {
-            Debug.Assert(controlIndex < (1 << kControlIndexBits), "Control index beyond what is supported");
-            Debug.Assert(stateOffsetInBits < (1 << kStateOffsetBits), "State offset beyond what is supported");
-            Debug.Assert(stateSizeInBits < (1 << kStateSizeBits), "State size beyond what is supported");
+            Debug.Assert(kControlIndexBits < 32, $"Expected kControlIndexBits < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert(kStateOffsetBits < 32, $"Expected kStateOffsetBits < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert(kStateSizeBits < 32, $"Expected kStateSizeBits < 32, so we fit into the 32 bit wide bitmask");
+            Debug.Assert(controlIndex < (1U << kControlIndexBits), "Control index beyond what is supported");
+            Debug.Assert(stateOffsetInBits < (1U << kStateOffsetBits), "State offset beyond what is supported");
+            Debug.Assert(stateSizeInBits < (1U << kStateSizeBits), "State size beyond what is supported");
             return stateOffsetInBits << (kControlIndexBits + kStateSizeBits) | stateSizeInBits << kControlIndexBits | controlIndex;
         }
 
         internal static void DecodeStateOffsetToControlMapEntry(uint entry, out uint controlIndex,
             out uint stateOffset, out uint stateSize)
         {
-            controlIndex = entry & (1 << kControlIndexBits) - 1;
+            controlIndex = entry & (1U << kControlIndexBits) - 1;
             stateOffset = entry >> (kControlIndexBits + kStateSizeBits);
-            stateSize = (entry >> kControlIndexBits) & (((1 << (kControlIndexBits + kStateSizeBits)) - 1) >> kControlIndexBits);
+            stateSize = (entry >> kControlIndexBits) & (((1U << (kControlIndexBits + kStateSizeBits)) - 1) >> kControlIndexBits);
         }
 
         // NOTE: We don't store processors in a combined array the same way we do for

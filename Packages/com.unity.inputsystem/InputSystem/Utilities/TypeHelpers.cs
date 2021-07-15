@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Utilities
             return null;
         }
 
-        public static string GetNiceTypeName(Type type)
+        public static string GetNiceTypeName(this Type type)
         {
             if (type.IsPrimitive)
             {

@@ -403,16 +403,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnFingerDown.AppendWithCapacity(value);
+                s_OnFingerDown.AddCallback(value);
             }
             remove
             {
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnFingerDown.IndexOf(value);
-                if (index != -1)
-                    s_OnFingerDown.RemoveAtWithCapacity(index);
+                s_OnFingerDown.RemoveCallback(value);
             }
         }
 
@@ -429,16 +427,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnFingerUp.AppendWithCapacity(value);
+                s_OnFingerUp.AddCallback(value);
             }
             remove
             {
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnFingerUp.IndexOf(value);
-                if (index != -1)
-                    s_OnFingerUp.RemoveAtWithCapacity(index);
+                s_OnFingerUp.RemoveCallback(value);
             }
         }
 
@@ -456,16 +452,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnFingerMove.AppendWithCapacity(value);
+                s_OnFingerMove.AddCallback(value);
             }
             remove
             {
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnFingerMove.IndexOf(value);
-                if (index != -1)
-                    s_OnFingerMove.RemoveAtWithCapacity(index);
+                s_OnFingerMove.RemoveCallback(value);
             }
         }
 
@@ -565,8 +559,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
             #endif
 
-            ++s_PlayerState.updateStepCount;
-
             // If we have any touches in activeTouches that are ended or canceled,
             // we need to clear them in the next frame.
             if (s_PlayerState.haveActiveTouchesNeedingRefreshNextUpdate)
@@ -578,9 +570,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         internal static InlinedArray<Touchscreen> s_Touchscreens;
         internal static int s_HistoryLengthPerFinger = 64;
-        internal static InlinedArray<Action<Finger>> s_OnFingerDown;
-        internal static InlinedArray<Action<Finger>> s_OnFingerMove;
-        internal static InlinedArray<Action<Finger>> s_OnFingerUp;
+        internal static CallbackArray<Action<Finger>> s_OnFingerDown;
+        internal static CallbackArray<Action<Finger>> s_OnFingerMove;
+        internal static CallbackArray<Action<Finger>> s_OnFingerUp;
 
         internal static FingerAndTouchState s_PlayerState;
         #if UNITY_EDITOR
@@ -598,7 +590,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         internal struct FingerAndTouchState
         {
             public InputUpdateType updateMask;
-            public uint updateStepCount;
             public Finger[] fingers;
             public Finger[] activeFingers;
             public Touch[] activeTouches;
@@ -691,7 +682,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 }
                 activeTouchCount = 0;
                 haveActiveTouchesNeedingRefreshNextUpdate = false;
-                var currentUpdateStepCount = s_PlayerState.updateStepCount;
+                var currentUpdateStepCount = InputUpdate.s_UpdateStepCount;
 
                 ////OPTIMIZE: Handle touchscreens that have no activity more efficiently
                 ////FIXME: This is sensitive to history size; we probably need to ensure that the Begans and Endeds/Canceleds of touches are always available to us

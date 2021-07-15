@@ -177,6 +177,36 @@ internal partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1272563/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformInteractiveRebinding_OfPartOfComposite()
+    {
+        var action = new InputAction();
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        // The expected control type shouldn't get in the way. What matters is that the code
+        // identifies the expected type of the *part binding* as the one we need, not the
+        // type of the action in this case.
+        action.expectedControlType = "Vector2";
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        using (new InputActionRebindingExtensions.RebindingOperation()
+               .WithAction(action)
+               .WithTargetBinding(1)
+               .Start())
+        {
+            PressAndRelease(keyboard.spaceKey);
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.spaceKey, keyboard.sKey, keyboard.aKey, keyboard.dKey }));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -622,6 +652,35 @@ internal partial class CoreTests
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
+        }
+    }
+
+    // Tests that controls with discrete actuations successfully rebind when the control is already
+    // actuated when rebinding begins.
+    // https://fogbugz.unity3d.com/f/cases/1317225/
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_WhenDiscreteControlAlreadyPressed_RebindWorksOnNextActuation()
+    {
+        var action = new InputAction(binding: "<Keyboard>/n");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Press(keyboard.spaceKey);
+
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
+                   .WithMatchingEventsBeingSuppressed()
+                   .Start())
+        {
+            Release(keyboard.spaceKey);
+
+            Assert.That(rebind.completed, Is.False);
+            Assert.That(rebind.candidates, Is.Empty);
+
+            Press(keyboard.spaceKey);
+
+            Assert.That(rebind.completed, Is.True);
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Keyboard>/space"));
         }
     }
 

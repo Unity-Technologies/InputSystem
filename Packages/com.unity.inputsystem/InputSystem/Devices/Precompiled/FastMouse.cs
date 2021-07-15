@@ -226,6 +226,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Press")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -249,6 +250,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("LMB")
                 .WithLayout(kButtonLayout)
                 .WithUsages(4, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -272,6 +274,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("RMB")
                 .WithLayout(kButtonLayout)
                 .WithUsages(5, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -294,6 +297,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Middle Button")
                 .WithShortDisplayName("MMB")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -316,6 +320,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Forward")
                 .WithLayout(kButtonLayout)
                 .WithUsages(6, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -338,6 +343,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Back")
                 .WithLayout(kButtonLayout)
                 .WithUsages(7, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),

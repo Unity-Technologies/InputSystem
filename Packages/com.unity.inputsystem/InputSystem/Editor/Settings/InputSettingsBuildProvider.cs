@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Revert back to original state.
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
-            var index = preloadedAssets.IndexOfReference(m_SettingsAddedToPreloadedAssets);
+            var index = preloadedAssets.IndexOfReference<Object, Object>(m_SettingsAddedToPreloadedAssets);
             if (index != -1)
             {
                 ArrayHelpers.EraseAt(ref preloadedAssets, index);
