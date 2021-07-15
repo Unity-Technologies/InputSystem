@@ -71,8 +71,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
         [FieldOffset(0)]
         private NativeInputEventBurstFriendly m_Event;
-        
-        [StructLayout(LayoutKind.Explicit, Size = 24 /* make burst happy */ )]
+
+        [StructLayout(LayoutKind.Explicit, Size = 24 /* make burst happy */)]
         internal struct NativeInputEventBurstFriendly
         {
             public const int structSize = 20;

@@ -4212,7 +4212,7 @@ partial class CoreTests
         InputSystem.RemoveDevice(pointer);
         Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
-    
+
     [Test]
     [Category("Devices")]
     [TestCase(false)]
@@ -4221,12 +4221,12 @@ partial class CoreTests
     {
         InputSystem.settings.disableMouseMoveCompression = disableMouseMoveCompression;
         var mouse = InputSystem.AddDevice<Mouse>();
-        
+
         using (var trace = new InputEventTrace(mouse))
         {
             trace.Enable();
             Assert.That(trace.enabled, Is.True);
-            
+
             InputSystem.QueueStateEvent(mouse,
                 new MouseState
                 {
@@ -4257,8 +4257,8 @@ partial class CoreTests
             // first event is always preserved as-is
             {
                 var index = 0;
-                
-                Assert.That(events[index].type, Is.EqualTo((FourCC) StateEvent.Type));
+
+                Assert.That(events[index].type, Is.EqualTo((FourCC)StateEvent.Type));
                 Assert.That(events[index].deviceId, Is.EqualTo(mouse.deviceId));
                 Assert.That(events[index].time, Is.EqualTo(1).Within(0.000001));
                 Assert.That(events[index].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<MouseState>()));
@@ -4272,8 +4272,8 @@ partial class CoreTests
             if (disableMouseMoveCompression)
             {
                 var index = 1;
-                
-                Assert.That(events[index].type, Is.EqualTo((FourCC) StateEvent.Type));
+
+                Assert.That(events[index].type, Is.EqualTo((FourCC)StateEvent.Type));
                 Assert.That(events[index].deviceId, Is.EqualTo(mouse.deviceId));
                 Assert.That(events[index].time, Is.EqualTo(2).Within(0.000001));
                 Assert.That(events[index].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<MouseState>()));
@@ -4287,7 +4287,7 @@ partial class CoreTests
             {
                 var index = disableMouseMoveCompression ? 2 : 1;
 
-                Assert.That(events[index].type, Is.EqualTo((FourCC) StateEvent.Type));
+                Assert.That(events[index].type, Is.EqualTo((FourCC)StateEvent.Type));
                 Assert.That(events[index].deviceId, Is.EqualTo(mouse.deviceId));
                 Assert.That(events[index].time, Is.EqualTo(3).Within(0.000001));
                 Assert.That(events[index].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<MouseState>()));

@@ -2556,7 +2556,7 @@ namespace UnityEngine.InputSystem
                 m_HaveSentStartupAnalytics = true;
             }
             #endif
-            
+
             // See if we're supposed to only take events up to a certain time.
             // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
             //       all events in the buffer each time. Note that if there are multiple events for the same
@@ -2566,7 +2566,7 @@ namespace UnityEngine.InputSystem
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
             var timesliceEvents = shouldProcessInputEvents && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
-            
+
             // mouse move compression will modify event buffer in-place
             if (!settings.disableMouseMoveCompression)
                 CompressMouseMoveEvents.ProcessEvents(updateType, timesliceEvents ? currentTime : -1.0f, ref eventBuffer);

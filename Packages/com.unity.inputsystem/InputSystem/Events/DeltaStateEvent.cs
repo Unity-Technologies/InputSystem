@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.LowLevel
     public unsafe struct DeltaStateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x444C5441; // 'DLTA'
-        
+
         internal const int kDeltaStateEventSize = InputEvent.kBaseEventSize + sizeof(int) + sizeof(uint);
 
         [FieldOffset(0)]

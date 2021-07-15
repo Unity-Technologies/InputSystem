@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem
             var eventToProcessCount = eventCount;
             for (var i = 0; i < eventCount; ++i)
             {
-                eventPtrs[i] = (IntPtr) currentEvent;
+                eventPtrs[i] = (IntPtr)currentEvent;
 
                 if (currentEvent->type == DeltaStateEvent.Type)
                 {
@@ -102,9 +102,9 @@ namespace UnityEngine.InputSystem
                     break;
                 }
             }
-            eventPtrs[eventToProcessCount] = (IntPtr) currentEvent; // Remember the end pointer, will make life easier later.
+            eventPtrs[eventToProcessCount] = (IntPtr)currentEvent;  // Remember the end pointer, will make life easier later.
 
-            // Step 2: compress move events in-place, mark redundant events for skipping 
+            // Step 2: compress move events in-place, mark redundant events for skipping
             NativeMouseStateBurstFriendly* previousState = null;
             var previousStateIndex = 0;
             var skipEvent = new NativeArray<bool>(eventToProcessCount, Allocator.Temp);
@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem
                     var stateEvent = StateEvent.FromUnchecked(currentEvent);
                     if (stateEvent->stateFormat == MouseState.Format)
                     {
-                        currentState = (NativeMouseStateBurstFriendly*) stateEvent->state;
+                        currentState = (NativeMouseStateBurstFriendly*)stateEvent->state;
                     }
                 }
 
@@ -151,7 +151,7 @@ namespace UnityEngine.InputSystem
                         // So now if we have a button action on left button it would trigger on timestamp=4 instead of timestamp=2.
                         // Which is suboptimal because we pretend like mouse press was happening much later in time.
                         // A more robust way would be to read device state and compare to that, but that's involves too much poking and device tracking.
-                        // A compromise is to always preserve first event and base from it, so we will end up with: 
+                        // A compromise is to always preserve first event and base from it, so we will end up with:
                         //   t=2,left_btn=1,dx=10                          t=4,left_btn=1,dx=50
                         // This way any potential mouse press/release/etc will be correctly reported, and the rest of events compressed.
                         // Paying price of one event for this simplicity is a reasonable tradeoff at this point.
@@ -201,7 +201,7 @@ namespace UnityEngine.InputSystem
                 //   0123456789a
                 //   pppssssppps
                 //   ---^---^--^
-                // Then we jump and i becomes 10. 
+                // Then we jump and i becomes 10.
 
                 // find how many events to skip first
                 var toSkip = 1;
@@ -222,9 +222,9 @@ namespace UnityEngine.InputSystem
                 }
 
                 // do the actual moving
-                var dst = (byte*) eventPtrs[i];
-                var src = (byte*) eventPtrs[i + toSkip];
-                var next = (byte*) eventPtrs[i + toSkip + toMove];
+                var dst = (byte*)eventPtrs[i];
+                var src = (byte*)eventPtrs[i + toSkip];
+                var next = (byte*)eventPtrs[i + toSkip + toMove];
                 var skipLength = src - dst;
                 var moveLength = next - src;
                 if (moveLength > 0)

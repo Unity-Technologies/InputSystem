@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.LowLevel
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
         public const int Type = 0x53544154; // 'STAT'
-        
+
         internal const int kStateEventSize = InputEvent.kBaseEventSize + sizeof(int);
 
         [FieldOffset(0)]

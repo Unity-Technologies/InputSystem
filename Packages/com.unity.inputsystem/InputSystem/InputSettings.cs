@@ -470,7 +470,7 @@ namespace UnityEngine.InputSystem
                 OnChange();
             }
         }
-        
+
         /// <summary>
         /// Disables mouse move compression. Disable it if you want to get all mouse move events.
         /// </summary>
