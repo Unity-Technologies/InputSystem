@@ -98,6 +98,11 @@ namespace UnityEngine.InputSystem.UI
         /// to this are touches as a <see cref="Touchscreen"/> may have multiple pointers (one for each active
         /// finger). For touch, you can use the <see cref="TouchControl.touchId"/> of the touch.
         ///
+        /// Note that for touch, a pointer will stay valid for one frame before being removed. In other words,
+        /// when <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/> is received for a touch
+        /// and the touch was over a <c>GameObject</c>, the associated pointer is still considered over that
+        /// object for the frame in which the touch ended.
+        ///
         /// To check whether any pointer is over a <c>GameObject</c>, simply pass a negative value such as -1.</param>
         /// <returns>True if the given pointer is currently hovering over a <c>GameObject</c>.</returns>
         /// <remarks>
@@ -298,8 +303,6 @@ namespace UnityEngine.InputSystem.UI
 
             ProcessPointerButton(ref state.middleButton, eventData);
             ProcessPointerButtonDrag(ref state.middleButton, eventData);
-
-            state.OnFrameFinished();
         }
 
         // if we are using a IPlayerInputEventSystem, ignore any transforms
@@ -317,9 +320,9 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessPointerMovement(ref PointerModel pointer, ExtendedPointerEventData eventData)
         {
             var currentPointerTarget =
-                // If the pointer is a touch that was released this frame, we generate pointer-exit events
+                // If the pointer is a touch that was released the *previous* frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == UIPointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
+                (eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame) ||
                 (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
@@ -626,19 +629,19 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                // NOTE: Whereas we use callbacks for the other actions, we rely on WasReleasedThisFrame() for
-                //       submit and cancel. This makes their behavior consistent with pointer click behavior where
-                //       a click will register on button *up*. This nuance in behavior becomes important in
-                //       combination with action enable/disable changes in response to submit or cancel. If we
-                //       react to button *down* instead of *up*, the button *up* will come in *after* we have
-                //       applied the state change.
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPressedThisFrame() for
+                //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
+                //       a click will register on button *up*, but consistent with how other UI systems work where
+                //       click occurs on key press. This nuance in behavior becomes important in combination with
+                //       action enable/disable changes in response to submit or cancel. We react to button *down*
+                //       instead of *up*, so button *up* will come in *after* we have applied the state change.
                 var submitAction = m_SubmitAction?.action;
                 var cancelAction = m_CancelAction?.action;
 
                 var data = GetBaseEventData();
-                if (cancelAction != null && cancelAction.WasReleasedThisFrame())
+                if (cancelAction != null && cancelAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasReleasedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }
@@ -1297,7 +1300,7 @@ namespace UnityEngine.InputSystem.UI
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_OnActionControlsChanged.AppendWithCapacity(m_OnControlsChangedDelegate);
+            InputActionState.s_OnActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
 
             HookActions();
             EnableAllActions();
@@ -1307,9 +1310,7 @@ namespace UnityEngine.InputSystem.UI
         {
             base.OnDisable();
 
-            var i = InputActionState.s_OnActionControlsChanged.IndexOfReference(m_OnControlsChangedDelegate);
-            if (i != -1)
-                InputActionState.s_OnActionControlsChanged.RemoveAtWithCapacity(i);
+            InputActionState.s_OnActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
 
             DisableAllActions();
             UnhookActions();
@@ -1868,7 +1869,10 @@ namespace UnityEngine.InputSystem.UI
             }
             else
             {
+                // Navigation input.
                 ProcessNavigation(ref m_NavigationState);
+
+                // Pointer input.
                 for (var i = 0; i < m_PointerStates.length; i++)
                 {
                     ref var state = ref GetPointerStateForIndex(i);
@@ -1879,13 +1883,17 @@ namespace UnityEngine.InputSystem.UI
                     ProcessPointer(ref state);
 
                     // If it's a touch and the touch has ended, release the pointer state.
-                    // NOTE: We have no guarantee that the system reuses touch IDs so the touch ID we used
-                    //       as a pointer ID may be a one-off thing.
-                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed)
+                    // NOTE: We defer this by one frame such that OnPointerUp happens in the frame of release
+                    //       and OnPointerExit happens one frame later. This is so that IsPointerOverGameObject()
+                    //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
+                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
                         RemovePointerAtIndex(i);
                         --i;
+                        continue;
                     }
+
+                    state.OnFrameFinished();
                 }
             }
         }
