@@ -57,6 +57,23 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
+        /// Whether navigation events IMoveHandler, ISubmitHandler and ICancelHandler will be propagated up in hierarchy.
+        /// </summary>
+        /// <value>
+        /// If true, navigation events will also be recursively sent to parents of the on the currently selected object. 
+        /// Default is false.
+        /// </value>
+        /// <remarks>
+        /// By toggling this on, navigation events may be handled by UI elements higher up in the hierarchy, such as
+        /// closing a containing menu when the currently selected object is a button within it.
+        /// </remarks>
+        public bool propagateNavigationEvents
+        {
+            get => m_PropagateNavigationEvents;
+            set => m_PropagateNavigationEvents = value;
+        }
+
+        /// <summary>
         /// How to deal with the presence of pointer-type input from multiple devices.
         /// </summary>
         /// <remarks>
@@ -610,7 +627,14 @@ namespace UnityEngine.InputSystem.UI
                         eventData.moveVector = moveVector;
                         eventData.moveDir = moveDirection;
 
-                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                        if (m_PropagateNavigationEvents)
+                        {
+                            ExecuteEvents.ExecuteHierarchy(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                        }
+                        else
+                        {
+                            ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                        }
                         usedSelectionChange = eventData.used;
 
                         m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
@@ -640,9 +664,27 @@ namespace UnityEngine.InputSystem.UI
 
                 var data = GetBaseEventData();
                 if (cancelAction != null && cancelAction.WasPressedThisFrame())
-                    ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
+                {
+                    if (m_PropagateNavigationEvents)
+                    {
+                        ExecuteEvents.ExecuteHierarchy(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
+                    }
+                    else
+                    {
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
+                    }
+                }
                 if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
-                    ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
+                {
+                    if (m_PropagateNavigationEvents)
+                    {
+                        ExecuteEvents.ExecuteHierarchy(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
+                    }
+                    else
+                    {
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
+                    }
+                }
             }
         }
 
@@ -2036,6 +2078,7 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceOrientationAction;
 
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
+        [SerializeField] private bool m_PropagateNavigationEvents;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
 
         private static Dictionary<string, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<string, InputActionReferenceState>();
