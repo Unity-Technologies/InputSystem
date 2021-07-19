@@ -412,6 +412,66 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
+        /// <see cref="InputSystem.Update"/>.
+        /// </summary>
+        /// <remarks>
+        /// This setting establishes a bound on the amount of input event data processed in a single
+        /// update and thus limits throughput allowed for input. This prevents long stalls from
+        /// leading to long delays in input processing.
+        ///
+        /// When the limit is exceeded, all events remaining in the buffer are thrown away (the
+        /// <see cref="InputEventBuffer"/> is reset) and an error is logged. After that, the current
+        /// update will abort and early out.
+        ///
+        /// Setting this property to 0 or a negative value will disable the limit.
+        ///
+        /// The default value is 5MB.
+        /// </remarks>
+        /// <seealso cref="InputSystem.Update"/>
+        /// <see cref="InputEvent.sizeInBytes"/>
+        public int maxEventBytesPerUpdate
+        {
+            get => m_MaxEventBytesPerUpdate;
+            set
+            {
+                if (m_MaxEventBytesPerUpdate == value)
+                    return;
+                m_MaxEventBytesPerUpdate = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Upper limit on the number of <see cref="InputEvent"/>s that can be queued within one
+        /// <see cref="InputSystem.Update"/>.
+        /// <remarks>
+        /// This settings establishes an upper limit on the number of events that can be queued
+        /// using <see cref="InputSystem.QueueEvent"/> during a single update. This prevents infinite
+        /// loops where an action callback queues an event that causes the action callback to
+        /// be called again which queues an event...
+        ///
+        /// Note that this limit only applies while the input system is updating. There is no limit
+        /// on the number of events that can be queued outside of this time, but those will be queued
+        /// into the next frame where the <see cref="maxEventBytesPerUpdate"/> setting will apply.
+        ///
+        /// The default value is 1000.
+        /// </remarks>
+        /// </summary>
+        public int maxQueuedEventsPerUpdate
+        {
+            get => m_MaxQueuedEventsPerUpdate;
+            set
+            {
+                if (m_MaxQueuedEventsPerUpdate == value)
+                    return;
+
+                m_MaxQueuedEventsPerUpdate = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
         /// <remarks>
@@ -464,6 +524,8 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
+        [SerializeField] private int m_MaxEventBytesPerUpdate = 5 * 1024 * 1024;
+        [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
