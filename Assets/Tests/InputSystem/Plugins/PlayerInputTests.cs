@@ -781,6 +781,85 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
     }
 
+    // Similar to PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer() and 
+    // PlayerInput_AutoSwitchingControlSchemesInSinglePlayer_CanBeDisabled() but verifies the
+    // scenario when auto-switching is enabled after initial assignment attempt has taken
+    // place
+    // Related to https://fogbugz.unity3d.com/f/cases/1240924/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer_IfChangingAutoSwitchAfterInitialActivation()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.neverAutoSwitchControlSchemes = true;
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);  // trigger
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        playerInput.neverAutoSwitchControlSchemes = false;
+        Press(gamepad.buttonSouth);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            ////TODO: reduce the steps in which PlayerInput updates the data to result in fewer re-resolves
+            new Message("OnControlsChanged", playerInput), // Initial resolve.
+            new Message("OnControlsChanged", playerInput), // Control scheme switch.
+            new Message("OnFire", 1f)
+        }));
+    }
+
+    // Similar to PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer() and 
+    // PlayerInput_AutoSwitchingControlSchemesInSinglePlayer_CanBeDisabled() but verifies the
+    // scenario when auto-switching is enabled after initial assignment attempt has failed
+    // Related to https://fogbugz.unity3d.com/f/cases/1240924/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer_IfNotInitiallyActivated()
+    {
+        InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.neverAutoSwitchControlSchemes = true;
+        playerInput.defaultControlScheme = "Gamepad";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);  // trigger
+
+        // Default control scheme set in combination with neverAutoSwitchControlSchemes = true
+        // implies that only Gamepad control scheme may be considered, but not currently
+        // finding any device available on the system.
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo(null));
+        Assert.That(playerInput.devices.Count, Is.EqualTo(0));
+
+        // Note: Adding device matching enforced control scheme
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Press(gamepad.buttonSouth);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", playerInput), // Initial resolve.
+            new Message("OnControlsChanged", playerInput), // Control scheme switch.
+            new Message("OnFire", 1f)
+        }));
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1232039/
     [Test]
     [Category("PlayerInput")]
@@ -1165,6 +1244,7 @@ internal class PlayerInputTests : CoreTestsFixture
     [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
     [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerInputEventListener), true)]
     [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerInputCSharpEventListener), true)]
+    // [TestCase(PlayerNotifications.SendMessages, typeof(PlayerInputCSharpEventListener), true)] // https://jira.unity3d.com/browse/ISX-667
     public void PlayerInput_CanReceiveNotificationWhenActionIsTriggered(PlayerNotifications notificationBehavior, Type listenerType, bool receivesAllPhases = false)
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

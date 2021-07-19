@@ -401,6 +401,9 @@ namespace UnityEngine.InputSystem
         ///
         /// By setting this property to true, auto-switching of control schemes is forcibly turned off and
         /// will thus not be performed even if there is only a single PlayerInput in the game.
+        /// 
+        /// Note that even if this property is set to true, initial assignment of a control scheme
+        /// occurrs as if this property was false. Only subsequent switching is prohibited.
         ///
         /// Note that you can still switch control schemes manually using <see
         /// cref="SwitchCurrentControlScheme(string,InputDevice[])"/>.
@@ -1344,11 +1347,11 @@ namespace UnityEngine.InputSystem
             // If we have control schemes, try to find the one we should use.
             if (m_Actions.controlSchemes.Count > 0)
             {
-                if (!string.IsNullOrEmpty(s_InitControlScheme))
+                var hasInitControlScheme = !string.IsNullOrEmpty(s_InitControlScheme);
+                if (hasInitControlScheme)
                 {
                     // We've been given a control scheme to initialize this. Try that one and
                     // that one only. Might mean we end up with missing devices.
-
                     var controlScheme = m_Actions.FindControlScheme(s_InitControlScheme);
                     if (controlScheme == null)
                     {
@@ -1374,29 +1377,33 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                // If we did not end up with a usable scheme by now but we've been given devices to pair with,
-                // search for a control scheme matching the given devices.
-                if (s_InitPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
+                // If we did not end up with a usable scheme by now.
+                // Allow switching control scheme only if not previously assigned and auto-switching is allowed
+                var mayAutoSwitch = !hasInitControlScheme && (!m_NeverAutoSwitchControlSchemes || string.IsNullOrEmpty(m_DefaultControlScheme));
+                if (mayAutoSwitch && (!m_InputUser.valid || m_InputUser.controlScheme == null))
                 {
-                    // The devices we've been given may not be all the devices required to satisfy a given control scheme so we
-                    // want to pick any one control scheme that is the best match for the devices we have regardless of whether
-                    // we'll need additional devices. TryToActivateControlScheme will take care of that.
-                    var controlScheme = InputControlScheme.FindControlSchemeForDevices(
-                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes,
-                        allowUnsuccesfulMatch: true);
-                    if (controlScheme != null)
-                        TryToActivateControlScheme(controlScheme.Value);
-                }
-                // If we don't have a working control scheme by now and we haven't been instructed to use
-                // one specific control scheme, try each one in the asset one after the other until we
-                // either find one we can use or run out of options.
-                else if ((!m_InputUser.valid || m_InputUser.controlScheme == null) && string.IsNullOrEmpty(s_InitControlScheme))
-                {
-                    using (var availableDevices = InputUser.GetUnpairedInputDevices())
+                    // If we've been given devices to pair with, search for a control scheme matching the given devices.
+                    if (s_InitPairWithDevicesCount > 0)
                     {
-                        var controlScheme = InputControlScheme.FindControlSchemeForDevices(availableDevices, m_Actions.controlSchemes);
+                        // The devices we've been given may not be all the devices required to satisfy a given control scheme so we
+                        // want to pick any one control scheme that is the best match for the devices we have regardless of whether
+                        // we'll need additional devices. TryToActivateControlScheme will take care of that.
+                        var controlScheme = InputControlScheme.FindControlSchemeForDevices(
+                            new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes,
+                            allowUnsuccesfulMatch: true);
                         if (controlScheme != null)
                             TryToActivateControlScheme(controlScheme.Value);
+                    }
+                    // If we haven't been instructed to use one specific control scheme, try each one in
+                    // the asset one after the other until we either find one we can use or run out of options.
+                    else if (string.IsNullOrEmpty(s_InitControlScheme))
+                    {
+                        using (var availableDevices = InputUser.GetUnpairedInputDevices())
+                        {
+                            var controlScheme = InputControlScheme.FindControlSchemeForDevices(availableDevices, m_Actions.controlSchemes);
+                            if (controlScheme != null)
+                                TryToActivateControlScheme(controlScheme.Value);
+                        }
                     }
                 }
             }
@@ -1499,6 +1506,8 @@ namespace UnityEngine.InputSystem
                 m_InputUser.UnpairDevices();
                 return false;
             }
+
+            // Debug.Log($"Activated control scheme '{controlScheme.name}' for '{m_InputUser}'");
 
             return true;
         }
