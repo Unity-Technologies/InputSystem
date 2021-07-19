@@ -238,7 +238,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, ','))
+                        variants, InputControlLayout.VariantSeparator[0]))
                     continue;
 
                 ////REVIEW: I'm not sure this is good enough. ATM if you have a control layout with
@@ -294,7 +294,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants,
-                        variants, ','))
+                        variants, InputControlLayout.VariantSeparator[0]))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -339,7 +339,9 @@ namespace UnityEngine.InputSystem.Layouts
 
                     // If the control is part of a variants, skip it if it isn't the variants we're
                     // looking for.
-                    if (!controlLayout.variants.IsEmpty() && controlLayout.variants != variants)
+                    if (!controlLayout.variants.IsEmpty() &&
+                        !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
+                            variants, InputControlLayout.VariantSeparator[0]))
                         continue;
 
                     AddChildControlIfMissing(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
