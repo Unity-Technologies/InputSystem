@@ -3254,11 +3254,11 @@ namespace UnityEngine.InputSystem
         {
             UISupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             DualShockSupport.Initialize();
             #endif
 

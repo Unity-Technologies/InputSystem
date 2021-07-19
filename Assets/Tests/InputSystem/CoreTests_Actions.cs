@@ -5486,15 +5486,11 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
-#endif
-    public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
+    public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch_HID()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
         var genericGamepad = InputSystem.AddDevice<Gamepad>();
         var ps4Gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
-        var mouse = InputSystem.AddDevice<Mouse>();
 
         var genericGamepadScheme = new InputControlScheme("GenericGamepad")
             .WithRequiredDevice("<Gamepad>");
@@ -5503,15 +5499,42 @@ partial class CoreTests
 
         using (var genericToGeneric = genericGamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
         using (var genericToPS4 = genericGamepadScheme.PickDevicesFrom(new[] { ps4Gamepad }))
-        using (var ps4ToGeneric = ps4GamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
         using (var ps4ToPS4 = ps4GamepadScheme.PickDevicesFrom(new[] { ps4Gamepad }))
+        {
+            Assert.That(genericToPS4.score, Is.GreaterThan(1));
+            Assert.That(ps4ToPS4.score, Is.GreaterThan(1));
+
+            // Generic gamepad is a more precise match for generic gamepad scheme than PS4 *HID* controller
+            // is for PS4 gamepad scheme.
+            Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToPS4.score));
+
+            // PS4 *HID* gamepad to PS4 gamepad scheme is a 50% match as the HID layout is one step removed
+            // from the base PS4 gamepad layout.
+            Assert.That(ps4ToPS4.score, Is.EqualTo(1 + 0.5f));
+        }
+#endif
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
+    {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA || UNITY_ANDROID || UNITY_IOS
+        var genericGamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var genericGamepadScheme = new InputControlScheme("GenericGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var ps4GamepadScheme = new InputControlScheme("PS4Gamepad")
+            .WithRequiredDevice("<DualShockGamepad>");
+
+        using (var genericToGeneric = genericGamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
+        using (var ps4ToGeneric = ps4GamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
         using (var genericToMouse = genericGamepadScheme.PickDevicesFrom(new[] { mouse }))
         using (var ps4ToMouse = ps4GamepadScheme.PickDevicesFrom(new[] { mouse }))
         {
             Assert.That(genericToGeneric.score, Is.GreaterThan(1));
-            Assert.That(genericToPS4.score, Is.GreaterThan(1));
             Assert.That(ps4ToGeneric.score, Is.Zero); // Generic gamepad is no match for PS4 scheme.
-            Assert.That(ps4ToPS4.score, Is.GreaterThan(1));
             Assert.That(genericToMouse.score, Is.Zero);
             Assert.That(ps4ToMouse.score, Is.Zero);
 
@@ -5519,17 +5542,9 @@ partial class CoreTests
             // for generic gamepad scheme.
             Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToGeneric.score));
 
-            // Generic gamepad is a more precise match for generic gamepad scheme than PS4 *HID* controller
-            // is for PS4 gamepad scheme.
-            Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToPS4.score));
-
             // Generic gamepad to generic gamepad scheme is a 100% match so score is one for matching the
             // requirement plus 1 for matching it 100%.
             Assert.That(genericToGeneric.score, Is.EqualTo(1 + 1));
-
-            // PS4 *HID* gamepad to PS4 gamepad scheme is a 50% match as the HID layout is one step removed
-            // from the base PS4 gamepad layout.
-            Assert.That(ps4ToPS4.score, Is.EqualTo(1 + 0.5f));
         }
 #endif
     }
@@ -5588,9 +5603,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
-#endif
     public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
@@ -5604,7 +5616,7 @@ partial class CoreTests
             .WithRequiredDevice("<Mouse>");
 
         var genericGamepad = InputSystem.AddDevice<Gamepad>();
-        var ps4Controller = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var ps4Controller = InputSystem.AddDevice<DualShockGamepad>();
         var xboxController = InputSystem.AddDevice<XInputController>();
 
         Assert.That(InputControlScheme.FindControlSchemeForDevice(genericGamepad, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),

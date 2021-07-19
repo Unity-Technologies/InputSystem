@@ -629,19 +629,19 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                // NOTE: Whereas we use callbacks for the other actions, we rely on WasReleasedThisFrame() for
-                //       submit and cancel. This makes their behavior consistent with pointer click behavior where
-                //       a click will register on button *up*. This nuance in behavior becomes important in
-                //       combination with action enable/disable changes in response to submit or cancel. If we
-                //       react to button *down* instead of *up*, the button *up* will come in *after* we have
-                //       applied the state change.
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPressedThisFrame() for
+                //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
+                //       a click will register on button *up*, but consistent with how other UI systems work where
+                //       click occurs on key press. This nuance in behavior becomes important in combination with
+                //       action enable/disable changes in response to submit or cancel. We react to button *down*
+                //       instead of *up*, so button *up* will come in *after* we have applied the state change.
                 var submitAction = m_SubmitAction?.action;
                 var cancelAction = m_CancelAction?.action;
 
                 var data = GetBaseEventData();
-                if (cancelAction != null && cancelAction.WasReleasedThisFrame())
+                if (cancelAction != null && cancelAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasReleasedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }
