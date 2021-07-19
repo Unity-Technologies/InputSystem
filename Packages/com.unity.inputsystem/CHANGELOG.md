@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- XRLayoutBuilder now supports `_` in sanitized names.
 - The `VirtualMouseInput` component is now part of the Input System assembly. It was previously packaged with the `Gamepad Mouse Cursor` sample.
   * The component has a different GUID from before, so existing setups that use the component from the sample are not broken. To use the built-in component you must explicitly switch over.
 - `InputTestFixture` no longer deletes the `GameObject`s in the current scene in its `TearDown` ([case 1286987](https://issuetracker.unity3d.com/issues/input-system-inputtestfixture-destroys-test-scene)).
