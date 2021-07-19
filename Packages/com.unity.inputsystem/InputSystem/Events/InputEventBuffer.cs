@@ -82,21 +82,6 @@ namespace UnityEngine.InputSystem.LowLevel
             get { return (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer); }
         }
 
-        /// <summary>
-        /// Construct an event buffer using the given memory block containing <see cref="InputEvent"/>s.
-        /// </summary>
-        /// <param name="eventPtr">A buffer containing <paramref name="eventCount"/> number of input events. The
-        /// individual events in the buffer are variable-sized (depending on the type of each event).</param>
-        /// <param name="eventCount">The number of events in <paramref name="eventPtr"/>. Can be zero.</param>
-        /// <param name="sizeInBytes">Total number of bytes of event data in the memory block pointed to by <paramref name="eventPtr"/>.
-        /// If -1 (default), the size of the actual event data in the buffer is considered unknown and has to be determined by walking
-        /// <paramref name="eventCount"/> number of events (due to the variable size of each event).</param>
-        /// <param name="capacityInBytes">The total size of the memory block allocated at <paramref name="eventPtr"/>. If this
-        /// is larger than <paramref name="sizeInBytes"/>, additional events can be appended to the buffer until the capacity
-        /// is exhausted. If this is -1 (default), the capacity is considered unknown and no additional events can be
-        /// appended to the buffer.</param>
-        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is <c>null</c> and <paramref name="eventCount"/> is not zero
-        /// -or- <paramref name="capacityInBytes"/> is less than <paramref name="sizeInBytes"/>.</exception>
         public InputEventBuffer(InputEvent* eventPtr, int eventCount, int sizeInBytes = -1, int capacityInBytes = -1)
             : this()
         {
@@ -119,22 +104,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        /// <summary>
-        /// Construct an event buffer using the array containing <see cref="InputEvent"/>s.
-        /// </summary>
-        /// <param name="buffer">A native array containing <paramref name="eventCount"/> number of input events. The
-        /// individual events in the buffer are variable-sized (depending on the type of each event).</param>
-        /// <param name="eventCount">The number of events in <paramref name="buffer"/>. Can be zero.</param>
-        /// <param name="sizeInBytes">Total number of bytes of event data in the <paramref cref="buffer"/>.
-        /// If -1 (default), the size of the actual event data in <paramref name="buffer"/> is considered unknown and has to be determined by walking
-        /// <paramref name="eventCount"/> number of events (due to the variable size of each event).</param>
-        /// <param name="transferNativeArrayOwnership">If true, ownership of the <c>NativeArray</c> given by <paramref name="buffer"/> is
-        /// transferred to the <c>InputEventBuffer</c>. Calling <see cref="Dispose"/> will deallocate the array. Also, <see cref="AllocateEvent"/>
-        /// may re-allocate the array.</param>
-        /// <exception cref="ArgumentException"><paramref name="buffer"/> has no memory allocated but <paramref name="eventCount"/> is not zero.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="sizeInBytes"/> is greater than the total length allocated for
-        /// <paramref name="buffer"/>.</exception>
-        public InputEventBuffer(NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1, bool transferNativeArrayOwnership = false)
+        public InputEventBuffer(NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1)
         {
             if (eventCount > 0 && !buffer.IsCreated)
                 throw new ArgumentException("buffer has no data but eventCount is > 0", nameof(eventCount));
@@ -142,57 +112,36 @@ namespace UnityEngine.InputSystem.LowLevel
                 throw new ArgumentOutOfRangeException(nameof(sizeInBytes));
 
             m_Buffer = buffer;
-            m_WeOwnTheBuffer = transferNativeArrayOwnership;
+            m_WeOwnTheBuffer = false;
             m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : buffer.Length;
             m_EventCount = eventCount;
         }
 
         /// <summary>
-        /// Append a new event to the end of the buffer by copying the event from <paramref name="eventPtr"/>.
+        /// Append a new event to the end of the buffer.
         /// </summary>
-        /// <param name="eventPtr">Data of the event to store in the buffer. This will be copied in full as
-        /// per <see cref="InputEvent.sizeInBytes"/> found in the event's header.</param>
-        /// <param name="capacityIncrementInBytes">If the buffer needs to be reallocated to accommodate the event, number of
-        /// bytes to grow the buffer by.</param>
-        /// <param name="allocator">If the buffer needs to be reallocated to accommodate the event, the type of allocation to
-        /// use.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is <c>null</c>.</exception>
+        /// <param name="eventPtr"></param>
+        /// <param name="capacityIncrementInBytes"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         /// <remarks>
-        /// If the buffer's current capacity (see <see cref="capacityInBytes"/>) is smaller than <see cref="InputEvent.sizeInBytes"/>
-        /// of the given event, the buffer will be reallocated.
+        /// If the buffer's current <see cref="capacityInBytes">capacity</see> is smaller than the <see cref="InputEvent.sizeInBytes">
+        /// size</see> of the given <paramref name="eventPtr">event</paramref>,
         /// </remarks>
-        public void AppendEvent(InputEvent* eventPtr, int capacityIncrementInBytes = 2048, Allocator allocator = Allocator.Persistent)
+        public void AppendEvent(InputEvent* eventPtr, int capacityIncrementInBytes = 2048)
         {
             if (eventPtr == null)
                 throw new ArgumentNullException(nameof(eventPtr));
 
             // Allocate space.
             var eventSizeInBytes = eventPtr->sizeInBytes;
-            var destinationPtr = AllocateEvent((int)eventSizeInBytes, capacityIncrementInBytes, allocator);
+            var destinationPtr = AllocateEvent((int)eventSizeInBytes, capacityIncrementInBytes);
 
             // Copy event.
             UnsafeUtility.MemCpy(destinationPtr, eventPtr, eventSizeInBytes);
         }
 
-        /// <summary>
-        /// Make space for an event of <paramref name="sizeInBytes"/> bytes and return a pointer to
-        /// the memory for the event.
-        /// </summary>
-        /// <param name="sizeInBytes">Number of bytes to make available for the event including the event header (see <see cref="InputEvent"/>).</param>
-        /// <param name="capacityIncrementInBytes">If the buffer needs to be reallocated to accommodate the event, number of
-        ///     bytes to grow the buffer by.</param>
-        /// <param name="allocator">If the buffer needs to be reallocated to accommodate the event, the type of allocation to
-        /// use.</param>
-        /// <returns>A pointer to a block of memory in <see cref="bufferPtr"/>. Store the event data here.</returns>
-        /// <exception cref="ArgumentException"><paramref name="sizeInBytes"/> is less than the size needed for the
-        /// header of an <see cref="InputEvent"/>. Will automatically be aligned to a multiple of 4.</exception>
-        /// <remarks>
-        /// Only <see cref="InputEvent.sizeInBytes"/> is initialized by this method. No other fields from the event's
-        /// header are touched.
-        ///
-        /// The event will be appended to the buffer after the last event currently in the buffer (if any).
-        /// </remarks>
-        public InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048, Allocator allocator = Allocator.Persistent)
+        public InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048)
         {
             if (sizeInBytes < InputEvent.kBaseEventSize)
                 throw new ArgumentException(
@@ -212,14 +161,11 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (newCapacity > int.MaxValue)
                     throw new NotImplementedException("NativeArray long support");
                 var newBuffer =
-                    new NativeArray<byte>((int)newCapacity, allocator, NativeArrayOptions.ClearMemory);
+                    new NativeArray<byte>((int)newCapacity, Allocator.Persistent, NativeArrayOptions.ClearMemory);
 
                 if (m_Buffer.IsCreated)
                 {
-                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(),
-                        NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer),
-                        this.sizeInBytes);
-
+                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_Buffer.GetUnsafeReadOnlyPtr(), this.sizeInBytes);
                     if (m_WeOwnTheBuffer)
                         m_Buffer.Dispose();
                 }
@@ -228,7 +174,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_WeOwnTheBuffer = true;
             }
 
-            var eventPtr = (InputEvent*)((byte*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer) + m_SizeInBytes);
+            var eventPtr = (InputEvent*)((byte*)m_Buffer.GetUnsafePtr() + m_SizeInBytes);
             eventPtr->sizeInBytes = (uint)sizeInBytes;
             m_SizeInBytes += alignedSizeInBytes;
             ++m_EventCount;

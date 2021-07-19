@@ -292,38 +292,6 @@ namespace UnityEngine.InputSystem.DualShock
             m_HighFrequenceyMotorSpeed = highFrequency;
         }
 
-        /// <summary>
-        /// Set motor speeds of both motors and the light bar color simultaneously.
-        /// </summary>
-        /// <param name="lowFrequency"><see cref="Haptics.IDualMotorRumble.SetMotorSpeeds"/></param>
-        /// <param name="highFrequency"><see cref="Haptics.IDualMotorRumble.SetMotorSpeeds"/></param>
-        /// <param name="color"><see cref="IDualShockHaptics.SetLightBarColor"/></param>
-        /// <returns>True if the command succeeded. Will return false if another command is currently being processed.</returns>
-        /// <remarks>
-        /// Use this method to set both the motor speeds and the light bar color in the same call. This method exists
-        /// because it is currently not possible to process an input/output control (IOCTL) command while another one
-        /// is in flight. For example, calling <see cref="SetMotorSpeeds"/> immediately after calling
-        /// <see cref="SetLightBarColor"/> might result in only the light bar color changing. The <see cref="SetMotorSpeeds"/>
-        /// call could fail. It is however possible to combine multiple IOCTL instructions into a single command, which
-        /// is what this method does.
-        ///
-        /// See <see cref="Haptics.IDualMotorRumble.SetMotorSpeeds"/> and <see cref="IDualShockHaptics.SetLightBarColor"/>
-        /// for the respective documentation regarding setting rumble and light bar color.</remarks>
-        public bool SetMotorSpeedsAndLightBarColor(float lowFrequency, float highFrequency, Color color)
-        {
-            var command = DualShockHIDOutputReport.Create();
-            command.SetMotorSpeeds(lowFrequency, highFrequency);
-            command.SetColor(color);
-
-            var result = ExecuteCommand(ref command);
-
-            m_LowFrequencyMotorSpeed = lowFrequency;
-            m_HighFrequenceyMotorSpeed = highFrequency;
-            m_LightBarColor = color;
-
-            return result >= 0;
-        }
-
         private float? m_LowFrequencyMotorSpeed;
         private float? m_HighFrequenceyMotorSpeed;
         private Color? m_LightBarColor;

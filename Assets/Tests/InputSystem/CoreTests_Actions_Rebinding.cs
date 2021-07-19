@@ -177,36 +177,6 @@ internal partial class CoreTests
         }
     }
 
-    // https://fogbugz.unity3d.com/f/cases/1272563/
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanPerformInteractiveRebinding_OfPartOfComposite()
-    {
-        var action = new InputAction();
-        action.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/w")
-            .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d");
-
-        // The expected control type shouldn't get in the way. What matters is that the code
-        // identifies the expected type of the *part binding* as the one we need, not the
-        // type of the action in this case.
-        action.expectedControlType = "Vector2";
-
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        using (new InputActionRebindingExtensions.RebindingOperation()
-               .WithAction(action)
-               .WithTargetBinding(1)
-               .Start())
-        {
-            PressAndRelease(keyboard.spaceKey);
-
-            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.spaceKey, keyboard.sKey, keyboard.aKey, keyboard.dKey }));
-        }
-    }
-
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]

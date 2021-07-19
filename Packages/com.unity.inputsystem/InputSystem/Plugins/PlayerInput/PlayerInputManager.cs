@@ -4,9 +4,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
@@ -166,20 +163,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        /// <summary>
-        /// The input action that a player must trigger to join the game.
-        /// </summary>
-        /// <remarks>
-        /// If the join action is a reference to an existing input action, it will be cloned when the PlayerInputManager
-        /// is enabled. This avoids the situation where the join action can become disabled after the first user joins which
-        /// can happen when the join action is the same as a player in-game action. When a player joins, input bindings from
-        /// devices other than the device they joined with are disabled. If the join action had a binding for keyboard and one
-        /// for gamepad for example, and the first player joined using the keyboard, the expectation is that the next player
-        /// could still join by pressing the gamepad join button. Without the cloning behavior, the gamepad input would have
-        /// been disabled.
-        ///
-        /// For more details about joining behavior, see <see cref="PlayerInput"/>.
-        /// </remarks>
         public InputActionProperty joinAction
         {
             get => m_JoinAction;
@@ -233,13 +216,15 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerJoinedCallbacks.AddCallback(value);
+                m_PlayerJoinedCallbacks.AppendWithCapacity(value, 4);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerJoinedCallbacks.RemoveCallback(value);
+                var index = m_PlayerJoinedCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_PlayerJoinedCallbacks.RemoveAtWithCapacity(index);
             }
         }
 
@@ -249,13 +234,15 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerLeftCallbacks.AddCallback(value);
+                m_PlayerLeftCallbacks.AppendWithCapacity(value, 4);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerLeftCallbacks.RemoveCallback(value);
+                var index = m_PlayerLeftCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_PlayerLeftCallbacks.RemoveAtWithCapacity(index);
             }
         }
 
@@ -285,8 +272,6 @@ namespace UnityEngine.InputSystem
             switch (m_JoinBehavior)
             {
                 case PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed:
-                    ValidateInputActionAsset();
-
                     if (!m_UnpairedDeviceUsedDelegateHooked)
                     {
                         if (m_UnpairedDeviceUsedDelegate == null)
@@ -471,8 +456,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
-        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
-        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
         internal static string[] messages => new[]
         {
@@ -542,15 +527,6 @@ namespace UnityEngine.InputSystem
             {
                 Debug.LogWarning("Multiple PlayerInputManagers in the game. There should only be one PlayerInputManager", this);
                 return;
-            }
-
-            // if the join action is a reference, clone it so we don't run into problems with the action being disabled by
-            // PlayerInput when devices are assigned to individual players
-            if (joinAction.reference != null && joinAction.action?.actionMap?.asset != null)
-            {
-                var inputActionAsset = Instantiate(joinAction.action.actionMap.asset);
-                var inputActionReference = InputActionReference.Create(inputActionAsset.FindAction(joinAction.action.name));
-                joinAction = new InputActionProperty(inputActionReference);
             }
 
             // Join all players already in the game.
@@ -683,38 +659,6 @@ namespace UnityEngine.InputSystem
                     return true;
 
             return false;
-        }
-
-        private void ValidateInputActionAsset()
-        {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
-                return;
-
-            var actions = m_PlayerPrefab.GetComponentInChildren<PlayerInput>().actions;
-            if (actions == null)
-                return;
-
-            var isValid = true;
-            foreach (var controlScheme in actions.controlSchemes)
-            {
-                if (controlScheme.deviceRequirements.Count > 0)
-                    break;
-
-                isValid = false;
-            }
-
-            if (isValid) return;
-
-            var assetInfo = actions.name;
-#if UNITY_EDITOR
-            assetInfo = AssetDatabase.GetAssetPath(actions);
-#endif
-            Debug.LogWarning($"The input action asset '{assetInfo}' in the player prefab assigned to PlayerInputManager has " +
-                "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
-                "will not work unless the expected input devices are listed as requirements in the input " +
-                "action asset.", m_PlayerPrefab);
-#endif
         }
 
         /// <summary>

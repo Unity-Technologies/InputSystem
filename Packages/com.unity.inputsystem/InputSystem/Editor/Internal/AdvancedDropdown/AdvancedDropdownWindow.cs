@@ -518,17 +518,7 @@ namespace UnityEngine.InputSystem.Editor
             else
                 m_NewAnimTarget = -1;
             m_AnimationTree = m_CurrentlyRenderedTree;
-            var parentItem = m_ViewsStack.Pop();
-
-            m_State.ClearSelectionOnItem(m_CurrentlyRenderedTree);
-
-            if (parentItem != null)
-            {
-                var suggestedIndex = parentItem.GetIndexOfChild(m_CurrentlyRenderedTree);
-                m_State.SetSelectionOnItem(parentItem, suggestedIndex);
-            }
-
-            m_CurrentlyRenderedTree = parentItem;
+            m_CurrentlyRenderedTree = m_ViewsStack.Pop();
         }
 
         private void GoToChild()

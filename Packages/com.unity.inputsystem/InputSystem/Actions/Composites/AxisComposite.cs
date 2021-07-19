@@ -132,35 +132,34 @@ namespace UnityEngine.InputSystem.Composites
         /// <inheritdoc />
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            var negativeMagnitude = context.EvaluateMagnitude(negative);
-            var positiveMagnitude = context.EvaluateMagnitude(positive);
+            var negativeValue = context.ReadValue<float>(negative);
+            var positiveValue = context.ReadValue<float>(positive);
 
-            var negativeIsPressed = negativeMagnitude > 0;
-            var positiveIsPressed = positiveMagnitude > 0;
+            ////TODO: take partial actuation into account (e.g. amount of actuation of gamepad trigger should result in partial actuation of axis)
+            ////REVIEW: should this respect press points?
+
+            var negativeIsPressed = negativeValue > 0;
+            var positiveIsPressed = positiveValue > 0;
 
             if (negativeIsPressed == positiveIsPressed)
             {
                 switch (whichSideWins)
                 {
                     case WhichSideWins.Negative:
-                        positiveIsPressed = false;
-                        break;
+                        return -negativeValue;
 
                     case WhichSideWins.Positive:
-                        negativeIsPressed = false;
-                        break;
+                        return positiveValue;
 
                     case WhichSideWins.Neither:
                         return midPoint;
                 }
             }
 
-            var mid = midPoint;
-
             if (negativeIsPressed)
-                return mid - (mid - minValue) * negativeMagnitude;
+                return -negativeValue;
 
-            return mid + (maxValue - mid) * positiveMagnitude;
+            return positiveValue;
         }
 
         /// <inheritdoc />

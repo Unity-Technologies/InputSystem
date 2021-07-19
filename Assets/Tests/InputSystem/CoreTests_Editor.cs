@@ -43,8 +43,6 @@ partial class CoreTests
             var versionString = packageJson.version;
             if (versionString.Contains("-preview"))
                 versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
-            else if (versionString.Contains("-pre"))
-                versionString = versionString.Substring(0, versionString.IndexOf("-pre"));
             return new Version(versionString);
         }
     }
@@ -801,7 +799,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        Assert.That(tree.rootItem, Is.TypeOf<InputActionTreeView.ActionMapListItem>());
+        Assert.That(tree.rootItem, Is.TypeOf<TreeViewItem>());
         Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
         Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
         Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());

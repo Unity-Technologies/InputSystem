@@ -667,6 +667,28 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         /// <summary>
+        /// Swap the contents of two potentially overlapping slices within the array.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="sourceIndex"></param>
+        /// <param name="destinationIndex"></param>
+        /// <param name="count"></param>
+        /// <typeparam name="TValue"></typeparam>
+        public static void SwapSlice<TValue>(TValue[] array, int sourceIndex, int destinationIndex, int count)
+        {
+            if (sourceIndex < destinationIndex)
+            {
+                for (var i = 0; i < count; ++i)
+                    Swap(ref array[sourceIndex + count - i - 1], ref array[destinationIndex + count - i - 1]);
+            }
+            else
+            {
+                for (var i = 0; i < count; ++i)
+                    Swap(ref array[sourceIndex + i], ref array[destinationIndex + i]);
+            }
+        }
+
+        /// <summary>
         /// Move a slice in the array to a different place without allocating a temporary array.
         /// </summary>
         /// <param name="array"></param>
@@ -684,65 +706,28 @@ namespace UnityEngine.InputSystem.Utilities
             if (count <= 0 || sourceIndex == destinationIndex)
                 return;
 
-            // Determine the number of elements in the window.
-            int elementCount;
-            if (destinationIndex > sourceIndex)
-                elementCount = destinationIndex + count - sourceIndex;
-            else
-                elementCount = sourceIndex + count - destinationIndex;
+            // Make sure we're moving from lower part of array to higher part so we only
+            // have to deal with that scenario.
+            if (sourceIndex > destinationIndex)
+                Swap(ref sourceIndex, ref destinationIndex);
 
-            // If the source and target slice are right next to each other, just go
-            // and swap out the elements in both slices.
-            if (elementCount == count * 2)
+            while (destinationIndex != sourceIndex)
             {
-                for (var i = 0; i < count; ++i)
-                    Swap(ref array[sourceIndex + i], ref array[destinationIndex + i]);
-            }
-            else
-            {
-                // There's elements in-between the two slices.
-                //
-                // The easiest way to picture this operation is as a rotation of the elements within
-                // the window given by sourceIndex, destination, and count. Within that window, we are
-                // simply treating it as a wrap-around buffer and then sliding the elements clockwise
-                // or counter-clockwise (depending on whether we move up or down, respectively) through
-                // the window.
-                //
-                // Unfortunately, we can't just memcopy the slices within that window as we have to
-                // have a temporary copy in place in order to preserve element values. So instead, we
-                // go and swap elements one by one, something that doesn't require anything other than
-                // a single value temporary copy.
+                // Swap source and destination slice. Afterwards, the source slice is the right, final
+                // place but the destination slice may not be.
+                SwapSlice(array, sourceIndex, destinationIndex, count);
 
-                // Determine the number of swaps we need to achieve the desired order. Swaps
-                // operate in pairs so it's one less than the number of elements in the range.
-                var swapCount = elementCount - 1;
-
-                // We simply take sourceIndex as fixed and do all swaps from there until all
-                // the elements in the window are in the right order. Each swap will put one
-                // element in its final place.
-                var dst = destinationIndex;
-                for (var i = 0; i < swapCount; ++i)
+                // Slide destination window down.
+                if (destinationIndex - sourceIndex >= count * 2)
                 {
-                    // Swap source into its destination place. This puts the current sourceIndex
-                    // element in its final place.
-                    Swap(ref array[dst], ref array[sourceIndex]);
-
-                    // Find out where the element that we now swapped into sourceIndex should
-                    // actually go.
-                    if (destinationIndex > sourceIndex)
-                    {
-                        // Rotating clockwise.
-                        dst -= count;
-                        if (dst < sourceIndex)
-                            dst = destinationIndex + count - Math.Abs(sourceIndex - dst); // Wrap around.
-                    }
-                    else
-                    {
-                        // Rotating counter-clockwise.
-                        dst += count;
-                        if (dst >= sourceIndex + count)
-                            dst = destinationIndex + (dst - (sourceIndex + count)); // Wrap around.
-                    }
+                    // Slide down one whole window of count elements.
+                    destinationIndex -= count;
+                }
+                else
+                {
+                    ////TODO: this can be improved by using halving instead and only doing the final step as a single element slide
+                    // Slide down by one element.
+                    --destinationIndex;
                 }
             }
         }

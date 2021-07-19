@@ -48,7 +48,7 @@ namespace InputSamples.Gestures
         /// <summary>
         /// Event fired when the user presses on the screen.
         /// </summary>
-        public event Action<SwipeInput> Pressed;
+        public new event Action<SwipeInput> Pressed;
 
         /// <summary>
         /// Event fired for every motion (possibly multiple times a frame) of a potential swipe gesture.

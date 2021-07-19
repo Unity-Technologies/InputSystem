@@ -6,7 +6,6 @@
   * [Debugging users and PlayerInput](#debugging-users-and-playerinput)
   * [Debugging layouts](#debugging-layouts)
   * [Debugging Remotely](#debugging-remotely)
-* [Device Simulator](#device-simulator)
 
 When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players.
 
@@ -88,9 +87,3 @@ Visualizes the current state of a single Control in real time. You can have mult
 Visualizes the current state of a single Action in real time. You can have multiple Action visualizers to visualize the state of multiple Actions. This can also display the current value of the Action and the Control currently driving the Action, and track the state of [Interactions](Interactions.md) over time. Check the `SimpleControlsVisualizer` Scene in the sample for examples.
 
 ![InputActionVisualizer](Images/InputActionVisualizer.png)
-
-## Device Simulator
-
-When Device Simulator window is in use, mouse and pen inputs on the simulated device screen are turned into touchscreen inputs. Device Simulator uses its own touchscreen device, which it creates and destroys together with the Device Simulator window.
-
-To prevent conflicts between simulated touchscreen inputs and native mouse and pen inputs, Device Simulator disables all native mouse and pen devices.

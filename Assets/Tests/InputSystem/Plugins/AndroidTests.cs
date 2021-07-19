@@ -36,8 +36,7 @@ internal class AndroidTests : CoreTestsFixture
             }.ToJson()
         });
 
-        // Gamepad class is always adding dpad in FinishSetup so AndroidGamepadWithDpadButtons instead of AndroidGamepad is used
-        Assert.That(gamepad, Is.TypeOf<AndroidGamepadWithDpadButtons>());
+        Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
         Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
     }
 
@@ -55,8 +54,7 @@ internal class AndroidTests : CoreTestsFixture
             }.ToJson()
         });
 
-        // Gamepad class is always adding dpad in FinishSetup so AndroidGamepadWithDpadButtons instead of AndroidGamepad is used
-        Assert.That(device, Is.TypeOf<AndroidGamepadWithDpadButtons>());
+        Assert.That(device, Is.TypeOf<AndroidGamepad>());
         var controller = (AndroidGamepad)device;
 
         var leftStick = new Vector2(0.789f, 0.987f);
@@ -219,7 +217,7 @@ internal class AndroidTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidXboxController()
+    public void Devices_SupportsAndroidXboxConttroller()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -233,8 +231,8 @@ internal class AndroidTests : CoreTestsFixture
                 productId = 0x02dd,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Brake,
-                    AndroidAxis.Gas,
+                    AndroidAxis.Rx,
+                    AndroidAxis.Ry,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,
@@ -243,13 +241,13 @@ internal class AndroidTests : CoreTestsFixture
             }.ToJson()
         });
 
-        Assert.That(gamepad.name, Is.EqualTo("XboxOneGamepadAndroid"));
+        Assert.That(gamepad.name, Is.EqualTo("AndroidGamepadXboxController"));
 
         // Check if normalization works correctly
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Brake, -1)
-                .WithAxis(AndroidAxis.Gas, -1));
+                .WithAxis(AndroidAxis.Z, -1)
+                .WithAxis(AndroidAxis.Rz, -1));
 
         InputSystem.Update();
 
@@ -258,10 +256,10 @@ internal class AndroidTests : CoreTestsFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Brake, 1)
-                .WithAxis(AndroidAxis.Gas, 1)
-                .WithAxis(AndroidAxis.Z, 0.123f)
-                .WithAxis(AndroidAxis.Rz, -0.456f));
+                .WithAxis(AndroidAxis.Z, 1)
+                .WithAxis(AndroidAxis.Rz, 1)
+                .WithAxis(AndroidAxis.Rx, 0.123f)
+                .WithAxis(AndroidAxis.Ry, -0.456f));
 
 
         InputSystem.Update();
@@ -271,186 +269,6 @@ internal class AndroidTests : CoreTestsFixture
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsAndroidXboxControllerWithDpad()
-    {
-        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
-                // http://www.linux-usb.org/usb.ids
-                vendorId = 0x045e,
-                productId = 0x02dd,
-                motionAxes = new[]
-                {
-                    AndroidAxis.Brake,
-                    AndroidAxis.Gas,
-                    AndroidAxis.Z,
-                    AndroidAxis.Rz,
-                    AndroidAxis.HatX,
-                    AndroidAxis.HatY
-                }
-            }.ToJson()
-        });
-
-        Assert.That(gamepad.name, Is.EqualTo("XboxOneGamepadAndroid"));
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.HatX, 1)
-                .WithAxis(AndroidAxis.HatY, 1));
-        InputSystem.Update();
-
-        Assert.That(gamepad.dpad.left.isPressed, Is.False);
-        Assert.That(gamepad.dpad.right.isPressed, Is.True);
-        Assert.That(gamepad.dpad.up.isPressed, Is.False);
-        Assert.That(gamepad.dpad.down.isPressed, Is.True);
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.HatX, -1)
-                .WithAxis(AndroidAxis.HatY, -1));
-        InputSystem.Update();
-
-        Assert.That(gamepad.dpad.left.isPressed, Is.True);
-        Assert.That(gamepad.dpad.right.isPressed, Is.False);
-        Assert.That(gamepad.dpad.up.isPressed, Is.True);
-        Assert.That(gamepad.dpad.down.isPressed, Is.False);
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.HatX, 0)
-                .WithAxis(AndroidAxis.HatY, 0));
-        InputSystem.Update();
-
-        Assert.That(gamepad.dpad.left.isPressed, Is.False);
-        Assert.That(gamepad.dpad.right.isPressed, Is.False);
-        Assert.That(gamepad.dpad.up.isPressed, Is.False);
-        Assert.That(gamepad.dpad.down.isPressed, Is.False);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsAndroidDualShockController()
-    {
-        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
-                // http://www.linux-usb.org/usb.ids
-                vendorId = 0x054c,
-                productId = 0x09cc,
-                motionAxes = new[]
-                {
-                    AndroidAxis.Brake,
-                    AndroidAxis.Gas,
-                    AndroidAxis.Z,
-                    AndroidAxis.Rz,
-                    AndroidAxis.HatX,
-                    AndroidAxis.HatY
-                }
-            }.ToJson()
-        });
-
-        Assert.That(gamepad.name, Is.EqualTo("DualShock4GamepadAndroid"));
-
-        // Check if normalization works correctly
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Brake, -1)
-                .WithAxis(AndroidAxis.Gas, -1));
-
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Brake, 1)
-                .WithAxis(AndroidAxis.Gas, 1)
-                .WithAxis(AndroidAxis.Z, 0.123f)
-                .WithAxis(AndroidAxis.Rz, -0.456f));
-
-
-        InputSystem.Update();
-
-        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
-        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_SupportsAndroidDualShockControllerWithDpad()
-    {
-        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
-                // http://www.linux-usb.org/usb.ids
-                vendorId = 0x054c,
-                productId = 0x09cc,
-                motionAxes = new[]
-                {
-                    AndroidAxis.Brake,
-                    AndroidAxis.Gas,
-                    AndroidAxis.Z,
-                    AndroidAxis.Rz,
-                    AndroidAxis.HatX,
-                    AndroidAxis.HatY
-                }
-            }.ToJson()
-        });
-
-        Assert.That(gamepad.name, Is.EqualTo("DualShock4GamepadAndroid"));
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.HatX, 1)
-                .WithAxis(AndroidAxis.HatY, 1));
-        InputSystem.Update();
-
-        Assert.That(gamepad.dpad.left.isPressed, Is.False);
-        Assert.That(gamepad.dpad.right.isPressed, Is.True);
-        Assert.That(gamepad.dpad.up.isPressed, Is.False);
-        Assert.That(gamepad.dpad.down.isPressed, Is.True);
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.HatX, -1)
-                .WithAxis(AndroidAxis.HatY, -1));
-        InputSystem.Update();
-
-        Assert.That(gamepad.dpad.left.isPressed, Is.True);
-        Assert.That(gamepad.dpad.right.isPressed, Is.False);
-        Assert.That(gamepad.dpad.up.isPressed, Is.True);
-        Assert.That(gamepad.dpad.down.isPressed, Is.False);
-
-        InputSystem.QueueStateEvent(gamepad,
-            new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.HatX, 0)
-                .WithAxis(AndroidAxis.HatY, 0));
-        InputSystem.Update();
-
-        Assert.That(gamepad.dpad.left.isPressed, Is.False);
-        Assert.That(gamepad.dpad.right.isPressed, Is.False);
-        Assert.That(gamepad.dpad.up.isPressed, Is.False);
-        Assert.That(gamepad.dpad.down.isPressed, Is.False);
     }
 
     [Test]
@@ -473,8 +291,8 @@ internal class AndroidTests : CoreTestsFixture
                 productId = 0x09cc,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Brake,
-                    AndroidAxis.Gas,
+                    AndroidAxis.Rx,
+                    AndroidAxis.Ry,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,

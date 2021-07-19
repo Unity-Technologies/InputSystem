@@ -224,20 +224,12 @@ namespace UnityEngine.InputSystem.Editor
 
                 InitializeTrees();
             }
-
-            InputSystem.onSettingsChange += OnInputSettingsChanged;
         }
 
         private void OnDestroy()
         {
             ConfirmSaveChangesIfNeeded();
             EditorApplication.wantsToQuit -= EditorWantsToQuit;
-            InputSystem.onSettingsChange -= OnInputSettingsChanged;
-        }
-
-        private void OnInputSettingsChanged()
-        {
-            Repaint();
         }
 
         // Set asset would usually only be called when the window is open

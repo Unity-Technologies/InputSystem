@@ -440,30 +440,6 @@ internal partial class CoreTests
         }
     }
 
-    // https://fogbugz.unity3d.com/f/cases/1346786/
-    [Test]
-    [Category("Actions")]
-    public void Actions_HoldInteraction_DoesNotGetStuck_WhenHeldAndReleasedInSameEvent()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var action = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.4)");
-        action.Enable();
-
-        using (var trace = new InputActionTrace(action))
-        {
-            Press(gamepad.buttonSouth, time: 10, queueEventOnly: true);
-            Release(gamepad.buttonSouth, time: 10.41, queueEventOnly: true);
-            currentTime = 10.5;
-            InputSystem.Update();
-
-            Assert.That(trace,
-                Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10, value: 1.0)
-                    .AndThen(Performed<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)) // Note the zero value; button is already released.
-                    .AndThen(Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)));
-        }
-    }
-
     [Test]
     [Category("Actions")]
     public void Actions_ReleasedHoldInteractionIsCancelled_WithMultipleBindings()

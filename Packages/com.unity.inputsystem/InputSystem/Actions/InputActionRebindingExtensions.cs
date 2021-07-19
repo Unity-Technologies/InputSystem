@@ -301,8 +301,6 @@ namespace UnityEngine.InputSystem
             var bindings = action.bindings;
             for (var i = 0; i < bindings.Count; ++i)
             {
-                if (bindings[i].isPartOfComposite)
-                    continue;
                 if (!bindingMask.Matches(bindings[i]))
                     continue;
 
@@ -434,12 +432,7 @@ namespace UnityEngine.InputSystem
                 // Get the display string for each part.
                 var partStrings = new string[partCount];
                 for (var i = 0; i < partCount; ++i)
-                {
-                    var partString = action.GetBindingDisplayString(firstPartIndex + i, options);
-                    if (string.IsNullOrEmpty(partString))
-                        partString = " ";
-                    partStrings[i] = partString;
-                }
+                    partStrings[i] = action.GetBindingDisplayString(firstPartIndex + i, options);
 
                 // Put the parts together based on the display format string for
                 // the composite.
@@ -466,9 +459,6 @@ namespace UnityEngine.InputSystem
                             else
                                 result = partStrings[i];
                         }
-
-                        if (string.IsNullOrEmpty(result))
-                            result = " ";
 
                         return result;
                     });
@@ -1278,60 +1268,6 @@ namespace UnityEngine.InputSystem
         /// An ongoing rebinding operation.
         /// </summary>
         /// <remarks>
-        /// <example>
-        /// An example for how to use this class comes with the Input System package in the form of the "Rebinding UI" sample
-        /// that can be installed from the Package Manager UI in the Unity editor. The sample comes with a reusable <c>RebindActionUI</c>
-        /// component that also has a dedicated custom inspector.
-        /// </example>
-        ///
-        /// The most convenient way to use this class is by using <see cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>.
-        /// This method sets up many default behaviors based on the information found in the given action.
-        ///
-        /// Note that instances of this class <em>must</em> be disposed of to not leak memory on the unmanaged heap.
-        ///
-        /// <example>
-        /// <code>
-        /// // A MonoBehaviour that can be hooked up to a UI.Button control.
-        /// public class RebindButton : MonoBehaviour
-        /// {
-        ///     public InputActionReference m_Action; // Reference to an action to rebind.
-        ///     public int m_BindingIndex; // Index into m_Action.bindings for binding to rebind.
-        ///     public Text m_DisplayText; // Text in UI that receives the binding display string.
-        ///
-        ///     public void OnEnable()
-        ///     {
-        ///         UpdateDisplayText();
-        ///     }
-        ///
-        ///     public void OnDisable()
-        ///     {
-        ///         m_Rebind?.Dispose();
-        ///     }
-        ///
-        ///     public void OnClick()
-        ///     {
-        ///         var rebind = m_Action.PerformInteractiveRebinding()
-        ///             .WithTargetBinding(m_BindingIndex)
-        ///             .OnComplete(_ => UpdateDisplayText())
-        ///             .Start();
-        ///     }
-        ///
-        ///     private void UpdateDisplayText()
-        ///     {
-        ///         m_DisplayText.text = m_Action.GetBindingDisplayString(m_BindingIndex);
-        ///     }
-        ///
-        ///     private void RebindingOperation m_Rebind;
-        /// }
-        ///
-        /// rebind.Start();
-        /// </code>
-        /// </example>
-        ///
-        /// The goal of a rebind is always to generate a control path (see <see cref="InputControlPath"/>) usable
-        /// with a binding. By default, the generated path will be installed in <see cref="InputBinding.overridePath"/>.
-        /// This is non-destructive as the original path is left intact in the form of <see cref="InputBinding.path"/>.
-        ///
         /// This class acts as both a configuration interface for rebinds as well as a controller while
         /// the rebind is ongoing. An instance can be reused arbitrary many times. Doing so can avoid allocating
         /// additional GC memory (the class internally retains state that it can reuse for multiple rebinds).
@@ -1344,11 +1280,18 @@ namespace UnityEngine.InputSystem
         /// Note that changing configuration while a rebind is in progress in not allowed and will throw
         /// <see cref="InvalidOperationException"/>.
         ///
-        /// Note that it is also possible to use this class for selecting controls interactively without also
-        /// having an <see cref="InputAction"/> or even associated <see cref="InputBinding"/>s. To set this up,
-        /// configure the rebind accordingly with the respective methods (such as <see cref="WithExpectedControlType{Type}"/>)
-        /// and use <see cref="OnApplyBinding"/> to intercept the binding override process and instead use custom
-        /// logic to do something with the resulting path (or to even just use the control list found in <see cref="candidates"/>).
+        /// <example>
+        /// <code>
+        /// var rebind = new RebindingOperation()
+        ///     .WithAction(myAction)
+        ///     .WithBindingGroup("Gamepad")
+        ///     .WithCancelingThrough("&lt;Keyboard&gt;/escape");
+        ///
+        /// rebind.Start();
+        /// </code>
+        /// </example>
+        ///
+        /// Note that instances of this class <em>must</em> be disposed of to not leak memory on the unmanaged heap.
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public sealed class RebindingOperation : IDisposable
@@ -1380,8 +1323,6 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="AddCandidate"/>
             /// <seealso cref="RemoveCandidate"/>
-            /// <seealso cref="scores"/>
-            /// <seealso cref="magnitudes"/>
             public InputControlList<InputControl> candidates => m_Candidates;
 
             /// <summary>
@@ -1405,7 +1346,6 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="OnComputeScore"/>
             /// <seealso cref="candidates"/>
-            /// <seealso cref="magnitudes"/>
             public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
 
             /// <summary>
@@ -1418,7 +1358,6 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="InputControl.EvaluateMagnitude()"/>
             /// <seealso cref="candidates"/>
-            /// <seealso cref="scores"/>
             public ReadOnlyArray<float> magnitudes => new ReadOnlyArray<float>(m_Magnitudes, 0, m_Candidates.Count);
 
             /// <summary>
@@ -1439,8 +1378,6 @@ namespace UnityEngine.InputSystem
 
                     return m_Candidates[0];
                 }
-
-                ////TODO: allow setting this directly from a callback
             }
 
             /// <summary>
@@ -1461,38 +1398,14 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <value>True if the rebind has been completed.</value>
             /// <seealso cref="OnComplete(Action{RebindingOperation})"/>
-            /// <seealso cref="OnComplete"/>
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
-            /// <summary>
-            /// Whether the rebind has been cancelled.
-            /// </summary>
-            /// <seealso cref="OnCancel"/>
             public bool canceled => (m_Flags & Flags.Canceled) != 0;
 
             public double startTime => m_StartTime;
 
             public float timeout => m_Timeout;
 
-            /// <summary>
-            /// Name of the control layout that the rebind is looking for.
-            /// </summary>
-            /// <remarks>
-            /// This is optional but in general, rebinds will be more successful when the operation knows
-            /// what kind of input it is looking for.
-            ///
-            /// If an action is supplied with <see cref="WithAction"/> (automatically done by <see cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>),
-            /// the expected control type is automatically set to <see cref="InputAction.expectedControlType"/> or, if that is
-            /// not set, to <c>"Button"</c> in case the action has type <see cref="InputActionType.Button"/>.
-            ///
-            /// If a binding is supplied with <see cref="WithTargetBinding"/> and the binding is a part binding (see <see cref="InputBinding.isPartOfComposite"/>),
-            /// the expected control type is automatically set to that expected by the respective part of the composite.
-            ///
-            /// If this is set, any input on controls that are not of the expected type is ignored. If this is not set,
-            /// any control that matches all of the other criteria is considered for rebinding.
-            /// </remarks>
-            /// <seealso cref="InputControl.layout"/>
-            /// <seealso cref="InputAction.expectedControlType"/>
             public string expectedControlType => m_ExpectedLayout;
 
             /// <summary>
@@ -1624,112 +1537,18 @@ namespace UnityEngine.InputSystem
             }
 
             ////TODO: allow targeting bindings by name (i.e. be able to say WithTargetBinding("Left"))
-            /// <summary>
-            /// Rebinding a specific <see cref="InputBinding"/> on an <see cref="InputAction"/> as identified
-            /// by the given index into <see cref="InputAction.bindings"/>.
-            /// </summary>
-            /// <param name="bindingIndex">Index into <see cref="InputAction.bindings"/> of the action supplied
-            /// by <see cref="WithAction"/>.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// Note that if the given binding is a part binding of a composite (see <see cref="InputBinding.isPartOfComposite"/>),
-            /// then the expected control type (see <see cref="WithExpectedControlType(string)"/>) is implicitly changed to
-            /// match the type of control expected by the given part. If, for example, the composite the part belongs to
-            /// is a <see cref="Composites.Vector2Composite"/>, then the expected control type is implicitly changed to
-            /// <see cref="Controls.ButtonControl"/>.
-            ///
-            /// <example>
-            /// <code>
-            /// // Create an action with a WASD setup.
-            /// var moveAction = new InputAction(expectedControlType: "Vector2");
-            /// moveAction.AddCompositeBinding("2DVector")
-            ///     .With("Up", "&lt;Keyboard&gt;/w")
-            ///     .With("Down", "&lt;Keyboard&gt;/s")
-            ///     .With("Left", "&lt;Keyboard&gt;/a")
-            ///     .With("Right", "&lt;Keyboard&gt;/d");
-            ///
-            /// // Start a rebind of the "Up" binding.
-            /// moveAction.PerformInteractiveRebinding()
-            ///     .WithTargetBinding(1)
-            ///     .Start();
-            /// </code>
-            /// </example>
-            /// </remarks>
-            /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is negative.</exception>
-            /// <seealso cref="WithAction"/>
-            /// <seealso cref="InputAction.bindings"/>
-            /// <seealso cref="WithBindingMask"/>
-            /// <seealso cref="WithBindingGroup"/>
             public RebindingOperation WithTargetBinding(int bindingIndex)
             {
-                if (bindingIndex < 0)
-                    throw new ArgumentOutOfRangeException(nameof(bindingIndex));
-
                 m_TargetBindingIndex = bindingIndex;
-
-                ////REVIEW: This works nicely with this method but doesn't work as nicely with other means of selecting bindings (by group or mask).
-
-                if (m_ActionToRebind != null && bindingIndex < m_ActionToRebind.bindings.Count)
-                {
-                    var binding = m_ActionToRebind.bindings[bindingIndex];
-
-                    // If it's a composite, this also changes the type of the control we're looking for.
-                    if (binding.isPartOfComposite)
-                    {
-                        var composite = m_ActionToRebind.ChangeBinding(bindingIndex).PreviousCompositeBinding().binding.GetNameOfComposite();
-                        var partName = binding.name;
-                        var expectedLayout = InputBindingComposite.GetExpectedControlLayoutName(composite, partName);
-                        if (!string.IsNullOrEmpty(expectedLayout))
-                            WithExpectedControlType(expectedLayout);
-                    }
-
-                    // If the binding is part of a control scheme, only accept controls
-                    // that also match device requirements.
-                    var asset = action.actionMap?.asset;
-                    if (asset != null && !string.IsNullOrEmpty(binding.groups))
-                    {
-                        foreach (var group in binding.groups.Split(InputBinding.Separator))
-                        {
-                            var controlSchemeIndex =
-                                asset.controlSchemes.IndexOf(x => group.Equals(x.bindingGroup, StringComparison.InvariantCultureIgnoreCase));
-                            if (controlSchemeIndex == -1)
-                                continue;
-
-                            ////TODO: make this deal with and/or requirements
-
-                            var controlScheme = asset.controlSchemes[controlSchemeIndex];
-                            foreach (var requirement in controlScheme.deviceRequirements)
-                                WithControlsHavingToMatchPath(requirement.controlPath);
-                        }
-                    }
-                }
-
                 return this;
             }
 
-            /// <summary>
-            /// Apply the rebinding to all <see cref="InputAction.bindings"/> of the action given by <see cref="WithAction"/>
-            /// which are match the given binding mask (see <see cref="InputBinding.Matches"/>).
-            /// </summary>
-            /// <param name="bindingMask">A binding mask. See <see cref="InputBinding.Matches"/>.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <seealso cref="WithBindingGroup"/>
-            /// <seealso cref="WithTargetBinding"/>
             public RebindingOperation WithBindingMask(InputBinding? bindingMask)
             {
                 m_BindingMask = bindingMask;
                 return this;
             }
 
-            /// <summary>
-            /// Apply the rebinding to all <see cref="InputAction.bindings"/> of the action given by <see cref="WithAction"/>
-            /// which are associated with the given binding group (see <see cref="InputBinding.groups"/>).
-            /// </summary>
-            /// <param name="group">A binding group. See <see cref="InputBinding.groups"/>. A binding matches if any of its
-            /// group associates matches.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <seealso cref="WithBindingMask"/>
-            /// <seealso cref="WithTargetBinding"/>
             public RebindingOperation WithBindingGroup(string group)
             {
                 return WithBindingMask(new InputBinding {groups = group});
@@ -1751,21 +1570,12 @@ namespace UnityEngine.InputSystem
             /// we're usually interested in the fact that it came from a gamepad.
             /// </remarks>
             /// <seealso cref="InputBinding.overridePath"/>
-            /// <seealso cref="OnGeneratePath"/>
             public RebindingOperation WithoutGeneralizingPathOfSelectedControl()
             {
                 m_Flags |= Flags.DontGeneralizePathOfSelectedControl;
                 return this;
             }
 
-            /// <summary>
-            /// Instead of applying the generated path as an <see cref="InputBinding.overridePath"/>,
-            /// create a new binding on the given action (see <see cref="WithAction"/>).
-            /// </summary>
-            /// <param name="group">Binding group (see <see cref="InputBinding.groups"/>) to apply to the new binding.
-            /// This determines, for example, which control scheme (if any) the binding is associated with.</param>
-            /// <returns></returns>
-            /// <seealso cref="OnApplyBinding"/>
             public RebindingOperation WithRebindAddingNewBinding(string group = null)
             {
                 m_Flags |= Flags.AddNewBinding;
@@ -1799,8 +1609,6 @@ namespace UnityEngine.InputSystem
             /// Note that you can also use this method to <em>lower</em> the default threshold of 0.2
             /// in case you want more controls to make it through the matching process.
             /// </remarks>
-            /// <seealso cref="magnitudes"/>
-            /// <seealso cref="InputControl.EvaluateMagnitude()"/>
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
                 ThrowIfRebindInProgress();
@@ -1852,7 +1660,6 @@ namespace UnityEngine.InputSystem
             /// are accepted if <em>any</em> of the given paths matches. To reset the list, call <see
             /// cref="Reset"/>.
             /// </remarks>
-            /// <seealso cref="InputControlPath.Matches"/>
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
                 ThrowIfRebindInProgress();
@@ -1891,7 +1698,6 @@ namespace UnityEngine.InputSystem
             /// This method can be called repeatedly to add multiple exclusions. To reset the list,
             /// call <see cref="Reset"/>.
             /// </remarks>
-            /// <seealso cref="InputControlPath.Matches"/>
             public RebindingOperation WithControlsExcluding(string path)
             {
                 ThrowIfRebindInProgress();
@@ -1904,72 +1710,24 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            /// <summary>
-            /// If no match materializes with <paramref name="timeInSeconds"/>, cancel the rebind automatically.
-            /// </summary>
-            /// <param name="timeInSeconds">Time in seconds to wait for a successful rebind. Disabled if timeout is less than or equal to 0.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// Limiting rebinds by time can be useful in situations where a rebind may potentially put the user in a situation where
-            /// there is no other way to escape the rebind. For example, if <see cref="WithMatchingEventsBeingSuppressed"/> is engaged,
-            /// input may be consumed by the rebind and thus not reach the UI if <see cref="WithControlsExcluding"/> has not also been
-            /// configured accordingly.
-            ///
-            /// By default, no timeout is set.
-            /// </remarks>
-            /// <seealso cref="timeout"/>
             public RebindingOperation WithTimeout(float timeInSeconds)
             {
                 m_Timeout = timeInSeconds;
                 return this;
             }
 
-            /// <summary>
-            /// Delegate to invoke when the rebind completes successfully.
-            /// </summary>
-            /// <param name="callback">A delegate to invoke when the rebind is <see cref="completed"/>.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// Note that by the time this is invoked, the rebind has been fully applied, that is
-            /// <see cref="OnApplyBinding"/> has been executed.
-            /// </remarks>
             public RebindingOperation OnComplete(Action<RebindingOperation> callback)
             {
                 m_OnComplete = callback;
                 return this;
             }
 
-            /// <summary>
-            /// Delegate to invoke when the rebind is cancelled instead of completing. This happens when either an
-            /// input is received from a control explicitly set up to trigger cancellation (see <see cref="WithCancelingThrough(string)"/>
-            /// and <see cref="WithCancelingThrough(InputControl)"/>) or when <see cref="Cancel"/> is called
-            /// explicitly.
-            /// </summary>
-            /// <param name="callback">Delegate to invoke when the rebind is cancelled.</param>
-            /// <returns></returns>
-            /// <seealso cref="WithCancelingThrough(string)"/>
-            /// <seealso cref="Cancel"/>
-            /// <seealso cref="canceled"/>
             public RebindingOperation OnCancel(Action<RebindingOperation> callback)
             {
                 m_OnCancel = callback;
                 return this;
             }
 
-            /// <summary>
-            /// Delegate to invoke when the rebind has found one or more controls that it considers
-            /// potential matches. This allows modifying priority of matches or adding or removing
-            /// matches altogether.
-            /// </summary>
-            /// <param name="callback">Callback to invoke when one or more suitable controls have been found.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// The matches will be contained in <see cref="candidates"/>. In the callback, you can,
-            /// for example, alter the contents of the list in order to customize the selection process.
-            /// You can remove candidates with <see cref="AddCandidate"/> and/or remove candidates
-            /// with <see cref="RemoveCandidate"/>.
-            /// </remarks>
-            /// <seealso cref="candidates"/>
             public RebindingOperation OnPotentialMatch(Action<RebindingOperation> callback)
             {
                 m_OnPotentialMatch = callback;
@@ -1977,110 +1735,35 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Set function to call when generating the final binding path (see <see cref="InputBinding.path"/>) for a control
+            /// Set function to call when generating the final binding path for a control
             /// that has been selected.
             /// </summary>
-            /// <param name="callback">Delegate to call for when to generate a binding path.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// A rebind will by default create a path that it deems most useful for the purpose of rebinding. However, this
-            /// logic may be undesirable for your use case. By supplying a custom callback you can bypass this logic and thus replace it.
-            ///
-            /// When a matching control is singled out, the default logic will look for the device that introduces the given
-            /// control. For example, if the A button is pressed on an Xbox gamepad, the resulting path will be <c>"&lt;Gamepad&gt;/buttonSouth"</c>
-            /// as it is the <see cref="Gamepad"/> device that introduces the south face button on gamepads. Thus, the binding will work
-            /// with any other gamepad, not just the Xbox controller.
-            ///
-            /// If the delegate returns a null or empty string, the default logic will be re-engaged.
-            /// </remarks>
-            /// <seealso cref="InputBinding.path"/>
-            /// <seealso cref="WithoutGeneralizingPathOfSelectedControl"/>
+            /// <param name="callback">Delegate to call </param>
+            /// <returns></returns>
             public RebindingOperation OnGeneratePath(Func<InputControl, string> callback)
             {
                 m_OnGeneratePath = callback;
                 return this;
             }
 
-            /// <summary>
-            /// Delegate to invoke for compute the matching score for a candidate control.
-            /// </summary>
-            /// <param name="callback">A delegate that computes matching scores.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// By default, the actuation level of a control is used as its matching score. For a <see cref="Controls.StickControl"/>,
-            /// for example, the vector magnitude of the control will be its score. So, a stick that is actuated just a little
-            /// will have a lower score than a stick that is actuated to maximum extent in one direction.
-            ///
-            /// The control with the highest score will be the one appearing at index 0 in <see cref="candidates"/> and thus
-            /// will be the control picked by the rebind as the top candidate.
-            ///
-            /// By installing a custom delegate, it is possible to customize the scoring and apply custom logic to boost
-            /// or lower scores of controls.
-            ///
-            /// The first argument to the delegate is the control that is being added to <see cref="candidates"/> and the
-            /// second argument is a pointer to the input event that contains an input on the control.
-            /// </remarks>
-            /// <seealso cref="scores"/>
-            /// <seealso cref="candidates"/>
             public RebindingOperation OnComputeScore(Func<InputControl, InputEventPtr, float> callback)
             {
                 m_OnComputeScore = callback;
                 return this;
             }
 
-            /// <summary>
-            /// Apply a generated binding <see cref="InputBinding.path"/> as the final step to complete a rebind.
-            /// </summary>
-            /// <param name="callback">Delegate to invoke in order to the apply the generated binding path.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// Once a binding path has been generated (see <see cref="OnGeneratePath"/>) from a candidate control,
-            /// the last step is to apply the path. The default logic will take the supplied action (see <see cref="WithAction"/>)
-            /// and apply the path as an <see cref="InputBinding.overridePath"/> on all bindings that have been selected
-            /// for rebinding with <see cref="WithTargetBinding"/>, <see cref="WithBindingMask"/>, or <see cref="WithBindingGroup"/>.
-            ///
-            /// To customize this process, you can supply a custom delegate via this method. If you do so, the default
-            /// logic is bypassed and the step left entirely to the delegate. This also makes it possible to use
-            /// rebind operations without even having an action or even <see cref="InputBinding"/>s.
-            /// </remarks>
             public RebindingOperation OnApplyBinding(Action<RebindingOperation, string> callback)
             {
                 m_OnApplyBinding = callback;
                 return this;
             }
 
-            /// <summary>
-            /// If a successful match has been found, wait for the given time for a better match to appear before
-            /// committing to the match.
-            /// </summary>
-            /// <param name="seconds">Time in seconds to wait until committing to a match.</param>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <remarks>
-            /// While this adds a certain amount of lag to the operation, the lag is not really perceptible if the timeout
-            /// is kept short.
-            ///
-            /// What this helps with is controls such as sticks where, when moved out of the deadzone, the initial direction
-            /// that the user presses may not be the one actually intended. For example, the user may be pressing slightly
-            /// more in the X direction before finally very clearly going more strongly in the Y direction. If the rebind
-            /// does not wait for a bit but instead takes the first actuation as is, the rebind may appear overly brittle.
-            ///
-            /// An alternative to timeouts is to set higher magnitude thresholds with <see cref="WithMagnitudeHavingToBeGreaterThan"/>.
-            /// The default threshold is 0.2f. By setting it to 0.6f or even higher, timeouts may be unnecessary.
-            /// </remarks>
             public RebindingOperation OnMatchWaitForAnother(float seconds)
             {
                 m_WaitSecondsAfterMatch = seconds;
                 return this;
             }
 
-            /// <summary>
-            /// Start the rebinding. This should be invoked after the rebind operation has been fully configured.
-            /// </summary>
-            /// <returns>The same RebindingOperation instance.</returns>
-            /// <exception cref="InvalidOperationException">The rebind has been configure incorrectly. For example, no action has
-            /// been given but no <see cref="OnApplyBinding"/> callback has been installed either.</exception>
-            /// <seealso cref="Cancel"/>
-            /// <seealso cref="Dispose"/>
             public RebindingOperation Start()
             {
                 // Ignore if already started.
@@ -2112,11 +1795,6 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            /// <summary>
-            /// Cancel an ongoing rebind. This will invoke the callback supplied by <see cref="OnCancel"/> (if any).
-            /// </summary>
-            /// <seealso cref="Start"/>
-            /// <see cref="started"/>
             public void Cancel()
             {
                 if (!started)
@@ -2136,17 +1814,6 @@ namespace UnityEngine.InputSystem
                 OnComplete();
             }
 
-            /// <summary>
-            /// Add a candidate to <see cref="candidates"/>. This will also add values to <see cref="scores"/> and
-            /// <see cref="magnitudes"/>. If the control has already been added, it's values are simply updated based
-            /// on the given arguments.
-            /// </summary>
-            /// <param name="control">A control that is meant to be considered as a candidate for the rebind.</param>
-            /// <param name="score">The score to associate with the control (see <see cref="scores"/>). By default, the control with the highest
-            /// score will be picked by the rebind.</param>
-            /// <param name="magnitude">Actuation level of the control to enter into <see cref="magnitudes"/>.</param>
-            /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
-            /// <seealso cref="RemoveCandidate"/>
             public void AddCandidate(InputControl control, float score, float magnitude = -1)
             {
                 if (control == null)
@@ -2171,13 +1838,6 @@ namespace UnityEngine.InputSystem
                 SortCandidatesByScore();
             }
 
-            /// <summary>
-            /// Remove a control from the list of <see cref="candidates"/>. This also removes its entries from
-            /// <see cref="scores"/> and <see cref="magnitudes"/>.
-            /// </summary>
-            /// <param name="control">Control to remove from <see cref="candidates"/>.</param>
-            /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
-            /// <seealso cref="AddCandidate"/>
             public void RemoveCandidate(InputControl control)
             {
                 if (control == null)
@@ -2192,10 +1852,6 @@ namespace UnityEngine.InputSystem
                 ArrayHelpers.EraseAtWithCapacity(m_Scores, ref candidateCount, index);
             }
 
-            /// <summary>
-            /// Release all memory held by the option, especially unmanaged memory which will not otherwise
-            /// be freed.
-            /// </summary>
             public void Dispose()
             {
                 UnhookOnEvent();
@@ -2445,10 +2101,9 @@ namespace UnityEngine.InputSystem
                 {
                     for (var j = i; j > 0 && m_Scores[j - 1] < m_Scores[j]; --j)
                     {
-                        var k = j - 1;
-                        m_Scores.SwapElements(j, k);
-                        m_Candidates.SwapElements(j, k);
-                        m_Magnitudes.SwapElements(j, k);
+                        m_Scores.SwapElements(j, j - 1);
+                        m_Candidates.SwapElements(j, j - 1);
+                        m_Magnitudes.SwapElements(i, j - 1);
                     }
                 }
             }
@@ -2689,22 +2344,9 @@ namespace UnityEngine.InputSystem
         /// <exception cref="InvalidOperationException">The binding at <paramref name="bindingIndex"/> is a composite binding.</exception>
         /// <remarks>
         /// This method will automatically perform a set of configuration on the <see cref="RebindingOperation"/>
-        /// based on the action and, if specified, binding. In particular, it will apply the following default
-        /// configuration:
+        /// based on the action and, if specified, binding.
         ///
-        /// <ul>
-        /// <li><see cref="RebindingOperation.WithAction"/> will be called with <paramref name="action"/></li>
-        /// <li>The default timeout will be set to 0.05f seconds with <see cref="RebindingOperation.OnMatchWaitForAnother"/>.</li>
-        /// <li>Pointer <see cref="Pointer.delta"/> and <see cref="Pointer.position"/> as well as touch <see cref="Controls.TouchControl.position"/>
-        /// and <see cref="Controls.TouchControl.delta"/> controls will be excluded with <see cref="RebindingOperation.WithControlsExcluding"/>.
-        /// This prevents mouse movement or touch leading to rebinds as it will generally be used to operate the UI.</li>
-        /// <li><see cref="RebindingOperation.WithMatchingEventsBeingSuppressed"/> will be invoked to suppress input funneled into rebinds
-        /// from being picked up elsewhere.</li>
-        /// <li>Except if the rebind is looking for a button, <see cref="Keyboard.escapeKey"/> will be set up to cancel the rebind
-        /// using <see cref="RebindingOperation.WithCancelingThrough(string)"/>.</li>
-        /// <li>If <paramref name="bindingIndex"/> is given, <see cref="RebindingOperation.WithTargetBinding"/> is invoked to
-        /// target the given binding with the rebind.</li>
-        /// </ul>
+        /// TODO
         ///
         /// Note that rebind operations must be disposed of once finished in order to not leak memory.
         ///
@@ -2764,6 +2406,46 @@ namespace UnityEngine.InputSystem
                         $"Cannot perform rebinding on composite binding '{bindings[bindingIndex]}' of '{action}'");
 
                 rebind.WithTargetBinding(bindingIndex);
+
+                // If the binding is a part binding, switch from the action's expected control type to
+                // that expected by the composite's part.
+                if (bindings[bindingIndex].isPartOfComposite)
+                {
+                    // Search for composite.
+                    var compositeIndex = bindingIndex - 1;
+                    while (compositeIndex > 0 && !bindings[compositeIndex].isComposite)
+                        --compositeIndex;
+
+                    if (compositeIndex >= 0 && bindings[compositeIndex].isComposite)
+                    {
+                        var compositeName = bindings[compositeIndex].GetNameOfComposite();
+                        var controlTypeExpectedByPart = InputBindingComposite.GetExpectedControlLayoutName(compositeName, bindings[bindingIndex].name);
+
+                        if (!string.IsNullOrEmpty(controlTypeExpectedByPart))
+                            rebind.WithExpectedControlType(controlTypeExpectedByPart);
+                    }
+                }
+
+                // If the binding is part of a control scheme, only accept controls
+                // that also match device requirements.
+                var bindingGroups = bindings[bindingIndex].groups;
+                var asset = action.actionMap?.asset;
+                if (asset != null && !string.IsNullOrEmpty(action.bindings[bindingIndex].groups))
+                {
+                    foreach (var group in bindingGroups.Split(InputBinding.Separator))
+                    {
+                        var controlSchemeIndex =
+                            asset.controlSchemes.IndexOf(x => group.Equals(x.bindingGroup, StringComparison.InvariantCultureIgnoreCase));
+                        if (controlSchemeIndex == -1)
+                            continue;
+
+                        ////TODO: make this deal with and/or requirements
+
+                        var controlScheme = asset.controlSchemes[controlSchemeIndex];
+                        foreach (var requirement in controlScheme.deviceRequirements)
+                            rebind.WithControlsHavingToMatchPath(requirement.controlPath);
+                    }
+                }
             }
 
             return rebind;

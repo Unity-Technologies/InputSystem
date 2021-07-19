@@ -160,7 +160,7 @@ partial class CoreTests
                     { ""name"" : ""VariantAControl"", ""variants"" : ""A"", ""layout"" : ""Button"" },
                     { ""name"" : ""VariantBControl"", ""variants"" : ""B"", ""layout"" : ""Button"" },
                     { ""name"" : ""VariantCControl"", ""variants"" : ""C"", ""layout"" : ""Button"" },
-                    { ""name"" : ""VariantABControl"", ""variants"" : ""A;B"", ""layout"" : ""Button"" },
+                    { ""name"" : ""VariantABControl"", ""variants"" : ""A,B"", ""layout"" : ""Button"" },
                     { ""name"" : ""NoVariantControl"", ""layout"" : ""Button"" }
                 ]
             }
@@ -4179,37 +4179,5 @@ partial class CoreTests
         ////REVIEW: should this require IME to be enabled?
         keyboard.SetIMECursorPosition(Vector2.one);
         Assert.That(commandWasSent, Is.True);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_RemovingKeyboardMakesNextKeyboardCurrent()
-    {
-        var keyboard1 = InputSystem.AddDevice<Keyboard>();
-        Press(keyboard1.spaceKey);
-        Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
-
-        var keyboard2 = InputSystem.AddDevice<Keyboard>();
-        Press(keyboard2.spaceKey);
-        Assert.That(Keyboard.current, Is.EqualTo(keyboard2));
-
-        InputSystem.RemoveDevice(keyboard2);
-        Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_RemovingDevice_MakesNextDeviceOfTypeCurrent()
-    {
-        var mouse = InputSystem.AddDevice<Mouse>();
-        Press(mouse.leftButton);
-        Assert.That(Pointer.current, Is.EqualTo(mouse));
-
-        var pointer = InputSystem.AddDevice<Pointer>();
-        Move(pointer.position, Vector2.right);
-        Assert.That(Pointer.current, Is.EqualTo(pointer));
-
-        InputSystem.RemoveDevice(pointer);
-        Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
 }

@@ -58,11 +58,6 @@ namespace UnityEngine.InputSystem.Editor
             Reload();
         }
 
-        public void SetPickedCallback(Action<string> action)
-        {
-            m_OnPickCallback = action;
-        }
-
         protected override void OnDestroy()
         {
             m_RebindingOperation?.Dispose();
@@ -494,7 +489,7 @@ namespace UnityEngine.InputSystem.Editor
             while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(deviceLayoutName, out deviceLayoutName));
         }
 
-        private Action<string> m_OnPickCallback;
+        private readonly Action<string> m_OnPickCallback;
         private InputControlPicker.Mode m_Mode;
         private string[] m_ControlPathsToMatch;
         private string m_ExpectedControlLayout;

@@ -1347,6 +1347,9 @@ namespace UnityEngine.InputSystem
                                 m_CurrentControl = null;
                                 continue;
                             }
+
+                            // Jump past location of this control.
+                            m_CurrentBitOffset = controlBitOffset + controlBitSize - m_CurrentControlStateBitOffset;
                         }
 
                         ++m_CurrentIndexInStateOffsetToControlIndexMap;

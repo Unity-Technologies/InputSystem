@@ -52,9 +52,9 @@ internal class EnhancedTouchTests : CoreTestsFixture
         #endif
 
         // Some state is kept alive in-between Disable/Enable. Manually clean it out.
-        Touch.s_OnFingerDown = default;
-        Touch.s_OnFingerUp = default;
-        Touch.s_OnFingerMove = default;
+        Touch.s_OnFingerDown = new InlinedArray<Action<Finger>>();
+        Touch.s_OnFingerUp = new InlinedArray<Action<Finger>>();
+        Touch.s_OnFingerMove = new InlinedArray<Action<Finger>>();
 
         TouchSimulation.Destroy();
         TouchSimulation.s_Instance = m_OldTouchSimulationInstance;

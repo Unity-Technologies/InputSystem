@@ -89,15 +89,12 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        public void OnGUI(Rect rect, GUIContent label = null, SerializedProperty property = null, Action modifiedCallback = null)
+        public void OnGUI(Rect rect)
         {
-            var pathLabel = label ?? m_PathLabel;
-            var serializedProperty = property ?? pathProperty;
-
             var lineRect = rect;
             var labelRect = lineRect;
             labelRect.width = EditorGUIUtility.labelWidth;
-            EditorGUI.LabelField(labelRect, pathLabel);
+            EditorGUI.LabelField(labelRect, m_PathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
 
@@ -109,7 +106,7 @@ namespace UnityEngine.InputSystem.Editor
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
-            var path = serializedProperty.stringValue;
+            var path = pathProperty.stringValue;
             ////TODO: this should be cached; generates needless GC churn
             var displayName = InputControlPath.ToHumanReadableString(path);
 
@@ -121,13 +118,15 @@ namespace UnityEngine.InputSystem.Editor
                 bindingTextRect.x -= 15;
                 bindingTextRect.width += 15;
 
+                bindingTextRect.height -= 2;
+                bindingTextRect.y += 1;
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(bindingTextRect, path);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    serializedProperty.stringValue = path;
-                    serializedProperty.serializedObject.ApplyModifiedProperties();
-                    (modifiedCallback ?? onModified).Invoke();
+                    pathProperty.stringValue = path;
+                    pathProperty.serializedObject.ApplyModifiedProperties();
+                    onModified();
                 }
             }
             else
@@ -135,9 +134,8 @@ namespace UnityEngine.InputSystem.Editor
                 // Dropdown that shows binding text and allows opening control picker.
                 if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
                 {
-                    SetExpectedControlLayoutFromAttribute(serializedProperty);
                     ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
-                    ShowDropdown(bindingTextRect, serializedProperty, modifiedCallback ?? onModified);
+                    ShowDropdown(bindingTextRect);
                 }
             }
 
@@ -146,7 +144,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorStyles.miniButton);
         }
 
-        private void ShowDropdown(Rect rect, SerializedProperty serializedProperty, Action modifiedCallback)
+        private void ShowDropdown(Rect rect)
         {
             if (m_PickerDropdown == null)
             {
@@ -154,34 +152,16 @@ namespace UnityEngine.InputSystem.Editor
                     m_PickerState,
                     path =>
                     {
-                        serializedProperty.stringValue = path;
+                        pathProperty.stringValue = path;
                         m_PickerState.manualPathEditMode = false;
-                        modifiedCallback();
+                        onModified();
                     });
             }
-
-            m_PickerDropdown.SetPickedCallback(path =>
-            {
-                serializedProperty.stringValue = path;
-                m_PickerState.manualPathEditMode = false;
-                modifiedCallback();
-            });
 
             m_PickerDropdown.SetControlPathsToMatch(m_ControlPathsToMatch);
             m_PickerDropdown.SetExpectedControlLayout(m_ExpectedControlLayout);
 
             m_PickerDropdown.Show(rect);
-        }
-
-        private void SetExpectedControlLayoutFromAttribute(SerializedProperty property)
-        {
-            var field = property.GetField();
-            if (field == null)
-                return;
-
-            var attribute = field.GetCustomAttribute<InputControlAttribute>();
-            if (attribute != null)
-                SetExpectedControlLayout(attribute.layout);
         }
 
         public SerializedProperty pathProperty { get; }

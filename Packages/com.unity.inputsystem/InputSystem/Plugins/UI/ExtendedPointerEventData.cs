@@ -80,15 +80,12 @@ namespace UnityEngine.InputSystem.UI
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.Append(base.ToString());
-            stringBuilder.AppendLine("button: " + button); // Defined in PointerEventData but PointerEventData.ToString() does not include it.
-            stringBuilder.AppendLine("clickTime: " + clickTime); // Same here.
-            stringBuilder.AppendLine("clickCount: " + clickCount); // Same here.
-            stringBuilder.AppendLine("device: " + device);
-            stringBuilder.AppendLine("pointerType: " + pointerType);
-            stringBuilder.AppendLine("touchId: " + touchId);
-            stringBuilder.AppendLine("pressPosition: " + pressPosition);
-            stringBuilder.AppendLine("trackedDevicePosition: " + trackedDevicePosition);
-            stringBuilder.AppendLine("trackedDeviceOrientation: " + trackedDeviceOrientation);
+            stringBuilder.AppendLine("<b>button</b>: " + button); // Defined in PointerEventData but PointerEventData.ToString() does not include it.
+            stringBuilder.AppendLine("<b>device</b>: " + device);
+            stringBuilder.AppendLine("<b>pointerType</b>: " + pointerType);
+            stringBuilder.AppendLine("<b>touchId</b>: " + touchId);
+            stringBuilder.AppendLine("<b>trackedDevicePosition</b>: " + trackedDevicePosition);
+            stringBuilder.AppendLine("<b>trackedDeviceOrientation</b>: " + trackedDeviceOrientation);
             return stringBuilder.ToString();
         }
 

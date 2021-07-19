@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.Interactions
         public float pressPoint;
 
         private float tapTimeOrDefault => tapTime > 0.0 ? tapTime : InputSystem.settings.defaultTapTime;
-        internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : InputSystem.settings.multiTapDelayTime;
+        internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : tapTimeOrDefault * 2;
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
         private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
@@ -183,7 +183,8 @@ namespace UnityEngine.InputSystem.Interactions
             m_TapDelaySetting.Initialize("Max Tap Spacing",
                 "The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is canceled.",
                 "Default Tap Spacing",
-                () => target.tapDelay, x => target.tapDelay = x, () => InputSystem.settings.multiTapDelayTime);
+                () => target.tapDelay, x => target.tapDelay = x, () => target.tapDelayOrDefault,
+                defaultComesFromInputSettings: false);
             m_PressPointSetting.Initialize("Press Point",
                 "The amount of actuation a control requires before being considered pressed. If not set, default to "
                 + "'Default Button Press Point' in the global input settings.",
