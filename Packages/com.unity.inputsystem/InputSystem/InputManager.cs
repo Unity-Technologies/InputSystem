@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem
                 ////TODO: if we're *inside* an update, this should use the current update type
 
                 #if UNITY_EDITOR
-                if (!gameIsPlayingAndHasFocus)
+                if (!gameIsPlaying || !hasInputFocus)
                     return InputUpdateType.Editor;
                 #endif
 
@@ -166,35 +166,20 @@ namespace UnityEngine.InputSystem
 
         public event DeviceChangeListener onDeviceChange
         {
-            add => m_DeviceChangeListeners.AppendWithCapacity(value);
-            remove
-            {
-                var index = m_DeviceChangeListeners.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceChangeListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_DeviceChangeListeners.AddCallback(value);
+            remove => m_DeviceChangeListeners.RemoveCallback(value);
         }
 
         public event DeviceStateChangeListener onDeviceStateChange
         {
-            add => m_DeviceStateChangeListeners.AppendWithCapacity(value);
-            remove
-            {
-                var index = m_DeviceStateChangeListeners.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceStateChangeListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_DeviceStateChangeListeners.AddCallback(value);
+            remove => m_DeviceStateChangeListeners.RemoveCallback(value);
         }
 
         public event InputDeviceCommandDelegate onDeviceCommand
         {
-            add => m_DeviceCommandCallbacks.Append(value);
-            remove
-            {
-                var index = m_DeviceCommandCallbacks.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceCommandCallbacks.RemoveAtWithCapacity(index);
-            }
+            add => m_DeviceCommandCallbacks.AddCallback(value);
+            remove => m_DeviceCommandCallbacks.RemoveCallback(value);
         }
 
         ////REVIEW: would be great to have a way to sort out precedence between two callbacks
@@ -202,7 +187,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                m_DeviceFindLayoutCallbacks.AppendWithCapacity(value);
+                m_DeviceFindLayoutCallbacks.AddCallback(value);
 
                 // Having a new callback on this event can change the set of devices we recognize.
                 // See if there's anything in the list of available devices that we can now turn
@@ -213,23 +198,13 @@ namespace UnityEngine.InputSystem
                 //       those changes.
                 AddAvailableDevicesThatAreNowRecognized();
             }
-            remove
-            {
-                var index = m_DeviceFindLayoutCallbacks.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceFindLayoutCallbacks.RemoveAtWithCapacity(index);
-            }
+            remove => m_DeviceFindLayoutCallbacks.RemoveCallback(value);
         }
 
         public event LayoutChangeListener onLayoutChange
         {
-            add => m_LayoutChangeListeners.AppendWithCapacity(value);
-            remove
-            {
-                var index = m_LayoutChangeListeners.IndexOf(value);
-                if (index >= 0)
-                    m_LayoutChangeListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_LayoutChangeListeners.AddCallback(value);
+            remove => m_LayoutChangeListeners.RemoveCallback(value);
         }
 
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
@@ -237,17 +212,8 @@ namespace UnityEngine.InputSystem
         ////TODO: introduce an alternative that consumes events in bulk
         public event EventListener onEvent
         {
-            add
-            {
-                if (!m_EventListeners.Contains(value))
-                    m_EventListeners.AppendWithCapacity(value);
-            }
-            remove
-            {
-                var index = m_EventListeners.IndexOf(value);
-                if (index >= 0)
-                    m_EventListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_EventListeners.AddCallback(value);
+            remove => m_EventListeners.RemoveCallback(value);
         }
 
         public event UpdateListener onBeforeUpdate
@@ -255,50 +221,51 @@ namespace UnityEngine.InputSystem
             add
             {
                 InstallBeforeUpdateHookIfNecessary();
-                if (!m_BeforeUpdateListeners.Contains(value))
-                    m_BeforeUpdateListeners.AppendWithCapacity(value);
+                m_BeforeUpdateListeners.AddCallback(value);
             }
-            remove
-            {
-                var index = m_BeforeUpdateListeners.IndexOf(value);
-                if (index >= 0)
-                    m_BeforeUpdateListeners.RemoveAtWithCapacity(index);
-            }
+            remove => m_BeforeUpdateListeners.RemoveCallback(value);
         }
 
         public event UpdateListener onAfterUpdate
         {
-            add
-            {
-                if (!m_AfterUpdateListeners.Contains(value))
-                    m_AfterUpdateListeners.AppendWithCapacity(value);
-            }
-            remove
-            {
-                var index = m_AfterUpdateListeners.IndexOf(value);
-                if (index >= 0)
-                    m_AfterUpdateListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_AfterUpdateListeners.AddCallback(value);
+            remove => m_AfterUpdateListeners.RemoveCallback(value);
         }
 
         public event Action onSettingsChange
         {
-            add
-            {
-                if (!m_SettingsChangedListeners.Contains(value))
-                    m_SettingsChangedListeners.AppendWithCapacity(value);
-            }
-            remove
-            {
-                var index = m_SettingsChangedListeners.IndexOf(value);
-                if (index >= 0)
-                    m_SettingsChangedListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_SettingsChangedListeners.AddCallback(value);
+            remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
-        private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+        private bool m_RunUpdatesInEditMode;
+
+        public bool runUpdatesInEditMode
+        {
+            get => m_RunUpdatesInEditMode;
+            set => m_RunUpdatesInEditMode = value;
+        }
+#endif
+
+        private bool gameIsPlaying =>
+#if UNITY_EDITOR
+                     m_Runtime.isInPlayMode && !m_Runtime.isPaused;
+#else
+            true;
+#endif
+
+        // TODO Should we assume focus is always true outside the editor?
+        private bool hasInputFocus =>
+#if UNITY_EDITOR
+            (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+#else
+            true;
+#endif
+
+        private bool shouldProcessInputEvents =>
+#if UNITY_EDITOR
+            (gameIsPlaying || runUpdatesInEditMode) && hasInputFocus;
 #else
             true;
 #endif
@@ -514,8 +481,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
-                m_LayoutChangeListeners[i](layoutName.ToString(), change);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, "InputSystem.onLayoutChange");
         }
 
         public void RegisterPrecompiledLayout<TDevice>(string metadata)
@@ -783,8 +749,7 @@ namespace UnityEngine.InputSystem
             ////      remove those layouts, too
 
             // Let listeners know.
-            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
-                m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, "InputSystem.onLayoutChange");
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
@@ -852,17 +817,25 @@ namespace UnityEngine.InputSystem
                 m_DeviceFindExecuteCommandDeviceId = deviceId;
 
                 var haveOverriddenLayoutName = false;
+                m_DeviceFindLayoutCallbacks.LockForChanges();
                 for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
                 {
-                    var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName,
-                                                                   m_DeviceFindExecuteCommandDelegate);
-
-                    if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                    try
                     {
-                        layoutName = new InternedString(newLayout);
-                        haveOverriddenLayoutName = true;
+                        var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
+                        if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                        {
+                            layoutName = new InternedString(newLayout);
+                            haveOverriddenLayoutName = true;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onFindLayoutForDevice' callbacks");
+                        Debug.LogException(exception);
                     }
                 }
+                m_DeviceFindLayoutCallbacks.UnlockForChanges();
             }
 
             Profiler.EndSample();
@@ -1030,8 +1003,7 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, "InputSystem.onDeviceChange");
 
             ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
@@ -1172,8 +1144,7 @@ namespace UnityEngine.InputSystem
             device.MakeCurrent();
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
         }
 
         ////TODO: this path should really put the device on the list of available devices
@@ -1301,8 +1272,10 @@ namespace UnityEngine.InputSystem
             device.NotifyRemoved();
 
             // Let listeners know.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, "InputSystem.onDeviceChange");
+
+            // Try setting next device of same type as current
+            InputSystem.GetDevice(device.GetType())?.MakeCurrent();
         }
 
         public void FlushDisconnectedDevices()
@@ -1407,8 +1380,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, deviceChange);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, "InputSystem.onDeviceChange");
         }
 
         ////TODO: support combining monitors for bitfields
@@ -1504,17 +1476,30 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private unsafe void QueueEvent(InputEvent* eventPtr)
+        {
+            // If we're currently in OnUpdate(), the m_InputEventStream will be open. In that case,
+            // append events directly to that buffer and do *NOT* go into native.
+            if (m_InputEventStream.isOpen)
+            {
+                m_InputEventStream.Write(eventPtr);
+                return;
+            }
+
+            // Don't bother keeping the data on the managed side. Just stuff the raw data directly
+            // into the native buffers. This also means this method is thread-safe.
+            m_Runtime.QueueEvent(eventPtr);
+        }
+
         public unsafe void QueueEvent(InputEventPtr ptr)
         {
-            m_Runtime.QueueEvent(ptr.data);
+            QueueEvent(ptr.data);
         }
 
         public unsafe void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
-            // Don't bother keeping the data on the managed side. Just stuff the raw data directly
-            // into the native buffers. This also means this method is thread-safe.
-            m_Runtime.QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
+            QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()
@@ -1785,18 +1770,19 @@ namespace UnityEngine.InputSystem
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
-        private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        private InlinedArray<DeviceStateChangeListener> m_DeviceStateChangeListeners;
-        private InlinedArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
-        internal InlinedArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
-        private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
-        private InlinedArray<EventListener> m_EventListeners;
-        private InlinedArray<UpdateListener> m_BeforeUpdateListeners;
-        private InlinedArray<UpdateListener> m_AfterUpdateListeners;
-        private InlinedArray<Action> m_SettingsChangedListeners;
+        private CallbackArray<DeviceChangeListener> m_DeviceChangeListeners;
+        private CallbackArray<DeviceStateChangeListener> m_DeviceStateChangeListeners;
+        private CallbackArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
+        internal CallbackArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
+        private CallbackArray<LayoutChangeListener> m_LayoutChangeListeners;
+        private CallbackArray<EventListener> m_EventListeners;
+        private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
+        private CallbackArray<UpdateListener> m_AfterUpdateListeners;
+        private CallbackArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
+        private InputEventStream m_InputEventStream;
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
         // only once to avoid creating garbage.
@@ -2145,8 +2131,8 @@ namespace UnityEngine.InputSystem
                     device.m_DeviceId = deviceId;
                     AddDevice(device);
 
-                    for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                        m_DeviceChangeListeners[i](device, InputDeviceChange.Reconnected);
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reconnected,
+                        "InputSystem.onDeviceChange");
                 }
                 else
                 {
@@ -2371,8 +2357,8 @@ namespace UnityEngine.InputSystem
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
             // Let listeners know.
-            for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
-                m_SettingsChangedListeners[i]();
+            DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
+                "InputSystem.onSettingsChange");
         }
 
         internal void AddAvailableDevicesThatAreNowRecognized()
@@ -2514,10 +2500,10 @@ namespace UnityEngine.InputSystem
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
             // Ignore editor updates when the game is playing and has focus. All input goes to player.
-            if (gameIsPlayingAndHasFocus)
+            if (gameIsPlaying && hasInputFocus)
                 mask &= ~InputUpdateType.Editor;
             // If the player isn't running, the only thing we run is editor updates.
-            else if (updateType != InputUpdateType.Editor)
+            else if (updateType != InputUpdateType.Editor && !runUpdatesInEditMode)
                 return false;
 #endif
             return (updateType & mask) != 0;
@@ -2539,6 +2525,7 @@ namespace UnityEngine.InputSystem
         /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
         /// which buffers we activate in the update and write the event data into.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
@@ -2546,6 +2533,9 @@ namespace UnityEngine.InputSystem
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
+
+            if (m_InputEventStream.isOpen)
+                throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
 
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
@@ -2592,52 +2582,52 @@ namespace UnityEngine.InputSystem
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = gameIsPlayingAndHasFocus && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+            var timesliceEvents = shouldProcessInputEvents && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
-                if (gameIsPlayingAndHasFocus)
+                if (shouldProcessInputEvents)
                     ProcessStateChangeMonitorTimeouts();
 
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
                 InvokeAfterUpdateCallback();
-                eventBuffer.Reset();
                 return;
             }
 
-            var currentEventReadPtr =
-                (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
-            var remainingEventCount = eventBuffer.eventCount;
             var processingStartTime = Stopwatch.GetTimestamp();
-
-            // When timeslicing events or in before-render updates, we may be leaving events in the buffer
-            // for later processing. We do this by compacting the event buffer and moving events down such
-            // that the events we leave in the buffer form one contiguous chunk of memory at the beginning
-            // of the buffer.
-            var currentEventWritePtr = currentEventReadPtr;
-            var numEventsRetainedInBuffer = 0;
-
             var totalEventLag = 0.0;
 
-            // Handle events.
-            while (remainingEventCount > 0)
-            {
-                InputDevice device = null;
+            m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
+            var totalEventBytesProcessed = 0U;
 
-                Debug.Assert(!currentEventReadPtr->handled);
+            // Handle events.
+            while (m_InputEventStream.remainingEventCount > 0)
+            {
+                if (m_Settings.maxEventBytesPerUpdate > 0 &&
+                    totalEventBytesProcessed >= m_Settings.maxEventBytesPerUpdate)
+                {
+                    Debug.LogError("Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
+                        + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
+                    break;
+                }
+
+                InputDevice device = null;
+                var currentEventReadPtr = m_InputEventStream.currentEventPtr;
+
+                Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
 
                 // In before render updates, we only take state events and only those for devices
                 // that have before render updates enabled.
                 if (updateType == InputUpdateType.BeforeRender)
                 {
-                    while (remainingEventCount > 0)
+                    while (m_InputEventStream.remainingEventCount > 0)
                     {
-                        Debug.Assert(!currentEventReadPtr->handled);
+                        Debug.Assert(!currentEventReadPtr->handled, "Iterated to event in buffer that is already marked as handled");
 
                         device = TryGetDeviceById(currentEventReadPtr->deviceId);
                         if (device != null && device.updateBeforeRender &&
@@ -2645,11 +2635,10 @@ namespace UnityEngine.InputSystem
                              currentEventReadPtr->type == DeltaStateEvent.Type))
                             break;
 
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
+                        currentEventReadPtr = m_InputEventStream.Advance(leaveEventInBuffer: true);
                     }
                 }
-                if (remainingEventCount == 0)
+                if (m_InputEventStream.remainingEventCount == 0)
                     break;
 
                 var currentEventTimeInternal = currentEventReadPtr->internalTime;
@@ -2670,8 +2659,7 @@ namespace UnityEngine.InputSystem
                     (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                      InputSystem.s_SystemObject.enterPlayModeTime == 0))
                 {
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                    m_InputEventStream.Advance(leaveEventInBuffer: false);
                     continue;
                 }
                 #endif
@@ -2679,8 +2667,7 @@ namespace UnityEngine.InputSystem
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventTimeInternal >= currentTime)
                 {
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
+                    m_InputEventStream.Advance(leaveEventInBuffer: true);
                     continue;
                 }
 
@@ -2698,8 +2685,7 @@ namespace UnityEngine.InputSystem
                     m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
                     #endif
 
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                    m_InputEventStream.Advance(leaveEventInBuffer: false);
 
                     // No device found matching event. Ignore it.
                     continue;
@@ -2708,14 +2694,13 @@ namespace UnityEngine.InputSystem
                 // Give listeners a shot at the event.
                 if (m_EventListeners.length > 0)
                 {
-                    for (var i = 0; i < m_EventListeners.length; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
+                        new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
 
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
                     {
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                        m_InputEventStream.Advance(leaveEventInBuffer: false);
                         continue;
                     }
                 }
@@ -2781,10 +2766,17 @@ namespace UnityEngine.InputSystem
                             haveChangedStateOtherThanNoise = UpdateState(device, eventPtr, updateType);
                         }
 
+                        totalEventBytesProcessed += eventPtr.sizeInBytes;
+
                         // Update timestamp on device.
                         // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
-                        //       Only events should.
-                        if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime)
+                        //       Only events should. If running play mode updates in editor, we want to defer to the play mode
+                        //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
+                        if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
+#if UNITY_EDITOR
+                            && !(updateType == InputUpdateType.Editor && runUpdatesInEditMode)
+#endif
+                        )
                             device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
                         // Make device current. Again, only do this when receiving events.
@@ -2835,22 +2827,31 @@ namespace UnityEngine.InputSystem
                         if (device.native && !device.description.empty)
                         {
                             ArrayHelpers.AppendWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, device);
-                            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                                m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
+                            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
+                                device, InputDeviceChange.Disconnected, "InputSystem.onDeviceChange");
                         }
                         break;
                     }
 
                     case DeviceConfigurationEvent.Type:
-                        device.OnConfigurationChanged();
+                        device.NotifyConfigurationChanged();
                         InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
-                        for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                            m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
+                        DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
+                            device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");
                         break;
                 }
 
-                eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                    ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                // Editor updates go into a separate buffer.  If we want to update the player buffer,
+                // we need to keep the events in the queue, and reprocess again once we are in a player-based update loop.
+#if UNITY_EDITOR
+                bool leaveInBuffer = updateType == InputUpdateType.Editor &&
+                    runUpdatesInEditMode &&
+                    (currentEventReadPtr->type == StateEvent.Type ||
+                        currentEventReadPtr->type == DeltaStateEvent.Type);
+#else
+                bool leaveInBuffer = false;
+#endif
+                m_InputEventStream.Advance(leaveEventInBuffer: leaveInBuffer);
             }
 
             m_Metrics.totalEventProcessingTime += ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
@@ -2858,28 +2859,12 @@ namespace UnityEngine.InputSystem
 
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
-            InputUpdate.s_LastUpdateRetainedEventCount = (uint)numEventsRetainedInBuffer;
-            InputUpdate.s_LastUpdateRetainedEventBytes = (uint)((byte*)currentEventWritePtr -
-                (byte*)NativeArrayUnsafeUtility
-                    .GetUnsafeBufferPointerWithoutChecks(eventBuffer
-                    .data));
+            InputUpdate.s_LastUpdateRetainedEventCount = (uint)m_InputEventStream.numEventsRetainedInBuffer;
+            InputUpdate.s_LastUpdateRetainedEventBytes = m_InputEventStream.numBytesRetainedInBuffer;
 
-            // Update event buffer. If we have retained events, update event count
-            // and buffer size. If not, just reset.
-            if (numEventsRetainedInBuffer > 0)
-            {
-                var bufferPtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
-                Debug.Assert((byte*)currentEventWritePtr > (byte*)bufferPtr);
-                var newBufferSize = (byte*)currentEventWritePtr - (byte*)bufferPtr;
-                eventBuffer = new InputEventBuffer((InputEvent*)bufferPtr, numEventsRetainedInBuffer, (int)newBufferSize,
-                    (int)eventBuffer.capacityInBytes);
-            }
-            else
-            {
-                eventBuffer.Reset();
-            }
+            m_InputEventStream.Close(ref eventBuffer);
 
-            if (gameIsPlayingAndHasFocus)
+            if (shouldProcessInputEvents)
                 ProcessStateChangeMonitorTimeouts();
 
             ////TODO: fire event that allows code to update state *from* state we just updated
@@ -2895,8 +2880,8 @@ namespace UnityEngine.InputSystem
 
         private void InvokeAfterUpdateCallback()
         {
-            for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
-                m_AfterUpdateListeners[i]();
+            DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
+                "InputSystem.onAfterUpdate");
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
@@ -2938,8 +2923,8 @@ namespace UnityEngine.InputSystem
 
                     var listenerCount = numMonitors;
                     var memoryRegionCount = numMonitors;
-                    ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors[deviceIndex].listeners, ref listenerCount, i);
-                    ArrayHelpers.EraseAtWithCapacity(memoryRegions, ref memoryRegionCount, i);
+                    m_StateChangeMonitors[deviceIndex].listeners.EraseAtWithCapacity(ref listenerCount, i);
+                    memoryRegions.EraseAtWithCapacity(ref memoryRegionCount, i);
                     signals.SetLength(numMonitors - 1);
                     haveChangedSignalsBitfield = true;
                     --numMonitors;
@@ -3166,8 +3151,8 @@ namespace UnityEngine.InputSystem
             }
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceStateChangeListeners.length; ++i)
-                m_DeviceStateChangeListeners[i](device, eventPtr);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
+                device, eventPtr, "InputSystem.onDeviceStateChange");
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
@@ -3224,7 +3209,7 @@ namespace UnityEngine.InputSystem
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
             // fixed updates.
-            if (updateType == InputUpdateType.Editor && !gameIsPlayingAndHasFocus)
+            if (updateType == InputUpdateType.Editor && (!gameIsPlaying || !hasInputFocus))
             {
                 ////REVIEW: This isn't right. The editor does have update ticks which constitute the equivalent of player frames.
                 // The editor doesn't really have a concept of frame-to-frame operation the

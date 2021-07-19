@@ -6,6 +6,9 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////FIXME: The UI is currently not reacting to pointers until they are moved after the UI module has been enabled. What needs to
 ////       happen is that point, trackedDevicePosition, and trackedDeviceOrientation have initial state checks. However, for touch,
@@ -94,6 +97,11 @@ namespace UnityEngine.InputSystem.UI
         /// generally corresponds to the <see cref="InputDevice.deviceId"/> of the pointer device. An exception
         /// to this are touches as a <see cref="Touchscreen"/> may have multiple pointers (one for each active
         /// finger). For touch, you can use the <see cref="TouchControl.touchId"/> of the touch.
+        ///
+        /// Note that for touch, a pointer will stay valid for one frame before being removed. In other words,
+        /// when <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/> is received for a touch
+        /// and the touch was over a <c>GameObject</c>, the associated pointer is still considered over that
+        /// object for the frame in which the touch ended.
         ///
         /// To check whether any pointer is over a <c>GameObject</c>, simply pass a negative value such as -1.</param>
         /// <returns>True if the given pointer is currently hovering over a <c>GameObject</c>.</returns>
@@ -266,6 +274,8 @@ namespace UnityEngine.InputSystem.UI
             eventData.button = PointerEventData.InputButton.Left;
             state.leftButton.CopyPressStateTo(eventData);
 
+            // Unlike StandaloneInputModule, we process moves before processing buttons. This way
+            // UI elements get pointer enters/exits before they get button ups/downs and clicks.
             ProcessPointerMovement(ref state, eventData);
 
             // We always need to process move-related events in order to get PointerEnter and Exit events
@@ -293,8 +303,6 @@ namespace UnityEngine.InputSystem.UI
 
             ProcessPointerButton(ref state.middleButton, eventData);
             ProcessPointerButtonDrag(ref state.middleButton, eventData);
-
-            state.OnFrameFinished();
         }
 
         // if we are using a MultiplayerEventSystem, ignore any transforms
@@ -312,9 +320,9 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessPointerMovement(ref PointerModel pointer, ExtendedPointerEventData eventData)
         {
             var currentPointerTarget =
-                // If the pointer is a touch that was released this frame, we generate pointer-exit events
+                // If the pointer is a touch that was released the *previous* frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == UIPointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
+                (eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame) ||
                 (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
@@ -385,6 +393,8 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+        private const float kClickSpeed = 0.3f;
+
         private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerEventData eventData)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
@@ -395,6 +405,8 @@ namespace UnityEngine.InputSystem.UI
             // Button press.
             if (button.wasPressedThisFrame)
             {
+                button.pressTime = InputRuntime.s_Instance.unscaledGameTime;
+
                 eventData.delta = Vector2.zero;
                 eventData.dragging = false;
                 eventData.pressPosition = eventData.position;
@@ -412,22 +424,23 @@ namespace UnityEngine.InputSystem.UI
                 // Invoke OnPointerDown, if present.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
 
-                // Detect clicks.
-                // NOTE: StandaloneInputModule does this *after* the click handler has been invoked -- which doesn't seem to
-                //       make sense. We do it *before* IPointerClickHandler.
-                var time = InputRuntime.s_Instance.unscaledGameTime;
-                const float clickSpeed = 0.3f;
-                if (newPressed == eventData.lastPress && (time - eventData.clickTime) < clickSpeed)
-                    ++eventData.clickCount;
-                else
-                    eventData.clickCount = 1;
-
-                eventData.clickTime = time;
-
-                // We didn't find a press handler, so we turn it into a click.
+                // If no GO responded to OnPointerDown, look for one that responds to OnPointerClick.
+                // NOTE: This only looks up the handler. We don't invoke OnPointerClick here.
                 if (newPressed == null)
                     newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
+                // Reset click state if delay to last release was too long or if we didn't
+                // press on the same object as last time. The latter part we don't know until
+                // we've actually run the press handler.
+                button.clickedOnSameGameObject = newPressed == eventData.lastPress && button.pressTime - eventData.clickTime <= kClickSpeed;
+                if (eventData.clickCount > 0 && !button.clickedOnSameGameObject)
+                {
+                    eventData.clickCount = default;
+                    eventData.clickTime = default;
+                }
+
+                // Set pointerPress. This nukes lastPress. Meaning that after OnPointerDown, lastPress will
+                // become null.
                 eventData.pointerPress = newPressed;
                 eventData.rawPointerPress = currentOverGo;
 
@@ -441,11 +454,37 @@ namespace UnityEngine.InputSystem.UI
             // Button release.
             if (button.wasReleasedThisFrame)
             {
+                // Check for click. Release must be on same GO that we pressed on and we must not
+                // have moved beyond our move tolerance (doing so will set eligibleForClick to false).
+                // NOTE: There's two difference to click handling here compared to StandaloneInputModule.
+                //       1) StandaloneInputModule counts clicks entirely on press meaning that clickCount is increased
+                //          before a click has actually happened.
+                //       2) StandaloneInputModule increases click counts even if something is eventually not deemed a
+                //          click and OnPointerClick is thus never invoked.
+                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                var isClick = eventData.pointerPress == pointerClickHandler && eventData.eligibleForClick;
+                if (isClick)
+                {
+                    // Count clicks.
+                    if (button.clickedOnSameGameObject)
+                    {
+                        // We re-clicked on the same UI element within 0.3 seconds so count
+                        // it as a repeat click.
+                        ++eventData.clickCount;
+                    }
+                    else
+                    {
+                        // First click on this object.
+                        eventData.clickCount = 1;
+                    }
+                    eventData.clickTime = InputRuntime.s_Instance.unscaledGameTime;
+                }
+
+                // Invoke OnPointerUp.
                 ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
 
-                var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-
-                if (eventData.pointerPress == pointerUpHandler && eventData.eligibleForClick)
+                // Invoke OnPointerClick or OnDrop.
+                if (isClick)
                     ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
                 else if (eventData.dragging && eventData.pointerDrag != null)
                     ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
@@ -471,6 +510,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData.pointerDrag == null)
                 return;
 
+            // Detect drags.
             if (!eventData.dragging)
             {
                 if (!eventData.useDragThreshold || (eventData.pressPosition - eventData.position).sqrMagnitude >=
@@ -478,6 +518,7 @@ namespace UnityEngine.InputSystem.UI
                                                                                                ? m_TrackedDeviceDragThresholdMultiplier
                                                                                                : 1))
                 {
+                    // Started dragging. Invoke OnBeginDrag.
                     ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
                     eventData.dragging = true;
                 }
@@ -494,6 +535,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerPress = null;
                     eventData.rawPointerPress = null;
                 }
+
                 ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
                 button.CopyPressStateFrom(eventData);
             }
@@ -560,7 +602,7 @@ namespace UnityEngine.InputSystem.UI
                         var eventData = m_NavigationState.eventData;
                         if (eventData == null)
                         {
-                            eventData = new AxisEventData(eventSystem);
+                            eventData = new ExtendedAxisEventData(eventSystem);
                             m_NavigationState.eventData = eventData;
                         }
                         eventData.Reset();
@@ -587,19 +629,19 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
-                // NOTE: Whereas we use callbacks for the other actions, we rely on WasReleasedThisFrame() for
-                //       submit and cancel. This makes their behavior consistent with pointer click behavior where
-                //       a click will register on button *up*. This nuance in behavior becomes important in
-                //       combination with action enable/disable changes in response to submit or cancel. If we
-                //       react to button *down* instead of *up*, the button *up* will come in *after* we have
-                //       applied the state change.
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasPressedThisFrame() for
+                //       submit and cancel. This makes their behavior inconsistent with pointer click behavior where
+                //       a click will register on button *up*, but consistent with how other UI systems work where
+                //       click occurs on key press. This nuance in behavior becomes important in combination with
+                //       action enable/disable changes in response to submit or cancel. We react to button *down*
+                //       instead of *up*, so button *up* will come in *after* we have applied the state change.
                 var submitAction = m_SubmitAction?.action;
                 var cancelAction = m_CancelAction?.action;
 
                 var data = GetBaseEventData();
-                if (cancelAction != null && cancelAction.WasReleasedThisFrame())
+                if (cancelAction != null && cancelAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && submitAction != null && submitAction.WasReleasedThisFrame())
+                if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
         }
@@ -1197,12 +1239,46 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, m_OnTrackedDevicePositionDelegate);
         }
 
+        /// <summary>
+        /// Assigns default input actions asset and input actions, similar to how defaults are assigned when creating UI module in editor.
+        /// Useful for creating <see cref="InputSystemUIInputModule"/> at runtime.
+        /// </summary>
+        public void AssignDefaultActions()
+        {
+            var defaultActions = new DefaultInputActions();
+            actionsAsset = defaultActions.asset;
+            cancel = InputActionReference.Create(defaultActions.UI.Cancel);
+            submit = InputActionReference.Create(defaultActions.UI.Submit);
+            move = InputActionReference.Create(defaultActions.UI.Navigate);
+            leftClick = InputActionReference.Create(defaultActions.UI.Click);
+            rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
+            middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
+            point = InputActionReference.Create(defaultActions.UI.Point);
+            scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
+
+            defaultActions.Enable();
+        }
+
         [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
         public InputActionReference trackedDeviceSelect
         {
             get => throw new InvalidOperationException();
             set => throw new InvalidOperationException();
         }
+
+#if UNITY_EDITOR
+        protected override void Reset()
+        {
+            base.Reset();
+
+            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
+                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+                typeof(InputActionAsset));
+            // Setting default asset and actions when creating via inspector
+            Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);
+        }
+
+#endif
 
         protected override void Awake()
         {
@@ -1224,7 +1300,7 @@ namespace UnityEngine.InputSystem.UI
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_OnActionControlsChanged.AppendWithCapacity(m_OnControlsChangedDelegate);
+            InputActionState.s_OnActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
 
             HookActions();
             EnableAllActions();
@@ -1234,9 +1310,7 @@ namespace UnityEngine.InputSystem.UI
         {
             base.OnDisable();
 
-            var i = InputActionState.s_OnActionControlsChanged.IndexOfReference(m_OnControlsChangedDelegate);
-            if (i != -1)
-                InputActionState.s_OnActionControlsChanged.RemoveAtWithCapacity(i);
+            InputActionState.s_OnActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
 
             DisableAllActions();
             UnhookActions();
@@ -1611,18 +1685,26 @@ namespace UnityEngine.InputSystem.UI
             var eventData = m_PointerStates[index].eventData;
             Debug.Assert(eventData != null, "Pointer state should have an event instance!");
 
+            // Update current pointer, if necessary.
+            if (index == m_CurrentPointerIndex)
+            {
+                m_CurrentPointerId = -1;
+                m_CurrentPointerIndex = -1;
+                m_CurrentPointerType = default;
+            }
+            else if (m_CurrentPointerIndex == m_PointerIds.length - 1)
+            {
+                // We're about to move the last entry so update the index it will
+                // be at.
+                m_CurrentPointerIndex = index;
+            }
+
             // Remove. Note that we may change the order of pointers here. This can save us needless copying
             // and m_CurrentPointerIndex should be the only index we get around for longer.
             m_PointerIds.RemoveAtByMovingTailWithCapacity(index);
             m_PointerTouchControls.RemoveAtByMovingTailWithCapacity(index);
             m_PointerStates.RemoveAtByMovingTailWithCapacity(index);
             Debug.Assert(m_PointerIds.length == m_PointerStates.length, "Pointer ID array should match state array in length");
-
-            if (index == m_CurrentPointerIndex)
-            {
-                m_CurrentPointerId = -1;
-                m_CurrentPointerIndex = -1;
-            }
 
             // Put event instance back in place at one past last entry of array (which we know we have
             // as we just erased one entry). This entry will be the next one that will be used when we
@@ -1787,7 +1869,10 @@ namespace UnityEngine.InputSystem.UI
             }
             else
             {
+                // Navigation input.
                 ProcessNavigation(ref m_NavigationState);
+
+                // Pointer input.
                 for (var i = 0; i < m_PointerStates.length; i++)
                 {
                     ref var state = ref GetPointerStateForIndex(i);
@@ -1798,13 +1883,17 @@ namespace UnityEngine.InputSystem.UI
                     ProcessPointer(ref state);
 
                     // If it's a touch and the touch has ended, release the pointer state.
-                    // NOTE: We have no guarantee that the system reuses touch IDs so the touch ID we used
-                    //       as a pointer ID may be a one-off thing.
-                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed)
+                    // NOTE: We defer this by one frame such that OnPointerUp happens in the frame of release
+                    //       and OnPointerExit happens one frame later. This is so that IsPointerOverGameObject()
+                    //       stays true for the touch in the frame of release (see UI_TouchPointersAreKeptForOneFrameAfterRelease).
+                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed && !state.leftButton.wasReleasedThisFrame)
                     {
                         RemovePointerAtIndex(i);
                         --i;
+                        continue;
                     }
+
+                    state.OnFrameFinished();
                 }
             }
         }

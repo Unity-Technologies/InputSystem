@@ -82,10 +82,9 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         context.PerformedAndStayPerformed();
                     }
-                    else if (!context.ControlIsActuated())
+                    if (!context.ControlIsActuated())
                     {
-                        // Control is no longer actuated and we haven't performed a hold yet,
-                        // so cancel.
+                        // Control is no longer actuated so we're done.
                         context.Canceled();
                     }
                     break;

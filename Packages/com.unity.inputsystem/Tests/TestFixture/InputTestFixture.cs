@@ -359,6 +359,8 @@ namespace UnityEngine.InputSystem
                 duration: duration, value: value);
         }
 
+        ////REVIEW: Should we determine queueEventOnly automatically from whether we're in a UnityTest?
+
         // ReSharper disable once MemberCanBeProtected.Global
         public void Press(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
@@ -650,6 +652,16 @@ namespace UnityEngine.InputSystem
             {
                 runtime.currentTime = value;
                 runtime.dontAdvanceTimeNextDynamicUpdate = true;
+            }
+        }
+
+        internal float unscaledGameTime
+        {
+            get => runtime.unscaledGameTime;
+            set
+            {
+                runtime.unscaledGameTime = value;
+                runtime.dontAdvanceUnscaledGameTimeNextDynamicUpdate = true;
             }
         }
 

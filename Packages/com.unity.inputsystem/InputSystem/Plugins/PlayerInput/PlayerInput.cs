@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (!m_ActionsInitialized && gameObject.activeSelf)
+                if (!m_ActionsInitialized && gameObject.activeInHierarchy)
                     InitializeActions();
                 return m_Actions;
             }
@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem
                 if (m_Actions != null)
                 {
                     m_Actions.Disable();
-                    if (m_Enabled)
+                    if (m_ActionsInitialized)
                         UninitializeActions();
                 }
 
@@ -607,15 +607,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ActionTriggeredCallbacks.AppendWithCapacity(value, 5);
+                m_ActionTriggeredCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ActionTriggeredCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ActionTriggeredCallbacks.RemoveAtWithCapacity(index);
+                m_ActionTriggeredCallbacks.RemoveCallback(value);
             }
         }
 
@@ -638,15 +636,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceLostCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceLostCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceLostCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceLostCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceLostCallbacks.RemoveCallback(value);
             }
         }
 
@@ -669,15 +665,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceRegainedCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceRegainedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceRegainedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceRegainedCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceRegainedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -698,15 +692,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ControlsChangedCallbacks.AppendWithCapacity(value, 5);
+                m_ControlsChangedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ControlsChangedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ControlsChangedCallbacks.RemoveAtWithCapacity(index);
+                m_ControlsChangedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -1106,14 +1098,14 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
         [NonSerialized] private bool m_Enabled;
-        [NonSerialized] private bool m_ActionsInitialized;
+        [NonSerialized] internal bool m_ActionsInitialized;
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceLostCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
-        [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceLostCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
+        [NonSerialized] private CallbackArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private Func<InputDevice, InputEventPtr, bool> m_PreFilterUnpairedDeviceUsedDelegate;
         [NonSerialized] private bool m_OnUnpairedDeviceUsedHooked;
@@ -1188,31 +1180,12 @@ namespace UnityEngine.InputSystem
 
                             // Find action for event.
                             var action = m_Actions.FindAction(id);
-                            if (action != null)
-                            {
-                                ////REVIEW: really wish we had a single callback
-                                action.performed += actionEvent.Invoke;
-                                action.canceled += actionEvent.Invoke;
-                                action.started += actionEvent.Invoke;
-                            }
-                            else
-                            {
-                                // Cannot find action. Log error.
-                                if (!string.IsNullOrEmpty(actionEvent.actionName))
-                                {
-                                    // We have an action name. Show in message.
-                                    Debug.LogError(
-                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                                else
-                                {
-                                    // We have no action name. Best we have is ID.
-                                    Debug.LogError(
-                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                            }
+                            if (action == null)
+                                continue;
+
+                            action.performed += actionEvent.Invoke;
+                            action.canceled += actionEvent.Invoke;
+                            action.started += actionEvent.Invoke;
                         }
                     }
                     break;
