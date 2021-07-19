@@ -2936,7 +2936,7 @@ internal class UITests : CoreTestsFixture
 
         yield return null;
 
-        BeginTouch(1, new Vector2(100, 100));
+        BeginTouch(1, scene.From640x480ToScreen(100, 100));
         yield return null;
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
