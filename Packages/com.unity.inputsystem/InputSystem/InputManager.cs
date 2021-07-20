@@ -2854,6 +2854,12 @@ namespace UnityEngine.InputSystem
                 m_InputEventStream.Advance(leaveEventInBuffer: leaveInBuffer);
             }
 
+            foreach (var device in devices)
+            {
+	            if(device is IFlushableInputDevice inputDevice)
+                    inputDevice.Flush();
+            }
+
             m_Metrics.totalEventProcessingTime += ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
             m_Metrics.totalEventLagTime += totalEventLag;
 

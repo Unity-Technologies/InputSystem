@@ -4212,4 +4212,46 @@ partial class CoreTests
         InputSystem.RemoveDevice(pointer);
         Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompressMouseMoveEvents()
+    {
+	    var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+	    int count = 0;
+	    Vector2 pos = Vector2.zero;
+	    moveAction.performed += ctx =>
+	    {
+		    count++;
+		    pos = ctx.ReadValue<Vector2>();
+	    };
+        moveAction.Enable();
+        
+	    var mouse = InputSystem.AddDevice<Mouse>();
+
+	    InputSystem.QueueStateEvent(mouse,
+		    new MouseState
+		    {
+			    position = new Vector2(1.0f, 2.0f),
+			    delta = new Vector2(1.0f, 1.0f),
+		    }, time: 1);
+	    InputSystem.QueueStateEvent(mouse,
+		    new MouseState
+		    {
+			    position = new Vector2(2.0f, 3.0f),
+			    delta = new Vector2(1.0f, 1.0f),
+		    }, time: 2);
+	    InputSystem.QueueStateEvent(mouse,
+		    new MouseState
+		    {
+			    position = new Vector2(3.0f, 4.0f),
+			    delta = new Vector2(1.0f, 1.0f),
+		    }, time: 3);
+
+	    InputSystem.Update();
+
+        Assert.That(count, Is.EqualTo(1));
+        Assert.That(pos, Is.EqualTo(new Vector2(3, 4)));
+        Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(3, 3)));
+    }
 }

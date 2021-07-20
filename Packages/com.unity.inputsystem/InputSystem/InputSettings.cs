@@ -518,6 +518,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public bool disableMouseMoveCompression { get; set; }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
