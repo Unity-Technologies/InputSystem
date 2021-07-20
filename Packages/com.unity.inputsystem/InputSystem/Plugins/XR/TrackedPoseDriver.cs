@@ -353,7 +353,6 @@ namespace UnityEngine.InputSystem.XR
 #pragma warning disable 0649
         [SerializeField, HideInInspector]
         InputAction m_PositionAction;
-        [Obsolete("positionAction has been deprecated. Use positionInput instead.")]
         public InputAction positionAction
         {
             get => m_PositionInput.action;
@@ -362,7 +361,6 @@ namespace UnityEngine.InputSystem.XR
 
         [SerializeField, HideInInspector]
         InputAction m_RotationAction;
-        [Obsolete("rotationAction has been deprecated. Use rotationInput instead.")]
         public InputAction rotationAction
         {
             get => m_RotationInput.action;
