@@ -57,6 +57,7 @@ however, it has to be formatted properly to pass verification tests.
 - `InputSystemUIInputModule` now defers removing pointers for touches by one frame.
   * This is to ensure that `IsPointerOverGameObject` can meaningfully be queried for touches that have happened within the frame &ndash; even if by the time the method is called, a touch has technically already ended ([case 1347048](https://issuetracker.unity3d.com/issues/input-system-ispointerovergameobject-returns-false-when-used-with-a-tap-interaction)).
   * More precisely, this means that whereas before a `PointerExit` and `PointerUp` was received in the same frame, a touch will now see a `PointerUp` in the frame of release but only see a `PointerExit` in the subsequent frame.
+- Changed FastMouse to support coalescing of consecutive mouse move events to alleviate some of the performance issues when using high frequency mice. ([case 1281266](https://issuetracker.unity3d.com/issues/many-input-events-when-using-1000hz-mouse)).
 
 ## [1.1.0-pre.5] - 2021-05-11
 
