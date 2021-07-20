@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.XR
     /// </remarks>
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (Input System)")]
-    public partial class TrackedPoseDriver : MonoBehaviour
+    public partial class TrackedPoseDriver : MonoBehaviour, ISerializationCallbackReceiver
     {
         /// <summary>
         /// Options for which <see cref="Transform"/> properties to update.
