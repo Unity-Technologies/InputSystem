@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem
             InputState.Change(delta, Vector2.zero, InputState.currentUpdateType);
             InputState.Change(scroll, Vector2.zero, InputState.currentUpdateType);
             m_LastState = default;
+            m_DisableMouseMoveCompression = InputSystem.settings.disableMouseMoveCompression;
         }
 
         // For FastMouse, we know that our layout is MouseState so we can just go directly
@@ -33,7 +34,7 @@ namespace UnityEngine.InputSystem
 
             var newState = *(MouseState*)stateEvent->state;
 
-            if (InputSystem.settings.disableMouseMoveCompression)
+            if (m_DisableMouseMoveCompression)
             {
 	            var stateFromDevice = (MouseState*)((byte*)currentStatePtr + m_StateBlock.byteOffset);
 	            newState.delta += stateFromDevice->delta;
@@ -53,7 +54,8 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-	            InputState.Change(this, ref m_LastState, InputState.currentUpdateType, m_LastEventPtr);
+                if(m_LastEventPtr != null)
+					InputState.Change(this, ref m_LastState, InputState.currentUpdateType, m_LastEventPtr);
 
                 newState.delta += m_LastState.delta;
 	            newState.scroll += m_LastState.scroll;
@@ -85,6 +87,7 @@ namespace UnityEngine.InputSystem
 
         private MouseState m_LastState;
         private InputEventPtr m_LastEventPtr;
+        private bool m_DisableMouseMoveCompression;
     }
 
     internal interface IFlushableInputDevice
