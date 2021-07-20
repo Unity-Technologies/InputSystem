@@ -1680,8 +1680,6 @@ namespace UnityEngine.InputSystem.UI
 
         private void RemovePointerAtIndex(int index)
         {
-            if (m_PointerStates[index].eventData.pointerEnter != null)
-                Debug.Log("Foo");
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
@@ -1774,10 +1772,10 @@ namespace UnityEngine.InputSystem.UI
             // we will see cancellations on the "Point" action. Ignore these as they provide no useful values
             // and we want to avoid doing a read of touch IDs in GetPointerStateFor() on an already removed
             // touchscreen.
-            if (CheckForRemovedDevice(ref context))
+            if (CheckForRemovedDevice(ref context) || context.canceled)
                 return;
 
-            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            var index = GetPointerStateIndexFor(context.control);
             if (index == -1)
                 return;
 

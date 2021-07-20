@@ -94,6 +94,7 @@ internal class UITests : CoreTestsFixture
         var systemObject = new GameObject(namePrefix + "System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
         var uiModule = systemObject.AddComponent<InputSystemUIInputModule>();
+        uiModule.ignoreFocus = true;
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
 
@@ -2936,12 +2937,17 @@ internal class UITests : CoreTestsFixture
 
         yield return null;
 
-        BeginTouch(1, scene.From640x480ToScreen(100, 100));
+        BeginTouch(1, scene.From640x480ToScreen(100, 100), queueEventOnly: true);
         yield return null;
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
 
         actions.Disable();
+        yield return null;
+
+        // UI module keeps pointer over GO in frame of release.
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
         yield return null;
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);

@@ -623,7 +623,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="Enable"/>
         /// <seealso cref="InputActionType.Value"/>
-        internal bool wantsInitialStateCheck
+        public bool wantsInitialStateCheck
         {
             get => type == InputActionType.Value || (m_Flags & ActionFlags.WantsInitialStateCheck) != 0;
             set
