@@ -346,8 +346,7 @@ namespace UnityEngine.InputSystem.XR
             SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
         }
 
-
-#region DEPRECATED        
+        #region DEPRECATED
 
         // Disable warnings that these fields are never assigned to. They are set during Unity deserialization and migrated.
         // ReSharper disable UnassignedField.Local
@@ -402,6 +401,7 @@ namespace UnityEngine.InputSystem.XR
             m_RotationInput = new InputActionProperty(m_RotationAction);
             m_HasMigratedActions = true;
         }
-#endregion
+
+        #endregion
     }
 }
