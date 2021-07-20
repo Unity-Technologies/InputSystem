@@ -242,6 +242,16 @@ internal class DualShockTests : CoreTestsFixture
         Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.123f * 255)));
         Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.456f * 255)));
         Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.789f * 255)));
+
+        receivedCommand = null;
+        gamepad.SetMotorSpeedsAndLightBarColor(0.5f, 0.5f, new Color(0.5f, 0.5f, 0.5f));
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.lowFrequencyMotorSpeed, Is.EqualTo((byte)(0.5 * 255)));
+        Assert.That(receivedCommand.Value.highFrequencyMotorSpeed, Is.EqualTo((byte)(0.5 * 255)));
+        Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.5f * 255)));
+        Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.5f * 255)));
+        Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.5f * 255)));
     }
 
 #endif

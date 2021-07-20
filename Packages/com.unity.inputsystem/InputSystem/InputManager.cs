@@ -166,35 +166,20 @@ namespace UnityEngine.InputSystem
 
         public event DeviceChangeListener onDeviceChange
         {
-            add => m_DeviceChangeListeners.AppendWithCapacity(value);
-            remove
-            {
-                var index = m_DeviceChangeListeners.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceChangeListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_DeviceChangeListeners.AddCallback(value);
+            remove => m_DeviceChangeListeners.RemoveCallback(value);
         }
 
         public event DeviceStateChangeListener onDeviceStateChange
         {
-            add => m_DeviceStateChangeListeners.AppendWithCapacity(value);
-            remove
-            {
-                var index = m_DeviceStateChangeListeners.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceStateChangeListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_DeviceStateChangeListeners.AddCallback(value);
+            remove => m_DeviceStateChangeListeners.RemoveCallback(value);
         }
 
         public event InputDeviceCommandDelegate onDeviceCommand
         {
-            add => m_DeviceCommandCallbacks.Append(value);
-            remove
-            {
-                var index = m_DeviceCommandCallbacks.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceCommandCallbacks.RemoveAtWithCapacity(index);
-            }
+            add => m_DeviceCommandCallbacks.AddCallback(value);
+            remove => m_DeviceCommandCallbacks.RemoveCallback(value);
         }
 
         ////REVIEW: would be great to have a way to sort out precedence between two callbacks
@@ -202,7 +187,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                m_DeviceFindLayoutCallbacks.AppendWithCapacity(value);
+                m_DeviceFindLayoutCallbacks.AddCallback(value);
 
                 // Having a new callback on this event can change the set of devices we recognize.
                 // See if there's anything in the list of available devices that we can now turn
@@ -213,23 +198,13 @@ namespace UnityEngine.InputSystem
                 //       those changes.
                 AddAvailableDevicesThatAreNowRecognized();
             }
-            remove
-            {
-                var index = m_DeviceFindLayoutCallbacks.IndexOf(value);
-                if (index >= 0)
-                    m_DeviceFindLayoutCallbacks.RemoveAtWithCapacity(index);
-            }
+            remove => m_DeviceFindLayoutCallbacks.RemoveCallback(value);
         }
 
         public event LayoutChangeListener onLayoutChange
         {
-            add => m_LayoutChangeListeners.AppendWithCapacity(value);
-            remove
-            {
-                var index = m_LayoutChangeListeners.IndexOf(value);
-                if (index >= 0)
-                    m_LayoutChangeListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_LayoutChangeListeners.AddCallback(value);
+            remove => m_LayoutChangeListeners.RemoveCallback(value);
         }
 
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
@@ -237,17 +212,8 @@ namespace UnityEngine.InputSystem
         ////TODO: introduce an alternative that consumes events in bulk
         public event EventListener onEvent
         {
-            add
-            {
-                if (!m_EventListeners.Contains(value))
-                    m_EventListeners.AppendWithCapacity(value);
-            }
-            remove
-            {
-                var index = m_EventListeners.IndexOf(value);
-                if (index >= 0)
-                    m_EventListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_EventListeners.AddCallback(value);
+            remove => m_EventListeners.RemoveCallback(value);
         }
 
         public event UpdateListener onBeforeUpdate
@@ -255,45 +221,21 @@ namespace UnityEngine.InputSystem
             add
             {
                 InstallBeforeUpdateHookIfNecessary();
-                if (!m_BeforeUpdateListeners.Contains(value))
-                    m_BeforeUpdateListeners.AppendWithCapacity(value);
+                m_BeforeUpdateListeners.AddCallback(value);
             }
-            remove
-            {
-                var index = m_BeforeUpdateListeners.IndexOf(value);
-                if (index >= 0)
-                    m_BeforeUpdateListeners.RemoveAtWithCapacity(index);
-            }
+            remove => m_BeforeUpdateListeners.RemoveCallback(value);
         }
 
         public event UpdateListener onAfterUpdate
         {
-            add
-            {
-                if (!m_AfterUpdateListeners.Contains(value))
-                    m_AfterUpdateListeners.AppendWithCapacity(value);
-            }
-            remove
-            {
-                var index = m_AfterUpdateListeners.IndexOf(value);
-                if (index >= 0)
-                    m_AfterUpdateListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_AfterUpdateListeners.AddCallback(value);
+            remove => m_AfterUpdateListeners.RemoveCallback(value);
         }
 
         public event Action onSettingsChange
         {
-            add
-            {
-                if (!m_SettingsChangedListeners.Contains(value))
-                    m_SettingsChangedListeners.AppendWithCapacity(value);
-            }
-            remove
-            {
-                var index = m_SettingsChangedListeners.IndexOf(value);
-                if (index >= 0)
-                    m_SettingsChangedListeners.RemoveAtWithCapacity(index);
-            }
+            add => m_SettingsChangedListeners.AddCallback(value);
+            remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
 #if UNITY_EDITOR
@@ -539,8 +481,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
-                m_LayoutChangeListeners[i](layoutName.ToString(), change);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, "InputSystem.onLayoutChange");
         }
 
         public void RegisterPrecompiledLayout<TDevice>(string metadata)
@@ -808,8 +749,7 @@ namespace UnityEngine.InputSystem
             ////      remove those layouts, too
 
             // Let listeners know.
-            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
-                m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, "InputSystem.onLayoutChange");
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
@@ -877,17 +817,25 @@ namespace UnityEngine.InputSystem
                 m_DeviceFindExecuteCommandDeviceId = deviceId;
 
                 var haveOverriddenLayoutName = false;
+                m_DeviceFindLayoutCallbacks.LockForChanges();
                 for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
                 {
-                    var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName,
-                                                                   m_DeviceFindExecuteCommandDelegate);
-
-                    if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                    try
                     {
-                        layoutName = new InternedString(newLayout);
-                        haveOverriddenLayoutName = true;
+                        var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
+                        if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                        {
+                            layoutName = new InternedString(newLayout);
+                            haveOverriddenLayoutName = true;
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onFindLayoutForDevice' callbacks");
+                        Debug.LogException(exception);
                     }
                 }
+                m_DeviceFindLayoutCallbacks.UnlockForChanges();
             }
 
             Profiler.EndSample();
@@ -1055,8 +1003,7 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, "InputSystem.onDeviceChange");
 
             ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
@@ -1197,8 +1144,7 @@ namespace UnityEngine.InputSystem
             device.MakeCurrent();
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
         }
 
         ////TODO: this path should really put the device on the list of available devices
@@ -1326,8 +1272,7 @@ namespace UnityEngine.InputSystem
             device.NotifyRemoved();
 
             // Let listeners know.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, "InputSystem.onDeviceChange");
 
             // Try setting next device of same type as current
             InputSystem.GetDevice(device.GetType())?.MakeCurrent();
@@ -1435,8 +1380,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, deviceChange);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, "InputSystem.onDeviceChange");
         }
 
         ////TODO: support combining monitors for bitfields
@@ -1826,15 +1770,15 @@ namespace UnityEngine.InputSystem
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
-        private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        private InlinedArray<DeviceStateChangeListener> m_DeviceStateChangeListeners;
-        private InlinedArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
-        internal InlinedArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
-        private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
-        private InlinedArray<EventListener> m_EventListeners;
-        private InlinedArray<UpdateListener> m_BeforeUpdateListeners;
-        private InlinedArray<UpdateListener> m_AfterUpdateListeners;
-        private InlinedArray<Action> m_SettingsChangedListeners;
+        private CallbackArray<DeviceChangeListener> m_DeviceChangeListeners;
+        private CallbackArray<DeviceStateChangeListener> m_DeviceStateChangeListeners;
+        private CallbackArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
+        internal CallbackArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
+        private CallbackArray<LayoutChangeListener> m_LayoutChangeListeners;
+        private CallbackArray<EventListener> m_EventListeners;
+        private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
+        private CallbackArray<UpdateListener> m_AfterUpdateListeners;
+        private CallbackArray<Action> m_SettingsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2187,8 +2131,8 @@ namespace UnityEngine.InputSystem
                     device.m_DeviceId = deviceId;
                     AddDevice(device);
 
-                    for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                        m_DeviceChangeListeners[i](device, InputDeviceChange.Reconnected);
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reconnected,
+                        "InputSystem.onDeviceChange");
                 }
                 else
                 {
@@ -2413,8 +2357,8 @@ namespace UnityEngine.InputSystem
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
             // Let listeners know.
-            for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
-                m_SettingsChangedListeners[i]();
+            DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
+                "InputSystem.onSettingsChange");
         }
 
         internal void AddAvailableDevicesThatAreNowRecognized()
@@ -2750,8 +2694,8 @@ namespace UnityEngine.InputSystem
                 // Give listeners a shot at the event.
                 if (m_EventListeners.length > 0)
                 {
-                    for (var i = 0; i < m_EventListeners.length; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
+                        new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
 
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
@@ -2883,8 +2827,8 @@ namespace UnityEngine.InputSystem
                         if (device.native && !device.description.empty)
                         {
                             ArrayHelpers.AppendWithCapacity(ref m_DisconnectedDevices, ref m_DisconnectedDevicesCount, device);
-                            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                                m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
+                            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
+                                device, InputDeviceChange.Disconnected, "InputSystem.onDeviceChange");
                         }
                         break;
                     }
@@ -2892,8 +2836,8 @@ namespace UnityEngine.InputSystem
                     case DeviceConfigurationEvent.Type:
                         device.NotifyConfigurationChanged();
                         InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
-                        for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                            m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
+                        DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
+                            device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");
                         break;
                 }
 
@@ -2936,8 +2880,8 @@ namespace UnityEngine.InputSystem
 
         private void InvokeAfterUpdateCallback()
         {
-            for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
-                m_AfterUpdateListeners[i]();
+            DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
+                "InputSystem.onAfterUpdate");
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
@@ -2979,8 +2923,8 @@ namespace UnityEngine.InputSystem
 
                     var listenerCount = numMonitors;
                     var memoryRegionCount = numMonitors;
-                    ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors[deviceIndex].listeners, ref listenerCount, i);
-                    ArrayHelpers.EraseAtWithCapacity(memoryRegions, ref memoryRegionCount, i);
+                    m_StateChangeMonitors[deviceIndex].listeners.EraseAtWithCapacity(ref listenerCount, i);
+                    memoryRegions.EraseAtWithCapacity(ref memoryRegionCount, i);
                     signals.SetLength(numMonitors - 1);
                     haveChangedSignalsBitfield = true;
                     --numMonitors;
@@ -3207,8 +3151,8 @@ namespace UnityEngine.InputSystem
             }
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceStateChangeListeners.length; ++i)
-                m_DeviceStateChangeListeners[i](device, eventPtr);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceStateChangeListeners,
+                device, eventPtr, "InputSystem.onDeviceStateChange");
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
