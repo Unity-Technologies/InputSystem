@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -40,6 +41,11 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputSystem.onSettingsChange"/>
     public partial class InputSettings : ScriptableObject
     {
+        public void Awake()
+        {
+            HookDisableMouseCompressionListener();
+        }
+
         /// <summary>
         /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
@@ -518,6 +524,76 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Disables mouse move compression. Disable it if you want to get all mouse move events.
+        /// </summary>
+        /// <remarks>
+        /// When using a high frequency mouse, the number of mouse move events in each frame can be
+        /// very large, which can have a negative effect on performance. To help with this, mouse
+        /// move compression can be used which coalesces consecutive mouse move events into a single
+        /// input action update.
+        ///
+        /// For example, if there are one hundred mouse events, but they are all position updates
+        /// with no clicks, and there is an input action callback handler for the mouse position, that
+        /// callback handler will only be called one time in the current frame. Delta and scroll
+        /// values for the mouse will still be accumulated across all mouse events.
+        ///
+        /// Note that mouse move event compression cannot be used if any input actions use the mouse
+        /// position in a composite control. The input system will detect this and automatically
+        /// disable compression.
+        /// </remarks>
+        public bool disableMouseMoveCompression
+        {
+            get => m_DisableMouseMoveCompression;
+            set
+            {
+                if (m_DisableMouseMoveCompression == value)
+                    return;
+
+                m_DisableMouseMoveCompression = value;
+                OnChange();
+            }
+        }
+
+        private void HookDisableMouseCompressionListener()
+        {
+            InputSystem.onActionChange += (o, change) =>
+            {
+                if (change != InputActionChange.BoundControlsChanged)
+                    return;
+
+                if (!(o is InputAction action))
+                    return;
+
+                if (!action.controls.Any(c => c.device is FastMouse))
+                    return;
+
+                for (var i = 0; i < action.bindings.Count; i++)
+                {
+                    var binding = action.bindings[i];
+                    if (!binding.isComposite)
+                        continue;
+
+                    while (++i < action.bindings.Count)
+                    {
+                        binding = action.bindings[i];
+
+                        if (binding.isPartOfComposite == false)
+                            break;
+
+                        if (binding.path.ToLower() != "<mouse>/position")
+                            continue;
+
+                        Debug.LogWarning($"Mouse move event compression will be disabled because the mouse position control " +
+                            $"is used in composite binding '{binding.name}'. Compression is not supported " +
+                            "when the mouse position is used in a composite binding.");
+                        disableMouseMoveCompression = true;
+                        return;
+                    }
+                }
+            };
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -541,6 +617,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private bool m_DisableMouseMoveCompression = false;
 
         internal void OnChange()
         {

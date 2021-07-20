@@ -4212,4 +4212,129 @@ partial class CoreTests
         InputSystem.RemoveDevice(pointer);
         Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_MouseMoveCompression_CanCompressMouseMoveEvents()
+    {
+        var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+        int performedCount = 0;
+        Vector2 mousePosition = Vector2.zero;
+        moveAction.performed += ctx =>
+        {
+            performedCount++;
+            mousePosition = ctx.ReadValue<Vector2>();
+        };
+        moveAction.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(1.0f, 2.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 1);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(2.0f, 3.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 2);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(3.0f, 4.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 3);
+
+        InputSystem.Update();
+
+        Assert.That(performedCount, Is.EqualTo(1));
+        Assert.That(mousePosition, Is.EqualTo(new Vector2(3, 4)));
+        Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(3, 3)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_MouseMoveCompression_OnlyConsecutiveMoveEventsAreCompressed()
+    {
+        var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+        var clickAction = new InputAction("Click", binding: "<Mouse>/leftButton");
+        var movePerformedCount = 0;
+        var clickPerformedCount = 0;
+        Vector2 mousePositionAtClickEvent = Vector2.zero;
+        moveAction.performed += ctx =>
+        {
+            movePerformedCount++;
+        };
+        clickAction.performed += ctx =>
+        {
+            clickPerformedCount++;
+            mousePositionAtClickEvent = Mouse.current.position.ReadValue();
+        };
+        moveAction.Enable();
+        clickAction.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(1.0f, 2.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one
+            }, time: 1);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(2.0f, 3.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one
+            }, time: 2);
+
+        // inject a click event.
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(3.0f, 4.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one
+            }.WithButton(MouseButton.Left), time: 3);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(4.0f, 5.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one,
+            }, time: 4);
+
+        InputSystem.Update();
+
+        Assert.That(movePerformedCount, Is.EqualTo(2));
+        Assert.That(clickPerformedCount, Is.EqualTo(1));
+        Assert.That(Mouse.current.position.ReadValue(), Is.EqualTo(new Vector2(4, 5)));
+        Assert.That(mousePositionAtClickEvent, Is.EqualTo(new Vector2(3, 4)));
+
+        // delta and scroll should accumulate across an entire frame. Compression shouldn't change that
+        Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(4, 4)));
+        Assert.That(Mouse.current.scroll.ReadValue(), Is.EqualTo(new Vector2(4, 4)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_MouseMoveCompression_IsDisabledWhenMousePositionIsUsedInACompositeControl()
+    {
+        InputSystem.settings.disableMouseMoveCompression = false;
+
+        var moveAction = new InputAction();
+        moveAction.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/Ctrl")
+            .With("Binding", "<Mouse>/position");
+
+        moveAction.performed += ctx => {};
+        moveAction.Enable();
+        InputSystem.AddDevice<Mouse>();
+
+        Assert.That(InputSystem.settings.disableMouseMoveCompression, Is.EqualTo(true));
+    }
 }

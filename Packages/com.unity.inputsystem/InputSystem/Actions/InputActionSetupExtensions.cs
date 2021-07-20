@@ -510,13 +510,16 @@ namespace UnityEngine.InputSystem
             // anyone queries it.
             map.ClearPerActionCachedBindingData();
 
-            // Make sure bindings get re-resolved.
-            map.LazyResolveBindings();
-
             // If we're looking at a singleton action, make sure m_Bindings is up to date just
-            // in case the action gets serialized.
+            // in case the action gets serialized. Note that it is important that this happens
+            // *before* the resolve bindings call below because that code can trigger other
+            // code to access the singleton action, and that shouldn't happen before it's
+            // bindings have been assigned.
             if (map.m_SingletonAction != null)
                 map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
+
+            // Make sure bindings get re-resolved.
+            map.LazyResolveBindings();
 
             return bindingIndex;
         }
