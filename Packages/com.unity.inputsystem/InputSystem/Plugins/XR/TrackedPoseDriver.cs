@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.XR
     /// </remarks>
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (Input System)")]
-    public partial class TrackedPoseDriver : MonoBehaviour, ISerializationCallbackReceiver
+    public class TrackedPoseDriver : MonoBehaviour, ISerializationCallbackReceiver
     {
         /// <summary>
         /// Options for which <see cref="Transform"/> properties to update.
@@ -351,6 +351,7 @@ namespace UnityEngine.InputSystem.XR
         // Disable warnings that these fields are never assigned to. They are set during Unity deserialization and migrated.
         // ReSharper disable UnassignedField.Local
 #pragma warning disable 0649
+        [Obsolete]
         [SerializeField, HideInInspector]
         InputAction m_PositionAction;
         public InputAction positionAction
@@ -359,6 +360,7 @@ namespace UnityEngine.InputSystem.XR
             set => positionInput = new InputActionProperty(value);
         }
 
+        [Obsolete]
         [SerializeField, HideInInspector]
         InputAction m_RotationAction;
         public InputAction rotationAction
