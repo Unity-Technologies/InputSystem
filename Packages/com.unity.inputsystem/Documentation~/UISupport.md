@@ -1,12 +1,13 @@
 # UI support
 
-* [InputSystemUIInputModule component](#inputsystemuiinputmodule-component)
+* [UI input setup](#ui-input-setup)
   * [How the bindings work](#how-the-bindings-work)
     * [Pointer-type input](#pointer-type-input)
     * [Navigation-type input](#navigation-type-input)
     * [Tracked-type input](#tracked-type-input)
-* [MultiplayerEventSystem component](#multiplayereventsystem-component)
-* [VirtualMouseInput component](#virtualmouseinput-component)
+* [Multiplayer UIs](#multiplayer-uis)
+* [Virtual mouse cursor control](#virtual-mouse-cursor-control)
+* [UI and game input](#ui-and-game-input)
 * [UI Toolkit support](#ui-toolkit-support)
 
 You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html). The integration between the Input System and the UI system is handled by the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
@@ -14,7 +15,7 @@ You can use the Input System package to control any in-game UI created with the 
 >[!NOTE]
 >The Input System package does not support IMGUI. If you have `OnGUI` methods in your player code (Editor code is unaffected), Unity does not receive any input events in those methods when the **Active Input Handling** [Player Setting](https://docs.unity3d.com/Manual/class-PlayerSettings.html) is set to **Input System Package**. To restore functionality you can change the setting to **Both**, but this means that Unity processes the input twice.
 
-## InputSystemUIInputModule component
+## UI input setup
 
 The [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System instead of the legacy Input Manager to drive UI input.
 
@@ -113,7 +114,7 @@ For this raycasting to work, you need to add [TrackedDeviceRaycaster](../api/Uni
 
 Clicks on tracked devices do not differ from other [pointer-type input](#pointer-type-input). Therefore, actions such as [Left Click](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_leftClick) work for tracked devices just like they work for other pointers.
 
-## MultiplayerEventSystem component
+## Multiplayer UIs
 
 The Input System can also handle multiple separate UI instances on the screen controlled separately from different input Bindings. This is useful if you want to have multiple local players share a single screen with different controllers, so that every player can control their own UI instance. To allow this, you need to replace the [EventSystem](https://docs.unity3d.com/Manual/script-EventSystem.html) component from Unity with the Input System's [MultiplayerEventSystem](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component.
 
@@ -123,7 +124,7 @@ Unlike the [EventSystem](https://docs.unity3d.com/Manual/script-EventSystem.html
 
 The properties of the [MultiplayerEventSystem](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component are identical with those from the [Event System](https://docs.unity3d.com/Manual/script-EventSystem.html). Additionally, the [MultiplayerEventSystem](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component adds a [playerRoot](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html#UnityEngine_InputSystem_UI_MultiplayerEventSystem_playerRoot) property, which you can set to a GameObject that contains all the UI [selectables](https://docs.unity3d.com/Manual/script-Selectable.html) this event system should handle in its hierarchy. Mouse input that this event system processes then ignores any UI selectables which are not on any GameObject in the Hierarchy under  [Player Root](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html#UnityEngine_InputSystem_UI_MultiplayerEventSystem_playerRoot).
 
-## VirtualMouseInput Component
+## Virtual mouse cursor control
 
 >[!NOTE]
 >While pointer input generated from a `VirtualMouseInput` component is received in UI Toolkit, the `VirtualMouseInput` component is not officially supported for use with [UI Toolkit](#ui-toolkit-support). At the moment, it only works in combination with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system.
@@ -150,9 +151,31 @@ At runtime, the component adds a virtual [Mouse](../api/UnityEngine.InputSystem.
 Note that the resulting [Mouse](../api/UnityEngine.InputSystem.Mouse.html) input is visible in all code that picks up input from the mouse device. You can therefore use the component for mouse simulation elsewhere, not just with [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
 
 >[!NOTE]
->Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using VirtualMouseInput. If both VirtualMouseInput and navigation are configured, input is triggered twice: once via the pointer input path, and once via the navigation input path. If you encounter problems such as where buttons are pressed twice, this is likely the problem.
+>Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using `VirtualMouseInput`. If both `VirtualMouseInput` and navigation are configured, input is triggered twice: once via the pointer input path, and once via the navigation input path. If you encounter problems such as where buttons are pressed twice, this is likely the problem.
 
-# UI Toolkit support
+## UI and game input
+
+>[!NOTE]
+>A sample called `UI vs Game Input` is provided with the package and can be installed from the Unity Package Manager UI in the editor. The sample demonstrates how to deal with a situation where ambiguities arise between inputs for UI and inputs for the game.
+
+UI in Unity consumes input through the same mechanisms as game/player code. Right now, there is no mechanism that implicitly ensures that if a certain input &ndash; such as a click &ndash; is consumed by the UI, it is not also "consumed" by the game. This can create ambiguities between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) of an Action bound to `<Mouse>/leftButton`.
+
+Whether such ambiguities exist depends on *how* UIs are used. In the following scenarios, ambiguities are avoided:
+
+* All interaction is performed through UI elements. A 2D/3D scene is rendered in the background but all interaction is performed through UI events (including those such as 'background' clicks on the `Canvas`).
+* UI is overlaid over a 2D/3D scene but the UI elements cannot be interacted with directly.
+* UI is overlaid over a 2D/3D scene but there is a clear "mode" switch that determines if interaction is picked up by UI or by the game. For example, a first-person game on desktop may employ a [cursor lock](https://docs.unity3d.com/ScriptReference/Cursor-lockState.html) and direct input to the game while it is engaged whereas it may leave all interaction to the UI while the lock is not engaged.
+
+Overall, ambiguities arise differently for [pointer-type](#pointer-type-input) and [navigation-type](#navigation-type-input).
+
+### Handling ambiguities for pointer-type input
+
+>[!NOTE]
+>Calling [`EventSystem.IsPointerOverGameObject`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobject#UnityEngine_EventSystems_EventSystem_IsPointerOverGameObject) from within [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) callbacks such as [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) will lead to a warning. The UI updates separately *after* input processing and UI state thus corresponds to that of the *last* frame/update when input is being processed.
+
+### Handling ambiguities for navigation-type input
+
+## UI Toolkit support
 
 As of Unity 2021.2, [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is supported as an alternative to the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system for implementing UIs in players.
 
@@ -161,7 +184,7 @@ Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui
 Internally, UI Toolkit installs an event listener in the form of the `PanelEventHandler` component which intercepts events that `InputSystemUIInputModule` sends and translates them into UI Toolkit-specific events that are then routed into the visual tree. If you employ `EventSystem.SetUITookitEventSystemOverride`, this default mechanism is bypassed.
 
 >[!NOTE]
->XR ([tracked-type input](#tracked-type input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
+>XR ([tracked-type input](#tracked-type-input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
 
 There are some additional things worth noting:
 
