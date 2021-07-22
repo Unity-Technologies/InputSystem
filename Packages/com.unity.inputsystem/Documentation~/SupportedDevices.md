@@ -12,7 +12,7 @@ Support for the following Devices doesn't require specialized support of particu
 |[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
 |[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|No|
 |[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|No|
-|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|No|
+|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|Yes(5)|
 |[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|
 
 >__Notes__:
@@ -20,6 +20,7 @@ Support for the following Devices doesn't require specialized support of particu
 >2. Joysticks are supported as generic HIDs (See [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) below).
 >3. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 >4. Indirect touches are received from Siri Remote.
+>5. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
 
 ## Gamepads
 
