@@ -111,6 +111,14 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// This method can be invoked via <c>EventSystem.current.IsPointerOverGameObject</c>.
         ///
+        /// Be aware that this method relies on state set up during UI event processing that happens in <c>EventSystem.Update</c>,
+        /// that is, as part of <c>MonoBehaviour</c> updates. This step happens <em>after</em> input processing.
+        /// Thus, calling this method earlier than that in the frame will make it poll state from <em>last</em> frame.
+        ///
+        /// Calling this method from within an <see cref="InputAction"/> callback (such as <see cref="InputAction.performed"/>)
+        /// will result in a warning. See the "UI vs Game Input" sample shipped with the Input System package for
+        /// how to deal with this fact.
+        ///
         /// <example>
         /// <code>
         /// // In general, the pointer ID corresponds to the device ID:
@@ -135,6 +143,10 @@ namespace UnityEngine.InputSystem.UI
         /// <seealso cref="InputDevice.deviceId"/>
         public override bool IsPointerOverGameObject(int pointerOrTouchId)
         {
+            if (InputSystem.isProcessingEvents)
+                Debug.LogWarning(
+                    "Calling IsPointerOverGameObject() from within event processing (such as from InputAction callbacks) will not work as expected; it will query UI state from the last frame");
+
             var stateIndex = -1;
 
             if (pointerOrTouchId < 0)

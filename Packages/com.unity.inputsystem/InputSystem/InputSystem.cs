@@ -2163,6 +2163,8 @@ namespace UnityEngine.InputSystem
 
         #region Events
 
+        internal static bool isProcessingEvents => s_Manager.isProcessingEvents;
+
         /// <summary>
         /// Called during <see cref="Update"/> for each event that is processed.
         /// </summary>

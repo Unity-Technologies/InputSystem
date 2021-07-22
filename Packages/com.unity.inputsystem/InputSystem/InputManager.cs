@@ -238,6 +238,8 @@ namespace UnityEngine.InputSystem
             remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
+        public bool isProcessingEvents => m_InputEventStream.isOpen;
+
 #if UNITY_EDITOR
         private bool m_RunUpdatesInEditMode;
 

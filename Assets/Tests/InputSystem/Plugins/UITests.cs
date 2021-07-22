@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using UnityEngine;
@@ -1976,8 +1977,7 @@ internal class UITests : CoreTestsFixture
         var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
         var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
 
-        pointAction.Enable();
-        clickAction.Enable();
+        actions.Enable();
 
         scene.uiModule.point = InputActionReference.Create(pointAction);
         scene.uiModule.leftClick = InputActionReference.Create(clickAction);
@@ -1997,6 +1997,32 @@ internal class UITests : CoreTestsFixture
         yield return null;
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CallingIsPointerOverGameObject_FromActionCallback_ResultsInWarning()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+
+        pointAction.performed += ctx => { EventSystem.current.IsPointerOverGameObject(); };
+
+        actions.Enable();
+
+        yield return null;
+
+        LogAssert.Expect(LogType.Warning, new Regex("Calling IsPointerOverGameObject\\(\\) from within event processing .* will not work as expected"));
+
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+
+        yield return null;
     }
 
 #if UNITY_IOS || UNITY_TVOS
