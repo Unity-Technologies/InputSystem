@@ -730,11 +730,11 @@ namespace UnityEngine.InputSystem
             match.action = action.name;
 
             var actionMap = action.GetOrCreateActionMap();
-            var bindingIndex = actionMap.FindBinding(match, out _);
-            if (bindingIndex == -1)
+            var bindingIndexInMap = actionMap.FindBindingRelativeToMap(match);
+            if (bindingIndexInMap == -1)
                 return default;
 
-            return new BindingSyntax(actionMap, bindingIndex);
+            return new BindingSyntax(actionMap, bindingIndexInMap);
         }
 
         /// <summary>
