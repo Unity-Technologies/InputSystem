@@ -1,15 +1,12 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// TODO
-// [X] Test on phone
-// [ ] Look into triggering Fire() immediately
-// [ ] Navigation support
-
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
 #endif
 
 public class UIvsGameInputHandler : MonoBehaviour
@@ -18,18 +15,28 @@ public class UIvsGameInputHandler : MonoBehaviour
     public GameObject inGameUI;
     public GameObject mainMenuUI;
     public GameObject menuButton;
+    public GameObject firstNavigationSelection;
+    [Space]
     public PlayerInput playerInput;
     public GameObject projectile;
+
+    [Space]
+    [Tooltip("Multiplier for Pointer.delta values when adding to rotation.")]
+    public float m_MouseLookSensitivity = 0.1f;
+    [Tooltip("Rotation per second with fully actuated Gamepad/joystick stick.")]
+    public float m_GamepadLookSpeed = 10f;
 
     private bool m_OpenMenuActionTriggered;
     private bool m_ResetCameraActionTriggered;
     private bool m_FireActionTriggered;
-    private bool m_CurrentControlSchemeUsesPointer;
+    internal bool m_UIEngaged;
 
     private Vector2 m_Rotation;
     private InputAction m_LookEngageAction;
     private InputAction m_LookAction;
     private InputAction m_CancelAction;
+    private InputAction m_UIEngageAction;
+    private GameObject m_LastNavigationSelection;
 
     private Mouse m_Mouse;
     private Vector2? m_MousePositionToWarpToAfterCursorUnlock;
@@ -43,6 +50,16 @@ public class UIvsGameInputHandler : MonoBehaviour
 
     internal State m_State;
 
+    internal enum ControlStyle
+    {
+        None,
+        KeyboardMouse,
+        Touch,
+        GamepadJoystick,
+    }
+
+    internal ControlStyle m_ControlStyle;
+
     public void OnEnable()
     {
         // By default, hide menu and show game UI.
@@ -54,6 +71,7 @@ public class UIvsGameInputHandler : MonoBehaviour
         m_LookEngageAction = playerInput.actions["LookEngage"];
         m_LookAction = playerInput.actions["Look"];
         m_CancelAction = playerInput.actions["UI/Cancel"];
+        m_UIEngageAction = playerInput.actions["UIEngage"];
 
         m_State = State.InGame;
     }
@@ -61,17 +79,32 @@ public class UIvsGameInputHandler : MonoBehaviour
     // This is called when PlayerInput updates the controls bound to its InputActions.
     public void OnControlsChanged()
     {
-        // Check if in the current control scheme uses a device that is a Pointer or TrackedDevice.
-        // Both types of devices have the ability to point at elements in the UI and thus create
-        // ambiguity between UI and game input.
-        m_CurrentControlSchemeUsesPointer = playerInput.GetDevice<Pointer>() != null || playerInput.GetDevice<TrackedDevice>() != null;
+        // We could determine the types of controls we have from the names of the control schemes or their
+        // contents. However, a way that is both easier and more robust is to simply look at the kind of
+        // devices we have assigned to us. We do not support mixed models this way but this does correspond
+        // to the limitations of the current control code.
+
+        if (playerInput.GetDevice<Touchscreen>() != null) // Note that Touchscreen is also a Pointer so check this first.
+            m_ControlStyle = ControlStyle.Touch;
+        else if (playerInput.GetDevice<Pointer>() != null)
+            m_ControlStyle = ControlStyle.KeyboardMouse;
+        else if (playerInput.GetDevice<Gamepad>() != null || playerInput.GetDevice<Joystick>() != null)
+            m_ControlStyle = ControlStyle.GamepadJoystick;
+        else
+            Debug.LogError("Control scheme not recognized: " + playerInput.currentControlScheme);
 
         m_Mouse = default;
         m_MousePositionToWarpToAfterCursorUnlock = default;
 
         // Enable button for main menu depending on whether we use touch or not.
         // With kb&mouse and gamepad, not necessary but with touch, we have no "Cancel" control.
-        menuButton.SetActive(playerInput.GetDevice<Touchscreen>() != null);
+        menuButton.SetActive(m_ControlStyle == ControlStyle.Touch);
+
+        // If we're using navigation-style input, start with UI control disengaged.
+        if (m_ControlStyle == ControlStyle.GamepadJoystick)
+            SetUIEngaged(false);
+
+        RepaintInspector();
     }
 
     public void Update()
@@ -99,8 +132,17 @@ public class UIvsGameInputHandler : MonoBehaviour
                 if (m_ResetCameraActionTriggered)
                     transform.rotation = default;
 
-                if (m_LookEngageAction.WasPressedThisFrame())
+                // When using a pointer-based control scheme, we engage camera look explicitly.
+                if (m_ControlStyle != ControlStyle.GamepadJoystick && m_LookEngageAction.WasPressedThisFrame() && IsPointerInsideScreen())
                     EngageCameraLock();
+
+                // With gamepad/joystick, we can freely rotate the camera at any time.
+                if (m_ControlStyle == ControlStyle.GamepadJoystick)
+                {
+                    ProcessCameraLook();
+                    if (m_FireActionTriggered)
+                        Fire();
+                }
 
                 break;
             }
@@ -110,20 +152,11 @@ public class UIvsGameInputHandler : MonoBehaviour
                 if (m_ResetCameraActionTriggered && !IsPointerOverUI())
                     transform.rotation = default;
 
-                //this presents an ordering problem with resets
                 if (m_FireActionTriggered && !IsPointerOverUI())
                     Fire();
 
                 // Rotate camera.
-                var rotate = m_LookAction.ReadValue<Vector2>();
-                if (rotate.sqrMagnitude > 0.01)
-                {
-                    const float kSensitivity = 10;
-                    var scaledRotateSpeed = kSensitivity * Time.deltaTime;
-                    m_Rotation.y += rotate.x * scaledRotateSpeed;
-                    m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRotateSpeed, -89, 89);
-                    transform.localEulerAngles = m_Rotation;
-                }
+                ProcessCameraLook();
 
                 // Keep track of distance we travel with the mouse while in mouse lock so
                 // that when we unlock, we can jump to a position that feels "right".
@@ -148,6 +181,24 @@ public class UIvsGameInputHandler : MonoBehaviour
         m_FireActionTriggered = default;
     }
 
+    private void ProcessCameraLook()
+    {
+        var rotate = m_LookAction.ReadValue<Vector2>();
+        if (!(rotate.sqrMagnitude > 0.01))
+            return;
+
+        // For gamepad and joystick, we rotate continuously based on stick actuation.
+        float rotateScaleFactor;
+        if (m_ControlStyle == ControlStyle.GamepadJoystick)
+            rotateScaleFactor = m_GamepadLookSpeed * Time.deltaTime;
+        else
+            rotateScaleFactor = m_MouseLookSensitivity;
+
+        m_Rotation.y += rotate.x * rotateScaleFactor;
+        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * rotateScaleFactor, -89, 89);
+        transform.localEulerAngles = m_Rotation;
+    }
+
     private void EngageCameraLock()
     {
         // With a mouse, it's annoying to always end up with the pointer centered in the middle of
@@ -160,6 +211,8 @@ public class UIvsGameInputHandler : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         m_State = State.InGameControllingCamera;
+
+        RepaintInspector();
     }
 
     private void DisengageCameraControl()
@@ -170,6 +223,8 @@ public class UIvsGameInputHandler : MonoBehaviour
             playerInput.GetDevice<Mouse>()?.WarpCursorPosition(m_MousePositionToWarpToAfterCursorUnlock.Value);
 
         m_State = State.InGame;
+
+        RepaintInspector();
     }
 
     public void OnTopLeftClicked()
@@ -206,6 +261,8 @@ public class UIvsGameInputHandler : MonoBehaviour
         playerInput.ActivateInput();
 
         m_State = State.InGame;
+
+        RepaintInspector();
     }
 
     public void OnExitClicked()
@@ -216,8 +273,6 @@ public class UIvsGameInputHandler : MonoBehaviour
         Application.Quit();
         #endif
     }
-
-    // When the 'Menu' and 'CameraReset' actions trigger, ...
 
     public void OnMenu(InputAction.CallbackContext context)
     {
@@ -231,13 +286,74 @@ public class UIvsGameInputHandler : MonoBehaviour
             m_ResetCameraActionTriggered = true;
     }
 
+    public void OnUIEngage(InputAction.CallbackContext context)
+    {
+        if (!context.performed)
+            return;
+
+        // From here, we could also do things such as showing UI that we only
+        // have up while the UI is engaged. For example, the same approach as
+        // here could be used to display a radial selection dials for items.
+
+        SetUIEngaged(!m_UIEngaged);
+    }
+
+    private void SetUIEngaged(bool value)
+    {
+        if (value)
+        {
+            playerInput.actions.FindActionMap("UI").Enable();
+            SetPlayerActionsEnabled(false);
+
+            // Select the GO that was selected last time.
+            if (m_LastNavigationSelection == null)
+                m_LastNavigationSelection = firstNavigationSelection;
+            EventSystem.current.SetSelectedGameObject(m_LastNavigationSelection);
+        }
+        else
+        {
+            m_LastNavigationSelection = EventSystem.current.currentSelectedGameObject; // If this happens to be null, we will automatically pick up firstNavigationSelection again.
+            EventSystem.current.SetSelectedGameObject(null);
+
+            playerInput.actions.FindActionMap("UI").Disable();
+            SetPlayerActionsEnabled(true);
+        }
+
+        m_UIEngaged = value;
+
+        RepaintInspector();
+    }
+
+    // Enable/disable every in-game action other than the UI toggle.
+    private void SetPlayerActionsEnabled(bool value)
+    {
+        var actions = playerInput.actions.FindActionMap("Player");
+        foreach (var action in actions)
+        {
+            if (action == m_UIEngageAction)
+                continue;
+
+            if (value)
+                action.Enable();
+            else
+                action.Disable();
+        }
+    }
+
+    // There's two different approaches taken here. The first OnFire() just does the same as the action
+    // callbacks above and just sets some state to leave action responses to Update().
+    // The second OnFire() puts the response logic directly inside the callback.
+
+    #if false
+
     public void OnFire(InputAction.CallbackContext context)
     {
         if (context.performed)
             m_FireActionTriggered = true;
     }
 
-    /*
+    #else
+
     public void OnFire(InputAction.CallbackContext context)
     {
         // For this action, let's try something different. Let's say we want to trigger a response
@@ -245,28 +361,54 @@ public class UIvsGameInputHandler : MonoBehaviour
         // to correctly respond even if there is multiple activations in a single frame. In practice,
         // this will realistically only happen with low framerates (and even then it can be questionable
         // whether we want to respond this way).
-        //
-        // The problem is
+
+        if (!context.performed)
+            return;
 
         var device = playerInput.GetDevice<Pointer>();
-        if (device != null && EventSystem.current.IsPositionOverUIObject(device.position.ReadValue())
-        {
+        if (device != null && IsRaycastHittingUIObject(device.position.ReadValue()))
             return;
-        }
+
+        Fire();
+    }
+
+    // Can't use IsPointerOverGameObject() from within InputAction callbacks as the UI won't update
+    // until after input processing is complete. So, need to explicitly raycast here.
+    // NOTE: This is not something we'd want to do from a high-frequency action. If, for example, this
+    //       is called from an action bound to `<Mouse>/position`, there will be an immense amount of
+    //       raycasts performed per frame.
+    private bool IsRaycastHittingUIObject(Vector2 position)
+    {
+        if (m_PointerData == null)
+            m_PointerData = new PointerEventData(EventSystem.current);
+        m_PointerData.position = position;
+        EventSystem.current.RaycastAll(m_PointerData, m_RaycastResults);
+        return m_RaycastResults.Count > 0;
     }
 
     private PointerEventData m_PointerData;
-    private List<RaycastResult> m_RaycastResults;
-    */
+    private List<RaycastResult> m_RaycastResults = new List<RaycastResult>();
+
+    #endif
 
     private bool IsPointerOverUI()
     {
         // If we're not controlling the UI with a pointer, we can early out of this.
-        if (!m_CurrentControlSchemeUsesPointer)
+        if (m_ControlStyle == ControlStyle.GamepadJoystick)
             return false;
 
         // Otherwise, check if the primary pointer is currently over a UI object.
         return EventSystem.current.IsPointerOverGameObject();
+    }
+
+    ////REVIEW: check this together with the focus PR; ideally, the code here should not be necessary
+    private bool IsPointerInsideScreen()
+    {
+        var pointer = playerInput.GetDevice<Pointer>();
+        if (pointer == null)
+            return true;
+
+        return Screen.safeArea.Contains(pointer.position.ReadValue());
     }
 
     private void Fire()
@@ -281,6 +423,20 @@ public class UIvsGameInputHandler : MonoBehaviour
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);
         newProjectile.GetComponent<MeshRenderer>().material.color =
             new Color(Random.value, Random.value, Random.value, 1.0f);
+    }
+
+    private void RepaintInspector()
+    {
+        // We have a custom inspector below that prints some debugging information for internal state.
+        // When we change state, this will not result in an automatic repaint of the inspector as Unity
+        // doesn't know about the change.
+        //
+        // We thus manually force a refresh. There's more elegant ways to do this but the easiest by
+        // far is to just globally force a repaint of the entire editor window.
+
+        #if UNITY_EDITOR
+        InternalEditorUtility.RepaintAllViews();
+        #endif
     }
 }
 
@@ -302,6 +458,13 @@ internal class UIvsGameInputHandlerEditor : Editor
             {
                 var state = ((UIvsGameInputHandler)target).m_State;
                 EditorGUILayout.LabelField("State", state.ToString());
+                var style = ((UIvsGameInputHandler)target).m_ControlStyle;
+                EditorGUILayout.LabelField("Controls", style.ToString());
+                if (style == UIvsGameInputHandler.ControlStyle.GamepadJoystick)
+                {
+                    var uiEngaged = ((UIvsGameInputHandler)target).m_UIEngaged;
+                    EditorGUILayout.LabelField("UI Engaged?", uiEngaged ? "Yes" : "No");
+                }
             }
         }
     }

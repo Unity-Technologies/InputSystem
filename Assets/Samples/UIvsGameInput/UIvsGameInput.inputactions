@@ -44,6 +44,14 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "Tap"
+                },
+                {
+                    "name": "UIEngage",
+                    "type": "Button",
+                    "id": "a760f56f-1b0e-4826-aaa9-f59e75fcf250",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)"
                 }
             ],
             "bindings": [
@@ -119,18 +127,7 @@
                     "path": "*/{PrimaryAction}",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard&Mouse;Joystick;XR",
-                    "action": "LookEngage",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "9c662805-a2c4-46f4-924f-688fbf9df487",
-                    "path": "<Gamepad>/leftTrigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
+                    "groups": "Keyboard&Mouse;XR",
                     "action": "LookEngage",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -163,7 +160,7 @@
                     "path": "*/{SecondaryAction}",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard&Mouse;Gamepad;Joystick;XR",
+                    "groups": "Keyboard&Mouse;XR",
                     "action": "Fire",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -176,6 +173,39 @@
                     "processors": "",
                     "groups": "Touch",
                     "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a8a3616d-3da1-4500-8881-ec15ecf61a3c",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5bcbb0a0-51f9-4f3c-9b73-b640e3470217",
+                    "path": "<Joystick>/trigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Joystick",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "65dc21e5-f8ba-41c8-8798-8707af264863",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "UIEngage",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
