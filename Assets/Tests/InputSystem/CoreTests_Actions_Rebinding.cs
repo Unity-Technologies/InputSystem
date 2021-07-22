@@ -46,7 +46,7 @@ internal partial class CoreTests
         var action = map.AddAction("action1", binding: "<Keyboard>/enter");
         map.Enable();
 
-        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.enterKey}));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.enterKey }));
 
         map.ApplyBindingOverrides(new List<InputBinding>
         {
@@ -54,7 +54,7 @@ internal partial class CoreTests
         });
 
         Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
-        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftTrigger}));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftTrigger }));
     }
 
     [Test]
@@ -98,12 +98,12 @@ internal partial class CoreTests
 
         map.Enable();
 
-        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftTrigger}));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftTrigger }));
 
         map.RemoveBindingOverrides(overrides);
 
         Assert.That(action.bindings[0].overridePath, Is.Null);
-        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.enterKey}));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.enterKey }));
     }
 
     [Test]
@@ -491,7 +491,7 @@ internal partial class CoreTests
             Set(gamepad.leftStick, Vector2.right);
 
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick.x, gamepad.leftStick.right}));
+            Assert.That(rebind.candidates, Is.EquivalentTo(new[] { gamepad.leftStick.x, gamepad.leftStick.right }));
             Assert.That(rebind.scores, Has.Count.EqualTo(2));
             Assert.That(rebind.scores[0], Is.GreaterThan(rebind.scores[1]));
 
@@ -541,7 +541,7 @@ internal partial class CoreTests
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.Empty);
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.5f});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 0.5f });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
@@ -590,7 +590,7 @@ internal partial class CoreTests
                    .Start())
         {
             // Gamepad leftStick should get ignored.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
@@ -599,7 +599,7 @@ internal partial class CoreTests
             Assert.That(action.bindings[0].overridePath, Is.Null);
 
             // Gamepad leftTrigger should bind.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
@@ -803,7 +803,7 @@ internal partial class CoreTests
                        .WithBindingGroup("Gamepad")
                        .Start())
         {
-            Assert.That(rebind.bindingMask, Is.EqualTo(new InputBinding { groups = "Gamepad"}));
+            Assert.That(rebind.bindingMask, Is.EqualTo(new InputBinding { groups = "Gamepad" }));
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
             InputSystem.Update();
@@ -859,21 +859,21 @@ internal partial class CoreTests
                        .Start())
         {
             // Actuate leftStick above deadzone.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.3f, 0.3f)});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.3f, 0.3f) });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick}));
+            Assert.That(rebind.candidates, Is.EquivalentTo(new[] { gamepad.leftStick }));
 
             // Advance time by half a second.
             runtime.currentTime += 0.5f;
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
-            Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick}));
+            Assert.That(rebind.candidates, Is.EquivalentTo(new[] { gamepad.leftStick }));
 
             // Actuate rightStick even further than leftStick.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = new Vector2(0.7f, 0.7f)});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(0.7f, 0.7f) });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
@@ -933,7 +933,7 @@ internal partial class CoreTests
                        .WithAction(action)
                        .WithControlsHavingToMatchPath("<Keyboard>")
                        .WithControlsHavingToMatchPath("<Mouse>")
-                       .OnPotentialMatch(operation => {})  // Don't complete. Just keep going.
+                       .OnPotentialMatch(operation => { })  // Don't complete. Just keep going.
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
@@ -969,13 +969,13 @@ internal partial class CoreTests
                        .WithControlsExcluding("<Mouse>/position")
                        .Start())
         {
-            InputSystem.QueueStateEvent(mouse, new MouseState {position = new Vector2(123, 345)});
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(123, 345) });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.Empty);
 
-            InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(123, 345)});
+            InputSystem.QueueStateEvent(mouse, new MouseState { delta = new Vector2(123, 345) });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
@@ -1075,7 +1075,7 @@ internal partial class CoreTests
                 })
                 .Start();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(1, 0)});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0) });
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
@@ -1095,7 +1095,7 @@ internal partial class CoreTests
             rebind
                 .WithExpectedControlType("Button")
                 .OnPotentialMatch(ctx => candidates = ctx.candidates.ToArray())
-                .OnApplyBinding((operation, s) => {});
+                .OnApplyBinding((operation, s) => { });
 
             rebind.Start();
             PressAndRelease(gamepad.buttonSouth);
@@ -1331,5 +1331,114 @@ internal partial class CoreTests
         Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(joystick.trigger));
         Assert.That(secondActionInAsset.bindings[0].overrideInteractions, Is.EqualTo("tap"));
         Assert.That(secondActionInAsset.bindings[0].overrideProcessors, Is.EqualTo("invert"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnNegativeOne_IfEmpty()
+    {
+        var actionMap = new InputActionMap();
+        Assert.AreEqual(-1, actionMap.FindBinding(new InputBinding(), out _)); // match anything
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnZero_IfUnconditionalMatchAndNotEmpty()
+    {
+        var actionMap = new InputActionMap();
+        var action = actionMap.AddAction("action1");
+        actionMap.AddBinding("/keyboard/a", action); // 0
+        actionMap.AddBinding("/keyboard/b", action); // 1
+
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding(), out _)); // match anything
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("/keyboard/a"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/b"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/b"), out _)); // not found
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnNegativeOne_IfConditionalAnotNotFound()
+    {
+        var actionMap = new InputActionMap();
+        var action = actionMap.AddAction("action1");
+        actionMap.AddBinding("/keyboard/a", action); // 0
+        actionMap.AddBinding("/keyboard/b", action); // 1
+
+        Assert.AreEqual(-1, actionMap.FindBinding(new InputBinding("/keyboard/c"), out _)); // not found
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnIndexOnAction_IfMatched()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("/keyboard/e", secondActionInMap); // second, 2
+
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("/keyboard/a"), out _)); // exact match
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("/keyboard/b"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/c"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/d"), out _)); // exact match
+        Assert.AreEqual(2, actionMap.FindBinding(new InputBinding("/keyboard/e"), out _)); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBindingRelativeToMap_ShouldReturnNegativeOne_IfNotFound()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
+
+        Assert.AreEqual(-1, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/q"))); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBindingRelativeToMap_ShouldReturnZero_IfUnconditional()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
+
+        Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding())); // unconditional
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBindingRelativeToMap_ShouldReturnIndexOfBinding_IfMatches()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("/keyboard/e", secondActionInMap); // second, 2
+
+        Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/a"))); // exact match
+        Assert.AreEqual(1, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/b"))); // exact match
+        Assert.AreEqual(2, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/c"))); // exact match
+        Assert.AreEqual(3, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/d"))); // exact match
+        Assert.AreEqual(4, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/e"))); // exact match
     }
 }
