@@ -727,10 +727,22 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            match.action = action.name;
-
             var actionMap = action.GetOrCreateActionMap();
-            var bindingIndexInMap = actionMap.FindBindingRelativeToMap(match);
+
+            int bindingIndexInMap = -1;
+            var id = action.idDontGenerate;
+            if (id != null)
+            {
+                // Prio1: Attempt to match action id (stronger)
+                match.action = action.id.ToString();
+                bindingIndexInMap = actionMap.FindBindingRelativeToMap(match);
+            }
+            if (bindingIndexInMap == -1)
+            {
+                // Prio2: Attempt to match action name (weaker)
+                match.action = action.name;
+                bindingIndexInMap = actionMap.FindBindingRelativeToMap(match);
+            }
             if (bindingIndexInMap == -1)
                 return default;
 

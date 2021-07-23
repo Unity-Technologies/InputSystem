@@ -1202,23 +1202,6 @@ namespace UnityEngine.InputSystem
 
             action = m_SingletonAction ?? FindAction(bindings[index].action);
             return action.BindingIndexOnMapToBindingIndexOnAction(index);
-
-            // OLD CODE:
-            //var bindings = m_Bindings;
-            //var bindingsCount = bindings.LengthSafe();
-
-            //for (var n = 0; n < bindingsCount; ++n)
-            //{
-            //    ref var binding = ref bindings[n];
-            //    if (mask.Matches(ref binding))
-            //    {
-            //        action = m_SingletonAction ?? FindAction(binding.action);
-            //        return action.BindingIndexOnMapToBindingIndexOnAction(n);
-            //    }
-            //}
-
-            //action = null;
-            //return -1;
         }
 
         /// <summary>

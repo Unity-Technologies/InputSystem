@@ -1347,13 +1347,13 @@ internal partial class CoreTests
     {
         var actionMap = new InputActionMap();
         var action = actionMap.AddAction("action1");
-        actionMap.AddBinding("/keyboard/a", action); // 0
-        actionMap.AddBinding("/keyboard/b", action); // 1
+        actionMap.AddBinding("<Keyboard>/a", action); // 0
+        actionMap.AddBinding("<Keyboard>/b", action); // 1
 
         Assert.AreEqual(0, actionMap.FindBinding(new InputBinding(), out _)); // match anything
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("/keyboard/a"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/b"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/b"), out _)); // not found
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _)); // not found
     }
 
     [Test]
@@ -1362,10 +1362,10 @@ internal partial class CoreTests
     {
         var actionMap = new InputActionMap();
         var action = actionMap.AddAction("action1");
-        actionMap.AddBinding("/keyboard/a", action); // 0
-        actionMap.AddBinding("/keyboard/b", action); // 1
+        actionMap.AddBinding("<Keyboard>/a", action); // 0
+        actionMap.AddBinding("<Keyboard>/b", action); // 1
 
-        Assert.AreEqual(-1, actionMap.FindBinding(new InputBinding("/keyboard/c"), out _)); // not found
+        Assert.AreEqual(-1, actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _)); // not found
     }
 
     [Test]
@@ -1376,17 +1376,17 @@ internal partial class CoreTests
         var firstActionInMap = actionMap.AddAction("action1");
         var secondActionInMap = actionMap.AddAction("action2");
 
-        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
-        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
-        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
-        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
-        actionMap.AddBinding("/keyboard/e", secondActionInMap); // second, 2
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
 
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("/keyboard/a"), out _)); // exact match
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("/keyboard/b"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/c"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("/keyboard/d"), out _)); // exact match
-        Assert.AreEqual(2, actionMap.FindBinding(new InputBinding("/keyboard/e"), out _)); // exact match
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _)); // exact match
+        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _)); // exact match
+        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/d"), out _)); // exact match
+        Assert.AreEqual(2, actionMap.FindBinding(new InputBinding("<Keyboard>/e"), out _)); // exact match
     }
 
     [Test]
@@ -1397,12 +1397,12 @@ internal partial class CoreTests
         var firstActionInMap = actionMap.AddAction("action1");
         var secondActionInMap = actionMap.AddAction("action2");
 
-        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
-        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
-        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
-        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
 
-        Assert.AreEqual(-1, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/q"))); // exact match
+        Assert.AreEqual(-1, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/q"))); // exact match
     }
 
     [Test]
@@ -1413,10 +1413,10 @@ internal partial class CoreTests
         var firstActionInMap = actionMap.AddAction("action1");
         var secondActionInMap = actionMap.AddAction("action2");
 
-        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
-        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
-        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
-        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
 
         Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding())); // unconditional
     }
@@ -1429,16 +1429,36 @@ internal partial class CoreTests
         var firstActionInMap = actionMap.AddAction("action1");
         var secondActionInMap = actionMap.AddAction("action2");
 
-        actionMap.AddBinding("/keyboard/a", firstActionInMap);  // first, 0
-        actionMap.AddBinding("/keyboard/b", secondActionInMap); // second, 0
-        actionMap.AddBinding("/keyboard/c", firstActionInMap);  // first, 1
-        actionMap.AddBinding("/keyboard/d", secondActionInMap); // second, 1
-        actionMap.AddBinding("/keyboard/e", secondActionInMap); // second, 2
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
 
-        Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/a"))); // exact match
-        Assert.AreEqual(1, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/b"))); // exact match
-        Assert.AreEqual(2, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/c"))); // exact match
-        Assert.AreEqual(3, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/d"))); // exact match
-        Assert.AreEqual(4, actionMap.FindBindingRelativeToMap(new InputBinding("/keyboard/e"))); // exact match
+        Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/a"))); // exact match
+        Assert.AreEqual(1, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/b"))); // exact match
+        Assert.AreEqual(2, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/c"))); // exact match
+        Assert.AreEqual(3, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/d"))); // exact match
+        Assert.AreEqual(4, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/e"))); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InputActionSetupExtensionsChange_ShouldChangeBindingIfFound()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        var binding1 = actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
+
+        var accessor = secondActionInMap.ChangeBinding(binding1.binding.name);
+        Assert.IsTrue(accessor.valid);
+        secondActionInMap.ChangeBinding(new InputBinding("<Keyboard>/e")).WithPath("<Keyboard>/f");
+        Assert.AreEqual(2, actionMap.FindBinding(new InputBinding("<Keyboard>/f"), out _)); // exact match
     }
 }
