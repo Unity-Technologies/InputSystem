@@ -616,7 +616,7 @@ namespace UnityEngine.InputSystem
         ///
         /// <see cref="InputActionType.Value"/> actions handle this differently by immediately performing an "initial state check"
         /// in the next input update (see <see cref="InputSystem.Update"/>) after being enabled. If any of the bound controls
-        /// is already actuated, the action will trigger right away &ndash; even with no change in state on the controls.
+        /// is already actuated, the action will trigger right away -- even with no change in state on the controls.
         ///
         /// This same behavior can be enabled explicitly for <see cref="InputActionType.Button"/> and <see cref="InputActionType.PassThrough"/>
         /// actions using this property.
