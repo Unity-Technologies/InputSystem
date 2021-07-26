@@ -818,6 +818,7 @@ namespace UnityEngine.InputSystem
         /// of the actual device type. For example, querying for <see cref="Pointer"/>, may return a <see cref="Mouse"/>.</typeparam>
         /// <returns>The first device paired to the player that is of the given type or <c>null</c> if the player
         /// does not have a matching device.</returns>
+        /// <seealso cref="devices"/>
         public TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {

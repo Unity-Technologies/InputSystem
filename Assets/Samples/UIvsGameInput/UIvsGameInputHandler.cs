@@ -15,6 +15,7 @@ public class UIvsGameInputHandler : MonoBehaviour
     public GameObject inGameUI;
     public GameObject mainMenuUI;
     public GameObject menuButton;
+    public GameObject firstButtonInMainMenu;
     public GameObject firstNavigationSelection;
     [Space]
     public PlayerInput playerInput;
@@ -123,6 +124,9 @@ public class UIvsGameInputHandler : MonoBehaviour
 
                     // Disable gameplay inputs.
                     playerInput.DeactivateInput();
+                    
+                    // Select topmost button.
+                    EventSystem.current.SetSelectedGameObject(firstButtonInMainMenu);
                 }
 
                 var pointerIsOverUI = IsPointerOverUI();
@@ -134,7 +138,7 @@ public class UIvsGameInputHandler : MonoBehaviour
 
                 // When using a pointer-based control scheme, we engage camera look explicitly.
                 if (m_ControlStyle != ControlStyle.GamepadJoystick && m_LookEngageAction.WasPressedThisFrame() && IsPointerInsideScreen())
-                    EngageCameraLock();
+                    EngageCameraControl();
 
                 // With gamepad/joystick, we can freely rotate the camera at any time.
                 if (m_ControlStyle == ControlStyle.GamepadJoystick)
@@ -199,7 +203,7 @@ public class UIvsGameInputHandler : MonoBehaviour
         transform.localEulerAngles = m_Rotation;
     }
 
-    private void EngageCameraLock()
+    private void EngageCameraControl()
     {
         // With a mouse, it's annoying to always end up with the pointer centered in the middle of
         // the screen after we come out of a cursor lock. So, what we do is we simply remember where
@@ -220,7 +224,7 @@ public class UIvsGameInputHandler : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
 
         if (m_MousePositionToWarpToAfterCursorUnlock != null)
-            playerInput.GetDevice<Mouse>()?.WarpCursorPosition(m_MousePositionToWarpToAfterCursorUnlock.Value);
+            m_Mouse?.WarpCursorPosition(m_MousePositionToWarpToAfterCursorUnlock.Value);
 
         m_State = State.InGame;
 

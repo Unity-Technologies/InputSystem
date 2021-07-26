@@ -1167,6 +1167,7 @@ MonoBehaviour:
   inGameUI: {fileID: 42746462}
   mainMenuUI: {fileID: 1996902384}
   menuButton: {fileID: 1023361647}
+  firstButtonInMainMenu: {fileID: 1774746364}
   firstNavigationSelection: {fileID: 209782685}
   playerInput: {fileID: 568883811}
   projectile: {fileID: 1050929111787496, guid: f5da6e8a2833c9042afb6a52de81b66c, type: 3}
