@@ -160,7 +160,7 @@ partial class CoreTests
                     { ""name"" : ""VariantAControl"", ""variants"" : ""A"", ""layout"" : ""Button"" },
                     { ""name"" : ""VariantBControl"", ""variants"" : ""B"", ""layout"" : ""Button"" },
                     { ""name"" : ""VariantCControl"", ""variants"" : ""C"", ""layout"" : ""Button"" },
-                    { ""name"" : ""VariantABControl"", ""variants"" : ""A,B"", ""layout"" : ""Button"" },
+                    { ""name"" : ""VariantABControl"", ""variants"" : ""A;B"", ""layout"" : ""Button"" },
                     { ""name"" : ""NoVariantControl"", ""layout"" : ""Button"" }
                 ]
             }
