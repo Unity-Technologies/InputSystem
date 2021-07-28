@@ -37,20 +37,23 @@ if (Gyroscope.current.enabled)
 
 Each sensor Device implements a single Control which represents the data read by the sensor. The following sensors are available:
 
-|Device|Android|iOS|Control|Type|
-|------|-------|---|-------|----|
-|[`Accelerometer`](#accelerometer)|Yes|Yes|[`acceleration`](../api/UnityEngine.InputSystem.Accelerometer.html#UnityEngine_InputSystem_Accelerometer_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`Gyroscope`](#gyroscope)|Yes|Yes|[`angularVelocity`](../api/UnityEngine.InputSystem.Gyroscope.html#UnityEngine_InputSystem_Gyroscope_angularVelocity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`GravitySensor`](#gravitysensor)|Yes|Yes|[`gravity`](../api/UnityEngine.InputSystem.GravitySensor.html#UnityEngine_InputSystem_GravitySensor_gravity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`AttitudeSensor`](#attitudesensor)|Yes|Yes|[`attitude`](../api/UnityEngine.InputSystem.AttitudeSensor.html#properties)|[`QuaternionControl`](../api/UnityEngine.InputSystem.Controls.QuaternionControl.html)|
-|[`LinearAccelerationSensor`](#linearaccelerationsensor)|Yes|Yes|[`acceleration`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html#UnityEngine_InputSystem_LinearAccelerationSensor_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`MagneticFieldSensor`](#magneticfieldsensor)|Yes|No|[`magneticField`](../api/UnityEngine.InputSystem.MagneticFieldSensor.html#UnityEngine_InputSystem_MagneticFieldSensor_magneticField)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
-|[`LightSensor`](#lightsensor)|Yes|No|[`lightLevel`](../api/UnityEngine.InputSystem.LightSensor.html#UnityEngine_InputSystem_LightSensor_lightLevel)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
-|[`PressureSensor`](#pressuresensor)|Yes|No|[`atmosphericPressure`](../api/UnityEngine.InputSystem.PressureSensor.html#UnityEngine_InputSystem_PressureSensor_atmosphericPressure)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
-|[`ProximitySensor`](#proximitysensor)|Yes|No|[`distance`](../api/UnityEngine.InputSystem.ProximitySensor.html#UnityEngine_InputSystem_ProximitySensor_distance)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
-|[`HumiditySensor`](#humiditysensor)|Yes|No|[`relativeHumidity`](../api/UnityEngine.InputSystem.HumiditySensor.html#UnityEngine_InputSystem_HumiditySensor_relativeHumidity)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
-|[`AmbientTemperatureSensor`](#ambienttemperaturesensor)|Yes|No|[`ambientTemperature`](../api/UnityEngine.InputSystem.AmbientTemperatureSensor.html#UnityEngine_InputSystem_AmbientTemperatureSensor_ambientTemperature)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
-|[`StepCounter`](#stepcounter)|Yes|Yes|[`stepCounter`](../api/UnityEngine.InputSystem.StepCounter.html#UnityEngine_InputSystem_StepCounter_stepCounter)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|
+|Device|Android|iOS|**WebGL**|Control|Type|
+|------|-------|---|-------|----|----|
+|[`Accelerometer`](#accelerometer)|Yes|Yes|Yes(1)|[`acceleration`](../api/UnityEngine.InputSystem.Accelerometer.html#UnityEngine_InputSystem_Accelerometer_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`Gyroscope`](#gyroscope)|Yes|Yes|Yes(1)|[`angularVelocity`](../api/UnityEngine.InputSystem.Gyroscope.html#UnityEngine_InputSystem_Gyroscope_angularVelocity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`GravitySensor`](#gravitysensor)|Yes|Yes|Yes(1)|[`gravity`](../api/UnityEngine.InputSystem.GravitySensor.html#UnityEngine_InputSystem_GravitySensor_gravity)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`AttitudeSensor`](#attitudesensor)|Yes|Yes|Yes(1)|[`attitude`](../api/UnityEngine.InputSystem.AttitudeSensor.html#properties)|[`QuaternionControl`](../api/UnityEngine.InputSystem.Controls.QuaternionControl.html)|
+|[`LinearAccelerationSensor`](#linearaccelerationsensor)|Yes|Yes|Yes(1)|[`acceleration`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html#UnityEngine_InputSystem_LinearAccelerationSensor_acceleration)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`MagneticFieldSensor`](#magneticfieldsensor)|Yes|No|No|[`magneticField`](../api/UnityEngine.InputSystem.MagneticFieldSensor.html#UnityEngine_InputSystem_MagneticFieldSensor_magneticField)|[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|
+|[`LightSensor`](#lightsensor)|Yes|No|No|[`lightLevel`](../api/UnityEngine.InputSystem.LightSensor.html#UnityEngine_InputSystem_LightSensor_lightLevel)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
+|[`PressureSensor`](#pressuresensor)|Yes|No|No|[`atmosphericPressure`](../api/UnityEngine.InputSystem.PressureSensor.html#UnityEngine_InputSystem_PressureSensor_atmosphericPressure)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
+|[`ProximitySensor`](#proximitysensor)|Yes|No|No|[`distance`](../api/UnityEngine.InputSystem.ProximitySensor.html#UnityEngine_InputSystem_ProximitySensor_distance)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
+|[`HumiditySensor`](#humiditysensor)|Yes|No|No|[`relativeHumidity`](../api/UnityEngine.InputSystem.HumiditySensor.html#UnityEngine_InputSystem_HumiditySensor_relativeHumidity)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
+|[`AmbientTemperatureSensor`](#ambienttemperaturesensor)|Yes|No|No|[`ambientTemperature`](../api/UnityEngine.InputSystem.AmbientTemperatureSensor.html#UnityEngine_InputSystem_AmbientTemperatureSensor_ambientTemperature)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
+|[`StepCounter`](#stepcounter)|Yes|Yes|No|[`stepCounter`](../api/UnityEngine.InputSystem.StepCounter.html#UnityEngine_InputSystem_StepCounter_stepCounter)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|
+
+>__Notes__:
+>1. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
 
 ## Sampling frequency
 

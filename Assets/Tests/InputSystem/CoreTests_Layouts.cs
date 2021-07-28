@@ -2157,9 +2157,6 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254566")]
-#endif
     public void Layouts_CanGetNameOfBaseLayout()
     {
         Assert.That(InputSystem.GetNameOfBaseLayout("DualShockGamepad"), Is.EqualTo("Gamepad"));
@@ -2169,13 +2166,20 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1254565")]
-#endif
     public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()
     {
+        var json = @"
+            {
+                ""name"" : ""DualShockGamepadTest"",
+                ""extend"" : ""DualShockGamepad"",
+                ""controls"" : [ { ""name"" : ""MyControl"" } ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepad", "Gamepad"), Is.True);
-        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShock4GamepadHID", "Gamepad"), Is.True);
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepadTest", "Gamepad"), Is.True);
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Gamepad"), Is.True);
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Pointer"), Is.False);
     }
@@ -2299,10 +2303,7 @@ partial class CoreTests
         [InputControl(name = "axis", layout = "Axis", variants = "B")]
         public float axis;
 
-        public FourCC format
-        {
-            get { return new FourCC('T', 'E', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(variants = "A", stateType = typeof(StateWithTwoLayoutVariants))]
@@ -2416,7 +2417,7 @@ partial class CoreTests
                     { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
                     { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
                     { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" },
-                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A,B"" },
+                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A;B"" },
                     { ""name"" : ""ButtonNoVariant"", ""layout"" : ""Button"" }
                 ]
             }
@@ -2424,15 +2425,49 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = InputSystem.AddDevice("TestLayout", variants: "A,B");
+        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
 
-        Assert.That(device.variants, Is.EqualTo("A,B"));
+        Assert.That(device.variants, Is.EqualTo("A;B"));
         Assert.That(device.allControls, Has.Count.EqualTo(4));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonB"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonAB"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonNoVariant"));
         Assert.That(device.allControls, Has.None.With.Property("name").EqualTo("ButtonC"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanForceMixedVariantsThroughLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
+                    { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
+                    { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""variant"" : ""A;C""
+            }
+        ";
+
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
+
+        var device = InputSystem.AddDevice("DerivedLayout");
+
+        Assert.That(device.variants, Is.EqualTo("A;C"));
+        Assert.That(device.allControls, Has.Count.EqualTo(2));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
+        Assert.That(device.allControls, Has.None.With.Property("name").EqualTo("ButtonB"));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonC"));
     }
 
     [Test]

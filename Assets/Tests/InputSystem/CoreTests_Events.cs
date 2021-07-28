@@ -20,6 +20,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using Random = UnityEngine.Random;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
@@ -698,6 +699,56 @@ partial class CoreTests
                     list.Add(control);
             }, Is.Not.AllocatingGCMemory());
             Assert.That(list, Is.Not.Empty);
+        }
+    }
+
+    private struct DpadState : IInputStateTypeInfo
+    {
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
+        [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
+        public int dpad;
+
+        [InputControl(layout = "Axis")]
+        public float axis1;
+
+        [InputControl(layout = "Axis")]
+        public float axis2;
+
+        public FourCC format => new FourCC("TEST");
+    }
+
+    [InputControlLayout(stateType = typeof(DpadState))]
+    [Preserve]
+    private class DpadDevice : InputDevice
+    {
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1315107/
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanIterateOverChangedControlsInEvent_EvenWhenMultipleControlsShareTheSameState()
+    {
+        // Create a device that has a dpad setup  where all buttons share the same four bits.
+        // To handle this correctly, the iteration code must not advance past a control until
+        // after having tried all possible controls using the state.
+        // (this setup is actually what's found on the PS4 controller)
+        var device = InputSystem.AddDevice<DpadDevice>();
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            var stateEventPtr = StateEvent.From(eventPtr);
+            var statePtr = (DpadState*)stateEventPtr->state;
+
+            statePtr->dpad = 6; // Press dpad left.
+            statePtr->axis2 = 1f;
+
+            // The code is checking only state, not values. The state for *all* dpad buttons is shared and thus
+            // has changed for all of them. So all the dpad buttons are in the list.
+            Assert.That(eventPtr.EnumerateChangedControls(),
+                Is.EquivalentTo(new[] { device["dpad/up"], device["dpad/right"], device["dpad/down"], device["dpad/left"], device["axis2"] }));
         }
     }
 
@@ -1991,7 +2042,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("Not implemented yet. Fix as part of https://jira.unity3d.com/browse/ISX-557.")]
     public void Events_MaximumEventLoadPerUpdateIsLimited()
     {
         // Default setting is 5MB.
@@ -2009,7 +2059,7 @@ partial class CoreTests
         InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
 
         LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
-            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to raise the limit.");
+            + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to remove the limit.");
 
         InputSystem.Update();
 
@@ -2041,6 +2091,10 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var numMouseEventsQueued = InputTestRuntime.kDefaultEventBufferSize / StateEvent.GetEventSizeWithPayload<MouseState>() + 1;
+
+        // allow all these events
+        InputSystem.settings.maxQueuedEventsPerUpdate = numMouseEventsQueued;
+
         var numMouseEventsReceived = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
@@ -2066,6 +2120,57 @@ partial class CoreTests
         Assert.That(mouse.leftButton.isPressed, Is.True);
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
         Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_MaximumQueuedEventsDuringEventProcessingIsLimited()
+    {
+        // Default setting is 1000.
+        Assert.That(InputSystem.settings.maxQueuedEventsPerUpdate, Is.EqualTo(1000));
+
+        InputSystem.settings.maxQueuedEventsPerUpdate = 20;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var callbackCount = 0;
+        var action = new InputAction(type: InputActionType.Value, binding: "<mouse>/position");
+        action.performed +=
+            _ =>
+        {
+            if (callbackCount > InputSystem.settings.maxQueuedEventsPerUpdate)
+                Assert.Fail("Maximum queued event count exceeded");
+
+            callbackCount++;
+            Set(mouse.position, Random.insideUnitCircle * 100, queueEventOnly: true);
+        };
+        action.Enable();
+
+        Set(mouse.position, Random.insideUnitCircle * 100);
+
+        LogAssert.Expect(LogType.Error, $"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' setting to a higher value if you " +
+            $"need to queue more events than this. Current limit is '{InputSystem.settings.maxQueuedEventsPerUpdate}'.");
+        Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1316000/
+    [Test]
+    [Category("Events")]
+    public void Events_CallingInputSystemUpdateDuringEventProcessingThrowsInvalidOperation()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed += _ =>
+        {
+            InputSystem.Update();
+        };
+        action.Enable();
+
+        Press(device.buttonSouth);
+
+        LogAssert.Expect(LogType.Error, "InvalidOperationException while executing 'performed' callbacks of '<Unnamed>[/Gamepad/buttonSouth]'");
+        LogAssert.Expect(LogType.Exception, "InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?");
     }
 
     ////TODO: test thread-safe QueueEvent

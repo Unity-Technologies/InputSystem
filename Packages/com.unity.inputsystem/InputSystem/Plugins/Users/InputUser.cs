@@ -314,15 +314,13 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnChange.AppendWithCapacity(value);
+                s_OnChange.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnChange.IndexOf(value);
-                if (index != -1)
-                    s_OnChange.RemoveAtWithCapacity(index);
+                s_OnChange.RemoveCallback(value);
             }
         }
 
@@ -392,7 +390,7 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnUnpairedDeviceUsed.AppendWithCapacity(value);
+                s_OnUnpairedDeviceUsed.AddCallback(value);
                 if (s_ListenForUnpairedDeviceActivity > 0)
                     HookIntoEvents();
             }
@@ -400,9 +398,7 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnUnpairedDeviceUsed.IndexOf(value);
-                if (index != -1)
-                    s_OnUnpairedDeviceUsed.RemoveAtWithCapacity(index);
+                s_OnUnpairedDeviceUsed.RemoveCallback(value);
                 if (s_OnUnpairedDeviceUsed.length == 0)
                     UnhookFromDeviceStateChange();
             }
@@ -435,15 +431,13 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnPreFilterUnpairedDeviceUsed.AppendWithCapacity(value);
+                s_OnPreFilterUnpairedDeviceUsed.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnPreFilterUnpairedDeviceUsed.IndexOf(value);
-                if (index != -1)
-                    s_OnPreFilterUnpairedDeviceUsed.RemoveAtWithCapacity(index);
+                s_OnPreFilterUnpairedDeviceUsed.RemoveCallback(value);
             }
         }
 
@@ -1125,8 +1119,24 @@ namespace UnityEngine.InputSystem.Users
         {
             Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
 
+            if (s_OnChange.length == 0)
+                return;
+            Profiler.BeginSample("InputUser.onChange");
+            s_OnChange.LockForChanges();
             for (var i = 0; i < s_OnChange.length; ++i)
-                s_OnChange[i](s_AllUsers[userIndex], change, device);
+            {
+                try
+                {
+                    s_OnChange[i](s_AllUsers[userIndex], change, device);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"{exception.GetType().Name} while executing 'InputUser.onChange' callbacks");
+                    Debug.LogException(exception);
+                }
+            }
+            s_OnChange.UnlockForChanges();
+            Profiler.EndSample();
         }
 
         private static int TryFindUserIndex(uint userId)
@@ -1641,8 +1651,10 @@ namespace UnityEngine.InputSystem.Users
                         AddDeviceToUser(userIndex, device);
 
                         // Search for another user who had lost the same device.
-                        deviceIndex =
-                            s_AllLostDevices.IndexOfReference(device, deviceIndex + 1, s_AllLostDeviceCount);
+                        // Note: s_AllLostDevices is modified (element erased) from within RemoveDeviceFromUser,
+                        //       hence, deviceIndex is not advanced and s_AllLostDeviceCount is one less than
+                        //       previous linear search iteration.
+                        deviceIndex = s_AllLostDevices.IndexOfReference(device, deviceIndex, s_AllLostDeviceCount);
                     }
                     break;
                 }
@@ -1698,7 +1710,10 @@ namespace UnityEngine.InputSystem.Users
                             UpdatePlatformUserAccount(userIndex, device);
 
                             // Search for another user paired to the same device.
-                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, deviceIndex + 1, s_AllPairedDeviceCount);
+                            // Note that action is tied to user and hence we can skip to end of slice associated
+                            // with the current user or at least one element forward.
+                            var offsetNextSlice = deviceIndex + Math.Max(1, s_AllUserData[userIndex].deviceCount);
+                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, offsetNextSlice, s_AllPairedDeviceCount - offsetNextSlice);
                         }
                     }
                     break;
@@ -1756,11 +1771,20 @@ namespace UnityEngine.InputSystem.Users
             foreach (var control in eventPtr.EnumerateChangedControls(device: device, magnitudeThreshold: 0.0001f))
             {
                 var deviceHasBeenPaired = false;
+                s_OnUnpairedDeviceUsed.LockForChanges();
                 for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
                 {
                     var pairingStateVersionBefore = s_PairingStateVersion;
 
-                    s_OnUnpairedDeviceUsed[n](control, eventPtr);
+                    try
+                    {
+                        s_OnUnpairedDeviceUsed[n](control, eventPtr);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError($"{exception.GetType().Name} while executing 'InputUser.onUnpairedDeviceUsed' callbacks");
+                        Debug.LogException(exception);
+                    }
 
                     if (pairingStateVersionBefore != s_PairingStateVersion
                         && FindUserPairedToDevice(device) != null)
@@ -1769,6 +1793,7 @@ namespace UnityEngine.InputSystem.Users
                         break;
                     }
                 }
+                s_OnUnpairedDeviceUsed.UnlockForChanges();
 
                 // If the device was paired in one of the callbacks, stop processing
                 // changes on it.
@@ -1869,8 +1894,15 @@ namespace UnityEngine.InputSystem.Users
 
             public InputControlScheme.MatchResult controlSchemeMatch;
 
+            /// <summary>
+            /// Number of devices in <see cref="InputUser.s_AllLostDevices"/> assigned to the user.
+            /// </summary>
             public int lostDeviceCount;
 
+            /// <summary>
+            /// Index in <see cref="InputUser.s_AllLostDevices"/> where the lost devices for this user start. Only valid
+            /// if <see cref="lostDeviceCount"/> is greater than zero.
+            /// </summary>
             public int lostDeviceStartIndex;
 
             ////TODO
@@ -1926,11 +1958,11 @@ namespace UnityEngine.InputSystem.Users
         private static InputUser[] s_AllUsers;
         private static UserData[] s_AllUserData;
         private static InputDevice[] s_AllPairedDevices; // We keep a single array that we slice out to each user.
-        private static InputDevice[] s_AllLostDevices;
+        private static InputDevice[] s_AllLostDevices;   // We keep a single array that we slice out to each user.
         private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
-        private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
-        private static InlinedArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
-        private static InlinedArray<Func<InputDevice, InputEventPtr, bool>> s_OnPreFilterUnpairedDeviceUsed;
+        private static CallbackArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
+        private static CallbackArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
+        private static CallbackArray<Func<InputDevice, InputEventPtr, bool>> s_OnPreFilterUnpairedDeviceUsed;
         private static Action<object, InputActionChange> s_ActionChangeDelegate;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
         private static Action<InputEventPtr, InputDevice> s_OnEventDelegate;

@@ -539,8 +539,8 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionPhase.Started"/>
         public event Action<CallbackContext> started
         {
-            add => m_OnStarted.Append(value);
-            remove => m_OnStarted.Remove(value);
+            add => m_OnStarted.AddCallback(value);
+            remove => m_OnStarted.RemoveCallback(value);
         }
 
         /// <summary>
@@ -554,8 +554,8 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionPhase.Canceled"/>
         public event Action<CallbackContext> canceled
         {
-            add => m_OnCanceled.Append(value);
-            remove => m_OnCanceled.Remove(value);
+            add => m_OnCanceled.AddCallback(value);
+            remove => m_OnCanceled.RemoveCallback(value);
         }
 
         /// <summary>
@@ -568,8 +568,8 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionPhase.Performed"/>
         public event Action<CallbackContext> performed
         {
-            add => m_OnPerformed.Append(value);
-            remove => m_OnPerformed.Remove(value);
+            add => m_OnPerformed.AddCallback(value);
+            remove => m_OnPerformed.RemoveCallback(value);
         }
 
         ////TODO: Obsolete and drop this when we can break API
@@ -1409,9 +1409,9 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionMap m_ActionMap;
 
         // Listeners. No array allocations if only a single listener.
-        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnStarted;
-        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnCanceled;
-        [NonSerialized] internal InlinedArray<Action<CallbackContext>> m_OnPerformed;
+        [NonSerialized] internal CallbackArray<Action<CallbackContext>> m_OnStarted;
+        [NonSerialized] internal CallbackArray<Action<CallbackContext>> m_OnCanceled;
+        [NonSerialized] internal CallbackArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
         /// Whether the action is a loose action created in code (e.g. as a property on a component).

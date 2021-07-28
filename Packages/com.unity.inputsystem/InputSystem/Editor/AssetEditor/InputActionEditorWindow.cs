@@ -31,8 +31,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionEditorWindow : EditorWindow, IDisposable
     {
         /// <summary>
-        /// Open window if someone clicks on an .inputactions asset or an action inside of it or
-        /// if someone hits the "Edit Asset" button in the importer inspector.
+        /// Open window if someone clicks on an .inputactions asset or an action inside of it.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
@@ -64,6 +63,26 @@ namespace UnityEngine.InputSystem.Editor
                     return false;
             }
 
+            var window = OpenEditor(asset);
+
+            // If user clicked on an action inside the asset, focus on that action (if we can find it).
+            if (actionToSelect != null && window.m_ActionMapsTree.TrySelectItem(mapToSelect))
+            {
+                window.OnActionMapTreeSelectionChanged();
+                window.m_ActionsTree.SelectItem(actionToSelect);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Open the specified <paramref name="asset"/> in an editor window. Used when someone hits the "Edit Asset" button in the
+        /// importer inspector.
+        /// </summary>
+        /// <param name="asset">The InputActionAsset to open.</param>
+        /// <returns>The editor window.</returns>
+        public static InputActionEditorWindow OpenEditor(InputActionAsset asset)
+        {
             ////REVIEW: It'd be great if the window got docked by default but the public EditorWindow API doesn't allow that
             ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
             ////        only way to get programmatic docking with the current API).
@@ -78,14 +97,7 @@ namespace UnityEngine.InputSystem.Editor
             window.Show();
             window.Focus();
 
-            // If user clicked on an action inside the asset, focus on that action (if we can find it).
-            if (actionToSelect != null && window.m_ActionMapsTree.TrySelectItem(mapToSelect))
-            {
-                window.OnActionMapTreeSelectionChanged();
-                window.m_ActionsTree.SelectItem(actionToSelect);
-            }
-
-            return true;
+            return window;
         }
 
         public static InputActionEditorWindow FindEditorForAsset(InputActionAsset asset)
@@ -224,17 +236,28 @@ namespace UnityEngine.InputSystem.Editor
 
                 InitializeTrees();
             }
+
+            InputSystem.onSettingsChange += OnInputSettingsChanged;
         }
 
         private void OnDestroy()
         {
             ConfirmSaveChangesIfNeeded();
             EditorApplication.wantsToQuit -= EditorWantsToQuit;
+            InputSystem.onSettingsChange -= OnInputSettingsChanged;
+        }
+
+        private void OnInputSettingsChanged()
+        {
+            Repaint();
         }
 
         // Set asset would usually only be called when the window is open
         private void SetAsset(InputActionAsset asset)
         {
+            if (asset == null)
+                return;
+
             m_ActionAssetManager = new InputActionAssetManager(asset) {onDirtyChanged = OnDirtyChanged};
             m_ActionAssetManager.Initialize();
 

@@ -444,7 +444,7 @@ namespace UnityEngine.InputSystem
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
-        internal void OnConfigurationChanged()
+        internal void NotifyConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
@@ -455,6 +455,8 @@ namespace UnityEngine.InputSystem
 
             // Make sure we fetch the enabled/disabled state again.
             m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
+
+            OnConfigurationChanged();
         }
 
         /// <summary>
@@ -514,6 +516,24 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device configuration is changed. This happens when the backend sends
+        /// a <see cref="DeviceConfigurationEvent"/> for the device.
+        /// </summary>
+        /// <remarks>
+        /// This method can be used to flush out cached information. An example of where this happens is <see cref="Controls.KeyControl"/>
+        /// caching information about the display name of a control. As this depends on the current keyboard layout, the information
+        /// has to be fetched dynamically (this happens using <see cref="QueryKeyNameCommand"/>). Whenever the keyboard layout changes,
+        /// the system sends a <see cref="DeviceConfigurationEvent"/> for the <see cref="Keyboard"/> at which point the device flushes
+        /// all cached key names.
+        /// </remarks>
+        /// <seealso cref="InputManager.OnUpdate"/>
+        /// <seealso cref="InputDeviceChange.ConfigurationChanged"/>
+        /// <seealso cref="OnConfigurationChanged"/>///
+        protected virtual void OnConfigurationChanged()
+        {
+        }
+
         ////TODO: add overridable OnDisable/OnEnable that fire the device commands
 
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
@@ -535,15 +555,25 @@ namespace UnityEngine.InputSystem
             where TCommand : struct, IInputDeviceCommandInfo
         {
             var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
-            var callbacks = manager.m_DeviceCommandCallbacks;
-            for (var i = 0; i < callbacks.length; ++i)
+            manager.m_DeviceCommandCallbacks.LockForChanges();
+            for (var i = 0; i < manager.m_DeviceCommandCallbacks.length; ++i)
             {
-                var result = callbacks[i](this, commandPtr);
-                if (result.HasValue)
-                    return result.Value;
+                try
+                {
+                    var result = manager.m_DeviceCommandCallbacks[i](this, commandPtr);
+                    if (result.HasValue)
+                        return result.Value;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onDeviceCommand' callbacks");
+                    Debug.LogException(exception);
+                }
             }
+            manager.m_DeviceCommandCallbacks.UnlockForChanges();
 
             return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }

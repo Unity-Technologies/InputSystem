@@ -1,3 +1,8 @@
+// Grouping up the XR defines since it's a pretty heavy sequence
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+#define ENABLE_XR_COMBINED_DEFINE
+#endif
+
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Haptics;
@@ -2705,6 +2710,25 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
+        /// <summary>
+        /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
+        /// </summary>
+        /// <remarks>
+        /// Enabling this allows native input to continue processing as if the application was playing, similar to how the <see cref="ExecuteInEditMode"/> attribute affects MonoBehaviours.
+        /// 
+        /// By default, only updates flagged with <see cref="InputUpdateType.Editor"/> will be processed, and native inputs events will only be processed and registered for that type.
+        /// 
+        /// By setting this to true, the InputSystem will act like it is in play mode and allow full action processing to occur.
+        /// </remarks>
+        /// <seealso cref="Update"/>
+        public static bool runUpdatesInEditMode
+        {
+            get => s_Manager.runUpdatesInEditMode;
+            set => s_Manager.runUpdatesInEditMode = value;
+        }
+#endif
+
         #endregion
 
         #region Settings
@@ -2813,16 +2837,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                lock (s_Manager)
-                    if (!InputActionState.s_OnActionChange.Contains(value))
-                        InputActionState.s_OnActionChange.Append(value);
+                InputActionState.s_OnActionChange.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                lock (s_Manager)
-                    InputActionState.s_OnActionChange.Remove(value);
+                InputActionState.s_OnActionChange.RemoveCallback(value);
             }
         }
 
@@ -3305,11 +3326,11 @@ namespace UnityEngine.InputSystem
         {
             UISupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             DualShockSupport.Initialize();
             #endif
 
@@ -3333,7 +3354,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+            #if ENABLE_XR_COMBINED_DEFINE
             XR.XRSupport.Initialize();
             #endif
 
@@ -3523,7 +3544,10 @@ namespace UnityEngine.InputSystem
             // Get devices that keep global lists (like Gamepad) to re-initialize them
             // by pretending the devices have been added.
             foreach (var device in devices)
+            {
                 device.NotifyAdded();
+                device.MakeCurrent();
+            }
         }
 
 #endif
