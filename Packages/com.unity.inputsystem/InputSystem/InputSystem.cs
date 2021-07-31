@@ -2724,8 +2724,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="Update"/>
         public static bool runUpdatesInEditMode
         {
-            get => s_Manager.runUpdatesInEditMode;
-            set => s_Manager.runUpdatesInEditMode = value;
+            get => s_Manager.runPlayerUpdatesInEditMode;
+            set => s_Manager.runPlayerUpdatesInEditMode = value;
         }
 #endif
 

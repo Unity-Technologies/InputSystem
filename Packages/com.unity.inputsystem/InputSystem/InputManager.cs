@@ -131,7 +131,7 @@ namespace UnityEngine.InputSystem
                     return m_CurrentUpdate;
 
                 #if UNITY_EDITOR
-                if (!gameIsPlayingAndHasFocus && 
+                if (!m_RunPlayerUpdatesInEditMode && (!gameIsPlaying || !gameHasFocus))
                     return InputUpdateType.Editor;
                 #endif
 
@@ -229,18 +229,32 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR
-        private bool m_RunUpdatesInEditMode;
+        private bool m_RunPlayerUpdatesInEditMode;
 
-        public bool runUpdatesInEditMode
+        /// <summary>
+        /// If true, consider the editor to be in "perpetual play mode". Meaning, we ignore editor
+        /// updates and just go and continuously process Dynamic/Fixed/BeforeRender regardless of
+        /// whether we're in play mode or not.
+        ///
+        /// In this mode, we also ignore game view focus.
+        /// </summary>
+        public bool runPlayerUpdatesInEditMode
         {
-            get => m_RunUpdatesInEditMode;
-            set => m_RunUpdatesInEditMode = value;
+            get => m_RunPlayerUpdatesInEditMode;
+            set => m_RunPlayerUpdatesInEditMode = value;
         }
 #endif
 
-        private bool gameIsPlayingAndHasFocus =>
+        private bool gameIsPlaying =>
 #if UNITY_EDITOR
-            m_Runtime.isInPlayMode && !m_Runtime.isPaused && m_HasFocus;
+            (m_Runtime.isInPlayMode && !m_Runtime.isPaused) || m_RunPlayerUpdatesInEditMode;
+#else
+            true;
+#endif
+
+        private bool gameHasFocus =>
+#if UNITY_EDITOR
+            m_RunPlayerUpdatesInEditMode || m_HasFocus;
 #else
             m_HasFocus;
 #endif
@@ -2743,14 +2757,18 @@ namespace UnityEngine.InputSystem
             var mask = m_UpdateMask;
 
 #if UNITY_EDITOR
-            var isPlaying = m_Runtime.isInPlayMode;
+            var isPlaying = gameIsPlaying;
 
             // Ignore editor updates when the game is playing and has focus. All input goes to player.
             if (isPlaying && m_HasFocus)
                 mask &= ~InputUpdateType.Editor;
             // If the player isn't running, the only thing we run is editor updates, except if
             // explicitly overriden via `runUpdatesInEditMode`.
-            else if (!isPlaying && updateType != InputUpdateType.Editor && !runUpdatesInEditMode)
+            // NOTE: This means that in edit mode (outside of play mode) we *never* switch to player
+            //       input state. So, any script anywhere will see input state from the editor. If you
+            //       have an [ExecuteInEditMode] MonoBehaviour and it polls the gamepad, for example,
+            //       it will see gamepad inputs going to the editor and respond to them.
+            else if (!isPlaying && updateType != InputUpdateType.Editor && !runPlayerUpdatesInEditMode)
                 return false;
 #endif
 
@@ -2808,10 +2826,6 @@ namespace UnityEngine.InputSystem
             }
             #endif
 
-            // Figure out whether we ...
-            var shouldProcessActionTimeouts = updateType != InputUpdateType.Editor || runUpdatesInEditMode;
-            var shouldProcessInputEventsInCurrentUpdate = ;
-
             // Update metrics.
             ++m_Metrics.totalUpdateCount;
 
@@ -2825,6 +2839,8 @@ namespace UnityEngine.InputSystem
 
             m_CurrentUpdate = updateType;
             InputUpdate.OnUpdate(updateType);
+
+            var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
             // See if we're supposed to only take events up to a certain time.
             // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
@@ -2868,7 +2884,7 @@ namespace UnityEngine.InputSystem
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
-                if (shouldProcessInputEventsInCurrentUpdate)
+                if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
                 #if ENABLE_PROFILER
@@ -3107,7 +3123,7 @@ namespace UnityEngine.InputSystem
                         //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
                         if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
 #if UNITY_EDITOR
-                            && !(updateType == InputUpdateType.Editor && runUpdatesInEditMode)
+                            && !(updateType == InputUpdateType.Editor && runPlayerUpdatesInEditMode)
 #endif
                         )
                             device.m_LastUpdateTimeInternal = eventPtr.internalTime;
@@ -3187,7 +3203,7 @@ namespace UnityEngine.InputSystem
 
             m_InputEventStream.Close(ref eventBuffer);
 
-            if (shouldProcessInputEventsInCurrentUpdate)
+            if (shouldProcessActionTimeouts)
                 ProcessStateChangeMonitorTimeouts();
 
             Profiler.EndSample();
@@ -3530,7 +3546,7 @@ namespace UnityEngine.InputSystem
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
             // fixed updates.
-            if (updateType == InputUpdateType.Editor && (!gameIsPlayingAndHasFocus || !hasInputFocus))
+            if (updateType == InputUpdateType.Editor)
             {
                 ////REVIEW: This isn't right. The editor does have update ticks which constitute the equivalent of player frames.
                 // The editor doesn't really have a concept of frame-to-frame operation the

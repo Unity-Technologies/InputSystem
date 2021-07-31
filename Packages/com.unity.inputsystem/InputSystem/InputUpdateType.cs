@@ -209,5 +209,12 @@ namespace UnityEngine.InputSystem.LowLevel
 
             return InputUpdateType.None;
         }
+
+        public static bool IsPlayerUpdate(this InputUpdateType updateType)
+        {
+            if (updateType == InputUpdateType.Editor)
+                return false;
+            return updateType != default;
+        }
     }
 }
