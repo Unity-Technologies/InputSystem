@@ -1,4 +1,4 @@
-# Input event
+# Input events
 
 * [Types of events](#types-of-events)
     * [State events](#state-events)
