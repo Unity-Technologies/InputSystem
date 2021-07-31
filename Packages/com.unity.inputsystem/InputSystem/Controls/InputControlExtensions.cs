@@ -1057,6 +1057,74 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Return true if the given <paramref name="eventPtr"/> has any <see cref="Input"/>
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        /// <param name="magnitude"></param>
+        /// <param name="buttonControlsOnly"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
+        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <seealso cref="EnumerateChangedControls"/>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        public static bool HasButtonPress(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        {
+            return eventPtr.GetFirstButtonPressOrNull(magnitude, buttonControlsOnly) != null;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        /// <param name="magnitude"></param>
+        /// <param name="buttonControlsOnly"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
+        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <seealso cref="EnumerateChangedControls"/>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        public static InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        {
+            if (magnitude < 0)
+                magnitude = InputSystem.settings.defaultButtonPressPoint;
+
+            foreach (var control in eventPtr.EnumerateChangedControls(magnitudeThreshold: magnitude))
+            {
+                if (buttonControlsOnly && !control.isButton)
+                    continue;
+                return control;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Enumerate all pressed buttons in the given event.
+        /// </summary>
+        /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="magnitude"></param>
+        /// <param name="buttonControlsOnly"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
+        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <seealso cref="EnumerateChangedControls"/>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        public static IEnumerable<InputControl> GetAllButtonPresses(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        {
+            if (magnitude < 0)
+                magnitude = InputSystem.settings.defaultButtonPressPoint;
+
+            foreach (var control in eventPtr.EnumerateChangedControls(magnitudeThreshold: magnitude))
+            {
+                if (buttonControlsOnly && !control.isButton)
+                    continue;
+                yield return control;
+            }
+        }
+
+        /// <summary>
         /// Allows iterating over the controls referenced by an <see cref="InputEvent"/> via <see cref="InputEventControlEnumerator"/>.
         /// </summary>
         /// <seealso cref="InputControlExtensions.EnumerateControls"/>

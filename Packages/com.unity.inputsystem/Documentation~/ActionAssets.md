@@ -184,6 +184,8 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 }
 ```
 
+>__Note__: To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".
+
 ### Using Action Assets with `PlayerInput`
 
 The [`PlayerInput`](Components.md#playerinput-component) component provides a convenient way to handle input for one or multiple players. It requires you to set up all your Actions in an Input Action Asset, which you can then assign to the [`PlayerInput`](Components.md#playerinput-component) component. [`PlayerInput`](Components.md#playerinput-component) can then automatically handle activating Action Maps and selecting Control Schemes for you. To learn more, see the documentation on [GameObject Components for Input](Components.md).

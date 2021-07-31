@@ -1836,6 +1836,7 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnMove(InputAction.CallbackContext context)
         {
+            ////REVIEW: should we poll this? or set the action to not be pass-through? (ps4 controller is spamming this action)
             m_NavigationState.move = context.ReadValue<Vector2>();
         }
 
