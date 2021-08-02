@@ -12,6 +12,6 @@ Notes:
   1) Tests need to be green.
   2) Behavioral changes need to be accompanied by test changes/additions.
   3) Where relevant, documentation (xmldoc and/or Manual) needs to be updated.
-  4) Fixes, changes, and additions need to be documented in [CHANGELOG](./CHANGELOG.md).
+  4) Fixes, changes, and additions need to be documented in [CHANGELOG](Packages/com.unity.inputsystem/CHANGELOG.md).
   5) Breaking API changes can only be introduced in new major versions.
 * The more a PR deviates from these requirements, the more work we have to do on our side to incorporate your changes. Give your PR a leg up by making it easy on us :)

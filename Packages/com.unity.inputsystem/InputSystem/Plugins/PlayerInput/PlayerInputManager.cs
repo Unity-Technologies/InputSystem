@@ -166,6 +166,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// The input action that a player must trigger to join the game.
+        /// </summary>
+        /// <remarks>
+        /// If the join action is a reference to an existing input action, it will be cloned when the PlayerInputManager
+        /// is enabled. This avoids the situation where the join action can become disabled after the first user joins which
+        /// can happen when the join action is the same as a player in-game action. When a player joins, input bindings from
+        /// devices other than the device they joined with are disabled. If the join action had a binding for keyboard and one
+        /// for gamepad for example, and the first player joined using the keyboard, the expectation is that the next player
+        /// could still join by pressing the gamepad join button. Without the cloning behavior, the gamepad input would have
+        /// been disabled.
+        ///
+        /// For more details about joining behavior, see <see cref="PlayerInput"/>.
+        /// </remarks>
         public InputActionProperty joinAction
         {
             get => m_JoinAction;
@@ -219,15 +233,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerJoinedCallbacks.AppendWithCapacity(value, 4);
+                m_PlayerJoinedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_PlayerJoinedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_PlayerJoinedCallbacks.RemoveAtWithCapacity(index);
+                m_PlayerJoinedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -237,15 +249,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_PlayerLeftCallbacks.AppendWithCapacity(value, 4);
+                m_PlayerLeftCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_PlayerLeftCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_PlayerLeftCallbacks.RemoveAtWithCapacity(index);
+                m_PlayerLeftCallbacks.RemoveCallback(value);
             }
         }
 
@@ -303,7 +313,7 @@ namespace UnityEngine.InputSystem
                     else
                     {
                         Debug.LogError(
-                            "No join action configured on PlayerInputManager but join behavior is set to JoinPlayersWhenActionIsTriggered",
+                            $"No join action configured on PlayerInputManager but join behavior is set to {nameof(PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered)}",
                             this);
                     }
                     break;
@@ -461,8 +471,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
         internal static string[] messages => new[]
         {
@@ -532,6 +542,15 @@ namespace UnityEngine.InputSystem
             {
                 Debug.LogWarning("Multiple PlayerInputManagers in the game. There should only be one PlayerInputManager", this);
                 return;
+            }
+
+            // if the join action is a reference, clone it so we don't run into problems with the action being disabled by
+            // PlayerInput when devices are assigned to individual players
+            if (joinAction.reference != null && joinAction.action?.actionMap?.asset != null)
+            {
+                var inputActionAsset = Instantiate(joinAction.action.actionMap.asset);
+                var inputActionReference = InputActionReference.Create(inputActionAsset.FindAction(joinAction.action.name));
+                joinAction = new InputActionProperty(inputActionReference);
             }
 
             // Join all players already in the game.

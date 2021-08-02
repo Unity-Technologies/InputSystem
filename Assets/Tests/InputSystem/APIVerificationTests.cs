@@ -14,12 +14,12 @@ using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
-using UnityEditor;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 using PropertyAttribute = NUnit.Framework.PropertyAttribute;
@@ -448,6 +448,13 @@ class APIVerificationTests
     ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
     private static string GenerateDocsDirectory(out string log)
     {
+        // The dependency on `com.unity.modules.uielements` we have triggers a 404 error in doctools as it
+        // tries to retrieve information on the "package" from `packages.unity.com`. As it is a module and not a
+        // package, there's no metadata on the server and PacmanUtils.GetVersions() in doctools will log an
+        // error to the console. This doesn't impact the rest of the run so just ignore it.
+        // This is a workaround. Remove when fixed in doctools.
+        LogAssert.ignoreFailingMessages = true;
+
         // DocumentationBuilder users C:/temp on Windows to avoid deeply nested paths that go
         // beyond the Windows path limit. However, on Yamato agent, C:/temp does not exist.
         // Create it manually here.
@@ -771,6 +778,11 @@ class APIVerificationTests
         public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
         public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
+    // TrackedPose Driver changes
+    [Property("Exclusions", @"1.0.0
+         public class TrackedPoseDriver : UnityEngine.MonoBehaviour
+    ")]
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(UnityEngine.Rect rect);")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
@@ -789,6 +801,11 @@ class APIVerificationTests
                 .Where(t => t.StartsWith(lastReleasedVersion.ToString())).SelectMany(t => t.Split(new[] { "\n", "\r\n", "\r" },
                     StringSplitOptions.None)).ToArray();
 
+        var scopedExclusions = TestContext.CurrentContext.Test.Properties[ScopedExclusionPropertyAttribute.ScopedExclusions].OfType<ScopedExclusion>()
+            .Where(s => s.Version == lastReleasedVersion.ToString())
+            .ToArray();
+
+
         if (currentVersion.Major == lastReleasedVersion.Major)
         {
             Unity.Coding.Editor.ApiScraping.ApiScraping.Scrape();
@@ -800,13 +817,14 @@ class APIVerificationTests
                 Is.Empty,
                 "Any API file existing for the last published release must also exist for the current one.");
 
-            var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions))
+            var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions, scopedExclusions))
                 .ToList();
             Assert.That(missingLines, Is.Empty);
         }
     }
 
-    private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions)
+    private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions,
+        ScopedExclusion[] scopedExclusions)
     {
         var oldApiFile = lastPublicApiFiles.First(p => Path.GetFileName(p) == apiFile);
         var newApiFile = currentApiFiles.First(p => Path.GetFileName(p) == apiFile);
@@ -814,9 +832,20 @@ class APIVerificationTests
         var oldApiContents = File.ReadAllLines(oldApiFile).Select(FilterIgnoredChanges).ToArray();
         var newApiContents = File.ReadAllLines(newApiFile).Select(FilterIgnoredChanges).ToArray();
 
-        foreach (var line in oldApiContents)
+        var scopeStack = new List<string>();
+        for (var i = 0; i < oldApiContents.Length; i++)
         {
-            if (!newApiContents.Contains(line) && !exclusions.Any(x => x.Trim() == line.Trim()))
+            var line = oldApiContents[i];
+            if (line.Trim().StartsWith("{"))
+            {
+                scopeStack.Add(oldApiContents[i - 1]);
+            }
+            else if (line.Trim().StartsWith("}"))
+            {
+                scopeStack.RemoveAt(scopeStack.Count - 1);
+            }
+
+            if (!newApiContents.Contains(line) && !exclusions.Any(x => x.Trim() == line.Trim()) && !scopedExclusions.Any(s => s.IsMatch(scopeStack, line)))
                 yield return line;
         }
     }
@@ -852,7 +881,50 @@ class APIVerificationTests
         }
     }
 
-    #endif // UNITY_EDITOR_WIN
+    internal readonly struct ScopedExclusion
+    {
+        public ScopedExclusion(string version, string ns, string type, string method)
+        {
+            Version = version;
+            Namespace = ns;
+            Type = type;
+            Method = method;
+        }
+
+        public string Version { get; }
+        public string Namespace { get; }
+        public string Type { get; }
+        public string Method { get; }
+
+        public bool IsMatch(List<string> scopeStack, string method)
+        {
+            var namespaceScope = string.Empty;
+            var typeScope = string.Empty;
+
+            for (var i = scopeStack.Count - 1; i >= 0; i--)
+            {
+                if (scopeStack[i].StartsWith("namespace"))
+                    namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1);
+                else
+                    typeScope = scopeStack[i].Trim();
+            }
+
+            return namespaceScope == Namespace && typeScope == Type && method.Trim() == Method;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public class ScopedExclusionPropertyAttribute : PropertyAttribute
+    {
+        public const string ScopedExclusions = "ScopedExclusions";
+
+        public ScopedExclusionPropertyAttribute(string version, string ns, string type, string method)
+        {
+            Properties.Add(ScopedExclusions, new ScopedExclusion(version, ns, type, method));
+        }
+    }
+
+#endif // UNITY_EDITOR_WIN
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
     ////      be great to have some way of diagnosing links that have gone stale

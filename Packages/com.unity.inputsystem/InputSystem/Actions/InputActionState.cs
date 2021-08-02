@@ -1915,7 +1915,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners, string callbackName)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
@@ -1951,8 +1951,7 @@ namespace UnityEngine.InputSystem
                         return;
                 }
 
-                for (var i = 0; i < s_OnActionChange.length; ++i)
-                    s_OnActionChange[i](action, change);
+                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, action, change, "InputSystem.onActionChange");
             }
 
             // Run callbacks (if any) directly on action.
@@ -3582,8 +3581,8 @@ namespace UnityEngine.InputSystem
         /// Both of these needs are served by this global list.
         /// </remarks>
         internal static InlinedArray<GCHandle> s_GlobalList;
-        internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
-        internal static InlinedArray<Action<object>> s_OnActionControlsChanged;
+        internal static CallbackArray<Action<object, InputActionChange>> s_OnActionChange;
+        internal static CallbackArray<Action<object>> s_OnActionControlsChanged;
 
         private void AddToGlobaList()
         {
