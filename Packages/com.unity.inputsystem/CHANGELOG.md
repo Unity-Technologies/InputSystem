@@ -12,6 +12,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- Changed `TrackedPoseDriver` to use properties of type `InputActionProperty` rather than `InputAction` to allow more flexibility.
+- XRLayoutBuilder now supports `_` in sanitized names.
 - Added method `SetMotorSpeedsAndLightBarColor` as a workaround for setting both the light bar and motor speeds simultaneously on a DualShock 4 controller ([case 1271119](https://issuetracker.unity3d.com/issues/dualshock4-setlightbarcolor-and-setmotorspeeds-cannot-be-called-on-the-same-frame-using-input-system)).
 - Updated documentation for sensor WebGL support in 2021.2.
 

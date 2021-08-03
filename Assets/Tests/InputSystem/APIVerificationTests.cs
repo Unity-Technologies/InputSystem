@@ -778,6 +778,10 @@ class APIVerificationTests
         public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
         public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
+    // TrackedPose Driver changes
+    [Property("Exclusions", @"1.0.0
+         public class TrackedPoseDriver : UnityEngine.MonoBehaviour
+    ")]
     // These methods have been superseded and have an Obsolete warning on them.
     [Property("Exclusions", @"1.0.0
         public static bool TryResetDevice(UnityEngine.InputSystem.InputDevice device);
