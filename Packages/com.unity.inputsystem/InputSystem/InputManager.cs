@@ -2689,6 +2689,17 @@ namespace UnityEngine.InputSystem
                     continue;
                 }
 
+                if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
+                {
+                    var nextEvent = m_InputEventStream.Peek();
+                    if (nextEvent != null && merger.MergeForward(currentEventReadPtr, nextEvent))
+                    {
+                        // Event was merged into next event, skipping.
+                        m_InputEventStream.Advance(leaveEventInBuffer: false);
+                        continue;
+                    }
+                }
+
                 // Give listeners a shot at the event.
                 if (m_EventListeners.length > 0)
                 {
