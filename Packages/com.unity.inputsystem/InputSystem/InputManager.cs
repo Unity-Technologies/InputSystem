@@ -2592,9 +2592,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessInputEvents)
                     ProcessStateChangeMonitorTimeouts();
 
-                #if ENABLE_PROFILER
                 Profiler.EndSample();
-                #endif
                 InvokeAfterUpdateCallback();
                 return;
             }
