@@ -4270,11 +4270,11 @@ partial class CoreTests
         var mousePositionAtClickEvent = Vector2.zero;
         var mouseDeltaAtClickEvent = Vector2.zero;
         var mouseScrollAtClickEvent = Vector2.zero;
-        
+
         var mousePositionAtKeyPressEvent = Vector2.zero;
         var mouseDeltaAtKeyPressEvent = Vector2.zero;
         var mouseScrollAtKeyPressEvent = Vector2.zero;
-        
+
         moveAction.performed += ctx =>
         {
             movePerformedCount++;
@@ -4293,7 +4293,7 @@ partial class CoreTests
             mouseDeltaAtKeyPressEvent = Mouse.current.delta.ReadValue();
             mouseScrollAtKeyPressEvent = Mouse.current.scroll.ReadValue();
         };
-        
+
         moveAction.Enable();
         clickAction.Enable();
         keyPressAction.Enable();
@@ -4338,7 +4338,7 @@ partial class CoreTests
                 delta = Vector2.one,
                 scroll = Vector2.one,
             }, time: 5);
-        
+
         // inject a keyboard press event
         InputSystem.QueueStateEvent(keyboard,
             new KeyboardState(Key.Space), time: 6);

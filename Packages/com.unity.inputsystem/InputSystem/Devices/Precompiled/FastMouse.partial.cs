@@ -2,11 +2,6 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem
 {
-    internal interface IEventMerger
-    {
-        public bool MergeForward(InputEventPtr currentEvent, InputEventPtr nextEvent);
-    }
-    
     internal partial class FastMouse : IInputStateCallbackReceiver, IEventMerger
     {
         protected new void OnNextUpdate()
@@ -64,7 +59,7 @@ namespace UnityEngine.InputSystem
 
             if (currentEvent->stateFormat != MouseState.Format || nextEvent->stateFormat != MouseState.Format)
                 return false;
-            
+
             var currentState = (MouseState*)currentEvent->state;
             var nextState = (MouseState*)nextEvent->state;
 
