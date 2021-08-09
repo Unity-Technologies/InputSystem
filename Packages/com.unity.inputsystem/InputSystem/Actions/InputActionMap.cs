@@ -1774,7 +1774,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Make sure we don't retain any cached per-action data when using serialization
-            // to doctor around in action map configurations in the editor. 
+            // to doctor around in action map configurations in the editor.
             ClearPerActionCachedBindingData();
         }
 
