@@ -1350,10 +1350,10 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/a", action); // 0
         actionMap.AddBinding("<Keyboard>/b", action); // 1
 
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding(), out _)); // match anything
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _)); // not found
+        Assert.That(actionMap.FindBinding(new InputBinding(), out _), Is.EqualTo(0)); // match anything
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _), Is.EqualTo(1)); // not found
     }
 
     [Test]
@@ -1365,7 +1365,7 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/a", action); // 0
         actionMap.AddBinding("<Keyboard>/b", action); // 1
 
-        Assert.AreEqual(-1, actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _)); // not found
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _), Is.EqualTo(-1)); // not found
     }
 
     [Test]
@@ -1382,11 +1382,11 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
         actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
 
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _)); // exact match
-        Assert.AreEqual(0, actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _)); // exact match
-        Assert.AreEqual(1, actionMap.FindBinding(new InputBinding("<Keyboard>/d"), out _)); // exact match
-        Assert.AreEqual(2, actionMap.FindBinding(new InputBinding("<Keyboard>/e"), out _)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/d"), out _), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/e"), out _), Is.EqualTo(2)); // exact match
     }
 
     [Test]
@@ -1402,7 +1402,7 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
         actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
 
-        Assert.AreEqual(-1, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/q"))); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/q")), Is.EqualTo(-1)); // exact match
     }
 
     [Test]
@@ -1418,7 +1418,7 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
         actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
 
-        Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding())); // unconditional
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding()), Is.EqualTo(0)); // unconditional
     }
 
     [Test]
@@ -1435,11 +1435,11 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
         actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
 
-        Assert.AreEqual(0, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/a"))); // exact match
-        Assert.AreEqual(1, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/b"))); // exact match
-        Assert.AreEqual(2, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/c"))); // exact match
-        Assert.AreEqual(3, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/d"))); // exact match
-        Assert.AreEqual(4, actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/e"))); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/a")), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/b")), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/c")), Is.EqualTo(2)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/d")), Is.EqualTo(3)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/e")), Is.EqualTo(4)); // exact match
     }
 
     [Test]
@@ -1457,8 +1457,8 @@ internal partial class CoreTests
         actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
 
         var accessor = secondActionInMap.ChangeBinding(binding1.binding.name);
-        Assert.IsTrue(accessor.valid);
+        Assert.That(accessor.valid, Is.True);
         secondActionInMap.ChangeBinding(new InputBinding("<Keyboard>/e")).WithPath("<Keyboard>/f");
-        Assert.AreEqual(2, actionMap.FindBinding(new InputBinding("<Keyboard>/f"), out _)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/f"), out _), Is.EqualTo(2)); // exact match
     }
 }
