@@ -1230,7 +1230,7 @@ namespace UnityEngine.InputSystem
             var bindings = m_Bindings;
             var bindingsCount = bindings.LengthSafe();
 
-            for (var i=0; i < bindingsCount; ++i)
+            for (var i = 0; i < bindingsCount; ++i)
             {
                 ref var binding = ref bindings[i];
                 if (mask.Matches(ref binding))
