@@ -2592,9 +2592,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessInputEvents)
                     ProcessStateChangeMonitorTimeouts();
 
-                #if ENABLE_PROFILER
                 Profiler.EndSample();
-                #endif
                 InvokeAfterUpdateCallback();
                 return;
             }
@@ -2689,6 +2687,17 @@ namespace UnityEngine.InputSystem
 
                     // No device found matching event. Ignore it.
                     continue;
+                }
+
+                if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
+                {
+                    var nextEvent = m_InputEventStream.Peek();
+                    if (nextEvent != null && merger.MergeForward(currentEventReadPtr, nextEvent))
+                    {
+                        // Event was merged into next event, skipping.
+                        m_InputEventStream.Advance(leaveEventInBuffer: false);
+                        continue;
+                    }
                 }
 
                 // Give listeners a shot at the event.

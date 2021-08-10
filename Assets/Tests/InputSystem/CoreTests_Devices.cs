@@ -4212,4 +4212,167 @@ partial class CoreTests
         InputSystem.RemoveDevice(pointer);
         Assert.That(Pointer.current, Is.EqualTo(mouse));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_EventMerging_CanMergeMouseMoveEvents()
+    {
+        var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+        int performedCount = 0;
+        Vector2 mousePosition = Vector2.zero;
+        moveAction.performed += ctx =>
+        {
+            performedCount++;
+            mousePosition = ctx.ReadValue<Vector2>();
+        };
+        moveAction.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(1.0f, 2.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 1);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(2.0f, 3.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 2);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(3.0f, 4.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 3);
+
+        InputSystem.Update();
+
+        Assert.That(performedCount, Is.EqualTo(1));
+        Assert.That(mousePosition, Is.EqualTo(new Vector2(3, 4)));
+        Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(3, 3)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_EventMerging_OnlyConsecutiveMoveEventsAreMerged()
+    {
+        var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+        var clickAction = new InputAction("Click", binding: "<Mouse>/leftButton");
+        var keyPressAction = new InputAction("KeyPress", binding: "<Keyboard>/space");
+
+        var movePerformedCount = 0;
+        var clickPerformedCount = 0;
+        var keyPressPerformedCount = 0;
+
+        var mousePositionAtClickEvent = Vector2.zero;
+        var mouseDeltaAtClickEvent = Vector2.zero;
+        var mouseScrollAtClickEvent = Vector2.zero;
+
+        var mousePositionAtKeyPressEvent = Vector2.zero;
+        var mouseDeltaAtKeyPressEvent = Vector2.zero;
+        var mouseScrollAtKeyPressEvent = Vector2.zero;
+
+        moveAction.performed += ctx =>
+        {
+            movePerformedCount++;
+        };
+        clickAction.performed += ctx =>
+        {
+            clickPerformedCount++;
+            mousePositionAtClickEvent = Mouse.current.position.ReadValue();
+            mouseDeltaAtClickEvent = Mouse.current.delta.ReadValue();
+            mouseScrollAtClickEvent = Mouse.current.scroll.ReadValue();
+        };
+        keyPressAction.performed += ctx =>
+        {
+            keyPressPerformedCount++;
+            mousePositionAtKeyPressEvent = Mouse.current.position.ReadValue();
+            mouseDeltaAtKeyPressEvent = Mouse.current.delta.ReadValue();
+            mouseScrollAtKeyPressEvent = Mouse.current.scroll.ReadValue();
+        };
+
+        moveAction.Enable();
+        clickAction.Enable();
+        keyPressAction.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(1.0f, 2.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one
+            }, time: 1);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(2.0f, 3.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one
+            }, time: 2);
+
+        // inject a click event.
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(3.0f, 4.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one
+            }.WithButton(MouseButton.Left), time: 3);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(4.0f, 5.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one,
+            }, time: 4);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(5.0f, 6.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one,
+            }, time: 5);
+
+        // inject a keyboard press event
+        InputSystem.QueueStateEvent(keyboard,
+            new KeyboardState(Key.Space), time: 6);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(6.0f, 7.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one,
+            }, time: 7);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(7.0f, 8.0f),
+                delta = Vector2.one,
+                scroll = Vector2.one,
+            }, time: 8);
+
+        InputSystem.Update();
+
+        Assert.That(movePerformedCount, Is.EqualTo(4));
+        Assert.That(clickPerformedCount, Is.EqualTo(1));
+        Assert.That(keyPressPerformedCount, Is.EqualTo(1));
+
+        Assert.That(Mouse.current.position.ReadValue(), Is.EqualTo(new Vector2(7, 8)));
+        Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(7, 7)));
+        Assert.That(Mouse.current.scroll.ReadValue(), Is.EqualTo(new Vector2(7, 7)));
+
+        Assert.That(mousePositionAtClickEvent, Is.EqualTo(new Vector2(3, 4)));
+        Assert.That(mouseDeltaAtClickEvent, Is.EqualTo(new Vector2(3, 3)));
+        Assert.That(mouseScrollAtClickEvent, Is.EqualTo(new Vector2(3, 3)));
+
+        Assert.That(mousePositionAtKeyPressEvent, Is.EqualTo(new Vector2(5, 6)));
+        Assert.That(mouseDeltaAtKeyPressEvent, Is.EqualTo(new Vector2(5, 5)));
+        Assert.That(mouseScrollAtKeyPressEvent, Is.EqualTo(new Vector2(5, 5)));
+    }
 }
