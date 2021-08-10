@@ -11,6 +11,26 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [     
+         {
+            "name": "com.unity.xr.oculus",
+            "expression": "1.0.3",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
+        },
+        {
+            "name": "com.unity.xr.googlevr",
+            "expression": "1.0.0",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR"
+        },
+        {
+            "name": "com.unity.xr.openvr",
+            "expression": "1.0.0",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR"
+        },
+        {
+            "name": "com.unity.xr.windowsmr",
+            "expression": "2.0.3",
+            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
+        },
         {
             "name": "com.unity.modules.vr",
             "expression": "1.0.0",
