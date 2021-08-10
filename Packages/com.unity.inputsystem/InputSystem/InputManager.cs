@@ -3006,7 +3006,10 @@ namespace UnityEngine.InputSystem
                             {
                                 // Let everything but pointer and keyboard input through.
                                 skipEvent = isPointerOrKeyboard;
-                                leaveInBuffer = true;
+
+                                // if the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
+                                // in a subsequent editor update. Otherwise, take it out.
+                                leaveInBuffer = isPointerOrKeyboard;
                             }
                             else
                             {

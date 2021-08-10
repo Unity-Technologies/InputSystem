@@ -4403,9 +4403,12 @@ partial class CoreTests
                     Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
                     Assert.That(trackedDevice.isTracked.isPressed, Is.False);
 
+                    // REVIEW: Does the order matter here? The expected list does not match the actual in terms of order, where it's
+                    // Reset device -> Disable Device, Reset device -> disable device..., but also in a completely different order per
+                    // device than in the expected list.
                     Assert.That(changes, Is.EquivalentTo(new[]
                     {
-                        "Reset Mouse", "Reset Keyboard", "Reset Gamepad", "Reset Joystick", "Reset TrackedDevice",
+                        "SoftReset Mouse", "SoftReset Keyboard", "SoftReset Gamepad", "SoftReset Joystick", "SoftReset TrackedDevice",
                         "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
                     }));
                     if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
@@ -4434,7 +4437,7 @@ partial class CoreTests
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
-                            "Reset Mouse", "Reset Keyboard", "Reset Joystick",
+                            "SoftReset Mouse", "SoftReset Keyboard", "SoftReset Joystick",
                             "Disabled Mouse", "Disabled Keyboard", "Disabled Joystick"
                         }));
                         if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
@@ -4461,7 +4464,7 @@ partial class CoreTests
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
-                            "Reset Mouse", "Reset Keyboard",
+                            "SoftReset Mouse", "SoftReset Keyboard",
                             "Disabled Mouse", "Disabled Keyboard"
                         }));
                         Assert.That(commands, Is.Empty); // No actual disabling in backend.
@@ -4485,7 +4488,7 @@ partial class CoreTests
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
-                            "Reset Mouse", "Reset Keyboard", "Reset Gamepad", "Reset Joystick", "Reset TrackedDevice",
+                            "SoftReset Mouse", "SoftReset Keyboard", "SoftReset Gamepad", "SoftReset Joystick", "SoftReset TrackedDevice",
                             "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
                         }));
                         Assert.That(commands, Is.Empty); // We don't actually disable them in the backend as the editor will continue to receive data.
@@ -4799,7 +4802,7 @@ partial class CoreTests
 
             // Enabled devices that do not support syncs will have seen resets.
             if (kIsEditor)
-                Assert.That(changes, Is.EquivalentTo(new[] { "Reset Mouse1", "Reset TrackedDevice2", "Reset Mouse3", "Reset Joystick" }));
+                Assert.That(changes, Is.EquivalentTo(new[] { "SoftReset Mouse1", "SoftReset TrackedDevice2", "SoftReset Mouse3", "SoftReset Joystick" }));
             else
                 Assert.That(changes, Is.EquivalentTo(new[] { "Reset Mouse", "Reset Joystick" }));
 
@@ -4852,7 +4855,7 @@ partial class CoreTests
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
                             // Enabled devices that don't support syncs get reset.
-                            "Reset Mouse1", "Reset Mouse3", "Reset Joystick",
+                            "SoftReset Mouse1", "SoftReset Mouse3", "SoftReset Joystick",
 
                             "Enabled Mouse1", "Enabled Mouse3",
                             "Enabled Keyboard", "Enabled Joystick"
@@ -4873,7 +4876,7 @@ partial class CoreTests
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
                             // Enabled devices that don't support syncs get reset.
-                            "Reset Mouse1", "Reset Mouse3",
+                            "SoftReset Mouse1", "SoftReset Mouse3",
 
                             "Enabled Mouse1", "Enabled Mouse2", "Enabled Mouse3", "Enabled Keyboard"
                         }));
@@ -4895,7 +4898,7 @@ partial class CoreTests
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
                             // Enabled devices that don't support syncs get reset.
-                            "Reset Mouse1", "Reset Mouse3", "Reset Joystick", "Reset TrackedDevice2",
+                            "SoftReset Mouse1", "SoftReset Mouse3", "SoftReset Joystick", "SoftReset TrackedDevice2",
 
                             "Enabled Gamepad", "Enabled Joystick",
                             "Enabled TrackedDevice1", "Enabled TrackedDevice2",
@@ -4941,7 +4944,7 @@ partial class CoreTests
                     Assert.That(changes, Is.EquivalentTo(new[]
                     {
                         // Enabled devices that don't support syncs get reset.
-                        "Reset Mouse1", "Reset Mouse3", "Reset Joystick", "Reset TrackedDevice2",
+                        "SoftReset Mouse1", "SoftReset Mouse3", "SoftReset Joystick", "SoftReset TrackedDevice2",
 
                         "Enabled Gamepad", "Enabled Joystick",
                         "Enabled TrackedDevice1", "Enabled TrackedDevice2",
