@@ -518,6 +518,33 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Disables redundant events merging. Disable it if you want to get all events.
+        /// </summary>
+        /// <remarks>
+        /// When using a high frequency mouse, the number of mouse move events in each frame can be
+        /// very large, which can have a negative effect on performance. To help with this,
+        /// merging events can be used which coalesces consecutive mouse move events into a single
+        /// input action update.
+        ///
+        /// For example, if there are one hundred mouse events, but they are all position updates
+        /// with no clicks, and there is an input action callback handler for the mouse position, that
+        /// callback handler will only be called one time in the current frame. Delta and scroll
+        /// values for the mouse will still be accumulated across all mouse events.
+        /// </remarks>
+        public bool disableRedundantEventsMerging
+        {
+            get => m_DisableRedundantEventsMerging;
+            set
+            {
+                if (m_DisableRedundantEventsMerging == value)
+                    return;
+
+                m_DisableRedundantEventsMerging = value;
+                OnChange();
+            }
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -541,6 +568,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private bool m_DisableRedundantEventsMerging = false;
 
         internal void OnChange()
         {
