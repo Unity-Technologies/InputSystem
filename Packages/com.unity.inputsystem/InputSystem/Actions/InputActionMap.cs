@@ -1193,20 +1193,50 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc/>
         public int FindBinding(InputBinding mask, out InputAction action)
         {
+            var index = FindBindingRelativeToMap(mask);
+            if (index == -1)
+            {
+                action = null;
+                return -1;
+            }
+
+            action = m_SingletonAction ?? FindAction(bindings[index].action);
+            return action.BindingIndexOnMapToBindingIndexOnAction(index);
+        }
+
+        /// <summary>
+        /// Find the index of the first binding that matches the given mask.
+        /// </summary>
+        /// <param name="mask">A binding. See <see cref="InputBinding.Matches"/> for details.</param>
+        /// <returns>Index into <see cref="InputAction.bindings"/> of <paramref name="action"/> of the binding
+        /// that matches <paramref name="mask"/>. If no binding matches, will return -1.</returns>
+        /// <remarks>
+        /// For details about matching bindings by a mask, see <see cref="InputBinding.Matches"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var index = playerInput.actions.FindBindingRelativeToMap(
+        ///     new InputBinding { path = "&lt;Gamepad&gt;/buttonSouth" });
+        ///
+        /// if (index != -1)
+        ///     Debug.Log($"Found binding with index {index}");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.Matches"/>
+        /// <seealso cref="bindings"/>
+        internal int FindBindingRelativeToMap(InputBinding mask)
+        {
             var bindings = m_Bindings;
             var bindingsCount = bindings.LengthSafe();
 
-            for (var n = 0; n < bindingsCount; ++n)
+            for (var i = 0; i < bindingsCount; ++i)
             {
-                ref var binding = ref bindings[n];
+                ref var binding = ref bindings[i];
                 if (mask.Matches(ref binding))
-                {
-                    action = m_SingletonAction ?? FindAction(binding.action);
-                    return action.BindingIndexOnMapToBindingIndexOnAction(n);
-                }
+                    return i;
             }
 
-            action = null;
             return -1;
         }
 

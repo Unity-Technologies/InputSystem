@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - XRLayoutBuilder now supports `_` in sanitized names.
 - Added method `SetMotorSpeedsAndLightBarColor` as a workaround for setting both the light bar and motor speeds simultaneously on a DualShock 4 controller ([case 1271119](https://issuetracker.unity3d.com/issues/dualshock4-setlightbarcolor-and-setmotorspeeds-cannot-be-called-on-the-same-frame-using-input-system)).
 - Updated documentation for sensor WebGL support in 2021.2.
+- Added value clamping to 'up' and 'down' synthetic controls on `WebGLGamepad` left and right sticks.
 
 ### Fixed
 
@@ -53,6 +54,7 @@ however, it has to be formatted properly to pass verification tests.
 - `PlayerInput` no longer logs an error message when it is set to `Invoke UnityEvents` and can't find  an action in the given `.inputactions` asset ([case 1259577](https://issuetracker.unity3d.com/issues/an-error-is-thrown-when-deleting-an-input-action-and-entering-play-mode)).
 - Fixed `HoldInteraction` getting stuck when hold and release happens in same event ([case 1346786](https://issuetracker.unity3d.com/issues/input-system-the-canceled-event-is-not-fired-when-clicking-a-button-for-a-precise-amount-of-time)).
 - Fixed adding an action in the `.inputactions` editor automatically duplicating interactions and processors from the first action in the map.
+- Fixed `InputActionSetupExtensions.ChangeBinding` when modifying binding from a different action than specified. Contribution by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1348](https://github.com/Unity-Technologies/InputSystem/pull/1352).
 
 ### Added
 
