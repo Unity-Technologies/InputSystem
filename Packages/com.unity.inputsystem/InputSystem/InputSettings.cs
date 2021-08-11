@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -579,6 +581,32 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Enable or disable an internal feature by its name.
+        /// </summary>
+        /// <param name="featureName">Name of the feature.</param>
+        /// <param name="enabled">Whether to enable or disable the feature.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="featureName"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This method is intended for experimental features. These must be enabled/disabled from code.
+        /// Setting or unsetting a feature flag will not be persisted in an <c>.inputsettings</c> file.
+        /// </remarks>
+        public void SetInternalFeatureFlag(string featureName, bool enabled)
+        {
+            if (string.IsNullOrEmpty(featureName))
+                throw new ArgumentNullException(nameof(featureName));
+
+            if (m_FeatureFlags == null)
+                m_FeatureFlags = new HashSet<string>();
+
+            if (enabled)
+                m_FeatureFlags.Add(featureName.ToUpperInvariant());
+            else
+                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+
+            OnChange();
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -604,6 +632,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+
+        [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
         internal void OnChange()
         {

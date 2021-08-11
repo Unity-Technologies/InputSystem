@@ -2545,6 +2545,61 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsManually, InputUpdateType.Manual)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate, InputUpdateType.Dynamic)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
+    public void Editor_WhenRunUpdatesInEditModeIsEnabled_PlayerUpdatesRunOutsideOfPlayMode(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.updateMode = updateMode;
+
+        var updates = new List<InputUpdateType>();
+        InputSystem.onBeforeUpdate += () => updates.Add(InputState.currentUpdateType);
+
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+
+        updates.Clear();
+
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor, updateType }));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+
+        var performedCallCount = 0;
+        action.performed += context => performedCallCount++;
+        action.Enable();
+
+        Set(gamepad.leftTrigger, 0f);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(performedCallCount, Is.EqualTo(0));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
+
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_LeavingPlayMode_DestroysAllActionStates()
     {
         InputSystem.AddDevice<Gamepad>();

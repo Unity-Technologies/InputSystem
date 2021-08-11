@@ -2577,6 +2577,14 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            // Apply feature flags.
+            if (m_Settings.m_FeatureFlags != null)
+            {
+                #if UNITY_EDITOR
+                runPlayerUpdatesInEditMode = m_Settings.m_FeatureFlags.Contains(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode);
+                #endif
+            }
+
             // Cache some values.
             Touchscreen.s_TapTime = settings.defaultTapTime;
             Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
