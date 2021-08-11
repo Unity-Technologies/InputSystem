@@ -31,6 +31,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed a problem arising when combining InputSystemUIInputModule and PlayInput with SendMessage or BroadcastMessage callback behavior on the same game object or hierarchy which is an ambiguous input setup. This fix eliminates callbacks into InputSystemUIInputModule. Related to ([1343712](https://issuetracker.unity3d.com/issues/input-system-ui-components-lags-when-using-input-system-ui-input-module-together-with-player-input-component)).
 - Fixed inconsistent usage of `ENABLE_PROFILER` define together with `Profiler.BeginSample`/`Profiler.EndSample` by removing `ENABLE_PROFILER` macro check because `BeginSample`/`EndSample` are already conditional with `[Conditional("ENABLE_PROFILER")]` ([case 1350139](https://issuetracker.unity3d.com/issues/inconsistent-enable-profiler-scripting-defines-in-inputmanager-dot-cs-when-using-profiler-dot-beginssample-and-profiler-dot-endsample)).
 - Remediated majority of performance issues with high frequency mice (>=1kHz poll rates) in release mode by merging consecutive mouse move events together ([case 1281266](https://issuetracker.unity3d.com/issues/many-input-events-when-using-1000hz-mouse)).
+- Fixed `InputEventTrace` replays skipping over empty frames and thus causing playback to happen too fast.
 
 #### Actions
 
