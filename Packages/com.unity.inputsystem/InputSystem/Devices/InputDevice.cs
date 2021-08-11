@@ -326,6 +326,8 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
         /// not cause lastUpdateTime to be changed.
+        /// The "timeline" is reset to 0 when entering play mode. If there are any events incoming or device
+        /// updates which occur prior to entering play mode, these will appear negative.
         /// </remarks>
         public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
@@ -544,15 +546,25 @@ namespace UnityEngine.InputSystem
             where TCommand : struct, IInputDeviceCommandInfo
         {
             var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
-            var callbacks = manager.m_DeviceCommandCallbacks;
-            for (var i = 0; i < callbacks.length; ++i)
+            manager.m_DeviceCommandCallbacks.LockForChanges();
+            for (var i = 0; i < manager.m_DeviceCommandCallbacks.length; ++i)
             {
-                var result = callbacks[i](this, commandPtr);
-                if (result.HasValue)
-                    return result.Value;
+                try
+                {
+                    var result = manager.m_DeviceCommandCallbacks[i](this, commandPtr);
+                    if (result.HasValue)
+                        return result.Value;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onDeviceCommand' callbacks");
+                    Debug.LogException(exception);
+                }
             }
+            manager.m_DeviceCommandCallbacks.UnlockForChanges();
 
             return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }

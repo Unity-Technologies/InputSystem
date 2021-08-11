@@ -86,6 +86,7 @@ namespace UnityEngine.InputSystem.UI
             stringBuilder.AppendLine("device: " + device);
             stringBuilder.AppendLine("pointerType: " + pointerType);
             stringBuilder.AppendLine("touchId: " + touchId);
+            stringBuilder.AppendLine("pressPosition: " + pressPosition);
             stringBuilder.AppendLine("trackedDevicePosition: " + trackedDevicePosition);
             stringBuilder.AppendLine("trackedDeviceOrientation: " + trackedDeviceOrientation);
             return stringBuilder.ToString();
