@@ -3,7 +3,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.UI;
 
 ////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
 
