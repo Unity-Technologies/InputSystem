@@ -1,3 +1,4 @@
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -259,6 +260,9 @@ namespace UnityEngine.InputSystem
         ///
         /// The default value is 0.5.
         ///
+        /// Any value will implicitly be clamped to <c>0.0001f</c> as allowing a value of 0 would
+        /// cause all buttons in their default state to already be pressed.
+        ///
         /// Lowering the button press point will make triggers feel more like hair-triggers (akin
         /// to using the hair-trigger feature on Xbox Elite controllers). However, it may make using
         /// the directional buttons (i.e. <see cref="Controls.StickControl.up"/> etc) be fickle as
@@ -297,7 +301,7 @@ namespace UnityEngine.InputSystem
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
-                m_DefaultButtonPressPoint = value;
+                m_DefaultButtonPressPoint = Mathf.Clamp(value, ButtonControl.kMinButtonPressPoint, float.MaxValue);
                 OnChange();
             }
         }
@@ -561,6 +565,7 @@ namespace UnityEngine.InputSystem
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
         // Having a higher value here also obsoletes the need for custom press points on stick buttons
         // (the up/down/left/right ones).
+        [Min(ButtonControl.kMinButtonPressPoint)]
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_ButtonReleaseThreshold = 0.75f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;

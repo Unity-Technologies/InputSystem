@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>Effective value to use for press point thresholds.</value>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        public float pressPointOrDefault => pressPoint >= 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
+        public float pressPointOrDefault => pressPoint > 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
 
         /// <summary>
         /// Default-initialize the control.
@@ -101,5 +101,9 @@ namespace UnityEngine.InputSystem.Controls
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
         internal static float s_GlobalDefaultButtonPressPoint;
         internal static float s_GlobalDefaultButtonReleaseThreshold;
+
+        // We clamp button press points to this value as allowing 0 as the press point causes all buttons
+        // to implicitly be pressed all the time. Not useful.
+        internal const float kMinButtonPressPoint = 0.0001f;
     }
 }
