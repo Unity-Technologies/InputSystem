@@ -83,10 +83,28 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TODO")]
     public void Events_CanResetDeviceWithEvent()
     {
-        Assert.Fail();
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Set(device.leftTrigger, 0.5f);
+
+        var sawReset = false;
+        InputSystem.onDeviceChange += (inputDevice, change) =>
+        {
+            if (change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset)
+            {
+                Assert.That(sawReset, Is.False);
+                sawReset = true;
+            }
+        };
+
+        var resetEvent = DeviceResetEvent.Create(device.deviceId);
+        InputSystem.QueueEvent(ref resetEvent);
+        InputSystem.Update();
+
+        Assert.That(sawReset, Is.True);
+        Assert.That(device.leftTrigger.ReadValue(), Is.Zero);
     }
 
     [Test]

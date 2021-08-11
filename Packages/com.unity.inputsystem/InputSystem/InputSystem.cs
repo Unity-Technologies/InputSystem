@@ -1830,6 +1830,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="TrySyncDevice"/>
         /// <seealso cref="InputDeviceChange.HardReset"/>
+        /// <seealso cref="InputDeviceChange.SoftReset"/>
+        /// <seealso cref="LowLevel.DeviceResetEvent"/>
         public static void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false)
         {
             s_Manager.ResetDevice(device, alsoResetDontResetControls);

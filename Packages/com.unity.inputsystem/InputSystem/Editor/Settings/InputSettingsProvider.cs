@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
                     + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
                     + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
-                    + "as support will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
+                    + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
                 m_SupportedDevices.DoLayoutList();
 

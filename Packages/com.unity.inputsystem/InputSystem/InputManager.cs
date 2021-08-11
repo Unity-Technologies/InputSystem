@@ -3234,6 +3234,10 @@ namespace UnityEngine.InputSystem
                         DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners,
                             device, InputDeviceChange.ConfigurationChanged, "InputSystem.onDeviceChange");
                         break;
+
+                    case DeviceResetEvent.Type:
+                        ResetDevice(device, alsoResetDontResetControls: ((DeviceResetEvent*)currentEventReadPtr)->hardReset);
+                        break;
                 }
 
                 m_InputEventStream.Advance(leaveEventInBuffer: leaveInBuffer);
