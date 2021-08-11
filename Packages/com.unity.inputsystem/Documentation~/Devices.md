@@ -10,7 +10,7 @@
     * [Device resets](#device-resets)
     * [Device syncs](#device-syncs)
     * [Device enabling and disabling](#device-enabling-and-disabling)
-    * [Backgrouund and focus change behavior](#background-and-focus-change-behavior)
+    * [Background and focus change behavior](#background-and-focus-change-behavior)
     * [Domain reloads](#domain-reloads-in-the-editor)
 * [Native Devices](#native-devices)
     * [Disconnected Devices](#disconnected-devices)
@@ -145,13 +145,13 @@ Synchronization requests are also automatically sent by the Input System in cert
 
 When a Device is added, the Input System sends it an initial [`QueryEnabledStateCommand`](../api/UnityEngine.InputSystem.LowLevel.QueryEnabledStateCommand.html) to find out whether the device is currently enabled or not. The result of this is reflected in the [`InputDevice.enabled`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_enabled) property.
 
-When disabled, no events are than removal ([`DeviceRemoveEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceRemoveEvent.html)) and configuration change ([`DeviceConfigurationEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceConfigurationEvent.html)) events are processed for a Device, even if they are sent.
+When disabled, no events other than removal ([`DeviceRemoveEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceRemoveEvent.html)) and configuration change ([`DeviceConfigurationEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceConfigurationEvent.html)) events are processed for a Device, even if they are sent.
 
 A Device can be manually disabled and re-enabled via [`InputSystem.DisableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_) and [`InputSystem.EnableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_) respectively.
 
 Note that [sensors](Sensors.md) start in a disabled state by default, and you need to enable them in order for them to generate events.
 
-The Input System may automatically disable and reenable Devices in certain situations, as detailed in the [next section](#background-and-focus-change-behavior).
+The Input System may automatically disable and re-enable Devices in certain situations, as detailed in the [next section](#background-and-focus-change-behavior).
 
 #### Background and focus change behavior
 
@@ -167,9 +167,9 @@ If the application is configured to run while in the background (that is, not ha
 If the application is configured this way to keep running while in the background, the player loop and thus the Input System, too, will keep running even when the application does not have focus. What happens with respect to input then depends on two factors:
 
 1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](../api/UnityEngine.InputSystem.TrackedDevice.html)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) property. This property can also be forced to true or false via a Device's [layout](Layouts.md#control-items).
-2. On two settings you can find in the project-wide [Input Settings](Settings.md). Specifically, [`InputSettings.backgroundBehavior`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_backgroundBehavior):<br>![Background Behavior Setting](Images/BackgroundBehavior.png)<br>and [`InputSettings.editorInputBehaviorInPlayMode`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_editorInputBehaviorInPlayMode):<br>![Play Mode Input Behavior](Images/PlayModeInputBehavior.png)<br>The table below shows a detailed breakdown to how input behaviors based on these two settings in relation to `Run In Background`.
+2. On two settings you can find in the project-wide [Input Settings](Settings.md). Specifically, [`InputSettings.backgroundBehavior`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_backgroundBehavior):<br>![Background Behavior Setting](Images/BackgroundBehavior.png)<br>and [`InputSettings.editorInputBehaviorInPlayMode`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_editorInputBehaviorInPlayMode):<br>![Play Mode Input Behavior](Images/PlayModeInputBehavior.png)<br>The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
 
->__Note__: [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) is overridded by the editor in certain situations (see table below). In general, the value of the property does not have to be the same between the editor and the player and depends on the specific platform and device.
+>__Note__: [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) is overridden by the editor in certain situations (see table below). In general, the value of the property does not have to be the same between the editor and the player and depends on the specific platform and device.
 
 The following table shows the full matrix of behaviors according to the [Input Settings](Settings.md) and whether the game is running in the editor or in the player.
 
