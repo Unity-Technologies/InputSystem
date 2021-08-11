@@ -2930,9 +2930,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
-                #if ENABLE_PROFILER
                 Profiler.EndSample();
-                #endif
                 InvokeAfterUpdateCallback();
                 if (canFlushBuffer)
                     eventBuffer.Reset();
@@ -3083,6 +3081,24 @@ namespace UnityEngine.InputSystem
                             leaveInBuffer = false;
                         }
                     }
+                }
+                
+                if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
+                {
+                    var nextEvent = m_InputEventStream.Peek();
+                    if (nextEvent != null && merger.MergeForward(currentEventReadPtr, nextEvent))
+                    {
+                        // Event was merged into next event, skipping.
+                        m_InputEventStream.Advance(leaveEventInBuffer: false);
+                        continue;
+                    }
+                }
+
+                // Give listeners a shot at the event.
+                if (m_EventListeners.length > 0)
+                {
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
+                        new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
 
                     // Give listeners a shot at the event.
                     if (!skipEvent && m_EventListeners.length > 0)

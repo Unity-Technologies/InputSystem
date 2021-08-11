@@ -203,6 +203,17 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public static void AssertStickValues(StickControl stick, Vector2 stickValue, float up, float down, float left,
+            float right)
+        {
+            Assert.That(stick.ReadUnprocessedValue(), Is.EqualTo(stickValue));
+
+            Assert.That(stick.up.ReadUnprocessedValue(), Is.EqualTo(up).Within(0.0001), "Incorrect 'up' value");
+            Assert.That(stick.down.ReadUnprocessedValue(), Is.EqualTo(down).Within(0.0001), "Incorrect 'down' value");
+            Assert.That(stick.left.ReadUnprocessedValue(), Is.EqualTo(left).Within(0.0001), "Incorrect 'left' value");
+            Assert.That(stick.right.ReadUnprocessedValue(), Is.EqualTo(right).Within(0.0001), "Incorrect 'right' value");
+        }
+
         private Dictionary<Key, Tuple<string, int>> m_KeyInfos;
         private bool m_Initialized;
 

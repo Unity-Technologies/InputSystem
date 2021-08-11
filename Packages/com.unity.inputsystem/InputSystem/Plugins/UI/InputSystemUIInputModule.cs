@@ -1771,7 +1771,7 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
-        private void OnPoint(InputAction.CallbackContext context)
+        private void OnPointCallback(InputAction.CallbackContext context)
         {
             // When a pointer is removed, there's like a non-zero coordinate on the position control and thus
             // we will see cancellations on the "Point" action. Ignore these as they provide no useful values
@@ -1787,7 +1787,7 @@ namespace UnityEngine.InputSystem.UI
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
         //       button *clicks* when an action resets. However, we still need to send pointer ups.
 
-        private void OnLeftClick(InputAction.CallbackContext context)
+        private void OnLeftClickCallback(InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
                 return;
@@ -1799,7 +1799,7 @@ namespace UnityEngine.InputSystem.UI
                 state.leftButton.ignoreNextClick = true;
         }
 
-        private void OnRightClick(InputAction.CallbackContext context)
+        private void OnRightClickCallback(InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
                 return;
@@ -1811,7 +1811,7 @@ namespace UnityEngine.InputSystem.UI
                 state.leftButton.ignoreNextClick = true;
         }
 
-        private void OnMiddleClick(InputAction.CallbackContext context)
+        private void OnMiddleClickCallback(InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
                 return;
@@ -1839,7 +1839,7 @@ namespace UnityEngine.InputSystem.UI
 
         internal const float kPixelPerLine = 20;
 
-        private void OnScroll(InputAction.CallbackContext context)
+        private void OnScrollCallback(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
             // The old input system reported scroll deltas in lines, we report pixels.
@@ -1847,18 +1847,18 @@ namespace UnityEngine.InputSystem.UI
             state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
         }
 
-        private void OnMove(InputAction.CallbackContext context)
+        private void OnMoveCallback(InputAction.CallbackContext context)
         {
             m_NavigationState.move = context.ReadValue<Vector2>();
         }
 
-        private void OnTrackedDeviceOrientation(InputAction.CallbackContext context)
+        private void OnTrackedDeviceOrientationCallback(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
             state.worldOrientation = context.ReadValue<Quaternion>();
         }
 
-        private void OnTrackedDevicePosition(InputAction.CallbackContext context)
+        private void OnTrackedDevicePositionCallback(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
             state.worldPosition = context.ReadValue<Vector3>();
@@ -1927,21 +1927,21 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             if (m_OnPointDelegate == null)
-                m_OnPointDelegate = OnPoint;
+                m_OnPointDelegate = OnPointCallback;
             if (m_OnLeftClickDelegate == null)
-                m_OnLeftClickDelegate = OnLeftClick;
+                m_OnLeftClickDelegate = OnLeftClickCallback;
             if (m_OnRightClickDelegate == null)
-                m_OnRightClickDelegate = OnRightClick;
+                m_OnRightClickDelegate = OnRightClickCallback;
             if (m_OnMiddleClickDelegate == null)
-                m_OnMiddleClickDelegate = OnMiddleClick;
+                m_OnMiddleClickDelegate = OnMiddleClickCallback;
             if (m_OnScrollWheelDelegate == null)
-                m_OnScrollWheelDelegate = OnScroll;
+                m_OnScrollWheelDelegate = OnScrollCallback;
             if (m_OnMoveDelegate == null)
-                m_OnMoveDelegate = OnMove;
+                m_OnMoveDelegate = OnMoveCallback;
             if (m_OnTrackedDeviceOrientationDelegate == null)
-                m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientation;
+                m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientationCallback;
             if (m_OnTrackedDevicePositionDelegate == null)
-                m_OnTrackedDevicePositionDelegate = OnTrackedDevicePosition;
+                m_OnTrackedDevicePositionDelegate = OnTrackedDevicePositionCallback;
 
             SetActionCallbacks(true);
         }

@@ -343,6 +343,8 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
         /// not cause lastUpdateTime to be changed.
+        /// The "timeline" is reset to 0 when entering play mode. If there are any events incoming or device
+        /// updates which occur prior to entering play mode, these will appear negative.
         /// </remarks>
         public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
