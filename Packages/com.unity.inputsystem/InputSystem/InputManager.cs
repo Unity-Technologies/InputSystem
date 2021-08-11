@@ -3082,7 +3082,7 @@ namespace UnityEngine.InputSystem
                         }
                     }
                 }
-                
+
                 if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
                 {
                     var nextEvent = m_InputEventStream.Peek();
