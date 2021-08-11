@@ -3183,7 +3183,7 @@ internal class UITests : CoreTestsFixture
         {
             var objects = scene.GetRootGameObjects();
             var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
-            uiModule.ignoreFocus = true;
+            uiModule.shouldIgnoreFocus = true;
             var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
             var uiRoot = uiDocument.rootVisualElement;
             var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
