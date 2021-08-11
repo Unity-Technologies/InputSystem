@@ -4806,7 +4806,7 @@ partial class CoreTests
             if (kIsEditor)
                 Assert.That(changes, Is.EquivalentTo(new[] { "SoftReset Mouse1", "SoftReset TrackedDevice2", "SoftReset Mouse3", "HardReset Joystick" }));
             else
-                Assert.That(changes, Is.EquivalentTo(new[] { "Reset Mouse", "Reset Joystick" }));
+                Assert.That(changes, Is.EquivalentTo(new[] { "SoftReset Mouse", "HardReset Joystick" }));
 
             // All enabled devices should have received sync requests.
             if (kIsEditor)
