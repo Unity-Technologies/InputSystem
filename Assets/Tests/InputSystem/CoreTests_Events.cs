@@ -1327,7 +1327,8 @@ partial class CoreTests
             trace.Enable();
 
             Press(gamepad.buttonSouth);
-            InputSystem.Update();
+            InputSystem.Update(); // Record empty frame.
+            InputSystem.Update(); // Record empty frame.
             Release(gamepad.buttonSouth);
 
             trace.Disable();
@@ -1336,6 +1337,11 @@ partial class CoreTests
 
             Assert.That(replay.finished, Is.False);
             Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
 
             InputSystem.Update();
 
