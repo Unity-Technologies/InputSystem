@@ -1818,20 +1818,20 @@ partial class CoreTests
         Press(noisyGamepad.buttonSouth, queueEventOnly: true);
         InputSystem.Update();
 
-        bool? receivedResetDeviceChange = null;
+        InputDeviceChange? receivedResetDeviceChange = null;
         InputSystem.onDeviceChange += (d, c) =>
         {
-            if (c == InputDeviceChange.SoftReset)
+            if (c == InputDeviceChange.SoftReset || c == InputDeviceChange.HardReset)
             {
                 Assert.That(receivedResetDeviceChange, Is.Null);
-                receivedResetDeviceChange = true;
+                receivedResetDeviceChange = c;
             }
         };
 
         // "Soft" reset mouse.
         InputSystem.ResetDevice(mouse);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.SoftReset));
         Assert.That(receivedMouseReset, Is.False);
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
         Assert.That(mouse.scroll.ReadValue(), Is.EqualTo(Vector2.zero));
@@ -1843,7 +1843,7 @@ partial class CoreTests
         // "Hard" reset mouse.
         InputSystem.ResetDevice(mouse, alsoResetDontResetControls: true);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.HardReset));
         Assert.That(receivedMouseReset, Is.True);
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(Vector2.zero));
         Assert.That(mouse.scroll.ReadValue(), Is.EqualTo(Vector2.zero));
@@ -1855,7 +1855,7 @@ partial class CoreTests
         // between a soft and a hard reset.
         InputSystem.ResetDevice(keyboard);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.HardReset));
         Assert.That(receivedKeyboardReset, Is.True);
         Assert.That(keyboard.allControls, Has.All.Matches((InputControl control) => control.CheckStateIsAtDefault()));
         Assert.That(keyboard.allControls.OfType<KeyControl>(), Has.All.Matches((KeyControl key) => !key.isPressed));
@@ -1866,7 +1866,7 @@ partial class CoreTests
         // Reset gamepad.
         InputSystem.ResetDevice(gamepad);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.HardReset));
         Assert.That(receivedGamepadReset, Is.True);
         Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(Vector2.zero));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
@@ -1877,7 +1877,7 @@ partial class CoreTests
         // "Soft" reset noisy gamepad.
         InputSystem.ResetDevice(noisyGamepad);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.SoftReset));
         Assert.That(receivedNoisyGamepadReset, Is.False);
         Assert.That(noisyGamepad.buttonSouth.ReadValue(), Is.Zero);
         Assert.That(noisyGamepad["gyro"].ReadValueAsObject(), Is.EqualTo(Quaternion.Euler(1, 2, 3)));
@@ -1887,7 +1887,7 @@ partial class CoreTests
         // "Hard" reset noisy gamepad.
         InputSystem.ResetDevice(noisyGamepad, alsoResetDontResetControls: true);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.HardReset));
         Assert.That(receivedNoisyGamepadReset, Is.True);
         Assert.That(noisyGamepad.buttonSouth.ReadValue(), Is.Zero);
         Assert.That(noisyGamepad["gyro"].ReadValueAsObject(), Is.EqualTo(default(Quaternion)));
@@ -1897,7 +1897,7 @@ partial class CoreTests
         // "Soft" reset touch.
         InputSystem.ResetDevice(touch);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.SoftReset));
         Assert.That(receivedTouchReset, Is.False);
         Assert.That(touch.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
         Assert.That(touch.primaryTouch.position.ReadValue(), Is.EqualTo(new Vector2(234, 345)));
@@ -1917,7 +1917,7 @@ partial class CoreTests
         // "Hard" reset touch.
         InputSystem.ResetDevice(touch, alsoResetDontResetControls: true);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.HardReset));
         Assert.That(receivedTouchReset, Is.True);
         Assert.That(touch.CheckStateIsAtDefault(), Is.True);
         Assert.That(touch.primaryTouch.touchId.ReadValue(), Is.Zero);
@@ -1938,7 +1938,7 @@ partial class CoreTests
         // "Soft" reset gyro.
         InputSystem.ResetDevice(gyro);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.SoftReset));
         Assert.That(receivedGyroReset, Is.False);
         Assert.That(gyro.CheckStateIsAtDefault(), Is.False);
         Assert.That(gyro.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
@@ -1949,7 +1949,7 @@ partial class CoreTests
         // "Hard" reset gyro.
         InputSystem.ResetDevice(gyro, alsoResetDontResetControls: true);
 
-        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.HardReset));
         Assert.That(receivedGyroReset, Is.True);
         Assert.That(gyro.CheckStateIsAtDefault(), Is.True);
         Assert.That(gyro.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
@@ -4403,13 +4403,15 @@ partial class CoreTests
                     Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
                     Assert.That(trackedDevice.isTracked.isPressed, Is.False);
 
-                    // REVIEW: Does the order matter here? The expected list does not match the actual in terms of order, where it's
                     // Reset device -> Disable Device, Reset device -> disable device..., but also in a completely different order per
                     // device than in the expected list.
-                    Assert.That(changes, Is.EquivalentTo(new[]
+                    Assert.That(changes, Is.EqualTo(new[]
                     {
-                        "SoftReset Mouse", "SoftReset Keyboard", "SoftReset Gamepad", "SoftReset Joystick", "SoftReset TrackedDevice",
-                        "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
+                        "SoftReset TrackedDevice", "Disabled TrackedDevice",
+                        "SoftReset Mouse", "Disabled Mouse",
+                        "HardReset Keyboard", "Disabled Keyboard",
+                        "HardReset Gamepad", "Disabled Gamepad",
+                        "HardReset Joystick", "Disabled Joystick"
                     }));
                     if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                         Assert.That(commands, Is.EquivalentTo(new[] { "Disable Mouse", "Disable Keyboard", "Disable Gamepad", "Disable Joystick", "Disable TrackedDevice" }));
@@ -4437,7 +4439,7 @@ partial class CoreTests
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
-                            "SoftReset Mouse", "SoftReset Keyboard", "SoftReset Joystick",
+                            "SoftReset Mouse", "HardReset Keyboard", "HardReset Joystick",
                             "Disabled Mouse", "Disabled Keyboard", "Disabled Joystick"
                         }));
                         if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
@@ -4464,7 +4466,7 @@ partial class CoreTests
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
-                            "SoftReset Mouse", "SoftReset Keyboard",
+                            "SoftReset Mouse", "HardReset Keyboard",
                             "Disabled Mouse", "Disabled Keyboard"
                         }));
                         Assert.That(commands, Is.Empty); // No actual disabling in backend.
@@ -4488,7 +4490,7 @@ partial class CoreTests
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
-                            "SoftReset Mouse", "SoftReset Keyboard", "SoftReset Gamepad", "SoftReset Joystick", "SoftReset TrackedDevice",
+                            "SoftReset Mouse", "HardReset Keyboard", "HardReset Gamepad", "HardReset Joystick", "SoftReset TrackedDevice",
                             "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
                         }));
                         Assert.That(commands, Is.Empty); // We don't actually disable them in the backend as the editor will continue to receive data.
@@ -4802,7 +4804,7 @@ partial class CoreTests
 
             // Enabled devices that do not support syncs will have seen resets.
             if (kIsEditor)
-                Assert.That(changes, Is.EquivalentTo(new[] { "SoftReset Mouse1", "SoftReset TrackedDevice2", "SoftReset Mouse3", "SoftReset Joystick" }));
+                Assert.That(changes, Is.EquivalentTo(new[] { "SoftReset Mouse1", "SoftReset TrackedDevice2", "SoftReset Mouse3", "HardReset Joystick" }));
             else
                 Assert.That(changes, Is.EquivalentTo(new[] { "Reset Mouse", "Reset Joystick" }));
 
@@ -4812,14 +4814,16 @@ partial class CoreTests
                     Is.EquivalentTo(new[]
                     {
                         "Sync Mouse", "Sync Mouse2", "Sync Mouse3", "Sync TrackedDevice", "Sync TrackedDevice2",
-                        "Sync Keyboard", "Sync Gamepad", "Sync Joystick"
+                        "Sync Keyboard", "Sync Gamepad", "Sync Joystick",
+                        "Reset Joystick"
                     }));
             else
                 Assert.That(commands,
                     Is.EquivalentTo(new[]
                     {
                         "Sync Mouse", "Sync TrackedDevice",
-                        "Sync Keyboard", "Sync Gamepad", "Sync Joystick"
+                        "Sync Keyboard", "Sync Gamepad", "Sync Joystick",
+                        "Reset Joystick"
                     }));
         }
         else
@@ -4849,13 +4853,14 @@ partial class CoreTests
                                 "Enable Mouse", "Sync Mouse",
                                 "Enable Mouse3", "Sync Mouse3",
                                 "Enable Keyboard", "Sync Keyboard",
-                                "Enable Joystick", "Sync Joystick"
+                                "Enable Joystick", "Sync Joystick",
+                                "Reset Joystick"
                             }));
 
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
                             // Enabled devices that don't support syncs get reset.
-                            "SoftReset Mouse1", "SoftReset Mouse3", "SoftReset Joystick",
+                            "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick",
 
                             "Enabled Mouse1", "Enabled Mouse3",
                             "Enabled Keyboard", "Enabled Joystick"
@@ -4898,7 +4903,7 @@ partial class CoreTests
                         Assert.That(changes, Is.EquivalentTo(new[]
                         {
                             // Enabled devices that don't support syncs get reset.
-                            "SoftReset Mouse1", "SoftReset Mouse3", "SoftReset Joystick", "SoftReset TrackedDevice2",
+                            "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick", "SoftReset TrackedDevice2",
 
                             "Enabled Gamepad", "Enabled Joystick",
                             "Enabled TrackedDevice1", "Enabled TrackedDevice2",
@@ -4926,7 +4931,10 @@ partial class CoreTests
                                 "Enable Gamepad", "Enable Joystick",
                                 "Enable TrackedDevice", "Enable TrackedDevice2",
                                 "Enable Mouse", "Enable Mouse2", "Enable Mouse3",
-                                "Enable Keyboard"
+                                "Enable Keyboard",
+
+                                // Devices that don't support syncs and don't have dontReset controls should have seen resets.
+                                "Reset Joystick"
                             }));
                     }
                     else
@@ -4944,7 +4952,7 @@ partial class CoreTests
                     Assert.That(changes, Is.EquivalentTo(new[]
                     {
                         // Enabled devices that don't support syncs get reset.
-                        "SoftReset Mouse1", "SoftReset Mouse3", "SoftReset Joystick", "SoftReset TrackedDevice2",
+                        "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick", "SoftReset TrackedDevice2",
 
                         "Enabled Gamepad", "Enabled Joystick",
                         "Enabled TrackedDevice1", "Enabled TrackedDevice2",

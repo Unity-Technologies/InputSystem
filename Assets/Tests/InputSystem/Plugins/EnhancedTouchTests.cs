@@ -150,6 +150,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         // Run one player update with data.
         BeginTouch(1, new Vector2(0.123f, 0.234f));
+
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
 
         // And make sure we're not seeing the data in the editor.

@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (leaveEventInBuffer)
             {
                 Debug.Assert(Contains(currentWritePos), "Current write position should be contained in buffer");
-                
+
                 // Move down in buffer if read and write pos have deviated from each other.
                 var numBytes = currentReadPos->sizeInBytes;
                 if (currentReadPos != currentWritePos)

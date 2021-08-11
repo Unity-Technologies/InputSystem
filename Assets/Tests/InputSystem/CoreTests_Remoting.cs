@@ -231,6 +231,7 @@ partial class CoreTests
             };
 
             InputSystem.ResetDevice(gamepad);
+            InputSystem.Update();
 
             Assert.That(remoteGamepad.buttonSouth.isPressed, Is.False);
             Assert.That(remoteGamepadWasSoftReset, Is.True);
@@ -239,6 +240,7 @@ partial class CoreTests
             remoteGamepadWasSoftReset = false;
 
             InputSystem.ResetDevice(gamepad, alsoResetDontResetControls: true);
+            InputSystem.Update();
 
             Assert.That(remoteGamepadWasSoftReset, Is.False);
             Assert.That(remoteGamepadWasHardReset, Is.True);

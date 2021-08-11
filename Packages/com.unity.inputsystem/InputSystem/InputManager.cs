@@ -254,10 +254,17 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-            m_RunPlayerUpdatesInEditMode || m_HasFocus;
+                     m_RunPlayerUpdatesInEditMode || m_HasFocus;
 #else
             m_HasFocus;
 #endif
+
+        private bool gameShouldGetInputRegardlessOfFocus =>
+            m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus
+#if UNITY_EDITOR
+            && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
+#endif
+        ;
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
@@ -1150,7 +1157,7 @@ namespace UnityEngine.InputSystem
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
-            
+
             // Request device to send us an initial state update.
             if (device.enabled)
                 device.RequestSync();
@@ -1295,15 +1302,17 @@ namespace UnityEngine.InputSystem
             m_DisconnectedDevicesCount = 0;
         }
 
-        public unsafe void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false, bool noResetCommand = false)
+        public unsafe void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false, bool? issueResetCommand = null)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
             if (!device.added)
                 throw new InvalidOperationException($"Device '{device}' has not been added to the system");
 
+            var isHardReset = alsoResetDontResetControls || !device.hasDontResetControls;
+
             // Trigger reset notification.
-            var change = alsoResetDontResetControls ? InputDeviceChange.HardReset : InputDeviceChange.SoftReset;
+            var change = isHardReset ? InputDeviceChange.HardReset : InputDeviceChange.SoftReset;
             InputActionState.OnDeviceChange(device, change);
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
 
@@ -1335,7 +1344,6 @@ namespace UnityEngine.InputSystem
                 stateEventPtr->stateFormat = device.m_StateBlock.format;
 
                 // Decide whether we perform a soft reset or a hard reset.
-                var isHardReset = alsoResetDontResetControls || !device.hasDontResetControls;
                 if (isHardReset)
                 {
                     // Perform a hard reset where we wipe the entire device and set a full
@@ -1367,7 +1375,26 @@ namespace UnityEngine.InputSystem
                 UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
                     new InputEventPtr((InputEvent*)stateEventPtr));
 
-                if (isHardReset && !noResetCommand)
+                // In the editor, we don't want to issue RequestResetCommand to devices based on focus of the game view
+                // as this would also reset device state for the editor. And we don't need the reset commands in this case
+                // as -- unlike in the player --, Unity keeps running and we will keep seeing OS messages for these devices.
+                // So, in the editor, we generally suppress reset commands.
+                //
+                // The only exception is when the editor itself loses focus. We issue sync requests to all devices when
+                // coming back into focus. But for any device that doesn't support syncs, we actually do want to have a
+                // reset command reach the background.
+                //
+                // Finally, in the player, we also avoid reset commands when disabling a device as these are pointless.
+                // We sync/reset when enabling a device in the backend.
+                var doIssueResetCommand = isHardReset;
+                if (issueResetCommand != null)
+                    doIssueResetCommand = issueResetCommand.Value;
+                #if UNITY_EDITOR
+                else if (m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
+                    doIssueResetCommand = false;
+                #endif
+
+                if (doIssueResetCommand)
                     device.RequestReset();
             }
         }
@@ -1471,7 +1498,7 @@ namespace UnityEngine.InputSystem
                         if (device.disabledInFrontend)
                         {
                             if (!device.RequestSync())
-                                ResetDevice(device, noResetCommand: true);
+                                ResetDevice(device);
                             device.disabledInFrontend = false;
                         }
                         break;
@@ -1488,7 +1515,7 @@ namespace UnityEngine.InputSystem
                         if (device.disabledInFrontend)
                         {
                             if (!device.RequestSync())
-                                ResetDevice(device, noResetCommand: true);
+                                ResetDevice(device);
                             device.disabledInFrontend = false;
                         }
                         break;
@@ -1502,7 +1529,7 @@ namespace UnityEngine.InputSystem
                                 device.disabledInRuntime = false;
                             }
                             if (!device.RequestSync())
-                                ResetDevice(device, noResetCommand: true);
+                                ResetDevice(device);
                             device.disabledWhileInBackground = false;
                         }
                         break;
@@ -1524,7 +1551,8 @@ namespace UnityEngine.InputSystem
                         }
                         if (!device.disabledInFrontend)
                         {
-                            ResetDevice(device, noResetCommand: true);
+                            // When disabling a device, also issuing a reset in the backend is pointless.
+                            ResetDevice(device, issueResetCommand: false);
                             device.disabledInFrontend = true;
                         }
                         break;
@@ -1540,7 +1568,8 @@ namespace UnityEngine.InputSystem
                         }
                         if (!device.disabledInFrontend)
                         {
-                            ResetDevice(device, noResetCommand: true);
+                            // When disabling a device, also issuing a reset in the backend is pointless.
+                            ResetDevice(device, issueResetCommand: false);
                             device.disabledInFrontend = true;
                         }
                         break;
@@ -1551,7 +1580,7 @@ namespace UnityEngine.InputSystem
                         if (device.disabledInFrontend || device.disabledWhileInBackground)
                             return;
                         device.disabledWhileInBackground = true;
-                        ResetDevice(device, noResetCommand: true);
+                        ResetDevice(device, issueResetCommand: false);
                         #if UNITY_EDITOR
                         if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                         #endif
@@ -2436,7 +2465,13 @@ namespace UnityEngine.InputSystem
             if (m_EditorIsActive)
             {
                 for (var i = 0; i < m_DevicesCount; ++i)
-                    m_Devices[i].RequestSync();
+                {
+                    // When the editor comes back into focus, we actually do want resets to happen
+                    // for devices that don't support syncs as they will likely have missed input while
+                    // we were in the background.
+                    if (!m_Devices[i].RequestSync())
+                        ResetDevice(m_Devices[i], issueResetCommand: true);
+                }
             }
             #endif
         }
@@ -2725,7 +2760,7 @@ namespace UnityEngine.InputSystem
                     // have changed state while we weren't running. So at least make the backend flush
                     // its state (if any).
                     else if (device.enabled && !runInBackground && !device.RequestSync())
-                        ResetDevice(device, noResetCommand: true);
+                        ResetDevice(device);
                 }
             }
 
@@ -2748,7 +2783,7 @@ namespace UnityEngine.InputSystem
                 var device = m_Devices[i];
                 if (device.disabledWhileInBackground)
                     EnableOrDisableDevice(device, true, scope: DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-                ResetDevice(device, alsoResetDontResetControls: true, noResetCommand: true);
+                ResetDevice(device, alsoResetDontResetControls: true);
             }
             m_CurrentUpdate = default;
         }
@@ -2765,18 +2800,13 @@ namespace UnityEngine.InputSystem
             var mask = m_UpdateMask;
 
 #if UNITY_EDITOR
-            var isPlaying = gameIsPlaying;
-
-            // Ignore editor updates when the game is playing and has focus. All input goes to player.
-            if (isPlaying && m_HasFocus)
-                mask &= ~InputUpdateType.Editor;
             // If the player isn't running, the only thing we run is editor updates, except if
             // explicitly overriden via `runUpdatesInEditMode`.
             // NOTE: This means that in edit mode (outside of play mode) we *never* switch to player
             //       input state. So, any script anywhere will see input state from the editor. If you
             //       have an [ExecuteInEditMode] MonoBehaviour and it polls the gamepad, for example,
             //       it will see gamepad inputs going to the editor and respond to them.
-            else if (!isPlaying && updateType != InputUpdateType.Editor && !runPlayerUpdatesInEditMode)
+            if (!gameIsPlaying && updateType != InputUpdateType.Editor && !runPlayerUpdatesInEditMode)
                 return false;
 #endif
 
@@ -2866,7 +2896,7 @@ namespace UnityEngine.InputSystem
                 false
 #if UNITY_EDITOR
                 // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
-                || (!m_HasFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView &&
+                || (!gameHasFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView &&
                     (!m_Runtime.runInBackground ||
                         m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
 #else
@@ -2879,13 +2909,18 @@ namespace UnityEngine.InputSystem
                 || canFlushBuffer ||
                 // If we're in the background and not supposed to process events in this update (but somehow
                 // still ended up here), we're done.
-                (!m_HasFocus &&
+                ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
                     ((m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices && updateType != InputUpdateType.Editor)
 #if UNITY_EDITOR
                         || (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus && updateType != InputUpdateType.Editor)
-                        || (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && updateType == InputUpdateType.Editor)
+                        || (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView && updateType == InputUpdateType.Editor)
 #endif
                     )
+#if UNITY_EDITOR
+                    // When the game is playing and has focus, we never process input in editor updates. All we
+                    // do is just switch to editor state buffers and then exit.
+                    || (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor)
+#endif
                 );
 
             if (canEarlyOut)
@@ -2909,7 +2944,7 @@ namespace UnityEngine.InputSystem
             var totalEventLag = 0.0;
 
             #if UNITY_EDITOR
-            var isPlaying = m_Runtime.isInPlayMode;
+            var isPlaying = gameIsPlaying;
             #endif
 
             m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
@@ -3004,7 +3039,7 @@ namespace UnityEngine.InputSystem
                     // In the editor, we may need to bump events from editor updates into player updates
                     // and vice versa.
                     #if UNITY_EDITOR
-                    else if (!m_HasFocus && isPlaying)
+                    else if (isPlaying && !gameHasFocus)
                     {
                         if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus &&
                             m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
@@ -3015,7 +3050,7 @@ namespace UnityEngine.InputSystem
                                 // Let everything but pointer and keyboard input through.
                                 skipEvent = isPointerOrKeyboard;
 
-                                // if the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
+                                // If the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
                                 // in a subsequent editor update. Otherwise, take it out.
                                 leaveInBuffer = isPointerOrKeyboard;
                             }
@@ -3023,7 +3058,7 @@ namespace UnityEngine.InputSystem
                             {
                                 // Let only pointer and keyboard input through.
                                 skipEvent = !isPointerOrKeyboard;
-                                leaveInBuffer = true;
+                                leaveInBuffer = skipEvent;
                             }
                         }
                     }

@@ -340,12 +340,9 @@ partial class CoreTests
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
-    // Editor updates are confusing in that they denote just another point in the
-    // application loop where we push out events. They do not mean that the events
-    // we send necessarily go to the editor state buffers.
     [Test]
     [Category("Editor")]
-    public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
+    public void Editor_WhenPlaying_EditorUpdatesKeepSeparateStateFromPlayerUpdates()
     {
         InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
@@ -354,9 +351,19 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
 
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Piping input into an editor update now should not result in it being consumed
+        // as the game is running and has focus. We should see the blank state the editor
+        // started with.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Editor);
 
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // So running a player update now should make the input come through in player state.
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));

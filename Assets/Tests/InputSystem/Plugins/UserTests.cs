@@ -1238,7 +1238,7 @@ internal class UserTests : CoreTestsFixture
         Assert.That(user2.pairedDevices, Is.EquivalentTo(new[] { user2pad }));
         Assert.That(user3.pairedDevices, Is.EquivalentTo(new[] { user3pad }));
     }
-    
+
     #if UNITY_EDITOR
     [Test]
     [Category("Users")]

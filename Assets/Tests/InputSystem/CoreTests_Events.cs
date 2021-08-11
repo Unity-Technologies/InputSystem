@@ -83,6 +83,14 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
+    public void Events_CanResetDeviceWithEvent()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanUpdatePartialStateOfDeviceWithEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
