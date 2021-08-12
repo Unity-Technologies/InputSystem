@@ -3062,30 +3062,36 @@ namespace UnityEngine.InputSystem
                         }
                     }
                     #endif
+                }
 
-                    // If device is disabled, we let the event through only in certain cases.
-                    if (!skipEvent && !device.enabled)
+                // If device is disabled, we let the event through only in certain cases.
+                if (!skipEvent && !device.enabled)
+                {
+                    // Removal and configuration change events should always be processed.
+                    if (currentEventType != DeviceRemoveEvent.Type &&
+                        currentEventType != DeviceConfigurationEvent.Type &&
+                        (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime | InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
                     {
-                        // Removal and configuration change events should always be processed.
-                        if (currentEventType != DeviceRemoveEvent.Type &&
-                            currentEventType != DeviceConfigurationEvent.Type &&
-                            (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime | InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
-                        {
-                            #if UNITY_EDITOR
-                            // If the device is disabled in the backend, getting events for them
-                            // is something that indicates a problem in the backend so diagnose.
-                            if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
-                                m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
-                            #endif
+                        #if UNITY_EDITOR
+                        // If the device is disabled in the backend, getting events for them
+                        // is something that indicates a problem in the backend so diagnose.
+                        if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
+                            m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
+                        #endif
 
-                            skipEvent = true;
-                            leaveInBuffer = false;
-                        }
+                        skipEvent = true;
+                        leaveInBuffer = false;
                     }
                 }
 
+                // Check if the device wants to merge successive events.
                 if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
                 {
+                    // NOTE: This relies on events in the buffer being consecutive for the same device. This is not
+                    //       necessarily the case for events coming in from the background event queue where parallel
+                    //       producers may create interleaved input sequences. This will be fixed once we have the
+                    //       new buffering scheme for input events working in the native runtime.
+
                     var nextEvent = m_InputEventStream.Peek();
                     if (nextEvent != null && merger.MergeForward(currentEventReadPtr, nextEvent))
                     {
@@ -3096,23 +3102,19 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Give listeners a shot at the event.
-                if (m_EventListeners.length > 0)
+                // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
+                //       such as TouchSimulation that disables the originating devices and then uses its events to
+                //       create simulated events from.
+                if (!skipEvent && m_EventListeners.length > 0)
                 {
                     DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
                         new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
 
-                    // Give listeners a shot at the event.
-                    if (!skipEvent && m_EventListeners.length > 0)
+                    // If a listener marks the event as handled, we don't process it further.
+                    if (currentEventReadPtr->handled)
                     {
-                        DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
-                            new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
-
-                        // If a listener marks the event as handled, we don't process it further.
-                        if (currentEventReadPtr->handled)
-                        {
-                            skipEvent = true;
-                            leaveInBuffer = false;
-                        }
+                        skipEvent = true;
+                        leaveInBuffer = false;
                     }
                 }
 
