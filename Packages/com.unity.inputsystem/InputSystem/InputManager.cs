@@ -2624,7 +2624,8 @@ namespace UnityEngine.InputSystem
             Touchscreen.s_TapTime = settings.defaultTapTime;
             Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
             Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
-            ButtonControl.s_GlobalDefaultButtonPressPoint = settings.defaultButtonPressPoint;
+            // Extra clamp here as we can't tell what we're getting from serialized data.
+            ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
             // Let listeners know.
