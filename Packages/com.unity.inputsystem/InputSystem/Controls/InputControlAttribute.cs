@@ -318,6 +318,15 @@ namespace UnityEngine.InputSystem.Layouts
         public bool synthetic { get; set; }
 
         /// <summary>
+        /// Allows you to specify that a control should not be reset when its device is reset.
+        /// </summary>
+        /// <value>If true, resets of the device will leave the value of the control untouched except if a "hard" reset
+        /// is explicitly enforced.</value>
+        /// <seealso cref="InputSystem.ResetDevice"/>
+        /// <seealso cref="InputControlLayout.ControlItem.dontReset"/>
+        public bool dontReset { get; set; }
+
+        /// <summary>
         /// Default state to write into the control's memory.
         /// </summary>
         /// <value>Default memory state for the control.</value>

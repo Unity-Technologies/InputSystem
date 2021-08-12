@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position.</value>
         /// <seealso cref="Pointer.position"/>
-        [InputControl(usage = "Point")]
+        [InputControl(usage = "Point", dontReset = true)]
         [FieldOffset(0)]
         public Vector2 position;
 

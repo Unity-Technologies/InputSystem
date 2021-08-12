@@ -139,16 +139,18 @@ internal class EnhancedTouchTests : CoreTestsFixture
     [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate)]
     public void EnhancedTouch_SupportsEditorUpdates(InputSettings.UpdateMode updateMode)
     {
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
         // To better observe that play mode and edit mode state is indeed independent and handled
         // correctly, suppress resetting of the touch device when focus is lost to the player.
         runtime.runInBackground = true;
         SetCanRunInBackground(Touchscreen.current);
 
-        InputEditorUserSettings.lockInputToGameView = false;
         InputSystem.settings.updateMode = updateMode;
         runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         // Run one player update with data.
         BeginTouch(1, new Vector2(0.123f, 0.234f));
+
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
 
         // And make sure we're not seeing the data in the editor.
