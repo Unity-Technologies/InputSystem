@@ -3273,7 +3273,7 @@ internal class UITests : CoreTestsFixture
         // With running in the background, the reset should happen when we lose focus.
         runtime.runInBackground = true;
 
-        var scene = UITests.CreateUIScene();
+        var scene = CreateUIScene();
         var mousePosition = scene.From640x480ToScreen(100, 100);
 
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -3302,10 +3302,13 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(button.receivedPointerDown, Is.True);
         Assert.That(scene.leftChildReceiver.events,
-            UITests.EventSequence(
-                UITests.OneEvent("type", UITests.EventType.PointerEnter),
-                UITests.OneEvent("type", UITests.EventType.PointerDown),
-                UITests.OneEvent("type", UITests.EventType.InitializePotentialDrag)
+            EventSequence(
+                OneEvent("type", EventType.PointerEnter),
+                #if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+                #endif
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("type", EventType.InitializePotentialDrag)
             )
         );
 
