@@ -1,3 +1,4 @@
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -259,6 +260,9 @@ namespace UnityEngine.InputSystem
         ///
         /// The default value is 0.5.
         ///
+        /// Any value will implicitly be clamped to <c>0.0001f</c> as allowing a value of 0 would
+        /// cause all buttons in their default state to already be pressed.
+        ///
         /// Lowering the button press point will make triggers feel more like hair-triggers (akin
         /// to using the hair-trigger feature on Xbox Elite controllers). However, it may make using
         /// the directional buttons (i.e. <see cref="Controls.StickControl.up"/> etc) be fickle as
@@ -297,7 +301,7 @@ namespace UnityEngine.InputSystem
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
-                m_DefaultButtonPressPoint = value;
+                m_DefaultButtonPressPoint = Mathf.Clamp(value, ButtonControl.kMinButtonPressPoint, float.MaxValue);
                 OnChange();
             }
         }
@@ -518,6 +522,33 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Disables redundant events merging. Disable it if you want to get all events.
+        /// </summary>
+        /// <remarks>
+        /// When using a high frequency mouse, the number of mouse move events in each frame can be
+        /// very large, which can have a negative effect on performance. To help with this,
+        /// merging events can be used which coalesces consecutive mouse move events into a single
+        /// input action update.
+        ///
+        /// For example, if there are one hundred mouse events, but they are all position updates
+        /// with no clicks, and there is an input action callback handler for the mouse position, that
+        /// callback handler will only be called one time in the current frame. Delta and scroll
+        /// values for the mouse will still be accumulated across all mouse events.
+        /// </remarks>
+        public bool disableRedundantEventsMerging
+        {
+            get => m_DisableRedundantEventsMerging;
+            set
+            {
+                if (m_DisableRedundantEventsMerging == value)
+                    return;
+
+                m_DisableRedundantEventsMerging = value;
+                OnChange();
+            }
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -534,6 +565,7 @@ namespace UnityEngine.InputSystem
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
         // Having a higher value here also obsoletes the need for custom press points on stick buttons
         // (the up/down/left/right ones).
+        [Min(ButtonControl.kMinButtonPressPoint)]
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_ButtonReleaseThreshold = 0.75f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
@@ -541,6 +573,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private bool m_DisableRedundantEventsMerging = false;
 
         internal void OnChange()
         {

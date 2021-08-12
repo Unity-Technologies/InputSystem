@@ -1327,7 +1327,8 @@ partial class CoreTests
             trace.Enable();
 
             Press(gamepad.buttonSouth);
-            InputSystem.Update();
+            InputSystem.Update(); // Record empty frame.
+            InputSystem.Update(); // Record empty frame.
             Release(gamepad.buttonSouth);
 
             trace.Disable();
@@ -1336,6 +1337,11 @@ partial class CoreTests
 
             Assert.That(replay.finished, Is.False);
             Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
 
             InputSystem.Update();
 
@@ -2085,8 +2091,12 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanQueueEventsFromWithinEventProcessing()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Events_CanQueueEventsFromWithinEventProcessing_WithEventMergingSetTo(bool mergeRedundantEvents)
     {
+        InputSystem.settings.disableRedundantEventsMerging = !mergeRedundantEvents;
+
         var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -2111,15 +2121,18 @@ partial class CoreTests
             // This way we not only test whether the events make it into the queue at all but
             // also that they still make it if we have to re-allocate the buffer.
             for (var i = 0; i < numMouseEventsQueued; ++i)
-                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(123, 234) }.WithButton(MouseButton.Left));
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2((i + 1), (i + 1) * 2), delta = Vector2.one}.WithButton(MouseButton.Left));
         };
         action.Enable();
 
         Press(keyboard.spaceKey);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
-        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-        Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(numMouseEventsQueued, numMouseEventsQueued * 2)));
+        Assert.That(mouse.delta.ReadValue(), Is.EqualTo(new Vector2(numMouseEventsQueued, numMouseEventsQueued)));
+        Assert.That(numMouseEventsReceived, Is.EqualTo(mergeRedundantEvents ? 1 : numMouseEventsQueued));
+
+        InputSystem.settings.disableRedundantEventsMerging = false;
     }
 
     [Test]

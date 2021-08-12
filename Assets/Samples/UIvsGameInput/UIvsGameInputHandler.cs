@@ -124,7 +124,7 @@ public class UIvsGameInputHandler : MonoBehaviour
 
                     // Disable gameplay inputs.
                     playerInput.DeactivateInput();
-                    
+
                     // Select topmost button.
                     EventSystem.current.SetSelectedGameObject(firstButtonInMainMenu);
                 }

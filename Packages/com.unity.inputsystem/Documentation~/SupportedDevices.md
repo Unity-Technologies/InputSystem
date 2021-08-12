@@ -11,7 +11,7 @@ Support for the following Devices doesn't require specialized support of particu
 |[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
 |[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
 |[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|No|
-|[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|No|
+|[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|Yes|
 |[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|Yes(5)|
 |[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|
 

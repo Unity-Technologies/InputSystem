@@ -1327,7 +1327,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 // returned from MoveNext).
                 if (currentEventPtr.type == FrameMarkerEvent)
                 {
-                    if (!MoveNext(false, out currentEventPtr))
+                    if (!MoveNext(false, out var nextEvent))
                     {
                         // Last frame.
                         Finished();
@@ -1335,8 +1335,14 @@ namespace UnityEngine.InputSystem.LowLevel
                     }
 
                     // Check for empty frame.
-                    if (currentEventPtr.type == FrameMarkerEvent)
+                    if (nextEvent.type == FrameMarkerEvent)
+                    {
+                        --position;
+                        m_Enumerator.m_Current = currentEventPtr;
                         return;
+                    }
+
+                    currentEventPtr = nextEvent;
                 }
 
                 // Inject our events into the frame.

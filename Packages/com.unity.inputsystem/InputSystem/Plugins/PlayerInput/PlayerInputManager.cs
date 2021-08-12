@@ -313,7 +313,7 @@ namespace UnityEngine.InputSystem
                     else
                     {
                         Debug.LogError(
-                            "No join action configured on PlayerInputManager but join behavior is set to JoinPlayersWhenActionIsTriggered",
+                            $"No join action configured on PlayerInputManager but join behavior is set to {nameof(PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered)}",
                             this);
                     }
                     break;

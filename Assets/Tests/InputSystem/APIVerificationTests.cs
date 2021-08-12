@@ -778,6 +778,10 @@ class APIVerificationTests
         public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
         public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
+    // TrackedPose Driver changes
+    [Property("Exclusions", @"1.0.0
+         public class TrackedPoseDriver : UnityEngine.MonoBehaviour
+    ")]
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(UnityEngine.Rect rect);")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {

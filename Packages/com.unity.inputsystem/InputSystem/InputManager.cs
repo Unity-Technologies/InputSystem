@@ -2355,7 +2355,8 @@ namespace UnityEngine.InputSystem
             Touchscreen.s_TapTime = settings.defaultTapTime;
             Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
             Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
-            ButtonControl.s_GlobalDefaultButtonPressPoint = settings.defaultButtonPressPoint;
+            // Extra clamp here as we can't tell what we're getting from serialized data.
+            ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
             // Let listeners know.
@@ -2594,9 +2595,7 @@ namespace UnityEngine.InputSystem
                 if (shouldProcessInputEvents)
                     ProcessStateChangeMonitorTimeouts();
 
-                #if ENABLE_PROFILER
                 Profiler.EndSample();
-                #endif
                 InvokeAfterUpdateCallback();
                 return;
             }
@@ -2691,6 +2690,17 @@ namespace UnityEngine.InputSystem
 
                     // No device found matching event. Ignore it.
                     continue;
+                }
+
+                if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
+                {
+                    var nextEvent = m_InputEventStream.Peek();
+                    if (nextEvent != null && merger.MergeForward(currentEventReadPtr, nextEvent))
+                    {
+                        // Event was merged into next event, skipping.
+                        m_InputEventStream.Advance(leaveEventInBuffer: false);
+                        continue;
+                    }
                 }
 
                 // Give listeners a shot at the event.
