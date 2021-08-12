@@ -359,27 +359,9 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputUpdateType DetermineUpdateTypeToShow(InputDevice device)
         {
-            if (Application.isPlaying)
+            if (EditorApplication.isPlaying)
             {
-                // In play mode, show editor state only when input for the device is currently
-                // actually going to the editor.
-
-                if (!Application.isFocused)
-                {
-                    switch (InputSystem.settings.editorInputBehaviorInPlayMode)
-                    {
-                        case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
-                            return InputUpdateType.Editor;
-
-                        case InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView:
-                            break;
-
-                        case InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus:
-                            if (device is Pointer || device is Keyboard)
-                                return InputUpdateType.Editor;
-                            break;
-                    }
-                }
+                // In play mode, while playing, we show player state. Period.
 
                 switch (InputSystem.settings.updateMode)
                 {
