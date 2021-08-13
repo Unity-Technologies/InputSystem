@@ -159,6 +159,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Position")
                 .WithLayout(kVector2Layout)
                 .WithUsages(0, 1)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -451,6 +452,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Position X")
                 .WithShortDisplayName("Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -472,6 +474,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Position Y")
                 .WithShortDisplayName("Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),

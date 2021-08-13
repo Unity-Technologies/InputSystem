@@ -227,8 +227,13 @@ namespace UnityEngine.InputSystem
             if (device.remote)
                 return;
 
-            var message = NewDeviceMsg.Create(device);
-            Send(message);
+            var newDeviceMessage = NewDeviceMsg.Create(device);
+            Send(newDeviceMessage);
+
+            // Send current state. We do this here in this case as the device
+            // may have been added some time ago and thus have already received events.
+            var stateEventMessage = NewEventsMsg.CreateStateEvent(device);
+            Send(stateEventMessage);
         }
 
         private unsafe void SendEvent(InputEventPtr eventPtr, InputDevice device)
@@ -266,6 +271,13 @@ namespace UnityEngine.InputSystem
                     break;
                 case InputDeviceChange.UsageChanged:
                     msg = ChangeUsageMsg.Create(device);
+                    break;
+                ////FIXME: This creates a double reset event in case the reset itself happens from a reset event that we are also remoting at the same time.
+                case InputDeviceChange.SoftReset:
+                    msg = NewEventsMsg.CreateResetEvent(device, false);
+                    break;
+                case InputDeviceChange.HardReset:
+                    msg = NewEventsMsg.CreateResetEvent(device, true);
                     break;
                 default:
                     return;
@@ -346,6 +358,8 @@ namespace UnityEngine.InputSystem
             var localId = FindLocalDeviceId(remoteDeviceId, senderIndex);
             return m_LocalManager.TryGetDeviceById(localId);
         }
+
+        internal InputManager manager => m_LocalManager;
 
         private Flags m_Flags;
         private InputManager m_LocalManager; // Input system we mirror input from and to.
@@ -591,6 +605,18 @@ namespace UnityEngine.InputSystem
         // Tell remote system there's new input events.
         private static class NewEventsMsg
         {
+            public static unsafe Message CreateResetEvent(InputDevice device, bool isHardReset)
+            {
+                var resetEvent = DeviceResetEvent.Create(device.deviceId, isHardReset);
+                return Create((InputEvent*)UnsafeUtility.AddressOf(ref resetEvent), 1);
+            }
+
+            public static unsafe Message CreateStateEvent(InputDevice device)
+            {
+                using (StateEvent.From(device, out var eventPtr))
+                    return Create(eventPtr.data, 1);
+            }
+
             public static unsafe Message Create(InputEvent* events, int eventCount)
             {
                 // Find total size of event buffer we need.

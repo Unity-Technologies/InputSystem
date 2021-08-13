@@ -1079,6 +1079,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Position")
                 .WithLayout(kVector2Layout)
                 .WithUsages(1, 1)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -1403,6 +1404,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Primary Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -1425,6 +1427,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Primary Touch Position")
                 .WithShortDisplayName("Primary Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -1670,6 +1673,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Primary Touch Primary Touch Position X")
                 .WithShortDisplayName("Primary Touch Primary Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -1691,6 +1695,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Primary Touch Primary Touch Position Y")
                 .WithShortDisplayName("Primary Touch Primary Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -1838,6 +1843,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Position X")
                 .WithShortDisplayName("Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -1859,6 +1865,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Position Y")
                 .WithShortDisplayName("Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -1965,6 +1972,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -1987,6 +1995,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -2231,6 +2240,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -2252,6 +2262,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -2400,6 +2411,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -2422,6 +2434,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -2666,6 +2679,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -2687,6 +2701,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -2835,6 +2850,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -2857,6 +2873,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -3101,6 +3118,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -3122,6 +3140,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -3270,6 +3289,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -3292,6 +3312,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -3536,6 +3557,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -3557,6 +3579,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -3705,6 +3728,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -3727,6 +3751,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -3971,6 +3996,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -3992,6 +4018,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -4140,6 +4167,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -4162,6 +4190,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -4406,6 +4435,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -4427,6 +4457,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -4575,6 +4606,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -4597,6 +4629,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -4841,6 +4874,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -4862,6 +4896,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -5010,6 +5045,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -5032,6 +5068,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -5276,6 +5313,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -5297,6 +5335,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -5445,6 +5484,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -5467,6 +5507,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -5711,6 +5752,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -5732,6 +5774,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -5880,6 +5923,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Touch ID")
                 .WithLayout(kIntegerLayout)
                 .IsSynthetic(true)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1229870112),
@@ -5902,6 +5946,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
                 .WithLayout(kVector2Layout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1447379762),
@@ -6146,6 +6191,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position X")
                 .WithShortDisplayName("Touch Touch Position X")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),
@@ -6167,6 +6213,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Position Y")
                 .WithShortDisplayName("Touch Touch Position Y")
                 .WithLayout(kAxisLayout)
+                .DontReset(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1179407392),

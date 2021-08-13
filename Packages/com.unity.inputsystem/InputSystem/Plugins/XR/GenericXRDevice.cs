@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
     /// </summary>
-    [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD")]
+    [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD", canRunInBackground = true)]
     [Preserve]
     public class XRHMD : TrackedDevice
     {
