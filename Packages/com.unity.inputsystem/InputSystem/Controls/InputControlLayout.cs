@@ -10,8 +10,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: *kill* variants!
 
-////TODO: allow setting canRunInBackground at the layout level
-
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
 ////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
@@ -252,6 +250,31 @@ namespace UnityEngine.InputSystem.Layouts
             }
 
             /// <summary>
+            /// Get or set whether the control should be excluded when performing a device reset.
+            /// </summary>
+            /// <value>If true, the control will not get reset in a device reset. Off by default.</value>
+            /// <remarks>
+            /// Some controls like, for example, mouse positions do not generally make sense to reset when a
+            /// device is reset. By setting this flag on, the control's state will be excluded in resets.
+            ///
+            /// Note that a full reset can still be forced through <see cref="InputSystem.ResetDevice"/> in
+            /// which case controls that have this flag set will also get reset.
+            /// </remarks>
+            /// <seealso cref="InputSystem.ResetDevice"/>
+            /// <seealso cref="InputControlAttribute.dontReset"/>
+            public bool dontReset
+            {
+                get => (flags & Flags.DontReset) == Flags.DontReset;
+                internal set
+                {
+                    if (value)
+                        flags |= Flags.DontReset;
+                    else
+                        flags &= ~Flags.DontReset;
+                }
+            }
+
+            /// <summary>
             /// Whether the control is introduced by the layout.
             /// </summary>
             /// <value>If true, the control is first introduced by this layout.</value>
@@ -296,6 +319,7 @@ namespace UnityEngine.InputSystem.Layouts
                 result.arraySize = !isArray ? other.arraySize : arraySize;
                 ////FIXME: allow overrides to unset this
                 result.isNoisy = isNoisy || other.isNoisy;
+                result.dontReset = dontReset || other.dontReset;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;
 
@@ -372,6 +396,7 @@ namespace UnityEngine.InputSystem.Layouts
                 IsNoisy = 1 << 1,
                 IsSynthetic = 1 << 2,
                 IsFirstDefinedInThisLayout = 1 << 3,
+                DontReset = 1 << 4,
             }
         }
 
@@ -401,6 +426,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// <value>Child controls defined for the layout.</value>
         public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
+        ////FIXME: this should be a `bool?`
         public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
 
         public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
@@ -446,6 +472,34 @@ namespace UnityEngine.InputSystem.Layouts
                     m_Flags |= Flags.HideInUI;
                 else
                     m_Flags &= ~Flags.HideInUI;
+            }
+        }
+
+        /// <summary>
+        /// Override value for <see cref="InputDevice.canRunInBackground"/>. If this is set by the
+        /// layout, it will prevent <see cref="QueryCanRunInBackground"/> from being issued. However, other
+        /// logic that affects <see cref="InputDevice.canRunInBackground"/> may still force a specific value
+        /// on a device regardless of what's set in the layout.
+        /// </summary>
+        /// <seealso cref="InputDevice.canRunInBackground"/>
+        /// <seealso cref="InputSettings.backgroundBehavior"/>
+        public bool? canRunInBackground
+        {
+            get => (m_Flags & Flags.CanRunInBackgroundIsSet) != 0 ? (bool?)((m_Flags & Flags.CanRunInBackground) != 0) : null;
+            internal set
+            {
+                if (!value.HasValue)
+                {
+                    m_Flags &= ~Flags.CanRunInBackgroundIsSet;
+                }
+                else
+                {
+                    m_Flags |= Flags.CanRunInBackgroundIsSet;
+                    if (value.Value)
+                        m_Flags |= Flags.CanRunInBackground;
+                    else
+                        m_Flags &= ~Flags.CanRunInBackground;
+                }
             }
         }
 
@@ -687,6 +741,12 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder DontReset(bool value)
+                {
+                    builder.m_Controls[index].dontReset = value;
+                    return this;
+                }
+
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
                     builder.m_Controls[index].sizeInBits = sizeInBits;
@@ -915,6 +975,7 @@ namespace UnityEngine.InputSystem.Layouts
                 hideInUI = layoutAttribute?.hideInUI ?? false,
                 m_Description = layoutAttribute?.description,
                 m_DisplayName = layoutAttribute?.displayName,
+                canRunInBackground = layoutAttribute?.canRunInBackgroundInternal,
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -960,6 +1021,8 @@ namespace UnityEngine.InputSystem.Layouts
             IsGenericTypeOfDevice = 1 << 0,
             HideInUI = 1 << 1,
             IsOverride = 1 << 2,
+            CanRunInBackground = 1 << 3,
+            CanRunInBackgroundIsSet = 1 << 4,
         }
 
         private InputControlLayout(string name, Type type)
@@ -1174,6 +1237,11 @@ namespace UnityEngine.InputSystem.Layouts
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
+            // Determine whether it's a dontReset control.
+            var dontReset = false;
+            if (attribute != null)
+                dontReset = attribute.dontReset;
+
             // Determine if it's a synthetic control.
             var isSynthetic = false;
             if (attribute != null)
@@ -1217,6 +1285,7 @@ namespace UnityEngine.InputSystem.Layouts
                 isModifyingExistingControl = isModifyingChildControlByPath,
                 isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
+                dontReset = dontReset,
                 isSynthetic = isSynthetic,
                 arraySize = arraySize,
                 defaultState = defaultState,
@@ -1525,6 +1594,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string[] extendMultiple;
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
+            public string runInBackground;
             public string[] commonUsages;
             public string displayName;
             public string description;
@@ -1590,7 +1660,19 @@ namespace UnityEngine.InputSystem.Layouts
                     else if (beforeRenderLowerCase == "update")
                         layout.m_UpdateBeforeRender = true;
                     else
-                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
+                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}' (should be 'ignore' or 'update')");
+                }
+
+                // CanRunInBackground flag.
+                if (!string.IsNullOrEmpty(runInBackground))
+                {
+                    var runInBackgroundLowerCase = runInBackground.ToLower();
+                    if (runInBackgroundLowerCase == "enabled")
+                        layout.canRunInBackground = true;
+                    else if (runInBackgroundLowerCase == "disabled")
+                        layout.canRunInBackground = false;
+                    else
+                        throw new InvalidOperationException($"Invalid runInBackground setting '{beforeRender}' (should be 'enabled' or 'disabled')");
                 }
 
                 // Add controls.
@@ -1661,6 +1743,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string displayName;
             public string shortDisplayName;
             public bool noisy;
+            public bool dontReset;
             public bool synthetic;
 
             // This should be an object type field and allow any JSON primitive value type as well
@@ -1695,6 +1778,7 @@ namespace UnityEngine.InputSystem.Layouts
                     sizeInBits = sizeInBits,
                     isModifyingExistingControl = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    dontReset = dontReset,
                     isSynthetic = synthetic,
                     isFirstDefinedInThisLayout = true,
                     arraySize = arraySize,
@@ -1766,6 +1850,7 @@ namespace UnityEngine.InputSystem.Layouts
                         usages = item.usages.Select(x => x.ToString()).ToArray(),
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
+                        dontReset = item.dontReset,
                         synthetic = item.isSynthetic,
                         arraySize = item.arraySize,
                         defaultState = item.defaultState.ToString(),

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -416,6 +418,67 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// When <c>Application.runInBackground</c> is true, this property determines what happens when application focus changes
+        /// (see <a href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html">Application.isFocused</a>) changes and how we handle
+        /// input while running the background.
+        /// </summary>
+        /// <value>What to do with input while not having focus. Set to <see cref="BackgroundBehavior.ResetAndDisableNonBackgroundDevices"/> by default.</value>
+        /// <remarks>
+        /// If <c>Application.runInBackground</c> is false, the value of this property is ignored. In that case, nothing happens when
+        /// focus is lost. However, when focus is regained, <see cref="InputSystem.TrySyncDevice"/> is called on all devices.
+        ///
+        /// Note that in the editor as well as in development standalone players, <c>Application.runInBackground</c> will effectively always be
+        /// turned on. The editor keeps the player loop running regardless of Game View focus for as long as the editor is active and in play mode
+        /// and development players will implicitly turn on the setting during the build process.
+        /// </remarks>
+        /// <seealso cref="InputSystem.ResetDevice"/>
+        /// <seealso cref="InputSystem.EnableDevice"/>
+        /// <seealso cref="InputDevice.canRunInBackground"/>
+        /// <seealso cref="editorInputBehaviorInPlayMode"/>
+        public BackgroundBehavior backgroundBehavior
+        {
+            get => m_BackgroundBehavior;
+            set
+            {
+                if (m_BackgroundBehavior == value)
+                    return;
+                m_BackgroundBehavior = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Determines how player focus is handled in the editor with respect to input.
+        /// </summary>
+        /// <remarks>
+        /// This setting only has an effect while in play mode (see <a href="https://docs.unity3d.com/ScriptReference/Application-isPlaying.html">Application.isPlaying</a>).
+        /// While not in play mode, all input is invariably routed to the editor.
+        ///
+        /// The editor generally treats Game View focus as equivalent to application focus (see <a href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html">Application.isFocused</a>).
+        /// In other words, as long as any Game View has focus, the player is considered to have input focus. As soon as focus is transferred to a non-Game View
+        /// <c>EditorWindow</c> or the editor as a whole loses focus, the player is considered to have lost input focus.
+        ///
+        /// However, unlike in built players, the editor will keep running the player loop while in play mode regardless of whether a Game View is focused
+        /// or not. This essentially equates to <a href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html">Application.runInBackground</a> always
+        /// being true in the editor.
+        ///
+        /// To accommodate this behavior, this setting determines where input is routed while the player loop is running with no Game View being focused. As such,
+        /// it also dictates which input reaches the editor (if any) while the game is playing.
+        /// </remarks>
+        /// <seealso cref="backgroundBehavior"/>
+        public EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode
+        {
+            get => m_EditorInputBehaviorInPlayMode;
+            set
+            {
+                if (m_EditorInputBehaviorInPlayMode == value)
+                    return;
+                m_EditorInputBehaviorInPlayMode = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
         /// <see cref="InputSystem.Update"/>.
         /// </summary>
@@ -523,7 +586,8 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Disables redundant events merging. Disable it if you want to get all events.
+        /// Disables merging of redundant input events (at the moment, only mouse events).
+        /// Disable it if you want to get all events.
         /// </summary>
         /// <remarks>
         /// When using a high frequency mouse, the number of mouse move events in each frame can be
@@ -549,6 +613,32 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Enable or disable an internal feature by its name.
+        /// </summary>
+        /// <param name="featureName">Name of the feature.</param>
+        /// <param name="enabled">Whether to enable or disable the feature.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="featureName"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This method is intended for experimental features. These must be enabled/disabled from code.
+        /// Setting or unsetting a feature flag will not be persisted in an <c>.inputsettings</c> file.
+        /// </remarks>
+        public void SetInternalFeatureFlag(string featureName, bool enabled)
+        {
+            if (string.IsNullOrEmpty(featureName))
+                throw new ArgumentNullException(nameof(featureName));
+
+            if (m_FeatureFlags == null)
+                m_FeatureFlags = new HashSet<string>();
+
+            if (enabled)
+                m_FeatureFlags.Add(featureName.ToUpperInvariant());
+            else
+                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+
+            OnChange();
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -560,6 +650,8 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
+        [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
+        [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
@@ -574,6 +666,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+
+        [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
         internal void OnChange()
         {
@@ -635,6 +729,78 @@ namespace UnityEngine.InputSystem
             /// accumulating or some input getting lost.
             /// </summary>
             ProcessEventsManually,
+        }
+
+        /// <summary>
+        /// Determines how the applications behaves when running in the background. See <see cref="backgroundBehavior"/>.
+        /// </summary>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html"/>
+        /// <seealso cref="backgroundBehavior"/>
+        /// <seealso cref="InputSettings.editorInputBehaviorInPlayMode"/>
+        public enum BackgroundBehavior
+        {
+            /// <summary>
+            /// When the application loses focus, issue a <see cref="InputSystem.ResetDevice"/> call on every <see cref="InputDevice"/> that is
+            /// not marked as <see cref="InputDevice.canRunInBackground"/> and then disable the device (see <see cref="InputSystem.DisableDevice"/>
+            /// and <see cref="InputDevice.enabled"/>). Devices that <see cref="InputDevice.canRunInBackground"/> will not be touched and will
+            /// keep running as is.
+            ///
+            /// In effect, this setting will "soft-reset" all devices that cannot receive input while the application does
+            /// not have focus. That is, it will reset all controls that are not marked as <see cref="InputControlLayout.ControlItem.dontReset"/>
+            /// to their default state.
+            ///
+            /// When the application comes back into focus, all devices that have been reset and disabled will be re-enabled and a synchronization
+            /// request (see <see cref="RequestSyncCommand"/>) will be sent to each device.
+            ///
+            /// Devices that are added while the application is running in the background are treated like devices that were already present
+            /// when losing focus. That is, if they cannot run in the background, they will be disabled until focus comes back.
+            ///
+            /// Note that the resets will cancel <see cref="InputAction"/>s that are in progress from controls on devices that are being reset.
+            /// </summary>
+            ResetAndDisableNonBackgroundDevices = 0,
+
+            /// <summary>
+            /// Like <see cref="ResetAndDisableNonBackgroundDevices"/> but instead treat all devices as having <see cref="InputDevice.canRunInBackground"/>
+            /// return false. This effectively means that all input is silenced while the application is running in the background.
+            /// </summary>
+            ResetAndDisableAllDevices = 1,
+
+            /// <summary>
+            /// Ignore all changes in focus and leave devices untouched. This also disables focus checks in <see cref="UI.InputSystemUIInputModule"/>.
+            /// </summary>
+            IgnoreFocus = 2,
+        }
+
+        /// <summary>
+        /// Determines how player focus is handled with respect to input when we are in play mode in the editor.
+        /// See <see cref="InputSettings.editorInputBehaviorInPlayMode"/>. The setting does not have an effect
+        /// when the editor is not in play mode.
+        /// </summary>
+        public enum EditorInputBehaviorInPlayMode
+        {
+            /// <summary>
+            /// When the game view does not have focus, input from <see cref="Pointer"/> devices (such as <see cref="Mouse"/> and <see cref="Touchscreen"/>)
+            /// is routed to the editor and not visible in player code. Input from devices such as <see cref="Gamepad"/>s will continue to
+            /// go to the game regardless of which <c>EditorWindow</c> is focused.
+            ///
+            /// This is the default. It makes sure that the devices that are used with the editor UI respect <c>EditorWindow</c> focus and thus
+            /// do not lead to accidental inputs affecting the game. While at the same time letting all other input get through to the game.
+            /// It does, however, mean that no other <c>EditorWindow</c> can tap input from these devices (such as <see cref="Gamepad"/>s and <see cref="HID"/>s).
+            /// </summary>
+            PointersAndKeyboardsRespectGameViewFocus,
+
+            /// <summary>
+            /// When the game view does not have focus, all input is routed to the editor (and thus <c>EditorWindow</c>s). No input
+            /// is received in the game regardless of the type of device generating it.
+            /// </summary>
+            AllDevicesRespectGameViewFocus,
+
+            /// <summary>
+            /// All input is going to the game at all times. This most closely aligns input behavior in the editor with that in players. <see cref="backgroundBehavior"/>
+            /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
+            /// </summary>
+            AllDeviceInputAlwaysGoesToGameView,
         }
     }
 }

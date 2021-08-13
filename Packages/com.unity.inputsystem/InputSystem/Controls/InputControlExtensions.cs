@@ -1660,6 +1660,15 @@ namespace UnityEngine.InputSystem
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ControlBuilder DontReset(bool value)
+            {
+                control.dontReset = value;
+                if (value)
+                    control.m_Device.hasDontResetControls = true;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder IsButton(bool value)
             {
                 control.isButton = value;

@@ -1759,19 +1759,86 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputDevice.enabled"/>
         public static void DisableDevice(InputDevice device, bool keepSendingEvents = false)
         {
-            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents: keepSendingEvents);
+            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents ? InputManager.DeviceDisableScope.InFrontendOnly : default);
         }
 
+        /// <summary>
+        /// Issue a <see cref="RequestSyncCommand"/> on <paramref name="device"/>. This requests the device to
+        /// send its current state as an event. If successful, the device will be updated in the next <see cref="InputSystem.Update"/>.
+        /// </summary>
+        /// <param name="device">An <see cref="InputDevice"/> that is currently part of <see cref="devices"/>.</param>
+        /// <returns>True if the request succeeded, false if it fails.</returns>
+        /// <remarks>
+        /// It depends on the backend/platform implementation whether explicit synchronization is supported. If it is, the method
+        /// will return true. If it is not, the method will return false and the request is ignored.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been <see cref="InputDevice.added"/>.</exception>
+        /// <seealso cref="RequestSyncCommand"/>
+        /// <seealso cref="ResetDevice"/>
         public static bool TrySyncDevice(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-
-            var syncCommand = RequestSyncCommand.Create();
-            var result = device.ExecuteCommand(ref syncCommand);
-            return result >= 0;
+            if (!device.added)
+                throw new InvalidOperationException($"Device '{device}' has not been added");
+            return device.RequestSync();
         }
 
+        /// <summary>
+        /// Reset the state of the given device.
+        /// </summary>
+        /// <param name="device">Device to reset. Must be <see cref="InputDevice.added"/> to the system.</param>
+        /// <param name="alsoResetDontResetControls">If true, also reset controls that are marked as <see cref="InputControlAttribute.dontReset"/>.
+        /// Leads to <see cref="InputDeviceChange.HardReset"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been <see cref="InputDevice.added"/>.</exception>
+        /// <remarks>
+        /// There are two different kinds of resets performed by the input system: a "soft" reset and a "hard" reset.
+        ///
+        /// A "hard" reset resets all controls on the device to their default state and also sends a <see cref="RequestResetCommand"/>
+        /// to the backend, instructing to also reset its own internal state (if any) to the default.
+        ///
+        /// A "soft" reset will reset only controls that are not marked as <see cref="InputControlAttribute.noisy"/> and not marked as
+        /// <see cref="InputControlAttribute.dontReset"/>. It will also not set a <see cref="RequestResetCommand"/> to the backend,
+        /// i.e. the reset will be internal to the input system only (and thus can be partial in nature).
+        ///
+        /// By default, the method will perform a "soft" reset if <paramref name="device"/> has <see cref="InputControlAttribute.noisy"/>
+        /// or <see cref="InputControlAttribute.dontReset"/> controls. If it does not, it will perform a "hard" reset.
+        ///
+        /// A "hard" reset can be forced by setting <paramref name="alsoResetDontResetControls"/> to true.
+        ///
+        /// <example>
+        /// <code>
+        /// // "Soft" reset the mouse. This will leave controls such as the mouse position intact
+        /// // but will reset button press states.
+        /// InputSystem.ResetDevice(Mouse.current);
+        ///
+        /// // "Hard" reset the mouse. This will wipe everything and reset the mouse to its default
+        /// // state.
+        /// InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
+        /// </code>
+        /// </example>
+        ///
+        /// Resetting a device will trigger a <see cref="InputDeviceChange.SoftReset"/> or <see cref="InputDeviceChange.HardReset"/>
+        /// (based on the value of <paramref name="alsoResetDontResetControls"/>) notification on <see cref="onDeviceChange"/>.
+        /// Also, all <see cref="InputAction"/>s currently in progress from controls on <paramref name="device"/> will be cancelled
+        /// (see <see cref="InputAction.canceled"/>) in a way that guarantees for them to not get triggered. That is, a reset is
+        /// semantically different from simply sending an event with default state. Using the latter, a button may be considered as
+        /// going from pressed to released whereas with a device reset, the change back to unpressed state will not be considered
+        /// a button release (and thus not trigger interactions that are waiting for a button release).
+        /// </remarks>
+        /// <seealso cref="TrySyncDevice"/>
+        /// <seealso cref="InputDeviceChange.HardReset"/>
+        /// <seealso cref="InputDeviceChange.SoftReset"/>
+        /// <seealso cref="LowLevel.DeviceResetEvent"/>
+        public static void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false)
+        {
+            s_Manager.ResetDevice(device, alsoResetDontResetControls);
+        }
+
+        // Not an auto-upgrade as it implies a change in behavior.
+        [Obsolete("Use 'ResetDevice' instead.", error: false)]
         public static bool TryResetDevice(InputDevice device)
         {
             if (device == null)
@@ -2647,22 +2714,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
-        /// <summary>
-        /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
-        /// </summary>
-        /// <remarks>
-        /// Enabling this allows native input to continue processing as if the application was playing, similar to how the <see cref="ExecuteInEditMode"/> attribute affects Monobehaviours.
-        /// By default, only updates flagged with <see cref="InputUpdateType.Editor"/> will be processed, and native inputs events will only be processed and registered for that type.
-        /// By setting this to true, the InputSystem will act like it is in play mode and allow full action processing to occur.
-        /// </remarks>
-        public static bool runUpdatesInEditMode
-        {
-            get => s_Manager.runUpdatesInEditMode;
-            set => s_Manager.runUpdatesInEditMode = value;
-        }
-#endif
-
         #endregion
 
         #region Settings
@@ -3130,6 +3181,10 @@ namespace UnityEngine.InputSystem
 
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    break;
+
+                case PlayModeStateChange.ExitingPlayMode:
+                    s_Manager.LeavePlayMode();
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
