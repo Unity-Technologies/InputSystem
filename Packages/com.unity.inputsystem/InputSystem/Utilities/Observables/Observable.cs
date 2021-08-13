@@ -206,9 +206,8 @@ namespace UnityEngine.InputSystem.Utilities
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            var observer = new AutoDisposeObserver<TValue>(action);
-            var subscription = source.Take(1).Subscribe(observer);
-            observer.disposable = subscription;
+            IDisposable subscription = null;
+            subscription = source.Take(1).Subscribe(new Observer<TValue>(action, () => subscription?.Dispose()));
             return subscription;
         }
 
