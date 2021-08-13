@@ -1,4 +1,4 @@
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)
+#if ENABLE_VR || ENABLE_AR
 using System;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -891,4 +891,4 @@ internal class XRTests : CoreTestsFixture
         Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
     }
 }
-#endif // (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)
+#endif //ENABLE_VR || ENABLE_AR
