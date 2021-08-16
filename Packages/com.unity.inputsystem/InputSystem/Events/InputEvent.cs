@@ -255,7 +255,6 @@ namespace UnityEngine.InputSystem.LowLevel
         internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
         {
             Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
-            Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
             var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);

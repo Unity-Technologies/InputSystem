@@ -262,6 +262,7 @@ namespace UnityEngine.InputSystem
             return bestResult.HasValue;
         }
 
+        ////FIXME: docs are wrong now
         /// <summary>
         /// Return the first control schemes from the given list that supports the given
         /// device (see <see cref="SupportsDevice"/>).

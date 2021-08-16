@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 throw new ArgumentNullException(nameof(pointer));
 
             // Ignore if already added.
-            if (ArrayHelpers.ContainsReference(m_Pointers, m_NumPointers, pointer))
+            if (m_Pointers.ContainsReference(m_NumPointers, pointer))
                 return;
 
             // Add to list.
@@ -114,8 +114,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             ArrayHelpers.EraseAtWithCapacity(m_Pointers, ref m_NumPointers, pointerIndex);
             ArrayHelpers.EraseAtWithCapacity(m_CurrentPositions, ref numPointers, pointerIndex);
 
-            // Re-enable the device.
-            InputSystem.EnableDevice(pointer);
+            // Re-enable the device (only in case it's still added to the system).
+            if (pointer.added)
+                InputSystem.EnableDevice(pointer);
         }
 
         private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)

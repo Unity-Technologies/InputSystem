@@ -28,7 +28,14 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `PlayerInputManager`s join action not triggering when using a referenced `InputAction` ([case 1260625](https://issuetracker.unity3d.com/issues/input-system-player-input-managers-join-action-is-not-triggered-when-using-a-referenced-input-action)).
 - Fixed UI issue where pressing the wrong button was possible while quickly moving through a UI because the submit action fired on action press instead of action release ([1333563](https://issuetracker.unity3d.com/issues/input-submit-action-is-called-on-release-rather-than-on-press-when-using-enter-key)).
 - Fixed InvalidOperationException when opening a preset created from a .inputactions asset ([case 1199544](https://issuetracker.unity3d.com/issues/input-system-properties-are-not-visible-and-invalidoperationexception-is-thrown-on-selecting-inputactionimporter-preset-asset)).
+- Fixed a problem arising when combining InputSystemUIInputModule and PlayInput with SendMessage or BroadcastMessage callback behavior on the same game object or hierarchy which is an ambiguous input setup. This fix eliminates callbacks into InputSystemUIInputModule. Related to ([1343712](https://issuetracker.unity3d.com/issues/input-system-ui-components-lags-when-using-input-system-ui-input-module-together-with-player-input-component)).
+- Fixed inconsistent usage of `ENABLE_PROFILER` define together with `Profiler.BeginSample`/`Profiler.EndSample` by removing `ENABLE_PROFILER` macro check because `BeginSample`/`EndSample` are already conditional with `[Conditional("ENABLE_PROFILER")]` ([case 1350139](https://issuetracker.unity3d.com/issues/inconsistent-enable-profiler-scripting-defines-in-inputmanager-dot-cs-when-using-profiler-dot-beginssample-and-profiler-dot-endsample)).
+- Remediated majority of performance issues with high frequency mice (>=1kHz poll rates) in release mode by merging consecutive mouse move events together ([case 1281266](https://issuetracker.unity3d.com/issues/many-input-events-when-using-1000hz-mouse)).
+- Fixed `InputEventTrace` replays skipping over empty frames and thus causing playback to happen too fast.
 - Fixed `"Pointer should have exited all objects before being removed"` error when changing screen orientation on mobile.
+- Controls such as mouse positions are no longer reset when focus is lost.
+- Pressing a uGUI `Button` and then alt-tabbing away, letting go of the button, and then going back to the application will no longer trigger a button click.
+- Fixed `Input.onUnpairedDeviceActivity` triggering from editor input.
 
 #### Actions
 
@@ -44,11 +51,37 @@ however, it has to be formatted properly to pass verification tests.
 - `PlayerInput` no longer logs an error message when it is set to `Invoke UnityEvents` and can't find  an action in the given `.inputactions` asset ([case 1259577](https://issuetracker.unity3d.com/issues/an-error-is-thrown-when-deleting-an-input-action-and-entering-play-mode)).
 - Fixed `HoldInteraction` getting stuck when hold and release happens in same event ([case 1346786](https://issuetracker.unity3d.com/issues/input-system-the-canceled-event-is-not-fired-when-clicking-a-button-for-a-precise-amount-of-time)).
 - Fixed adding an action in the `.inputactions` editor automatically duplicating interactions and processors from the first action in the map.
+- Fixed `InputActionSetupExtensions.ChangeBinding` when modifying binding from a different action than specified. Contribution by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1348](https://github.com/Unity-Technologies/InputSystem/pull/1352).
 
 ### Added
 
 - Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode (only available for XR).
 - Added method `SetMotorSpeedsAndLightBarColor` as a workaround for setting both the light bar and motor speeds simultaneously on a DualShock 4 controller ([case 1271119](https://issuetracker.unity3d.com/issues/dualshock4-setlightbarcolor-and-setmotorspeeds-cannot-be-called-on-the-same-frame-using-input-system)).
+- Added the concept of "soft" and "hard" device resets.
+  * In general, resetting a device will reset its state to default values.
+  * Individual controls can be marked as `dontReset` to exclude them from resets. This makes the reset "soft" (default).
+    ```CSharp
+    //  Perform a "soft" reset of the mouse. The mouse position will not be affected
+    // but controls such as buttons will be reset.
+    InputSystem.ResetDevice(Mouse.current);
+    ```
+  * A "hard" reset can be forced through the API. This also resets `dontReset` controls.
+    ```CSharp
+    // Perform a "hard" reset of the mouse. The mouse position will also be reset to (0,0).
+    InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
+    ```
+  * Resets will lead to `InputAction`s that are enabled and in-progress from controls that being reset, to be canceled. This will not perform actions even if they trigger on, for example, button release.
+- `InputDevice.canRunInBackground` can now be force-set through layouts.
+   ```CSharp
+   // Force XInputWindows gamepads to not run in the background.
+   InputSystem.RegisterLayoutOverride(@"
+       {
+           ""name"": ""XInputWindowsNoCanRunInBackground"",
+           ""extend"": ""XInputWindows"",
+           ""runInBackground"": ""off""
+       }
+   ");
+   ```
 
 #### Actions
 
@@ -57,11 +90,20 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- Application focus handling behavior has been reworked.
+  * When `runInBackground` is off, no action will be taken on focus loss. When focus comes back, all devices will receive a sync request. Those that don't support it will see a "soft" reset.
+  * When `runInBackground` is on (which, when running in the editor, is considered to always be the case), a new setting `InputSettings.backgroundBehavior` dictates how input is to be handled while the application does not have focus. The default setting of `ResetAndDisableNonBackgroundDevices` will soft-reset and disable all devices for which `InputDevice.canRunInBackground` is false. While in the background, devices that are flagged as `canRunInBackground` will keep running as in the foreground.
+  * In the editor, devices other than `Pointer` and `Keyboard` devices (i.e. anything not used to operate the editor UI) are now by default routing their input to the Game View regardless of focus. This also fixes the problem of gamepad sticks resetting to `(0,0)` on focus loss ([case 1222305](https://issuetracker.unity3d.com/issues/input-system-gamepad-stick-values-are-cached-when-changing-editor-window-focus)).
+  * A new setting `InputSettings.gameViewFocus` has been introduced to determine how Game View focused is handled in the editor with respect to input.
+- Editor: Removed 'Lock Input to Game View' setting in the Input Debugger.
+  * The setting has been replaced by the new 'Game View Focus' project setting.
+- `InputSystem.defaultButtonPressPoint` is now clamped to a minimum value of `0.0001` ([case 1349002](https://issuetracker.unity3d.com/issues/onclick-not-working-when-in-player)).
 - `InputDevice.OnConfigurationChanged` can now be overridden in derived classes.
 - `InputSystemUIInputModule` now defers removing pointers for touches by one frame.
   * This is to ensure that `IsPointerOverGameObject` can meaningfully be queried for touches that have happened within the frame &ndash; even if by the time the method is called, a touch has technically already ended ([case 1347048](https://issuetracker.unity3d.com/issues/input-system-ispointerovergameobject-returns-false-when-used-with-a-tap-interaction)).
   * More precisely, this means that whereas before a `PointerExit` and `PointerUp` was received in the same frame, a touch will now see a `PointerUp` in the frame of release but only see a `PointerExit` in the subsequent frame.
 - Updated documentation for sensor WebGL support in 2021.2.
+- Changed `TrackedPoseDriver` to use properties of type `InputActionProperty` rather than `InputAction` to allow more flexibility.
 
 ## [1.1.0-pre.5] - 2021-05-11
 

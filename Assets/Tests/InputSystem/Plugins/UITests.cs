@@ -48,6 +48,7 @@ internal class UITests : CoreTestsFixture
         public UICallbackReceiver parentReceiver;
         public UICallbackReceiver leftChildReceiver;
         public UICallbackReceiver rightChildReceiver;
+        public DefaultInputActions actions;
 
         // Assume a 640x480 resolution and translate the given coordinates from a resolution
         // in that space to coordinates in the current camera screen space.
@@ -81,6 +82,19 @@ internal class UITests : CoreTestsFixture
     public override void Setup()
     {
         base.Setup();
+    }
+
+    private static TestObjects CreateUIScene()
+    {
+        var scene = CreateTestUI();
+        scene.actions = new DefaultInputActions();
+
+        scene.uiModule.point = InputActionReference.Create(scene.actions.UI.Point);
+        scene.uiModule.leftClick = InputActionReference.Create(scene.actions.UI.Click);
+
+        scene.actions.UI.Enable();
+
+        return scene;
     }
 
     // Set up a InputSystemUIInputModule with a full roster of actions and inputs
@@ -3220,7 +3234,7 @@ internal class UITests : CoreTestsFixture
         {
             var objects = scene.GetRootGameObjects();
             var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
-            uiModule.ignoreFocus = true;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
             var uiRoot = uiDocument.rootVisualElement;
             var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
@@ -3300,6 +3314,110 @@ internal class UITests : CoreTestsFixture
         }
     }
     #endif
+
+    [UnityTest]
+    [Category("Focus")]
+    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonIsNotClicked()
+    {
+        // Whether we run in the background or not should only move the reset of the mouse button
+        // around. Without running in the background, the reset should happen when we come back into focus.
+        // With running in the background, the reset should happen when we lose focus.
+        runtime.runInBackground = true;
+
+        var scene = CreateUIScene();
+        var mousePosition = scene.From640x480ToScreen(100, 100);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // On sync, send current position but with all buttons up.
+        SyncMouse(mouse, mousePosition);
+
+        // Turn left object into a button.
+        var button = scene.leftGameObject.AddComponent<MyButton>();
+        var clicked = false;
+        button.onClick.AddListener(() => clicked = true);
+
+        yield return null;
+        scene.leftChildReceiver.events.Clear();
+
+        // Put mouse over button and press it.
+        Set(mouse.position, mousePosition);
+        Press(mouse.leftButton);
+
+        Assert.That(scene.actions.UI.Click.phase.IsInProgress(), Is.True);
+
+        var clickWasCanceled = false;
+        scene.actions.UI.Click.canceled += _ => clickWasCanceled = true;
+
+        yield return null;
+
+        Assert.That(button.receivedPointerDown, Is.True);
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerEnter),
+                #if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+                #endif
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("type", EventType.InitializePotentialDrag)
+            )
+        );
+
+        scene.leftChildReceiver.events.Clear();
+
+        runtime.PlayerFocusLost();
+        Assert.That(clickWasCanceled, Is.True);
+        scene.eventSystem.SendMessage("OnApplicationFocus", false);
+
+        Assert.That(scene.leftChildReceiver.events, Is.Empty);
+        Assert.That(scene.eventSystem.hasFocus, Is.False);
+        Assert.That(clicked, Is.False);
+
+        runtime.PlayerFocusGained();
+        scene.eventSystem.SendMessage("OnApplicationFocus", true);
+
+        yield return null;
+
+        // NOTE: We *do* need the pointer up to keep UI state consistent.
+
+        Assert.That(scene.eventSystem.hasFocus, Is.True);
+        Assert.That(button.receivedPointerUp, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
+        Assert.That(mouse.leftButton.isPressed, Is.False);
+        Assert.That(clicked, Is.False);
+    }
+
+    public class MyButton : UnityEngine.UI.Button
+    {
+        public bool receivedPointerDown;
+        public bool receivedPointerUp;
+        public override void OnPointerDown(PointerEventData eventData)
+        {
+            receivedPointerDown = true;
+            base.OnPointerDown(eventData);
+        }
+
+        public override void OnPointerUp(PointerEventData eventData)
+        {
+            receivedPointerUp = true;
+            base.OnPointerDown(eventData);
+        }
+    }
+
+    private unsafe void SyncMouse(Mouse mouse, Vector2 mousePosition)////FIXME: mousePosition should be by reference.
+    {
+        runtime.SetDeviceCommandCallback(mouse,
+            (id, command) =>
+            {
+                if (command->type == RequestSyncCommand.Type)
+                {
+                    InputSystem.QueueStateEvent(mouse, new MouseState { position = mousePosition });
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+    }
 
     // This test requires some functionality which ATM is only available through InputTestRuntime (namely, being able to create
     // native devices and set up IOCTLs for them).
@@ -3543,6 +3661,8 @@ internal class UITests : CoreTestsFixture
 
     private class TestEventSystem : MultiplayerEventSystem
     {
+        public bool hasFocus;
+
         public void InvokeUpdate()
         {
             Update();
@@ -3552,7 +3672,8 @@ internal class UITests : CoreTestsFixture
         {
             // Sync our focus state to that of the test runtime rather than to the Unity test runner (where
             // debugging may still focus and thus alter the test run).
-            hasFocus = ((InputTestRuntime)InputRuntime.s_Instance).hasFocus;
+            hasFocus = ((InputTestRuntime)InputRuntime.s_Instance).isPlayerFocused;
+            this.hasFocus = hasFocus;
             base.OnApplicationFocus(hasFocus);
         }
     }

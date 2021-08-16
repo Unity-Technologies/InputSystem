@@ -290,8 +290,6 @@ namespace UnityEngine.InputSystem.LowLevel
             ref InputEvent* currentWritePos, ref int numEventsRetainedInBuffer,
             ref int numRemainingEvents, bool leaveEventInBuffer)
         {
-            Debug.Assert(Contains(currentReadPos), "Current read position should be contained in buffer");
-            Debug.Assert(Contains(currentWritePos), "Current write position should be contained in buffer");
             Debug.Assert(currentReadPos >= currentWritePos, "Current write position is beyond read position");
 
             // Get new read position *before* potentially moving the current event so that we don't
@@ -310,6 +308,8 @@ namespace UnityEngine.InputSystem.LowLevel
             // If the current event should be left in the buffer, advance write position.
             if (leaveEventInBuffer)
             {
+                Debug.Assert(Contains(currentWritePos), "Current write position should be contained in buffer");
+
                 // Move down in buffer if read and write pos have deviated from each other.
                 var numBytes = currentReadPos->sizeInBytes;
                 if (currentReadPos != currentWritePos)

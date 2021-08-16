@@ -4,6 +4,8 @@ using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
+
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -161,7 +163,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public bool isFocused => Application.isFocused;
+        public bool isPlayerFocused => Application.isFocused;
 
         public float pollingFrequency
         {
@@ -227,6 +229,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public bool isInPlayMode => EditorApplication.isPlaying;
         public bool isPaused => EditorApplication.isPaused;
+        public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
         private Action<PlayModeStateChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;

@@ -3,7 +3,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.XR;
 
 ////TODO: runtime remapping of control usages on a per-device basis
 
@@ -175,6 +174,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputDeviceDescription description => m_Description;
 
+        ////REVIEW: When we can break the API, probably makes sense to replace this single bool with one for sending and one for receiving events
         /// <summary>
         /// Whether the device is currently enabled (that is, sends and receives events).
         /// </summary>
@@ -198,56 +198,73 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                // Fetch state from runtime, if necessary.
-                if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueried) == 0)
-                {
-                    var command = QueryEnabledStateCommand.Create();
-                    if (ExecuteCommand(ref command) >= 0)
-                    {
-                        if (command.isEnabled)
-                            m_DeviceFlags &= ~DeviceFlags.Disabled;
-                        else
-                            m_DeviceFlags |= DeviceFlags.Disabled;
-                    }
-                    else
-                    {
-                        // We got no response on the enable/disable state. Assume device is enabled.
-                        m_DeviceFlags &= ~DeviceFlags.Disabled;
-                    }
+                #if UNITY_EDITOR
+                if (InputState.currentUpdateType == InputUpdateType.Editor && (m_DeviceFlags & DeviceFlags.DisabledWhileInBackground) != 0)
+                    return true;
+                #endif
 
-                    // Only fetch enable/disable state again if we get a configuration change event.
-                    m_DeviceFlags |= DeviceFlags.DisabledStateHasBeenQueried;
-                }
+                if ((m_DeviceFlags & (DeviceFlags.DisabledInFrontend | DeviceFlags.DisabledWhileInBackground)) != 0)
+                    return false;
 
-                return (m_DeviceFlags & DeviceFlags.Disabled) != DeviceFlags.Disabled;
+                return QueryEnabledStateFromRuntime();
             }
         }
 
-        ////TODO: rename this to canReceiveInputInBackground
+        ////TODO: rename this to canReceiveInputInBackground (once we can break API)
         /// <summary>
         /// If true, the device is capable of delivering input while the application is running in the background, i.e.
         /// while <c>Application.isFocused</c> is false.
         /// </summary>
         /// <value>Whether the device can generate input while in the background.</value>
         /// <remarks>
-        /// Note that processing input in the background requires <c>Application.runInBackground</c> to be enabled in the
-        /// player preferences. If this is enabled, the input system will keep running by virtue of being part of the Unity
-        /// player loop which will keep running in the background. Note, however, that this does not necessarily mean that
-        /// the application will necessarily receive input.
+        /// The value of this property is determined by three separator factors.
         ///
-        /// Only a select set of hardware, platform, and SDK/API combinations support gathering input while not having
-        /// input focus. The most notable set of devices are HMDs and VR controllers.
+        /// For one, <see cref="native"/> devices have an inherent value for this property that can be retrieved through
+        /// <see cref="QueryCanRunInBackground"/>. This determines whether at the input collection level, the device is
+        /// capable of producing input independent of application. This is rare and only a select set of hardware, platform,
+        /// and SDK/API combinations support this. The prominent class of input devices that in general do support this
+        /// behavior are VR devices.
         ///
-        /// The value of this property is determined by sending <see cref="QueryCanRunInBackground"/> to the device.
+        /// Furthermore, the property may be force-set through a device's <see cref="InputControl.layout"/> by
+        /// means of <see cref="InputControlLayout.canRunInBackground"/>.
+        ///
+        /// Lastly, in the editor, the value of the property may be overridden depending on <see cref="InputSettings.editorInputBehaviorInPlayMode"/>
+        /// in case certain devices are automatically kept running in play mode even when no Game View has focus.
+        ///
+        /// Be aware that as far as players are concerned, only certain platforms support running Unity while not having focus.
+        /// On mobile platforms, for example, this is generally not supported. In this case, the value of this property
+        /// has no impact on input while the application does not have focus. See <see cref="InputSettings.backgroundBehavior"/>
+        /// for more details.
         /// </remarks>
+        /// <seealso cref="InputSettings.backgroundBehavior"/>
+        /// <seealso cref="InputControlLayout.canRunInBackground"/>
         public bool canRunInBackground
         {
             get
             {
-                ////TODO: make this a flag and query only once; also, allow C# devices to just set the flag directly and not perform an IOCTL at all
+                // In the editor, "background" refers to "game view not focused", not to the editor not being active.
+                // So, we modulate canRunInBackground depending on how input should behave WRT game view according
+                // to the input settings.
+                #if UNITY_EDITOR
+                var gameViewFocus = InputSystem.settings.editorInputBehaviorInPlayMode;
+                if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
+                    return false; // No device considered being able to run without game view focus.
+                if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
+                    return !(this is Pointer || this is Keyboard); // Anything but pointers and keyboards considered as being able to run in background.
+                #endif
+
+                if ((m_DeviceFlags & DeviceFlags.CanRunInBackgroundHasBeenQueried) != 0)
+                    return (m_DeviceFlags & DeviceFlags.CanRunInBackground) != 0;
+
                 var command = QueryCanRunInBackground.Create();
-                if (ExecuteCommand(ref command) >= 0)
-                    return command.canRunInBackground;
+                m_DeviceFlags |= DeviceFlags.CanRunInBackgroundHasBeenQueried;
+                if (ExecuteCommand(ref command) >= 0 && command.canRunInBackground)
+                {
+                    m_DeviceFlags |= DeviceFlags.CanRunInBackground;
+                    return true;
+                }
+
+                m_DeviceFlags &= ~DeviceFlags.CanRunInBackground;
                 return false;
             }
         }
@@ -326,6 +343,8 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
         /// not cause lastUpdateTime to be changed.
+        /// The "timeline" is reset to 0 when entering play mode. If there are any events incoming or device
+        /// updates which occur prior to entering play mode, these will appear negative.
         /// </remarks>
         public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
@@ -337,17 +356,12 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Does not allocate.
         /// </remarks>
-        public ReadOnlyArray<InputControl> allControls
-        {
-            get
-            {
-                // Since m_ChildrenForEachControl contains the device's children as well as the children
-                // of each control in the hierarchy, and since each control can only have a single parent,
-                // this list will actually deliver a flattened list of all controls in the hierarchy (and without
-                // the device itself being listed).
-                return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
-            }
-        }
+        public ReadOnlyArray<InputControl> allControls =>
+            // Since m_ChildrenForEachControl contains the device's children as well as the children
+            // of each control in the hierarchy, and since each control can only have a single parent,
+            // this list will actually deliver a flattened list of all controls in the hierarchy (and without
+            // the device itself being listed).
+            new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
 
         ////REVIEW: This violates the constraint of controls being required to not have reference types as value types.
         /// <inheritdoc/>
@@ -442,7 +456,7 @@ namespace UnityEngine.InputSystem
                 m_ChildrenForEachControl[i].isConfigUpToDate = false;
 
             // Make sure we fetch the enabled/disabled state again.
-            m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+            m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
 
             OnConfigurationChanged();
         }
@@ -524,7 +538,6 @@ namespace UnityEngine.InputSystem
 
         ////TODO: add overridable OnDisable/OnEnable that fire the device commands
 
-        ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
@@ -572,16 +585,88 @@ namespace UnityEngine.InputSystem
             return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);
         }
 
+        internal bool QueryEnabledStateFromRuntime()
+        {
+            // Fetch state from runtime, if necessary.
+            if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueriedFromRuntime) == 0)
+            {
+                var command = QueryEnabledStateCommand.Create();
+                if (ExecuteCommand(ref command) >= 0)
+                {
+                    if (command.isEnabled)
+                        m_DeviceFlags &= ~DeviceFlags.DisabledInRuntime;
+                    else
+                        m_DeviceFlags |= DeviceFlags.DisabledInRuntime;
+                }
+                else
+                {
+                    // We got no response on the enable/disable state. Assume device is enabled.
+                    m_DeviceFlags &= ~DeviceFlags.DisabledInRuntime;
+                }
+
+                // Only fetch enable/disable state again if we get a configuration change event.
+                m_DeviceFlags |= DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
+            }
+
+            return (m_DeviceFlags & DeviceFlags.DisabledInRuntime) == 0;
+        }
+
+        [Serializable]
         [Flags]
         internal enum DeviceFlags
         {
             UpdateBeforeRender = 1 << 0,
+
             HasStateCallbacks = 1 << 1,
             HasControlsWithDefaultState = 1 << 2,
-            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
-            Disabled = 1 << 5,
-            DisabledStateHasBeenQueried = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
+            HasDontResetControls = 1 << 3,
+
+            Remote = 1 << 4, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 5, // It's a device created from data surfaced by NativeInputRuntime.
+
+            DisabledInFrontend = 1 << 6, // Explicitly disabled on the managed side.
+            DisabledInRuntime = 1 << 7, // Disabled in the native runtime.
+            DisabledWhileInBackground = 1 << 8, // Disabled while the player is running in the background.
+            DisabledStateHasBeenQueriedFromRuntime = 1 << 9, // Whether we have fetched the current enable/disable state from the runtime.
+
+            CanRunInBackground = 1 << 11,
+            CanRunInBackgroundHasBeenQueried = 1 << 12,
+        }
+
+        internal bool disabledInFrontend
+        {
+            get => (m_DeviceFlags & DeviceFlags.DisabledInFrontend) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.DisabledInFrontend;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.DisabledInFrontend;
+            }
+        }
+
+        internal bool disabledInRuntime
+        {
+            get => (m_DeviceFlags & DeviceFlags.DisabledInRuntime) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.DisabledInRuntime;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.DisabledInRuntime;
+            }
+        }
+
+        internal bool disabledWhileInBackground
+        {
+            get => (m_DeviceFlags & DeviceFlags.DisabledWhileInBackground) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.DisabledWhileInBackground;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.DisabledWhileInBackground;
+            }
         }
 
         internal DeviceFlags m_DeviceFlags;
@@ -669,9 +754,21 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal bool hasDontResetControls
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasDontResetControls) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasDontResetControls;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasDontResetControls;
+            }
+        }
+
         internal bool hasStateCallbacks
         {
-            get => (m_DeviceFlags & DeviceFlags.HasStateCallbacks) == DeviceFlags.HasStateCallbacks;
+            get => (m_DeviceFlags & DeviceFlags.HasStateCallbacks) != 0;
             set
             {
                 if (value)
@@ -715,11 +812,28 @@ namespace UnityEngine.InputSystem
             m_UsageCount = default;
         }
 
+        internal bool RequestSync()
+        {
+            var syncCommand = RequestSyncCommand.Create();
+            return device.ExecuteCommand(ref syncCommand) >= 0;
+        }
+
         internal bool RequestReset()
         {
             var resetCommand = RequestResetCommand.Create();
-            var result = device.ExecuteCommand(ref resetCommand);
-            return result >= 0;
+            return device.ExecuteCommand(ref resetCommand) >= 0;
+        }
+
+        internal bool ExecuteEnableCommand()
+        {
+            var command = EnableDeviceCommand.Create();
+            return device.ExecuteCommand(ref command) >= 0;
+        }
+
+        internal bool ExecuteDisableCommand()
+        {
+            var command = DisableDeviceCommand.Create();
+            return device.ExecuteCommand(ref command) >= 0;
         }
 
         internal void NotifyAdded()

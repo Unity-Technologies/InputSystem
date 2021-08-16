@@ -1506,6 +1506,33 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ResettingDevice_CancelsOngoingActionsThatAreDrivenByIt()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Create an action that performs on button *up*. This way we can tell whether
+        // the action is truly cancelled or whether it simply gets triggered by us
+        // resetting the corresponding device state.
+        var buttonReleaseAction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+            interactions: "press(behavior=1)");
+        buttonReleaseAction.Enable();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(buttonReleaseAction.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(buttonReleaseAction.activeControl, Is.SameAs(gamepad.buttonSouth));
+
+        using (var buttonReleaseActionTrace = new InputActionTrace(buttonReleaseAction))
+        {
+            InputSystem.ResetDevice(gamepad);
+
+            Assert.That(buttonReleaseActionTrace,
+                Canceled(buttonReleaseAction));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateActionsWithoutAnActionMap()
     {
         var action = new InputAction();
