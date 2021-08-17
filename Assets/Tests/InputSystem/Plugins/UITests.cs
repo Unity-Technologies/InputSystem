@@ -2928,6 +2928,7 @@ internal class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    [Ignore("Temporarily disabled to bisect CI timeout problems")] // TODO Reenable
     public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
     {
         InputSystem.AddDevice<Touchscreen>();
