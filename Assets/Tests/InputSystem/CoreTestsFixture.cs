@@ -5,23 +5,28 @@ public class CoreTestsFixture : InputTestFixture
 {
     public override void TearDown()
     {
+        // Unload any additional scenes.
+        if (SceneManager.sceneCount > 1)
+        {
+            // Switch back to UTR scene if this is currently not the active scene
+            var utrScene = SceneManager.GetSceneAt(0);
+            if (SceneManager.GetActiveScene() != utrScene)
+                SceneManager.SetActiveScene(utrScene);
+
+            // Unload all other scenes
+            for (var i = SceneManager.sceneCount - 1; i != 0; --i)
+                SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(i));
+        }
+
         // Destroy any GameObject in the first scene that isn't hidden and isn't the
         // test runner object. Do this first so that any cleanup finds the system in the
         // state it expects.
-        foreach (var go in SceneManager.GetSceneAt(0).GetRootGameObjects())
+        var activeScene = SceneManager.GetActiveScene();
+        foreach (var go in activeScene.GetRootGameObjects())
         {
             if (go.hideFlags != 0 || go.name.Contains("tests runner"))
                 continue;
             UnityEngine.Object.DestroyImmediate(go);
-        }
-
-        // Unload any additional scenes.
-        for (var i = 1; i < SceneManager.sceneCount; ++i)
-        {
-            var scene = SceneManager.GetSceneAt(i);
-            if (SceneManager.GetActiveScene() == scene)
-                SceneManager.SetActiveScene(SceneManager.GetSceneAt(0));
-            SceneManager.UnloadSceneAsync(scene); 
         }
 
         base.TearDown();
