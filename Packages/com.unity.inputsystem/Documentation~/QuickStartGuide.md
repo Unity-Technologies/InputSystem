@@ -2,8 +2,13 @@
 
 >__Note__: For information on how to install the new Input System, see [Installation](Installation.md).
 
-* [Getting input directly from an Input Device](#getting-input-directly-from-an-input-device)
-* [Getting input indirectly through an Input Action](#getting-input-indirectly-through-an-input-action)
+- [Quick start guide](#quick-start-guide)
+  - [Getting input directly from an Input Device](#getting-input-directly-from-an-input-device)
+  - [Getting input indirectly through an Input Action](#getting-input-indirectly-through-an-input-action)
+    - [Step 1: Add a `PlayerInput` Component](#step-1-add-a-playerinput-component)
+    - [Step 2: Create Input Actions](#step-2-create-input-actions)
+    - [Step 3: Setting up Action responses](#step-3-setting-up-action-responses)
+  - [Alternate ways to set up Input Actions](#alternate-ways-to-set-up-input-actions)
 
 ## Getting input directly from an Input Device
 
@@ -15,7 +20,7 @@ using UnityEngine.InputSystem;
 
 public class MyPlayerScript : MonoBehaviour
 {
-    void FixedUpdate()
+    void Update()
     {
         var gamepad = Gamepad.current;
         if (gamepad == null)
@@ -42,7 +47,7 @@ To get input directly through an Input Action, follow these steps:
 2. Create Actions.
 3. Script Action responses.
 
-### Step 1: Add a [`PlayerInput`](Components.md) Component
+### Step 1: Add a `PlayerInput` Component
 
 Getting input directly from an Input Device is quick and convenient, but requires a separate path for each type of Device. That also makes it harder to later change which Device Control triggers a specific event in the game.
 
@@ -86,6 +91,6 @@ public class MyPlayerScript : MonoBehaviour
 
 This completes the basic setup using [`PlayerInput`](Components.md).
 
-### Alternate ways to set up Input Actions
+## Alternate ways to set up Input Actions
 
 There are ways other than [`PlayerInput`](Components.md) to set up Input Actions. For more information, see documentation on [Creating Actions](Actions.md#creating-actions).
