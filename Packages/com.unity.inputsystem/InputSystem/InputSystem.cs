@@ -2324,7 +2324,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
-        /// Note that the listener will get triggered from the first button that was found in a pressed state in an
+        /// Note that the listener will get triggered from the first button that was found in a pressed state in a
         /// given <see cref="InputEvent"/>. If multiple buttons are pressed in an event, the listener will not
         /// get triggered multiple times. To get all button presses in an event, use <see cref="InputControlExtensions.GetAllButtonPresses"/>
         /// and instead listen directly through <see cref="onEvent"/>.
