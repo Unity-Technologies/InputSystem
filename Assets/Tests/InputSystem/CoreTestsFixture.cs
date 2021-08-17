@@ -19,7 +19,9 @@ public class CoreTestsFixture : InputTestFixture
         for (var i = 1; i < SceneManager.sceneCount; ++i)
         {
             var scene = SceneManager.GetSceneAt(i);
-            SceneManager.UnloadSceneAsync(scene);
+            if (SceneManager.GetActiveScene() == scene)
+                SceneManager.SetActiveScene(SceneManager.GetSceneAt(0));
+            SceneManager.UnloadSceneAsync(scene); 
         }
 
         base.TearDown();
