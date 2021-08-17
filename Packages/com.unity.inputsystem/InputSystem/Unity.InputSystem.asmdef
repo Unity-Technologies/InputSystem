@@ -10,8 +10,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
+    "versionDefines": [     
+         {
             "name": "com.unity.xr.oculus",
             "expression": "1.0.3",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
@@ -39,7 +39,7 @@
         {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",
-            "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
+            "define": "UNITY_XR_AVAILABLE"
         },
         {
             "name": "com.unity.modules.physics",
