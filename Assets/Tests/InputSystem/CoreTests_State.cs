@@ -655,7 +655,9 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        // InputTestFixture puts this at ExactlyAsInPlayer. Give us a setting that allows
+        // gamepad input to go through to the editor.
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1161,6 +1163,7 @@ partial class CoreTests
             device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
+        var sizeOfSpecialBuffers = sizeOfSingleBuffer * 3; // Noise mask, default state, and dontReset mask.
 
         const int kDoubleBufferCount =
             #if UNITY_EDITOR
@@ -1174,11 +1177,8 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
-        // QueueEvent aligns to 4-byte boundaries.
-        eventByteCount = eventByteCount.AlignToMultipleOf(4);
-
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSpecialBuffers));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
@@ -1627,7 +1627,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_ExcludesEditorInputByDefault()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
@@ -1646,7 +1646,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_CanCaptureEditorInput()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))

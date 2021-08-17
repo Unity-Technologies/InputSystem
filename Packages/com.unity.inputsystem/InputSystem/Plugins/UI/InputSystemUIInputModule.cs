@@ -28,6 +28,9 @@ using UnityEditor;
 ////REVIEW: how does this/uGUI support two-finger right-clicks with touch? [GESTURES]
 
 ////TODO: add ability to query which device was last used with any of the actions
+////REVIEW: also give access to the last/current UI event?
+
+////TODO: ToString() method a la PointerInputModule
 
 namespace UnityEngine.InputSystem.UI
 {
@@ -498,6 +501,8 @@ namespace UnityEngine.InputSystem.UI
 
                 eventData.dragging = false;
                 eventData.pointerDrag = null;
+
+                button.ignoreNextClick = false;
             }
 
             button.CopyPressStateFrom(eventData);
@@ -701,16 +706,19 @@ namespace UnityEngine.InputSystem.UI
             set => m_MoveRepeatRate = value;
         }
 
-        ////REVIEW: keeping this internal for now; should be revisited when focus branch lands
-        /// <summary>
-        /// If true, then <c>EventSystem.isFocused</c> is ignored when processing input. The default value is false.
-        /// </summary>
-        /// <remarks>Whether to ignore <c>EventSystem.isFocused</c> in <see cref="Process"/>. Default is false.</remarks>
-        /// <seealso cref="Process"/>
-        internal bool ignoreFocus
+        private bool shouldIgnoreFocus
         {
-            get => m_IgnoreFocus;
-            set => m_IgnoreFocus = value;
+            get
+            {
+                if (InputSystem.settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
+                    return true;
+
+                // By default, key this on whether running the background is enabled or not. Rationale is that
+                // if running in the background is enabled, we already have rules in place what kind of input
+                // is allowed through and what isn't. And for the input that *IS* allowed through, the UI should
+                // react.
+                return InputRuntime.s_Instance.runInBackground;
+            }
         }
 
         [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
@@ -1763,7 +1771,7 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
-        private void OnPoint(InputAction.CallbackContext context)
+        private void OnPointCallback(InputAction.CallbackContext context)
         {
             // When a pointer is removed, there's like a non-zero coordinate on the position control and thus
             // we will see cancellations on the "Point" action. Ignore these as they provide no useful values
@@ -1776,11 +1784,10 @@ namespace UnityEngine.InputSystem.UI
             state.screenPosition = context.ReadValue<Vector2>();
         }
 
-        ////REVIEW: How should we handle clickCount here? There's only one for the entire device yet right and middle clicks
-        ////        are independent of left clicks. ATM we ignore native click counts and do click detection for all clicks
-        ////        ourselves just like StandaloneInputModule does.
+        // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
+        //       button *clicks* when an action resets. However, we still need to send pointer ups.
 
-        private void OnLeftClick(InputAction.CallbackContext context)
+        private void OnLeftClickCallback(InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
                 return;
@@ -1788,9 +1795,11 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateFor(ref context);
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+            if (context.canceled)
+                state.leftButton.ignoreNextClick = true;
         }
 
-        private void OnRightClick(InputAction.CallbackContext context)
+        private void OnRightClickCallback(InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
                 return;
@@ -1798,9 +1807,11 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateFor(ref context);
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+            if (context.canceled)
+                state.leftButton.ignoreNextClick = true;
         }
 
-        private void OnMiddleClick(InputAction.CallbackContext context)
+        private void OnMiddleClickCallback(InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
                 return;
@@ -1808,6 +1819,8 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateFor(ref context);
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+            if (context.canceled)
+                state.leftButton.ignoreNextClick = true;
         }
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
@@ -1826,7 +1839,7 @@ namespace UnityEngine.InputSystem.UI
 
         internal const float kPixelPerLine = 20;
 
-        private void OnScroll(InputAction.CallbackContext context)
+        private void OnScrollCallback(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
             // The old input system reported scroll deltas in lines, we report pixels.
@@ -1834,19 +1847,19 @@ namespace UnityEngine.InputSystem.UI
             state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
         }
 
-        private void OnMove(InputAction.CallbackContext context)
+        private void OnMoveCallback(InputAction.CallbackContext context)
         {
             ////REVIEW: should we poll this? or set the action to not be pass-through? (ps4 controller is spamming this action)
             m_NavigationState.move = context.ReadValue<Vector2>();
         }
 
-        private void OnTrackedDeviceOrientation(InputAction.CallbackContext context)
+        private void OnTrackedDeviceOrientationCallback(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
             state.worldOrientation = context.ReadValue<Quaternion>();
         }
 
-        private void OnTrackedDevicePosition(InputAction.CallbackContext context)
+        private void OnTrackedDevicePositionCallback(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
             state.worldPosition = context.ReadValue<Vector3>();
@@ -1863,7 +1876,7 @@ namespace UnityEngine.InputSystem.UI
                 PurgeStalePointers();
 
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
-            if (!eventSystem.isFocused && !m_IgnoreFocus)
+            if (!eventSystem.isFocused && !shouldIgnoreFocus)
             {
                 for (var i = 0; i < m_PointerStates.length; ++i)
                     m_PointerStates[i].OnFrameFinished();
@@ -1915,21 +1928,21 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             if (m_OnPointDelegate == null)
-                m_OnPointDelegate = OnPoint;
+                m_OnPointDelegate = OnPointCallback;
             if (m_OnLeftClickDelegate == null)
-                m_OnLeftClickDelegate = OnLeftClick;
+                m_OnLeftClickDelegate = OnLeftClickCallback;
             if (m_OnRightClickDelegate == null)
-                m_OnRightClickDelegate = OnRightClick;
+                m_OnRightClickDelegate = OnRightClickCallback;
             if (m_OnMiddleClickDelegate == null)
-                m_OnMiddleClickDelegate = OnMiddleClick;
+                m_OnMiddleClickDelegate = OnMiddleClickCallback;
             if (m_OnScrollWheelDelegate == null)
-                m_OnScrollWheelDelegate = OnScroll;
+                m_OnScrollWheelDelegate = OnScrollCallback;
             if (m_OnMoveDelegate == null)
-                m_OnMoveDelegate = OnMove;
+                m_OnMoveDelegate = OnMoveCallback;
             if (m_OnTrackedDeviceOrientationDelegate == null)
-                m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientation;
+                m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientationCallback;
             if (m_OnTrackedDevicePositionDelegate == null)
-                m_OnTrackedDevicePositionDelegate = OnTrackedDevicePosition;
+                m_OnTrackedDevicePositionDelegate = OnTrackedDevicePositionCallback;
 
             SetActionCallbacks(true);
         }

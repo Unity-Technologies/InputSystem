@@ -397,11 +397,11 @@ namespace UnityEngine.InputSystem.XR
             if (m_HasMigratedActions)
                 return;
 
-            #pragma warning disable CS0612
+#pragma warning disable 0612
             m_PositionInput = new InputActionProperty(m_PositionAction);
             m_RotationInput = new InputActionProperty(m_RotationAction);
             m_HasMigratedActions = true;
-            #pragma warning restore CS0612
+#pragma warning restore 0612
         }
 
         #endregion

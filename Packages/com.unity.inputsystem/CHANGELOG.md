@@ -28,6 +28,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `PlayerInputManager`s join action not triggering when using a referenced `InputAction` ([case 1260625](https://issuetracker.unity3d.com/issues/input-system-player-input-managers-join-action-is-not-triggered-when-using-a-referenced-input-action)).
 - Fixed UI issue where pressing the wrong button was possible while quickly moving through a UI because the submit action fired on action press instead of action release ([1333563](https://issuetracker.unity3d.com/issues/input-submit-action-is-called-on-release-rather-than-on-press-when-using-enter-key)).
 - Fixed InvalidOperationException when opening a preset created from a .inputactions asset ([case 1199544](https://issuetracker.unity3d.com/issues/input-system-properties-are-not-visible-and-invalidoperationexception-is-thrown-on-selecting-inputactionimporter-preset-asset)).
+- Fixed a problem arising when combining InputSystemUIInputModule and PlayInput with SendMessage or BroadcastMessage callback behavior on the same game object or hierarchy which is an ambiguous input setup. This fix eliminates callbacks into InputSystemUIInputModule. Related to ([1343712](https://issuetracker.unity3d.com/issues/input-system-ui-components-lags-when-using-input-system-ui-input-module-together-with-player-input-component)).
+- Fixed inconsistent usage of `ENABLE_PROFILER` define together with `Profiler.BeginSample`/`Profiler.EndSample` by removing `ENABLE_PROFILER` macro check because `BeginSample`/`EndSample` are already conditional with `[Conditional("ENABLE_PROFILER")]` ([case 1350139](https://issuetracker.unity3d.com/issues/inconsistent-enable-profiler-scripting-defines-in-inputmanager-dot-cs-when-using-profiler-dot-beginssample-and-profiler-dot-endsample)).
+- Remediated majority of performance issues with high frequency mice (>=1kHz poll rates) in release mode by merging consecutive mouse move events together ([case 1281266](https://issuetracker.unity3d.com/issues/many-input-events-when-using-1000hz-mouse)).
+- Fixed `InputEventTrace` replays skipping over empty frames and thus causing playback to happen too fast.
 
 #### Actions
 
@@ -43,6 +47,7 @@ however, it has to be formatted properly to pass verification tests.
 - `PlayerInput` no longer logs an error message when it is set to `Invoke UnityEvents` and can't find  an action in the given `.inputactions` asset ([case 1259577](https://issuetracker.unity3d.com/issues/an-error-is-thrown-when-deleting-an-input-action-and-entering-play-mode)).
 - Fixed `HoldInteraction` getting stuck when hold and release happens in same event ([case 1346786](https://issuetracker.unity3d.com/issues/input-system-the-canceled-event-is-not-fired-when-clicking-a-button-for-a-precise-amount-of-time)).
 - Fixed adding an action in the `.inputactions` editor automatically duplicating interactions and processors from the first action in the map.
+- Fixed `InputActionSetupExtensions.ChangeBinding` when modifying binding from a different action than specified. Contribution by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1348](https://github.com/Unity-Technologies/InputSystem/pull/1352).
 
 ### Added
 
@@ -64,6 +69,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- `InputSystem.defaultButtonPressPoint` is now clamped to a minimum value of `0.0001` ([case 1349002](https://issuetracker.unity3d.com/issues/onclick-not-working-when-in-player)).
 - `InputDevice.OnConfigurationChanged` can now be overridden in derived classes.
 - `InputSystemUIInputModule` now defers removing pointers for touches by one frame.
   * This is to ensure that `IsPointerOverGameObject` can meaningfully be queried for touches that have happened within the frame &ndash; even if by the time the method is called, a touch has technically already ended ([case 1347048](https://issuetracker.unity3d.com/issues/input-system-ispointerovergameobject-returns-false-when-used-with-a-tap-interaction)).
@@ -86,10 +92,17 @@ however, it has to be formatted properly to pass verification tests.
 - Generic `Gamepad` now has platform independent long button names. Previously it used different names if editor targeted PS4/Switch consoles (case 1321676).
 - When creating a new control scheme with a name `All Control Schemes`, `All Control Schemes1` will be created to avoid confusion with implicit `All Control Schemes` scheme ([case 1217379](https://issuetracker.unity3d.com/issues/control-scheme-cannot-be-selected-when-it-is-named-all-control-schemes)).
 - Display names of keyboard buttons are now passed through `ToLower` and `ToTitleCase` to enforce consistent casing between different platforms and keyboard layouts ([case 1254705](https://issuetracker.unity3d.com/issues/the-display-names-for-keyboard-keys-in-the-input-debugger-do-not-match-those-defined-in-input-system-package)).
-- Editor: All remaining `InputUser` instances are now removed automatically when exiting play mode. This means that all devices are automatically unpaired.
-  * In essence, like `InputAction`, `InputUser` is now considered a player-only feature.
+- Application focus handling behavior has been reworked.
+  * When `runInBackground` is off, no action will be taken on focus loss. When focus comes back, all devices will receive a sync request. Those that don't support it will see a "soft" reset.
+  * When `runInBackground` is on (which, when running in the editor, is considered to always be the case), a new setting `InputSettings.backgroundBehavior` dictates how input is to be handled while the application does not have focus. The default setting of `ResetAndDisableNonBackgroundDevices` will soft-reset and disable all devices for which `InputDevice.canRunInBackground` is false. While in the background, devices that are flagged as `canRunInBackground` will keep running as in the foreground.
+  * In the editor, devices other than `Pointer` and `Keyboard` devices (i.e. anything not used to operate the editor UI) are now by default routing their input to the Game View regardless of focus. This also fixes the problem of gamepad sticks resetting to `(0,0)` on focus loss ([case 1222305](https://issuetracker.unity3d.com/issues/input-system-gamepad-stick-values-are-cached-when-changing-editor-window-focus)).
+  * A new setting `InputSettings.gameViewFocus` has been introduced to determine how Game View focused is handled in the editor with respect to input.
 - Events queued __during__ event processing (i.e. `InputSystem.Update()`) are now processed in the same frame. This eliminates the 1-frame lag previously incurred by simulated input.
   * Note that this does not extend to input queued __outside__ of event processing but in the same frame. For example, input queued by the UI (such as by `OnScreenButton` and `OnScreenStick`) will still see a 1-frame lag as UI event processing happens later in the frame and outside of input event processing.
+- Editor: All remaining `InputUser` instances are now removed automatically when exiting play mode. This means that all devices are automatically unpaired.
+  * In essence, like `InputAction`, `InputUser` is now considered a player-only feature.
+- Editor: Removed 'Lock Input to Game View' setting in the Input Debugger.
+  * The setting has been replaced by the new 'Game View Focus' project setting.
 
 #### Actions
 
@@ -121,11 +134,14 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `clickCount` not being incremented correctly by `InputSystemUIInputModule` for successive mouse clicks ([case 1317239](https://issuetracker.unity3d.com/issues/eventdata-dot-clickcount-doesnt-increase-when-clicking-repeatedly-in-the-new-input-system)).
 - Fixed UI not working after additively loading scenes with additional InputSystemUIInputModule modules ([case 1251720](https://issuetracker.unity3d.com/issues/input-system-buttons-cannot-be-pressed-after-additively-loading-scenes-with-additional-event-systems)).
 - Fixed no `OnPointerExit` received when changing UI state without moving pointer ([case 1232705](https://issuetracker.unity3d.com/issues/input-system-onpointerexit-is-not-triggered-when-a-ui-element-interrupts-a-mouse-hover)).
+- Controls such as mouse positions are no longer reset when focus is lost.
+- Pressing a uGUI `Button` and then alt-tabbing away, letting go of the button, and then going back to the application will no longer trigger a button click.
 - Fixed reference to `.inputactions` of `Player Prefab` referenced by `PlayerInputManager` being destroyed on going into play mode, if the player prefab was a nested prefab ([case 1319756](https://issuetracker.unity3d.com/issues/playerinput-component-loses-its-reference-to-an-inputactionasset)).
 - Fixed "Scheme Name" label clipped in "Add Control Schema" popup window ([case 1199560]https://issuetracker.unity3d.com/issues/themes-input-system-scheme-name-is-clipped-in-add-control-schema-window-with-inter-default-font)).
 - Fixed `InputSystem.QueueEvent` calls from within `InputAction` callbacks getting dropped entirely ([case 1297339](https://issuetracker.unity3d.com/issues/input-system-ui-button-wont-click-when-simulating-a-mouse-click-with-inputsystem-dot-queueevent)).
 - Fixed `InputSystemUIInputModule` being in invalid state when added from `Awake` to a game object when entering playmode ([case 1323566](https://issuetracker.unity3d.com/issues/input-system-default-ui-actions-do-not-register-when-adding-inputsystemuiinputmodule-at-runtime-to-an-active-game-object)).
 - Fixed `Keyboard.current` becoming `null` after `OnScreenButton` is disabled or destroyed ([case 1305016](https://issuetracker.unity3d.com/issues/inputsystem-keyboard-dot-current-becomes-null-after-onscreenbutton-is-destroyed)).
+- Fixed `Input.onUnpairedDeviceActivity` triggering from editor input.
 
 #### Actions
 
@@ -170,6 +186,31 @@ however, it has to be formatted properly to pass verification tests.
   Debug.Log(parsed[1].name); // Prints "trigger".
   ```
   * Can, for example, be used with `InputBinding.path`.
+- Added the concept of "soft" and "hard" device resets.
+  * In general, resetting a device will reset its state to default values.
+  * Individual controls can be marked as `dontReset` to exclude them from resets. This makes the reset "soft" (default).
+    ```CSharp
+    //  Perform a "soft" reset of the mouse. The mouse position will not be affected
+    // but controls such as buttons will be reset.
+    InputSystem.ResetDevice(Mouse.current);
+    ```
+  * A "hard" reset can be forced through the API. This also resets `dontReset` controls.
+    ```CSharp
+    // Perform a "hard" reset of the mouse. The mouse position will also be reset to (0,0).
+    InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
+    ```
+  * Resets will lead to `InputAction`s that are enabled and in-progress from controls that being reset, to be canceled. This will not perform actions even if they trigger on, for example, button release.
+- `InputDevice.canRunInBackground` can now be force-set through layouts.
+   ```CSharp
+   // Force XInputWindows gamepads to not run in the background.
+   InputSystem.RegisterLayoutOverride(@"
+       {
+           ""name"": ""XInputWindowsNoCanRunInBackground"",
+           ""extend"": ""XInputWindows"",
+           ""runInBackground"": ""off""
+       }
+   ");
+   ```
 - Added a new API-only setting in the form of `InputSystem.settings.maxEventBytesPerUpdate`.
   * Puts an upper limit on the number of event bytes processed in a single update.
   * If exceeded, any additional event data will get thrown away and an error will be issued.

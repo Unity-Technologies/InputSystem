@@ -1,5 +1,14 @@
 # Input settings
 
+* [Update Mode](#update-mode)
+* [Background Behavior](#background-behavior)
+* [Filter Noise on .current](#filter-noise-on-current)
+* [Compensate orientation](#compensate-orientation)
+* [Default value properties](#default-value-properties)
+* [Supported Devices](#supported-devices)
+* [Platform-specific Settings](#platform-specific-settings)
+* [Play Mode Input Behavior](#play-mode-input-behavior)
+
 To configure the Input System individually for each project, go to __Edit > Project Settings… > Input System Package__ from Unity's main menu.
 
 ![Input Settings](Images/InputSettings.png)
@@ -20,11 +29,31 @@ The Input System processes input in one of three distinct ways:
 
 |Type|Description|
 |----|-----------|
-|[`Fixed Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html).|
-|[`Dynamic Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System processes events at irregular intervals determined by the current framerate.|
-|[`Manual Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System does not process events automatically. Instead, it processes them whenever you call [`InputSystem.Update()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update).|
+|[`Process Events In Dynamic Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System processes events at irregular intervals determined by the current framerate.|
+|[`Process Events In Fixed Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System processes events at fixed-length intervals. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html).|
+|[`Process Events Manually`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|The Input System does not process events automatically. Instead, it processes them whenever you call [`InputSystem.Update()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update).|
 
 >__Note__: The system performs two additional types of updates in the form of  [`InputUpdateType.BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (late update for XR tracking Devices) and [`InputUpdateType.Editor`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (for EditorWindows). Neither of these update types change how the application consumes input.
+
+## Background Behavior
+
+![Background Behavior](Images/BackgroundBehavior.png)
+
+Determines how [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is handled. That is, what happens when focus is lost or gained and how input behaves while the application is not in the foreground.
+
+This setting is only relevant when "Run In Background" is enabled in the [Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettings.html) for the project. This setting is only supported on some platforms. On platforms such as Android and iOS, the game will not be run while the application is not in the foreground.
+
+Note that in the editor, "Run In Background" is considered to always be enabled as the player loop will be kept running regardless of whether a Game View is focused or not. Also, in development players on desktop platforms, the setting is force-enabled during the build process.
+
+>__Note__: In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](Devices.md#background-and-focus-change-behavior) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
+
+|Setting|Description|
+|----|-----------|
+|[`Reset And Disable Non Background Devices`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_ResetAndDisableNonBackgroundDevices)|When focus is lost, perform a [soft reset](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) on all Devices that are not marked as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) and also subsequently [disable](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) them. Does not affect Devices marked as being able to run in the background.<br><br>When focus is regained, [re-enable](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_) any Device that has been disabled and also issue a [sync request](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_TrySyncDevice_UnityEngine_InputSystem_InputDevice_) on these Devices in order to update their current state. If a Device is issued a sync request and does not respond to it, [soft-reset](Devices.md#device-resets) the Device.<br><br>This is the default setting.|
+|[`Reset And Disable All Devices`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_ResetAndDisableAllDevices)|When focus is lost, perform a [soft reset](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) on all Devices and also subsequently [disable](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) them.<br><br>When focus is regained, [re-enable](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_) all Devices and also issue a [sync request](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_TrySyncDevice_UnityEngine_InputSystem_InputDevice_) on each Device in order to update it to its current state. If a device does not respond to the sync request, [soft-reset](Devices.md#device-resets) it.|
+|[`Ignore Focus`](../api/UnityEngine.InputSystem.InputSettings.BackgroundBehavior.html#UnityEngine_InputSystem_InputSettings_BackgroundBehavior_IgnoreFocus)|Do nothing when focus is lost. When focus is regained, issue a [sync request](Devices.md#device-syncs) on all Devices.|
+
+Focus behavior has implications for how [Actions](./Actions.md) behave on focus changes. When a Device is reset, Actions bound to Controls on the device will be cancelled. This ensures, for example, that a user-controlled character in your game doesn't continue to move when focus is lost while the user is pressing one of the W, A, S or D keys. The cancellation happens in such a way that Actions are guaranteed to not trigger. That is, even if an Action is set to trigger on button release, it will not get triggered when a button is down and gets reset by a [Device reset](Devices.md#device-resets).
 
 ## Filter Noise On Current
 
@@ -40,7 +69,7 @@ To counteract this, enable noise filtering. When this setting is enabled and you
 
 >__Note__: The system doesn't currently detect most forms of noise, but does detect those on gamepad sticks. This means that if the sticks wiggle a small amount but are still within deadzone limits, the Device still becomes current. This doesn't require actuating the sticks themselves. On most gamepads, there's a small tolerance within which the sticks move when the entire device moves.
 
-## Compensate For Screen Orientation
+## Compensate Orientation
 
 If this setting is enabled, rotation values reported by [sensors](Sensors.md) are rotated around the Z axis as follows:
 
@@ -107,3 +136,17 @@ This setting is stored as a user setting (that is, other users who open the same
 
 * __Motion Usage__<br>
   Governs access to the [pedometer](Sensors.md# on the device. If enabled, the __Description__ string supplied in the settings will be added to the application's Info.plist
+
+### Editor
+
+#### Play Mode Input Behavior
+
+![Play Mode Input Behavior](Images/PlayModeInputBehavior.png)
+
+Determines how input is handled in the Editor when in play mode. Unlike in players, in the Editor Unity (and thus its input backends) will keep running for as long as the Editor is active regardless of whether a Game View is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
+
+|Setting|Description|
+|-------|-----------|
+|[`Pointers And Keyboards Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_PointersAndKeyboardsRespectGameViewFocus)|Only [Pointer](Pointers.md) and [Keyboard](Keyboard.md) Devices require the Game View to be focused. Other Devices will route their input into the application regardless of Game View focus.<br><br>This setting essentially routes any input into the game that is, by default, not used to operate the Editor UI. So, Devices such as [gamepads](Gamepad.md) will go to the application at all times when in play mode whereas keyboard input, for example, will require explicitly giving focus to a Game View window.<br><br>This setting is the default.|
+|[`All Devices Respect Game View Focus`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDevicesRespectGameViewFocus)|Focus on a Game View is required for all Devices. When no Game View window is focused, all input goes to the editor and not to the application. This allows other EditorWindows to receive these inputs (from gamepads, for example).|
+|[`All Device Input Always Goes To Game View`](../api/UnityEngine.InputSystem.InputSettings.EditorInputBehaviorInPlayMode.html#UnityEngine_InputSystem_InputSettings_EditorInputBehaviorInPlayMode_AllDeviceInputAlwaysGoesToGameView)|All editor input is disabled and input is considered to be exclusive to Game Views. Also, [`Background Behavior`](#background-behavior) is to be taken literally and executed like in players. Meaning, if in a certain situation, a Device is disabled in the player, it will get disabled in the editor as well.<br><br>This setting most closely aligns player behavior with editor behavior. Be aware, however, that no EditorWindows will be able to see input from Devices (this does not effect IMGUI and UITK input in the Editor in general as they do not consume input from the Input System).|

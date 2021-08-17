@@ -22,6 +22,8 @@ The following is a list of known limitations that the Input System currently has
 
 ## Device support
 
+* Currently, devices whose input sources depend on application focus (generally, keyboards and pointers but can be any device depending on platform) will not automatically sync their current state when the app loses and subsequently regains focus. This means that, for example, if the W key is held when application comes back into the foreground, the key needs to be depressed and pressed again for the input to come through.
+  * This is being worked on.
 * (Desktop) We do not yet support distinguishing input from multiple pointers (mouse, pen, touch) or keyboards. There will be a single Mouse, Pen, Touch, and Keyboard device.
 * (Windows) Pen input will not work with Wacom devices if "Windows Ink" support is turned off.
 * (Windows) HID input is not currently supported in 32-bit players. This means that devices such as the PS4 controller will not work in 32-bit standalone players. Use the 64-bit standalone player instead.
