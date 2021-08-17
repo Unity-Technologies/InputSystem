@@ -4,6 +4,6 @@ namespace UnityEngine.InputSystem
 {
     internal interface IEventMerger
     {
-        bool MergeForward(InputEventPtr currentEvent, InputEventPtr nextEvent);
+        bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr);
     }
 }

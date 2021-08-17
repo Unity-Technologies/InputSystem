@@ -337,6 +337,8 @@ namespace UnityEngine.InputSystem.Editor
                 flags.Add("UpdateBeforeRender");
             if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
                 flags.Add("HasStateCallbacks");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasEventMerger) == InputDevice.DeviceFlags.HasEventMerger)
+                flags.Add("HasEventMerger");
             if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInFrontend) == InputDevice.DeviceFlags.DisabledInFrontend)
                 flags.Add("DisabledInFrontend");
             if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) == InputDevice.DeviceFlags.DisabledInRuntime)

@@ -1141,6 +1141,10 @@ namespace UnityEngine.InputSystem
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
 
+            // If the device has event merger, make a note of it.
+            if (device is IEventMerger)
+                device.hasEventMerger = true;
+
             // If the device wants before-render updates, enable them if they
             // aren't already.
             if (device.updateBeforeRender)
@@ -2516,7 +2520,7 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < m_DevicesCount; ++i)
                 {
                     var device = m_Devices[i];
-                    if ((device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == 0)
+                    if (!device.hasStateCallbacks)
                         continue;
 
                     // NOTE: We do *not* perform a buffer flip here as we do not want to change what is the
@@ -3085,7 +3089,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Check if the device wants to merge successive events.
-                if (!settings.disableRedundantEventsMerging && device is IEventMerger merger)
+                if (!skipEvent && !settings.disableRedundantEventsMerging && device.hasEventMerger)
                 {
                     // NOTE: This relies on events in the buffer being consecutive for the same device. This is not
                     //       necessarily the case for events coming in from the background event queue where parallel
@@ -3093,7 +3097,7 @@ namespace UnityEngine.InputSystem
                     //       new buffering scheme for input events working in the native runtime.
 
                     var nextEvent = m_InputEventStream.Peek();
-                    if (nextEvent != null && merger.MergeForward(currentEventReadPtr, nextEvent))
+                    if (nextEvent != null && ((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                     {
                         // Event was merged into next event, skipping.
                         m_InputEventStream.Advance(leaveEventInBuffer: false);
@@ -3146,8 +3150,7 @@ namespace UnityEngine.InputSystem
                         //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
                         //       that are generated in the backend and would require considerable work to ensure monotonically
                         //       increasing timestamps across all such streams.
-                        var deviceIsStateCallbackReceiver = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
-                            InputDevice.DeviceFlags.HasStateCallbacks;
+                        var deviceIsStateCallbackReceiver = device.hasStateCallbacks;
                         if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
                             !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
                         {
