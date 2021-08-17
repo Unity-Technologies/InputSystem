@@ -47,7 +47,7 @@ To get input directly through an Input Action, follow these steps:
 2. Create Actions.
 3. Script Action responses.
 
-### Step 1: Add a [`PlayerInput`](Components.md) Component
+### Step 1: Add a `PlayerInput` Component
 
 Getting input directly from an Input Device is quick and convenient, but requires a separate path for each type of Device. That also makes it harder to later change which Device Control triggers a specific event in the game.
 
