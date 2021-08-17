@@ -489,7 +489,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
-    public class Touchscreen : Pointer, IInputStateCallbackReceiver
+    public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger
     {
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
@@ -950,6 +950,28 @@ namespace UnityEngine.InputSystem
                 return false;
 
             offset = touchControl.stateBlock.byteOffset - m_StateBlock.byteOffset;
+            return true;
+        }
+
+        public unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+                return false;
+
+            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+
+            if (currentEvent->stateFormat != TouchState.Format || nextEvent->stateFormat != TouchState.Format)
+                return false;
+
+            var currentState = (TouchState*)currentEvent->state;
+            var nextState = (TouchState*)nextEvent->state;
+
+            if (currentState->touchId != nextState->touchId || currentState->phaseId != nextState->phaseId || currentState->flags != nextState->flags)
+                return false;
+
+            nextState->delta += currentState->delta;
+
             return true;
         }
 
