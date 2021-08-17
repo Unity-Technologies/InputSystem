@@ -849,7 +849,11 @@ namespace UnityEngine.InputSystem
         //       an action happens to be enabled.
         private void OnBeforeInitialUpdate()
         {
-            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender
+                #if UNITY_EDITOR
+                || InputState.currentUpdateType == InputUpdateType.Editor
+                #endif
+            )
                 return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.

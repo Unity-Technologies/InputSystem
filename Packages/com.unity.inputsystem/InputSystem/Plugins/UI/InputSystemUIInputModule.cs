@@ -669,8 +669,6 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField]
         private Transform m_XRTrackingOrigin;
 
-        private bool m_IgnoreFocus;
-
         /// <summary>
         /// Delay in seconds between an initial move action and a repeated move action while <see cref="move"/> is actuated.
         /// </summary>
