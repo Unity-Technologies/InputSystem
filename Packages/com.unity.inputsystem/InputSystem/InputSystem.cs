@@ -1,8 +1,10 @@
 // Grouping up the XR defines since it's a pretty heavy sequence
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
@@ -11,6 +13,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -67,7 +70,7 @@ namespace UnityEngine.InputSystem
     /// be called on the main thread. However, select APIs like <see cref="QueueEvent"/> can be
     /// called from threads. Where this is the case, it is stated in the documentation.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
+    [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
@@ -2234,9 +2237,9 @@ namespace UnityEngine.InputSystem
         /// or <see cref="Update"/> for details about when and how this happens),
         /// it flushes all events from the internal event buffer.
         ///
-        /// As the input system reads events from the buffer one by one, it will trigger this
+        /// As the Input System reads events from the buffer one by one, it will trigger this
         /// callback for each event which originates from a recognized device, before then proceeding
-        /// to process the event. However, if any of the callbacks sets <see cref="InputEvent.handled"/>
+        /// to process the event. If any of the callbacks sets <see cref="InputEvent.handled"/>
         /// to true, the event will be skipped and ignored.
         ///
         /// Note that a device that is disabled (see <see cref="InputDevice.enabled"/>) may still get
@@ -2244,7 +2247,7 @@ namespace UnityEngine.InputSystem
         /// backends when a device is disabled but a backend may or may not respond to the command and
         /// thus may or may not keep sending events for the device.
         ///
-        /// Note that the input system does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
+        /// Note that the Input System does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
         /// Instead, they are consumed in the order they are produced. This means that they
         /// will also surface on this callback in that order.
         ///
@@ -2271,6 +2274,18 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
+        /// The property returns an <see cref="InputEventListener"/> struct that, beyond adding and removing
+        /// callbacks, can be used to flexibly listen in on the event stream.
+        ///
+        /// <example>
+        /// <code>
+        /// // Listen for mouse events.
+        /// InputSystem.onEvent
+        ///     .ForDevice(Mouse.current)
+        ///     .Call(e => Debug.Log("Mouse event"));
+        /// </code>
+        /// </example>
+        ///
         /// If you are looking for a way to capture events, <see cref="InputEventTrace"/> may be of
         /// interest and an alternative to directly hooking into this event.
         ///
@@ -2283,23 +2298,107 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputEvent"/>
         /// <seealso cref="Update"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public static event Action<InputEventPtr, InputDevice> onEvent
+        public static InputEventListener onEvent
         {
-            add
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                lock (s_Manager)
-                    s_Manager.onEvent += value;
-            }
-            remove
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                lock (s_Manager)
-                    s_Manager.onEvent -= value;
-            }
+            // The listener syntax is an artificial struct. Setting it has no effect.
+            // Its only purpose is to give us access to both the += and -= syntax of C# events
+            // and at the same time provide a springboard into IObservable.
+            get => default;
+            // ReSharper disable once ValueParameterNotUsed
+            set {}
         }
+
+        /// <summary>
+        /// Listen through <see cref="onEvent"/> for a button to be pressed.
+        /// </summary>
+        /// <remarks>
+        /// The listener will get triggered whenever a <see cref="ButtonControl"/> on any device in the list of <see cref="devices"/>
+        /// goes from not being pressed to being pressed.
+        ///
+        /// <example>
+        /// <code>
+        /// // Response to the first button press. Calls our delegate
+        /// // and then immediately stops listening.
+        /// InputSystem.onAnyButtonPress
+        ///     .CallOnce(ctrl => Debug.Log($"Button {ctrl} was pressed"));
+        /// </code>
+        /// </example>
+        ///
+        /// Note that the listener will get triggered from the first button that was found in a pressed state in a
+        /// given <see cref="InputEvent"/>. If multiple buttons are pressed in an event, the listener will not
+        /// get triggered multiple times. To get all button presses in an event, use <see cref="InputControlExtensions.GetAllButtonPresses"/>
+        /// and instead listen directly through <see cref="onEvent"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.onEvent
+        ///     .Where(e => e.HasButtonPress())
+        ///     .CallOnce(eventPtr =>
+        ///     {
+        ///         foreach (var button in l.eventPtr.GetAllButtonPresses())
+        ///             Debug.Log($"Button {button} was pressed");
+        ///     });
+        /// </code>
+        /// </example>
+        ///
+        /// There is a certain overhead to listening for button presses so it is best to have listeners
+        /// installed only while the information is actually needed.
+        ///
+        /// <example>
+        /// <code>
+        /// // Script that will spawn a new player when a button on a device is pressed.
+        /// public class JoinPlayerOnPress : MonoBehaviour
+        /// {
+        ///     // We instantiate this GameObject to create a new player object.
+        ///     // Expected to have a PlayerInput component in its hierarchy.
+        ///     public GameObject playerPrefab;
+        ///
+        ///     // We want to remove the event listener we install through InputSystem.onAnyButtonPress
+        ///     // after we're done so remember it here.
+        ///     private IDisposable m_EventListener;
+        ///
+        ///     // When enabled, we install our button press listener.
+        ///     void OnEnable()
+        ///     {
+        ///         // Start listening.
+        ///         m_EventListener =
+        ///             InputSystem.onAnyButtonPress
+        ///                 .Call(OnButtonPressed)
+        ///     }
+        ///
+        ///     // When disabled, we remove our button press listener.
+        ///     void OnDisable()
+        ///     {
+        ///         m_EventListener.Dispose();
+        ///     }
+        ///
+        ///     void OnButtonPressed(InputControl button)
+        ///     {
+        ///         var device = button.device;
+        ///
+        ///         // Ignore presses on devices that are already used by a player.
+        ///         if (PlayerInput.FindFirstPairedToDevice(device) != null)
+        ///             return;
+        ///
+        ///         // Create a new player.
+        ///         var player = PlayerInput.Instantiate(playerPrefab, pairWithDevice: device);
+        ///
+        ///         // If the player did not end up with a valid input setup,
+        ///         // unjoin the player.
+        ///         if (player.hasMissingRequiredDevices)
+        ///             Destroy(player);
+        ///
+        ///         // If we only want to join a single player, could uninstall our listener here
+        ///         // or use CallOnce() instead of Call() when we set it up.
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        /// <seealso cref="onEvent"/>
+        public static IObservable<InputControl> onAnyButtonPress =>
+            onEvent.Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
 
         /// <summary>
         /// Add an event to the internal event queue.
@@ -3078,7 +3177,7 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
+            Profiler.BeginSample("InputSystem.InitializeInEditor");
             Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -3158,7 +3257,7 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
 
-            Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3361,7 +3460,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiling.Profiler.BeginSample("InputSystem.Reset");
+            Profiler.BeginSample("InputSystem.Reset");
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -3400,9 +3499,10 @@ namespace UnityEngine.InputSystem
 
             Mouse.s_PlatformMouseDevice = null;
 
+            InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
-            Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
 
         /// <summary>

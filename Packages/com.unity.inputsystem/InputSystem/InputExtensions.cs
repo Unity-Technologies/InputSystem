@@ -18,11 +18,25 @@ namespace UnityEngine.InputSystem
             return phase == InputActionPhase.Started || phase == InputActionPhase.Performed;
         }
 
+        /// <summary>
+        /// Return true if the given phase is <see cref="TouchPhase.Canceled"/> or <see cref="TouchPhase.Ended"/>, i.e.
+        /// if a touch with that phase would no longer be ongoing.
+        /// </summary>
+        /// <param name="phase">A touch phase.</param>
+        /// <returns>True if the phase indicates a touch that has ended.</returns>
+        /// <seealso cref="Controls.TouchControl.phase"/>
         public static bool IsEndedOrCanceled(this TouchPhase phase)
         {
             return phase == TouchPhase.Canceled || phase == TouchPhase.Ended;
         }
 
+        /// <summary>
+        /// Return true if the given phase is <see cref="TouchPhase.Began"/>, <see cref="UnityEngine.TouchPhase.Moved"/>, or
+        /// <see cref="TouchPhase.Stationary"/>, i.e. if a touch with that phase would indicate an ongoing touch.
+        /// </summary>
+        /// <param name="phase">A touch phase.</param>
+        /// <returns>True if the phase indicates a touch that is ongoing.</returns>
+        /// <seealso cref="Controls.TouchControl.phase"/>
         public static bool IsActive(this TouchPhase phase)
         {
             switch (phase)
