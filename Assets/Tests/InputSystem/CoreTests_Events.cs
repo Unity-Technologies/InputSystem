@@ -41,7 +41,10 @@ partial class CoreTests
 
         InputSystem.onEvent
             .Select(e => e.GetFirstButtonPressOrNull())
-            .Call(c => firstButtonPress.Add(c));
+            .Call(c =>
+            {
+                if (c != null) firstButtonPress.Add(c);
+            });
 
         InputSystem.onEvent
             .SelectMany(e => e.GetAllButtonPresses())
@@ -85,26 +88,27 @@ partial class CoreTests
 
         Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
         Assert.That(callMouseEventCount, Is.Zero);
-        Assert.That(firstButtonPress, Is.Empty);
-        Assert.That(allButtonPresses, Is.Empty);
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
 
         Press(keyboard.spaceKey, queueEventOnly: true);
         Press(mouse.leftButton);
 
         Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
         Assert.That(callMouseEventCount, Is.EqualTo(1));
-        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { keyboard.spaceKey, mouse.leftButton }));
-        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { keyboard.spaceKey, mouse.leftButton }));
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth, keyboard.spaceKey, mouse.leftButton }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth, keyboard.spaceKey, mouse.leftButton }));
 
         firstButtonPress.Clear();
         allButtonPresses.Clear();
 
+        Release(gamepad.buttonSouth);
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
         InputSystem.Update();
 
         Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
         Assert.That(callMouseEventCount, Is.EqualTo(1));
-        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.aButton })); // Comes first in layout.
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.bButton })); // Comes first in layout.
         Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.aButton, gamepad.bButton }));
     }
 
