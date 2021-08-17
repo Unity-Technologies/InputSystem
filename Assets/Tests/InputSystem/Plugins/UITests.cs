@@ -108,7 +108,6 @@ internal class UITests : CoreTestsFixture
         var systemObject = new GameObject(namePrefix + "System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
         var uiModule = systemObject.AddComponent<InputSystemUIInputModule>();
-        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
 
