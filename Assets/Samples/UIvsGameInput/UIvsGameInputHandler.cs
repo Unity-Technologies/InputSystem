@@ -361,7 +361,7 @@ public class UIvsGameInputHandler : MonoBehaviour
     public void OnFire(InputAction.CallbackContext context)
     {
         // For this action, let's try something different. Let's say we want to trigger a response
-        // right away every time the "fire" action triggers. Theoretically, this would allows us
+        // right away every time the "fire" action triggers. Theoretically, this would allow us
         // to correctly respond even if there is multiple activations in a single frame. In practice,
         // this will realistically only happen with low framerates (and even then it can be questionable
         // whether we want to respond this way).
