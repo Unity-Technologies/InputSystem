@@ -511,7 +511,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("Temporarily disabled to bisect CI timeout problems")] // TODO Reenable
     public void Actions_ButtonAndPassThroughActions_CanTurnOnInitialStateCheck()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

@@ -627,7 +627,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionType.Value"/>
         public bool wantsInitialStateCheck
         {
-            get => type == InputActionType.Value /*|| (m_Flags & ActionFlags.WantsInitialStateCheck) != 0*/; // TODO Temporarily disabled, restore
+            get => type == InputActionType.Value || (m_Flags & ActionFlags.WantsInitialStateCheck) != 0;
             set
             {
                 if (value)
