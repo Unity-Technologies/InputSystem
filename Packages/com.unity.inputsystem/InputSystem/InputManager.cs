@@ -3097,7 +3097,8 @@ namespace UnityEngine.InputSystem
                     //       new buffering scheme for input events working in the native runtime.
 
                     var nextEvent = m_InputEventStream.Peek();
-                    if (nextEvent != null && ((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
+                    if (nextEvent != null && currentEventReadPtr->deviceId == nextEvent->deviceId &&
+                        ((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                     {
                         // Event was merged into next event, skipping.
                         m_InputEventStream.Advance(leaveEventInBuffer: false);

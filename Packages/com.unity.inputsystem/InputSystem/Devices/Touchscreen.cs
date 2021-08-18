@@ -953,7 +953,7 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-        public unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
         {
             if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
                 return false;
@@ -973,6 +973,11 @@ namespace UnityEngine.InputSystem
             nextState->delta += currentState->delta;
 
             return true;
+        }
+
+        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            return MergeForward(currentEventPtr, nextEventPtr);
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases
