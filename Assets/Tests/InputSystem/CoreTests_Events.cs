@@ -26,6 +26,177 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 #pragma warning disable CS0649
 partial class CoreTests
 {
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenForEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var callMouseEventCount = 0;
+        var callOnceOnButtonPressCount = 0;
+        var firstButtonPress = new List<InputControl>();
+        var allButtonPresses = new List<InputControl>();
+
+        InputSystem.onEvent
+            .Select(e => e.GetFirstButtonPressOrNull())
+            .Call(c =>
+            {
+                if (c != null) firstButtonPress.Add(c);
+            });
+
+        InputSystem.onEvent
+            .SelectMany(e => e.GetAllButtonPresses())
+            .Call(c => allButtonPresses.Add(c));
+
+        InputSystem.onEvent
+            .Where(e => e.HasButtonPress())
+            .CallOnce(e =>
+            {
+                Assert.That(e, Is.Not.EqualTo(default(InputEventPtr)));
+                ++callOnceOnButtonPressCount;
+            });
+
+        InputSystem.onEvent
+            .ForDevice(mouse)
+            .Call(e => ++ callMouseEventCount);
+
+        Assert.That(callOnceOnButtonPressCount, Is.Zero);
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.Empty);
+        Assert.That(allButtonPresses, Is.Empty);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        firstButtonPress.Clear();
+        allButtonPresses.Clear();
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.Empty);
+        Assert.That(allButtonPresses, Is.Empty);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        Press(keyboard.spaceKey, queueEventOnly: true);
+        Press(mouse.leftButton);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.EqualTo(1));
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth, keyboard.spaceKey, mouse.leftButton }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth, keyboard.spaceKey, mouse.leftButton }));
+
+        firstButtonPress.Clear();
+        allButtonPresses.Clear();
+
+        Release(gamepad.buttonSouth);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
+        InputSystem.Update();
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.EqualTo(1));
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.bButton })); // Comes first in layout.
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.aButton, gamepad.bButton }));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenForButtonPresses()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .CallOnce(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(gamepad.buttonSouth));
+                ++callCount;
+            });
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        // Try trigger.
+        callCount = 0;
+        InputSystem.onAnyButtonPress
+            .CallOnce(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(gamepad.leftTrigger));
+                ++callCount;
+            });
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.4f });
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.6f });
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        // Try stick left "button".
+        Observable.CallOnce<InputControl>(InputSystem.onAnyButtonPress, _ =>
+        {
+            Assert.Fail("Must not be called for leftStick movement");
+        });
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(-1, 0) });
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanGetAllButtonPressesInEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var controls = new List<InputControl>();
+        InputSystem.onEvent += (eventPtr, device) =>
+        {
+            controls = eventPtr.GetAllButtonPresses().ToList();
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
+        InputSystem.Update();
+
+        Assert.That(controls, Is.EquivalentTo(new[] { gamepad.aButton, gamepad.bButton }));
+    }
+
     // This is one of the most central tests. If this one breaks, it most often
     // hints at the state layouting or state updating machinery being borked.
     [Test]

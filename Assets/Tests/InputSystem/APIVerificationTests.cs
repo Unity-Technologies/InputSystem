@@ -790,6 +790,10 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public const UnityEngine.InputSystem.InputDeviceChange Destroyed = 8;
     ")]
+    // InputSystem.onEvent has become a property with the Action replaced by the InputEventListener type.
+    [Property("Exclusions", @"1.0.0
+        public static event System.Action<UnityEngine.InputSystem.LowLevel.InputEventPtr, UnityEngine.InputSystem.InputDevice> onEvent;
+    ")]
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(UnityEngine.Rect rect);")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {

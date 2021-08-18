@@ -1982,7 +1982,7 @@ namespace UnityEngine.InputSystem
         internal int m_DisconnectedDevicesCount;
         internal InputDevice[] m_DisconnectedDevices;
 
-        private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
+        internal InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputUpdateType m_CurrentUpdate;
         internal InputStateBuffers m_StateBuffers;
 

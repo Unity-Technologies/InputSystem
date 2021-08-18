@@ -2952,6 +2952,56 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+
+        pointAction.wantsInitialStateCheck = true;
+        clickAction.wantsInitialStateCheck = true;
+
+        actions.Enable();
+
+        var scene = CreateTestUI();
+
+        scene.uiModule.actionsAsset = actions;
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        yield return null;
+
+        BeginTouch(1, scene.From640x480ToScreen(100, 100), queueEventOnly: true);
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        actions.Disable();
+        yield return null;
+
+        // UI module keeps pointer over GO in frame of release.
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
+
+        actions.Enable();
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        pointAction.ApplyBindingOverride("<Touchscreen>/primaryTouch/position");
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+    }
+
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
     ////        IMO is whether navigation should even be affected that way by not having a current selection. Seems to me that the
     ////        the system should remember the last selected object and start up navigation from there when nothing is selected.

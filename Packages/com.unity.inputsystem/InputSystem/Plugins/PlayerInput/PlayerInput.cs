@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.UI;
 #endif
 
+////TODO: add support for keeping a player's InputUser alive and reconnecting back to it
+
 ////TODO: when joining is *off*, allow auto-switching even in multiplayer
 
 ////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same

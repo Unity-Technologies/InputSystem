@@ -606,9 +606,36 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether the action wants a state check on its bound controls as soon as it is enabled.
+        /// Whether the action wants a state check on its bound controls as soon as it is enabled. This is always
+        /// true for <see cref="InputActionType.Value"/> actions but can optionally be enabled for <see cref="InputActionType.Button"/>
+        /// or <see cref="InputActionType.PassThrough"/> actions.
         /// </summary>
-        internal bool wantsInitialStateCheck => type == InputActionType.Value;
+        /// <remarks>
+        /// Usually, when an action is <see cref="enabled"/> (e.g. via <see cref="Enable"/>), it will start listening for input
+        /// and then trigger once the first input arrives. However, <see cref="controls"/> bound to an action may already be
+        /// actuated when an action is enabled. For example, if a "jump" action is bound to <see cref="Keyboard.spaceKey"/>,
+        /// the space bar may already be pressed when the jump action is enabled.
+        ///
+        /// <see cref="InputActionType.Value"/> actions handle this differently by immediately performing an "initial state check"
+        /// in the next input update (see <see cref="InputSystem.Update"/>) after being enabled. If any of the bound controls
+        /// is already actuated, the action will trigger right away -- even with no change in state on the controls.
+        ///
+        /// This same behavior can be enabled explicitly for <see cref="InputActionType.Button"/> and <see cref="InputActionType.PassThrough"/>
+        /// actions using this property.
+        /// </remarks>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="InputActionType.Value"/>
+        public bool wantsInitialStateCheck
+        {
+            get => type == InputActionType.Value || (m_Flags & ActionFlags.WantsInitialStateCheck) != 0;
+            set
+            {
+                if (value)
+                    m_Flags |= ActionFlags.WantsInitialStateCheck;
+                else
+                    m_Flags &= ~ActionFlags.WantsInitialStateCheck;
+            }
+        }
 
         /// <summary>
         /// Construct an unnamed, free-standing action that is not part of any map or asset
@@ -1383,6 +1410,7 @@ namespace UnityEngine.InputSystem
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
+        [SerializeField] internal ActionFlags m_Flags;
 
         [NonSerialized] internal InputBinding? m_BindingMask;
         [NonSerialized] internal int m_BindingsStartIndex;
@@ -1422,6 +1450,12 @@ namespace UnityEngine.InputSystem
         /// actions without action maps.
         /// </remarks>
         internal bool isSingletonAction => m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this);
+
+        [Flags]
+        internal enum ActionFlags
+        {
+            WantsInitialStateCheck = 1 << 0,
+        }
 
         private InputActionState.TriggerState currentState
         {
