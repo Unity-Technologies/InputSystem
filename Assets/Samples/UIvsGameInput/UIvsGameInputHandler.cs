@@ -142,11 +142,10 @@ public class UIvsGameInputHandler : MonoBehaviour
 
                 // With gamepad/joystick, we can freely rotate the camera at any time.
                 if (m_ControlStyle == ControlStyle.GamepadJoystick)
-                {
                     ProcessCameraLook();
-                    if (m_FireActionTriggered)
-                        Fire();
-                }
+
+                if (m_FireActionTriggered)
+                    Fire();
 
                 break;
             }
