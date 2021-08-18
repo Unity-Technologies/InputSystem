@@ -6,6 +6,7 @@ The following is a list of known limitations that the Input System currently has
 
 * Actions cannot currently "pre-empt" each other's input. Meaning that it is currently not possible to "consume" input from one action to prevent it from triggering input on another action.
   - A common scenario is having, for example, a binding for "A" on one action and a binding for "SHIFT+A" on another action. Currently, pressing "SHIFT+A" will trigger both actions.
+  - This also includes Actions that used by the [UI](UISupport.md) for input. Clicking a button in the UI does not by itself prevent an in-game Action that responds to pointer clicks from being triggered. See ["UI and game input"](UISupport.md#ui-and-game-input) for details.
 
 ## Compatibility with other Unity features
 

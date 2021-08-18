@@ -813,7 +813,12 @@ namespace UnityEngine.InputSystem.Editor
             if (arrayIndex == -1 || arrayIndex > array.arraySize)
                 arrayIndex = array.arraySize;
 
-            var actionForNewBindings = location.item is ActionTreeItem actionItem ? actionItem.name : null;
+            // Determine action to assign to pasted bindings.
+            string actionForNewBindings = null;
+            if (location.item is ActionTreeItem actionItem)
+                actionForNewBindings = actionItem.name;
+            else if (location.item is BindingTreeItem bindingItem)
+                actionForNewBindings = bindingItem.action;
 
             // Paste new element.
             var newElement = PasteBlock(tag, data, array, arrayIndex, assignNewIDs, actionForNewBindings);
