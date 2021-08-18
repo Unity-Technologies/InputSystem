@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -364,7 +365,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     [Preserve]
-    public class Gamepad : InputDevice, IDualMotorRumble
+    public class Gamepad : InputDevice, IDualMotorRumble, IEventMerger
     {
         /// <summary>
         /// The left face button of the gamepad.
@@ -611,6 +612,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="current"/>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
+        internal byte[] m_PreserveControlsMask;
+
         /// <inheritdoc />
         protected override void FinishSetup()
         {
@@ -658,6 +661,7 @@ namespace UnityEngine.InputSystem
         protected override void OnAdded()
         {
             ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
+            SetupEventMerger();
         }
 
         /// <summary>
@@ -711,6 +715,68 @@ namespace UnityEngine.InputSystem
         public virtual void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             m_Rumble.SetMotorSpeeds(this, lowFrequency, highFrequency);
+        }
+
+        private void SetupEventMerger()
+        {
+            // Gamepad event merging is not aware of any potential custom code that processes events,
+            // like accumulating sensor values, pre-processing, other.
+            // So we do a best effort to detect if this is an inherited class with custom state callbacks,
+            // if so we we disable event merging for this device.
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            if (this is IInputStateCallbackReceiver)
+                return;
+
+            // We create a bit mask of all controls which state changes should be preserved, e.g. buttons, dpad, etc.
+            m_PreserveControlsMask = new byte[stateBlock.alignedSizeInBytes];
+
+            foreach (var control in children)
+            {
+                // Stick control has a specific semantics in Gamepad, as it's usually left/right stick.
+                // Also noisy controls are already mostly ignored in the rest of the system.
+                if (control is StickControl || control.noisy)
+                    continue;
+
+                for (var bit = control.stateBlock.bitOffset; bit < control.stateBlock.sizeInBits; ++bit)
+                    m_PreserveControlsMask[bit / 8] |= (byte)(1U << ((int)bit % 8));
+            }
+        }
+
+        internal unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+                return false;
+
+            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+
+            if (currentEvent->stateFormat != stateBlock.format || nextEvent->stateFormat != stateBlock.format)
+                return false;
+
+            if (m_PreserveControlsMask == null || m_PreserveControlsMask.Length == 0)
+                return false;
+
+            // The incoming event might be larger in case of HID reports
+            if (currentEvent->stateSizeInBytes < m_PreserveControlsMask.Length)
+                return false;
+
+            if (currentEvent->stateSizeInBytes != nextEvent->stateSizeInBytes)
+                return false;
+
+            var currentState = (byte*)currentEvent->state;
+            var nextState = (byte*)nextEvent->state;
+
+            var mergeEvents = true;
+            fixed(byte* mask = m_PreserveControlsMask)
+            for (var i = 0; i < m_PreserveControlsMask.Length; ++i)
+                mergeEvents &= ((currentState[i] ^ nextState[i]) & mask[i]) == 0;
+
+            return mergeEvents;
+        }
+
+        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            return MergeForward(currentEventPtr, nextEventPtr);
         }
 
         private DualMotorRumble m_Rumble;
