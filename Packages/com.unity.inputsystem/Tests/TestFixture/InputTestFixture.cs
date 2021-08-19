@@ -119,6 +119,9 @@ namespace UnityEngine.InputSystem
                 m_OnPlayModeStateChange = OnPlayModeStateChange;
                 EditorApplication.playModeStateChanged += m_OnPlayModeStateChange;
                 #endif
+
+                // Always want to merge by default
+                InputSystem.settings.disableRedundantEventsMerging = false;
             }
             catch (Exception exception)
             {
