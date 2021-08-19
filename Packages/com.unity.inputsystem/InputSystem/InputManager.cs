@@ -3101,13 +3101,13 @@ namespace UnityEngine.InputSystem
                     var nextEvent = m_InputEventStream.Peek();
                     if (nextEvent != null && currentEventReadPtr->deviceId == nextEvent->deviceId)
                     {
-                        if(((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
+                        if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                         {
                             // Event was merged into next event, skipping.
                             m_InputEventStream.Advance(leaveEventInBuffer: false);
                             continue;
                         }
-                        
+
                         // If we can't merge current event with next one for any reason, we assume the next event
                         // carries crucial entropy (button changed state, phase changed, counter changed, etc).
                         // Hence semantic meaning for current event is "can't merge current with next because next is different".
@@ -3115,31 +3115,31 @@ namespace UnityEngine.InputSystem
                         // from that point of few next event should not be merged with current nor with _next after next_ event.
                         //
                         // For example, given such stream of events:
-                        // Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       
-                        // Event no1   Event no2   Event no3   Event no4   Event no5   Event no6   Event no7   
-                        // Time 1      Time 2      Time 3      Time 4      Time 5      Time 6      Time 7      
-                        // Pos(10,20)  Pos(12,21)  Pos(13,23)  Pos(14,24)  Pos(16,25)  Pos(17,27)  Pos(18,28)  
+                        // Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       Mouse
+                        // Event no1   Event no2   Event no3   Event no4   Event no5   Event no6   Event no7
+                        // Time 1      Time 2      Time 3      Time 4      Time 5      Time 6      Time 7
+                        // Pos(10,20)  Pos(12,21)  Pos(13,23)  Pos(14,24)  Pos(16,25)  Pos(17,27)  Pos(18,28)
                         // Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)
-                        // BtnLeft(0)  BtnLeft(0)  BtnLeft(0)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)  
+                        // BtnLeft(0)  BtnLeft(0)  BtnLeft(0)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)
                         //
                         // if we then merge without skipping next event here:
-                        //                         Mouse                                           Mouse       
-                        //                         Event no3                                       Event no7   
-                        //                         Time 3                                          Time 7      
-                        //                         Pos(13,23)                                      Pos(18,28)  
+                        //                         Mouse                                           Mouse
+                        //                         Event no3                                       Event no7
+                        //                         Time 3                                          Time 7
+                        //                         Pos(13,23)                                      Pos(18,28)
                         //                         Delta(4,4)                                      Delta(5,5)
-                        //                         BtnLeft(0)                                      BtnLeft(1)  
+                        //                         BtnLeft(0)                                      BtnLeft(1)
                         //
                         // As you can see, the event no4 containing mouse button press was lost,
                         // and with it we lose the important information of timestamp of mouse button press.
                         //
                         // With skipping merging next event we will get:
-                        //                         Mouse       Mouse                               Mouse       
-                        //                         Time 3      Time 4                              Time 7      
-                        //                         Event no3   Event no4                           Event no7   
-                        //                         Pos(13,23)  Pos(14,24)                          Pos(18,28)  
-                        //                         Delta(3,3)  Delta(1,1)                          Delta(4,4)  
-                        //                         BtnLeft(0)  BtnLeft(1)                          BtnLeft(1)  
+                        //                         Mouse       Mouse                               Mouse
+                        //                         Time 3      Time 4                              Time 7
+                        //                         Event no3   Event no4                           Event no7
+                        //                         Pos(13,23)  Pos(14,24)                          Pos(18,28)
+                        //                         Delta(3,3)  Delta(1,1)                          Delta(4,4)
+                        //                         BtnLeft(0)  BtnLeft(1)                          BtnLeft(1)
                         //
                         // And no4 is preserved, with the exact timestamp of button press.
                         skipEventMergingFor = nextEvent;
