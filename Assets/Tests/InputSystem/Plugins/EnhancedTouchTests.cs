@@ -450,22 +450,27 @@ internal class EnhancedTouchTests : CoreTestsFixture
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.345f, 0.456f), queueEventOnly: true);
+        MoveTouch(1, new Vector2(0.456f, 0.567f), queueEventOnly: true);
 
         InputSystem.Update();
 
-        Assert.That(Touch.activeFingers[0].touchHistory.Count, Is.EqualTo(mergeRedundantEvents ? 2 : 3));
+        Assert.That(Touch.activeFingers[0].touchHistory.Count, Is.EqualTo(mergeRedundantEvents ? 3 : 4));
 
         if (mergeRedundantEvents)
         {
             // Event merging adds deltas inside
             Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
                 Is.EqualTo(new Vector2(0.222f, 0.222f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(Touch.activeFingers[0].touchHistory[1].delta,
+                Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
         }
         else
         {
             Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
                 Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
             Assert.That(Touch.activeFingers[0].touchHistory[1].delta,
+                Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(Touch.activeFingers[0].touchHistory[2].delta,
                 Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
         }
 
@@ -534,6 +539,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         runtime.currentTime = 0.987;
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.345f, 0.456f), queueEventOnly: true);
+        MoveTouch(1, new Vector2(0.456f, 0.567f), queueEventOnly: true);
         BeginTouch(3, new Vector2(0.666f, 0.666f), queueEventOnly: true);
         BeginTouch(4, new Vector2(0.777f, 0.777f), queueEventOnly: true);
         EndTouch(4, new Vector2(0.888f, 0.888f), queueEventOnly: true);
@@ -543,20 +549,20 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(3));
 
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
-        Assert.That(Touch.activeTouches[0].history, Has.Count.EqualTo(mergeRedundantEvents ? 1 : 2));
+        Assert.That(Touch.activeTouches[0].history, Has.Count.EqualTo(mergeRedundantEvents ? 2 : 3));
         Assert.That(Touch.activeTouches[0].history, Has.All.Property("finger").SameAs(Touch.activeTouches[0].finger));
-        var beganIndex = mergeRedundantEvents ? 0 : 1;
+        var beganIndex = mergeRedundantEvents ? 1 : 2;
         Assert.That(Touch.activeTouches[0].history[beganIndex].phase, Is.EqualTo(TouchPhase.Began));
         Assert.That(Touch.activeTouches[0].history[beganIndex].time, Is.EqualTo(0.876));
         Assert.That(Touch.activeTouches[0].history[beganIndex].startTime, Is.EqualTo(0.876));
         Assert.That(Touch.activeTouches[0].history[beganIndex].startScreenPosition,
             Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
-        if (!mergeRedundantEvents)
+        for (int index = 0; index < (mergeRedundantEvents ? 1 : 2); ++index)
         {
-            Assert.That(Touch.activeTouches[0].history[0].phase, Is.EqualTo(TouchPhase.Moved));
-            Assert.That(Touch.activeTouches[0].history[0].time, Is.EqualTo(0.987));
-            Assert.That(Touch.activeTouches[0].history[0].startTime, Is.EqualTo(0.876));
-            Assert.That(Touch.activeTouches[0].history[0].startScreenPosition,
+            Assert.That(Touch.activeTouches[0].history[index].phase, Is.EqualTo(TouchPhase.Moved));
+            Assert.That(Touch.activeTouches[0].history[index].time, Is.EqualTo(0.987));
+            Assert.That(Touch.activeTouches[0].history[index].startTime, Is.EqualTo(0.876));
+            Assert.That(Touch.activeTouches[0].history[index].startScreenPosition,
                 Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
         }
 
