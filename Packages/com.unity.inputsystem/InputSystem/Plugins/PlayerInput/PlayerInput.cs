@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.UI;
 #endif
 
+////TODO: add support for keeping a player's InputUser alive and reconnecting back to it
+
 ////TODO: when joining is *off*, allow auto-switching even in multiplayer
 
 ////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same
@@ -811,6 +813,24 @@ namespace UnityEngine.InputSystem
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
 
         /// <summary>
+        /// Return the first device of the given type from <see cref="devices"/> paired to the player.
+        /// If no device of this type is paired to the player, return <c>null</c>.
+        /// </summary>
+        /// <typeparam name="TDevice">Type of device to look for (such as <see cref="Mouse"/>). Can be a supertype
+        /// of the actual device type. For example, querying for <see cref="Pointer"/>, may return a <see cref="Mouse"/>.</typeparam>
+        /// <returns>The first device paired to the player that is of the given type or <c>null</c> if the player
+        /// does not have a matching device.</returns>
+        /// <seealso cref="devices"/>
+        public TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
+        {
+            foreach (var device in devices)
+                if (device is TDevice deviceOfType)
+                    return deviceOfType;
+            return null;
+        }
+
+        /// <summary>
         /// Enable input on the player.
         /// </summary>
         /// <remarks>
@@ -1592,6 +1612,8 @@ namespace UnityEngine.InputSystem
                     StartListeningForUnpairedDeviceActivity();
                 }
             }
+
+            HandleControlsChanged();
 
             // Trigger join event.
             PlayerInputManager.instance?.NotifyPlayerJoined(this);

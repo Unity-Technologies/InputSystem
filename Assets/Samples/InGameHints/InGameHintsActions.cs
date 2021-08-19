@@ -35,7 +35,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""id"": ""7e7492e7-1329-48bb-9fdc-279fd15473b4"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Look"",
@@ -43,7 +44,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""id"": ""981fecc2-2e7a-4d6a-b041-00b47626e0a1"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""PickUp"",
@@ -51,7 +53,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""id"": ""5a59bbc2-a3d4-4cbd-88bb-01120d97dc69"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""Drop"",
@@ -59,7 +62,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""id"": ""f37bbe7e-e241-443f-b868-c784e1219f25"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""Throw"",
@@ -67,7 +71,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""id"": ""e450d71c-7cc5-4879-afb5-f3ed682d9824"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [

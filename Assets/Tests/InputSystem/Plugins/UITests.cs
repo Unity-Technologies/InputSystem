@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using UnityEngine;
@@ -1990,8 +1991,7 @@ internal class UITests : CoreTestsFixture
         var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
         var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
 
-        pointAction.Enable();
-        clickAction.Enable();
+        actions.Enable();
 
         scene.uiModule.point = InputActionReference.Create(pointAction);
         scene.uiModule.leftClick = InputActionReference.Create(clickAction);
@@ -2011,6 +2011,32 @@ internal class UITests : CoreTestsFixture
         yield return null;
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CallingIsPointerOverGameObject_FromActionCallback_ResultsInWarning()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+
+        pointAction.performed += ctx => { EventSystem.current.IsPointerOverGameObject(); };
+
+        actions.Enable();
+
+        yield return null;
+
+        LogAssert.Expect(LogType.Warning, new Regex("Calling IsPointerOverGameObject\\(\\) from within event processing .* will not work as expected"));
+
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+
+        yield return null;
     }
 
 #if UNITY_IOS || UNITY_TVOS
@@ -2924,6 +2950,56 @@ internal class UITests : CoreTestsFixture
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+
+        pointAction.wantsInitialStateCheck = true;
+        clickAction.wantsInitialStateCheck = true;
+
+        actions.Enable();
+
+        var scene = CreateTestUI();
+
+        scene.uiModule.actionsAsset = actions;
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        yield return null;
+
+        BeginTouch(1, scene.From640x480ToScreen(100, 100), queueEventOnly: true);
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        actions.Disable();
+        yield return null;
+
+        // UI module keeps pointer over GO in frame of release.
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
+
+        actions.Enable();
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        pointAction.ApplyBindingOverride("<Touchscreen>/primaryTouch/position");
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
     }
 
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question

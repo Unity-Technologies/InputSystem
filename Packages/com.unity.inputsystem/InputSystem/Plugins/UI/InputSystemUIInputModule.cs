@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#inputsystemuiinputmodule-component")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#setting-up-ui-input")]
     public class InputSystemUIInputModule : BaseInputModule
     {
         /// <summary>
@@ -114,6 +114,14 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// This method can be invoked via <c>EventSystem.current.IsPointerOverGameObject</c>.
         ///
+        /// Be aware that this method relies on state set up during UI event processing that happens in <c>EventSystem.Update</c>,
+        /// that is, as part of <c>MonoBehaviour</c> updates. This step happens <em>after</em> input processing.
+        /// Thus, calling this method earlier than that in the frame will make it poll state from <em>last</em> frame.
+        ///
+        /// Calling this method from within an <see cref="InputAction"/> callback (such as <see cref="InputAction.performed"/>)
+        /// will result in a warning. See the "UI vs Game Input" sample shipped with the Input System package for
+        /// how to deal with this fact.
+        ///
         /// <example>
         /// <code>
         /// // In general, the pointer ID corresponds to the device ID:
@@ -138,6 +146,10 @@ namespace UnityEngine.InputSystem.UI
         /// <seealso cref="InputDevice.deviceId"/>
         public override bool IsPointerOverGameObject(int pointerOrTouchId)
         {
+            if (InputSystem.isProcessingEvents)
+                Debug.LogWarning(
+                    "Calling IsPointerOverGameObject() from within event processing (such as from InputAction callbacks) will not work as expected; it will query UI state from the last frame");
+
             var stateIndex = -1;
 
             if (pointerOrTouchId < 0)
@@ -668,8 +680,6 @@ namespace UnityEngine.InputSystem.UI
         [Tooltip("Transform representing the real world origin for tracking devices. When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.")]
         [SerializeField]
         private Transform m_XRTrackingOrigin;
-
-        private bool m_IgnoreFocus;
 
         /// <summary>
         /// Delay in seconds between an initial move action and a repeated move action while <see cref="move"/> is actuated.
@@ -1389,7 +1399,7 @@ namespace UnityEngine.InputSystem.UI
             inputActionReference.action.Enable();
         }
 
-        private void DisableInputAction(InputActionReference inputActionReference)
+        private static void DisableInputAction(InputActionReference inputActionReference)
         {
             if (!s_InputActionReferenceCounts.TryGetValue(inputActionReference?.m_ActionId ?? string.Empty,
                 out var referenceState))
@@ -1446,7 +1456,7 @@ namespace UnityEngine.InputSystem.UI
         //
         // Quite a lot going on in this method but we're dealing with three different UI interaction paradigms
         // here which we all support from a single input path and allow seamless switching between.
-        private int GetPointerStateIndexFor(InputControl control)
+        private int GetPointerStateIndexFor(InputControl control, bool createIfNotExists = true)
         {
             Debug.Assert(control != null, "Control must not be null");
 
@@ -1513,6 +1523,9 @@ namespace UnityEngine.InputSystem.UI
                     }
                 }
             }
+
+            if (!createIfNotExists)
+                return -1;
 
             // Determine pointer type.
             var pointerType = UIPointerType.None;
@@ -1685,8 +1698,6 @@ namespace UnityEngine.InputSystem.UI
 
         private void RemovePointerAtIndex(int index)
         {
-            if (m_PointerStates[index].eventData.pointerEnter != null)
-                Debug.Log("Foo");
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
@@ -1771,16 +1782,22 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
+        // The pointer actions we unfortunately cannot poll as we may be sourcing input from multiple pointers.
+
         private void OnPointCallback(InputAction.CallbackContext context)
         {
             // When a pointer is removed, there's like a non-zero coordinate on the position control and thus
             // we will see cancellations on the "Point" action. Ignore these as they provide no useful values
             // and we want to avoid doing a read of touch IDs in GetPointerStateFor() on an already removed
             // touchscreen.
-            if (CheckForRemovedDevice(ref context))
+            if (CheckForRemovedDevice(ref context) || context.canceled)
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
         }
 
@@ -1792,7 +1809,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
             if (context.canceled)
@@ -1804,7 +1825,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
             if (context.canceled)
@@ -1816,7 +1841,11 @@ namespace UnityEngine.InputSystem.UI
             if (CheckForRemovedDevice(ref context))
                 return;
 
-            ref var state = ref GetPointerStateFor(ref context);
+            var index = GetPointerStateIndexFor(context.control, createIfNotExists: !context.canceled);
+            if (index == -1)
+                return;
+
+            ref var state = ref GetPointerStateForIndex(index);
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
             if (context.canceled)
@@ -1849,6 +1878,7 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnMoveCallback(InputAction.CallbackContext context)
         {
+            ////REVIEW: should we poll this? or set the action to not be pass-through? (ps4 controller is spamming this action)
             m_NavigationState.move = context.ReadValue<Vector2>();
         }
 

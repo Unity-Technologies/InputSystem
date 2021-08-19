@@ -91,6 +91,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
+        /// <seealso cref="InputSystem.onAnyButtonPress"/>
         public bool isPressed => IsValueConsideredPressed(ReadValue());
 
         public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());

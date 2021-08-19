@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// A command to tell the runtime to reset the device to it's default state.
     /// </summary>
     /// <remarks>
-    /// This triggers an event being sent from the device that represents an empty, or untouched device
+    /// This triggers an event being sent from the device that represents an empty, or untouched device.
     /// </remarks>
     /// <seealso cref="RequestSyncCommand"/>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]

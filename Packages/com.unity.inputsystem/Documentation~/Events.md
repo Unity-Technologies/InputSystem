@@ -5,7 +5,7 @@
     * [Device events](#device-events)
     * [Text events](#text-events)
 * [Working with events](#working-with-events)
-    * [Monitoring events](#monitoring-events)
+    * [Listening to events](#listening-to-events)
     * [Reading state events](#reading-state-events)
     * [Creating events](#creating-events)
     * [Capturing events](#capturing-events)
@@ -73,9 +73,40 @@ There are two types of text events:
 
 ## Working with events
 
-### Monitoring events
+### Listening to events
 
 If you want to do any monitoring or processing on incoming events yourself, subscribe to the [`InputSystem.onEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onEvent) callback.
+
+```CSharp
+InputSystem.onEvent +=
+   (eventPtr, device) =>
+   {
+       Debug.Log($"Received event for {device}");
+   };
+```
+
+An [`IObservable`](https://docs.microsoft.com/en-us/dotnet/api/system.iobservable-1) interface is provided to more conveniently process events.
+
+```CSharp
+// Wait for first button press on a gamepad.
+InputSystem.onEvent
+    .ForDevice<Gamepad>()
+    .Where(e => e.HasButtonPress())
+    .CallOnce(ctrl => Debug.Log($"Button {ctrl} pressed"));
+```
+
+To enumerate the controls that have value changes in an event, you can use [`InputControlExtensions.EnumerateChangedControls`](../api/UnityEngine.InputSystem.InputControlExtensions.html#UnityEngine_InputSystem_InputControlExtensions_EnumerateChangedControls_UnityEngine_InputSystem_LowLevel_InputEventPtr_UnityEngine_InputSystem_InputDevice_System_Single_).
+
+```CSharp
+InputSystem.onEvent
+    .Call(eventPtr =>
+    {
+        foreach (var control in eventPtr.EnumerateChangedControls())
+            Debug.Log($"Control {control} changed value to {control.ReadValueFromEventAsObject(eventPtr)}");
+    };
+```
+
+This is significantly more efficient than manually iterating over [`InputDevice.allControls`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_allControls) and reading out the value of each control from the event.
 
 ### Reading state events
 

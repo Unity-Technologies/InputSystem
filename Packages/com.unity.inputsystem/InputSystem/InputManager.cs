@@ -228,6 +228,8 @@ namespace UnityEngine.InputSystem
             remove => m_SettingsChangedListeners.RemoveCallback(value);
         }
 
+        public bool isProcessingEvents => m_InputEventStream.isOpen;
+
 #if UNITY_EDITOR
         private bool m_RunPlayerUpdatesInEditMode;
 
@@ -1984,7 +1986,7 @@ namespace UnityEngine.InputSystem
         internal int m_DisconnectedDevicesCount;
         internal InputDevice[] m_DisconnectedDevices;
 
-        private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
+        internal InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputUpdateType m_CurrentUpdate;
         internal InputStateBuffers m_StateBuffers;
 

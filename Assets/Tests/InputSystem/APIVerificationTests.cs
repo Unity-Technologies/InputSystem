@@ -790,6 +790,10 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public const UnityEngine.InputSystem.InputDeviceChange Destroyed = 8;
     ")]
+    // InputSystem.onEvent has become a property with the Action replaced by the InputEventListener type.
+    [Property("Exclusions", @"1.0.0
+        public static event System.Action<UnityEngine.InputSystem.LowLevel.InputEventPtr, UnityEngine.InputSystem.InputDevice> onEvent;
+    ")]
     // Mouse and Touchscreen implement internal IEventMerger interface
     [Property("Exclusions", @"1.0.0
         public class Mouse : UnityEngine.InputSystem.Pointer, UnityEngine.InputSystem.LowLevel.IInputStateCallbackReceiver

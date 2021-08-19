@@ -118,13 +118,13 @@ If the `PlayerInput` component has any Devices assigned, it matches these to the
 
 ### UI input
 
-The `PlayerInput` component can work together with an [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) to drive the [UI system](UISupport.md).
+The `PlayerInput` component can work together with an [`InputSystemUIInputModule`](UISupport.md#setting-up-ui-input) to drive the [UI system](UISupport.md).
 
 To set this up, assign a reference to a `InputSystemUIInputModule` component in the [`UI Input Module`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_uiInputModule) field of the `PlayerInput` component. The `PlayerInput` and `InputSystemUIInputModule` components should be configured to work with the same [`InputActionAsset`](Actions.md) for this to work.
 
 Once you've completed this setup, when the `PlayerInput` component configures the Actions for a specific player, it assigns the same Action configuration to the `InputSystemUIInputModule`. In other words, the same Action and Device configuration that controls the player now also controls the UI.
 
-If you use [`MultiplayerEventSystem`](UISupport.md#multiplayereventsystem-component) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, each controlled by a separate player.
+If you use [`MultiplayerEventSystem`](UISupport.md#multiplayer-uis) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, each controlled by a separate player.
 
 ## `PlayerInputManager` component
 
@@ -166,7 +166,7 @@ If you enable the [`Split-Screen`](../api/UnityEngine.InputSystem.PlayerInputMan
 |[`Set Fixed Number`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_fixedNumberOfSplitScreens)|If this value is greater than zero, the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) always splits the screen into a fixed number of rectangles, regardless of the actual number of players.|
 |[`Screen Rectangle`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_splitScreenArea)|The normalized screen rectangle available for allocating player split-screens into.|
 
-By default, any player in the game can interact with any UI elements. However, in split-screen setups, your game can have screen-space UIs that are restricted to just one specific camera. See the [UI Input](#ui-input) section above on how to set this up using the `PlayerInput`, [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) and [`MultiplayerEventSystem`](UISupport.md#multiplayereventsystem-component) components.
+By default, any player in the game can interact with any UI elements. However, in split-screen setups, your game can have screen-space UIs that are restricted to just one specific camera. See the [UI Input](#ui-input) section above on how to set this up using the `PlayerInput`, [`InputSystemUIInputModule`](UISupport.md#setting-up-ui-input) and [`MultiplayerEventSystem`](UISupport.md#multiplayer-uis) components.
 
 ### `PlayerInputManager` notifications
 

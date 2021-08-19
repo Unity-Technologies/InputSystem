@@ -1899,6 +1899,7 @@ partial class CoreTests
 
         Assert.That(receivedResetDeviceChange, Is.EqualTo(InputDeviceChange.SoftReset));
         Assert.That(receivedTouchReset, Is.False);
+        Assert.That(touch.position.ReadValue(), Is.EqualTo(new Vector2(234, 345)));
         Assert.That(touch.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
         Assert.That(touch.primaryTouch.position.ReadValue(), Is.EqualTo(new Vector2(234, 345)));
         Assert.That(touch.primaryTouch.press.ReadValue(), Is.Zero);
