@@ -2328,8 +2328,39 @@ partial class CoreTests
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(numMouseEventsQueued, numMouseEventsQueued * 2)));
         Assert.That(mouse.delta.ReadValue(), Is.EqualTo(new Vector2(numMouseEventsQueued, numMouseEventsQueued)));
         Assert.That(numMouseEventsReceived, Is.EqualTo(mergeRedundantEvents ? 1 : numMouseEventsQueued));
+    }
 
-        InputSystem.settings.disableRedundantEventsMerging = false;
+    [Test]
+    [Category("Events")]
+    public void Events_QueuedToDifferentDevices_AreNotMergedTogether()
+    {
+        var mouse1 = InputSystem.AddDevice<Mouse>();
+        var mouse2 = InputSystem.AddDevice<Mouse>();
+
+        var numMouse1EventsReceived = 0;
+        var numMouse2EventsReceived = 0;
+        InputSystem.onEvent +=
+            (eventPtr, device) =>
+        {
+            if (device == mouse1)
+                ++numMouse1EventsReceived;
+            if (device == mouse2)
+                ++numMouse2EventsReceived;
+        };
+
+        InputSystem.QueueStateEvent(mouse1, new MouseState { position = new Vector2(1, 2)});
+        InputSystem.QueueStateEvent(mouse1, new MouseState { position = new Vector2(2, 3)});
+        InputSystem.QueueStateEvent(mouse2, new MouseState { position = new Vector2(3, 4)});
+        InputSystem.QueueStateEvent(mouse2, new MouseState { position = new Vector2(4, 5)});
+        InputSystem.QueueStateEvent(mouse2, new MouseState { position = new Vector2(5, 6)});
+
+        InputSystem.Update();
+
+        Assert.That(mouse1.position.ReadValue(), Is.EqualTo(new Vector2(2, 3)));
+        Assert.That(mouse2.position.ReadValue(), Is.EqualTo(new Vector2(5, 6)));
+
+        Assert.That(numMouse1EventsReceived, Is.EqualTo(1));
+        Assert.That(numMouse2EventsReceived, Is.EqualTo(1));
     }
 
     [Test]
