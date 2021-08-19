@@ -168,7 +168,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
-    public class Mouse : Pointer, IInputStateCallbackReceiver, IEventMerger
+    public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
         /// The horizontal and vertical scroll wheels.
@@ -318,34 +318,6 @@ namespace UnityEngine.InputSystem
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
             OnStateEvent(eventPtr);
-        }
-
-        internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
-        {
-            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
-                return false;
-
-            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
-            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
-
-            if (currentEvent->stateFormat != MouseState.Format || nextEvent->stateFormat != MouseState.Format)
-                return false;
-
-            var currentState = (MouseState*)currentEvent->state;
-            var nextState = (MouseState*)nextEvent->state;
-
-            // if buttons or clickCount changed we need to process it, so don't merge events together
-            if (currentState->buttons != nextState->buttons || currentState->clickCount != nextState->clickCount)
-                return false;
-
-            nextState->delta += currentState->delta;
-            nextState->scroll += currentState->scroll;
-            return true;
-        }
-
-        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
-        {
-            return MergeForward(currentEventPtr, nextEventPtr);
         }
     }
 }

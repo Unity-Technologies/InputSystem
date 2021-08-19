@@ -467,7 +467,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         else
         {
             Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
-                Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
+                Is.EqualTo(new Vector2(0.222f, 0.222f)).Using(Vector2EqualityComparer.Instance));
             Assert.That(Touch.activeFingers[0].touchHistory[1].delta,
                 Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
             Assert.That(Touch.activeFingers[0].touchHistory[2].delta,

@@ -796,7 +796,6 @@ class APIVerificationTests
     ")]
     // Mouse and Touchscreen implement internal IEventMerger interface
     [Property("Exclusions", @"1.0.0
-        public class Mouse : UnityEngine.InputSystem.Pointer, UnityEngine.InputSystem.LowLevel.IInputStateCallbackReceiver
         public class Touchscreen : UnityEngine.InputSystem.Pointer, UnityEngine.InputSystem.LowLevel.IInputStateCallbackReceiver
     ")]
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(UnityEngine.Rect rect);")]

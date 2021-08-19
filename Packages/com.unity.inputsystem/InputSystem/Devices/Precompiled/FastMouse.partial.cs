@@ -2,7 +2,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem
 {
-    internal partial class FastMouse : IInputStateCallbackReceiver
+    internal partial class FastMouse : IInputStateCallbackReceiver, IEventMerger
     {
         protected new void OnNextUpdate()
         {
@@ -47,6 +47,34 @@ namespace UnityEngine.InputSystem
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
             OnStateEvent(eventPtr);
+        }
+
+        internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+                return false;
+
+            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+
+            if (currentEvent->stateFormat != MouseState.Format || nextEvent->stateFormat != MouseState.Format)
+                return false;
+
+            var currentState = (MouseState*)currentEvent->state;
+            var nextState = (MouseState*)nextEvent->state;
+
+            // if buttons or clickCount changed we need to process it, so don't merge events together
+            if (currentState->buttons != nextState->buttons || currentState->clickCount != nextState->clickCount)
+                return false;
+
+            nextState->delta += currentState->delta;
+            nextState->scroll += currentState->scroll;
+            return true;
+        }
+
+        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            return MergeForward(currentEventPtr, nextEventPtr);
         }
     }
 }

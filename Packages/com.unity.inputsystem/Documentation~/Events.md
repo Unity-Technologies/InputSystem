@@ -267,7 +267,7 @@ and it's important to keep the exact timestamp of such transition.
 Later we combine no5, no6, no7 together into no7 because it is the last event in the update.
 
 Currently this approach is implemented for:
-- `Mouse`, combines events unless `buttons` or `clickCount` differ in `MouseState`.
+- `FastMouse`, combines events unless `buttons` or `clickCount` differ in `MouseState`.
 - `Touchscreen`, combines events unless `touchId`, `phaseId` or `flags` differ in `TouchState`.
 
 You can disable merging of events by:
