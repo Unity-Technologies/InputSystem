@@ -177,6 +177,36 @@ internal partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1272563/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformInteractiveRebinding_OfPartOfComposite()
+    {
+        var action = new InputAction();
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        // The expected control type shouldn't get in the way. What matters is that the code
+        // identifies the expected type of the *part binding* as the one we need, not the
+        // type of the action in this case.
+        action.expectedControlType = "Vector2";
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        using (new InputActionRebindingExtensions.RebindingOperation()
+               .WithAction(action)
+               .WithTargetBinding(1)
+               .Start())
+        {
+            PressAndRelease(keyboard.spaceKey);
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.spaceKey, keyboard.sKey, keyboard.aKey, keyboard.dKey }));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
@@ -1301,5 +1331,134 @@ internal partial class CoreTests
         Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(joystick.trigger));
         Assert.That(secondActionInAsset.bindings[0].overrideInteractions, Is.EqualTo("tap"));
         Assert.That(secondActionInAsset.bindings[0].overrideProcessors, Is.EqualTo("invert"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnNegativeOne_IfEmpty()
+    {
+        var actionMap = new InputActionMap();
+        Assert.AreEqual(-1, actionMap.FindBinding(new InputBinding(), out _)); // match anything
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnZero_IfUnconditionalMatchAndNotEmpty()
+    {
+        var actionMap = new InputActionMap();
+        var action = actionMap.AddAction("action1");
+        actionMap.AddBinding("<Keyboard>/a", action); // 0
+        actionMap.AddBinding("<Keyboard>/b", action); // 1
+
+        Assert.That(actionMap.FindBinding(new InputBinding(), out _), Is.EqualTo(0)); // match anything
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _), Is.EqualTo(1)); // not found
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnNegativeOne_IfConditionalAnotNotFound()
+    {
+        var actionMap = new InputActionMap();
+        var action = actionMap.AddAction("action1");
+        actionMap.AddBinding("<Keyboard>/a", action); // 0
+        actionMap.AddBinding("<Keyboard>/b", action); // 1
+
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _), Is.EqualTo(-1)); // not found
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBinding_ShouldReturnIndexOnAction_IfMatched()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
+
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/a"), out _), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/b"), out _), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/c"), out _), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/d"), out _), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/e"), out _), Is.EqualTo(2)); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBindingRelativeToMap_ShouldReturnNegativeOne_IfNotFound()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/q")), Is.EqualTo(-1)); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBindingRelativeToMap_ShouldReturnZero_IfUnconditional()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding()), Is.EqualTo(0)); // unconditional
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionMapFindBindingRelativeToMap_ShouldReturnIndexOfBinding_IfMatches()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        actionMap.AddBinding("<Keyboard>/a", firstActionInMap);  // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
+
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/a")), Is.EqualTo(0)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/b")), Is.EqualTo(1)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/c")), Is.EqualTo(2)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/d")), Is.EqualTo(3)); // exact match
+        Assert.That(actionMap.FindBindingRelativeToMap(new InputBinding("<Keyboard>/e")), Is.EqualTo(4)); // exact match
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InputActionSetupExtensionsChange_ShouldChangeBindingIfFound()
+    {
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        var binding1 = actionMap.AddBinding("<Keyboard>/a", firstActionInMap); // first, 0
+        actionMap.AddBinding("<Keyboard>/b", secondActionInMap); // second, 0
+        actionMap.AddBinding("<Keyboard>/c", firstActionInMap);  // first, 1
+        actionMap.AddBinding("<Keyboard>/d", secondActionInMap); // second, 1
+        actionMap.AddBinding("<Keyboard>/e", secondActionInMap); // second, 2
+
+        var accessor = secondActionInMap.ChangeBinding(binding1.binding.name);
+        Assert.That(accessor.valid, Is.True);
+        secondActionInMap.ChangeBinding(new InputBinding("<Keyboard>/e")).WithPath("<Keyboard>/f");
+        Assert.That(actionMap.FindBinding(new InputBinding("<Keyboard>/f"), out _), Is.EqualTo(2)); // exact match
     }
 }

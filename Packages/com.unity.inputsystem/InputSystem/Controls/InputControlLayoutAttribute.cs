@@ -55,6 +55,14 @@ namespace UnityEngine.InputSystem.Layouts
 
         public string variants { get; set; }
 
+        internal bool? canRunInBackgroundInternal;
+
+        public bool canRunInBackground
+        {
+            get => canRunInBackgroundInternal.Value;
+            set => canRunInBackgroundInternal = value;
+        }
+
         internal bool? updateBeforeRenderInternal;
 
         /// <summary>

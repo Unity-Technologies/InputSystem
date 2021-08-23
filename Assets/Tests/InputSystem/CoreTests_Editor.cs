@@ -340,23 +340,30 @@ partial class CoreTests
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
-    // Editor updates are confusing in that they denote just another point in the
-    // application loop where we push out events. They do not mean that the events
-    // we send necessarily go to the editor state buffers.
     [Test]
     [Category("Editor")]
-    public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
+    public void Editor_WhenPlaying_EditorUpdatesKeepSeparateStateFromPlayerUpdates()
     {
-        InputEditorUserSettings.lockInputToGameView = true;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
 
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Piping input into an editor update now should not result in it being consumed
+        // as the game is running and has focus. We should see the blank state the editor
+        // started with.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Editor);
 
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // So running a player update now should make the input come through in player state.
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
@@ -801,7 +808,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        Assert.That(tree.rootItem, Is.TypeOf<TreeViewItem>());
+        Assert.That(tree.rootItem, Is.TypeOf<InputActionTreeView.ActionMapListItem>());
         Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
         Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
         Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
@@ -2414,6 +2421,105 @@ partial class CoreTests
         throw new NotImplementedException();
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanForceKeyboardAndMouseInputToGameViewWithoutFocus()
+    {
+        runtime.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(keyboard.enabled, Is.True);
+        Assert.That(mouse.enabled, Is.True);
+
+        Press(keyboard.spaceKey, queueEventOnly: true);
+        Press(mouse.leftButton, queueEventOnly: true);
+
+        // First make sure the editor is *not* eating this input.
+        var eventCountBefore = InputSystem.metrics.totalEventCount;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputSystem.metrics.totalEventCount, Is.EqualTo(eventCountBefore));
+
+        Assert.That(keyboard.spaceKey.isPressed, Is.False);
+        Assert.That(mouse.leftButton.isPressed, Is.False);
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(keyboard.spaceKey.isPressed, Is.True);
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenNotInPlayMode_AllInputGoesToEditor()
+    {
+        // Give us a setting where in play mode, gamepad input would go to the game
+        // regardless of focus.
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        runtime.isInPlayMode = false;
+
+        Press(gamepad.buttonSouth);
+        Press(mouse.leftButton);
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+        Set(gamepad.leftTrigger, 0.5f, queueEventOnly: true);
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+
+        // Try running a dynamic update. Outside of play mode, this should do nothing.
+        var eventCountBefore = InputSystem.metrics.totalEventCount;
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(InputSystem.metrics.totalEventCount, Is.EqualTo(eventCountBefore));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Running the editor update now, we should see the event for the gamepad popping up.
+        InputSystem.Update();
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f));
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public unsafe void Editor_WhenEditorIsActivated_AllDevicesAreSynced()
+    {
+        runtime.isInPlayMode = false;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var receivedMouseSync = false;
+        runtime.SetDeviceCommandCallback(mouse, (id, commandPtr) =>
+        {
+            if (commandPtr->type == RequestSyncCommand.Type)
+                receivedMouseSync = true;
+            return InputDeviceCommand.GenericFailure;
+        });
+
+        runtime.isEditorActive = false;
+        InputSystem.Update();
+
+        Assert.That(receivedMouseSync, Is.False);
+
+        runtime.isEditorActive = true;
+        InputSystem.Update();
+
+        Assert.That(receivedMouseSync, Is.True);
+    }
+
     // While going into play mode, the editor will be unresponsive. So what will happen is that when the user clicks the
     // play mode button and then moves the mouse around while Unity is busy going into play mode, the game will receive
     // a huge pointer motion delta in one of its first frames. If pointer motion is tied to camera motion, for example,
@@ -2442,6 +2548,61 @@ partial class CoreTests
 
         // Make sure the event was not left in the buffer.
         Assert.That(runtime.m_EventCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Editor")]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsManually, InputUpdateType.Manual)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate, InputUpdateType.Dynamic)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
+    public void Editor_WhenRunUpdatesInEditModeIsEnabled_PlayerUpdatesRunOutsideOfPlayMode(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.updateMode = updateMode;
+
+        var updates = new List<InputUpdateType>();
+        InputSystem.onBeforeUpdate += () => updates.Add(InputState.currentUpdateType);
+
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+
+        updates.Clear();
+
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor, updateType }));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+
+        var performedCallCount = 0;
+        action.performed += context => performedCallCount++;
+        action.Enable();
+
+        Set(gamepad.leftTrigger, 0f);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(performedCallCount, Is.EqualTo(0));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
+
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
     }
 
     [Test]
@@ -2495,6 +2656,30 @@ partial class CoreTests
 
         // Send an event to make sure InputUser removed its event hook.
         Press(gamepad.buttonSouth);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_ReenablesAllDevicesTemporarilyDisabledDueToFocus()
+    {
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.ResetAndDisableAllDevices;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Set(mouse.position, new Vector2(123, 234));
+        Press(gamepad.buttonSouth);
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(gamepad.enabled, Is.False);
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+
+        Assert.That(gamepad.enabled, Is.True);
+        Assert.That(gamepad.disabledWhileInBackground, Is.False);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
     }
 
     [Test]
@@ -2608,6 +2793,8 @@ partial class CoreTests
         Assert.That(device.parent, Is.Null);
         Assert.That(device.device, Is.SameAs(device));
         Assert.That(device.children.Select(x => x.path), Is.EquivalentTo(original.children.Select(x => x.path)));
+        Assert.That(device.hasControlsWithDefaultState, Is.EqualTo(original.hasControlsWithDefaultState));
+        Assert.That(device.hasDontResetControls, Is.EqualTo(original.hasDontResetControls));
 
         Assert.That(device.allControls.Count, Is.EqualTo(original.allControls.Count));
         Assert.That(device.allControls.Select(x => x.name), Is.EquivalentTo(original.allControls.Select(x => x.name)));
@@ -2628,6 +2815,7 @@ partial class CoreTests
         Assert.That(device.allControls.Select(x => x.isSetupFinished), Is.EquivalentTo(original.allControls.Select(x => x.isSetupFinished)));
         Assert.That(device.allControls.Select(x => x.usages), Is.EquivalentTo(original.allControls.Select(x => x.usages)));
         Assert.That(device.allControls.Select(x => x.aliases), Is.EquivalentTo(original.allControls.Select(x => x.aliases)));
+        Assert.That(device.allControls.Select(x => x.dontReset), Is.EquivalentTo(original.allControls.Select(x => x.dontReset)));
 
         // Check that all InputControl getters were initialized correctly.
         Assert.That(

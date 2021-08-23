@@ -1,4 +1,4 @@
-#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#if UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Layouts;
@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
     /// </summary>
-    [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD")]
+    [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD", canRunInBackground = true)]
     [Preserve]
     public class XRHMD : TrackedDevice
     {

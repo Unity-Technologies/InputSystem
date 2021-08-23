@@ -40,12 +40,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             base.OnActivate(searchContext, rootElement);
             InputSystem.onSettingsChange += OnSettingsChange;
+            Undo.undoRedoPerformed += OnUndoRedo;
         }
 
         public override void OnDeactivate()
         {
             base.OnDeactivate();
             InputSystem.onSettingsChange -= OnSettingsChange;
+            Undo.undoRedoPerformed -= OnUndoRedo;
         }
 
         public void Dispose()
@@ -73,8 +75,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(string searchContext)
         {
-            if (m_Settings == null)
-                InitializeWithCurrentSettings();
+            InitializeWithCurrentSettingsIfNecessary();
 
             if (m_AvailableInputSettingsAssets.Length == 0)
             {
@@ -97,9 +98,19 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                var runInBackground = Application.runInBackground;
+                using (new EditorGUI.DisabledScope(!runInBackground))
+                    EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
+                if (!runInBackground)
+                    EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
 
+                EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
+
+                // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
+                //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
+                //       development players.
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -122,13 +133,18 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
                     + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
                     + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
-                    + "as support will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
+                    + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
                 m_SupportedDevices.DoLayoutList();
 
                 EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
                 EditorGUILayout.Space();
                 m_iOSProvider.OnGUI();
+
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
 
                 if (EditorGUI.EndChangeCheck())
                     Apply();
@@ -165,8 +181,7 @@ namespace UnityEngine.InputSystem.Editor
             var dataPath = Application.dataPath + "/";
             if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
             {
-                Debug.LogError(string.Format(
-                    "Input settings must be stored in Assets folder of the project (got: '{0}')", path));
+                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
                 return;
             }
 
@@ -180,6 +195,14 @@ namespace UnityEngine.InputSystem.Editor
             CreateNewSettingsAsset(relativePath);
         }
 
+        private void InitializeWithCurrentSettingsIfNecessary()
+        {
+            if (InputSystem.settings == m_Settings && m_Settings != null && m_SettingsDirtyCount == EditorUtility.GetDirtyCount(m_Settings))
+                return;
+
+            InitializeWithCurrentSettings();
+        }
+
         /// <summary>
         /// Grab <see cref="InputSystem.settings"/> and set it up for editing.
         /// </summary>
@@ -190,6 +213,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // See which is the active one.
             m_Settings = InputSystem.settings;
+            m_SettingsDirtyCount = EditorUtility.GetDirtyCount(m_Settings);
             var currentSettingsPath = AssetDatabase.GetAssetPath(m_Settings);
             if (string.IsNullOrEmpty(currentSettingsPath))
             {
@@ -226,7 +250,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (name.EndsWith(".inputsettings"))
                     name = name.Substring(0, name.Length - ".inputsettings".Length);
 
-                // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+                // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
                 m_AvailableSettingsAssetsOptions[i] = new GUIContent(name.Replace("/", "\u29f8"));
             }
 
@@ -234,6 +258,8 @@ namespace UnityEngine.InputSystem.Editor
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
+            m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
+            m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
@@ -246,8 +272,23 @@ namespace UnityEngine.InputSystem.Editor
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
-            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
+            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on .current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
+            m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
+                + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
+                + "'Reset And Disable Non-Background Devices' soft-resets and disables devices that cannot run in the background while the application does not have focus. Devices "
+                + "that can run in the background remain enabled and will keep receiving input.\n"
+                + "'Reset And Disable All Devices' soft-resets and disables *all* devices while the application does not have focus. No device will receive input while the application "
+                + "is running in the background.\n"
+                + "'Ignore Focus' leaves all devices untouched when application focus changes. While running in the background, all input that is received is processed as if "
+                + "running in the foreground.");
+            m_EditorInputBehaviorInPlayModeContent = new GUIContent("Play Mode Input Behavior", "When in play mode, determines how focus of the Game View is handled with respect to input.\n\n"
+                + "'Pointers And Keyboards Respect Game View Focus' requires Game View focus only for pointers (mice, touch, etc.) and keyboards. Other devices will feed input to the game regardless "
+                + "of whether the Game View is focused or not. Note that this means that input on these devices is not visible in other EditorWindows.\n"
+                + "'All Devices Respect Game View Focus' requires Game View focus for all input devices. While focus is not on the Game View, all input on InputDevices will go to the editor and not "
+                + "the game.\n"
+                + "'All Device Input Always Goes To Game View' causes input to treat 'Background Behavior' exactly as in the player including devices potentially being disabled entirely while the Game View "
+                + "does not have focus. In this setting, no input from the Input System will be visible to EditorWindows.");
             m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");
@@ -307,7 +348,7 @@ namespace UnityEngine.InputSystem.Editor
                         GUI.Label(iconRect, icon);
                     }
 
-                    EditorGUI.LabelField(rect, m_Settings.supportedDevices[index]);
+                    EditorGUI.LabelField(rect, layoutName);
                 }
             };
 
@@ -319,13 +360,20 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(m_Settings != null);
 
             m_SettingsObject.ApplyModifiedProperties();
+            m_SettingsObject.Update();
             m_Settings.OnChange();
+        }
+
+        private void OnUndoRedo()
+        {
+            if (m_Settings != null && EditorUtility.GetDirtyCount(m_Settings) != m_SettingsDirtyCount)
+                m_Settings.OnChange();
+            InitializeWithCurrentSettingsIfNecessary();
         }
 
         private void OnSettingsChange()
         {
-            if (InputSystem.settings != m_Settings)
-                InitializeWithCurrentSettings();
+            InitializeWithCurrentSettingsIfNecessary();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
             Repaint();
@@ -344,9 +392,12 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputSettings m_Settings;
         [SerializeField] private bool m_SettingsIsNotAnAsset;
 
+        [NonSerialized] private int m_SettingsDirtyCount;
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
+        [NonSerialized] private SerializedProperty m_BackgroundBehavior;
+        [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
@@ -366,18 +417,20 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
-        GUIContent m_UpdateModeContent;
-        GUIContent m_FilterNoiseOnCurrentContent;
-        GUIContent m_CompensateForScreenOrientationContent;
-        GUIContent m_DefaultDeadzoneMinContent;
-        GUIContent m_DefaultDeadzoneMaxContent;
-        GUIContent m_DefaultButtonPressPointContent;
-        GUIContent m_ButtonReleaseThresholdContent;
-        GUIContent m_DefaultTapTimeContent;
-        GUIContent m_DefaultSlowTapTimeContent;
-        GUIContent m_DefaultHoldTimeContent;
-        GUIContent m_TapRadiusContent;
-        GUIContent m_MultiTapDelayTimeContent;
+        private GUIContent m_UpdateModeContent;
+        private GUIContent m_FilterNoiseOnCurrentContent;
+        private GUIContent m_CompensateForScreenOrientationContent;
+        private GUIContent m_BackgroundBehaviorContent;
+        private GUIContent m_EditorInputBehaviorInPlayModeContent;
+        private GUIContent m_DefaultDeadzoneMinContent;
+        private GUIContent m_DefaultDeadzoneMaxContent;
+        private GUIContent m_DefaultButtonPressPointContent;
+        private GUIContent m_ButtonReleaseThresholdContent;
+        private GUIContent m_DefaultTapTimeContent;
+        private GUIContent m_DefaultSlowTapTimeContent;
+        private GUIContent m_DefaultHoldTimeContent;
+        private GUIContent m_TapRadiusContent;
+        private GUIContent m_MultiTapDelayTimeContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 

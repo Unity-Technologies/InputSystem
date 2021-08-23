@@ -1766,6 +1766,69 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanMarkControlAsDontReset()
+    {
+        const string layout1 = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button"", ""layout"" : ""Button"", ""dontReset"" : true }
+                ]
+            }
+        ";
+        const string layout2 = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button"", ""layout"" : ""Key"" },
+                    { ""name"" : ""axis"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""otherButton"", ""layout"" : ""Button"", ""useStateFrom"" : ""button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout1);
+        InputSystem.RegisterLayout(layout2);
+
+        var layout = InputSystem.LoadLayout("DerivedLayout");
+        Assert.That(layout["button"].dontReset, Is.True);
+        Assert.That(layout["axis"].dontReset, Is.False);
+        Assert.That(layout["otherButton"].dontReset, Is.False);
+
+        var device = InputSystem.AddDevice("DerivedLayout");
+
+        Assert.That(device["button"].dontReset, Is.True);
+        Assert.That(device["axis"].dontReset, Is.False);
+        Assert.That(device["otherButton"].dontReset, Is.True); // Should automatically get toggled on because of useStateFrom.
+    }
+
+    // If a parent is noisy, all its children are.
+    // If a parent is dontReset, all its children are.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_NoisyAndDontResetPropagateDownTheControlHierarchy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""noisyStick"", ""layout"" : ""Stick"", ""noisy"" : true },
+                    { ""name"" : ""dontResetStick"", ""layout"" : ""Stick"", ""dontReset"" : true }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device["noisyStick"].children, Has.All.Matches((InputControl x) => x.noisy));
+        Assert.That(device["dontResetStick"].children, Has.All.Matches((InputControl x) => x.dontReset));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_NoisyControls_AutomaticallyMakeAllTheirChildrenNoisy()
     {
         const string json = @"
@@ -2094,9 +2157,6 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254566")]
-#endif
     public void Layouts_CanGetNameOfBaseLayout()
     {
         Assert.That(InputSystem.GetNameOfBaseLayout("DualShockGamepad"), Is.EqualTo("Gamepad"));
@@ -2106,13 +2166,20 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1254565")]
-#endif
     public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()
     {
+        var json = @"
+            {
+                ""name"" : ""DualShockGamepadTest"",
+                ""extend"" : ""DualShockGamepad"",
+                ""controls"" : [ { ""name"" : ""MyControl"" } ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepad", "Gamepad"), Is.True);
-        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShock4GamepadHID", "Gamepad"), Is.True);
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepadTest", "Gamepad"), Is.True);
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Gamepad"), Is.True);
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Pointer"), Is.False);
     }
@@ -2236,10 +2303,7 @@ partial class CoreTests
         [InputControl(name = "axis", layout = "Axis", variants = "B")]
         public float axis;
 
-        public FourCC format
-        {
-            get { return new FourCC('T', 'E', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(variants = "A", stateType = typeof(StateWithTwoLayoutVariants))]
@@ -2353,7 +2417,7 @@ partial class CoreTests
                     { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
                     { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
                     { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" },
-                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A,B"" },
+                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A;B"" },
                     { ""name"" : ""ButtonNoVariant"", ""layout"" : ""Button"" }
                 ]
             }
@@ -2361,15 +2425,49 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = InputSystem.AddDevice("TestLayout", variants: "A,B");
+        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
 
-        Assert.That(device.variants, Is.EqualTo("A,B"));
+        Assert.That(device.variants, Is.EqualTo("A;B"));
         Assert.That(device.allControls, Has.Count.EqualTo(4));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonB"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonAB"));
         Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonNoVariant"));
         Assert.That(device.allControls, Has.None.With.Property("name").EqualTo("ButtonC"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanForceMixedVariantsThroughLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
+                    { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
+                    { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""variant"" : ""A;C""
+            }
+        ";
+
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
+
+        var device = InputSystem.AddDevice("DerivedLayout");
+
+        Assert.That(device.variants, Is.EqualTo("A;C"));
+        Assert.That(device.allControls, Has.Count.EqualTo(2));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
+        Assert.That(device.allControls, Has.None.With.Property("name").EqualTo("ButtonB"));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonC"));
     }
 
     [Test]

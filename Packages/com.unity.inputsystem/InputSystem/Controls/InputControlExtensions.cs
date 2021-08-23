@@ -1057,6 +1057,77 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Return true if the given <paramref name="eventPtr"/> has any <see cref="Input"/>
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        /// <param name="magnitude"></param>
+        /// <param name="buttonControlsOnly"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
+        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <seealso cref="EnumerateChangedControls"/>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        public static bool HasButtonPress(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        {
+            return eventPtr.GetFirstButtonPressOrNull(magnitude, buttonControlsOnly) != null;
+        }
+
+        /// <summary>
+        /// Get the first pressed button from the given event or null if the event doesn't contain a new button press.
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        /// <param name="magnitude"></param>
+        /// <param name="buttonControlsOnly"></param>
+        /// <returns>The control that was pressed.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
+        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <seealso cref="EnumerateChangedControls"/>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        /// <remarks>Buttons will be evaluated in the order that they appear in the devices layout i.e. the bit position of each control
+        /// in the devices state memory. For example, in the gamepad state, button north (bit position 4) will be evaluated before button
+        /// east (bit position 5), so if both buttons were pressed in the given event, button north would be returned.</remarks>
+        public static InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        {
+            if (magnitude < 0)
+                magnitude = InputSystem.settings.defaultButtonPressPoint;
+
+            foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
+            {
+                if (buttonControlsOnly && !control.isButton)
+                    continue;
+                return control;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Enumerate all pressed buttons in the given event.
+        /// </summary>
+        /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="magnitude"></param>
+        /// <param name="buttonControlsOnly"></param>
+        /// <returns>An enumerable collection containing all buttons that were pressed in the given event.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
+        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <seealso cref="EnumerateChangedControls"/>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        public static IEnumerable<InputControl> GetAllButtonPresses(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        {
+            if (magnitude < 0)
+                magnitude = InputSystem.settings.defaultButtonPressPoint;
+
+            foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
+            {
+                if (buttonControlsOnly && !control.isButton)
+                    continue;
+                yield return control;
+            }
+        }
+
+        /// <summary>
         /// Allows iterating over the controls referenced by an <see cref="InputEvent"/> via <see cref="InputEventControlEnumerator"/>.
         /// </summary>
         /// <seealso cref="InputControlExtensions.EnumerateControls"/>
@@ -1347,9 +1418,6 @@ namespace UnityEngine.InputSystem
                                 m_CurrentControl = null;
                                 continue;
                             }
-
-                            // Jump past location of this control.
-                            m_CurrentBitOffset = controlBitOffset + controlBitSize - m_CurrentControlStateBitOffset;
                         }
 
                         ++m_CurrentIndexInStateOffsetToControlIndexMap;
@@ -1659,6 +1727,15 @@ namespace UnityEngine.InputSystem
             public ControlBuilder IsSynthetic(bool value)
             {
                 control.synthetic = value;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ControlBuilder DontReset(bool value)
+            {
+                control.dontReset = value;
+                if (value)
+                    control.m_Device.hasDontResetControls = true;
                 return this;
             }
 

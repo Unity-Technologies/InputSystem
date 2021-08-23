@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// After a touch has ended or been canceled, an ID can be reused.
         /// </remarks>
         /// <seealso cref="TouchControl.touchId"/>
-        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true)]
+        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true, dontReset = true)]
         [FieldOffset(0)]
         public int touchId;
 
@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position of the touch.</value>
         /// <seealso cref="TouchControl.position"/>
-        [InputControl(displayName = "Position")]
+        [InputControl(displayName = "Position", dontReset = true)]
         [FieldOffset(4)]
         public Vector2 position;
 
@@ -489,7 +489,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
-    public class Touchscreen : Pointer, IInputStateCallbackReceiver
+    public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger
     {
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
@@ -591,7 +591,7 @@ namespace UnityEngine.InputSystem
         //
         // NOTE: We do *NOT* make a effort here to prevent us from losing short-lived touches. This is different
         //       from the old input system where individual touches were not reused until the next frame. This meant
-        //       that additional touches potentially had to be allocated in order to accomodate new touches coming
+        //       that additional touches potentially had to be allocated in order to accommodate new touches coming
         //       in from the system.
         //
         //       The rationale for *NOT* doing this is that:
@@ -951,6 +951,33 @@ namespace UnityEngine.InputSystem
 
             offset = touchControl.stateBlock.byteOffset - m_StateBlock.byteOffset;
             return true;
+        }
+
+        internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+                return false;
+
+            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+
+            if (currentEvent->stateFormat != TouchState.Format || nextEvent->stateFormat != TouchState.Format)
+                return false;
+
+            var currentState = (TouchState*)currentEvent->state;
+            var nextState = (TouchState*)nextEvent->state;
+
+            if (currentState->touchId != nextState->touchId || currentState->phaseId != nextState->phaseId || currentState->flags != nextState->flags)
+                return false;
+
+            nextState->delta += currentState->delta;
+
+            return true;
+        }
+
+        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            return MergeForward(currentEventPtr, nextEventPtr);
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases

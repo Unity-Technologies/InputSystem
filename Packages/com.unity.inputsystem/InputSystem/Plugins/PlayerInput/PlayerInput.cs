@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.UI;
 #endif
 
+////TODO: add support for keeping a player's InputUser alive and reconnecting back to it
+
 ////TODO: when joining is *off*, allow auto-switching even in multiplayer
 
 ////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same
@@ -607,15 +609,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ActionTriggeredCallbacks.AppendWithCapacity(value, 5);
+                m_ActionTriggeredCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ActionTriggeredCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ActionTriggeredCallbacks.RemoveAtWithCapacity(index);
+                m_ActionTriggeredCallbacks.RemoveCallback(value);
             }
         }
 
@@ -638,15 +638,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceLostCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceLostCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceLostCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceLostCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceLostCallbacks.RemoveCallback(value);
             }
         }
 
@@ -669,15 +667,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceRegainedCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceRegainedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceRegainedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceRegainedCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceRegainedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -698,15 +694,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ControlsChangedCallbacks.AppendWithCapacity(value, 5);
+                m_ControlsChangedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ControlsChangedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ControlsChangedCallbacks.RemoveAtWithCapacity(index);
+                m_ControlsChangedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -817,6 +811,24 @@ namespace UnityEngine.InputSystem
         public static bool isSinglePlayer =>
             s_AllActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
+
+        /// <summary>
+        /// Return the first device of the given type from <see cref="devices"/> paired to the player.
+        /// If no device of this type is paired to the player, return <c>null</c>.
+        /// </summary>
+        /// <typeparam name="TDevice">Type of device to look for (such as <see cref="Mouse"/>). Can be a supertype
+        /// of the actual device type. For example, querying for <see cref="Pointer"/>, may return a <see cref="Mouse"/>.</typeparam>
+        /// <returns>The first device paired to the player that is of the given type or <c>null</c> if the player
+        /// does not have a matching device.</returns>
+        /// <seealso cref="devices"/>
+        public TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
+        {
+            foreach (var device in devices)
+                if (device is TDevice deviceOfType)
+                    return deviceOfType;
+            return null;
+        }
 
         /// <summary>
         /// Enable input on the player.
@@ -1110,10 +1122,10 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceLostCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
-        [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceLostCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
+        [NonSerialized] private CallbackArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private Func<InputDevice, InputEventPtr, bool> m_PreFilterUnpairedDeviceUsedDelegate;
         [NonSerialized] private bool m_OnUnpairedDeviceUsedHooked;
@@ -1188,31 +1200,12 @@ namespace UnityEngine.InputSystem
 
                             // Find action for event.
                             var action = m_Actions.FindAction(id);
-                            if (action != null)
-                            {
-                                ////REVIEW: really wish we had a single callback
-                                action.performed += actionEvent.Invoke;
-                                action.canceled += actionEvent.Invoke;
-                                action.started += actionEvent.Invoke;
-                            }
-                            else
-                            {
-                                // Cannot find action. Log error.
-                                if (!string.IsNullOrEmpty(actionEvent.actionName))
-                                {
-                                    // We have an action name. Show in message.
-                                    Debug.LogError(
-                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                                else
-                                {
-                                    // We have no action name. Best we have is ID.
-                                    Debug.LogError(
-                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                            }
+                            if (action == null)
+                                continue;
+
+                            action.performed += actionEvent.Invoke;
+                            action.canceled += actionEvent.Invoke;
+                            action.started += actionEvent.Invoke;
                         }
                     }
                     break;
@@ -1619,6 +1612,8 @@ namespace UnityEngine.InputSystem
                     StartListeningForUnpairedDeviceActivity();
                 }
             }
+
+            HandleControlsChanged();
 
             // Trigger join event.
             PlayerInputManager.instance?.NotifyPlayerJoined(this);

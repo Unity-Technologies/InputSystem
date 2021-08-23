@@ -147,6 +147,12 @@ namespace UnityEngine.InputSystem.Layouts
 
                 if (layout.m_UpdateBeforeRender == true)
                     m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.UpdateBeforeRender;
+                if (layout.canRunInBackground != null)
+                {
+                    m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.CanRunInBackgroundHasBeenQueried;
+                    if (layout.canRunInBackground == true)
+                        m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.CanRunInBackground;
+                }
             }
             else if (parent == null)
             {
@@ -238,7 +244,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Skip if variants don't match.
                 if (!controlLayouts[i].variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, ','))
+                        variants, InputControlLayout.VariantSeparator[0]))
                     continue;
 
                 ////REVIEW: I'm not sure this is good enough. ATM if you have a control layout with
@@ -294,7 +300,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // looking for.
                 if (!controlLayout.variants.IsEmpty() &&
                     !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants,
-                        variants, ','))
+                        variants, InputControlLayout.VariantSeparator[0]))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -339,7 +345,9 @@ namespace UnityEngine.InputSystem.Layouts
 
                     // If the control is part of a variants, skip it if it isn't the variants we're
                     // looking for.
-                    if (!controlLayout.variants.IsEmpty() && controlLayout.variants != variants)
+                    if (!controlLayout.variants.IsEmpty() &&
+                        !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
+                            variants, InputControlLayout.VariantSeparator[0]))
                         continue;
 
                     AddChildControlIfMissing(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
@@ -392,9 +400,13 @@ namespace UnityEngine.InputSystem.Layouts
             // Set flags and misc things.
             control.noisy = controlItem.isNoisy;
             control.synthetic = controlItem.isSynthetic;
+            control.usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
+            control.dontReset = (control.noisy || controlItem.dontReset) && !control.usesStateFromOtherControl; // Imply dontReset for noisy controls.
             if (control.noisy)
                 m_Device.noisy = true;
             control.isButton = control is ButtonControl;
+            if (control.dontReset)
+                m_Device.hasDontResetControls = true;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
@@ -414,8 +426,7 @@ namespace UnityEngine.InputSystem.Layouts
                 control.m_MaxValue = controlItem.maxValue;
 
             // Pass state block config on to control.
-            var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
-            if (!usesStateFromOtherControl)
+            if (!control.usesStateFromOtherControl)
             {
                 control.m_StateBlock.byteOffset = controlItem.offset;
                 control.m_StateBlock.bitOffset = controlItem.bit;
@@ -583,6 +594,7 @@ namespace UnityEngine.InputSystem.Layouts
             // Copy its state settings.
             child.m_StateBlock = referencedControl.m_StateBlock;
             child.usesStateFromOtherControl = true;
+            child.dontReset = referencedControl.dontReset;
 
             // At this point, all byteOffsets are relative to parents so we need to
             // walk up the referenced control's parent chain and add offsets until
@@ -872,10 +884,10 @@ namespace UnityEngine.InputSystem.Layouts
                 throw new NotSupportedException($"Device '{m_Device}' exceeds maximum supported control count of {1U << InputDevice.kControlIndexBits} (has {m_Device.allControls.Count} controls)");
 
             // Device is not in m_ChildrenForEachControl so use index -1.
-            FinalizeControlHierarchyRecursive(m_Device, -1, m_Device.m_ChildrenForEachControl);
+            FinalizeControlHierarchyRecursive(m_Device, -1, m_Device.m_ChildrenForEachControl, false, false);
         }
 
-        private void FinalizeControlHierarchyRecursive(InputControl control, int controlIndex, InputControl[] allControls)
+        private void FinalizeControlHierarchyRecursive(InputControl control, int controlIndex, InputControl[] allControls, bool noisy, bool dontReset)
         {
             // Make sure we're staying within limits on state offsets and sizes.
             if (control.m_ChildCount == 0)
@@ -898,6 +910,19 @@ namespace UnityEngine.InputSystem.Layouts
             SetDisplayName(control, displayNameFromLayout, shortDisplayNameFromLayout, false);
             SetDisplayName(control, displayNameFromLayout, shortDisplayNameFromLayout, true);
 
+            if (control != control.device)
+            {
+                if (noisy)
+                    control.noisy = true;
+                else
+                    noisy = control.noisy;
+
+                if (dontReset)
+                    control.dontReset = true;
+                else
+                    dontReset = control.dontReset;
+            }
+
             // Recurse into children. Also bake our state offset into our children.
             var ourOffset = control.m_StateBlock.byteOffset;
             var childCount = control.m_ChildCount;
@@ -908,7 +933,7 @@ namespace UnityEngine.InputSystem.Layouts
                 var child = allControls[childIndex];
                 child.m_StateBlock.byteOffset += ourOffset;
 
-                FinalizeControlHierarchyRecursive(child, childIndex, allControls);
+                FinalizeControlHierarchyRecursive(child, childIndex, allControls, noisy, dontReset);
             }
 
             control.isSetupFinished = true;

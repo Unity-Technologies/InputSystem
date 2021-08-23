@@ -26,6 +26,177 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 #pragma warning disable CS0649
 partial class CoreTests
 {
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenForEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var callMouseEventCount = 0;
+        var callOnceOnButtonPressCount = 0;
+        var firstButtonPress = new List<InputControl>();
+        var allButtonPresses = new List<InputControl>();
+
+        InputSystem.onEvent
+            .Select(e => e.GetFirstButtonPressOrNull())
+            .Call(c =>
+            {
+                if (c != null) firstButtonPress.Add(c);
+            });
+
+        InputSystem.onEvent
+            .SelectMany(e => e.GetAllButtonPresses())
+            .Call(c => allButtonPresses.Add(c));
+
+        InputSystem.onEvent
+            .Where(e => e.HasButtonPress())
+            .CallOnce(e =>
+            {
+                Assert.That(e, Is.Not.EqualTo(default(InputEventPtr)));
+                ++callOnceOnButtonPressCount;
+            });
+
+        InputSystem.onEvent
+            .ForDevice(mouse)
+            .Call(e => ++ callMouseEventCount);
+
+        Assert.That(callOnceOnButtonPressCount, Is.Zero);
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.Empty);
+        Assert.That(allButtonPresses, Is.Empty);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        firstButtonPress.Clear();
+        allButtonPresses.Clear();
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.Empty);
+        Assert.That(allButtonPresses, Is.Empty);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.Zero);
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        Press(keyboard.spaceKey, queueEventOnly: true);
+        Press(mouse.leftButton);
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.EqualTo(1));
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.buttonSouth, keyboard.spaceKey, mouse.leftButton }));
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.buttonSouth, keyboard.spaceKey, mouse.leftButton }));
+
+        firstButtonPress.Clear();
+        allButtonPresses.Clear();
+
+        Release(gamepad.buttonSouth);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
+        InputSystem.Update();
+
+        Assert.That(callOnceOnButtonPressCount, Is.EqualTo(1));
+        Assert.That(callMouseEventCount, Is.EqualTo(1));
+        Assert.That(firstButtonPress, Is.EquivalentTo(new[] { gamepad.bButton })); // Comes first in layout.
+        Assert.That(allButtonPresses, Is.EquivalentTo(new[] { gamepad.aButton, gamepad.bButton }));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenForButtonPresses()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .CallOnce(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(gamepad.buttonSouth));
+                ++callCount;
+            });
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        // Try trigger.
+        callCount = 0;
+        InputSystem.onAnyButtonPress
+            .CallOnce(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(gamepad.leftTrigger));
+                ++callCount;
+            });
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.4f });
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.6f });
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+
+        // Try stick left "button".
+        Observable.CallOnce<InputControl>(InputSystem.onAnyButtonPress, _ =>
+        {
+            Assert.Fail("Must not be called for leftStick movement");
+        });
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(-1, 0) });
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanGetAllButtonPressesInEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var controls = new List<InputControl>();
+        InputSystem.onEvent += (eventPtr, device) =>
+        {
+            controls = eventPtr.GetAllButtonPresses().ToList();
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A, GamepadButton.B));
+        InputSystem.Update();
+
+        Assert.That(controls, Is.EquivalentTo(new[] { gamepad.aButton, gamepad.bButton }));
+    }
+
     // This is one of the most central tests. If this one breaks, it most often
     // hints at the state layouting or state updating machinery being borked.
     [Test]
@@ -79,6 +250,32 @@ partial class CoreTests
     public void TODO_Events_CanUpdateStateOfDeviceWithBatchEvent()
     {
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanResetDeviceWithEvent()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Set(device.leftTrigger, 0.5f);
+
+        var sawReset = false;
+        InputSystem.onDeviceChange += (inputDevice, change) =>
+        {
+            if (change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset)
+            {
+                Assert.That(sawReset, Is.False);
+                sawReset = true;
+            }
+        };
+
+        var resetEvent = DeviceResetEvent.Create(device.deviceId);
+        InputSystem.QueueEvent(ref resetEvent);
+        InputSystem.Update();
+
+        Assert.That(sawReset, Is.True);
+        Assert.That(device.leftTrigger.ReadValue(), Is.Zero);
     }
 
     [Test]
@@ -702,6 +899,56 @@ partial class CoreTests
         }
     }
 
+    private struct DpadState : IInputStateTypeInfo
+    {
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
+        [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
+        public int dpad;
+
+        [InputControl(layout = "Axis")]
+        public float axis1;
+
+        [InputControl(layout = "Axis")]
+        public float axis2;
+
+        public FourCC format => new FourCC("TEST");
+    }
+
+    [InputControlLayout(stateType = typeof(DpadState))]
+    [Preserve]
+    private class DpadDevice : InputDevice
+    {
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1315107/
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanIterateOverChangedControlsInEvent_EvenWhenMultipleControlsShareTheSameState()
+    {
+        // Create a device that has a dpad setup  where all buttons share the same four bits.
+        // To handle this correctly, the iteration code must not advance past a control until
+        // after having tried all possible controls using the state.
+        // (this setup is actually what's found on the PS4 controller)
+        var device = InputSystem.AddDevice<DpadDevice>();
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            var stateEventPtr = StateEvent.From(eventPtr);
+            var statePtr = (DpadState*)stateEventPtr->state;
+
+            statePtr->dpad = 6; // Press dpad left.
+            statePtr->axis2 = 1f;
+
+            // The code is checking only state, not values. The state for *all* dpad buttons is shared and thus
+            // has changed for all of them. So all the dpad buttons are in the list.
+            Assert.That(eventPtr.EnumerateChangedControls(),
+                Is.EquivalentTo(new[] { device["dpad/up"], device["dpad/right"], device["dpad/down"], device["dpad/left"], device["axis2"] }));
+        }
+    }
+
     [Test]
     [Category("Events")]
     public void Events_CanResetControlToDefaultState()
@@ -1277,7 +1524,8 @@ partial class CoreTests
             trace.Enable();
 
             Press(gamepad.buttonSouth);
-            InputSystem.Update();
+            InputSystem.Update(); // Record empty frame.
+            InputSystem.Update(); // Record empty frame.
             Release(gamepad.buttonSouth);
 
             trace.Disable();
@@ -1286,6 +1534,11 @@ partial class CoreTests
 
             Assert.That(replay.finished, Is.False);
             Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
 
             InputSystem.Update();
 
@@ -2035,8 +2288,12 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanQueueEventsFromWithinEventProcessing()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void Events_CanQueueEventsFromWithinEventProcessing_WithEventMergingSetTo(bool mergeRedundantEvents)
     {
+        InputSystem.settings.disableRedundantEventsMerging = !mergeRedundantEvents;
+
         var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -2061,15 +2318,49 @@ partial class CoreTests
             // This way we not only test whether the events make it into the queue at all but
             // also that they still make it if we have to re-allocate the buffer.
             for (var i = 0; i < numMouseEventsQueued; ++i)
-                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(123, 234) }.WithButton(MouseButton.Left));
+                InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2((i + 1), (i + 1) * 2), delta = Vector2.one}.WithButton(MouseButton.Left));
         };
         action.Enable();
 
         Press(keyboard.spaceKey);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
-        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-        Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(numMouseEventsQueued, numMouseEventsQueued * 2)));
+        Assert.That(mouse.delta.ReadValue(), Is.EqualTo(new Vector2(numMouseEventsQueued, numMouseEventsQueued)));
+        Assert.That(numMouseEventsReceived, Is.EqualTo(mergeRedundantEvents ? 1 : numMouseEventsQueued));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_QueuedToDifferentDevices_AreNotMergedTogether()
+    {
+        var mouse1 = InputSystem.AddDevice<Mouse>();
+        var mouse2 = InputSystem.AddDevice<Mouse>();
+
+        var numMouse1EventsReceived = 0;
+        var numMouse2EventsReceived = 0;
+        InputSystem.onEvent +=
+            (eventPtr, device) =>
+        {
+            if (device == mouse1)
+                ++numMouse1EventsReceived;
+            if (device == mouse2)
+                ++numMouse2EventsReceived;
+        };
+
+        InputSystem.QueueStateEvent(mouse1, new MouseState { position = new Vector2(1, 2)});
+        InputSystem.QueueStateEvent(mouse1, new MouseState { position = new Vector2(2, 3)});
+        InputSystem.QueueStateEvent(mouse2, new MouseState { position = new Vector2(3, 4)});
+        InputSystem.QueueStateEvent(mouse2, new MouseState { position = new Vector2(4, 5)});
+        InputSystem.QueueStateEvent(mouse2, new MouseState { position = new Vector2(5, 6)});
+
+        InputSystem.Update();
+
+        Assert.That(mouse1.position.ReadValue(), Is.EqualTo(new Vector2(2, 3)));
+        Assert.That(mouse2.position.ReadValue(), Is.EqualTo(new Vector2(5, 6)));
+
+        Assert.That(numMouse1EventsReceived, Is.EqualTo(1));
+        Assert.That(numMouse2EventsReceived, Is.EqualTo(1));
     }
 
     [Test]
@@ -2101,6 +2392,26 @@ partial class CoreTests
         LogAssert.Expect(LogType.Error, $"Maximum number of queued events exceeded. Set the '{nameof(InputSettings.maxQueuedEventsPerUpdate)}' setting to a higher value if you " +
             $"need to queue more events than this. Current limit is '{InputSystem.settings.maxQueuedEventsPerUpdate}'.");
         Assert.That(callbackCount - 1, Is.EqualTo(InputSystem.settings.maxQueuedEventsPerUpdate));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1316000/
+    [Test]
+    [Category("Events")]
+    public void Events_CallingInputSystemUpdateDuringEventProcessingThrowsInvalidOperation()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.performed += _ =>
+        {
+            InputSystem.Update();
+        };
+        action.Enable();
+
+        Press(device.buttonSouth);
+
+        LogAssert.Expect(LogType.Error, "InvalidOperationException while executing 'performed' callbacks of '<Unnamed>[/Gamepad/buttonSouth]'");
+        LogAssert.Expect(LogType.Exception, "InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?");
     }
 
     ////TODO: test thread-safe QueueEvent

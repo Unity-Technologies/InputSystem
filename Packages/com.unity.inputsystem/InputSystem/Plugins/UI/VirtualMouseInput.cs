@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.UI
     /// <seealso cref="Gamepad"/>
     /// <seealso cref="Mouse"/>
     [AddComponentMenu("Input/Virtual Mouse")]
-    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#virtualmouseinput-component")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#virtual-mouse-cursor-control")]
     public class VirtualMouseInput : MonoBehaviour
     {
         /// <summary>

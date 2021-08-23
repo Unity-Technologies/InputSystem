@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Layouts;
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Enum of different player loop positions where the input system can invoke it's update mechanism.
+    /// Enum of different player loop positions where the input system can invoke its update mechanism.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "Not consistently used as flags, many using APIs expect only one type to be passed.")]
     [Flags]
@@ -16,32 +16,29 @@ namespace UnityEngine.InputSystem.LowLevel
 
         /// <summary>
         /// Update corresponding to <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>.
-        /// </summary>
-        /// <remarks>
+        ///
         /// Every frame has exactly one dynamic update. If not reconfigured using <see cref="PlayerLoop"/>,
         /// the dynamic update happens after all the fixed updates for the frame have run (which can be
         /// zero or more).
         ///
         /// Input updates run before script callbacks on MonoBehaviours are fired.
-        /// </remarks>
+        /// </summary>
         Dynamic = 1 << 0,
 
         /// <summary>
         /// Update corresponding to <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a>.
-        /// </summary>
-        /// <remarks>
+        ///
         /// Every frame has zero or more fixed updates. These are run before the dynamic update for the
         /// frame.
         ///
         /// Input updates run before script callbacks on MonoBehaviours are fired.
-        /// </remarks>
+        /// </summary>
         Fixed = 1 << 1,
 
         ////REVIEW: Axe this update type from the public API?
         /// <summary>
         /// Input update that happens right before rendering.
-        /// </summary>
-        /// <remarks>
+        ///
         /// The BeforeRender update affects only devices that have before-render updates enabled. This
         /// has to be done through a device's layout (<see cref="InputControlLayout.updateBeforeRender"/>
         /// and is visible through <see cref="InputDevice.updateBeforeRender"/>.
@@ -50,22 +47,24 @@ namespace UnityEngine.InputSystem.LowLevel
         /// but is coming from external tracking devices. An example are HMDs. If the head transform used
         /// for the render camera is not synchronized right before rendering, it can result in a noticeable
         /// lag between head and camera movement.
-        /// </remarks>
+        /// </summary>
         BeforeRender = 1 << 2,
 
         /// <summary>
         /// Input update that happens right before <see cref="UnityEditor.EditorWindow"/>s are updated.
-        /// </summary>
-        /// <remarks>
+        ///
         /// This update only occurs in the editor. It is triggered right before <see cref="UnityEditor.EditorApplication.update"/>.
-        /// </remarks>
-        /// <seealso cref="UnityEditor.EditorApplication.update"/>
+        /// </summary>
         Editor = 1 << 3,
 
-        ////TODO
+        /// <summary>
+        /// Input updates do not happen automatically but have to be triggered manually by calling <see cref="InputSystem.Update"/>.
+        /// </summary>
         Manual = 1 << 4,
 
-        ////REVIEW: kill?
+        /// <summary>
+        /// Default update mask. Combines <see cref="Dynamic"/>, <see cref="Fixed"/>, and <see cref="Editor"/>.
+        /// </summary>
         Default = Dynamic | Fixed | Editor,
     }
 
@@ -195,6 +194,27 @@ namespace UnityEngine.InputSystem.LowLevel
                     s_UpdateStepCount = 0;
                     break;
             }
+        }
+
+        public static InputUpdateType GetUpdateTypeForPlayer(this InputUpdateType mask)
+        {
+            if ((mask & InputUpdateType.Manual) != 0)
+                return InputUpdateType.Manual;
+
+            if ((mask & InputUpdateType.Dynamic) != 0)
+                return InputUpdateType.Dynamic;
+
+            if ((mask & InputUpdateType.Fixed) != 0)
+                return InputUpdateType.Fixed;
+
+            return InputUpdateType.None;
+        }
+
+        public static bool IsPlayerUpdate(this InputUpdateType updateType)
+        {
+            if (updateType == InputUpdateType.Editor)
+                return false;
+            return updateType != default;
         }
     }
 }

@@ -407,6 +407,32 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private void ResetActionStatesDrivenBy(InputDevice device)
+        {
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                for (var i = 0; i < totalActionCount; ++i)
+                {
+                    var actionState = &actionStates[i];
+
+                    // Skip actions that aren't in progress.
+                    if (actionState->phase == InputActionPhase.Waiting || actionState->phase == InputActionPhase.Disabled)
+                        continue;
+
+                    // Skip actions not from this device.
+                    var controlIndex = actionState->controlIndex;
+                    if (controlIndex == -1)
+                        continue;
+                    var control = controls[controlIndex];
+                    if (control.device != device)
+                        continue;
+
+                    // Reset.
+                    ResetActionState(i);
+                }
+            }
+        }
+
         /// <summary>
         /// Reset the trigger state of the given action such that the action has no record of being triggered.
         /// </summary>
@@ -823,7 +849,11 @@ namespace UnityEngine.InputSystem
         //       an action happens to be enabled.
         private void OnBeforeInitialUpdate()
         {
-            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender
+                #if UNITY_EDITOR
+                || InputState.currentUpdateType == InputUpdateType.Editor
+                #endif
+            )
                 return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
@@ -1915,7 +1945,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners, string callbackName)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
@@ -1951,8 +1981,7 @@ namespace UnityEngine.InputSystem
                         return;
                 }
 
-                for (var i = 0; i < s_OnActionChange.length; ++i)
-                    s_OnActionChange[i](action, change);
+                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, action, change, "InputSystem.onActionChange");
             }
 
             // Run callbacks (if any) directly on action.
@@ -3582,8 +3611,8 @@ namespace UnityEngine.InputSystem
         /// Both of these needs are served by this global list.
         /// </remarks>
         internal static InlinedArray<GCHandle> s_GlobalList;
-        internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
-        internal static InlinedArray<Action<object>> s_OnActionControlsChanged;
+        internal static CallbackArray<Action<object, InputActionChange>> s_OnActionChange;
+        internal static CallbackArray<Action<object>> s_OnActionControlsChanged;
 
         private void AddToGlobaList()
         {
@@ -3722,7 +3751,8 @@ namespace UnityEngine.InputSystem
             ////REVIEW: should we ignore disconnected devices in InputBindingResolver?
             Debug.Assert(
                 change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
-                change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged,
+                change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged ||
+                change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset,
                 "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
@@ -3769,6 +3799,16 @@ namespace UnityEngine.InputSystem
                         if (!state.IsUsingDevice(device) && !state.CanUseDevice(device))
                             continue;
                         break;
+
+                    // On reset, cancel all actions currently in progress from the device that got reset.
+                    // If we simply let change monitors trigger, we will respond to things like button releases
+                    // that are in fact just resets of buttons to their default state.
+                    case InputDeviceChange.SoftReset:
+                    case InputDeviceChange.HardReset:
+                        if (!state.IsUsingDevice(device))
+                            continue;
+                        state.ResetActionStatesDrivenBy(device);
+                        return; // No re-resolving necessary.
                 }
 
                 // Trigger a lazy-resolve on all action maps in the state.

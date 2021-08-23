@@ -33,7 +33,8 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""id"": ""1077f913-a9f9-41b1-acb3-b9ee0adbc744"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": ""Tap,SlowTap""
+                    ""interactions"": ""Tap,SlowTap"",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""move"",
@@ -41,7 +42,8 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""id"": ""50fd2809-3aa3-4a90-988e-1facf6773553"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""look"",
@@ -49,7 +51,8 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
                     ""id"": ""c60e0974-d140-4597-a40e-9862193067e9"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [

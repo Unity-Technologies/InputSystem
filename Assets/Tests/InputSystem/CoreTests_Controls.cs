@@ -1004,6 +1004,48 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanCustomizeDefaultButtonPressPoint()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.settings.defaultButtonPressPoint = 0.4f;
+
+        Set(gamepad.leftTrigger, 0.39f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+
+        Set(gamepad.leftTrigger, 0.4f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
+
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+
+        InputSystem.settings.defaultButtonPressPoint = 0;
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
+
+        // Setting the trigger to 0 requires the system to be "smart" enough to
+        // figure out that 0 as a default button press point doesn't make sense
+        // and that instead the press point should clamp off at some low, non-zero value.
+        // https://fogbugz.unity3d.com/f/cases/1349002/
+        Set(gamepad.leftTrigger, 0f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+
+        Set(gamepad.leftTrigger, 0.001f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
+
+        InputSystem.settings.defaultButtonPressPoint = -1;
+        Set(gamepad.leftTrigger, 0f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanCustomizePressPointOfGamepadTriggers()
     {
         var json = @"
@@ -1061,9 +1103,6 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254559")]
-#endif
     public void Controls_CanTurnControlPathIntoHumanReadableText()
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));

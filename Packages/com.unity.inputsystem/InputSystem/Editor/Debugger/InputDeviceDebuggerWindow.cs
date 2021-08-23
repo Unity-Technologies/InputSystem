@@ -87,6 +87,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 InputSystem.onDeviceChange -= OnDeviceChange;
                 InputState.onChange -= OnDeviceStateChange;
+                InputSystem.onSettingsChange -= NeedControlValueRefresh;
+                Application.focusChanged -= OnApplicationFocusChange;
+                EditorApplication.playModeStateChanged += OnPlayModeChange;
             }
 
             m_EventTrace?.Dispose();
@@ -146,10 +149,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DrawControlTree()
         {
-            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+            var label = m_InputUpdateTypeShownInControlTree == InputUpdateType.Editor
+                ? Contents.editorStateContent
+                : Contents.playerStateContent;
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label($"Controls ({updateTypeToShow} State)", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.Label(label, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
             // Allow plugins to add toolbar buttons.
@@ -171,10 +176,8 @@ namespace UnityEngine.InputSystem.Editor
                 m_NeedControlValueRefresh = false;
             }
 
-            ////TODO: The help box could use some richText styling but all the effing Unity APIs to do this are internal. Would have
-            ////      to roll our own help box from scratch. Sigh.
-            if (!m_Device.enabled)
-                EditorGUILayout.HelpBox("Device is DISABLED. Control values will not receives updates. "
+            if (m_Device.disabledInFrontend)
+                EditorGUILayout.HelpBox("Device is DISABLED. Control values will not receive updates. "
                     + "To force-enable the device, you can right-click it in the input debugger and use 'Enable Device'.", MessageType.Info);
 
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
@@ -316,8 +319,11 @@ namespace UnityEngine.InputSystem.Editor
 
             AddToList();
 
+            InputSystem.onSettingsChange += NeedControlValueRefresh;
             InputSystem.onDeviceChange += OnDeviceChange;
             InputState.onChange += OnDeviceStateChange;
+            Application.focusChanged += OnApplicationFocusChange;
+            EditorApplication.playModeStateChanged += OnPlayModeChange;
         }
 
         private void UpdateDeviceFlags()
@@ -331,20 +337,49 @@ namespace UnityEngine.InputSystem.Editor
                 flags.Add("UpdateBeforeRender");
             if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
                 flags.Add("HasStateCallbacks");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Disabled) == InputDevice.DeviceFlags.Disabled)
-                flags.Add("Disabled");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasEventMerger) == InputDevice.DeviceFlags.HasEventMerger)
+                flags.Add("HasEventMerger");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInFrontend) == InputDevice.DeviceFlags.DisabledInFrontend)
+                flags.Add("DisabledInFrontend");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) == InputDevice.DeviceFlags.DisabledInRuntime)
+                flags.Add("DisabledInRuntime");
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledWhileInBackground) == InputDevice.DeviceFlags.DisabledWhileInBackground)
+                flags.Add("DisabledWhileInBackground");
             m_DeviceFlags = m_Device.m_DeviceFlags;
             m_DeviceFlagsString = string.Join(", ", flags.ToArray());
         }
 
         private void RefreshControlTreeValues()
         {
-            var updateTypeToShow = InputSystem.s_Manager.defaultUpdateType;
+            m_InputUpdateTypeShownInControlTree = DetermineUpdateTypeToShow(m_Device);
             var currentUpdateType = InputState.currentUpdateType;
 
-            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, m_InputUpdateTypeShownInControlTree);
             m_ControlTree.RefreshControlValues();
             InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
+        }
+
+        internal static InputUpdateType DetermineUpdateTypeToShow(InputDevice device)
+        {
+            if (EditorApplication.isPlaying)
+            {
+                // In play mode, while playing, we show player state. Period.
+
+                switch (InputSystem.settings.updateMode)
+                {
+                    case InputSettings.UpdateMode.ProcessEventsManually:
+                        return InputUpdateType.Manual;
+
+                    case InputSettings.UpdateMode.ProcessEventsInFixedUpdate:
+                        return InputUpdateType.Fixed;
+
+                    default:
+                        return InputUpdateType.Dynamic;
+                }
+            }
+
+            // Outside of play mode, always show editor state.
+            return InputUpdateType.Editor;
         }
 
         // We will lose our device on domain reload and then look it back up the first
@@ -361,6 +396,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_ReloadEventTree;
         private InputEventTrace.ReplayController m_ReplayController;
         private InputEventTrace m_EventTrace;
+        private InputUpdateType m_InputUpdateTypeShownInControlTree;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -384,6 +420,23 @@ namespace UnityEngine.InputSystem.Editor
             s_OpenDebuggerWindows?.Remove(this);
         }
 
+        private void NeedControlValueRefresh()
+        {
+            m_NeedControlValueRefresh = true;
+            Repaint();
+        }
+
+        private void OnPlayModeChange(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode || change == PlayModeStateChange.EnteredEditMode)
+                NeedControlValueRefresh();
+        }
+
+        private void OnApplicationFocusChange(bool focus)
+        {
+            NeedControlValueRefresh();
+        }
+
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             if (device.deviceId != m_DeviceId)
@@ -403,10 +456,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
-            if (InputState.currentUpdateType != InputSystem.s_Manager.defaultUpdateType)
-                return;
-            m_NeedControlValueRefresh = true;
-            Repaint();
+            if (device == m_Device)
+                NeedControlValueRefresh();
         }
 
         private static class Styles
@@ -434,6 +485,8 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIContent loadContent = new GUIContent("Load");
             public static GUIContent recordFramesContent = new GUIContent("Record Frames");
             public static GUIContent stateContent = new GUIContent("State");
+            public static GUIContent editorStateContent = new GUIContent("Controls (Editor State)");
+            public static GUIContent playerStateContent = new GUIContent("Controls (Player State)");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

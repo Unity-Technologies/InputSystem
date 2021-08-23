@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// <value>True if any of <see cref="interfaceName"/>, <see cref="deviceClass"/>,
         /// <see cref="manufacturer"/>, <see cref="product"/>, <see cref="serial"/>,
         /// <see cref="version"/>, or <see cref="capabilities"/> is not <c>null</c> and
-        /// not empty..</value>
+        /// not empty.</value>
         public bool empty =>
             string.IsNullOrEmpty(m_InterfaceName) &&
             string.IsNullOrEmpty(m_DeviceClass) &&
