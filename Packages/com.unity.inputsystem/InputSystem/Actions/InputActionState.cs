@@ -127,7 +127,7 @@ namespace UnityEngine.InputSystem
         public void Initialize(InputBindingResolver resolver)
         {
             ClaimDataFrom(resolver);
-            AddToGlobaList();
+            AddToGlobalList();
         }
 
         internal void ClaimDataFrom(InputBindingResolver resolver)
@@ -390,7 +390,7 @@ namespace UnityEngine.InputSystem
             HookOnBeforeUpdate();
 
             // Fire notifications.
-            if (s_OnActionChange.length > 0)
+            if (s_GlobalState.onActionChange.length > 0)
             {
                 for (var i = 0; i < totalMapCount; ++i)
                 {
@@ -1949,7 +1949,7 @@ namespace UnityEngine.InputSystem
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
-            if (listeners.length == 0 && callbacksOnMap.length == 0 && s_OnActionChange.length == 0)
+            if (listeners.length == 0 && callbacksOnMap.length == 0 && s_GlobalState.onActionChange.length == 0)
                 return;
 
             var context = new InputAction.CallbackContext
@@ -1962,7 +1962,7 @@ namespace UnityEngine.InputSystem
 
             // Global callback goes first.
             var action = context.action;
-            if (s_OnActionChange.length > 0)
+            if (s_GlobalState.onActionChange.length > 0)
             {
                 InputActionChange change;
                 switch (phase)
@@ -1981,7 +1981,7 @@ namespace UnityEngine.InputSystem
                         return;
                 }
 
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, action, change, "InputSystem.onActionChange");
+                DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, action, change, "InputSystem.onActionChange");
             }
 
             // Run callbacks (if any) directly on action.
@@ -3610,25 +3610,30 @@ namespace UnityEngine.InputSystem
         ///
         /// Both of these needs are served by this global list.
         /// </remarks>
-        internal static InlinedArray<GCHandle> s_GlobalList;
-        internal static CallbackArray<Action<object, InputActionChange>> s_OnActionChange;
-        internal static CallbackArray<Action<object>> s_OnActionControlsChanged;
+        internal struct GlobalState
+        {
+            internal InlinedArray<GCHandle> globalList;
+            internal CallbackArray<Action<object, InputActionChange>> onActionChange;
+            internal CallbackArray<Action<object>> onActionControlsChanged;
+        }
 
-        private void AddToGlobaList()
+        internal static GlobalState s_GlobalState;
+
+        private void AddToGlobalList()
         {
             CompactGlobalList();
             var handle = GCHandle.Alloc(this, GCHandleType.Weak);
-            s_GlobalList.AppendWithCapacity(handle);
+            s_GlobalState.globalList.AppendWithCapacity(handle);
         }
 
         private void RemoveMapFromGlobalList()
         {
-            var count = s_GlobalList.length;
+            var count = s_GlobalState.globalList.length;
             for (var i = 0; i < count; ++i)
-                if (s_GlobalList[i].Target == this)
+                if (s_GlobalState.globalList[i].Target == this)
                 {
-                    s_GlobalList[i].Free();
-                    s_GlobalList.RemoveAtByMovingTailWithCapacity(i);
+                    s_GlobalState.globalList[i].Free();
+                    s_GlobalState.globalList.RemoveAtByMovingTailWithCapacity(i);
                     break;
                 }
         }
@@ -3638,25 +3643,25 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void CompactGlobalList()
         {
-            var length = s_GlobalList.length;
+            var length = s_GlobalState.globalList.length;
             var head = 0;
             for (var i = 0; i < length; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (handle.IsAllocated && handle.Target != null)
                 {
                     if (head != i)
-                        s_GlobalList[head] = handle;
+                        s_GlobalState.globalList[head] = handle;
                     ++head;
                 }
                 else
                 {
                     if (handle.IsAllocated)
-                        s_GlobalList[i].Free();
-                    s_GlobalList[i] = default;
+                        s_GlobalState.globalList[i].Free();
+                    s_GlobalState.globalList[i] = default;
                 }
             }
-            s_GlobalList.length = head;
+            s_GlobalState.globalList.length = head;
         }
 
         internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMapOrAsset)
@@ -3665,9 +3670,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
-            DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, actionOrMapOrAsset, change, "onActionChange");
             if (change == InputActionChange.BoundControlsChanged)
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
+                DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
         }
 
         /// <summary>
@@ -3676,22 +3681,22 @@ namespace UnityEngine.InputSystem
         internal static void ResetGlobals()
         {
             DestroyAllActionMapStates();
-            for (var i = 0; i < s_GlobalList.length; ++i)
-                if (s_GlobalList[i].IsAllocated)
-                    s_GlobalList[i].Free();
-            s_GlobalList.length = 0;
-            s_OnActionChange.Clear();
-            s_OnActionControlsChanged.Clear();
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
+                if (s_GlobalState.globalList[i].IsAllocated)
+                    s_GlobalState.globalList[i].Free();
+            s_GlobalState.globalList.length = 0;
+            s_GlobalState.onActionChange.Clear();
+            s_GlobalState.onActionControlsChanged.Clear();
         }
 
         // Walk all maps with enabled actions and add all enabled actions to the given list.
         internal static int FindAllEnabledActions(List<InputAction> result)
         {
             var numFound = 0;
-            var stateCount = s_GlobalList.length;
+            var stateCount = s_GlobalState.globalList.length;
             for (var i = 0; i < stateCount; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (!handle.IsAllocated)
                     continue;
                 var state = (InputActionState)handle.Target;
@@ -3755,15 +3760,15 @@ namespace UnityEngine.InputSystem
                 change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset,
                 "Should only be called for relevant changes");
 
-            for (var i = 0; i < s_GlobalList.length; ++i)
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Stale entry in the list. State has already been reclaimed by GC. Remove it.
                     if (handle.IsAllocated)
-                        s_GlobalList[i].Free();
-                    s_GlobalList.RemoveAtWithCapacity(i);
+                        s_GlobalState.globalList[i].Free();
+                    s_GlobalState.globalList.RemoveAtWithCapacity(i);
                     --i;
                     continue;
                 }
@@ -3827,15 +3832,15 @@ namespace UnityEngine.InputSystem
             ++InputActionMap.s_DeferBindingResolution;
             try
             {
-                for (var i = 0; i < s_GlobalList.length; ++i)
+                for (var i = 0; i < s_GlobalState.globalList.length; ++i)
                 {
-                    var handle = s_GlobalList[i];
+                    var handle = s_GlobalState.globalList[i];
                     if (!handle.IsAllocated || handle.Target == null)
                     {
                         // Stale entry in the list. State has already been reclaimed by GC. Remove it.
                         if (handle.IsAllocated)
-                            s_GlobalList[i].Free();
-                        s_GlobalList.RemoveAtWithCapacity(i);
+                            s_GlobalState.globalList[i].Free();
+                        s_GlobalState.globalList.RemoveAtWithCapacity(i);
                         --i;
                         continue;
                     }
@@ -3853,9 +3858,9 @@ namespace UnityEngine.InputSystem
 
         internal static void DisableAllActions()
         {
-            for (var i = 0; i < s_GlobalList.length; ++i)
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (!handle.IsAllocated || handle.Target == null)
                     continue;
                 var state = (InputActionState)handle.Target;
@@ -3879,16 +3884,16 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static void DestroyAllActionMapStates()
         {
-            while (s_GlobalList.length > 0)
+            while (s_GlobalState.globalList.length > 0)
             {
-                var index = s_GlobalList.length - 1;
-                var handle = s_GlobalList[index];
+                var index = s_GlobalState.globalList.length - 1;
+                var handle = s_GlobalState.globalList[index];
                 if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Already destroyed.
                     if (handle.IsAllocated)
-                        s_GlobalList[index].Free();
-                    s_GlobalList.RemoveAtWithCapacity(index);
+                        s_GlobalState.globalList[index].Free();
+                    s_GlobalState.globalList.RemoveAtWithCapacity(index);
                     continue;
                 }
 

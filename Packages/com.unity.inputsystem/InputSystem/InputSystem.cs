@@ -2917,13 +2917,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                InputActionState.s_OnActionChange.AddCallback(value);
+                InputActionState.s_GlobalState.onActionChange.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                InputActionState.s_OnActionChange.RemoveCallback(value);
+                InputActionState.s_GlobalState.onActionChange.RemoveCallback(value);
             }
         }
 
@@ -3553,6 +3553,8 @@ namespace UnityEngine.InputSystem
             [SerializeField] public string systemObject;
             #endif
             ////REVIEW: preserve InputUser state? (if even possible)
+            ///
+            [NonSerialized] public InputActionState.GlobalState inputActionState;
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -3589,8 +3591,12 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(s_SystemObject),
+                inputActionState = InputActionState.s_GlobalState
                 #endif
             });
+
+            // Replace global state with new state
+            InputActionState.s_GlobalState = new InputActionState.GlobalState();
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
         }
@@ -3611,6 +3617,8 @@ namespace UnityEngine.InputSystem
             s_Manager = state.manager;
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;
+
+            InputActionState.s_GlobalState = state.inputActionState;
 
             InputUpdate.Restore(state.managerState.updateState);
 
