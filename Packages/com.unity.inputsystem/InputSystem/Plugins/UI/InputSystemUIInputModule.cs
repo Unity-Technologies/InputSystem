@@ -1318,7 +1318,7 @@ namespace UnityEngine.InputSystem.UI
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_OnActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
+            InputActionState.s_GlobalState.onActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
 
             HookActions();
             EnableAllActions();
@@ -1328,7 +1328,7 @@ namespace UnityEngine.InputSystem.UI
         {
             base.OnDisable();
 
-            InputActionState.s_OnActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
+            InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
 
             DisableAllActions();
             UnhookActions();

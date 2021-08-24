@@ -3555,6 +3555,7 @@ namespace UnityEngine.InputSystem
             ////REVIEW: preserve InputUser state? (if even possible)
             ///
             [NonSerialized] public InputActionState.GlobalState inputActionState;
+            [NonSerialized] public EnhancedTouch.Touch.GlobalState touchState;
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -3591,7 +3592,8 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(s_SystemObject),
-                inputActionState = InputActionState.s_GlobalState
+                inputActionState = InputActionState.s_GlobalState,
+                touchState = EnhancedTouch.Touch.s_GlobalState
                 #endif
             });
 
@@ -3619,6 +3621,7 @@ namespace UnityEngine.InputSystem
             s_RemoteConnection = state.remoteConnection;
 
             InputActionState.s_GlobalState = state.inputActionState;
+            EnhancedTouch.Touch.s_GlobalState = state.touchState;
 
             InputUpdate.Restore(state.managerState.updateState);
 
