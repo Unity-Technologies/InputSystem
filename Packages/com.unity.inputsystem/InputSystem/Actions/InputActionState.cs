@@ -3601,7 +3601,7 @@ namespace UnityEngine.InputSystem
         #region Global State
 
         /// <summary>
-        /// List of weak references to all action map states currently in the system.
+        /// Global state containing a list of weak references to all action map states currently in the system.
         /// </summary>
         /// <remarks>
         /// When the control setup in the system changes, we need a way for control resolution that
