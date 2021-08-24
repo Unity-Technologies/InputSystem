@@ -2025,6 +2025,33 @@ namespace UnityEngine.InputSystem.Users
             s_OnEventHooked = false;
         }
 
+        internal struct GlobalState
+        {
+            private int s_PairingStateVersion;
+            private uint s_LastUserId;
+            private int s_AllUserCount;
+            private int s_AllPairedDeviceCount;
+            private int s_AllLostDeviceCount;
+            private InputUser[] s_AllUsers;
+            private UserData[] s_AllUserData;
+            private InputDevice[] s_AllPairedDevices; // We keep a single array that we slice out to each user.
+            private InputDevice[] s_AllLostDevices;   // We keep a single array that we slice out to each user.
+            private InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
+            private CallbackArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
+            private CallbackArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
+            private CallbackArray<Func<InputDevice, InputEventPtr, bool>> s_OnPreFilterUnpairedDeviceUsed;
+            private Action<object, InputActionChange> s_ActionChangeDelegate;
+            private Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
+            private Action<InputEventPtr, InputDevice> s_OnEventDelegate;
+            private bool s_OnActionChangeHooked;
+            private bool s_OnDeviceChangeHooked;
+            private bool s_OnEventHooked;
+            private int s_ListenForUnpairedDeviceActivity;
+        }
+
+        internal static GlobalState CreateGlobalState() => default;
+        internal static GlobalState s_GlobalState;
+
         internal static void ResetGlobals()
         {
             UnhookFromActionChange();
@@ -2041,13 +2068,16 @@ namespace UnityEngine.InputSystem.Users
             s_PairingStateVersion = 0;
             s_AllUserCount = 0;
             s_AllPairedDeviceCount = 0;
+            s_AllLostDeviceCount = 0;
             s_AllUsers = null;
             s_AllUserData = null;
             s_AllPairedDevices = null;
+            s_AllLostDevices = null;
             s_OngoingAccountSelections = default;
             s_OnChange = default;
             s_OnUnpairedDeviceUsed = default;
             s_OnPreFilterUnpairedDeviceUsed = default;
+            s_ActionChangeDelegate = null;
             s_OnDeviceChangeDelegate = null;
             s_OnEventDelegate = null;
             s_OnDeviceChangeHooked = false;

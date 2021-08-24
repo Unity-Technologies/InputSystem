@@ -3556,6 +3556,7 @@ namespace UnityEngine.InputSystem
             ///
             [NonSerialized] public InputActionState.GlobalState inputActionState;
             [NonSerialized] public EnhancedTouch.Touch.GlobalState touchState;
+            [NonSerialized] public InputUser.GlobalState inputUserState;
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -3598,7 +3599,9 @@ namespace UnityEngine.InputSystem
             });
 
             // Replace global state with new state
-            InputActionState.s_GlobalState = new InputActionState.GlobalState();
+            InputActionState.s_GlobalState = InputActionState.CreateGlobalState();
+            EnhancedTouch.Touch.s_GlobalState = EnhancedTouch.Touch.CreateGlobalState();
+            InputUser.s_GlobalState = InputUser.CreateGlobalState();
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
         }
@@ -3622,6 +3625,7 @@ namespace UnityEngine.InputSystem
 
             InputActionState.s_GlobalState = state.inputActionState;
             EnhancedTouch.Touch.s_GlobalState = state.touchState;
+            InputUser.s_GlobalState = state.inputUserState;
 
             InputUpdate.Restore(state.managerState.updateState);
 

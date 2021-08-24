@@ -3617,6 +3617,7 @@ namespace UnityEngine.InputSystem
             internal CallbackArray<Action<object>> onActionControlsChanged;
         }
 
+        internal static GlobalState CreateGlobalState() => default;
         internal static GlobalState s_GlobalState;
 
         private void AddToGlobalList()
