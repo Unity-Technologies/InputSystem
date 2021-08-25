@@ -12,7 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
-- Fixed an issue where mixing test cases based on `InputTestFixture` (using mocked `InputSystem`) and regular test cases (using real `InputSystem`) would lead to static state leaking between test cases causing random failures and unexpected/undefined behavior.
+- Fixed an issue where mixing test cases based on `InputTestFixture` (using mocked `InputSystem`) and regular test cases (using real `InputSystem`) would lead to static state leaking between test cases causing random failures and unexpected/undefined behavior ([case 1329015](https://issuetracker.unity3d.com/product/unity/issues/guid/1329015)).
 
 ## [1.1.0-pre.6] - 2021-08-23
 
