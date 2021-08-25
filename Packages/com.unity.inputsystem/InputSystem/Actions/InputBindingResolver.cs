@@ -564,7 +564,7 @@ namespace UnityEngine.InputSystem
                 memory.Dispose();
                 memory = newMemory;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Don't leak our native memory when we throw an exception.
                 newMemory.Dispose();
