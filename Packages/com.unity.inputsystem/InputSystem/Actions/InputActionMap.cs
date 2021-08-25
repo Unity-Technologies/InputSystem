@@ -844,11 +844,13 @@ namespace UnityEngine.InputSystem
                     var numControls = 0;
                     var controls = new InputControl[m_SingletonAction.m_ControlCount];
                     for (var i = 0; i < m_SingletonAction.m_ControlCount; ++i)
+                    {
                         if (!controls.ContainsReference(m_ControlsForEachAction[i]))
                         {
                             controls[numControls] = m_ControlsForEachAction[i];
                             ++numControls;
                         }
+                    }
 
                     m_ControlsForEachAction = controls;
                     m_SingletonAction.m_ControlCount = numControls;
