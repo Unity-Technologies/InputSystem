@@ -3552,8 +3552,7 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
             [SerializeField] public string systemObject;
             #endif
-            ////REVIEW: preserve InputUser state? (if even possible)
-            ///
+            ////TODO: make these saved states capable of surviving domain reloads
             [NonSerialized] public ISavedState inputActionState;
             [NonSerialized] public ISavedState touchState;
             [NonSerialized] public ISavedState inputUserState;
