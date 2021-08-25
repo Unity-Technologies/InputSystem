@@ -836,6 +836,23 @@ namespace UnityEngine.InputSystem
                 m_SingletonAction.m_BindingsCount = m_Bindings.Length;
                 m_SingletonAction.m_ControlStartIndex = 0;
                 m_SingletonAction.m_ControlCount = m_State?.totalControlCount ?? 0;
+
+                // Only complication, InputActionState allows a control to appear multiple times
+                // on the same action and InputAction.controls[] doesn't.
+                if (m_ControlsForEachAction.HaveDuplicateReferences(0, m_SingletonAction.m_ControlCount))
+                {
+                    var numControls = 0;
+                    var controls = new InputControl[m_SingletonAction.m_ControlCount];
+                    for (var i = 0; i < m_SingletonAction.m_ControlCount; ++i)
+                        if (!controls.ContainsReference(m_ControlsForEachAction[i]))
+                        {
+                            controls[numControls] = m_ControlsForEachAction[i];
+                            ++numControls;
+                        }
+
+                    m_ControlsForEachAction = controls;
+                    m_SingletonAction.m_ControlCount = numControls;
+                }
             }
             else
             {
@@ -943,17 +960,27 @@ namespace UnityEngine.InputSystem
                         // but do not really resolve to controls themselves).
                         if (m_State != null && !m_Bindings[sourceBindingToCopy].isComposite)
                         {
-                            var controlCountForBinding = m_State
-                                .bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy].controlCount;
+                            ref var bindingState = ref m_State.bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy];
+
+                            var controlCountForBinding = bindingState.controlCount;
                             if (controlCountForBinding > 0)
                             {
-                                Array.Copy(m_State.controls,
-                                    m_State.bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy]
-                                        .controlStartIndex,
-                                    m_ControlsForEachAction, currentControlIndex, controlCountForBinding);
+                                // Internally, we allow several bindings on a given action to resolve to the same control.
+                                // Externally, however, InputAction.controls[] is a set and thus should not contain duplicates.
+                                // So, instead of just doing a straight copy here, we copy controls one by one.
 
-                                currentControlIndex += controlCountForBinding;
-                                currentAction.m_ControlCount += controlCountForBinding;
+                                var controlStartIndexForBinding = bindingState.controlStartIndex;
+                                for (var n = 0; n < controlCountForBinding; ++n)
+                                {
+                                    var control = m_State.controls[controlStartIndexForBinding + n];
+                                    if (!m_ControlsForEachAction.ContainsReference(currentAction.m_ControlStartIndex,
+                                        currentAction.m_ControlCount, control))
+                                    {
+                                        m_ControlsForEachAction[currentControlIndex] = control;
+                                        ++currentControlIndex;
+                                        ++currentAction.m_ControlCount;
+                                    }
+                                }
                             }
                         }
 
