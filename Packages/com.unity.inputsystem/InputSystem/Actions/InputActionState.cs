@@ -3617,8 +3617,26 @@ namespace UnityEngine.InputSystem
             internal CallbackArray<Action<object>> onActionControlsChanged;
         }
 
-        internal static GlobalState CreateGlobalState() => default;
         internal static GlobalState s_GlobalState;
+
+        internal static SavedStructState<GlobalState> SaveAndResetState()
+        {
+            // Save current state
+            var savedState = new SavedStructState<GlobalState>(
+                ref s_GlobalState, (ref GlobalState state) =>
+                {
+                    // Free/dispose any resources allocated for the current state
+                    ResetGlobals();
+
+                    // Restore stored state
+                    s_GlobalState = state;
+                });
+
+            // Reset global state
+            s_GlobalState = default;
+
+            return savedState;
+        }
 
         private void AddToGlobalList()
         {
@@ -3679,7 +3697,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Nuke global state we have to keep track of action map states.
         /// </summary>
-        internal static void ResetGlobals()
+        private static void ResetGlobals()
         {
             DestroyAllActionMapStates();
             for (var i = 0; i < s_GlobalState.globalList.length; ++i)

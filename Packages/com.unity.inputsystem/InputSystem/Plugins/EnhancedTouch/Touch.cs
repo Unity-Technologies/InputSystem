@@ -585,12 +585,28 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 #endif
         }
 
-        internal static GlobalState CreateGlobalState()
-        {
+        private static GlobalState CreateGlobalState()
+        {   // Convenient method since parameterized construction is default
             return new GlobalState { historyLengthPerFinger = 64 };
         }
 
         internal static GlobalState s_GlobalState = CreateGlobalState();
+
+        internal static ISavedState SaveAndResetState()
+        {
+            // Save current state
+            var savedState = new SavedStructState<GlobalState>(
+                ref s_GlobalState, (ref GlobalState state) =>
+                {
+                    // Restore stored state
+                    s_GlobalState = state;
+                });
+
+            // Reset global state
+            s_GlobalState = CreateGlobalState();
+
+            return savedState;
+        }
 
         // In scenarios where we have to support multiple different types of input updates (e.g. in editor or in
         // player when both dynamic and fixed input updates are enabled), we need more than one copy of touch state.

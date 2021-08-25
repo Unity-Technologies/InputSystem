@@ -14,6 +14,7 @@ using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -3519,7 +3520,6 @@ namespace UnityEngine.InputSystem
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
 
-            InputActionState.ResetGlobals();
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
@@ -3554,9 +3554,9 @@ namespace UnityEngine.InputSystem
             #endif
             ////REVIEW: preserve InputUser state? (if even possible)
             ///
-            [NonSerialized] public InputActionState.GlobalState inputActionState;
-            [NonSerialized] public EnhancedTouch.Touch.GlobalState touchState;
-            [NonSerialized] public InputUser.GlobalState inputUserState;
+            [NonSerialized] public ISavedState inputActionState;
+            [NonSerialized] public ISavedState touchState;
+            [NonSerialized] public ISavedState inputUserState;
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -3593,15 +3593,11 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(s_SystemObject),
-                inputActionState = InputActionState.s_GlobalState,
-                touchState = EnhancedTouch.Touch.s_GlobalState
+                inputActionState = InputActionState.SaveAndResetState(),
+                touchState = EnhancedTouch.Touch.SaveAndResetState(),
+                inputUserState = InputUser.SaveAndResetState()
                 #endif
             });
-
-            // Replace global state with new state
-            InputActionState.s_GlobalState = InputActionState.CreateGlobalState();
-            EnhancedTouch.Touch.s_GlobalState = EnhancedTouch.Touch.CreateGlobalState();
-            InputUser.s_GlobalState = InputUser.CreateGlobalState();
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
         }
@@ -3623,9 +3619,9 @@ namespace UnityEngine.InputSystem
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;
 
-            InputActionState.s_GlobalState = state.inputActionState;
-            EnhancedTouch.Touch.s_GlobalState = state.touchState;
-            InputUser.s_GlobalState = state.inputUserState;
+            state.inputActionState.Restore();
+            state.touchState.Restore();
+            state.inputUserState.Restore();
 
             InputUpdate.Restore(state.managerState.updateState);
 
