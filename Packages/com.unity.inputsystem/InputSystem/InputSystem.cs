@@ -3592,10 +3592,10 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(s_SystemObject),
+                #endif
                 inputActionState = InputActionState.SaveAndResetState(),
                 touchState = EnhancedTouch.Touch.SaveAndResetState(),
                 inputUserState = InputUser.SaveAndResetState()
-                #endif
             });
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.

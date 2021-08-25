@@ -8,8 +8,15 @@ namespace UnityEngine.InputSystem.Utilities
     /// </summary>
     internal interface ISavedState
     {
+        /// <summary>
+        /// Dispose current state, should be invoked before RestoreSavedState()
+        /// to dispose the current state before restoring a saved state.
+        /// </summary>
         void StaticDisposeCurrentState();
 
+        /// <summary>
+        /// Restore previous state, should be invoked after StaticDisposeCurrentState().
+        /// </summary>
         void RestoreSavedState();
     }
 
@@ -28,8 +35,8 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         /// <param name="state">The value-type state to be saved.</param>
         /// <param name="restoreAction">The action to be carried out to restore state.</param>
-        /// <param name="staticDisposeCurrentState">The action to be carried out to dispose current state.</param>
-        internal SavedStructState(ref T state, TypedRestore restoreAction, Action staticDisposeCurrentState)
+        /// <param name="staticDisposeCurrentState">The action to be carried out to dispose current state. May be null.</param>
+        internal SavedStructState(ref T state, TypedRestore restoreAction, Action staticDisposeCurrentState = null)
         {
             Debug.Assert(restoreAction != null, "Restore action is required");
 
@@ -38,9 +45,6 @@ namespace UnityEngine.InputSystem.Utilities
             m_StaticDisposeCurrentState = staticDisposeCurrentState;
         }
 
-        /// <summary>
-        /// Dispose current state, should be invoked before RestoreSavedState().
-        /// </summary>
         public void StaticDisposeCurrentState()
         {
             if (m_StaticDisposeCurrentState != null)
@@ -50,13 +54,11 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
-        /// <summary>
-        /// Restore previous state, should be invoked after StaticDisposeCurrentState().
-        /// </summary>
         public void RestoreSavedState()
         {
-            Debug.Assert(m_StaticDisposeCurrentState == null, "Only restore once");
-            Debug.Assert(m_RestoreAction != null, "Only restore once");
+            Debug.Assert(m_StaticDisposeCurrentState == null,
+                $"Should have been disposed via {nameof(StaticDisposeCurrentState)} before invoking {nameof(RestoreSavedState)}");
+            Debug.Assert(m_RestoreAction != null, $"Only invoke {nameof(RestoreSavedState)} once ");
             m_RestoreAction(ref m_State);
             m_RestoreAction = null;
         }
