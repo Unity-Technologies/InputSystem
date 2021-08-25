@@ -170,7 +170,7 @@ partial class CoreTests
     // https://fogbugz.unity3d.com/f/cases/1293808/
     [Test]
     [Category("Actions")]
-    public void Actions_WhenSeveralBindingsResolveToSameControl_ControlIsAssociatedWithFirstActiveBinding()
+    public void Actions_WhenSeveralBindingsResolveToSameControl_SameControlFeedsIntoActionMultipleTimes_ButIsListedInControlsOnlyOnce()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
