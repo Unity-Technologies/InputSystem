@@ -1979,14 +1979,9 @@ namespace UnityEngine.InputSystem.Users
         {
             // Save current state and provide an opaque interface to restore it
             var savedState = new SavedStructState<GlobalState>(
-                ref s_GlobalState, (ref GlobalState state) =>
-                {
-                    // Free/dispose any resources allocated for the current state
-                    DisposeAndResetGlobalState();
-
-                    // Restore stored state
-                    s_GlobalState = state;
-                });
+                ref s_GlobalState,
+                (ref GlobalState state) => s_GlobalState = state, // restore
+                () => DisposeAndResetGlobalState()); // static dispose
 
             // Reset global state
             s_GlobalState = default;

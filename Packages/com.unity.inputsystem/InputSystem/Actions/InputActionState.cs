@@ -3623,14 +3623,9 @@ namespace UnityEngine.InputSystem
         {
             // Save current state
             var savedState = new SavedStructState<GlobalState>(
-                ref s_GlobalState, (ref GlobalState state) =>
-                {
-                    // Free/dispose any resources allocated for the current state
-                    ResetGlobals();
-
-                    // Restore stored state
-                    s_GlobalState = state;
-                });
+                ref s_GlobalState,
+                (ref GlobalState state) => s_GlobalState = state, // restore
+                () => ResetGlobals()); // static dispose
 
             // Reset global state
             s_GlobalState = default;

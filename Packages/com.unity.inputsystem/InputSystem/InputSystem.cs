@@ -3609,18 +3609,23 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(s_SavedStateStack != null && s_SavedStateStack.Count > 0);
 
+            // Load back previous state.
+            var state = s_SavedStateStack.Pop();
+
+            state.inputUserState.StaticDisposeCurrentState();
+            state.touchState.StaticDisposeCurrentState();
+            state.inputActionState.StaticDisposeCurrentState();
+
             // Nuke what we have.
             Destroy();
 
-            // Load back previous state.
-            var state = s_SavedStateStack.Pop();
+            state.inputUserState.RestoreSavedState();
+            state.touchState.RestoreSavedState();
+            state.inputActionState.RestoreSavedState();
+
             s_Manager = state.manager;
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;
-
-            state.inputActionState.Restore();
-            state.touchState.Restore();
-            state.inputUserState.Restore();
 
             InputUpdate.Restore(state.managerState.updateState);
 

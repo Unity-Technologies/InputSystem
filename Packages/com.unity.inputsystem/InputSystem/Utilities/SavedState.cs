@@ -1,3 +1,5 @@
+using System;
+
 namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
@@ -6,7 +8,9 @@ namespace UnityEngine.InputSystem.Utilities
     /// </summary>
     internal interface ISavedState
     {
-        void Restore();
+        void StaticDisposeCurrentState();
+
+        void RestoreSavedState();
     }
 
     /// <summary>
@@ -19,27 +23,46 @@ namespace UnityEngine.InputSystem.Utilities
     {
         public delegate void TypedRestore(ref T state);
 
-        internal SavedStructState(ref T state, TypedRestore restoreAction)
+        /// <summary>
+        /// Constructs a SavedStructState.
+        /// </summary>
+        /// <param name="state">The value-type state to be saved.</param>
+        /// <param name="restoreAction">The action to be carried out to restore state.</param>
+        /// <param name="staticDisposeCurrentState">The action to be carried out to dispose current state.</param>
+        internal SavedStructState(ref T state, TypedRestore restoreAction, Action staticDisposeCurrentState)
         {
-            Debug.Assert(restoreAction != null);
+            Debug.Assert(restoreAction != null, "Restore action is required");
 
             m_State = state; // copy
             m_RestoreAction = restoreAction;
+            m_StaticDisposeCurrentState = staticDisposeCurrentState;
         }
 
         /// <summary>
-        /// Restore previous state
+        /// Dispose current state, should be invoked before RestoreSavedState().
         /// </summary>
-        public void Restore()
+        public void StaticDisposeCurrentState()
         {
-            if (m_RestoreAction != null)
+            if (m_StaticDisposeCurrentState != null)
             {
-                m_RestoreAction(ref m_State);
-                m_RestoreAction = null;
+                m_StaticDisposeCurrentState();
+                m_StaticDisposeCurrentState = null;
             }
+        }
+
+        /// <summary>
+        /// Restore previous state, should be invoked after StaticDisposeCurrentState().
+        /// </summary>
+        public void RestoreSavedState()
+        {
+            Debug.Assert(m_StaticDisposeCurrentState == null, "Only restore once");
+            Debug.Assert(m_RestoreAction != null, "Only restore once");
+            m_RestoreAction(ref m_State);
+            m_RestoreAction = null;
         }
 
         private T m_State;
         private TypedRestore m_RestoreAction;
+        private Action m_StaticDisposeCurrentState;
     }
 }
