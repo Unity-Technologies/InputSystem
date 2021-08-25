@@ -350,6 +350,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="SwitchCurrentControlScheme(UnityEngine.InputSystem.InputDevice[])"/>
         /// <seealso cref="defaultControlScheme"/>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
         public string currentControlScheme
         {
             get
@@ -877,6 +878,28 @@ namespace UnityEngine.InputSystem
             DeactivateInput();
         }
 
+        /// <summary>
+        /// Switch the current control scheme to one that fits the given set of devices.
+        /// </summary>
+        /// <param name="devices">A list of input devices. Note that if any of the devices is already paired to another
+        /// player, the device will end up paired to both players.</param>
+        /// <returns>True if the switch was successful, false otherwise. The latter can happen, for example, if
+        /// <see cref="actions"/> does not have a control scheme that fits the given set of devices.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="devices"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="actions"/> has not been assigned.</exception>
+        /// <remarks>
+        /// The player's currently paired devices (see <see cref="devices"/>) will get unpaired.
+        ///
+        /// <example>
+        /// <code>
+        /// // Switch the first player to keyboard and mouse.
+        /// PlayerInput.all[0]
+        ///     .SwitchCurrentControlScheme(Keyboard.current, Mouse.current);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="currentControlScheme"/>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
         public bool SwitchCurrentControlScheme(params InputDevice[] devices)
         {
             if (devices == null)
@@ -895,6 +918,31 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: these should just be SwitchControlScheme
 
+        /// <summary>
+        /// Switch the player to use the given control scheme together with the given devices.
+        /// </summary>
+        /// <param name="controlScheme">Name of the control scheme. See <see cref="InputControlScheme.name"/>.</param>
+        /// <param name="devices">A list of devices.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="devices"/> is <c>null</c> -or- <paramref name="controlScheme"/> is
+        /// <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This method can be used to explicitly force a combination of control scheme and a specific set of
+        /// devices.
+        ///
+        /// <example>
+        /// <code>
+        /// // Put player 1 on the "Gamepad" control scheme together
+        /// // with the second gamepad.
+        /// PlayerInput.all[0].SwitchControlScheme(
+        ///     "Gamepad",
+        ///     Gamepad.all[1]);
+        /// </code>
+        /// </example>
+        ///
+        /// The player's currently paired devices (see <see cref="devices"/>) will get unpaired.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
+        /// <seealso cref="currentControlScheme"/>
         public void SwitchCurrentControlScheme(string controlScheme, params InputDevice[] devices)
         {
             if (string.IsNullOrEmpty(controlScheme))
