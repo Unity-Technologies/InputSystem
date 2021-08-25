@@ -3619,7 +3619,7 @@ namespace UnityEngine.InputSystem
 
         internal static GlobalState s_GlobalState;
 
-        internal static SavedStructState<GlobalState> SaveAndResetState()
+        internal static ISavedState SaveAndResetState()
         {
             // Save current state
             var savedState = new SavedStructState<GlobalState>(
