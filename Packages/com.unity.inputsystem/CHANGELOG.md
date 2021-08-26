@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Changed
+
+- Modified the fix that landed in `1.1-preview.3` for [any given control being added to an action only once](#same_control_multiple_times_fix).
+  * This caused a regression with some setups that, for example, bound the same control multiple times in a composite using processors to alter the value of the control.
+  * Internally, a control is now again allowed to feed into the same action through more than one binding.
+  * However, externally the control will be mentioned on the action's `InputAction.controls` list only once.
+
 ## [1.1.0-pre.6] - 2021-08-23
 
 ### Fixed
@@ -266,7 +275,7 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
-- Fixed actions not triggering correctly when multiple bindings on the same action were referencing the same control ([case 1293808](https://issuetracker.unity3d.com/product/unity/issues/guid/1293808/)).
+- <a name="same_control_multiple_times_fix"></a>Fixed actions not triggering correctly when multiple bindings on the same action were referencing the same control ([case 1293808](https://issuetracker.unity3d.com/product/unity/issues/guid/1293808/)).
   * Bindings will now "claim" controls during resolution. If several bindings __on the same action__ resolve to the same control, only the first such binding will successfully resolve to the control. Subsequent bindings will only resolve to controls not already referenced by other bindings on the action.
   ```CSharp
   var action = new InputAction();
