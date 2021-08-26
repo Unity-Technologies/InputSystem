@@ -2618,7 +2618,7 @@ partial class CoreTests
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         action.Enable();
 
-        Assert.That(InputActionState.s_GlobalList.length, Is.EqualTo(1));
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
 
@@ -2626,7 +2626,7 @@ partial class CoreTests
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
-        Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
