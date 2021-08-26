@@ -411,26 +411,63 @@ namespace UnityEngine.InputSystem
         {
             using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                for (var i = 0; i < totalActionCount; ++i)
+                for (var actionIndex = 0; actionIndex < totalActionCount; ++actionIndex)
                 {
-                    var actionState = &actionStates[i];
+                    var actionState = &actionStates[actionIndex];
 
                     // Skip actions that aren't in progress.
                     if (actionState->phase == InputActionPhase.Waiting || actionState->phase == InputActionPhase.Disabled)
                         continue;
 
-                    // Skip actions not from this device.
-                    var controlIndex = actionState->controlIndex;
-                    if (controlIndex == -1)
-                        continue;
-                    var control = controls[controlIndex];
-                    if (control.device != device)
-                        continue;
+                    // Skip actions not driven from this device.
+                    if (actionState->isPassThrough)
+                    {
+                        // Pass-through actions are not driven from specific controls yet still benefit
+                        // from being able to observe resets. So for these, we need to check all bound controls,
+                        // not just the one that happen to trigger last.
+                        if (!IsActionBoundToControlFromDevice(device, actionIndex))
+                            continue;
+                    }
+                    else
+                    {
+                        // For button and value actions, we go by whatever is currently driving the action.
+
+                        var controlIndex = actionState->controlIndex;
+                        if (controlIndex == -1)
+                            continue;
+                        var control = controls[controlIndex];
+                        if (control.device != device)
+                            continue;
+                    }
 
                     // Reset.
-                    ResetActionState(i);
+                    ResetActionState(actionIndex);
                 }
             }
+        }
+
+        private bool IsActionBoundToControlFromDevice(InputDevice device, int actionIndex)
+        {
+            var usesControlFromDevice = false;
+            var bindingStartIndex = GetActionBindingStartIndexAndCount(actionIndex, out var bindingCount);
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingIndex = memory.actionBindingIndices[bindingStartIndex + i];
+                var controlCount = bindingStates[bindingIndex].controlCount;
+                var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
+
+                for (var n = 0; n < controlCount; ++n)
+                {
+                    var control = controls[controlStartIndex + n];
+                    if (control.device == device)
+                    {
+                        usesControlFromDevice = true;
+                        break;
+                    }
+                }
+            }
+
+            return usesControlFromDevice;
         }
 
         /// <summary>
@@ -480,7 +517,8 @@ namespace UnityEngine.InputSystem
                     Debug.Assert(bindingStates[actionState->bindingIndex].interactionCount == 0,
                         "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
 
-                    ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
+                    if (actionState->phase != InputActionPhase.Canceled)
+                        ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
                 }
             }
 
@@ -1279,8 +1317,7 @@ namespace UnityEngine.InputSystem
                 // controls bound to the action are actuated but we don't yet know whether
                 // any of them is actuated *more* than the control that had just changed value.
                 // Go through the bindings for the action and see what we've got.
-                var bindingStartIndex = memory.actionBindingIndicesAndCounts[actionIndex * 2];
-                var bindingCount = memory.actionBindingIndicesAndCounts[actionIndex * 2 + 1];
+                var bindingStartIndex = GetActionBindingStartIndexAndCount(actionIndex, out var bindingCount);
                 var highestActuationLevel = trigger.magnitude;
                 var controlWithHighestActuation = kInvalidIndex;
                 var bindingWithHighestActuation = kInvalidIndex;
@@ -1392,6 +1429,12 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        private ushort GetActionBindingStartIndexAndCount(int actionIndex, out ushort bindingCount)
+        {
+            bindingCount = memory.actionBindingIndicesAndCounts[actionIndex * 2 + 1];
+            return memory.actionBindingIndicesAndCounts[actionIndex * 2];
+        }
+
         /// <summary>
         /// When there is no interaction on an action, this method perform the default interaction logic that we
         /// run when a bound control changes value.
@@ -1443,6 +1486,8 @@ namespace UnityEngine.InputSystem
                         // Ignore if the control has not crossed its actuation threshold.
                         if (IsActuated(ref trigger))
                         {
+                            ////REVIEW: Why is it we don't stay in performed but rather go back to started all the time?
+
                             // Go into started, then perform and then go back to started.
                             ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
@@ -3488,8 +3533,8 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Array of pair of ints, one pair for each action (same index as <see cref="actionStates"/>). First int
-            /// is count of bindings on action, second int is index into <see cref="actionBindingIndices"/> where
-            /// bindings of action are found.
+            /// is the index into <see cref="actionBindingIndices"/> where bindings of action are found and second int
+            /// is the count of bindings on action.
             /// </summary>
             public ushort* actionBindingIndicesAndCounts;
 
@@ -3833,7 +3878,7 @@ namespace UnityEngine.InputSystem
                         if (!state.IsUsingDevice(device))
                             continue;
                         state.ResetActionStatesDrivenBy(device);
-                        return; // No re-resolving necessary.
+                        continue; // No re-resolving necessary.
                 }
 
                 // Trigger a lazy-resolve on all action maps in the state.
