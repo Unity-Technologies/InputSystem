@@ -1536,21 +1536,41 @@ partial class CoreTests
         // Create an action that performs on button *up*. This way we can tell whether
         // the action is truly cancelled or whether it simply gets triggered by us
         // resetting the corresponding device state.
-        var buttonReleaseAction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+        var buttonReleaseAction = new InputAction(name: "button", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth",
             interactions: "press(behavior=1)");
         buttonReleaseAction.Enable();
+
+        var valueAction = new InputAction(name: "value", type: InputActionType.Value, binding: "<Gamepad>/buttonSouth");
+        valueAction.Enable();
+
+        var passThroughAction = new InputAction(name: "passthrough", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
+        passThroughAction.Enable();
 
         Press(gamepad.buttonSouth);
 
         Assert.That(buttonReleaseAction.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(buttonReleaseAction.activeControl, Is.SameAs(gamepad.buttonSouth));
 
+        Assert.That(valueAction.phase, Is.EqualTo(InputActionPhase.Started)); // Goes back to Started after Performed.
+        Assert.That(valueAction.activeControl, Is.SameAs(gamepad.buttonSouth));
+
+        Assert.That(passThroughAction.phase, Is.EqualTo(InputActionPhase.Performed));
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.buttonSouth));
+
         using (var buttonReleaseActionTrace = new InputActionTrace(buttonReleaseAction))
+        using (var valueActionTrace = new InputActionTrace(valueAction))
+        using (var passThroughActionTrace = new InputActionTrace(passThroughAction))
         {
             InputSystem.ResetDevice(gamepad);
 
-            Assert.That(buttonReleaseActionTrace,
-                Canceled(buttonReleaseAction));
+            Assert.That(buttonReleaseActionTrace, Canceled(buttonReleaseAction));
+            Assert.That(valueActionTrace, Canceled(valueAction));
+
+            // This case is quirky. For button and value actions, the reset of the control value
+            // does not cause the action to start back up. For pass-through actions, that is different
+            // as *any* value change performs the action. So here, we see *both* a cancellation and then
+            // immediately a performing of the action.
+            Assert.That(passThroughActionTrace, Canceled(passThroughAction).AndThen(Performed(passThroughAction, value: 0f)));
         }
     }
 

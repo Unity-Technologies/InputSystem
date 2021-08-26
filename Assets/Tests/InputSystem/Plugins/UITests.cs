@@ -109,6 +109,7 @@ internal class UITests : CoreTestsFixture
         var systemObject = new GameObject(namePrefix + "System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
         var uiModule = systemObject.AddComponent<InputSystemUIInputModule>();
+        uiModule.UnassignActions();
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
 
@@ -180,6 +181,40 @@ internal class UITests : CoreTestsFixture
         objects.eventSystem.InvokeUpdate(); // Initial update only sets current module.
 
         return objects;
+    }
+
+    [Test]
+    [Category("UI")]
+    public void UI_InputModuleHasDefaultActions()
+    {
+        var go = new GameObject();
+        var uiModule = go.AddComponent<InputSystemUIInputModule>();
+
+        Assert.That(uiModule.actionsAsset, Is.Not.Null);
+        Assert.That(uiModule.point?.action, Is.SameAs(uiModule.actionsAsset["UI/Point"]));
+        Assert.That(uiModule.leftClick?.action, Is.SameAs(uiModule.actionsAsset["UI/Click"]));
+        Assert.That(uiModule.rightClick?.action, Is.SameAs(uiModule.actionsAsset["UI/RightClick"]));
+        Assert.That(uiModule.middleClick?.action, Is.SameAs(uiModule.actionsAsset["UI/MiddleClick"]));
+        Assert.That(uiModule.scrollWheel?.action, Is.SameAs(uiModule.actionsAsset["UI/ScrollWheel"]));
+        Assert.That(uiModule.submit?.action, Is.SameAs(uiModule.actionsAsset["UI/Submit"]));
+        Assert.That(uiModule.cancel?.action, Is.SameAs(uiModule.actionsAsset["UI/Cancel"]));
+        Assert.That(uiModule.move?.action, Is.SameAs(uiModule.actionsAsset["UI/Navigate"]));
+        Assert.That(uiModule.trackedDeviceOrientation?.action, Is.SameAs(uiModule.actionsAsset["UI/TrackedDeviceOrientation"]));
+        Assert.That(uiModule.trackedDevicePosition?.action, Is.SameAs(uiModule.actionsAsset["UI/TrackedDevicePosition"]));
+
+        uiModule.UnassignActions();
+
+        Assert.That(uiModule.actionsAsset, Is.Null);
+        Assert.That(uiModule.point, Is.Null);
+        Assert.That(uiModule.leftClick, Is.Null);
+        Assert.That(uiModule.rightClick, Is.Null);
+        Assert.That(uiModule.middleClick, Is.Null);
+        Assert.That(uiModule.scrollWheel, Is.Null);
+        Assert.That(uiModule.submit, Is.Null);
+        Assert.That(uiModule.cancel, Is.Null);
+        Assert.That(uiModule.move, Is.Null);
+        Assert.That(uiModule.trackedDeviceOrientation, Is.Null);
+        Assert.That(uiModule.trackedDevicePosition, Is.Null);
     }
 
     // Comprehensive test for general pointer input behaviors.
@@ -3371,8 +3406,8 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(scene.actions.UI.Click.phase.IsInProgress(), Is.True);
 
-        var clickWasCanceled = false;
-        scene.actions.UI.Click.canceled += _ => clickWasCanceled = true;
+        var clickCanceled = 0;
+        scene.actions.UI.Click.canceled += _ => ++ clickCanceled;
 
         yield return null;
 
@@ -3391,7 +3426,7 @@ internal class UITests : CoreTestsFixture
         scene.leftChildReceiver.events.Clear();
 
         runtime.PlayerFocusLost();
-        Assert.That(clickWasCanceled, Is.True);
+        Assert.That(clickCanceled, Is.EqualTo(1));
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
