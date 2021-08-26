@@ -507,6 +507,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputActionPhase phase => currentState.phase;
 
+        /// <summary>
+        /// True if the action is currently in <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>
+        /// phase. False in all other cases.
+        /// </summary>
+        /// <see cref="phase"/>
         public bool inProgress => phase.IsInProgress();
 
         /// <summary>
@@ -1121,6 +1126,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasReleasedThisFrame"/>
@@ -1167,6 +1175,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasPressedThisFrame"/>
@@ -1223,6 +1234,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
