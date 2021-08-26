@@ -14,6 +14,7 @@ using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -2917,13 +2918,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                InputActionState.s_OnActionChange.AddCallback(value);
+                InputActionState.s_GlobalState.onActionChange.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                InputActionState.s_OnActionChange.RemoveCallback(value);
+                InputActionState.s_GlobalState.onActionChange.RemoveCallback(value);
             }
         }
 
@@ -3519,7 +3520,6 @@ namespace UnityEngine.InputSystem
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
 
-            InputActionState.ResetGlobals();
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
@@ -3552,7 +3552,10 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
             [SerializeField] public string systemObject;
             #endif
-            ////REVIEW: preserve InputUser state? (if even possible)
+            ////TODO: make these saved states capable of surviving domain reloads
+            [NonSerialized] public ISavedState inputActionState;
+            [NonSerialized] public ISavedState touchState;
+            [NonSerialized] public ISavedState inputUserState;
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -3590,6 +3593,9 @@ namespace UnityEngine.InputSystem
                 userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(s_SystemObject),
                 #endif
+                inputActionState = InputActionState.SaveAndResetState(),
+                touchState = EnhancedTouch.Touch.SaveAndResetState(),
+                inputUserState = InputUser.SaveAndResetState()
             });
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
@@ -3603,11 +3609,20 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(s_SavedStateStack != null && s_SavedStateStack.Count > 0);
 
+            // Load back previous state.
+            var state = s_SavedStateStack.Pop();
+
+            state.inputUserState.StaticDisposeCurrentState();
+            state.touchState.StaticDisposeCurrentState();
+            state.inputActionState.StaticDisposeCurrentState();
+
             // Nuke what we have.
             Destroy();
 
-            // Load back previous state.
-            var state = s_SavedStateStack.Pop();
+            state.inputUserState.RestoreSavedState();
+            state.touchState.RestoreSavedState();
+            state.inputActionState.RestoreSavedState();
+
             s_Manager = state.manager;
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;

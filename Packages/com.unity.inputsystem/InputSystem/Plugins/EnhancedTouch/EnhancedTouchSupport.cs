@@ -124,21 +124,21 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         internal static void Reset()
         {
-            Touch.s_Touchscreens = default;
-            Touch.s_PlayerState.Destroy();
-            Touch.s_PlayerState = default;
+            Touch.s_GlobalState.touchscreens = default;
+            Touch.s_GlobalState.playerState.Destroy();
+            Touch.s_GlobalState.playerState = default;
             #if UNITY_EDITOR
-            Touch.s_EditorState.Destroy();
-            Touch.s_EditorState = default;
+            Touch.s_GlobalState.editorState.Destroy();
+            Touch.s_GlobalState.editorState = default;
             #endif
             s_Enabled = 0;
         }
 
         private static void SetUpState()
         {
-            Touch.s_PlayerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual;
+            Touch.s_GlobalState.playerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual;
             #if UNITY_EDITOR
-            Touch.s_EditorState.updateMask = InputUpdateType.Editor;
+            Touch.s_GlobalState.editorState.updateMask = InputUpdateType.Editor;
             #endif
 
             s_UpdateMode = InputSystem.settings.updateMode;
@@ -152,14 +152,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             foreach (var device in InputSystem.devices)
                 OnDeviceChange(device, InputDeviceChange.Removed);
 
-            Touch.s_PlayerState.Destroy();
+            Touch.s_GlobalState.playerState.Destroy();
             #if UNITY_EDITOR
-            Touch.s_EditorState.Destroy();
+            Touch.s_GlobalState.editorState.Destroy();
             #endif
 
-            Touch.s_PlayerState = default;
+            Touch.s_GlobalState.playerState = default;
             #if UNITY_EDITOR
-            Touch.s_EditorState = default;
+            Touch.s_GlobalState.editorState = default;
             #endif
         }
 
@@ -196,8 +196,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         private static void OnBeforeDomainReload()
         {
             // We need to release NativeArrays we're holding before losing track of them during domain reloads.
-            Touch.s_PlayerState.Destroy();
-            Touch.s_EditorState.Destroy();
+            Touch.s_GlobalState.playerState.Destroy();
+            Touch.s_GlobalState.editorState.Destroy();
         }
 
         #endif

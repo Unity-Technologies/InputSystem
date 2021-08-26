@@ -127,7 +127,7 @@ namespace UnityEngine.InputSystem
         public void Initialize(InputBindingResolver resolver)
         {
             ClaimDataFrom(resolver);
-            AddToGlobaList();
+            AddToGlobalList();
         }
 
         internal void ClaimDataFrom(InputBindingResolver resolver)
@@ -390,7 +390,7 @@ namespace UnityEngine.InputSystem
             HookOnBeforeUpdate();
 
             // Fire notifications.
-            if (s_OnActionChange.length > 0)
+            if (s_GlobalState.onActionChange.length > 0)
             {
                 for (var i = 0; i < totalMapCount; ++i)
                 {
@@ -411,26 +411,63 @@ namespace UnityEngine.InputSystem
         {
             using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                for (var i = 0; i < totalActionCount; ++i)
+                for (var actionIndex = 0; actionIndex < totalActionCount; ++actionIndex)
                 {
-                    var actionState = &actionStates[i];
+                    var actionState = &actionStates[actionIndex];
 
                     // Skip actions that aren't in progress.
                     if (actionState->phase == InputActionPhase.Waiting || actionState->phase == InputActionPhase.Disabled)
                         continue;
 
-                    // Skip actions not from this device.
-                    var controlIndex = actionState->controlIndex;
-                    if (controlIndex == -1)
-                        continue;
-                    var control = controls[controlIndex];
-                    if (control.device != device)
-                        continue;
+                    // Skip actions not driven from this device.
+                    if (actionState->isPassThrough)
+                    {
+                        // Pass-through actions are not driven from specific controls yet still benefit
+                        // from being able to observe resets. So for these, we need to check all bound controls,
+                        // not just the one that happen to trigger last.
+                        if (!IsActionBoundToControlFromDevice(device, actionIndex))
+                            continue;
+                    }
+                    else
+                    {
+                        // For button and value actions, we go by whatever is currently driving the action.
+
+                        var controlIndex = actionState->controlIndex;
+                        if (controlIndex == -1)
+                            continue;
+                        var control = controls[controlIndex];
+                        if (control.device != device)
+                            continue;
+                    }
 
                     // Reset.
-                    ResetActionState(i);
+                    ResetActionState(actionIndex);
                 }
             }
+        }
+
+        private bool IsActionBoundToControlFromDevice(InputDevice device, int actionIndex)
+        {
+            var usesControlFromDevice = false;
+            var bindingStartIndex = GetActionBindingStartIndexAndCount(actionIndex, out var bindingCount);
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingIndex = memory.actionBindingIndices[bindingStartIndex + i];
+                var controlCount = bindingStates[bindingIndex].controlCount;
+                var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
+
+                for (var n = 0; n < controlCount; ++n)
+                {
+                    var control = controls[controlStartIndex + n];
+                    if (control.device == device)
+                    {
+                        usesControlFromDevice = true;
+                        break;
+                    }
+                }
+            }
+
+            return usesControlFromDevice;
         }
 
         /// <summary>
@@ -480,7 +517,8 @@ namespace UnityEngine.InputSystem
                     Debug.Assert(bindingStates[actionState->bindingIndex].interactionCount == 0,
                         "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
 
-                    ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
+                    if (actionState->phase != InputActionPhase.Canceled)
+                        ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
                 }
             }
 
@@ -1205,6 +1243,7 @@ namespace UnityEngine.InputSystem
             // anything.
             if (actionState->controlIndex == kInvalidIndex)
             {
+                actionState->magnitude = trigger.magnitude;
                 Profiler.EndSample();
                 return false;
             }
@@ -1219,7 +1258,7 @@ namespace UnityEngine.InputSystem
             if (trigger.magnitude > actionState->magnitude)
             {
                 // If this is not the control that is currently driving the action, we know
-                // there are multiple controls that are concurrently actuated on the control.
+                // there are multiple controls that are concurrently actuated on the action.
                 // Remember that so that when the controls are released again, we can more
                 // efficiently determine whether we need to take multiple bound controls into
                 // account or not.
@@ -1278,8 +1317,7 @@ namespace UnityEngine.InputSystem
                 // controls bound to the action are actuated but we don't yet know whether
                 // any of them is actuated *more* than the control that had just changed value.
                 // Go through the bindings for the action and see what we've got.
-                var bindingStartIndex = memory.actionBindingIndicesAndCounts[actionIndex * 2];
-                var bindingCount = memory.actionBindingIndicesAndCounts[actionIndex * 2 + 1];
+                var bindingStartIndex = GetActionBindingStartIndexAndCount(actionIndex, out var bindingCount);
                 var highestActuationLevel = trigger.magnitude;
                 var controlWithHighestActuation = kInvalidIndex;
                 var bindingWithHighestActuation = kInvalidIndex;
@@ -1378,12 +1416,23 @@ namespace UnityEngine.InputSystem
                 // it drive the action - this is like a direction change on the same control.
                 if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
                     return false;
-                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
+                // If we do have an actuation on a control that isn't currently driving the action, flag the action has
+                // having multiple concurrent inputs ATM.
+                // NOTE: We explicitly check for whether it is in fact not the same control even if the control indices are different.
+                //       The reason is that we allow the same control, on the same action to be bound more than once on the same
+                //       action.
+                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex && controls[triggerControlIndex] != controls[actionState->controlIndex])
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
             }
 
             return false;
+        }
+
+        private ushort GetActionBindingStartIndexAndCount(int actionIndex, out ushort bindingCount)
+        {
+            bindingCount = memory.actionBindingIndicesAndCounts[actionIndex * 2 + 1];
+            return memory.actionBindingIndicesAndCounts[actionIndex * 2];
         }
 
         /// <summary>
@@ -1437,6 +1486,8 @@ namespace UnityEngine.InputSystem
                         // Ignore if the control has not crossed its actuation threshold.
                         if (IsActuated(ref trigger))
                         {
+                            ////REVIEW: Why is it we don't stay in performed but rather go back to started all the time?
+
                             // Go into started, then perform and then go back to started.
                             ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
@@ -1949,7 +2000,7 @@ namespace UnityEngine.InputSystem
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
-            if (listeners.length == 0 && callbacksOnMap.length == 0 && s_OnActionChange.length == 0)
+            if (listeners.length == 0 && callbacksOnMap.length == 0 && s_GlobalState.onActionChange.length == 0)
                 return;
 
             var context = new InputAction.CallbackContext
@@ -1962,7 +2013,7 @@ namespace UnityEngine.InputSystem
 
             // Global callback goes first.
             var action = context.action;
-            if (s_OnActionChange.length > 0)
+            if (s_GlobalState.onActionChange.length > 0)
             {
                 InputActionChange change;
                 switch (phase)
@@ -1981,7 +2032,7 @@ namespace UnityEngine.InputSystem
                         return;
                 }
 
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, action, change, "InputSystem.onActionChange");
+                DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, action, change, "InputSystem.onActionChange");
             }
 
             // Run callbacks (if any) directly on action.
@@ -3482,8 +3533,8 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Array of pair of ints, one pair for each action (same index as <see cref="actionStates"/>). First int
-            /// is count of bindings on action, second int is index into <see cref="actionBindingIndices"/> where
-            /// bindings of action are found.
+            /// is the index into <see cref="actionBindingIndices"/> where bindings of action are found and second int
+            /// is the count of bindings on action.
             /// </summary>
             public ushort* actionBindingIndicesAndCounts;
 
@@ -3601,7 +3652,7 @@ namespace UnityEngine.InputSystem
         #region Global State
 
         /// <summary>
-        /// List of weak references to all action map states currently in the system.
+        /// Global state containing a list of weak references to all action map states currently in the system.
         /// </summary>
         /// <remarks>
         /// When the control setup in the system changes, we need a way for control resolution that
@@ -3610,25 +3661,44 @@ namespace UnityEngine.InputSystem
         ///
         /// Both of these needs are served by this global list.
         /// </remarks>
-        internal static InlinedArray<GCHandle> s_GlobalList;
-        internal static CallbackArray<Action<object, InputActionChange>> s_OnActionChange;
-        internal static CallbackArray<Action<object>> s_OnActionControlsChanged;
+        internal struct GlobalState
+        {
+            internal InlinedArray<GCHandle> globalList;
+            internal CallbackArray<Action<object, InputActionChange>> onActionChange;
+            internal CallbackArray<Action<object>> onActionControlsChanged;
+        }
 
-        private void AddToGlobaList()
+        internal static GlobalState s_GlobalState;
+
+        internal static ISavedState SaveAndResetState()
+        {
+            // Save current state
+            var savedState = new SavedStructState<GlobalState>(
+                ref s_GlobalState,
+                (ref GlobalState state) => s_GlobalState = state, // restore
+                () => ResetGlobals()); // static dispose
+
+            // Reset global state
+            s_GlobalState = default;
+
+            return savedState;
+        }
+
+        private void AddToGlobalList()
         {
             CompactGlobalList();
             var handle = GCHandle.Alloc(this, GCHandleType.Weak);
-            s_GlobalList.AppendWithCapacity(handle);
+            s_GlobalState.globalList.AppendWithCapacity(handle);
         }
 
         private void RemoveMapFromGlobalList()
         {
-            var count = s_GlobalList.length;
+            var count = s_GlobalState.globalList.length;
             for (var i = 0; i < count; ++i)
-                if (s_GlobalList[i].Target == this)
+                if (s_GlobalState.globalList[i].Target == this)
                 {
-                    s_GlobalList[i].Free();
-                    s_GlobalList.RemoveAtByMovingTailWithCapacity(i);
+                    s_GlobalState.globalList[i].Free();
+                    s_GlobalState.globalList.RemoveAtByMovingTailWithCapacity(i);
                     break;
                 }
         }
@@ -3638,25 +3708,25 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void CompactGlobalList()
         {
-            var length = s_GlobalList.length;
+            var length = s_GlobalState.globalList.length;
             var head = 0;
             for (var i = 0; i < length; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (handle.IsAllocated && handle.Target != null)
                 {
                     if (head != i)
-                        s_GlobalList[head] = handle;
+                        s_GlobalState.globalList[head] = handle;
                     ++head;
                 }
                 else
                 {
                     if (handle.IsAllocated)
-                        s_GlobalList[i].Free();
-                    s_GlobalList[i] = default;
+                        s_GlobalState.globalList[i].Free();
+                    s_GlobalState.globalList[i] = default;
                 }
             }
-            s_GlobalList.length = head;
+            s_GlobalState.globalList.length = head;
         }
 
         internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMapOrAsset)
@@ -3665,33 +3735,33 @@ namespace UnityEngine.InputSystem
             Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
-            DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionChange, actionOrMapOrAsset, change, "onActionChange");
             if (change == InputActionChange.BoundControlsChanged)
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
+                DelegateHelpers.InvokeCallbacksSafe(ref s_GlobalState.onActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
         }
 
         /// <summary>
         /// Nuke global state we have to keep track of action map states.
         /// </summary>
-        internal static void ResetGlobals()
+        private static void ResetGlobals()
         {
             DestroyAllActionMapStates();
-            for (var i = 0; i < s_GlobalList.length; ++i)
-                if (s_GlobalList[i].IsAllocated)
-                    s_GlobalList[i].Free();
-            s_GlobalList.length = 0;
-            s_OnActionChange.Clear();
-            s_OnActionControlsChanged.Clear();
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
+                if (s_GlobalState.globalList[i].IsAllocated)
+                    s_GlobalState.globalList[i].Free();
+            s_GlobalState.globalList.length = 0;
+            s_GlobalState.onActionChange.Clear();
+            s_GlobalState.onActionControlsChanged.Clear();
         }
 
         // Walk all maps with enabled actions and add all enabled actions to the given list.
         internal static int FindAllEnabledActions(List<InputAction> result)
         {
             var numFound = 0;
-            var stateCount = s_GlobalList.length;
+            var stateCount = s_GlobalState.globalList.length;
             for (var i = 0; i < stateCount; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (!handle.IsAllocated)
                     continue;
                 var state = (InputActionState)handle.Target;
@@ -3755,15 +3825,15 @@ namespace UnityEngine.InputSystem
                 change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset,
                 "Should only be called for relevant changes");
 
-            for (var i = 0; i < s_GlobalList.length; ++i)
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Stale entry in the list. State has already been reclaimed by GC. Remove it.
                     if (handle.IsAllocated)
-                        s_GlobalList[i].Free();
-                    s_GlobalList.RemoveAtWithCapacity(i);
+                        s_GlobalState.globalList[i].Free();
+                    s_GlobalState.globalList.RemoveAtWithCapacity(i);
                     --i;
                     continue;
                 }
@@ -3808,7 +3878,7 @@ namespace UnityEngine.InputSystem
                         if (!state.IsUsingDevice(device))
                             continue;
                         state.ResetActionStatesDrivenBy(device);
-                        return; // No re-resolving necessary.
+                        continue; // No re-resolving necessary.
                 }
 
                 // Trigger a lazy-resolve on all action maps in the state.
@@ -3827,15 +3897,15 @@ namespace UnityEngine.InputSystem
             ++InputActionMap.s_DeferBindingResolution;
             try
             {
-                for (var i = 0; i < s_GlobalList.length; ++i)
+                for (var i = 0; i < s_GlobalState.globalList.length; ++i)
                 {
-                    var handle = s_GlobalList[i];
+                    var handle = s_GlobalState.globalList[i];
                     if (!handle.IsAllocated || handle.Target == null)
                     {
                         // Stale entry in the list. State has already been reclaimed by GC. Remove it.
                         if (handle.IsAllocated)
-                            s_GlobalList[i].Free();
-                        s_GlobalList.RemoveAtWithCapacity(i);
+                            s_GlobalState.globalList[i].Free();
+                        s_GlobalState.globalList.RemoveAtWithCapacity(i);
                         --i;
                         continue;
                     }
@@ -3853,9 +3923,9 @@ namespace UnityEngine.InputSystem
 
         internal static void DisableAllActions()
         {
-            for (var i = 0; i < s_GlobalList.length; ++i)
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
             {
-                var handle = s_GlobalList[i];
+                var handle = s_GlobalState.globalList[i];
                 if (!handle.IsAllocated || handle.Target == null)
                     continue;
                 var state = (InputActionState)handle.Target;
@@ -3879,16 +3949,16 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static void DestroyAllActionMapStates()
         {
-            while (s_GlobalList.length > 0)
+            while (s_GlobalState.globalList.length > 0)
             {
-                var index = s_GlobalList.length - 1;
-                var handle = s_GlobalList[index];
+                var index = s_GlobalState.globalList.length - 1;
+                var handle = s_GlobalState.globalList[index];
                 if (!handle.IsAllocated || handle.Target == null)
                 {
                     // Already destroyed.
                     if (handle.IsAllocated)
-                        s_GlobalList[index].Free();
-                    s_GlobalList.RemoveAtWithCapacity(index);
+                        s_GlobalState.globalList[index].Free();
+                    s_GlobalState.globalList.RemoveAtWithCapacity(index);
                     continue;
                 }
 

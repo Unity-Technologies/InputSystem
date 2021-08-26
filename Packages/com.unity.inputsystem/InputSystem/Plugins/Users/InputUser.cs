@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -67,8 +66,8 @@ namespace UnityEngine.InputSystem.Users
                     return false;
 
                 // See if there's a currently active user with the given ID.
-                for (var i = 0; i < s_AllUserCount; ++i)
-                    if (s_AllUsers[i].m_Id == m_Id)
+                for (var i = 0; i < s_GlobalState.allUserCount; ++i)
+                    if (s_GlobalState.allUsers[i].m_Id == m_Id)
                         return true;
 
                 return false;
@@ -134,7 +133,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="platformUserAccountName"/>
         /// <seealso cref="platformUserAccountId"/>
         /// <seealso cref="InputUserChange.AccountChanged"/>
-        public InputUserAccountHandle? platformUserAccountHandle => s_AllUserData[index].platformUserAccountHandle;
+        public InputUserAccountHandle? platformUserAccountHandle => s_GlobalState.allUserData[index].platformUserAccountHandle;
 
         /// <summary>
         /// Human-readable name assigned to the user account at the platform level.
@@ -149,7 +148,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="platformUserAccountId"/>
         /// <seealso cref="InputUserChange.AccountChanged"/>
         /// <seealso cref="InputUserChange.AccountNameChanged"/>
-        public string platformUserAccountName => s_AllUserData[index].platformUserAccountName;
+        public string platformUserAccountName => s_GlobalState.allUserData[index].platformUserAccountName;
 
         /// <summary>
         /// Platform-specific user ID that is valid across sessions even if the <see cref="platformUserAccountName"/> of
@@ -164,7 +163,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="platformUserAccountHandle"/>
         /// <seealso cref="platformUserAccountName"/>
         /// <seealso cref="InputUserChange.AccountChanged"/>
-        public string platformUserAccountId => s_AllUserData[index].platformUserAccountId;
+        public string platformUserAccountId => s_GlobalState.allUserData[index].platformUserAccountId;
 
         ////REVIEW: Does it make sense to track used devices separately from paired devices?
         /// <summary>
@@ -195,8 +194,8 @@ namespace UnityEngine.InputSystem.Users
             get
             {
                 var userIndex = index;
-                return new ReadOnlyArray<InputDevice>(s_AllPairedDevices, s_AllUserData[userIndex].deviceStartIndex,
-                    s_AllUserData[userIndex].deviceCount);
+                return new ReadOnlyArray<InputDevice>(s_GlobalState.allPairedDevices, s_GlobalState.allUserData[userIndex].deviceStartIndex,
+                    s_GlobalState.allUserData[userIndex].deviceCount);
             }
         }
 
@@ -215,8 +214,8 @@ namespace UnityEngine.InputSystem.Users
             get
             {
                 var userIndex = index;
-                return new ReadOnlyArray<InputDevice>(s_AllLostDevices, s_AllUserData[userIndex].lostDeviceStartIndex,
-                    s_AllUserData[userIndex].lostDeviceCount);
+                return new ReadOnlyArray<InputDevice>(s_GlobalState.allLostDevices, s_GlobalState.allUserData[userIndex].lostDeviceStartIndex,
+                    s_GlobalState.allUserData[userIndex].lostDeviceCount);
             }
         }
 
@@ -237,7 +236,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="InputActionMap"/>
         /// <seealso cref="InputActionAsset"/>
         /// <seealso cref="InputUserChange.ControlsChanged"/>
-        public IInputActionCollection actions => s_AllUserData[index].actions;
+        public IInputActionCollection actions => s_GlobalState.allUserData[index].actions;
 
         /// <summary>
         /// The control scheme currently employed by the user.
@@ -256,7 +255,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="ActivateControlScheme(string)"/>
         /// <seealso cref="ActivateControlScheme(InputControlScheme)"/>
         /// <seealso cref="InputUserChange.ControlSchemeChanged"/>
-        public InputControlScheme? controlScheme => s_AllUserData[index].controlScheme;
+        public InputControlScheme? controlScheme => s_GlobalState.allUserData[index].controlScheme;
 
         /// <summary>
         /// The result of matching the device requirements given by <see cref="controlScheme"/> against
@@ -268,7 +267,7 @@ namespace UnityEngine.InputSystem.Users
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
         /// <seealso cref="InputControlScheme.PickDevicesFrom{TDevices}"/>
-        public InputControlScheme.MatchResult controlSchemeMatch => s_AllUserData[index].controlSchemeMatch;
+        public InputControlScheme.MatchResult controlSchemeMatch => s_GlobalState.allUserData[index].controlSchemeMatch;
 
         /// <summary>
         /// Whether the user is missing devices required by the <see cref="controlScheme"/> activated
@@ -280,7 +279,7 @@ namespace UnityEngine.InputSystem.Users
         /// devices if they cannot be satisfied based on the devices paired to the user.
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
-        public bool hasMissingRequiredDevices => s_AllUserData[index].controlSchemeMatch.hasMissingRequiredDevices;
+        public bool hasMissingRequiredDevices => s_GlobalState.allUserData[index].controlSchemeMatch.hasMissingRequiredDevices;
 
         /// <summary>
         /// List of all current users.
@@ -297,7 +296,7 @@ namespace UnityEngine.InputSystem.Users
         /// </remarks>
         /// <seealso cref="PerformPairingWithDevice"/>
         /// <seealso cref="UnpairDevicesAndRemoveUser"/>
-        public static ReadOnlyArray<InputUser> all => new ReadOnlyArray<InputUser>(s_AllUsers, 0, s_AllUserCount);
+        public static ReadOnlyArray<InputUser> all => new ReadOnlyArray<InputUser>(s_GlobalState.allUsers, 0, s_GlobalState.allUserCount);
 
         /// <summary>
         /// Event that is triggered when the <see cref="InputUser">user</see> setup in the system
@@ -314,13 +313,13 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnChange.AddCallback(value);
+                s_GlobalState.onChange.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnChange.RemoveCallback(value);
+                s_GlobalState.onChange.RemoveCallback(value);
             }
         }
 
@@ -390,16 +389,16 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnUnpairedDeviceUsed.AddCallback(value);
-                if (s_ListenForUnpairedDeviceActivity > 0)
+                s_GlobalState.onUnpairedDeviceUsed.AddCallback(value);
+                if (s_GlobalState.listenForUnpairedDeviceActivity > 0)
                     HookIntoEvents();
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnUnpairedDeviceUsed.RemoveCallback(value);
-                if (s_OnUnpairedDeviceUsed.length == 0)
+                s_GlobalState.onUnpairedDeviceUsed.RemoveCallback(value);
+                if (s_GlobalState.onUnpairedDeviceUsed.length == 0)
                     UnhookFromDeviceStateChange();
             }
         }
@@ -431,13 +430,13 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnPreFilterUnpairedDeviceUsed.AddCallback(value);
+                s_GlobalState.onPreFilterUnpairedDeviceUsed.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnPreFilterUnpairedDeviceUsed.RemoveCallback(value);
+                s_GlobalState.onPreFilterUnpairedDeviceUsed.RemoveCallback(value);
             }
         }
 
@@ -462,16 +461,16 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="PerformPairingWithDevice"/>
         public static int listenForUnpairedDeviceActivity
         {
-            get => s_ListenForUnpairedDeviceActivity;
+            get => s_GlobalState.listenForUnpairedDeviceActivity;
             set
             {
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(value), "Cannot be negative");
-                if (value > 0 && s_OnUnpairedDeviceUsed.length > 0)
+                if (value > 0 && s_GlobalState.onUnpairedDeviceUsed.length > 0)
                     HookIntoEvents();
                 else if (value == 0)
                     UnhookFromDeviceStateChange();
-                s_ListenForUnpairedDeviceActivity = value;
+                s_GlobalState.listenForUnpairedDeviceActivity = value;
             }
         }
 
@@ -519,18 +518,18 @@ namespace UnityEngine.InputSystem.Users
         public void AssociateActionsWithUser(IInputActionCollection actions)
         {
             var userIndex = index; // Throws if user is invalid.
-            if (s_AllUserData[userIndex].actions == actions)
+            if (s_GlobalState.allUserData[userIndex].actions == actions)
                 return;
 
             // If we already had actions associated, reset the binding mask and device list.
-            var oldActions = s_AllUserData[userIndex].actions;
+            var oldActions = s_GlobalState.allUserData[userIndex].actions;
             if (oldActions != null)
             {
                 oldActions.devices = null;
                 oldActions.bindingMask = null;
             }
 
-            s_AllUserData[userIndex].actions = actions;
+            s_GlobalState.allUserData[userIndex].actions = actions;
 
             // If we've switched to a different set of actions, synchronize our state.
             if (actions != null)
@@ -538,8 +537,8 @@ namespace UnityEngine.InputSystem.Users
                 HookIntoActionChange();
 
                 actions.devices = pairedDevices;
-                if (s_AllUserData[userIndex].controlScheme != null)
-                    ActivateControlSchemeInternal(userIndex, s_AllUserData[userIndex].controlScheme.Value);
+                if (s_GlobalState.allUserData[userIndex].controlScheme != null)
+                    ActivateControlSchemeInternal(userIndex, s_GlobalState.allUserData[userIndex].controlScheme.Value);
             }
         }
 
@@ -553,11 +552,11 @@ namespace UnityEngine.InputSystem.Users
 
                 // Need actions to be available to be able to activate control schemes
                 // by name only.
-                if (s_AllUserData[userIndex].actions == null)
+                if (s_GlobalState.allUserData[userIndex].actions == null)
                     throw new InvalidOperationException(
                         $"Cannot set control scheme '{schemeName}' by name on user #{userIndex} as not actions have been associated with the user yet (AssociateActionsWithUser)");
 
-                var controlSchemes = s_AllUserData[userIndex].actions.controlSchemes;
+                var controlSchemes = s_GlobalState.allUserData[userIndex].actions.controlSchemes;
                 for (var i = 0; i < controlSchemes.Count; ++i)
                     if (string.Compare(controlSchemes[i].name, schemeName,
                         StringComparison.InvariantCultureIgnoreCase) == 0)
@@ -569,7 +568,7 @@ namespace UnityEngine.InputSystem.Users
                 // Throw if we can't find it.
                 if (scheme == default)
                     throw new ArgumentException(
-                        $"Cannot find control scheme '{schemeName}' in actions '{s_AllUserData[userIndex].actions}'");
+                        $"Cannot find control scheme '{schemeName}' in actions '{s_GlobalState.allUserData[userIndex].actions}'");
             }
 
             return ActivateControlScheme(scheme);
@@ -579,14 +578,14 @@ namespace UnityEngine.InputSystem.Users
         {
             var userIndex = index; // Throws if user is invalid.
 
-            if (s_AllUserData[userIndex].controlScheme != scheme ||
-                (scheme == default && s_AllUserData[userIndex].controlScheme != null))
+            if (s_GlobalState.allUserData[userIndex].controlScheme != scheme ||
+                (scheme == default && s_GlobalState.allUserData[userIndex].controlScheme != null))
             {
                 ActivateControlSchemeInternal(userIndex, scheme);
                 Notify(userIndex, InputUserChange.ControlSchemeChanged, null);
             }
 
-            return new ControlSchemeChangeSyntax {m_UserIndex = userIndex};
+            return new ControlSchemeChangeSyntax { m_UserIndex = userIndex };
         }
 
         private void ActivateControlSchemeInternal(int userIndex, InputControlScheme scheme)
@@ -594,26 +593,26 @@ namespace UnityEngine.InputSystem.Users
             var isEmpty = scheme == default;
 
             if (isEmpty)
-                s_AllUserData[userIndex].controlScheme = null;
+                s_GlobalState.allUserData[userIndex].controlScheme = null;
             else
-                s_AllUserData[userIndex].controlScheme = scheme;
+                s_GlobalState.allUserData[userIndex].controlScheme = scheme;
 
-            if (s_AllUserData[userIndex].actions != null)
+            if (s_GlobalState.allUserData[userIndex].actions != null)
             {
                 if (isEmpty)
                 {
-                    s_AllUserData[userIndex].actions.bindingMask = null;
-                    s_AllUserData[userIndex].controlSchemeMatch.Dispose();
-                    s_AllUserData[userIndex].controlSchemeMatch = new InputControlScheme.MatchResult();
+                    s_GlobalState.allUserData[userIndex].actions.bindingMask = null;
+                    s_GlobalState.allUserData[userIndex].controlSchemeMatch.Dispose();
+                    s_GlobalState.allUserData[userIndex].controlSchemeMatch = new InputControlScheme.MatchResult();
                 }
                 else
                 {
-                    s_AllUserData[userIndex].actions.bindingMask = new InputBinding {groups = scheme.bindingGroup};
+                    s_GlobalState.allUserData[userIndex].actions.bindingMask = new InputBinding { groups = scheme.bindingGroup };
                     UpdateControlSchemeMatch(userIndex);
 
                     // If we had lost some devices, flush the list. We haven't regained the device
                     // but we're no longer missing devices to play.
-                    if (s_AllUserData[userIndex].controlSchemeMatch.isSuccessfulMatch)
+                    if (s_GlobalState.allUserData[userIndex].controlSchemeMatch.isSuccessfulMatch)
                         RemoveLostDevicesForUser(userIndex);
                 }
             }
@@ -682,32 +681,32 @@ namespace UnityEngine.InputSystem.Users
                 // We could remove the devices in bulk here but we still have to notify one
                 // by one which ends up being more complicated than just unpairing the devices
                 // individually here.
-                while (s_AllUserData[userIndex].deviceCount > 0)
-                    UnpairDevice(s_AllPairedDevices[s_AllUserData[userIndex].deviceStartIndex + s_AllUserData[userIndex].deviceCount - 1]);
+                while (s_GlobalState.allUserData[userIndex].deviceCount > 0)
+                    UnpairDevice(s_GlobalState.allPairedDevices[s_GlobalState.allUserData[userIndex].deviceStartIndex + s_GlobalState.allUserData[userIndex].deviceCount - 1]);
             }
 
             // Update control scheme, if necessary.
-            if (s_AllUserData[userIndex].controlScheme != null)
+            if (s_GlobalState.allUserData[userIndex].controlScheme != null)
                 UpdateControlSchemeMatch(userIndex);
         }
 
         private static void RemoveLostDevicesForUser(int userIndex)
         {
-            var lostDeviceCount = s_AllUserData[userIndex].lostDeviceCount;
+            var lostDeviceCount = s_GlobalState.allUserData[userIndex].lostDeviceCount;
             if (lostDeviceCount > 0)
             {
-                var lostDeviceStartIndex = s_AllUserData[userIndex].lostDeviceStartIndex;
-                ArrayHelpers.EraseSliceWithCapacity(ref s_AllLostDevices, ref s_AllLostDeviceCount,
+                var lostDeviceStartIndex = s_GlobalState.allUserData[userIndex].lostDeviceStartIndex;
+                ArrayHelpers.EraseSliceWithCapacity(ref s_GlobalState.allLostDevices, ref s_GlobalState.allLostDeviceCount,
                     lostDeviceStartIndex, lostDeviceCount);
 
-                s_AllUserData[userIndex].lostDeviceCount = 0;
-                s_AllUserData[userIndex].lostDeviceStartIndex = 0;
+                s_GlobalState.allUserData[userIndex].lostDeviceCount = 0;
+                s_GlobalState.allUserData[userIndex].lostDeviceStartIndex = 0;
 
                 // Adjust indices of other users.
-                for (var i = 0; i < s_AllUserCount; ++i)
+                for (var i = 0; i < s_GlobalState.allUserCount; ++i)
                 {
-                    if (s_AllUserData[i].lostDeviceStartIndex > lostDeviceStartIndex)
-                        s_AllUserData[i].lostDeviceStartIndex -= lostDeviceCount;
+                    if (s_GlobalState.allUserData[i].lostDeviceStartIndex > lostDeviceStartIndex)
+                        s_GlobalState.allUserData[i].lostDeviceStartIndex -= lostDeviceCount;
                 }
             }
         }
@@ -774,7 +773,7 @@ namespace UnityEngine.InputSystem.Users
             {
                 // If it's in s_AllPairedDevices, there is *some* user that is using the device.
                 // We don't care which one it is here.
-                if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+                if (ArrayHelpers.ContainsReference(s_GlobalState.allPairedDevices, s_GlobalState.allPairedDeviceCount, device))
                     continue;
 
                 list.Add(device);
@@ -808,7 +807,7 @@ namespace UnityEngine.InputSystem.Users
             if (userIndex == -1)
                 return null;
 
-            return s_AllUsers[userIndex];
+            return s_GlobalState.allUsers[userIndex];
         }
 
         public static InputUser? FindUserByAccount(InputUserAccountHandle platformUserAccountHandle)
@@ -820,13 +819,13 @@ namespace UnityEngine.InputSystem.Users
             if (userIndex == -1)
                 return null;
 
-            return s_AllUsers[userIndex];
+            return s_GlobalState.allUsers[userIndex];
         }
 
         public static InputUser CreateUserWithoutPairedDevices()
         {
             var userIndex = AddUser();
-            return s_AllUsers[userIndex];
+            return s_GlobalState.allUsers[userIndex];
         }
 
         ////REVIEW: allow re-adding a user through this method?
@@ -968,7 +967,7 @@ namespace UnityEngine.InputSystem.Users
             if (!accountSelectionInProgress)
                 AddDeviceToUser(userIndex, device);
 
-            return s_AllUsers[userIndex];
+            return s_GlobalState.allUsers[userIndex];
         }
 
         private static bool InitiateUserAccountSelection(int userIndex, InputDevice device,
@@ -991,12 +990,12 @@ namespace UnityEngine.InputSystem.Users
             {
                 if (InitiateUserAccountSelectionAtPlatformLevel(device))
                 {
-                    s_AllUserData[userIndex].flags |= UserFlags.UserAccountSelectionInProgress;
-                    s_OngoingAccountSelections.Append(
+                    s_GlobalState.allUserData[userIndex].flags |= UserFlags.UserAccountSelectionInProgress;
+                    s_GlobalState.ongoingAccountSelections.Append(
                         new OngoingAccountSelection
                         {
                             device = device,
-                            userId = s_AllUsers[userIndex].id,
+                            userId = s_GlobalState.allUsers[userIndex].id,
                         });
 
                     // Make sure we receive a notification for the configuration event.
@@ -1052,12 +1051,12 @@ namespace UnityEngine.InputSystem.Users
         /// </remarks>
         private static int AddUser()
         {
-            var id = ++s_LastUserId;
+            var id = ++s_GlobalState.lastUserId;
 
             // Add to list.
-            var userCount = s_AllUserCount;
-            ArrayHelpers.AppendWithCapacity(ref s_AllUsers, ref userCount, new InputUser {m_Id = id});
-            var userIndex = ArrayHelpers.AppendWithCapacity(ref s_AllUserData, ref s_AllUserCount, new UserData());
+            var userCount = s_GlobalState.allUserCount;
+            ArrayHelpers.AppendWithCapacity(ref s_GlobalState.allUsers, ref userCount, new InputUser { m_Id = id });
+            var userIndex = ArrayHelpers.AppendWithCapacity(ref s_GlobalState.allUserData, ref s_GlobalState.allUserCount, new UserData());
 
             // Send notification.
             Notify(userIndex, InputUserChange.Added, null);
@@ -1075,27 +1074,27 @@ namespace UnityEngine.InputSystem.Users
         /// </remarks>
         private static void RemoveUser(int userIndex)
         {
-            Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
-            Debug.Assert(s_AllUserData[userIndex].deviceCount == 0, "User must not have paired devices still");
+            Debug.Assert(userIndex >= 0 && userIndex < s_GlobalState.allUserCount, "User index is invalid");
+            Debug.Assert(s_GlobalState.allUserData[userIndex].deviceCount == 0, "User must not have paired devices still");
 
             // Reset data from control scheme.
-            if (s_AllUserData[userIndex].controlScheme != null)
+            if (s_GlobalState.allUserData[userIndex].controlScheme != null)
             {
-                if (s_AllUserData[userIndex].actions != null)
-                    s_AllUserData[userIndex].actions.bindingMask = null;
+                if (s_GlobalState.allUserData[userIndex].actions != null)
+                    s_GlobalState.allUserData[userIndex].actions.bindingMask = null;
             }
-            s_AllUserData[userIndex].controlSchemeMatch.Dispose();
+            s_GlobalState.allUserData[userIndex].controlSchemeMatch.Dispose();
 
             // Remove lost devices.
             RemoveLostDevicesForUser(userIndex);
 
             // Remove account selections that are in progress.
-            for (var i = 0; i < s_OngoingAccountSelections.length; ++i)
+            for (var i = 0; i < s_GlobalState.ongoingAccountSelections.length; ++i)
             {
-                if (s_OngoingAccountSelections[i].userId != s_AllUsers[userIndex].id)
+                if (s_GlobalState.ongoingAccountSelections[i].userId != s_GlobalState.allUsers[userIndex].id)
                     continue;
 
-                s_OngoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
+                s_GlobalState.ongoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
                 --i;
             }
 
@@ -1103,12 +1102,12 @@ namespace UnityEngine.InputSystem.Users
             Notify(userIndex, InputUserChange.Removed, null);
 
             // Remove.
-            var userCount = s_AllUserCount;
-            s_AllUsers.EraseAtWithCapacity(ref userCount, userIndex);
-            s_AllUserData.EraseAtWithCapacity(ref s_AllUserCount, userIndex);
+            var userCount = s_GlobalState.allUserCount;
+            s_GlobalState.allUsers.EraseAtWithCapacity(ref userCount, userIndex);
+            s_GlobalState.allUserData.EraseAtWithCapacity(ref s_GlobalState.allUserCount, userIndex);
 
             // Remove our hook if we no longer need it.
-            if (s_AllUserCount == 0)
+            if (s_GlobalState.allUserCount == 0)
             {
                 UnhookFromDeviceChange();
                 UnhookFromActionChange();
@@ -1117,17 +1116,17 @@ namespace UnityEngine.InputSystem.Users
 
         private static void Notify(int userIndex, InputUserChange change, InputDevice device)
         {
-            Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
+            Debug.Assert(userIndex >= 0 && userIndex < s_GlobalState.allUserCount, "User index is invalid");
 
-            if (s_OnChange.length == 0)
+            if (s_GlobalState.onChange.length == 0)
                 return;
             Profiler.BeginSample("InputUser.onChange");
-            s_OnChange.LockForChanges();
-            for (var i = 0; i < s_OnChange.length; ++i)
+            s_GlobalState.onChange.LockForChanges();
+            for (var i = 0; i < s_GlobalState.onChange.length; ++i)
             {
                 try
                 {
-                    s_OnChange[i](s_AllUsers[userIndex], change, device);
+                    s_GlobalState.onChange[i](s_GlobalState.allUsers[userIndex], change, device);
                 }
                 catch (Exception exception)
                 {
@@ -1135,7 +1134,7 @@ namespace UnityEngine.InputSystem.Users
                     Debug.LogException(exception);
                 }
             }
-            s_OnChange.UnlockForChanges();
+            s_GlobalState.onChange.UnlockForChanges();
             Profiler.EndSample();
         }
 
@@ -1143,9 +1142,9 @@ namespace UnityEngine.InputSystem.Users
         {
             Debug.Assert(userId != InvalidId, "User ID is invalid");
 
-            for (var i = 0; i < s_AllUserCount; ++i)
+            for (var i = 0; i < s_GlobalState.allUserCount; ++i)
             {
-                if (s_AllUsers[i].m_Id == userId)
+                if (s_GlobalState.allUsers[i].m_Id == userId)
                     return i;
             }
             return -1;
@@ -1155,9 +1154,9 @@ namespace UnityEngine.InputSystem.Users
         {
             Debug.Assert(platformHandle != default, "User platform handle is invalid");
 
-            for (var i = 0; i < s_AllUserCount; ++i)
+            for (var i = 0; i < s_GlobalState.allUserCount; ++i)
             {
-                if (s_AllUserData[i].platformUserAccountHandle == platformHandle)
+                if (s_GlobalState.allUserData[i].platformUserAccountHandle == platformHandle)
                     return i;
             }
             return -1;
@@ -1173,14 +1172,14 @@ namespace UnityEngine.InputSystem.Users
         {
             Debug.Assert(device != null, "Device cannot be null");
 
-            var indexOfDevice = s_AllPairedDevices.IndexOfReference(device, s_AllPairedDeviceCount);
+            var indexOfDevice = s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
             if (indexOfDevice == -1)
                 return -1;
 
-            for (var i = 0; i < s_AllUserCount; ++i)
+            for (var i = 0; i < s_GlobalState.allUserCount; ++i)
             {
-                var startIndex = s_AllUserData[i].deviceStartIndex;
-                if (startIndex <= indexOfDevice && indexOfDevice < startIndex + s_AllUserData[i].deviceCount)
+                var startIndex = s_GlobalState.allUserData[i].deviceStartIndex;
+                if (startIndex <= indexOfDevice && indexOfDevice < startIndex + s_GlobalState.allUserData[i].deviceCount)
                     return i;
             }
 
@@ -1195,67 +1194,67 @@ namespace UnityEngine.InputSystem.Users
         /// <param name="asLostDevice"></param>
         private static void AddDeviceToUser(int userIndex, InputDevice device, bool asLostDevice = false, bool dontUpdateControlScheme = false)
         {
-            Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
+            Debug.Assert(userIndex >= 0 && userIndex < s_GlobalState.allUserCount, "User index is invalid");
             Debug.Assert(device != null, "Device cannot be null");
             if (asLostDevice)
-                Debug.Assert(!s_AllUsers[userIndex].lostDevices.ContainsReference(device), "Device already in set of lostDevices for user");
+                Debug.Assert(!s_GlobalState.allUsers[userIndex].lostDevices.ContainsReference(device), "Device already in set of lostDevices for user");
             else
-                Debug.Assert(!s_AllUsers[userIndex].pairedDevices.ContainsReference(device), "Device already in set of pairedDevices for user");
+                Debug.Assert(!s_GlobalState.allUsers[userIndex].pairedDevices.ContainsReference(device), "Device already in set of pairedDevices for user");
 
             var deviceCount = asLostDevice
-                ? s_AllUserData[userIndex].lostDeviceCount
-                : s_AllUserData[userIndex].deviceCount;
+                ? s_GlobalState.allUserData[userIndex].lostDeviceCount
+                : s_GlobalState.allUserData[userIndex].deviceCount;
             var deviceStartIndex = asLostDevice
-                ? s_AllUserData[userIndex].lostDeviceStartIndex
-                : s_AllUserData[userIndex].deviceStartIndex;
+                ? s_GlobalState.allUserData[userIndex].lostDeviceStartIndex
+                : s_GlobalState.allUserData[userIndex].deviceStartIndex;
 
-            ++s_PairingStateVersion;
+            ++s_GlobalState.pairingStateVersion;
 
             // Move our devices to end of array.
             if (deviceCount > 0)
             {
-                ArrayHelpers.MoveSlice(asLostDevice ? s_AllLostDevices : s_AllPairedDevices, deviceStartIndex,
-                    asLostDevice ? s_AllLostDeviceCount - deviceCount : s_AllPairedDeviceCount - deviceCount,
+                ArrayHelpers.MoveSlice(asLostDevice ? s_GlobalState.allLostDevices : s_GlobalState.allPairedDevices, deviceStartIndex,
+                    asLostDevice ? s_GlobalState.allLostDeviceCount - deviceCount : s_GlobalState.allPairedDeviceCount - deviceCount,
                     deviceCount);
 
                 // Adjust users that have been impacted by the change.
-                for (var i = 0; i < s_AllUserCount; ++i)
+                for (var i = 0; i < s_GlobalState.allUserCount; ++i)
                 {
                     if (i == userIndex)
                         continue;
 
-                    if ((asLostDevice ? s_AllUserData[i].lostDeviceStartIndex : s_AllUserData[i].deviceStartIndex) <= deviceStartIndex)
+                    if ((asLostDevice ? s_GlobalState.allUserData[i].lostDeviceStartIndex : s_GlobalState.allUserData[i].deviceStartIndex) <= deviceStartIndex)
                         continue;
 
                     if (asLostDevice)
-                        s_AllUserData[i].lostDeviceStartIndex -= deviceCount;
+                        s_GlobalState.allUserData[i].lostDeviceStartIndex -= deviceCount;
                     else
-                        s_AllUserData[i].deviceStartIndex -= deviceCount;
+                        s_GlobalState.allUserData[i].deviceStartIndex -= deviceCount;
                 }
             }
 
             // Append to array.
             if (asLostDevice)
             {
-                s_AllUserData[userIndex].lostDeviceStartIndex = s_AllLostDeviceCount - deviceCount;
-                ArrayHelpers.AppendWithCapacity(ref s_AllLostDevices, ref s_AllLostDeviceCount, device);
-                ++s_AllUserData[userIndex].lostDeviceCount;
+                s_GlobalState.allUserData[userIndex].lostDeviceStartIndex = s_GlobalState.allLostDeviceCount - deviceCount;
+                ArrayHelpers.AppendWithCapacity(ref s_GlobalState.allLostDevices, ref s_GlobalState.allLostDeviceCount, device);
+                ++s_GlobalState.allUserData[userIndex].lostDeviceCount;
             }
             else
             {
-                s_AllUserData[userIndex].deviceStartIndex = s_AllPairedDeviceCount - deviceCount;
-                ArrayHelpers.AppendWithCapacity(ref s_AllPairedDevices, ref s_AllPairedDeviceCount, device);
-                ++s_AllUserData[userIndex].deviceCount;
+                s_GlobalState.allUserData[userIndex].deviceStartIndex = s_GlobalState.allPairedDeviceCount - deviceCount;
+                ArrayHelpers.AppendWithCapacity(ref s_GlobalState.allPairedDevices, ref s_GlobalState.allPairedDeviceCount, device);
+                ++s_GlobalState.allUserData[userIndex].deviceCount;
 
                 // If the user has actions, sync the devices on them with what we have now.
-                var actions = s_AllUserData[userIndex].actions;
+                var actions = s_GlobalState.allUserData[userIndex].actions;
                 if (actions != null)
                 {
-                    actions.devices = s_AllUsers[userIndex].pairedDevices;
+                    actions.devices = s_GlobalState.allUsers[userIndex].pairedDevices;
 
                     // Also, if we have a control scheme, update the matching of device requirements
                     // against the device we now have.
-                    if (!dontUpdateControlScheme && s_AllUserData[userIndex].controlScheme != null)
+                    if (!dontUpdateControlScheme && s_GlobalState.allUserData[userIndex].controlScheme != null)
                         UpdateControlSchemeMatch(userIndex);
                 }
             }
@@ -1269,12 +1268,12 @@ namespace UnityEngine.InputSystem.Users
 
         private static void RemoveDeviceFromUser(int userIndex, InputDevice device, bool asLostDevice = false)
         {
-            Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
+            Debug.Assert(userIndex >= 0 && userIndex < s_GlobalState.allUserCount, "User index is invalid");
             Debug.Assert(device != null, "Device cannot be null");
 
             var deviceIndex = asLostDevice
-                ? s_AllLostDevices.IndexOfReference(device, s_AllLostDeviceCount)
-                : s_AllPairedDevices.IndexOfReference(device, s_AllPairedDeviceCount);
+                ? s_GlobalState.allLostDevices.IndexOfReference(device, s_GlobalState.allLostDeviceCount)
+                : s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
             if (deviceIndex == -1)
             {
                 // Device not in list. Ignore.
@@ -1283,48 +1282,48 @@ namespace UnityEngine.InputSystem.Users
 
             if (asLostDevice)
             {
-                s_AllLostDevices.EraseAtWithCapacity(ref s_AllLostDeviceCount, deviceIndex);
-                --s_AllUserData[userIndex].lostDeviceCount;
+                s_GlobalState.allLostDevices.EraseAtWithCapacity(ref s_GlobalState.allLostDeviceCount, deviceIndex);
+                --s_GlobalState.allUserData[userIndex].lostDeviceCount;
             }
             else
             {
-                ++s_PairingStateVersion;
-                s_AllPairedDevices.EraseAtWithCapacity(ref s_AllPairedDeviceCount, deviceIndex);
-                --s_AllUserData[userIndex].deviceCount;
+                ++s_GlobalState.pairingStateVersion;
+                s_GlobalState.allPairedDevices.EraseAtWithCapacity(ref s_GlobalState.allPairedDeviceCount, deviceIndex);
+                --s_GlobalState.allUserData[userIndex].deviceCount;
             }
 
             // Adjust indices of other users.
-            for (var i = 0; i < s_AllUserCount; ++i)
+            for (var i = 0; i < s_GlobalState.allUserCount; ++i)
             {
-                if ((asLostDevice ? s_AllUserData[i].lostDeviceStartIndex : s_AllUserData[i].deviceStartIndex) <= deviceIndex)
+                if ((asLostDevice ? s_GlobalState.allUserData[i].lostDeviceStartIndex : s_GlobalState.allUserData[i].deviceStartIndex) <= deviceIndex)
                     continue;
 
                 if (asLostDevice)
-                    --s_AllUserData[i].lostDeviceStartIndex;
+                    --s_GlobalState.allUserData[i].lostDeviceStartIndex;
                 else
-                    --s_AllUserData[i].deviceStartIndex;
+                    --s_GlobalState.allUserData[i].deviceStartIndex;
             }
 
             if (!asLostDevice)
             {
                 // Remove any ongoing account selections for the user on the given device.
-                for (var i = 0; i < s_OngoingAccountSelections.length; ++i)
+                for (var i = 0; i < s_GlobalState.ongoingAccountSelections.length; ++i)
                 {
-                    if (s_OngoingAccountSelections[i].userId != s_AllUsers[userIndex].id ||
-                        s_OngoingAccountSelections[i].device != device)
+                    if (s_GlobalState.ongoingAccountSelections[i].userId != s_GlobalState.allUsers[userIndex].id ||
+                        s_GlobalState.ongoingAccountSelections[i].device != device)
                         continue;
 
-                    s_OngoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
+                    s_GlobalState.ongoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
                     --i;
                 }
 
                 // If the user has actions, sync the devices on them with what we have now.
-                var actions = s_AllUserData[userIndex].actions;
+                var actions = s_GlobalState.allUserData[userIndex].actions;
                 if (actions != null)
                 {
-                    actions.devices = s_AllUsers[userIndex].pairedDevices;
+                    actions.devices = s_GlobalState.allUsers[userIndex].pairedDevices;
 
-                    if (s_AllUsers[userIndex].controlScheme != null)
+                    if (s_GlobalState.allUsers[userIndex].controlScheme != null)
                         UpdateControlSchemeMatch(userIndex);
                 }
 
@@ -1335,26 +1334,26 @@ namespace UnityEngine.InputSystem.Users
 
         private static void UpdateControlSchemeMatch(int userIndex, bool autoPairMissing = false)
         {
-            Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
+            Debug.Assert(userIndex >= 0 && userIndex < s_GlobalState.allUserCount, "User index is invalid");
 
             // Nothing to do if we don't have a control scheme.
-            if (s_AllUserData[userIndex].controlScheme == null)
+            if (s_GlobalState.allUserData[userIndex].controlScheme == null)
                 return;
 
             // Get rid of last match result and start new match.
-            s_AllUserData[userIndex].controlSchemeMatch.Dispose();
+            s_GlobalState.allUserData[userIndex].controlSchemeMatch.Dispose();
             var matchResult = new InputControlScheme.MatchResult();
             try
             {
                 // Match the control scheme's requirements against the devices paired to the user.
-                var scheme = s_AllUserData[userIndex].controlScheme.Value;
+                var scheme = s_GlobalState.allUserData[userIndex].controlScheme.Value;
                 if (scheme.deviceRequirements.Count > 0)
                 {
                     var availableDevices = new InputControlList<InputDevice>(Allocator.Temp);
                     try
                     {
                         // Add devices already paired to user.
-                        availableDevices.AddSlice(s_AllUsers[userIndex].pairedDevices);
+                        availableDevices.AddSlice(s_GlobalState.allUsers[userIndex].pairedDevices);
 
                         // If we're supposed to grab whatever additional devices we need from what's
                         // available, add all unpaired devices to the list.
@@ -1368,11 +1367,11 @@ namespace UnityEngine.InputSystem.Users
                             // We want to favor devices that are already assigned to the same platform user account.
                             // Sort the unpaired devices we've added to the list such that the ones belonging to the
                             // same user account come first.
-                            if (s_AllUserData[userIndex].platformUserAccountHandle != null)
+                            if (s_GlobalState.allUserData[userIndex].platformUserAccountHandle != null)
                                 availableDevices.Sort(startIndex, count,
                                     new CompareDevicesByUserAccount
                                     {
-                                        platformUserAccountHandle = s_AllUserData[userIndex].platformUserAccountHandle.Value
+                                        platformUserAccountHandle = s_GlobalState.allUserData[userIndex].platformUserAccountHandle.Value
                                     });
                         }
 
@@ -1384,12 +1383,12 @@ namespace UnityEngine.InputSystem.Users
                             if (autoPairMissing)
                             {
                                 // Update match result on user before potentially invoking callbacks.
-                                s_AllUserData[userIndex].controlSchemeMatch = matchResult;
+                                s_GlobalState.allUserData[userIndex].controlSchemeMatch = matchResult;
 
                                 foreach (var device in matchResult.devices)
                                 {
                                     // Skip if already paired to user.
-                                    if (s_AllUsers[userIndex].pairedDevices.ContainsReference(device))
+                                    if (s_GlobalState.allUsers[userIndex].pairedDevices.ContainsReference(device))
                                         continue;
 
                                     AddDeviceToUser(userIndex, device, dontUpdateControlScheme: true);
@@ -1403,7 +1402,7 @@ namespace UnityEngine.InputSystem.Users
                     }
                 }
 
-                s_AllUserData[userIndex].controlSchemeMatch = matchResult;
+                s_GlobalState.allUserData[userIndex].controlSchemeMatch = matchResult;
             }
             catch (Exception)
             {
@@ -1416,7 +1415,7 @@ namespace UnityEngine.InputSystem.Users
 
         private static long UpdatePlatformUserAccount(int userIndex, InputDevice device)
         {
-            Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount, "User index is invalid");
+            Debug.Assert(userIndex >= 0 && userIndex < s_GlobalState.allUserCount, "User index is invalid");
 
             // Fetch account details from backend.
             var queryResult = QueryPairedPlatformUserAccount(device, out var platformUserAccountHandle,
@@ -1428,18 +1427,18 @@ namespace UnityEngine.InputSystem.Users
                 // Check if there's an account selection in progress. There shouldn't be as it's
                 // weird for the device to no signal it does not support querying user account, but
                 // just to be safe, we check.
-                if ((s_AllUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
+                if ((s_GlobalState.allUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
                     Notify(userIndex, InputUserChange.AccountSelectionCanceled, null);
 
-                s_AllUserData[userIndex].platformUserAccountHandle = null;
-                s_AllUserData[userIndex].platformUserAccountName = null;
-                s_AllUserData[userIndex].platformUserAccountId = null;
+                s_GlobalState.allUserData[userIndex].platformUserAccountHandle = null;
+                s_GlobalState.allUserData[userIndex].platformUserAccountName = null;
+                s_GlobalState.allUserData[userIndex].platformUserAccountId = null;
 
                 return queryResult;
             }
 
             // Check if there's an account selection that we have initiated.
-            if ((s_AllUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
+            if ((s_GlobalState.allUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
             {
                 // Yes, there is. See if it is complete.
 
@@ -1455,26 +1454,26 @@ namespace UnityEngine.InputSystem.Users
                 else
                 {
                     // Yes, it is complete.
-                    s_AllUserData[userIndex].flags &= ~UserFlags.UserAccountSelectionInProgress;
+                    s_GlobalState.allUserData[userIndex].flags &= ~UserFlags.UserAccountSelectionInProgress;
 
-                    s_AllUserData[userIndex].platformUserAccountHandle = platformUserAccountHandle;
-                    s_AllUserData[userIndex].platformUserAccountName = platformUserAccountName;
-                    s_AllUserData[userIndex].platformUserAccountId = platformUserAccountId;
+                    s_GlobalState.allUserData[userIndex].platformUserAccountHandle = platformUserAccountHandle;
+                    s_GlobalState.allUserData[userIndex].platformUserAccountName = platformUserAccountName;
+                    s_GlobalState.allUserData[userIndex].platformUserAccountId = platformUserAccountId;
 
                     Notify(userIndex, InputUserChange.AccountSelectionComplete, device);
                 }
             }
             // Check if user account details have changed.
-            else if (s_AllUserData[userIndex].platformUserAccountHandle != platformUserAccountHandle ||
-                     s_AllUserData[userIndex].platformUserAccountId != platformUserAccountId)
+            else if (s_GlobalState.allUserData[userIndex].platformUserAccountHandle != platformUserAccountHandle ||
+                     s_GlobalState.allUserData[userIndex].platformUserAccountId != platformUserAccountId)
             {
-                s_AllUserData[userIndex].platformUserAccountHandle = platformUserAccountHandle;
-                s_AllUserData[userIndex].platformUserAccountName = platformUserAccountName;
-                s_AllUserData[userIndex].platformUserAccountId = platformUserAccountId;
+                s_GlobalState.allUserData[userIndex].platformUserAccountHandle = platformUserAccountHandle;
+                s_GlobalState.allUserData[userIndex].platformUserAccountName = platformUserAccountName;
+                s_GlobalState.allUserData[userIndex].platformUserAccountId = platformUserAccountId;
 
                 Notify(userIndex, InputUserChange.AccountChanged, device);
             }
-            else if (s_AllUserData[userIndex].platformUserAccountName != platformUserAccountName)
+            else if (s_GlobalState.allUserData[userIndex].platformUserAccountName != platformUserAccountName)
             {
                 Notify(userIndex, InputUserChange.AccountNameChanged, device);
             }
@@ -1563,9 +1562,9 @@ namespace UnityEngine.InputSystem.Users
         {
             if (change == InputActionChange.BoundControlsChanged)
             {
-                for (var i = 0; i < s_AllUserCount; ++i)
+                for (var i = 0; i < s_GlobalState.allUserCount; ++i)
                 {
-                    ref var user = ref s_AllUsers[i];
+                    ref var user = ref s_GlobalState.allUsers[i];
                     if (ReferenceEquals(user.actions, obj))
                         Notify(i, InputUserChange.ControlsChanged, null);
                 }
@@ -1592,15 +1591,15 @@ namespace UnityEngine.InputSystem.Users
                 {
                     // Could have been removed from multiple users. Repeatedly search in s_AllPairedDevices
                     // until we can't find the device anymore.
-                    var deviceIndex = s_AllPairedDevices.IndexOfReference(device, s_AllPairedDeviceCount);
+                    var deviceIndex = s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
                     while (deviceIndex != -1)
                     {
                         // Find user. Must be there as we found the device in s_AllPairedDevices.
                         var userIndex = -1;
-                        for (var i = 0; i < s_AllUserCount; ++i)
+                        for (var i = 0; i < s_GlobalState.allUserCount; ++i)
                         {
-                            var deviceStartIndex = s_AllUserData[i].deviceStartIndex;
-                            if (deviceStartIndex <= deviceIndex && deviceIndex < deviceStartIndex + s_AllUserData[i].deviceCount)
+                            var deviceStartIndex = s_GlobalState.allUserData[i].deviceStartIndex;
+                            if (deviceStartIndex <= deviceIndex && deviceIndex < deviceStartIndex + s_GlobalState.allUserData[i].deviceCount)
                             {
                                 userIndex = i;
                                 break;
@@ -1616,7 +1615,7 @@ namespace UnityEngine.InputSystem.Users
                         RemoveDeviceFromUser(userIndex, device);
 
                         // Search for another user paired to the same device.
-                        deviceIndex = s_AllPairedDevices.IndexOfReference(device, s_AllPairedDeviceCount);
+                        deviceIndex = s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
                     }
                     break;
                 }
@@ -1626,15 +1625,15 @@ namespace UnityEngine.InputSystem.Users
                 {
                     // Could be a previously lost device. Could affect multiple users. Repeatedly search in
                     // s_AllLostDevices until we can't find the device anymore.
-                    var deviceIndex = s_AllLostDevices.IndexOfReference(device, s_AllLostDeviceCount);
+                    var deviceIndex = s_GlobalState.allLostDevices.IndexOfReference(device, s_GlobalState.allLostDeviceCount);
                     while (deviceIndex != -1)
                     {
                         // Find user. Must be there as we found the device in s_AllLostDevices.
                         var userIndex = -1;
-                        for (var i = 0; i < s_AllUserCount; ++i)
+                        for (var i = 0; i < s_GlobalState.allUserCount; ++i)
                         {
-                            var deviceStartIndex = s_AllUserData[i].lostDeviceStartIndex;
-                            if (deviceStartIndex <= deviceIndex && deviceIndex < deviceStartIndex + s_AllUserData[i].lostDeviceCount)
+                            var deviceStartIndex = s_GlobalState.allUserData[i].lostDeviceStartIndex;
+                            if (deviceStartIndex <= deviceIndex && deviceIndex < deviceStartIndex + s_GlobalState.allUserData[i].lostDeviceCount)
                             {
                                 userIndex = i;
                                 break;
@@ -1654,7 +1653,7 @@ namespace UnityEngine.InputSystem.Users
                         // Note: s_AllLostDevices is modified (element erased) from within RemoveDeviceFromUser,
                         //       hence, deviceIndex is not advanced and s_AllLostDeviceCount is one less than
                         //       previous linear search iteration.
-                        deviceIndex = s_AllLostDevices.IndexOfReference(device, deviceIndex, s_AllLostDeviceCount);
+                        deviceIndex = s_GlobalState.allLostDevices.IndexOfReference(device, deviceIndex, s_GlobalState.allLostDeviceCount);
                     }
                     break;
                 }
@@ -1666,21 +1665,21 @@ namespace UnityEngine.InputSystem.Users
                     // See if the this is a device that we were waiting for an account selection on. If so, pair
                     // it to the user that was waiting.
                     var wasOngoingAccountSelection = false;
-                    for (var i = 0; i < s_OngoingAccountSelections.length; ++i)
+                    for (var i = 0; i < s_GlobalState.ongoingAccountSelections.length; ++i)
                     {
-                        if (s_OngoingAccountSelections[i].device != device)
+                        if (s_GlobalState.ongoingAccountSelections[i].device != device)
                             continue;
 
-                        var userIndex = new InputUser { m_Id = s_OngoingAccountSelections[i].userId }.index;
+                        var userIndex = new InputUser { m_Id = s_GlobalState.ongoingAccountSelections[i].userId }.index;
                         var queryResult = UpdatePlatformUserAccount(userIndex, device);
                         if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) == 0)
                         {
                             wasOngoingAccountSelection = true;
-                            s_OngoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
+                            s_GlobalState.ongoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
                             --i;
 
                             // If the device wasn't paired to the user, pair it now.
-                            if (!s_AllUsers[userIndex].pairedDevices.ContainsReference(device))
+                            if (!s_GlobalState.allUsers[userIndex].pairedDevices.ContainsReference(device))
                                 AddDeviceToUser(userIndex, device);
                         }
                     }
@@ -1691,15 +1690,15 @@ namespace UnityEngine.InputSystem.Users
                     {
                         // Could be paired to multiple users. Repeatedly search in s_AllPairedDevices
                         // until we can't find the device anymore.
-                        var deviceIndex = s_AllPairedDevices.IndexOfReference(device, s_AllPairedDeviceCount);
+                        var deviceIndex = s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
                         while (deviceIndex != -1)
                         {
                             // Find user. Must be there as we found the device in s_AllPairedDevices.
                             var userIndex = -1;
-                            for (var i = 0; i < s_AllUserCount; ++i)
+                            for (var i = 0; i < s_GlobalState.allUserCount; ++i)
                             {
-                                var deviceStartIndex = s_AllUserData[i].deviceStartIndex;
-                                if (deviceStartIndex <= deviceIndex && deviceIndex < deviceStartIndex + s_AllUserData[i].deviceCount)
+                                var deviceStartIndex = s_GlobalState.allUserData[i].deviceStartIndex;
+                                if (deviceStartIndex <= deviceIndex && deviceIndex < deviceStartIndex + s_GlobalState.allUserData[i].deviceCount)
                                 {
                                     userIndex = i;
                                     break;
@@ -1712,8 +1711,8 @@ namespace UnityEngine.InputSystem.Users
                             // Search for another user paired to the same device.
                             // Note that action is tied to user and hence we can skip to end of slice associated
                             // with the current user or at least one element forward.
-                            var offsetNextSlice = deviceIndex + Math.Max(1, s_AllUserData[userIndex].deviceCount);
-                            deviceIndex = s_AllPairedDevices.IndexOfReference(device, offsetNextSlice, s_AllPairedDeviceCount - offsetNextSlice);
+                            var offsetNextSlice = deviceIndex + Math.Max(1, s_GlobalState.allUserData[userIndex].deviceCount);
+                            deviceIndex = s_GlobalState.allPairedDevices.IndexOfReference(device, offsetNextSlice, s_GlobalState.allPairedDeviceCount - offsetNextSlice);
                         }
                     }
                     break;
@@ -1731,16 +1730,16 @@ namespace UnityEngine.InputSystem.Users
         //       NOT from state changes applied directly through InputState.Change.
         private static void OnEvent(InputEventPtr eventPtr, InputDevice device)
         {
-            Debug.Assert(s_ListenForUnpairedDeviceActivity != 0,
+            Debug.Assert(s_GlobalState.listenForUnpairedDeviceActivity != 0,
                 "This should only be called while listening for unpaired device activity");
-            if (s_ListenForUnpairedDeviceActivity == 0)
+            if (s_GlobalState.listenForUnpairedDeviceActivity == 0)
                 return;
 
             // Ignore input in editor.
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
-            #endif
+#endif
 
             // Ignore any state change not triggered from a state event.
             var eventType = eventPtr.type;
@@ -1752,7 +1751,7 @@ namespace UnityEngine.InputSystem.Users
                 return;
 
             // See if it's a device not belonging to any user.
-            if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+            if (ArrayHelpers.ContainsReference(s_GlobalState.allPairedDevices, s_GlobalState.allPairedDeviceCount, device))
             {
                 // No, it's a device already paired to a player so do nothing.
                 return;
@@ -1763,7 +1762,7 @@ namespace UnityEngine.InputSystem.Users
             // Apply the pre-filter. If there's callbacks and none of them return true,
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
-                ref s_OnPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
+                ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
                 return;
 
             // Go through the changed controls in the event and look for ones actuated
@@ -1771,14 +1770,14 @@ namespace UnityEngine.InputSystem.Users
             foreach (var control in eventPtr.EnumerateChangedControls(device: device, magnitudeThreshold: 0.0001f))
             {
                 var deviceHasBeenPaired = false;
-                s_OnUnpairedDeviceUsed.LockForChanges();
-                for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
+                s_GlobalState.onUnpairedDeviceUsed.LockForChanges();
+                for (var n = 0; n < s_GlobalState.onUnpairedDeviceUsed.length; ++n)
                 {
-                    var pairingStateVersionBefore = s_PairingStateVersion;
+                    var pairingStateVersionBefore = s_GlobalState.pairingStateVersion;
 
                     try
                     {
-                        s_OnUnpairedDeviceUsed[n](control, eventPtr);
+                        s_GlobalState.onUnpairedDeviceUsed[n](control, eventPtr);
                     }
                     catch (Exception exception)
                     {
@@ -1786,14 +1785,14 @@ namespace UnityEngine.InputSystem.Users
                         Debug.LogException(exception);
                     }
 
-                    if (pairingStateVersionBefore != s_PairingStateVersion
+                    if (pairingStateVersionBefore != s_GlobalState.pairingStateVersion
                         && FindUserPairedToDevice(device) != null)
                     {
                         deviceHasBeenPaired = true;
                         break;
                     }
                 }
-                s_OnUnpairedDeviceUsed.UnlockForChanges();
+                s_GlobalState.onUnpairedDeviceUsed.UnlockForChanges();
 
                 // If the device was paired in one of the callbacks, stop processing
                 // changes on it.
@@ -1950,79 +1949,112 @@ namespace UnityEngine.InputSystem.Users
             public uint userId;
         }
 
-        private static int s_PairingStateVersion;
-        private static uint s_LastUserId;
-        private static int s_AllUserCount;
-        private static int s_AllPairedDeviceCount;
-        private static int s_AllLostDeviceCount;
-        private static InputUser[] s_AllUsers;
-        private static UserData[] s_AllUserData;
-        private static InputDevice[] s_AllPairedDevices; // We keep a single array that we slice out to each user.
-        private static InputDevice[] s_AllLostDevices;   // We keep a single array that we slice out to each user.
-        private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
-        private static CallbackArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
-        private static CallbackArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
-        private static CallbackArray<Func<InputDevice, InputEventPtr, bool>> s_OnPreFilterUnpairedDeviceUsed;
-        private static Action<object, InputActionChange> s_ActionChangeDelegate;
-        private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
-        private static Action<InputEventPtr, InputDevice> s_OnEventDelegate;
-        private static bool s_OnActionChangeHooked;
-        private static bool s_OnDeviceChangeHooked;
-        private static bool s_OnEventHooked;
-        private static int s_ListenForUnpairedDeviceActivity;
+        private struct GlobalState
+        {
+            internal int pairingStateVersion;
+            internal uint lastUserId;
+            internal int allUserCount;
+            internal int allPairedDeviceCount;
+            internal int allLostDeviceCount;
+            internal InputUser[] allUsers;
+            internal UserData[] allUserData;
+            internal InputDevice[] allPairedDevices; // We keep a single array that we slice out to each user.
+            internal InputDevice[] allLostDevices;   // We keep a single array that we slice out to each user.
+            internal InlinedArray<OngoingAccountSelection> ongoingAccountSelections;
+            internal CallbackArray<Action<InputUser, InputUserChange, InputDevice>> onChange;
+            internal CallbackArray<Action<InputControl, InputEventPtr>> onUnpairedDeviceUsed;
+            internal CallbackArray<Func<InputDevice, InputEventPtr, bool>> onPreFilterUnpairedDeviceUsed;
+            internal Action<object, InputActionChange> actionChangeDelegate;
+            internal Action<InputDevice, InputDeviceChange> onDeviceChangeDelegate;
+            internal Action<InputEventPtr, InputDevice> onEventDelegate;
+            internal bool onActionChangeHooked;
+            internal bool onDeviceChangeHooked;
+            internal bool onEventHooked;
+            internal int listenForUnpairedDeviceActivity;
+        }
+
+        private static GlobalState s_GlobalState;
+
+        internal static ISavedState SaveAndResetState()
+        {
+            // Save current state and provide an opaque interface to restore it
+            var savedState = new SavedStructState<GlobalState>(
+                ref s_GlobalState,
+                (ref GlobalState state) => s_GlobalState = state, // restore
+                () => DisposeAndResetGlobalState()); // static dispose
+
+            // Reset global state
+            s_GlobalState = default;
+
+            return savedState;
+        }
 
         private static void HookIntoActionChange()
         {
-            if (s_OnActionChangeHooked)
+            if (s_GlobalState.onActionChangeHooked)
                 return;
-            if (s_ActionChangeDelegate == null)
-                s_ActionChangeDelegate = OnActionChange;
+            if (s_GlobalState.actionChangeDelegate == null)
+                s_GlobalState.actionChangeDelegate = OnActionChange;
             InputSystem.onActionChange += OnActionChange;
-            s_OnActionChangeHooked = true;
+            s_GlobalState.onActionChangeHooked = true;
         }
 
         private static void UnhookFromActionChange()
         {
-            if (!s_OnActionChangeHooked)
+            if (!s_GlobalState.onActionChangeHooked)
                 return;
             InputSystem.onActionChange -= OnActionChange;
-            s_OnActionChangeHooked = false;
+            s_GlobalState.onActionChangeHooked = false;
         }
 
         private static void HookIntoDeviceChange()
         {
-            if (s_OnDeviceChangeHooked)
+            if (s_GlobalState.onDeviceChangeHooked)
                 return;
-            if (s_OnDeviceChangeDelegate == null)
-                s_OnDeviceChangeDelegate = OnDeviceChange;
-            InputSystem.onDeviceChange += s_OnDeviceChangeDelegate;
-            s_OnDeviceChangeHooked = true;
+            if (s_GlobalState.onDeviceChangeDelegate == null)
+                s_GlobalState.onDeviceChangeDelegate = OnDeviceChange;
+            InputSystem.onDeviceChange += s_GlobalState.onDeviceChangeDelegate;
+            s_GlobalState.onDeviceChangeHooked = true;
         }
 
         private static void UnhookFromDeviceChange()
         {
-            if (!s_OnDeviceChangeHooked)
+            if (!s_GlobalState.onDeviceChangeHooked)
                 return;
-            InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
-            s_OnDeviceChangeHooked = false;
+            InputSystem.onDeviceChange -= s_GlobalState.onDeviceChangeDelegate;
+            s_GlobalState.onDeviceChangeHooked = false;
         }
 
         private static void HookIntoEvents()
         {
-            if (s_OnEventHooked)
+            if (s_GlobalState.onEventHooked)
                 return;
-            if (s_OnEventDelegate == null)
-                s_OnEventDelegate = OnEvent;
-            InputSystem.onEvent += s_OnEventDelegate;
-            s_OnEventHooked = true;
+            if (s_GlobalState.onEventDelegate == null)
+                s_GlobalState.onEventDelegate = OnEvent;
+            InputSystem.onEvent += s_GlobalState.onEventDelegate;
+            s_GlobalState.onEventHooked = true;
         }
 
         private static void UnhookFromDeviceStateChange()
         {
-            if (!s_OnEventHooked)
+            if (!s_GlobalState.onEventHooked)
                 return;
-            InputSystem.onEvent -= s_OnEventDelegate;
-            s_OnEventHooked = false;
+            InputSystem.onEvent -= s_GlobalState.onEventDelegate;
+            s_GlobalState.onEventHooked = false;
+        }
+
+        private static void DisposeAndResetGlobalState()
+        {
+            // Release native memory held by control scheme match results.
+            for (var i = 0; i < s_GlobalState.allUserCount; ++i)
+                s_GlobalState.allUserData[i].controlSchemeMatch.Dispose();
+
+            // Don't reset s_LastUserId and just let it increment instead so we never generate
+            // the same ID twice.
+
+            var storedLastUserId = s_GlobalState.lastUserId;
+            s_GlobalState = default;
+            s_GlobalState.lastUserId = storedLastUserId;
         }
 
         internal static void ResetGlobals()
@@ -2031,29 +2063,7 @@ namespace UnityEngine.InputSystem.Users
             UnhookFromDeviceChange();
             UnhookFromDeviceStateChange();
 
-            // Release native memory held by control scheme match results.
-            for (var i = 0; i < s_AllUserCount; ++i)
-                s_AllUserData[i].controlSchemeMatch.Dispose();
-
-            // Don't reset s_LastUserId and just let it increment instead so we never generate
-            // the same ID twice.
-
-            s_PairingStateVersion = 0;
-            s_AllUserCount = 0;
-            s_AllPairedDeviceCount = 0;
-            s_AllUsers = null;
-            s_AllUserData = null;
-            s_AllPairedDevices = null;
-            s_OngoingAccountSelections = default;
-            s_OnChange = default;
-            s_OnUnpairedDeviceUsed = default;
-            s_OnPreFilterUnpairedDeviceUsed = default;
-            s_OnDeviceChangeDelegate = null;
-            s_OnEventDelegate = null;
-            s_OnDeviceChangeHooked = false;
-            s_OnActionChangeHooked = false;
-            s_OnEventHooked = false;
-            s_ListenForUnpairedDeviceActivity = 0;
+            DisposeAndResetGlobalState();
         }
     }
 }
