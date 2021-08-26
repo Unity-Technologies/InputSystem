@@ -441,9 +441,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         ///
         /// Note that this array will not contain the same control multiple times even if more than
-        /// one binding on an action references the same control. Instead, the first binding on
-        /// an action that resolves to a particular control will essentially "own" the control
-        /// and subsequent bindings for the action will be blocked from resolving to the same control.
+        /// one binding on an action references the same control.
         ///
         /// <example>
         /// <code>

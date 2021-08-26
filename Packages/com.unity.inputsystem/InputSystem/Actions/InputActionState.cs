@@ -1205,6 +1205,7 @@ namespace UnityEngine.InputSystem
             // anything.
             if (actionState->controlIndex == kInvalidIndex)
             {
+                actionState->magnitude = trigger.magnitude;
                 Profiler.EndSample();
                 return false;
             }
@@ -1219,7 +1220,7 @@ namespace UnityEngine.InputSystem
             if (trigger.magnitude > actionState->magnitude)
             {
                 // If this is not the control that is currently driving the action, we know
-                // there are multiple controls that are concurrently actuated on the control.
+                // there are multiple controls that are concurrently actuated on the action.
                 // Remember that so that when the controls are released again, we can more
                 // efficiently determine whether we need to take multiple bound controls into
                 // account or not.
@@ -1378,7 +1379,12 @@ namespace UnityEngine.InputSystem
                 // it drive the action - this is like a direction change on the same control.
                 if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
                     return false;
-                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
+                // If we do have an actuation on a control that isn't currently driving the action, flag the action has
+                // having multiple concurrent inputs ATM.
+                // NOTE: We explicitly check for whether it is in fact not the same control even if the control indices are different.
+                //       The reason is that we allow the same control, on the same action to be bound more than once on the same
+                //       action.
+                if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex && controls[triggerControlIndex] != controls[actionState->controlIndex])
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
             }
