@@ -601,7 +601,8 @@ You can also use this method to replace the text string with images.
     // Call GetBindingDisplayString() such that it also returns information about the
     // name of the device layout and path of the control on the device. This information
     // is useful for reliably associating imagery with individual controls.
-    var bindingString = action.GetBindingDisplayString(out deviceLayout, out controlPath);
+    // NOTE: The first argument is the index of the binding within InputAction.bindings.
+    var bindingString = action.GetBindingDisplayString(0, out deviceLayout, out controlPath);
 
     // If it's a gamepad, look up an icon for the control.
     Sprite icon = null;
