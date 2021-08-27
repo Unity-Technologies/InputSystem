@@ -107,6 +107,27 @@ namespace UnityEngine.InputSystem.Utilities
             return IndexOfReference(array, value, count) != -1;
         }
 
+        public static bool ContainsReference<TFirst, TSecond>(this TFirst[] array, int startIndex, int count, TSecond value)
+            where TSecond : class
+            where TFirst : TSecond
+        {
+            return IndexOfReference(array, value, startIndex, count) != -1;
+        }
+
+        public static bool HaveDuplicateReferences<TFirst>(this TFirst[] first, int index, int count)
+        {
+            for (var i = 0; i < count; ++i)
+            {
+                var element = first[i];
+                for (var n = i + 1; n < count - i; ++n)
+                {
+                    if (ReferenceEquals(element, first[n]))
+                        return true;
+                }
+            }
+            return false;
+        }
+
         public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second, int count = int.MaxValue)
         {
             if (first == null || second == null)

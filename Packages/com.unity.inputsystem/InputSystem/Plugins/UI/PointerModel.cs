@@ -219,6 +219,11 @@ namespace UnityEngine.InputSystem.UI
                 }
             }
 
+            /// <summary>
+            /// When we "release" a button other than through user interaction (e.g. through focus switching),
+            /// we don't want this to count as an actual release that ends up clicking. This flag will cause
+            /// generated events to have <c>eligibleForClick</c> to be false.
+            /// </summary>
             public bool ignoreNextClick
             {
                 get => m_IgnoreNextClick;

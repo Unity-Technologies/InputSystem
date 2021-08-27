@@ -441,9 +441,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         ///
         /// Note that this array will not contain the same control multiple times even if more than
-        /// one binding on an action references the same control. Instead, the first binding on
-        /// an action that resolves to a particular control will essentially "own" the control
-        /// and subsequent bindings for the action will be blocked from resolving to the same control.
+        /// one binding on an action references the same control.
         ///
         /// <example>
         /// <code>
@@ -509,6 +507,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputActionPhase phase => currentState.phase;
 
+        /// <summary>
+        /// True if the action is currently in <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>
+        /// phase. False in all other cases.
+        /// </summary>
+        /// <see cref="phase"/>
         public bool inProgress => phase.IsInProgress();
 
         /// <summary>
@@ -1123,6 +1126,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasReleasedThisFrame"/>
@@ -1169,6 +1175,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasPressedThisFrame"/>
@@ -1225,6 +1234,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>

@@ -601,7 +601,8 @@ You can also use this method to replace the text string with images.
     // Call GetBindingDisplayString() such that it also returns information about the
     // name of the device layout and path of the control on the device. This information
     // is useful for reliably associating imagery with individual controls.
-    var bindingString = action.GetBindingDisplayString(out deviceLayout, out controlPath);
+    // NOTE: The first argument is the index of the binding within InputAction.bindings.
+    var bindingString = action.GetBindingDisplayString(0, out deviceLayout, out controlPath);
 
     // If it's a gamepad, look up an icon for the control.
     Sprite icon = null;
@@ -660,22 +661,7 @@ Note that a single [Binding path](Controls.md#control-paths) can match multiple 
 
 * A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any Control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any Control tagged with the "Submit" [usage](Controls.md#control-usages) on any Device.
 
-If there are multiple Bindings on the same Action that all reference the same Control(s), only the first such Binding will successfully bind to the control.
-
-```CSharp
-var action1 = new InputAction();
-
-action1.AddBinding("<Gamepad>/buttonSouth");
-action1.AddBinding("<Gamepad>/buttonSouth"); // This binding will be ignored.
-
-var action2 = new InputAction();
-
-action2.AddBinding("<Gamepad>/buttonSouth");
-// Add a binding that implicitly matches the first binding, too. When binding resolution
-// happens, this binding will only receive buttonNorth, buttonWest, and buttonEast, but not
-// buttonSouth as the first binding already received that control.
-action2.AddBinding("<Gamepad>/button*");
-```
+If there are multiple Bindings on the same Action that all reference the same Control(s), the Control will effectively feed into the Action multiple times. This is to allow, for example, a single Control to produce different input on the same Action by virtue of being bound in a different fashion (composites, processors, interactions, etc). However, regardless of how many times a Control is bound on any given action, it will only be mentioned once in the Action's [array of `controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls).
 
 To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
 

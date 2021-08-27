@@ -26,7 +26,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         base.Setup();
 
         // Disable() will not reset this so default initialize it here.
-        Touch.s_HistoryLengthPerFinger = 64;
+        Touch.s_GlobalState.historyLengthPerFinger = 64;
 
         if (!TestContext.CurrentContext.Test.Properties.ContainsKey("EnhancedTouchDisabled"))
         {
@@ -45,16 +45,16 @@ internal class EnhancedTouchTests : CoreTestsFixture
         EnhancedTouchSupport.Disable();
 
         // Make sure cleanup really did clean up.
-        Assert.That(Touch.s_Touchscreens.length, Is.EqualTo(0));
-        Assert.That(Touch.s_PlayerState, Is.EqualTo(default(Touch.FingerAndTouchState)));
+        Assert.That(Touch.s_GlobalState.touchscreens.length, Is.EqualTo(0));
+        Assert.That(Touch.s_GlobalState.playerState, Is.EqualTo(default(Touch.FingerAndTouchState)));
         #if UNITY_EDITOR
-        Assert.That(Touch.s_EditorState, Is.EqualTo(default(Touch.FingerAndTouchState)));
+        Assert.That(Touch.s_GlobalState.editorState, Is.EqualTo(default(Touch.FingerAndTouchState)));
         #endif
 
         // Some state is kept alive in-between Disable/Enable. Manually clean it out.
-        Touch.s_OnFingerDown = default;
-        Touch.s_OnFingerUp = default;
-        Touch.s_OnFingerMove = default;
+        Touch.s_GlobalState.onFingerDown = default;
+        Touch.s_GlobalState.onFingerUp = default;
+        Touch.s_GlobalState.onFingerMove = default;
 
         TouchSimulation.Destroy();
         TouchSimulation.s_Instance = m_OldTouchSimulationInstance;

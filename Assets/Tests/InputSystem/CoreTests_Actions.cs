@@ -170,7 +170,7 @@ partial class CoreTests
     // https://fogbugz.unity3d.com/f/cases/1293808/
     [Test]
     [Category("Actions")]
-    public void Actions_WhenSeveralBindingsResolveToSameControl_ControlIsAssociatedWithFirstActiveBinding()
+    public void Actions_WhenSeveralBindingsResolveToSameControl_SameControlFeedsIntoActionMultipleTimes_ButIsListedInControlsOnlyOnce()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -180,6 +180,8 @@ partial class CoreTests
         var actionMap = new InputActionMap();
         var action3 = actionMap.AddAction("action3");
         var action4 = actionMap.AddAction("action4");
+        var action5 = actionMap.AddAction("action5");
+        var action6 = actionMap.AddAction("action6");
 
         action1.AddBinding("<Gamepad>/buttonSouth");
         action1.AddBinding("<Gamepad>/buttonSouth");
@@ -192,16 +194,30 @@ partial class CoreTests
         action3.AddBinding("<Gamepad>/buttonSouth");
         action4.AddBinding("<Gamepad>/buttonSouth"); // Should not be removed; different action.
 
+        action5.AddBinding("<Gamepad>/buttonSouth", interactions: "press(behavior=0)");
+        action5.AddBinding("<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
+        action5.AddBinding("<Gamepad>/buttonSouth", processors: "invert");
+
+        action6.AddCompositeBinding("Dpad")
+            .With("Left", "<Gamepad>/leftStick/y", processors: "clamp(min=0,max=1)")
+            .With("Right", "<Gamepad>/leftStick/y", processors: "clamp(min=-1,max=0),invert");
+
+        var action6Performed = 0;
+        action6.performed += ctx => action6Performed += ctx.performed ? 1 : 0;
+
         Assert.That(action1.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
-        Assert.That(action2.controls, Has.Count.EqualTo(4)); // North, south, east, west
+        Assert.That(action2.controls, Is.EquivalentTo(new[] { gamepad.buttonNorth, gamepad.buttonSouth, gamepad.buttonEast, gamepad.buttonWest }));
         Assert.That(action3.controls, Is.EquivalentTo(new[] { gamepad.buttonNorth, gamepad.buttonSouth }));
         Assert.That(action4.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(action5.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(action6.controls, Is.EquivalentTo(new[] { gamepad.leftStick.y })); // Only mentioned once.
 
         Assert.That(action1.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
         Assert.That(action2.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
         Assert.That(action3.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(1));
         Assert.That(action4.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
+        Assert.That(action5.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
 
         // Go through a bit of pressing and releasing to make sure that the action state
         // processing wasn't thrown off its track.
@@ -210,6 +226,8 @@ partial class CoreTests
         action2.Enable();
         action3.Enable();
         action4.Enable();
+        action5.Enable();
+        action6.Enable();
 
         Press(gamepad.buttonSouth);
 
@@ -245,6 +263,11 @@ partial class CoreTests
         Assert.That(action2.triggered, Is.False);
         Assert.That(action3.triggered, Is.False);
         Assert.That(action4.triggered, Is.False);
+
+        Set(gamepad.leftStick, new Vector2(0, -1));
+
+        Assert.That(action6Performed, Is.EqualTo(1));
+        Assert.That(action6.ReadValue<Vector2>(), Is.EqualTo(new Vector2(1,  0)));
     }
 
     [Test]
@@ -1513,21 +1536,41 @@ partial class CoreTests
         // Create an action that performs on button *up*. This way we can tell whether
         // the action is truly cancelled or whether it simply gets triggered by us
         // resetting the corresponding device state.
-        var buttonReleaseAction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+        var buttonReleaseAction = new InputAction(name: "button", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth",
             interactions: "press(behavior=1)");
         buttonReleaseAction.Enable();
+
+        var valueAction = new InputAction(name: "value", type: InputActionType.Value, binding: "<Gamepad>/buttonSouth");
+        valueAction.Enable();
+
+        var passThroughAction = new InputAction(name: "passthrough", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
+        passThroughAction.Enable();
 
         Press(gamepad.buttonSouth);
 
         Assert.That(buttonReleaseAction.phase, Is.EqualTo(InputActionPhase.Started));
         Assert.That(buttonReleaseAction.activeControl, Is.SameAs(gamepad.buttonSouth));
 
+        Assert.That(valueAction.phase, Is.EqualTo(InputActionPhase.Started)); // Goes back to Started after Performed.
+        Assert.That(valueAction.activeControl, Is.SameAs(gamepad.buttonSouth));
+
+        Assert.That(passThroughAction.phase, Is.EqualTo(InputActionPhase.Performed));
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.buttonSouth));
+
         using (var buttonReleaseActionTrace = new InputActionTrace(buttonReleaseAction))
+        using (var valueActionTrace = new InputActionTrace(valueAction))
+        using (var passThroughActionTrace = new InputActionTrace(passThroughAction))
         {
             InputSystem.ResetDevice(gamepad);
 
-            Assert.That(buttonReleaseActionTrace,
-                Canceled(buttonReleaseAction));
+            Assert.That(buttonReleaseActionTrace, Canceled(buttonReleaseAction));
+            Assert.That(valueActionTrace, Canceled(valueAction));
+
+            // This case is quirky. For button and value actions, the reset of the control value
+            // does not cause the action to start back up. For pass-through actions, that is different
+            // as *any* value change performs the action. So here, we see *both* a cancellation and then
+            // immediately a performing of the action.
+            Assert.That(passThroughActionTrace, Canceled(passThroughAction).AndThen(Performed(passThroughAction, value: 0f)));
         }
     }
 

@@ -41,6 +41,10 @@ namespace UnityEngine.InputSystem.UI
     /// This UI input module has the advantage over other such modules that it doesn't have to know
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
+    ///
+    /// When adding this component from code (such as through <c>GameObject.AddComponent</c>), the
+    /// resulting module will automatically have a set of default input actions assigned to it
+    /// (see <see cref="AssignDefaultActions"/>).
     /// </remarks>
     [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#setting-up-ui-input")]
     public class InputSystemUIInputModule : BaseInputModule
@@ -1261,6 +1265,30 @@ namespace UnityEngine.InputSystem.UI
         /// Assigns default input actions asset and input actions, similar to how defaults are assigned when creating UI module in editor.
         /// Useful for creating <see cref="InputSystemUIInputModule"/> at runtime.
         /// </summary>
+        /// <remarks>
+        /// This instantiates <see cref="DefaultInputActions"/> and assigns it to <see cref="actionsAsset"/>. It also
+        /// assigns all the various individual actions such as <see cref="point"/> and <see cref="leftClick"/>.
+        ///
+        /// Note that if an <c>InputSystemUIInputModule</c> component is programmatically added to a <c>GameObject</c>,
+        /// it will automatically receive the default actions as part of its <c>OnEnable</c> method. Use <see cref="UnassignActions"/>
+        /// to remove these assignments.
+        ///
+        /// <example>
+        /// <code>
+        /// var go = new GameObject();
+        /// go.AddComponent&lt;EventSystem&gt;();
+        ///
+        /// // Adding the UI module like this will implicitly enable it and thus lead to
+        /// // automatic assignment of the default input actions.
+        /// var uiModule = go.AddComponent&lt;InputSystemUIInputModule&gt;();
+        ///
+        /// // Manually remove the default input actions.
+        /// uiModule.UnassignActions();
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="actionsAsset"/>
+        /// <seealso cref="DefaultInputActions"/>
         public void AssignDefaultActions()
         {
             var defaultActions = new DefaultInputActions();
@@ -1273,8 +1301,31 @@ namespace UnityEngine.InputSystem.UI
             middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
             point = InputActionReference.Create(defaultActions.UI.Point);
             scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
+            trackedDeviceOrientation = InputActionReference.Create(defaultActions.UI.TrackedDeviceOrientation);
+            trackedDevicePosition = InputActionReference.Create(defaultActions.UI.TrackedDevicePosition);
+        }
 
-            defaultActions.Enable();
+        /// <summary>
+        /// Remove all action assignments, that is <see cref="actionsAsset"/> as well as all individual
+        /// actions such as <see cref="leftClick"/>.
+        /// </summary>
+        /// <remarks>
+        /// If the current actions were enabled by the UI input module, they will be disabled in the process.
+        /// </remarks>
+        /// <seealso cref="AssignDefaultActions"/>
+        public void UnassignActions()
+        {
+            actionsAsset = default;
+            cancel = default;
+            submit = default;
+            move = default;
+            leftClick = default;
+            rightClick = default;
+            middleClick = default;
+            point = default;
+            scrollWheel = default;
+            trackedDeviceOrientation = default;
+            trackedDevicePosition = default;
         }
 
         [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
@@ -1318,7 +1369,10 @@ namespace UnityEngine.InputSystem.UI
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_OnActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
+            InputActionState.s_GlobalState.onActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
+
+            if (HasNoActions())
+                AssignDefaultActions();
 
             HookActions();
             EnableAllActions();
@@ -1328,10 +1382,26 @@ namespace UnityEngine.InputSystem.UI
         {
             base.OnDisable();
 
-            InputActionState.s_OnActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
+            InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
 
             DisableAllActions();
             UnhookActions();
+        }
+
+        private bool HasNoActions()
+        {
+            if (m_ActionsAsset != null)
+                return false;
+
+            return m_PointAction?.action == null
+                && m_LeftClickAction?.action == null
+                && m_RightClickAction?.action == null
+                && m_MiddleClickAction?.action == null
+                && m_SubmitAction?.action == null
+                && m_CancelAction?.action == null
+                && m_ScrollWheelAction?.action == null
+                && m_TrackedDeviceOrientationAction?.action == null
+                && m_TrackedDevicePositionAction?.action == null;
         }
 
         private bool IsAnyActionEnabled()
@@ -1378,38 +1448,45 @@ namespace UnityEngine.InputSystem.UI
 
         private void EnableInputAction(InputActionReference inputActionReference)
         {
-            if (inputActionReference == null ||
-                inputActionReference.m_ActionId == null ||
-                inputActionReference.action == null)
+            var action = inputActionReference?.action;
+            if (action == null)
                 return;
 
-            if (s_InputActionReferenceCounts.TryGetValue(inputActionReference.m_ActionId, out var referenceState))
+            if (s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
             {
                 referenceState.refCount++;
-                s_InputActionReferenceCounts[inputActionReference.m_ActionId] = referenceState;
+                s_InputActionReferenceCounts[action] = referenceState;
             }
             else
             {
                 // if the action is already enabled but its reference count is zero then it was enabled by
                 // something outside the input module and the input module should never disable it.
-                referenceState = new InputActionReferenceState {refCount = 1, enabledByInputModule = !inputActionReference.action.enabled};
-                s_InputActionReferenceCounts.Add(inputActionReference.m_ActionId, referenceState);
+                referenceState = new InputActionReferenceState {refCount = 1, enabledByInputModule = !action.enabled};
+                s_InputActionReferenceCounts.Add(action, referenceState);
             }
 
-            inputActionReference.action.Enable();
+            action.Enable();
         }
 
         private static void DisableInputAction(InputActionReference inputActionReference)
         {
-            if (!s_InputActionReferenceCounts.TryGetValue(inputActionReference?.m_ActionId ?? string.Empty,
+            var action = inputActionReference?.action;
+            if (action == null)
+                return;
+
+            if (!s_InputActionReferenceCounts.TryGetValue(action,
                 out var referenceState))
                 return;
 
             if (referenceState.refCount - 1 == 0 && referenceState.enabledByInputModule)
-                inputActionReference?.action?.Disable();
+            {
+                action.Disable();
+                s_InputActionReferenceCounts.Remove(action);
+                return;
+            }
 
             referenceState.refCount--;
-            s_InputActionReferenceCounts[inputActionReference.m_ActionId] = referenceState;
+            s_InputActionReferenceCounts[action] = referenceState;
         }
 
         private int GetPointerStateIndexFor(int pointerOrTouchId)
@@ -2030,7 +2107,7 @@ namespace UnityEngine.InputSystem.UI
             var oldActionMap = oldAction.actionMap;
             Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
 
-            var newActionMap = m_ActionsAsset.FindActionMap(oldActionMap.name);
+            var newActionMap = m_ActionsAsset?.FindActionMap(oldActionMap.name);
             if (newActionMap == null)
                 return null;
 
@@ -2049,7 +2126,10 @@ namespace UnityEngine.InputSystem.UI
                 if (value != m_ActionsAsset)
                 {
                     var wasEnabled = IsAnyActionEnabled();
+
                     DisableAllActions();
+                    UnhookActions();
+
                     m_ActionsAsset = value;
 
                     point = UpdateReferenceForNewAsset(point);
@@ -2060,8 +2140,12 @@ namespace UnityEngine.InputSystem.UI
                     scrollWheel = UpdateReferenceForNewAsset(scrollWheel);
                     submit = UpdateReferenceForNewAsset(submit);
                     cancel = UpdateReferenceForNewAsset(cancel);
+
                     if (wasEnabled)
+                    {
+                        HookActions();
                         EnableAllActions();
+                    }
                 }
             }
         }
@@ -2081,7 +2165,7 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
 
-        private static Dictionary<string, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<string, InputActionReferenceState>();
+        private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
 
         private struct InputActionReferenceState
         {
