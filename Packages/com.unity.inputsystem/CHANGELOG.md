@@ -10,9 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
-### Changed
+### Fixed
 
 - Fixed `InvalidCastException: Specified cast is not valid.` and `InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?` when upgrading from 1.1.0-pre.5 or earlier. If you experience this issue you can also restart the editor to resolve it.
+- Fixed `InputDeviceChange.Destroyed` not being available, now it's correctly marked as obsolete instead.
 
 ## [1.1.0] - 2021-08-27
 
