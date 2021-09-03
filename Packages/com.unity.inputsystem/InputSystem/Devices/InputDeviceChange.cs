@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -119,5 +120,8 @@ namespace UnityEngine.InputSystem
         /// This notification is sent before the actual reset happens.
         /// </summary>
         HardReset,
+
+        [Obsolete("Destroyed enum has been deprecated.")]
+        Destroyed,
     }
 }

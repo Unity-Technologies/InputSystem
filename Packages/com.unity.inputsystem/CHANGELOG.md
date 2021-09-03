@@ -14,6 +14,14 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed a problem where explicitly switching to the already active control scheme and device set for PlayerInput would cancel event callbacks for no reason when the control scheme switch would have no practical effect. This fix detects and skips device unpairing and re-pairing if the switch is detected to not be a change to scheme or devices. ([case 1342297](https://fogbugz.unity3d.com/f/cases/1342297/))
 
+## [1.1.1] - 2021-09-03
+
+### Fixed
+
+- Fixed `InvalidCastException: Specified cast is not valid.` and `InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?` when upgrading from 1.1.0-pre.5 or earlier. If you experience this issue you can also restart the editor to resolve it.
+- Fixed `InputDeviceChange.Destroyed` not being available, now it's correctly marked as obsolete instead.
+- Removed documentation around platform user account management of `InputUser` which was ahead of actual backend support for the feature.
+
 ## [1.1.0] - 2021-08-27
 
 ### Changed
