@@ -908,11 +908,13 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     "Must set actions on PlayerInput in order to be able to switch control schemes");
 
+            // Find control scheme matching given devices in associated action asset
             var scheme = InputControlScheme.FindControlSchemeForDevices(devices, actions.controlSchemes);
-            if (scheme == null)
+            if (!scheme.HasValue)
                 return false;
 
-            SwitchCurrentControlScheme(scheme.Value.name, devices);
+            var controlScheme = scheme.Value;
+            SwitchControlSchemeInternalUnchecked(ref controlScheme, devices);
             return true;
         }
 
@@ -950,14 +952,9 @@ namespace UnityEngine.InputSystem
             if (devices == null)
                 throw new ArgumentNullException(nameof(devices));
 
-            using (InputActionRebindingExtensions.DeferBindingResolution())
-            {
-                user.UnpairDevices();
-                for (var i = 0; i < devices.Length; ++i)
-                    InputUser.PerformPairingWithDevice(devices[i], user: user);
-
-                user.ActivateControlScheme(controlScheme);
-            }
+            InputControlScheme scheme = default;
+            user.FindControlScheme(controlScheme, ref scheme); // throws if not found
+            SwitchControlSchemeInternalUnchecked(ref scheme, devices);
         }
 
         public void SwitchCurrentActionMap(string mapNameOrId)
@@ -1927,6 +1924,31 @@ namespace UnityEngine.InputSystem
                 m_InputUser.valid)
             {
                 InputUser.PerformPairingWithDevice(device, user: m_InputUser);
+            }
+        }
+
+        private bool IsCurrentControlScheme(ref InputControlScheme scheme, InputDevice[] devices)
+        {
+            var isSameScheme = user.controlScheme.HasValue && user.controlScheme.Value.Equals(scheme);
+            return (isSameScheme &&
+                ArrayHelpers.EqualSets(user.pairedDevices.ToArray(), devices) &&
+                !user.hasMissingRequiredDevices);
+        }
+
+        private void SwitchControlSchemeInternalUnchecked(ref InputControlScheme controlScheme, params InputDevice[] devices)
+        {
+            // Precondition: Control scheme and devices are correlated
+            // Precondition: Control scheme is valid, InputDevices are valid
+            if (IsCurrentControlScheme(ref controlScheme, devices))
+                return; // no change
+
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                user.UnpairDevices();
+                for (var i = 0; i < devices.Length; ++i)
+                    InputUser.PerformPairingWithDevice(devices[i], user: user);
+
+                user.ActivateControlScheme(controlScheme);
             }
         }
 

@@ -547,31 +547,39 @@ namespace UnityEngine.InputSystem.Users
             // Look up control scheme by name in actions.
             var scheme = new InputControlScheme();
             if (!string.IsNullOrEmpty(schemeName))
+                FindControlScheme(schemeName, ref scheme); // throws if not found
+            return ActivateControlScheme(scheme);
+        }
+
+        private bool TryFindControlScheme(string schemeName, ref InputControlScheme scheme)
+        {
+            if (!string.IsNullOrEmpty(schemeName))
             {
-                var userIndex = index; // Throws if user is invalid.
-
-                // Need actions to be available to be able to activate control schemes
-                // by name only.
-                if (s_GlobalState.allUserData[userIndex].actions == null)
+                // Need actions to be available to be able to activate control schemes by name only.
+                if (s_GlobalState.allUserData[index].actions == null)
                     throw new InvalidOperationException(
-                        $"Cannot set control scheme '{schemeName}' by name on user #{userIndex} as not actions have been associated with the user yet (AssociateActionsWithUser)");
+                        $"Cannot set control scheme '{schemeName}' by name on user #{index} as not actions have been associated with the user yet (AssociateActionsWithUser)");
 
-                var controlSchemes = s_GlobalState.allUserData[userIndex].actions.controlSchemes;
+                // Attempt to find control scheme by name
+                var controlSchemes = s_GlobalState.allUserData[index].actions.controlSchemes;
                 for (var i = 0; i < controlSchemes.Count; ++i)
                     if (string.Compare(controlSchemes[i].name, schemeName,
                         StringComparison.InvariantCultureIgnoreCase) == 0)
                     {
                         scheme = controlSchemes[i];
-                        break;
+                        return true;
                     }
-
-                // Throw if we can't find it.
-                if (scheme == default)
-                    throw new ArgumentException(
-                        $"Cannot find control scheme '{schemeName}' in actions '{s_GlobalState.allUserData[userIndex].actions}'");
             }
 
-            return ActivateControlScheme(scheme);
+            return false;
+        }
+
+        internal void FindControlScheme(string schemeName, ref InputControlScheme scheme)
+        {
+            if (TryFindControlScheme(schemeName, ref scheme))
+                return;
+            throw new ArgumentException(
+                $"Cannot find control scheme '{schemeName}' in actions '{s_GlobalState.allUserData[index].actions}'");
         }
 
         public ControlSchemeChangeSyntax ActivateControlScheme(InputControlScheme scheme)

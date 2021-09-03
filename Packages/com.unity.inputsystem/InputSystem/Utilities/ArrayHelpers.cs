@@ -147,6 +147,25 @@ namespace UnityEngine.InputSystem.Utilities
             return true;
         }
 
+        public static bool EqualSets<TValue>(TValue[] first, TValue[] second)
+        {
+            // Consistency with Array.Equals which do not compare empty set and null to be equal.
+            // Only true if first is a sub-set of second and second is a sub-set of first, i.e.
+            // length may be different as long as they contain the same elements and may contain
+            // repeated elements and still be considered equal.
+            // Worst case O(2*N*M) so do not use on a hot-path and only for small arrays.
+            if (first == null)
+                return second == null;
+            if (second == null)
+                return false;
+            if (!ReferenceEquals(first, second))
+            {
+                var comparer = EqualityComparer<TValue>.Default;
+                return IsSubSetUnchecked(first, second, comparer) && IsSubSetUnchecked(second, first, comparer);
+            }
+            return true;
+        }
+
         ////REVIEW: remove this to get rid of default equality comparer?
         public static int IndexOf<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
         {
@@ -792,6 +811,27 @@ namespace UnityEngine.InputSystem.Utilities
             var temp = array[index1];
             array[index1] = array[index2];
             array[index2] = temp;
+        }
+
+        private static bool IsSubSetUnchecked<TValue>(TValue[] first, TValue[] second, EqualityComparer<TValue> comparer)
+        {
+            // Evaluate whether first is a sub-set of second. Precondition: both first and second is not null.
+            for (int i = 0, j = 0; i < first.Length; ++i)
+            {
+                var k = j;
+                for (; k < second.Length; ++k)
+                {
+                    if (comparer.Equals(first[i], second[k]))
+                    {
+                        if (k == j)
+                            ++j;
+                        break;
+                    }
+                }
+                if (k == second.Length)
+                    return false;
+            }
+            return true;
         }
     }
 }
