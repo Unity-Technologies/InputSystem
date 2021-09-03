@@ -841,15 +841,41 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultControlScheme = "Keyboard&Mouse";
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+        playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
 
         Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        var listener = go.AddComponent<PlayerInputEventListener>();
 
         var result = playerInput.SwitchCurrentControlScheme(gamepad);
         Assert.That(result, Is.True);
 
         Assert.That(playerInput.currentControlScheme, Is.EqualTo("Gamepad"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(listener.messages.Count, Is.EqualTo(1));
+        Assert.That(listener.messages[0].name, Is.EqualTo("OnControlsChanged"));
+    }
+
+    [Test]
+    [Category("PlayerInput")] // https://fogbugz.unity3d.com/f/cases/1342297/
+    public void PlayerInput_ShouldNotUnpairAndPairDevices__IfExplicitlySwitchingToTheAlreadyActiveSchemeAndDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
+
+        var listener = go.AddComponent<PlayerInputEventListener>();
+
+        Assert.That(playerInput.SwitchCurrentControlScheme(keyboard, mouse), Is.True);
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard & Mouse"));
+        Assert.That(listener.messages.Count, Is.EqualTo(0)); // No switch should occurr since matched scheme
     }
 
     [Test]
