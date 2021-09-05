@@ -28,7 +28,7 @@ Support for the following Devices doesn't require specialized support of particu
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
-|PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
+|PS3/PS4/PS5|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
 |Switch|Yes (8)|Yes (8)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
 |MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 
@@ -37,7 +37,7 @@ Support for the following Devices doesn't require specialized support of particu
 >2. WebGL support varies between browsers, Devices, and operating systems.
 >3. XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
 >4. This includes any XInput-compatible Device.
->5. Unity doesn't support the gyro or accelerometer on PS4 controllers on platforms other than the PlayStation 4 console. Unity also doesn't support the DualShock 4 USB Wireless Adaptor.
+>5. Unity doesn't support motor rumble and lightbar color over Bluetooth. Unity doesn't support the gyro or accelerometer on PS4/PS5 controllers on platforms other than the PlayStation consoles. Unity also doesn't support the DualShock 4 USB Wireless Adaptor.
 >6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 >8. Unity officially supports PS4 controllers only on [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).

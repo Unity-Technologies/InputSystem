@@ -1147,6 +1147,10 @@ namespace UnityEngine.InputSystem
             if (device is IEventMerger)
                 device.hasEventMerger = true;
 
+            // If the device has event preprocessor, make a note of it.
+            if (device is IEventPreProcessor)
+                device.hasEventPreProcessor = true;
+
             // If the device wants before-render updates, enable them if they
             // aren't already.
             if (device.updateBeforeRender)
@@ -3186,6 +3190,15 @@ namespace UnityEngine.InputSystem
                             skipEventMergingFor = nextEvent;
                         }
                     }
+
+                    // Give the device a chance to do something with data before we propagate it to event listeners.
+                    if (!skipEvent && device.hasEventPreProcessor)
+                        if (!((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr))
+                        {
+                            // Skip event if PreProcessEvent considers it to be irrelevant.
+                            skipEvent = true;
+                            leaveInBuffer = false;
+                        }
 
                     // Give listeners a shot at the event.
                     // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
