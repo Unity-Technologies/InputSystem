@@ -3114,7 +3114,7 @@ namespace UnityEngine.InputSystem
                         // carries crucial entropy (button changed state, phase changed, counter changed, etc).
                         // Hence semantic meaning for current event is "can't merge current with next because next is different".
                         // But semantic meaning for next event is "next event carries important information and should be preserved",
-                        // from that point of few next event should not be merged with current nor with _next after next_ event.
+                        // from that point of view next event should not be merged with current nor with _next after next_ event.
                         //
                         // For example, given such stream of events:
                         // Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       Mouse
@@ -3724,6 +3724,11 @@ namespace UnityEngine.InputSystem
         /// Most of the state we re-recreate in-between reloads and do not store
         /// in this structure. In particular, we do not preserve anything from
         /// the various RegisterXXX().
+        ///
+        /// WARNING
+        ///
+        /// Making changes to serialized data format will likely to break upgrading projects from older versions.
+        /// That is until you restart the editor, then we recreate everything from clean state.
         /// </remarks>
         [Serializable]
         internal struct SerializedState

@@ -29,19 +29,6 @@ namespace UnityEngine.InputSystem.Users
     /// This can be useful in setups such as split-keyboard (e.g. one user using left side of keyboard and the
     /// other the right one) use or hotseat-style gameplay (e.g. two players taking turns on the same game controller).
     ///
-    /// A user may be associated with a platform user account (<see cref="platformUserAccountHandle"/>), if supported by the
-    /// platform and the devices used. Support for this is commonly found on consoles. Note that the account
-    /// associated with an InputUser may change if the player uses the system's facilities to switch to a different
-    /// account (<see cref="InputUserChange.AccountChanged"/>). On Xbox and Switch, this may also be initiated from
-    /// the application by passing <see cref="InputUserPairingOptions.ForcePlatformUserAccountSelection"/> to
-    /// <see cref="PerformPairingWithDevice"/>.
-    ///
-    /// Platforms that support user account association are <see cref="RuntimePlatform.XboxOne"/>,
-    /// <see cref="RuntimePlatform.PS4"/>, <see cref="RuntimePlatform.Switch"/>, <see cref="RuntimePlatform.WSAPlayerX86"/>,
-    /// <see cref="RuntimePlatform.WSAPlayerX64"/>, and <see cref="RuntimePlatform.WSAPlayerARM"/>. Note that
-    /// for WSA/UWP apps, the "User Account Information" capability must be enabled for the app in order for
-    /// user information to come through on input devices.
-    ///
     /// Note that the InputUser API, like <see cref="InputAction"/>) is a play mode-only feature. When exiting play mode,
     /// all users are automatically removed and all devices automatically unpaired.
     /// </remarks>
@@ -107,62 +94,13 @@ namespace UnityEngine.InputSystem.Users
         /// The ID of a user is internally assigned and cannot be changed over its lifetime. No two users, even
         /// if not concurrently active, will receive the same ID.
         ///
-        /// Note that this is not the same as the platform's internal user ID (if relevant on the current
-        /// platform). To get the ID that the platform uses to identify the user, use <see cref="platformUserAccountHandle"/>.
-        ///
         /// The ID stays valid and unique even if the user is removed and no longer <see cref="valid"/>.
         /// </remarks>
-        /// <seealso cref="platformUserAccountHandle"/>
         public uint id => m_Id;
 
-        /// <summary>
-        /// If the user is is associated with a user account at the platform level, this is the handle used by the
-        /// underlying platform API for the account.
-        /// </summary>
-        /// <remarks>
-        /// Users may be associated with user accounts defined by the platform we are running on. Consoles, for example,
-        /// have user account management built into the OS and marketplaces like Steam also have APIs for user management.
-        ///
-        /// If this property is not <c>null</c>, it is the handle associated with the user at the platform level. This can
-        /// be used, for example, to call platform-specific APIs to fetch additional information about the user (such as
-        /// user profile images).
-        ///
-        /// Be aware that there may be multiple InputUsers that have the same platformUserAccountHandle in case the platform
-        /// allows different players to log in on the same user account.
-        /// </remarks>
-        /// <seealso cref="platformUserAccountName"/>
-        /// <seealso cref="platformUserAccountId"/>
-        /// <seealso cref="InputUserChange.AccountChanged"/>
+        ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
         public InputUserAccountHandle? platformUserAccountHandle => s_GlobalState.allUserData[index].platformUserAccountHandle;
-
-        /// <summary>
-        /// Human-readable name assigned to the user account at the platform level.
-        /// </summary>
-        /// <remarks>
-        /// This property will be <c>null</c> on platforms that do not have user account management. In that case,
-        /// <see cref="platformUserAccountHandle"/> will be <c>null</c> as well.
-        ///
-        /// On platforms such as Xbox, PS4, and Switch, the user name will be the name of the user as logged in on the platform.
-        /// </remarks>
-        /// <seealso cref="platformUserAccountHandle"/>
-        /// <seealso cref="platformUserAccountId"/>
-        /// <seealso cref="InputUserChange.AccountChanged"/>
-        /// <seealso cref="InputUserChange.AccountNameChanged"/>
         public string platformUserAccountName => s_GlobalState.allUserData[index].platformUserAccountName;
-
-        /// <summary>
-        /// Platform-specific user ID that is valid across sessions even if the <see cref="platformUserAccountName"/> of
-        /// the user changes.
-        /// </summary>
-        /// <remarks>
-        /// This is only valid if <see cref="platformUserAccountHandle"/> is not null.
-        ///
-        /// Use this to, for example, associate application settings with the user. For display in UIs, use
-        /// <see cref="platformUserAccountName"/> instead.
-        /// </remarks>
-        /// <seealso cref="platformUserAccountHandle"/>
-        /// <seealso cref="platformUserAccountName"/>
-        /// <seealso cref="InputUserChange.AccountChanged"/>
         public string platformUserAccountId => s_GlobalState.allUserData[index].platformUserAccountId;
 
         ////REVIEW: Does it make sense to track used devices separately from paired devices?
@@ -861,64 +799,6 @@ namespace UnityEngine.InputSystem.Users
         /// user has a control scheme that is currently activated (<see cref="controlScheme"/>), then <see cref="controlSchemeMatch"/>
         /// will also automatically update to reflect the matching of devices to the control scheme's device requirements.
         ///
-        /// If the given device is associated with a user account at the platform level (queried through
-        /// <see cref="QueryPairedUserAccountCommand"/>), the user's platform account details (<see cref="platformUserAccountHandle"/>,
-        /// <see cref="platformUserAccountName"/>, and <see cref="platformUserAccountId"/>) are updated accordingly. In this case,
-        /// <see cref="InputUserChange.AccountChanged"/> or <see cref="InputUserChange.AccountNameChanged"/> may be signalled.
-        /// through <see cref="onChange"/>.
-        ///
-        /// If the given device is not associated with a user account at the platform level, but it does
-        /// respond to <see cref="InitiateUserAccountPairingCommand"/>, then the device is NOT immediately paired
-        /// to the user. Instead, pairing is deferred to until after an account selection has been made by the user.
-        /// In this case, <see cref="InputUserChange.AccountSelectionInProgress"/> will be signalled through <see cref="onChange"/>
-        /// and <see cref="InputUserChange.AccountChanged"/> will be signalled once the user has selected an account or
-        /// <see cref="InputUserChange.AccountSelectionCanceled"/> will be signalled if the user cancels account
-        /// selection. The device will be paired to the user once account selection is complete.
-        ///
-        /// This behavior is most useful on Xbox and Switch to require the user to choose which account to play with. Note that
-        /// if the device is already associated with a user account, account selection will not be initiated. However,
-        /// it can be explicitly forced to be performed by using <see
-        /// cref="InputUserPairingOptions.ForcePlatformUserAccountSelection"/>. This is useful,
-        /// for example, to allow the user to explicitly switch accounts.
-        ///
-        /// On Xbox and Switch, to permit playing even on devices that do not currently have an associated user account,
-        /// use <see cref="InputUserPairingOptions.ForceNoPlatformUserAccountSelection"/>.
-        ///
-        /// On PS4, devices will always have associated user accounts meaning that the returned InputUser will always
-        /// have updated platform account details.
-        ///
-        /// Note that user account queries and initiating account selection can be intercepted by the application. For
-        /// example, on Switch where user account pairing is not stored at the platform level, one can, for example, both
-        /// implement custom pairing logic as well as a custom account selection UI by intercepting <see cref="QueryPairedUserAccountCommand"/>
-        /// and <seealso cref="InitiateUserAccountPairingCommand"/>.
-        ///
-        /// <example>
-        /// <code>
-        /// InputSystem.onDeviceCommand +=
-        ///     (device, commandPtr, runtime) =>
-        ///     {
-        ///         // Dealing with InputDeviceCommands requires handling raw pointers.
-        ///         unsafe
-        ///         {
-        ///             // We're only looking for QueryPairedUserAccountCommand and InitiateUserAccountPairingCommand here.
-        ///             if (commandPtr->type != QueryPairedUserAccountCommand.Type &amp;&amp; commandPtr->type != InitiateUserAccountPairingCommand)
-        ///                 return null; // Command not handled.
-        ///
-        ///             // Check if device is the one your interested in. As an example, we look for Switch gamepads
-        ///             // here.
-        ///             if (!(device is Npad))
-        ///                 return null; // Command not handled.
-        ///
-        ///             // If it's a QueryPairedUserAccountCommand, see if we have a user ID to use with the Npad
-        ///             // based on last time the application ran.
-        ///             if (commandPtr->type == QueryPairedUserAccountCommand.Type)
-        ///             {
-        ///                 ////TODO
-        ///         }
-        ///     };
-        /// </code>
-        /// </example>
-        /// </remarks>
         /// <example>
         /// <code>
         /// // Pair device to new user.
@@ -928,6 +808,7 @@ namespace UnityEngine.InputSystem.Users
         /// InputUser.PerformPairingWithDevice(wand2, user: user);
         /// </code>
         /// </example>
+        /// </remarks>
         /// <seealso cref="pairedDevices"/>
         /// <seealso cref="UnpairDevice"/>
         /// <seealso cref="UnpairDevices"/>
@@ -1489,21 +1370,7 @@ namespace UnityEngine.InputSystem.Users
             return queryResult;
         }
 
-        /// <summary>
-        /// If the given device is paired to a user account at the platform level, return the platform user
-        /// account details.
-        /// </summary>
-        /// <param name="device">Any input device.</param>
-        /// <param name="platformAccountHandle">Receives the platform user account handle or null.</param>
-        /// <param name="platformAccountName">Receives the platform user account name or null.</param>
-        /// <param name="platformAccountId">Receives the platform user account ID or null.</param>
-        /// <returns>True if the device is paired to a user account, false otherwise.</returns>
-        /// <remarks>
-        /// Sends <see cref="QueryPairedUserAccountCommand"/> to the device.
-        /// </remarks>
-        /// <seealso cref="QueryPairedUserAccountCommand.handle"/>
-        /// <seealso cref="QueryPairedUserAccountCommand.name"/>
-        /// <seealso cref="QueryPairedUserAccountCommand.id"/>
+        ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
         private static long QueryPairedPlatformUserAccount(InputDevice device,
             out InputUserAccountHandle? platformAccountHandle, out string platformAccountName, out string platformAccountId)
         {
