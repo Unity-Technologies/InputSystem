@@ -874,7 +874,7 @@ internal class PlayerInputTests : CoreTestsFixture
         var listener = go.AddComponent<PlayerInputEventListener>();
 
         Assert.That(playerInput.SwitchCurrentControlScheme(keyboard, mouse), Is.True);
-        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard & Mouse"));
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(listener.messages.Count, Is.EqualTo(0)); // No switch should occurr since matched scheme
     }
 
