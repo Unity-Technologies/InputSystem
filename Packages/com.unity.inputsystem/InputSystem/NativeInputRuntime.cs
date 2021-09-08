@@ -231,6 +231,35 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isPaused => EditorApplication.isPaused;
         public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            set
+            {
+                if (m_UnityRemoteMessageHandler == value)
+                    return;
+
+                var editorAssembly = typeof(EditorApplication).Assembly;
+                var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
+                if (genericRemoteClass == null)
+                    return;
+
+                if (m_UnityRemoteMessageHandler != null)
+                {
+                    var removeMethod = genericRemoteClass.GetMethod("RemoveMessageHandler");
+                    removeMethod.Invoke(null, new[] { m_UnityRemoteMessageHandler });
+                    m_UnityRemoteMessageHandler = null;
+                }
+
+                if (value != null)
+                {
+                    var addMethod = genericRemoteClass.GetMethod("AddMessageHandler");
+                    addMethod.Invoke(null, new[] { value });
+                    m_UnityRemoteMessageHandler = value;
+                }
+            }
+        }
+
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
         private Action<PlayModeStateChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
 

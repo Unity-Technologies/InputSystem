@@ -182,6 +182,7 @@ namespace UnityEngine.InputSystem.LowLevel
         bool isInPlayMode { get;  }
         bool isPaused { get; }
         bool isEditorActive { get; }
+        Func<IntPtr, bool> onUnityRemoteMessage { set; }
         #endif
     }
 

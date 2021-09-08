@@ -386,6 +386,11 @@ namespace UnityEngine.InputSystem
         public bool isInPlayMode { get; set; } = true;
         public bool isPaused { get; set; }
         public bool isEditorActive { get; set; } = true;
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            get => m_UnityRemoteMessageHandler;
+            set => m_UnityRemoteMessageHandler = value;
+        }
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
@@ -405,6 +410,7 @@ namespace UnityEngine.InputSystem
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 
