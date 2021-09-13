@@ -7,10 +7,10 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Interface used to monitor input system state changes.
     /// </summary>
     /// <remarks>
-    /// Use <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/> to install a state change monitor receiving state change
+    /// Use <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,int)"/> to install a state change monitor receiving state change
     /// callbacks for a specific control.
     /// </remarks>
-    /// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
+    /// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,int)"/>
     public interface IInputStateChangeMonitor
     {
         /// <summary>

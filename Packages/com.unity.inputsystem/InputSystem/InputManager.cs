@@ -1604,7 +1604,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: support combining monitors for bitfields
-        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, int groupIndex)
         {
             Debug.Assert(m_DevicesCount > 0);
 
@@ -1620,7 +1620,7 @@ namespace UnityEngine.InputSystem
                 Array.Resize(ref m_StateChangeMonitors, m_DevicesCount);
 
             // Add record.
-            m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
+            m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex, groupIndex);
         }
 
         private void RemoveStateChangeMonitors(InputDevice device)
@@ -2043,16 +2043,18 @@ namespace UnityEngine.InputSystem
             public InputControl control;
             public IInputStateChangeMonitor monitor;
             public long monitorIndex;
+            public int groupIndex;
         }
         internal struct StateChangeMonitorsForDevice
         {
             public MemoryHelpers.BitRegion[] memoryRegions;
             public StateChangeMonitorListener[] listeners;
             public DynamicBitfield signalled;
+            public bool needToUpdateOrderingOfMonitors;
 
             public int count => signalled.length;
 
-            public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+            public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, int groupIndex)
             {
                 // NOTE: This method must only *append* to arrays. This way we can safely add data while traversing
                 //       the arrays in FireStateChangeNotifications. Note that appending *may* mean that the arrays
@@ -2061,7 +2063,7 @@ namespace UnityEngine.InputSystem
                 // Record listener.
                 var listenerCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
-                    new StateChangeMonitorListener {monitor = monitor, monitorIndex = monitorIndex, control = control});
+                    new StateChangeMonitorListener {monitor = monitor, monitorIndex = monitorIndex, groupIndex = groupIndex, control = control});
 
                 // Record memory region.
                 ref var controlStateBlock = ref control.m_StateBlock;
@@ -2071,6 +2073,8 @@ namespace UnityEngine.InputSystem
                         controlStateBlock.bitOffset, controlStateBlock.sizeInBits));
 
                 signalled.SetLength(signalled.length + 1);
+
+                needToUpdateOrderingOfMonitors = true;
             }
 
             public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
@@ -2098,6 +2102,23 @@ namespace UnityEngine.InputSystem
                 // our count to zero.
                 listeners.Clear(count);
                 signalled.SetLength(0);
+            }
+
+            public void SortMonitorsByIndex()
+            {
+                // Insertion sort.
+                for (var i = 1; i < listeners.Length; ++i)
+                {
+                    for (var j = i; j > 0 && listeners[j - 1].monitorIndex < listeners[j].monitorIndex; --j)
+                    {
+                        listeners.SwapElements(j, j - 1);
+                        memoryRegions.SwapElements(j, j - 1);
+
+                        // We can ignore the `signalled` array here as we call this method only
+                        // when all monitors are in non-signalled state.
+                    }
+                }
+                needToUpdateOrderingOfMonitors = false;
             }
         }
 
@@ -3414,6 +3435,7 @@ namespace UnityEngine.InputSystem
 
             // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
             // signalled state.
+            eventPtr->handled = false;
             for (var i = 0; i < signals.length; ++i)
             {
                 if (!signals.TestBit(i))
@@ -3430,6 +3452,23 @@ namespace UnityEngine.InputSystem
                     Debug.LogError(
                         $"Exception '{exception.GetType().Name}' thrown from state change monitor '{listener.monitor.GetType().Name}' on '{listener.control}'");
                     Debug.LogException(exception);
+                }
+
+                // If the monitor signalled that it has processed the state change, reset all signalled
+                // state monitors in the same group. This is what causes "SHIFT+B" to prevent "B" from
+                // also triggering.
+                if (eventPtr->handled)
+                {
+                    var groupIndex = listeners[i].groupIndex;
+                    for (var n = i + 1; n < signals.length; ++n)
+                    {
+                        if (listeners[n].groupIndex == groupIndex)
+                            signals.ClearBit(n);
+                    }
+
+                    // Need to reset it back to false as we may have more signalled state monitors that
+                    // aren't in the same group (i.e. have independent inputs).
+                    eventPtr->handled = false;
                 }
 
                 signals.ClearBit(i);
@@ -3554,6 +3593,11 @@ namespace UnityEngine.InputSystem
             ////TODO: limit stateSize and StateOffset by the device's state memory
 
             var deviceBuffer = (byte*)InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
+
+            // If state monitors need to be re-sorted, do it now.
+            // NOTE: This must happen with the monitors in non-signalled state!
+            if (m_StateChangeMonitors != null && deviceIndex < m_StateChangeMonitors.Length && m_StateChangeMonitors[deviceIndex].needToUpdateOrderingOfMonitors)
+                m_StateChangeMonitors[deviceIndex].SortMonitorsByIndex();
 
             // Before we update state, let change monitors compare the old and the new state.
             // We do this instead of first updating the front buffer and then comparing to the

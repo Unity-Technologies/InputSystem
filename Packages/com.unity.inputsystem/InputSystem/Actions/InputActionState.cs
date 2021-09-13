@@ -110,6 +110,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
+        public ushort* controlGrouping => memory.controlGrouping;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
         public bool isProcessingControlStateChange => m_InProcessControlStateChange;
@@ -117,6 +118,7 @@ namespace UnityEngine.InputSystem
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
         private bool m_InProcessControlStateChange;
+        private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
 
@@ -127,7 +129,54 @@ namespace UnityEngine.InputSystem
         public void Initialize(InputBindingResolver resolver)
         {
             ClaimDataFrom(resolver);
+            ComputeControlGroupingIfNecessary();
             AddToGlobalList();
+        }
+
+        private void ComputeControlGroupingIfNecessary()
+        {
+            if (memory.controlGroupingInitialized)
+                return;
+
+            var currentGroup = 1;
+            for (var i = 0; i < totalControlCount; ++i)
+            {
+                var control = controls[i];
+                var bindingIndex = controlIndexToBindingIndex[i];
+                ref var binding = ref bindingStates[bindingIndex];
+
+                ////REVIEW: take processors and interactions into account??
+
+                var complexity = 1;
+                if (binding.isPartOfComposite)
+                {
+                    var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
+
+                    for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
+                    {
+                        ref var partBinding = ref bindingStates[n];
+                        if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
+                            break;
+                        ++complexity;
+                    }
+                }
+
+                for (var n = 0; n < totalControlCount; ++n)
+                {
+                    var otherControl = controls[n];
+                    if (control != otherControl)
+                        continue;
+
+                    controlGrouping[n * 2] = (ushort)currentGroup;
+                }
+
+                controlGrouping[i * 2] = (ushort)currentGroup;
+                controlGrouping[i * 2 + 1] = (ushort)complexity;
+
+                ++currentGroup;
+            }
+
+            memory.controlGroupingInitialized = true;
         }
 
         internal void ClaimDataFrom(InputBindingResolver resolver)
@@ -793,7 +842,7 @@ namespace UnityEngine.InputSystem
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     SetInitialStateCheckPending(bindingStatePtr, true);
-                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGrouping[controlIndex * 2]);
 
                 SetControlEnabled(controlIndex, true);
             }
@@ -977,20 +1026,24 @@ namespace UnityEngine.InputSystem
         // all the information together avoids having to unnecessarily jump around in memory to grab
         // the various pieces of data.
 
-        private static long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
+        private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
+            // We have limits on the numbers of maps, controls, and bindings we allow in any single
+            // action state (see TriggerState.kMaxNumXXX).
+            var complexity = controlGrouping[controlIndex * 2 + 1];
             var result = (long)controlIndex;
-            result |= (long)bindingIndex << 32;
-            result |= (long)mapIndex << 48;
+            result |= (long)bindingIndex << 24;
+            result |= (long)mapIndex << 40;
+            result |= (long)complexity << 48;
             return result;
         }
 
-        private static void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
+        private void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
             out int controlIndex, out int bindingIndex)
         {
-            controlIndex = (int)(mapControlAndBindingIndex & 0xffffffff);
-            bindingIndex = (int)((mapControlAndBindingIndex >> 32) & 0xffff);
-            mapIndex = (int)(mapControlAndBindingIndex >> 48);
+            controlIndex = (int)(mapControlAndBindingIndex & 0x00ffffff);
+            bindingIndex = (int)((mapControlAndBindingIndex >> 24) & 0xffff);
+            mapIndex = (int)((mapControlAndBindingIndex >> 40) & 0xff);
         }
 
         /// <summary>
@@ -1028,6 +1081,7 @@ namespace UnityEngine.InputSystem
                 // triggered by an action callback, the state will be marked dirty and re-resolved after
                 // we have completed the callback.
                 m_InProcessControlStateChange = true;
+                m_CurrentlyProcessingThisEvent = eventPtr;
 
                 try
                 {
@@ -1091,7 +1145,8 @@ namespace UnityEngine.InputSystem
                     // Check actuation level.
                     var actuation = ComputeMagnitude(ref trigger);
                     var actionState = &actionStates[actionIndex];
-                    var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                    var control = controls[trigger.controlIndex];
+                    var pressPoint = control is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                     if (!actionState->isPressed && actuation >= pressPoint)
                     {
                         actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
@@ -1121,7 +1176,8 @@ namespace UnityEngine.InputSystem
                 }
                 finally
                 {
-                    m_InProcessControlStateChange = false;
+                    m_InProcessControlStateChange = default;
+                    m_CurrentlyProcessingThisEvent = default;
                 }
             }
         }
@@ -1948,6 +2004,12 @@ namespace UnityEngine.InputSystem
             {
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
+
+                // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
+                // can then reset state monitors in the same group.
+                // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
+                if (controlGrouping[trigger.controlIndex * 2 + 1] > 1)
+                    m_CurrentlyProcessingThisEvent.handled = true;
             }
             else if (newPhase == InputActionPhase.Canceled)
             {
@@ -3070,6 +3132,10 @@ namespace UnityEngine.InputSystem
         [StructLayout(LayoutKind.Explicit, Size = 48)]
         public struct TriggerState
         {
+            public const int kMaxNumMaps = byte.MaxValue;
+            public const int kMaxNumControls = ushort.MaxValue;
+            public const int kMaxNumBindings = ushort.MaxValue;
+
             [FieldOffset(0)] private byte m_Phase;
             [FieldOffset(1)] private byte m_Flags;
             [FieldOffset(2)] private byte m_MapIndex;
@@ -3157,7 +3223,7 @@ namespace UnityEngine.InputSystem
                 get => m_MapIndex;
                 set
                 {
-                    if (value < 0 || value > byte.MaxValue)
+                    if (value < 0 || value > kMaxNumMaps)
                         throw new NotSupportedException("More than byte.MaxValue InputActionMaps in a single InputActionState");
                     m_MapIndex = (byte)value;
                 }
@@ -3170,7 +3236,7 @@ namespace UnityEngine.InputSystem
             {
                 get
                 {
-                    if (m_ControlIndex == ushort.MaxValue)
+                    if (m_ControlIndex == kMaxNumControls)
                         return kInvalidIndex;
                     return m_ControlIndex;
                 }
@@ -3180,7 +3246,7 @@ namespace UnityEngine.InputSystem
                         m_ControlIndex = ushort.MaxValue;
                     else
                     {
-                        if (value < 0 || value >= ushort.MaxValue)
+                        if (value < 0 || value >= kMaxNumControls)
                             throw new NotSupportedException("More than ushort.MaxValue-1 controls in a single InputActionState");
                         m_ControlIndex = (ushort)value;
                     }
@@ -3198,7 +3264,7 @@ namespace UnityEngine.InputSystem
                 get => m_BindingIndex;
                 set
                 {
-                    if (value < 0 || value > ushort.MaxValue)
+                    if (value < 0 || value > kMaxNumBindings)
                         throw new NotSupportedException("More than ushort.MaxValue bindings in a single InputActionState");
                     m_BindingIndex = (ushort)value;
                 }
@@ -3484,6 +3550,7 @@ namespace UnityEngine.InputSystem
                 controlCount * sizeof(float) + // controlMagnitudes
                 compositeCount * sizeof(float) + // compositeMagnitudes
                 controlCount * sizeof(int) + // controlIndexToBindingIndex
+                controlCount * sizeof(ushort) * 2 + // controlGrouping
                 actionCount * sizeof(ushort) * 2 + // actionBindingIndicesAndCounts
                 bindingCount * sizeof(ushort) + // actionBindingIndices
                 (controlCount + 31) / 32 * sizeof(int); // enabledControlsArray
@@ -3547,6 +3614,10 @@ namespace UnityEngine.InputSystem
             ////REVIEW: make this an array of shorts rather than ints?
             public int* controlIndexToBindingIndex;
 
+            // Two shorts per control. First one is group number. Second one is complexity count.
+            public ushort* controlGrouping;
+            public bool controlGroupingInitialized;
+
             public ActionMapIndices* mapIndices;
 
             public void Allocate(int mapCount, int actionCount, int bindingCount, int controlCount, int interactionCount, int compositeCount)
@@ -3580,6 +3651,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = (float*)ptr; ptr += controlCount * sizeof(float);
                 compositeMagnitudes = (float*)ptr; ptr += compositeCount * sizeof(float);
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
+                controlGrouping = (ushort*)ptr; ptr += controlCount * sizeof(ushort) * 2;
                 actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
                 actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
                 enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);
@@ -3600,6 +3672,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = null;
                 compositeMagnitudes = null;
                 controlIndexToBindingIndex = null;
+                controlGrouping = null;
                 actionBindingIndices = null;
                 actionBindingIndicesAndCounts = null;
 
@@ -3625,6 +3698,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlMagnitudes, memory.controlMagnitudes, memory.controlCount * sizeof(float));
                 UnsafeUtility.MemCpy(compositeMagnitudes, memory.compositeMagnitudes, memory.compositeCount * sizeof(float));
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
+                UnsafeUtility.MemCpy(controlGrouping, memory.controlGrouping, memory.controlCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
                 UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));

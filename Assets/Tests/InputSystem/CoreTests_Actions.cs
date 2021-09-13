@@ -28,6 +28,105 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    // Premise: Binding the same control multiple times in different ways from multiple concurrently active
+    //          actions should result in the input system figuring out which *one* action gets to act on the input.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanConsumeInput()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1", type: InputActionType.Button);
+        var action2 = map.AddAction("action2", type: InputActionType.Button);
+        var action3 = map.AddAction("action3", type: InputActionType.Button);
+        var action4 = map.AddAction("action4", type: InputActionType.Value);
+        var action5 = map.AddAction("action5", type: InputActionType.Button);
+        var action6 = map.AddAction("action6", type: InputActionType.Button);
+        var action7 = map.AddAction("action7", type: InputActionType.Button);
+        var action8 = map.AddAction("action8", type: InputActionType.Button);
+
+        action1.Enable();
+        action2.Enable();
+
+        action2.Enable();
+        action1.Enable();
+
+        // State monitors on the space key:
+        //   action3 complexity=3
+        //   action2 complexity=2
+        //   action1 complexity=1
+        //   action4 complexity=1
+        //   action5 complexity=1
+
+        // ctrl+shift+b
+
+        // 1 STATE for the combination ctrl+shift+b
+
+        // CTRL+W
+        // ALT+W
+        // ALT+CTRL+X
+
+        // <Keyboard>/*
+
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            //.With("Modifier", "<Keyboard>/ctrl")
+            .With("Binding", "<Keyboard>/space");
+        action3.AddCompositeBinding("TwoModifiers")
+            .With("Modifier1", "<Keyboard>/ctrl")
+            .With("Modifier2", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/space");
+        action4.AddBinding("<Keyboard>/space");
+
+        // This one is a clear conflict. Binds SPC exactly the same way as action1.
+        action5.AddBinding("<Keyboard>/space");
+
+        action6.AddBinding("<Keyboard>/a", interactions: "tap"); // 10
+        action7.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a") // 2
+            .With("Positive", "<Keyboard>/d");
+
+        action8.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/ctrl")
+            .With("Binding", "<Keyboard>/a");
+
+        // Ctrl+B
+
+        // Ctrl >> B
+        // B >> Ctrl
+
+        map.Enable();
+
+        using (var trace = new InputActionTrace(map))
+        {
+            Press(keyboard.spaceKey);
+
+            Assert.That(action1.WasPerformedThisFrame());
+            Assert.That(action4.WasPerformedThisFrame());
+            Assert.That(action5.WasPerformedThisFrame());
+
+            Assert.That(!action2.WasPerformedThisFrame());
+            Assert.That(!action3.WasPerformedThisFrame());
+
+            Release(keyboard.spaceKey);
+
+            Press(keyboard.leftShiftKey);
+            Press(keyboard.spaceKey);
+
+            Assert.That(!action1.WasPerformedThisFrame());
+            Assert.That(!action4.WasPerformedThisFrame());
+            Assert.That(!action5.WasPerformedThisFrame());
+
+            Assert.That(action2.WasPerformedThisFrame());
+            Assert.That(!action3.WasPerformedThisFrame());
+
+            ////TODO
+        }
+    }
+
     #if UNITY_EDITOR
     [Test]
     [Category("Actions")]
