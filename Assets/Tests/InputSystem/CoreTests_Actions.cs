@@ -47,33 +47,21 @@ partial class CoreTests
         var action7 = map.AddAction("action7", type: InputActionType.Button);
         var action8 = map.AddAction("action8", type: InputActionType.Button);
 
+        // Enable some actions individually to make sure the code that deals
+        // with re-resolution of already enabled bindings handles 
         action1.Enable();
         action2.Enable();
 
-        action2.Enable();
-        action1.Enable();
-
-        // State monitors on the space key:
+        // State monitors on the space key (all end up in the same group):
         //   action3 complexity=3
         //   action2 complexity=2
         //   action1 complexity=1
         //   action4 complexity=1
         //   action5 complexity=1
 
-        // ctrl+shift+b
-
-        // 1 STATE for the combination ctrl+shift+b
-
-        // CTRL+W
-        // ALT+W
-        // ALT+CTRL+X
-
-        // <Keyboard>/*
-
         action1.AddBinding("<Keyboard>/space");
         action2.AddCompositeBinding("OneModifier")
             .With("Modifier", "<Keyboard>/shift")
-            //.With("Modifier", "<Keyboard>/ctrl")
             .With("Binding", "<Keyboard>/space");
         action3.AddCompositeBinding("TwoModifiers")
             .With("Modifier1", "<Keyboard>/ctrl")
@@ -84,47 +72,52 @@ partial class CoreTests
         // This one is a clear conflict. Binds SPC exactly the same way as action1.
         action5.AddBinding("<Keyboard>/space");
 
-        action6.AddBinding("<Keyboard>/a", interactions: "tap"); // 10
-        action7.AddCompositeBinding("1DAxis")
-            .With("Negative", "<Keyboard>/a") // 2
-            .With("Positive", "<Keyboard>/d");
-
-        action8.AddCompositeBinding("OneModifier")
-            .With("Modifier", "<Keyboard>/ctrl")
-            .With("Binding", "<Keyboard>/a");
-
-        // Ctrl+B
-
-        // Ctrl >> B
-        // B >> Ctrl
-
         map.Enable();
 
-        using (var trace = new InputActionTrace(map))
-        {
-            Press(keyboard.spaceKey);
+        Press(keyboard.spaceKey);
 
-            Assert.That(action1.WasPerformedThisFrame());
-            Assert.That(action4.WasPerformedThisFrame());
-            Assert.That(action5.WasPerformedThisFrame());
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(action4.WasPerformedThisFrame());
+        Assert.That(action5.WasPerformedThisFrame());
 
-            Assert.That(!action2.WasPerformedThisFrame());
-            Assert.That(!action3.WasPerformedThisFrame());
+        Assert.That(!action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
 
-            Release(keyboard.spaceKey);
+        Release(keyboard.spaceKey);
 
-            Press(keyboard.leftShiftKey);
-            Press(keyboard.spaceKey);
+        ////REVIEW: Pressing LSHIFT does *not* lead to the OneModifier and TwoModifiers actions
+        ////        going to Started phase because actuation remains at 0; intuitively, I would expect the actions to start
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.spaceKey);
 
-            Assert.That(!action1.WasPerformedThisFrame());
-            Assert.That(!action4.WasPerformedThisFrame());
-            Assert.That(!action5.WasPerformedThisFrame());
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(!action4.WasPerformedThisFrame());
+        Assert.That(!action5.WasPerformedThisFrame());
 
-            Assert.That(action2.WasPerformedThisFrame());
-            Assert.That(!action3.WasPerformedThisFrame());
+        Assert.That(action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
+        
+        Release(keyboard.leftShiftKey);
+        Release(keyboard.spaceKey);
+        
+        Press(keyboard.spaceKey);
+        
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(action4.WasPerformedThisFrame());
+        Assert.That(action5.WasPerformedThisFrame());
+        
+        Assert.That(!action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
+        
+        ////TODO: this should *NOT* trigger action2 based on the order of the keypresses
+        Press(keyboard.leftShiftKey);
+        
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(!action4.WasPerformedThisFrame());
+        Assert.That(!action5.WasPerformedThisFrame());
 
-            ////TODO
-        }
+        Assert.That(action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
     }
 
     #if UNITY_EDITOR

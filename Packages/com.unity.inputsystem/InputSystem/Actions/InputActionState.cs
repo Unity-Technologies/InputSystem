@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public ushort* controlGrouping => memory.controlGrouping;
+        public ushort* controlGroupingAndComplexity => memory.controlGroupingAndComplexity;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
         public bool isProcessingControlStateChange => m_InProcessControlStateChange;
@@ -129,7 +129,6 @@ namespace UnityEngine.InputSystem
         public void Initialize(InputBindingResolver resolver)
         {
             ClaimDataFrom(resolver);
-            ComputeControlGroupingIfNecessary();
             AddToGlobalList();
         }
 
@@ -147,6 +146,7 @@ namespace UnityEngine.InputSystem
 
                 ////REVIEW: take processors and interactions into account??
 
+                // Compute complexity.
                 var complexity = 1;
                 if (binding.isPartOfComposite)
                 {
@@ -160,20 +160,24 @@ namespace UnityEngine.InputSystem
                         ++complexity;
                     }
                 }
+                controlGroupingAndComplexity[i * 2 + 1] = (ushort)complexity;
 
-                for (var n = 0; n < totalControlCount; ++n)
+                // Compute grouping. If already set, skip.
+                if (controlGroupingAndComplexity[i * 2] != 0)
                 {
-                    var otherControl = controls[n];
-                    if (control != otherControl)
-                        continue;
+                    for (var n = 0; n < totalControlCount; ++n)
+                    {
+                        var otherControl = controls[n];
+                        if (control != otherControl)
+                            continue;
 
-                    controlGrouping[n * 2] = (ushort)currentGroup;
+                        controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
+                    }
+
+                    controlGroupingAndComplexity[i * 2] = (ushort)currentGroup;
+
+                    ++currentGroup;
                 }
-
-                controlGrouping[i * 2] = (ushort)currentGroup;
-                controlGrouping[i * 2 + 1] = (ushort)complexity;
-
-                ++currentGroup;
             }
 
             memory.controlGroupingInitialized = true;
@@ -191,6 +195,8 @@ namespace UnityEngine.InputSystem
 
             memory = resolver.memory;
             resolver.memory = new UnmanagedMemory();
+
+            ComputeControlGroupingIfNecessary();
         }
 
         ~InputActionState()
@@ -839,10 +845,11 @@ namespace UnityEngine.InputSystem
 
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     SetInitialStateCheckPending(bindingStatePtr, true);
-                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGrouping[controlIndex * 2]);
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndComplexity[controlIndex * 2]);
 
                 SetControlEnabled(controlIndex, true);
             }
@@ -1030,7 +1037,7 @@ namespace UnityEngine.InputSystem
         {
             // We have limits on the numbers of maps, controls, and bindings we allow in any single
             // action state (see TriggerState.kMaxNumXXX).
-            var complexity = controlGrouping[controlIndex * 2 + 1];
+            var complexity = controlGroupingAndComplexity[controlIndex * 2 + 1];
             var result = (long)controlIndex;
             result |= (long)bindingIndex << 24;
             result |= (long)mapIndex << 40;
@@ -2008,7 +2015,7 @@ namespace UnityEngine.InputSystem
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group.
                 // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGrouping[trigger.controlIndex * 2 + 1] > 1)
+                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1)
                     m_CurrentlyProcessingThisEvent.handled = true;
             }
             else if (newPhase == InputActionPhase.Canceled)
@@ -3615,7 +3622,7 @@ namespace UnityEngine.InputSystem
             public int* controlIndexToBindingIndex;
 
             // Two shorts per control. First one is group number. Second one is complexity count.
-            public ushort* controlGrouping;
+            public ushort* controlGroupingAndComplexity;
             public bool controlGroupingInitialized;
 
             public ActionMapIndices* mapIndices;
@@ -3651,7 +3658,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = (float*)ptr; ptr += controlCount * sizeof(float);
                 compositeMagnitudes = (float*)ptr; ptr += compositeCount * sizeof(float);
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
-                controlGrouping = (ushort*)ptr; ptr += controlCount * sizeof(ushort) * 2;
+                controlGroupingAndComplexity = (ushort*)ptr; ptr += controlCount * sizeof(ushort) * 2;
                 actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
                 actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
                 enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);
@@ -3672,7 +3679,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = null;
                 compositeMagnitudes = null;
                 controlIndexToBindingIndex = null;
-                controlGrouping = null;
+                controlGroupingAndComplexity = null;
                 actionBindingIndices = null;
                 actionBindingIndicesAndCounts = null;
 
@@ -3698,7 +3705,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlMagnitudes, memory.controlMagnitudes, memory.controlCount * sizeof(float));
                 UnsafeUtility.MemCpy(compositeMagnitudes, memory.compositeMagnitudes, memory.compositeCount * sizeof(float));
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
-                UnsafeUtility.MemCpy(controlGrouping, memory.controlGrouping, memory.controlCount * sizeof(ushort) * 2);
+                UnsafeUtility.MemCpy(controlGroupingAndComplexity, memory.controlGroupingAndComplexity, memory.controlCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
                 UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));
