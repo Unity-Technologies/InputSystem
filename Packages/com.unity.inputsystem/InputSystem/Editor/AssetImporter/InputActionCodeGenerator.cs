@@ -310,9 +310,9 @@ namespace UnityEngine.InputSystem.Editor
 			writer.WriteLine();
 
 			// write enums
-			foreach(var map in maps)
+			foreach(InputActionMap map in maps)
 			{
-				var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+				string mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
 				writer.WriteLine($"// {map.name} action enums");
 				writer.WriteLine($"public enum {map.name}ActionEnum");
 				writer.BeginBlock();
@@ -341,7 +341,7 @@ namespace UnityEngine.InputSystem.Editor
 
 			for(int i = 0; i < schemes.Count; i++)
 			{
-				string schemeName = schemes[i].name;
+				string schemeName = CSharpCodeHelpers.MakeIdentifier(schemes[i].name);
 				if(i < schemes.Count - 1)
 				{
 					writer.WriteLine(schemeName + ",");
