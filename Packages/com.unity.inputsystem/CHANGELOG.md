@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Changed
+
+- Rewrote the "How Do I...?" section of the manual for improved helpfulness and clarity.
+
 ## [1.1.1] - 2021-09-03
 
 ### Fixed
