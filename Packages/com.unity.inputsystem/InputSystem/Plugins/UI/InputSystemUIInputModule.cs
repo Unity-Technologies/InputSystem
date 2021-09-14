@@ -1268,7 +1268,27 @@ namespace UnityEngine.InputSystem.UI
         /// <remarks>
         /// This instantiates <see cref="DefaultInputActions"/> and assigns it to <see cref="actionsAsset"/>. It also
         /// assigns all the various individual actions such as <see cref="point"/> and <see cref="leftClick"/>.
+        ///
+        /// Note that if an <c>InputSystemUIInputModule</c> component is programmatically added to a <c>GameObject</c>,
+        /// it will automatically receive the default actions as part of its <c>OnEnable</c> method. Use <see cref="UnassignActions"/>
+        /// to remove these assignments.
+        ///
+        /// <example>
+        /// <code>
+        /// var go = new GameObject();
+        /// go.AddComponent&lt;EventSystem&gt;();
+        ///
+        /// // Adding the UI module like this will implicitly enable it and thus lead to
+        /// // automatic assignment of the default input actions.
+        /// var uiModule = go.AddComponent&lt;InputSystemUIInputModule&gt;();
+        ///
+        /// // Manually remove the default input actions.
+        /// uiModule.UnassignActions();
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="actionsAsset"/>
+        /// <seealso cref="DefaultInputActions"/>
         public void AssignDefaultActions()
         {
             var defaultActions = new DefaultInputActions();
@@ -1286,11 +1306,13 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// Remove all action assignment
+        /// Remove all action assignments, that is <see cref="actionsAsset"/> as well as all individual
+        /// actions such as <see cref="leftClick"/>.
         /// </summary>
         /// <remarks>
-        /// This clears <see cref="actionsAsset"/> and the various individual action references such as <see cref="point"/> and <see cref="leftClick"/>.
+        /// If the current actions were enabled by the UI input module, they will be disabled in the process.
         /// </remarks>
+        /// <seealso cref="AssignDefaultActions"/>
         public void UnassignActions()
         {
             actionsAsset = default;

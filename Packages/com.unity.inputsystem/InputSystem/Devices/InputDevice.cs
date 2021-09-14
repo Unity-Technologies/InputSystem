@@ -619,16 +619,16 @@ namespace UnityEngine.InputSystem
 
             HasStateCallbacks = 1 << 1,
             HasControlsWithDefaultState = 1 << 2,
-            HasDontResetControls = 1 << 3,
-            HasEventMerger = 1 << 4,
+            HasDontResetControls = 1 << 10,
+            HasEventMerger = 1 << 13,
 
-            Remote = 1 << 5, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 6, // It's a device created from data surfaced by NativeInputRuntime.
+            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
 
-            DisabledInFrontend = 1 << 7, // Explicitly disabled on the managed side.
-            DisabledInRuntime = 1 << 8, // Disabled in the native runtime.
-            DisabledWhileInBackground = 1 << 9, // Disabled while the player is running in the background.
-            DisabledStateHasBeenQueriedFromRuntime = 1 << 10, // Whether we have fetched the current enable/disable state from the runtime.
+            DisabledInFrontend = 1 << 5, // Explicitly disabled on the managed side.
+            DisabledInRuntime = 1 << 7, // Disabled in the native runtime.
+            DisabledWhileInBackground = 1 << 8, // Disabled while the player is running in the background.
+            DisabledStateHasBeenQueriedFromRuntime = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
 
             CanRunInBackground = 1 << 11,
             CanRunInBackgroundHasBeenQueried = 1 << 12,
