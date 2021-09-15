@@ -483,38 +483,46 @@ namespace UnityEngine.InputSystem.Users
         public ControlSchemeChangeSyntax ActivateControlScheme(string schemeName)
         {
             // Look up control scheme by name in actions.
-            var scheme = new InputControlScheme();
-            if (!string.IsNullOrEmpty(schemeName))
-                FindControlScheme(schemeName, ref scheme); // throws if not found
-            return ActivateControlScheme(scheme);
-        }
-
-        private bool TryFindControlScheme(string schemeName, ref InputControlScheme scheme)
-        {
             if (!string.IsNullOrEmpty(schemeName))
             {
-                // Need actions to be available to be able to activate control schemes by name only.
-                if (s_GlobalState.allUserData[index].actions == null)
-                    throw new InvalidOperationException(
-                        $"Cannot set control scheme '{schemeName}' by name on user #{index} as not actions have been associated with the user yet (AssociateActionsWithUser)");
+                FindControlScheme(schemeName, out InputControlScheme scheme); // throws if not found
+                return ActivateControlScheme(scheme);
+            }
+            return ActivateControlScheme(new InputControlScheme());
+        }
 
-                // Attempt to find control scheme by name
-                var controlSchemes = s_GlobalState.allUserData[index].actions.controlSchemes;
-                for (var i = 0; i < controlSchemes.Count; ++i)
-                    if (string.Compare(controlSchemes[i].name, schemeName,
-                        StringComparison.InvariantCultureIgnoreCase) == 0)
-                    {
-                        scheme = controlSchemes[i];
-                        return true;
-                    }
+        private bool TryFindControlScheme(string schemeName, out InputControlScheme scheme)
+        {
+            if (string.IsNullOrEmpty(schemeName))
+            {
+                scheme = default;
+                return false;
             }
 
+            // Need actions to be available to be able to activate control schemes by name only.
+            if (s_GlobalState.allUserData[index].actions == null)
+                throw new InvalidOperationException(
+                    $"Cannot set control scheme '{schemeName}' by name on user #{index} as not actions have been associated with the user yet (AssociateActionsWithUser)");
+
+            // Attempt to find control scheme by name
+            var controlSchemes = s_GlobalState.allUserData[index].actions.controlSchemes;
+            for (var i = 0; i < controlSchemes.Count; ++i)
+            {
+                if (string.Compare(controlSchemes[i].name, schemeName,
+                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    scheme = controlSchemes[i];
+                    return true;
+                }
+            }
+
+            scheme = default;
             return false;
         }
 
-        internal void FindControlScheme(string schemeName, ref InputControlScheme scheme)
+        internal void FindControlScheme(string schemeName, out InputControlScheme scheme)
         {
-            if (TryFindControlScheme(schemeName, ref scheme))
+            if (TryFindControlScheme(schemeName, out scheme))
                 return;
             throw new ArgumentException(
                 $"Cannot find control scheme '{schemeName}' in actions '{s_GlobalState.allUserData[index].actions}'");

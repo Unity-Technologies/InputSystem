@@ -914,7 +914,7 @@ namespace UnityEngine.InputSystem
                 return false;
 
             var controlScheme = scheme.Value;
-            SwitchControlSchemeInternalUnchecked(ref controlScheme, devices);
+            SwitchControlSchemeInternal(ref controlScheme, devices);
             return true;
         }
 
@@ -952,9 +952,8 @@ namespace UnityEngine.InputSystem
             if (devices == null)
                 throw new ArgumentNullException(nameof(devices));
 
-            InputControlScheme scheme = default;
-            user.FindControlScheme(controlScheme, ref scheme); // throws if not found
-            SwitchControlSchemeInternalUnchecked(ref scheme, devices);
+            user.FindControlScheme(controlScheme, out InputControlScheme scheme); // throws if not found
+            SwitchControlSchemeInternal(ref scheme, devices);
         }
 
         public void SwitchCurrentActionMap(string mapNameOrId)
@@ -1935,10 +1934,10 @@ namespace UnityEngine.InputSystem
                 !user.hasMissingRequiredDevices);
         }
 
-        private void SwitchControlSchemeInternalUnchecked(ref InputControlScheme controlScheme, params InputDevice[] devices)
+        private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, params InputDevice[] devices)
         {
-            // Precondition: Control scheme and devices are correlated
-            // Precondition: Control scheme is valid, InputDevices are valid
+            Debug.Assert(devices != null);
+
             if (IsCurrentControlScheme(ref controlScheme, devices))
                 return; // no change
 
