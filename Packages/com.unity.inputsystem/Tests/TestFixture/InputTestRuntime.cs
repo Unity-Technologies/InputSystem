@@ -352,6 +352,7 @@ namespace UnityEngine.InputSystem
 
         public bool runInBackground { get; set; } = false;
 
+        public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings
@@ -391,6 +392,20 @@ namespace UnityEngine.InputSystem
             get => m_UnityRemoteMessageHandler;
             set => m_UnityRemoteMessageHandler = value;
         }
+
+        public bool? unityRemoteGyroEnabled;
+        public float? unityRemoteGyroUpdateInterval;
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            unityRemoteGyroEnabled = value;
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            unityRemoteGyroUpdateInterval = interval;
+        }
+
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
