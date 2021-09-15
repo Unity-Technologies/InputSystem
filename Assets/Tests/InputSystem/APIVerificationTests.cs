@@ -434,10 +434,6 @@ class APIVerificationTests
             || type == typeof(FastMouse)
             || type == typeof(FastTouchscreen)
             || type == typeof(FastDualShock4GamepadHID)
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            // iOS Step Counter is created from C# code
-            || type == typeof(iOSStepCounter)
-#endif
         )
             return true;
 
