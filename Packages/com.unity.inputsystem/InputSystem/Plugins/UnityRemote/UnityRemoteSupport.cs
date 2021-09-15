@@ -1,9 +1,9 @@
+#if UNITY_EDITOR
 using System;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine.InputSystem.LowLevel;
 
-#if UNITY_EDITOR
 namespace UnityEngine.InputSystem
 {
     /// <summary>

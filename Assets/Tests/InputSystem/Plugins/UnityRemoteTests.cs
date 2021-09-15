@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Linq;
 using NUnit.Framework;
@@ -262,3 +263,4 @@ internal class UnityRemoteTests : CoreTestsFixture
         runtime.onUnityRemoteMessage(new IntPtr(ptr));
     }
 }
+#endif // UNITY_EDITOR
