@@ -1928,10 +1928,16 @@ namespace UnityEngine.InputSystem
 
         private bool IsCurrentControlScheme(ref InputControlScheme scheme, InputDevice[] devices)
         {
-            var isSameScheme = user.controlScheme.HasValue && user.controlScheme.Value.Equals(scheme);
-            return (isSameScheme &&
-                ArrayHelpers.EqualSets(user.pairedDevices.ToArray(), devices) &&
-                !user.hasMissingRequiredDevices);
+            if (!user.controlScheme.HasValue && user.controlScheme.Value.Equals(scheme))
+                return false; // Not equal control scheme
+            for (var i = 0; i < devices.Length; ++i)
+            {
+                var id = devices[i].deviceId;
+                var index = user.pairedDevices.IndexOf((device) => device.deviceId == id);
+                if (index == -1)
+                    return false; // Paired device is not present in applicable devices
+            }
+            return true; // Equal control scheme and paired device is present in devices
         }
 
         private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, params InputDevice[] devices)

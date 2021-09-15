@@ -147,25 +147,6 @@ namespace UnityEngine.InputSystem.Utilities
             return true;
         }
 
-        public static bool EqualSets<TValue>(TValue[] first, TValue[] second)
-        {
-            // Consistency with Array.Equals which do not compare empty set and null to be equal.
-            // Only true if first is a sub-set of second and second is a sub-set of first, i.e.
-            // length may be different as long as they contain the same elements and may contain
-            // repeated elements and still be considered equal.
-            // Worst case O(2*N*M) so do not use on a hot-path and only for small arrays.
-            if (first == null)
-                return second == null;
-            if (second == null)
-                return false;
-            if (!ReferenceEquals(first, second))
-            {
-                var comparer = EqualityComparer<TValue>.Default;
-                return IsSubSetUnchecked(first, second, comparer) && IsSubSetUnchecked(second, first, comparer);
-            }
-            return true;
-        }
-
         ////REVIEW: remove this to get rid of default equality comparer?
         public static int IndexOf<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
         {

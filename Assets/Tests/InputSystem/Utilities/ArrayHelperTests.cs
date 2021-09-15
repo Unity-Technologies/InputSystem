@@ -117,30 +117,4 @@ internal class ArrayHelperTests
         Assert.AreEqual(1, arr.IndexOfReference(arr[1], 1, 3));
         Assert.AreEqual(2, arr.IndexOfReference(arr[2], 1, 3));
     }
-
-    [Test]
-    [Category("Utilities")]
-    public void Utilities_HaveEqualElementsOrderIndependent__ShouldEvaluateToTrueOnlyIfElementsAreEqual()
-    {
-        var empty = new object[] {};
-
-        Assert.That(ArrayHelpers.EqualSets<object>(null, null), Is.True);
-        Assert.That(ArrayHelpers.EqualSets(empty, null), Is.False);
-        Assert.That(ArrayHelpers.EqualSets(null, empty), Is.False);
-        Assert.That(ArrayHelpers.EqualSets(empty, new object[] {}), Is.True);
-        Assert.That(ArrayHelpers.EqualSets(empty, empty), Is.True); // Same instance
-
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 2 }, new int[] {}), Is.False);
-        Assert.That(ArrayHelpers.EqualSets(new int[] {}, new[] { 1, 2 }), Is.False);
-
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 2 }, new[] { 2, 1 }), Is.True);
-        Assert.That(ArrayHelpers.EqualSets(new[] { 2, 1 }, new[] { 1, 2 }), Is.True);
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 2, 3 }, new[] { 1, 2 }), Is.False);
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1 }, new[] { 1, 2 }), Is.False);
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 2 }, new[] { 1 }), Is.False);
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 2 }, new[] { 1, 2 }), Is.True);
-
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 2, 1 }, new[] { 1, 1, 2 }), Is.True); // Basically {1, 2} == {1, 2}
-        Assert.That(ArrayHelpers.EqualSets(new[] { 1, 1, 2 }, new[] { 2, 1, 2 }), Is.True); // Basically {1, 2} == {2, 1}
-    }
 }
