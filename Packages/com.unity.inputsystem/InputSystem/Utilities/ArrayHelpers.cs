@@ -793,26 +793,5 @@ namespace UnityEngine.InputSystem.Utilities
             array[index1] = array[index2];
             array[index2] = temp;
         }
-
-        private static bool IsSubSetUnchecked<TValue>(TValue[] first, TValue[] second, EqualityComparer<TValue> comparer)
-        {
-            // Evaluate whether first is a sub-set of second. Precondition: both first and second is not null.
-            for (int i = 0, j = 0; i < first.Length; ++i)
-            {
-                var k = j;
-                for (; k < second.Length; ++k)
-                {
-                    if (comparer.Equals(first[i], second[k]))
-                    {
-                        if (k == j)
-                            ++j;
-                        break;
-                    }
-                }
-                if (k == second.Length)
-                    return false;
-            }
-            return true;
-        }
     }
 }
