@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.DualShock
         [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "Circle")]
         [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "Cross")]
         [InputControl]
+        [Preserve]
         public ButtonControl touchpadButton { get; protected set; }
 
         /// <summary>

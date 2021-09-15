@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.Scripting;
 
 ////TODO: expose user index
 
@@ -67,6 +68,7 @@ namespace UnityEngine.InputSystem.XInput
         // This follows Xbox One conventions; on Xbox 360, this is start=start and select=back.
         [InputControl(name = "start", displayName = "Menu", alias = "menu")]
         [InputControl(name = "select", displayName = "View", alias = "view")]
+        [Preserve]
         public ButtonControl menu { get; private set; }
 
         /// <summary>
