@@ -632,6 +632,7 @@ PlayerSettings:
     Android: 0
   managedStrippingLevel:
     Standalone: 3
+    iPhone: 3
   incrementalIl2cppBuild: {}
   allowUnsafeCode: 1
   additionalIl2CppArgs: 
