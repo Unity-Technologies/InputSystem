@@ -1926,34 +1926,32 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private bool IsCurrentControlScheme(ref InputControlScheme scheme, InputDevice[] devices)
-        {
-            if (!user.controlScheme.HasValue && user.controlScheme.Value.Equals(scheme))
-                return false; // Not equal control scheme
-            for (var i = 0; i < devices.Length; ++i)
-            {
-                var id = devices[i].deviceId;
-                var index = user.pairedDevices.IndexOf((device) => device.deviceId == id);
-                if (index == -1)
-                    return false; // Paired device is not present in applicable devices
-            }
-            return true; // Equal control scheme and paired device is present in devices
-        }
-
         private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, params InputDevice[] devices)
         {
             Debug.Assert(devices != null);
 
-            if (IsCurrentControlScheme(ref controlScheme, devices))
-                return; // no change
-
+            // Note that we are doing two somwhat uncorrelated actions here:
+            // - Switching control scheme
+            // - Explicitly pairing with given devices regardless if making sense with respect to control scheme
             using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                user.UnpairDevices();
-                for (var i = 0; i < devices.Length; ++i)
-                    InputUser.PerformPairingWithDevice(devices[i], user: user);
+                // Unpair device previously paired but not part of given devices to pair with
+                for (var i = user.pairedDevices.Count - 1; i >= 0; --i)
+                {
+                    if (!devices.ContainsReference(user.pairedDevices[i]))
+                        user.UnpairDevice(user.pairedDevices[i]);
+                }
 
-                user.ActivateControlScheme(controlScheme);
+                // Pair devices not previously paired but that are part of given devices to pair with
+                foreach (var device in devices)
+                {
+                    if (!user.pairedDevices.ContainsReference(device))
+                        InputUser.PerformPairingWithDevice(device, user: user);
+                }
+
+                // Only activate control scheme if its a different scheme
+                if (!user.controlScheme.HasValue || !user.controlScheme.Value.Equals(controlScheme))
+                    user.ActivateControlScheme(controlScheme);
             }
         }
 
