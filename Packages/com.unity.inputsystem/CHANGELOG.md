@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed a problem where explicitly switching to the already active control scheme and device set for PlayerInput would cancel event callbacks for no reason when the control scheme switch would have no practical effect. This fix detects and skips device unpairing and re-pairing if the switch is detected to not be a change to scheme or devices. ([case 1342297](https://fogbugz.unity3d.com/f/cases/1342297/))
+
 ## [1.1.1] - 2021-09-03
 
 ### Fixed
