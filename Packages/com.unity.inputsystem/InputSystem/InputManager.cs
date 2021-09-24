@@ -1210,11 +1210,18 @@ namespace UnityEngine.InputSystem
         public InputDevice AddDevice(InputDeviceDescription description, InternedString layout, string deviceName = null,
             int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
-            Profiler.BeginSample("InputSystem.AddDevice");
-            var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
-            device.m_Description = description;
-            Profiler.EndSample();
-            return device;
+            try
+            {
+                Profiler.BeginSample("InputSystem.AddDevice");
+
+                var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
+                device.m_Description = description;
+                return device;
+            }
+            finally
+            {
+                Profiler.EndSample();
+            }
         }
 
         public void RemoveDevice(InputDevice device, bool keepOnListOfAvailableDevices = false)
@@ -2679,6 +2686,9 @@ namespace UnityEngine.InputSystem
                 }
                 catch (Exception)
                 {
+                    // the user might have changed the layout of one device, but others in the system might still have
+                    // layouts we can't make sense of. Just quietly swallow exceptions from those so as not to spam
+                    // the user with information about devices unrelated to what was actually changed.
                 }
             }
         }
