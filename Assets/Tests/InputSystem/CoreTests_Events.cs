@@ -2408,10 +2408,85 @@ partial class CoreTests
         };
         action.Enable();
 
-        Press(device.buttonSouth);
-
-        LogAssert.Expect(LogType.Error, "InvalidOperationException while executing 'performed' callbacks of '<Unnamed>[/Gamepad/buttonSouth]'");
         LogAssert.Expect(LogType.Exception, "InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?");
+        LogAssert.Expect(LogType.Error, "InvalidOperationException during event processing of Dynamic update; resetting event buffer");
+        LogAssert.Expect(LogType.Exception, "InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?");
+        LogAssert.Expect(LogType.Error, "InvalidOperationException while executing 'performed' callbacks of '<Unnamed>[/Gamepad/buttonSouth]'");
+
+        Press(device.buttonSouth);
+    }
+
+    private struct ThrowingExceptionTestDeviceState : IInputStateTypeInfo
+    {
+        public static FourCC Format => new FourCC('T', 'E', 'T', 'D');
+        public FourCC format => Format;
+        [InputControl(layout = "Axis")] public float axis;
+    }
+
+    [InputControlLayout(stateType = typeof(ThrowingExceptionTestDeviceState))]
+    [Preserve]
+    private class ThrowingExceptionTestDevice : InputDevice, IInputStateCallbackReceiver
+    {
+        public class TestException : Exception
+        {
+        }
+
+        public bool throwExceptionOnState = true;
+        public AxisControl axis { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            axis = GetChildControl<AxisControl>("axis");
+            base.FinishSetup();
+        }
+
+        void IInputStateCallbackReceiver.OnNextUpdate()
+        {
+        }
+
+        unsafe void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
+        {
+            if (throwExceptionOnState)
+                throw new TestException();
+
+            if (eventPtr.type != StateEvent.Type)
+                return;
+
+            var stateEvent = StateEvent.FromUnchecked(eventPtr);
+            if (stateEvent->stateFormat != ThrowingExceptionTestDeviceState.Format)
+                return;
+
+            var newState = *(ThrowingExceptionTestDeviceState*)stateEvent->state;
+            InputState.Change(this, ref newState, InputState.currentUpdateType, eventPtr: eventPtr);
+        }
+
+        bool IInputStateCallbackReceiver.GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
+        }
+    };
+
+    [Test]
+    [Category("Events")]
+    public void Events_ThrowingExceptionsInInternalCode_DoesntLookupLatterUpdates()
+    {
+        var device = InputSystem.AddDevice<ThrowingExceptionTestDevice>();
+
+        InputSystem.QueueStateEvent(device, new ThrowingExceptionTestDeviceState {axis = 50.0f});
+        LogAssert.Expect(LogType.Exception, "TestException: Exception of type 'CoreTests+ThrowingExceptionTestDevice+TestException' was thrown.");
+        LogAssert.Expect(LogType.Error, "TestException during event processing of Dynamic update; resetting event buffer");
+        Assert.That(() => InputSystem.Update(), Throws.TypeOf<ThrowingExceptionTestDevice.TestException>());
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(0.0f));
+
+        // Event buffer should be reset so latter update calls should work without any errors
+        InputSystem.Update();
+        InputSystem.Update();
+
+        // Everything should recover to a working state
+        device.throwExceptionOnState = false;
+        InputSystem.QueueStateEvent(device, new ThrowingExceptionTestDeviceState {axis = 100.0f});
+        InputSystem.Update();
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(100.0f));
     }
 
     ////TODO: test thread-safe QueueEvent

@@ -22,11 +22,11 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
+                    Debug.LogException(exception);
                     if (context != null)
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
                     else
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                    Debug.LogException(exception);
                 }
             }
             callbacks.UnlockForChanges();
@@ -47,11 +47,11 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
+                    Debug.LogException(exception);
                     if (context != null)
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
                     else
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                    Debug.LogException(exception);
                 }
             }
             callbacks.UnlockForChanges();
@@ -72,11 +72,11 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
+                    Debug.LogException(exception);
                     if (context != null)
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
                     else
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                    Debug.LogException(exception);
                 }
             }
             callbacks.UnlockForChanges();
@@ -99,11 +99,11 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
+                    Debug.LogException(exception);
                     if (context != null)
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
                     else
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                    Debug.LogException(exception);
                 }
             }
             callbacks.UnlockForChanges();
