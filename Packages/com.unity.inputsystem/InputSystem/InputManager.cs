@@ -1207,6 +1207,23 @@ namespace UnityEngine.InputSystem
             return device;
         }
 
+        public InputDevice AddDevice(InputDeviceDescription description, InternedString layout, string deviceName = null,
+            int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+        {
+            try
+            {
+                Profiler.BeginSample("InputSystem.AddDevice");
+
+                var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
+                device.m_Description = description;
+                return device;
+            }
+            finally
+            {
+                Profiler.EndSample();
+            }
+        }
+
         public void RemoveDevice(InputDevice device, bool keepOnListOfAvailableDevices = false)
         {
             if (device == null)
@@ -2648,17 +2665,30 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
-                if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
+                if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout)) continue;
+
+                if (layout.IsEmpty())
                 {
-                    try
+                    // If it's a device coming from the runtime, disable it.
+                    if (id != InputDevice.InvalidDeviceId)
                     {
-                        AddDevice(m_AvailableDevices[i].description, false,
-                            deviceId: id,
-                            deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                        var command = DisableDeviceCommand.Create();
+                        m_Runtime.DeviceCommand(id, ref command);
                     }
-                    catch (Exception)
-                    {
-                    }
+
+                    continue;
+                }
+
+                try
+                {
+                    AddDevice(m_AvailableDevices[i].description, layout, deviceId: id,
+                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                }
+                catch (Exception)
+                {
+                    // the user might have changed the layout of one device, but others in the system might still have
+                    // layouts we can't make sense of. Just quietly swallow exceptions from those so as not to spam
+                    // the user with information about devices unrelated to what was actually changed.
                 }
             }
         }
