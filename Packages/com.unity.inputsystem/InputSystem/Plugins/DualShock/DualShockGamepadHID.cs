@@ -14,12 +14,12 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 {
     // This is abstract input report, similar to what is on the wire, but not exactly matching state events.
     // See ConvertInputReport for the exact conversion.
-    [StructLayout(LayoutKind.Explicit, Size = 9 /* important, if you plan to increase this, think about how you gonna fit 10 byte state events because we can only shrink events in IEventPreProcessor */)] 
+    [StructLayout(LayoutKind.Explicit, Size = 9 /* important, if you plan to increase this, think about how you gonna fit 10 byte state events because we can only shrink events in IEventPreProcessor */)]
     public struct DualSenseHIDInputReport : IInputStateTypeInfo
     {
         public static FourCC Format = new FourCC('D', 'S', 'V', 'S'); // DualSense Virtual State
         public FourCC format => Format;
-        
+
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
         [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 0)] public byte reportId;
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 1)] public DualSenseHIDOutputReportPayload payload;
-        
+
         public static DualSenseHIDUSBOutputReport Create(DualSenseHIDOutputReportPayload payload)
         {
             return new DualSenseHIDUSBOutputReport
@@ -107,7 +107,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
             };
         }
     }
-    
+
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal struct DualSenseHIDBluetoothOutputReport : IInputDeviceCommandInfo
     {
@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 2)] public byte tag2;
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 3)] public DualSenseHIDOutputReportPayload payload;
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 74)] public uint crc32;
-        
+
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 0)] public unsafe fixed byte rawData[74];
 
         public static DualSenseHIDBluetoothOutputReport Create(DualSenseHIDOutputReportPayload payload, byte outputSequenceId)
@@ -343,7 +343,7 @@ namespace UnityEngine.InputSystem.DualShock
         // - Full Bluetooth report, first byte is 0x31, observed size 78
         // While USB and Bluetooth reports only differ in header,
         // Minimal report also differs in order of fields (buttons -> triggers vs triggers -> buttons).
-        
+
         public ButtonControl leftTriggerButton { get; protected set; }
         public ButtonControl rightTriggerButton { get; protected set; }
         public ButtonControl playStationButton { get; protected set; }
@@ -380,6 +380,7 @@ namespace UnityEngine.InputSystem.DualShock
 
             SetMotorSpeedsAndLightBarColor(m_LowFrequencyMotorSpeed, m_HighFrequenceyMotorSpeed, m_LightBarColor);
         }
+
         public override void ResumeHaptics()
         {
             if (!m_LowFrequencyMotorSpeed.HasValue && !m_HighFrequenceyMotorSpeed.HasValue)
@@ -422,7 +423,7 @@ namespace UnityEngine.InputSystem.DualShock
             var lf = lowFrequency.HasValue ? lowFrequency.Value : 0;
             var hf = highFrequency.HasValue ? highFrequency.Value : 0;
             var c = color.HasValue ? color.Value : Color.black;
-            
+
             // DualSense differs a bit from DualShock 4 because all effects need to be set at a same time,
             // otherwise setting a color would disable motor rumble.
             var payload = new DualSenseHIDOutputReportPayload
@@ -446,31 +447,31 @@ namespace UnityEngine.InputSystem.DualShock
         private static unsafe bool MergeForward(DualSenseHIDUSBInputReport* currentState, DualSenseHIDUSBInputReport* nextState)
         {
             return currentState->buttons0 == nextState->buttons0 && currentState->buttons1 == nextState->buttons1 &&
-                   currentState->buttons2 == nextState->buttons2;
+                currentState->buttons2 == nextState->buttons2;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe bool MergeForward(DualSenseHIDBluetoothInputReport* currentState, DualSenseHIDBluetoothInputReport* nextState)
         {
             return currentState->buttons0 == nextState->buttons0 && currentState->buttons1 == nextState->buttons1 &&
-                   currentState->buttons2 == nextState->buttons2;
+                currentState->buttons2 == nextState->buttons2;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe bool MergeForward(DualSenseHIDMinimalInputReport* currentState, DualSenseHIDMinimalInputReport* nextState)
         {
             return currentState->buttons0 == nextState->buttons0 && currentState->buttons1 == nextState->buttons1 &&
-                   currentState->buttons2 == nextState->buttons2;
+                currentState->buttons2 == nextState->buttons2;
         }
 
         unsafe bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
         {
             if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
                 return false;
-        
+
             var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
             var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
-        
+
             if (currentEvent->stateFormat != DualSenseHIDGenericInputReport.Format || nextEvent->stateFormat != DualSenseHIDGenericInputReport.Format)
                 return false;
 
@@ -507,7 +508,7 @@ namespace UnityEngine.InputSystem.DualShock
             else
                 return false;
         }
-        
+
         unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr eventPtr)
         {
             if (eventPtr.type != StateEvent.Type)
@@ -567,7 +568,7 @@ namespace UnityEngine.InputSystem.DualShock
             [FieldOffset(8)] public byte buttons0;
             [FieldOffset(9)] public byte buttons1;
             [FieldOffset(10)] public byte buttons2;
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DualSenseHIDInputReport ToHIDInputReport()
             {
@@ -581,11 +582,11 @@ namespace UnityEngine.InputSystem.DualShock
                     rightTrigger = rightTrigger,
                     buttons0 = buttons0,
                     buttons1 = buttons1,
-                    buttons2 = (byte)(buttons2 & 0x07) 
+                    buttons2 = (byte)(buttons2 & 0x07)
                 };
             }
         }
-        
+
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualSenseHIDBluetoothInputReport
         {
@@ -599,7 +600,7 @@ namespace UnityEngine.InputSystem.DualShock
             [FieldOffset(9)] public byte buttons0;
             [FieldOffset(10)] public byte buttons1;
             [FieldOffset(11)] public byte buttons2;
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DualSenseHIDInputReport ToHIDInputReport()
             {
@@ -645,7 +646,7 @@ namespace UnityEngine.InputSystem.DualShock
                     rightTrigger = rightTrigger,
                     buttons0 = buttons0,
                     buttons1 = buttons1,
-                    buttons2 = (byte)(buttons2 & 0x03) // higher bits seem to contain random data, and mic button is not supported 
+                    buttons2 = (byte)(buttons2 & 0x03) // higher bits seem to contain random data, and mic button is not supported
                 };
             }
         }

@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.DualShock
     /// <summary>
     /// A Sony DualShock/DualSense controller.
     /// </summary>
-    [InputControlLayout(displayName = "Playstation Controller")]
+    [InputControlLayout(displayName = "PlayStation Controller")]
     [Preserve]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {

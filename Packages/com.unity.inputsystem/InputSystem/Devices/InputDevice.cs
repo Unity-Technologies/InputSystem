@@ -791,7 +791,7 @@ namespace UnityEngine.InputSystem
                     m_DeviceFlags &= ~DeviceFlags.HasEventMerger;
             }
         }
-        
+
         internal bool hasEventPreProcessor
         {
             get => (m_DeviceFlags & DeviceFlags.HasEventPreProcessor) == DeviceFlags.HasEventPreProcessor;

@@ -60,7 +60,7 @@ public class DualShockISX : GamepadISX
     {
         if (!(Gamepad.current is DualShockGamepad))
             return;
-        
+
         var gamepad = Gamepad.current as DualShockGamepad;
 
         if (GUILayout.Button("red"))
