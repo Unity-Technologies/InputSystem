@@ -28,8 +28,8 @@ Support for the following Devices doesn't require specialized support of particu
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
-|PS3/PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
-|PS5|Yes(10)|Yes(10)|No(10)|Yes(10)|Yes(10)|No(10)|No(10)|No|Yes|No|Sometimes (2)|
+|PS3/PS4|Yes (5)|Yes (5)|No (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
+|PS5|Yes (10)|Yes (10)|No (10)|No (10)|Yes (10)|No (10)|No (10)|No|Yes|No|Sometimes (2)|
 |Switch|Yes (8)|Yes (8)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
 |MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 

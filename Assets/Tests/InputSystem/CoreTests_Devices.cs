@@ -5354,7 +5354,10 @@ partial class CoreTests
                 case Behavior.GrowEventsInPlace:
                     state->value1 = -state->value1;
                     state->value2 = -state->value2;
-                    inputEvent->sizeInBytes += 4;
+
+                    // Potentially we're creating out-of-bounds memory access here,
+                    // but we rely on a size check following PreProcessEvent to early out our test with an exception.
+                    inputEvent->sizeInBytes += 1;
                     return true;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -5368,7 +5371,9 @@ partial class CoreTests
     [TestCase(PreProcessorTestDevice.Behavior.SkipEvents, 0, 0)]
     [TestCase(PreProcessorTestDevice.Behavior.ConvertEventsInPlace, -10, -20)]
     [TestCase(PreProcessorTestDevice.Behavior.ShrinkEventsInPlace, -10, 0)]
+#if UNITY_EDITOR
     [TestCase(PreProcessorTestDevice.Behavior.GrowEventsInPlace, 0, 0, true)]
+#endif
     public void Devices_EventPreProcessor_Can(PreProcessorTestDevice.Behavior secondEventBehavior, int expectedValue1, int expectedValue2, bool expectAccessViolationException = false)
     {
         var device = InputSystem.AddDevice<PreProcessorTestDevice>();
@@ -5379,7 +5384,7 @@ partial class CoreTests
             InputSystem.Update();
         else
         {
-            LogAssert.Expect(LogType.Exception, "AccessViolationException: 'PreProcessorTestDevice:/PreProcessorTestDevice'.PreProcessEvent tries to grow an event from 32 bytes to 36 bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+            LogAssert.Expect(LogType.Exception, "AccessViolationException: 'PreProcessorTestDevice:/PreProcessorTestDevice'.PreProcessEvent tries to grow an event from 32 bytes to 33 bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
             LogAssert.Expect(LogType.Error, "AccessViolationException during event processing of Dynamic update; resetting event buffer");
             Assert.That(() => InputSystem.Update(), Throws.TypeOf<AccessViolationException>());
         }
