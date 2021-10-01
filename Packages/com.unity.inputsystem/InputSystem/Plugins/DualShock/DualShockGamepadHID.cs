@@ -430,11 +430,12 @@ namespace UnityEngine.InputSystem.DualShock
             var c = color.HasValue ? color.Value : Color.black;
 
             // DualSense differs a bit from DualShock 4 because all effects need to be set at a same time,
-            // otherwise setting a color would disable motor rumble.
+            // otherwise setting just a color would disable motor rumble.
             var payload = new DualSenseHIDOutputReportPayload
             {
-                enableFlags1 = 0x1 | 0x2,
-                enableFlags2 = 0x4,
+                enableFlags1 = 0x1 | // Enable motor rumble.
+                    0x2,             // Disable haptics.
+                enableFlags2 = 0x4,  // Enable LEDs color.
                 lowFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(lf, byte.MinValue, byte.MinValue),
                 highFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(hf, byte.MinValue, byte.MaxValue),
                 redColor = (byte)NumberHelpers.NormalizedFloatToUInt(c.r, byte.MinValue, byte.MaxValue),
@@ -489,9 +490,10 @@ namespace UnityEngine.InputSystem.DualShock
             if (currentGenericReport->reportId != nextGenericReport->reportId)
                 return false;
 
-            if (currentGenericReport->reportId == 0x01)
+            if (currentGenericReport->reportId == DualSenseHIDUSBInputReport.ExpectedReportId)
             {
-                if (currentEvent->stateSizeInBytes == 10 || currentEvent->stateSizeInBytes == 78)
+                if (currentEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize1 ||
+                    currentEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
                 {
                     var currentState = (DualSenseHIDMinimalInputReport*)currentEvent->state;
                     var nextState = (DualSenseHIDMinimalInputReport*)nextEvent->state;
@@ -504,7 +506,7 @@ namespace UnityEngine.InputSystem.DualShock
                     return MergeForward(currentState, nextState);
                 }
             }
-            else if (currentGenericReport->reportId == 0x31)
+            else if (currentGenericReport->reportId == DualSenseHIDBluetoothInputReport.ExpectedReportId)
             {
                 var currentState = (DualSenseHIDBluetoothInputReport*)currentEvent->state;
                 var nextState = (DualSenseHIDBluetoothInputReport*)nextEvent->state;
@@ -525,9 +527,10 @@ namespace UnityEngine.InputSystem.DualShock
                 return false; // skip unrecognized state events otherwise they will corrupt control states
 
             var genericReport = (DualSenseHIDGenericInputReport*)stateEvent->state;
-            if (genericReport->reportId == 0x01)
+            if (genericReport->reportId == DualSenseHIDUSBInputReport.ExpectedReportId)
             {
-                if (stateEvent->stateSizeInBytes == 10 || stateEvent->stateSizeInBytes == 78)
+                if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize1 ||
+                    stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
                 {
                     // minimal report
                     var data = ((DualSenseHIDMinimalInputReport*)stateEvent->state)->ToHIDInputReport();
@@ -541,7 +544,7 @@ namespace UnityEngine.InputSystem.DualShock
                 stateEvent->stateFormat = DualSenseHIDInputReport.Format;
                 return true;
             }
-            else if (genericReport->reportId == 0x31)
+            else if (genericReport->reportId == DualSenseHIDBluetoothInputReport.ExpectedReportId)
             {
                 var data = ((DualSenseHIDBluetoothInputReport*)stateEvent->state)->ToHIDInputReport();
                 *((DualSenseHIDInputReport*)stateEvent->state) = data;
@@ -563,6 +566,8 @@ namespace UnityEngine.InputSystem.DualShock
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualSenseHIDUSBInputReport
         {
+            public const int ExpectedReportId = 0x01;
+
             [FieldOffset(0)] public byte reportId;
             [FieldOffset(1)] public byte leftStickX;
             [FieldOffset(2)] public byte leftStickY;
@@ -595,6 +600,8 @@ namespace UnityEngine.InputSystem.DualShock
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualSenseHIDBluetoothInputReport
         {
+            public const int ExpectedReportId = 0x31;
+
             [FieldOffset(0)] public byte reportId;
             [FieldOffset(2)] public byte leftStickX;
             [FieldOffset(3)] public byte leftStickY;
@@ -627,6 +634,9 @@ namespace UnityEngine.InputSystem.DualShock
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualSenseHIDMinimalInputReport
         {
+            public static int ExpectedSize1 = 10;
+            public static int ExpectedSize2 = 78;
+
             [FieldOffset(0)] public byte reportId;
             [FieldOffset(1)] public byte leftStickX;
             [FieldOffset(2)] public byte leftStickY;
