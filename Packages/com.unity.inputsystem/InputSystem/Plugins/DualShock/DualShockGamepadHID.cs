@@ -12,10 +12,12 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.DualShock.LowLevel
 {
-    // This is abstract input report, similar to what is on the wire, but not exactly matching state events.
-    // See ConvertInputReport for the exact conversion.
-    [StructLayout(LayoutKind.Explicit, Size = 9 /* important, if you plan to increase this, think about how you gonna fit 10 byte state events because we can only shrink events in IEventPreProcessor */)]
-    public struct DualSenseHIDInputReport : IInputStateTypeInfo
+    /// <summary>
+    /// This is abstract input report for PS5 DualSense controller, similar to what is on the wire, but not exactly binary matching any state events.
+    /// See ConvertInputReport for the exact conversion.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 9 /* !!! Beware !!! If you plan to increase this, think about how you gonna fit 10 byte state events because we can only shrink events in IEventPreProcessor */)]
+    internal struct DualSenseHIDInputReport : IInputStateTypeInfo
     {
         public static FourCC Format = new FourCC('D', 'S', 'V', 'S'); // DualSense Virtual State
         public FourCC format => Format;
@@ -333,6 +335,9 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
 namespace UnityEngine.InputSystem.DualShock
 {
+    /// <summary>
+    /// PS5 DualSense controller that is interfaced to a HID backend.
+    /// </summary>
     [InputControlLayout(stateType = typeof(DualSenseHIDInputReport), displayName = "DualSense HID")]
     [Scripting.Preserve]
     public class DualSenseGamepadHID : DualShockGamepad, IEventMerger, IEventPreProcessor
