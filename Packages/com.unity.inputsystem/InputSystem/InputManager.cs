@@ -3188,11 +3188,22 @@ namespace UnityEngine.InputSystem
                     }
 
                     // Give the device a chance to do something with data before we propagate it to event listeners.
-                    if (device.hasEventPreProcessor && !((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr))
+                    if (device.hasEventPreProcessor)
                     {
-                        // Skip event if PreProcessEvent considers it to be irrelevant.
-                        m_InputEventStream.Advance(false);
-                        continue;
+#if UNITY_EDITOR
+                        var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
+#endif
+                        var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
+#if UNITY_EDITOR
+                        if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
+                            throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+#endif
+                        if (!shouldProcess)
+                        {
+                            // Skip event if PreProcessEvent considers it to be irrelevant.
+                            m_InputEventStream.Advance(false);
+                            continue;
+                        }
                     }
 
                     // Give listeners a shot at the event.
