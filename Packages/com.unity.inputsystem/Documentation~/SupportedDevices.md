@@ -24,11 +24,12 @@ Support for the following Devices doesn't require specialized support of particu
 
 ## Gamepads
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4(7)|Switch(7)|WebGL|
+|Device|Windows|Mac|Linux|UWP|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4/PS5(7)|Switch(7)|WebGL|
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
-|PS3/PS4/PS5|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
+|PS3/PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
+|PS5|Yes(10)|Yes(10)|No(10)|Yes(10)|Yes(10)|No(10)|No(10)|No|Yes|No|Sometimes (2)|
 |Switch|Yes (8)|Yes (8)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
 |MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 
@@ -42,6 +43,9 @@ Support for the following Devices doesn't require specialized support of particu
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 >8. Unity officially supports PS4 controllers only on [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
 >9. Switch Joy-Cons are not currently supported on Windows and Mac. Also, Switch Pro controllers are supported only when connected via Bluetooth but not when connected via wired USB.
+>10. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
+On Android it's expected to be working from Android 12.
+On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.
 
 ### WebGL
 
