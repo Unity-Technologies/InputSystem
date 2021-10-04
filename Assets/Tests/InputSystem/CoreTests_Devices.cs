@@ -5283,4 +5283,113 @@ partial class CoreTests
         Assert.That(mouseDeltaAtKeyPressEvent, Is.EqualTo(new Vector2(5, 5)));
         Assert.That(mouseScrollAtKeyPressEvent, Is.EqualTo(new Vector2(5, 5)));
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PreProcessorTestDeviceState : IInputStateTypeInfo
+    {
+        public static FourCC Format => new FourCC('P', 'P', 'T', 'D');
+        public FourCC format => Format;
+
+        [InputControl(layout = "Integer")] public int value1;
+        [InputControl(layout = "Integer")] public int value2;
+    }
+
+    [InputControlLayout(stateType = typeof(PreProcessorTestDeviceState))]
+    [Preserve]
+    public class PreProcessorTestDevice : InputDevice, IEventPreProcessor
+    {
+        public enum Behavior
+        {
+            PreserveEventsAsIs,
+            SkipEvents,
+            ConvertEventsInPlace,
+            ShrinkEventsInPlace,
+            GrowEventsInPlace
+        }
+
+        public Behavior behavior = Behavior.PreserveEventsAsIs;
+
+        public IntegerControl value1 { get; private set; }
+        public IntegerControl value2 { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            value1 = GetChildControl<IntegerControl>("value1");
+            value2 = GetChildControl<IntegerControl>("value2");
+            base.FinishSetup();
+        }
+
+        unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr currentEventPtr)
+        {
+            var inputEvent = (InputEvent*)currentEventPtr;
+            var stateEvent = StateEvent.FromUnchecked(inputEvent);
+            var size = stateEvent->stateSizeInBytes;
+            if (stateEvent->stateFormat != PreProcessorTestDeviceState.Format || size < sizeof(PreProcessorTestDeviceState))
+                return false;
+
+            var state = (PreProcessorTestDeviceState*)stateEvent->state;
+            switch (behavior)
+            {
+                case Behavior.SkipEvents:
+                    return false;
+                case Behavior.PreserveEventsAsIs:
+                    return true;
+                case Behavior.ConvertEventsInPlace:
+                    state->value1 = -state->value1;
+                    state->value2 = -state->value2;
+                    return true;
+                case Behavior.ShrinkEventsInPlace:
+                    state->value1 = -state->value1;
+                    state->value2 = int.MaxValue; // This change should not be visible in device state
+
+                    // This code shrinks down a state event in-place without changing a type signature,
+                    // it relies on a lose definition of state updating in InputManager.UpdateState where passing
+                    // a state event of size smaller than device state size will only update first N bytes,
+                    // in a way working similarly to delta state events with offset=0.
+                    //
+                    // In case if we move to strongly typed events this will not work and will need to be redesigned,
+                    // one option could be having two different FourCC state types and shrinking will convert to another type.
+                    inputEvent->sizeInBytes -= 4;
+                    return true;
+                case Behavior.GrowEventsInPlace:
+                    state->value1 = -state->value1;
+                    state->value2 = -state->value2;
+
+                    // Potentially we're creating out-of-bounds memory access here,
+                    // but we rely on a size check following PreProcessEvent to early out our test with an exception.
+                    inputEvent->sizeInBytes += 1;
+                    return true;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    };
+
+    [Test]
+    [Category("Devices")]
+    [TestCase(PreProcessorTestDevice.Behavior.PreserveEventsAsIs, 10, 20)]
+    [TestCase(PreProcessorTestDevice.Behavior.SkipEvents, 0, 0)]
+    [TestCase(PreProcessorTestDevice.Behavior.ConvertEventsInPlace, -10, -20)]
+    [TestCase(PreProcessorTestDevice.Behavior.ShrinkEventsInPlace, -10, 0)]
+#if UNITY_EDITOR
+    [TestCase(PreProcessorTestDevice.Behavior.GrowEventsInPlace, 0, 0, true)]
+#endif
+    public void Devices_EventPreProcessor_Can(PreProcessorTestDevice.Behavior secondEventBehavior, int expectedValue1, int expectedValue2, bool expectAccessViolationException = false)
+    {
+        var device = InputSystem.AddDevice<PreProcessorTestDevice>();
+        device.behavior = secondEventBehavior;
+
+        InputSystem.QueueStateEvent(device, new PreProcessorTestDeviceState() {value1 = 10, value2 = 20});
+        if (!expectAccessViolationException)
+            InputSystem.Update();
+        else
+        {
+            LogAssert.Expect(LogType.Exception, "AccessViolationException: 'PreProcessorTestDevice:/PreProcessorTestDevice'.PreProcessEvent tries to grow an event from 32 bytes to 33 bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+            LogAssert.Expect(LogType.Error, "AccessViolationException during event processing of Dynamic update; resetting event buffer");
+            Assert.That(() => InputSystem.Update(), Throws.TypeOf<AccessViolationException>());
+        }
+
+        Assert.That(device.value1.ReadValue(), Is.EqualTo(expectedValue1));
+        Assert.That(device.value2.ReadValue(), Is.EqualTo(expectedValue2));
+    }
 }

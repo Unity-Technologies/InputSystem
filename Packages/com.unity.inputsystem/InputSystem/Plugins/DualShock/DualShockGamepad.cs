@@ -9,9 +9,9 @@ using UnityEngine.Scripting;
 namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
-    /// A Sony DualShock controller.
+    /// A Sony DualShock/DualSense controller.
     /// </summary>
-    [InputControlLayout(displayName = "PS4 Controller")]
+    [InputControlLayout(displayName = "PlayStation Controller")]
     [Preserve]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
