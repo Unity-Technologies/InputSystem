@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
@@ -32,3 +33,4 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+#endif // UNITY_EDITOR

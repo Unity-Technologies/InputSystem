@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.Editor
@@ -9,3 +10,4 @@ namespace UnityEngine.InputSystem.Editor
             InputControlLayout.ControlItem control, string device, string usage, bool searchable);
     }
 }
+#endif // UNITY_EDITOR
