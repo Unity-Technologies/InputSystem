@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
 {
     public partial class @InGameHintsActions: IInputActionCollection2, IDisposable
     {
+        public bool isEmbeddedAsset { get; protected set; }
         public InputActionAsset asset { get; }
         public @InGameHintsActions()
         {
@@ -263,6 +264,19 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
         }
     ]
 }");
+            this.isEmbeddedAsset = true;
+            // Gameplay
+            m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
+            m_Gameplay_Move = m_Gameplay.FindAction("Move", throwIfNotFound: true);
+            m_Gameplay_Look = m_Gameplay.FindAction("Look", throwIfNotFound: true);
+            m_Gameplay_PickUp = m_Gameplay.FindAction("PickUp", throwIfNotFound: true);
+            m_Gameplay_Drop = m_Gameplay.FindAction("Drop", throwIfNotFound: true);
+            m_Gameplay_Throw = m_Gameplay.FindAction("Throw", throwIfNotFound: true);
+        }
+
+        public @InGameHintsActions(InputActionAsset asset)
+        {
+            this.asset = asset;
             // Gameplay
             m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
             m_Gameplay_Move = m_Gameplay.FindAction("Move", throwIfNotFound: true);
@@ -274,7 +288,10 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
 
         public void Dispose()
         {
-            UnityEngine.Object.Destroy(asset);
+            if (isEmbeddedAsset)
+            {
+                UnityEngine.Object.Destroy(asset);
+            }
         }
 
         public InputBinding? bindingMask
