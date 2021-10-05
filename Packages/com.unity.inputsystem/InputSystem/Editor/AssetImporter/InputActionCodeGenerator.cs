@@ -6,8 +6,6 @@ using System.Text;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
-////TODO: option to allow referencing the original asset rather than embedding it
-
 ////TODO: emit indexer directly at toplevel so you can more easily look up actions dynamically
 
 ////TODO: put the generated code behind #if that depends on input system
@@ -97,33 +95,52 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine($"public partial class @{options.className} : IInputActionCollection2, IDisposable");
             writer.BeginBlock();
 
+            writer.WriteLine($"public bool isEmbeddedAsset {{ get; protected set; }}");
             writer.WriteLine($"public InputActionAsset asset {{ get; }}");
 
             // Default constructor.
             writer.WriteLine($"public @{options.className}()");
             writer.BeginBlock();
             writer.WriteLine($"asset = InputActionAsset.FromJson(@\"{asset.ToJson().Replace("\"", "\"\"")}\");");
+            writer.WriteLine($"this.isEmbeddedAsset = true;");
 
             var maps = asset.actionMaps;
             var schemes = asset.controlSchemes;
-            foreach (var map in maps)
-            {
-                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
-                writer.WriteLine($"// {map.name}");
-                writer.WriteLine($"m_{mapName} = asset.FindActionMap(\"{map.name}\", throwIfNotFound: true);");
 
-                foreach (var action in map.actions)
+            void WriteFindMap()
+            {
+                foreach (var map in maps)
                 {
-                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
+                    var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                    writer.WriteLine($"// {map.name}");
+                    writer.WriteLine($"m_{mapName} = asset.FindActionMap(\"{map.name}\", throwIfNotFound: true);");
+
+                    foreach (var action in map.actions)
+                    {
+                        var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                        writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
+                    }
                 }
             }
+
+            WriteFindMap();
+            writer.EndBlock();
+            writer.WriteLine();
+
+            // Constructor with asset.
+            writer.WriteLine($"public @{options.className}(InputActionAsset asset)");
+            writer.BeginBlock();
+            writer.WriteLine($"this.asset = asset;");
+            WriteFindMap();
             writer.EndBlock();
             writer.WriteLine();
 
             writer.WriteLine("public void Dispose()");
             writer.BeginBlock();
+            writer.WriteLine("if (isEmbeddedAsset)");
+            writer.BeginBlock();
             writer.WriteLine("UnityEngine.Object.Destroy(asset);");
+            writer.EndBlock();
             writer.EndBlock();
             writer.WriteLine();
 

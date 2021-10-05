@@ -17,6 +17,7 @@ using UnityEngine.InputSystem.Utilities;
 
 public partial class @SimpleControls: IInputActionCollection2, IDisposable
 {
+    public bool isEmbeddedAsset { get; protected set; }
     public InputActionAsset asset { get; }
     public @SimpleControls()
     {
@@ -160,6 +161,17 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
     ],
     ""controlSchemes"": []
 }");
+        this.isEmbeddedAsset = true;
+        // gameplay
+        m_gameplay = asset.FindActionMap("gameplay", throwIfNotFound: true);
+        m_gameplay_fire = m_gameplay.FindAction("fire", throwIfNotFound: true);
+        m_gameplay_move = m_gameplay.FindAction("move", throwIfNotFound: true);
+        m_gameplay_look = m_gameplay.FindAction("look", throwIfNotFound: true);
+    }
+
+    public @SimpleControls(InputActionAsset asset)
+    {
+        this.asset = asset;
         // gameplay
         m_gameplay = asset.FindActionMap("gameplay", throwIfNotFound: true);
         m_gameplay_fire = m_gameplay.FindAction("fire", throwIfNotFound: true);
@@ -169,7 +181,10 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
 
     public void Dispose()
     {
-        UnityEngine.Object.Destroy(asset);
+        if (isEmbeddedAsset)
+        {
+            UnityEngine.Object.Destroy(asset);
+        }
     }
 
     public InputBinding? bindingMask
