@@ -2968,7 +2968,7 @@ namespace UnityEngine.InputSystem
                     ProcessStateChangeMonitorTimeouts();
 
                 Profiler.EndSample();
-                InvokeAfterUpdateCallback();
+                InvokeAfterUpdateCallback(updateType);
                 if (canFlushBuffer)
                     eventBuffer.Reset();
                 m_CurrentUpdate = default;
@@ -3378,12 +3378,17 @@ namespace UnityEngine.InputSystem
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
-            InvokeAfterUpdateCallback();
+            InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
         }
 
-        private void InvokeAfterUpdateCallback()
+        private void InvokeAfterUpdateCallback(InputUpdateType updateType)
         {
+            // don't invoke the after update callback if this is an editor update. Otherwise, any
+            // handlers for this delegate that query input state will get stale values.
+            if (updateType == InputUpdateType.Editor)
+                return;
+
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
                 "InputSystem.onAfterUpdate");
         }

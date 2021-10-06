@@ -2958,6 +2958,18 @@ partial class CoreTests
         EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_AfterUpdateCallbackIsNotCalledDuringEditorUpdates()
+    {
+        var receivedCalls = 0;
+        InputSystem.onAfterUpdate += () => ++ receivedCalls;
+
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedCalls, Is.Zero);
+    }
+
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
 }
 #endif // UNITY_EDITOR
