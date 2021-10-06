@@ -3411,7 +3411,7 @@ namespace UnityEngine.InputSystem
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             DualShockSupport.Initialize();
             #endif
 
@@ -3434,7 +3434,6 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
-
 
             #if UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();

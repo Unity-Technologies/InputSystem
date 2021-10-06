@@ -329,21 +329,23 @@ namespace UnityEngine.InputSystem.Editor
         private void UpdateDeviceFlags()
         {
             var flags = new List<string>();
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Native) == InputDevice.DeviceFlags.Native)
+            if (m_Device.native)
                 flags.Add("Native");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Remote) == InputDevice.DeviceFlags.Remote)
+            if (m_Device.remote)
                 flags.Add("Remote");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.UpdateBeforeRender) == InputDevice.DeviceFlags.UpdateBeforeRender)
+            if (m_Device.updateBeforeRender)
                 flags.Add("UpdateBeforeRender");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
+            if (m_Device.hasStateCallbacks)
                 flags.Add("HasStateCallbacks");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasEventMerger) == InputDevice.DeviceFlags.HasEventMerger)
+            if (m_Device.hasEventMerger)
                 flags.Add("HasEventMerger");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInFrontend) == InputDevice.DeviceFlags.DisabledInFrontend)
+            if (m_Device.hasEventPreProcessor)
+                flags.Add("HasEventPreProcessor");
+            if (m_Device.disabledInFrontend)
                 flags.Add("DisabledInFrontend");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) == InputDevice.DeviceFlags.DisabledInRuntime)
+            if (m_Device.disabledInRuntime)
                 flags.Add("DisabledInRuntime");
-            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledWhileInBackground) == InputDevice.DeviceFlags.DisabledWhileInBackground)
+            if (m_Device.disabledWhileInBackground)
                 flags.Add("DisabledWhileInBackground");
             m_DeviceFlags = m_Device.m_DeviceFlags;
             m_DeviceFlagsString = string.Join(", ", flags.ToArray());

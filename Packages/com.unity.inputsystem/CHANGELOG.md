@@ -21,6 +21,10 @@ however, it has to be formatted properly to pass verification tests.
 - Any unhandled exception in `InputManager.OnUpdate` failing latter updates with `InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?`. Instead the system will try to handle the exception and recover into a working state.
 - Fixed an issue that broke the VirtualMouseInput component in the editor ([case 1367553](https://fogbugz.unity3d.com/f/cases/1367553/)).
 
+### Added
+
+- Added support for PS5 DualSense controllers on Mac and Windows.
+
 ## [1.1.1] - 2021-09-03
 
 ### Fixed

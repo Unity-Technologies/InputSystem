@@ -1147,6 +1147,10 @@ namespace UnityEngine.InputSystem
             if (device is IEventMerger)
                 device.hasEventMerger = true;
 
+            // If the device has event preprocessor, make a note of it.
+            if (device is IEventPreProcessor)
+                device.hasEventPreProcessor = true;
+
             // If the device wants before-render updates, enable them if they
             // aren't already.
             if (device.updateBeforeRender)
@@ -3031,10 +3035,6 @@ namespace UnityEngine.InputSystem
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
                     var currentEventType = currentEventReadPtr->type;
 
-                    // Decide whether to skip the event.
-                    var skipEvent = false;
-                    var leaveInBuffer = false;
-
                     // In the editor, we discard all input events that occur in-between exiting edit mode and having
                     // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
                     // UI was sort of neither in this mode nor in that mode. This would usually lead to the game receiving
@@ -3051,88 +3051,88 @@ namespace UnityEngine.InputSystem
                         (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                          InputSystem.s_SystemObject.enterPlayModeTime == 0))
                     {
-                        skipEvent = true;
-                        leaveInBuffer = false;
+                        m_InputEventStream.Advance(false);
+                        continue;
                     }
-                    else
 #endif
+
                     // If we're timeslicing, check if the event time is within limits.
                     if (timesliceEvents && currentEventTimeInternal >= currentTime)
                     {
-                        skipEvent = true;
-                        leaveInBuffer = true;
+                        m_InputEventStream.Advance(true);
+                        continue;
                     }
-                    else
+
+                    // If we can't find the device, ignore the event.
+                    if (device == null)
+                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
+                    if (device == null)
                     {
-                        // If we can't find the device, ignore the event.
-                        if (device == null)
-                            device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                        if (device == null)
-                        {
 #if UNITY_EDITOR
-                            ////TODO: see if this is a device we haven't created and if so, just ignore
-                            m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
+                        ////TODO: see if this is a device we haven't created and if so, just ignore
+                        m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
 #endif
 
-                            skipEvent = true;
-                            leaveInBuffer = false;
-                        }
+                        m_InputEventStream.Advance(false);
+                        continue;
+                    }
 
-                        // In the editor, we may need to bump events from editor updates into player updates
-                        // and vice versa.
+                    // In the editor, we may need to bump events from editor updates into player updates
+                    // and vice versa.
 #if UNITY_EDITOR
-                        else if (isPlaying && !gameHasFocus)
+                    if (isPlaying && !gameHasFocus)
+                    {
+                        if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode
+                            .PointersAndKeyboardsRespectGameViewFocus &&
+                            m_Settings.backgroundBehavior !=
+                            InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
                         {
-                            if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode
-                                .PointersAndKeyboardsRespectGameViewFocus &&
-                                m_Settings.backgroundBehavior !=
-                                InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
+                            var isPointerOrKeyboard = device is Pointer || device is Keyboard;
+                            if (updateType != InputUpdateType.Editor)
                             {
-                                var isPointerOrKeyboard = device is Pointer || device is Keyboard;
-                                if (updateType != InputUpdateType.Editor)
+                                // Let everything but pointer and keyboard input through.
+                                // If the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
+                                // in a subsequent editor update. Otherwise, take it out.
+                                if (isPointerOrKeyboard)
                                 {
-                                    // Let everything but pointer and keyboard input through.
-                                    skipEvent = isPointerOrKeyboard;
-
-                                    // If the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
-                                    // in a subsequent editor update. Otherwise, take it out.
-                                    leaveInBuffer = isPointerOrKeyboard;
+                                    m_InputEventStream.Advance(true);
+                                    continue;
                                 }
-                                else
+                            }
+                            else
+                            {
+                                // Let only pointer and keyboard input through.
+                                if (!isPointerOrKeyboard)
                                 {
-                                    // Let only pointer and keyboard input through.
-                                    skipEvent = !isPointerOrKeyboard;
-                                    leaveInBuffer = skipEvent;
+                                    m_InputEventStream.Advance(true);
+                                    continue;
                                 }
                             }
                         }
-#endif
                     }
+                    #endif
 
                     // If device is disabled, we let the event through only in certain cases.
-                    if (!skipEvent && !device.enabled)
+                    // Removal and configuration change events should always be processed.
+                    if (!device.enabled &&
+                        currentEventType != DeviceRemoveEvent.Type &&
+                        currentEventType != DeviceConfigurationEvent.Type &&
+                        (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
+                                                 InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
                     {
-                        // Removal and configuration change events should always be processed.
-                        if (currentEventType != DeviceRemoveEvent.Type &&
-                            currentEventType != DeviceConfigurationEvent.Type &&
-                            (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
-                                                     InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
-                        {
 #if UNITY_EDITOR
-                            // If the device is disabled in the backend, getting events for them
-                            // is something that indicates a problem in the backend so diagnose.
-                            if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
-                                m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
+                        // If the device is disabled in the backend, getting events for them
+                        // is something that indicates a problem in the backend so diagnose.
+                        if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
+                            m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
 #endif
 
-                            skipEvent = true;
-                            leaveInBuffer = false;
-                        }
+                        m_InputEventStream.Advance(false);
+                        continue;
                     }
 
                     // Check if the device wants to merge successive events.
-                    if (!skipEvent && !settings.disableRedundantEventsMerging && device.hasEventMerger &&
-                        currentEventReadPtr != skipEventMergingFor)
+                    if (!settings.disableRedundantEventsMerging && device.hasEventMerger && currentEventReadPtr != skipEventMergingFor)
                     {
                         // NOTE: This relies on events in the buffer being consecutive for the same device. This is not
                         //       necessarily the case for events coming in from the background event queue where parallel
@@ -3145,7 +3145,7 @@ namespace UnityEngine.InputSystem
                             if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                             {
                                 // Event was merged into next event, skipping.
-                                m_InputEventStream.Advance(leaveEventInBuffer: false);
+                                m_InputEventStream.Advance(false);
                                 continue;
                             }
 
@@ -3187,11 +3187,30 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
+                    // Give the device a chance to do something with data before we propagate it to event listeners.
+                    if (device.hasEventPreProcessor)
+                    {
+#if UNITY_EDITOR
+                        var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
+#endif
+                        var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
+#if UNITY_EDITOR
+                        if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
+                            throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+#endif
+                        if (!shouldProcess)
+                        {
+                            // Skip event if PreProcessEvent considers it to be irrelevant.
+                            m_InputEventStream.Advance(false);
+                            continue;
+                        }
+                    }
+
                     // Give listeners a shot at the event.
                     // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
                     //       such as TouchSimulation that disables the originating devices and then uses its events to
                     //       create simulated events from.
-                    if (!skipEvent && m_EventListeners.length > 0)
+                    if (m_EventListeners.length > 0)
                     {
                         DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
                             new InputEventPtr(currentEventReadPtr), device, "InputSystem.onEvent");
@@ -3199,15 +3218,9 @@ namespace UnityEngine.InputSystem
                         // If a listener marks the event as handled, we don't process it further.
                         if (currentEventReadPtr->handled)
                         {
-                            skipEvent = true;
-                            leaveInBuffer = false;
+                            m_InputEventStream.Advance(false);
+                            continue;
                         }
-                    }
-
-                    if (skipEvent)
-                    {
-                        m_InputEventStream.Advance(leaveEventInBuffer: leaveInBuffer);
-                        continue;
                     }
 
                     // Update metrics.
@@ -3348,7 +3361,7 @@ namespace UnityEngine.InputSystem
                             break;
                     }
 
-                    m_InputEventStream.Advance(leaveEventInBuffer: leaveInBuffer);
+                    m_InputEventStream.Advance(leaveEventInBuffer: false);
                 }
 
                 m_Metrics.totalEventProcessingTime +=
