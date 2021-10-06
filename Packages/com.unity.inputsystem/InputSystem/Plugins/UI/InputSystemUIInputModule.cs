@@ -2021,6 +2021,11 @@ namespace UnityEngine.InputSystem.UI
 #if UNITY_2021_1_OR_NEWER
         public override int ConvertUIToolkitPointerId(PointerEventData sourcePointerData)
         {
+            // Case 1369081: when using SingleUnifiedPointer, the same (default) pointerId should be sent to UIToolkit
+            // regardless of pointer type or finger id.
+            if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                return UIElements.PointerId.mousePointerId;
+
             return sourcePointerData is ExtendedPointerEventData ep
                 ? ep.uiToolkitPointerId
                 : base.ConvertUIToolkitPointerId(sourcePointerData);
