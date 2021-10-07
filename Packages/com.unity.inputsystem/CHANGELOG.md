@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed a performance issue on entering/exiting playmode where HID device capabilities JSON could be parsed multiple times for a single device([case 1362733](https://issuetracker.unity3d.com/issues/input-package-deserializing-json-multiple-times-when-entering-slash-exiting-playmode)).
 - Fixed a problem where explicitly switching to the already active control scheme and device set for PlayerInput would cancel event callbacks for no reason when the control scheme switch would have no practical effect. This fix detects and skips device unpairing and re-pairing if the switch is detected to not be a change to scheme or devices. ([case 1342297](https://fogbugz.unity3d.com/f/cases/1342297/))
 - Any unhandled exception in `InputManager.OnUpdate` failing latter updates with `InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?`. Instead the system will try to handle the exception and recover into a working state.
+- Fixed a problem with UI Toolkit buttons remaining active when multiple fingers are used on a touchscreen, using InputSystemUIInputModule with pointerBehavior set to UIPointerBehavior.SingleUnifiedPointer. UI Toolkit will now always receive the same pointerId when that option is in use, regardless of the hardware component that produced the pointer event. ([case 1369081](https://fogbugz.unity3d.com/f/cases/1369081))
 
 ### Added
 
