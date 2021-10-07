@@ -2622,7 +2622,7 @@ namespace UnityEngine.InputSystem
             if (m_Settings.m_FeatureFlags != null)
             {
                 #if UNITY_EDITOR
-                runPlayerUpdatesInEditMode = m_Settings.m_FeatureFlags.Contains(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode);
+                runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
             }
 

@@ -16,9 +16,23 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     internal static class UnityRemoteSupport
     {
+        public static bool isConnected => s_State.connected;
+
         public static void Initialize()
         {
             InputRuntime.s_Instance.onUnityRemoteMessage = ProcessMessageFromUnityRemote;
+
+            InputSystem.onSettingsChange += () =>
+            {
+                if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport))
+                {
+                    InputRuntime.s_Instance.onUnityRemoteMessage = null;
+                    if (s_State.connected)
+                        Disconnect();
+                }
+                else
+                    InputRuntime.s_Instance.onUnityRemoteMessage = ProcessMessageFromUnityRemote;
+            };
         }
 
         private static unsafe bool ProcessMessageFromUnityRemote(IntPtr messageData)
@@ -51,17 +65,7 @@ namespace UnityEngine.InputSystem
                 case (byte)MessageType.Goodbye:
                     if (!s_State.connected)
                         break;
-                    InputSystem.RemoveDevice(s_State.touchscreen);
-                    InputSystem.RemoveDevice(s_State.accelerometer);
-                    if (s_State.gyroscope != null)
-                        InputSystem.RemoveDevice(s_State.gyroscope);
-                    if (s_State.attitude != null)
-                        InputSystem.RemoveDevice(s_State.attitude);
-                    if (s_State.gravity != null)
-                        InputSystem.RemoveDevice(s_State.gravity);
-                    if (s_State.linearAcceleration != null)
-                        InputSystem.RemoveDevice(s_State.linearAcceleration);
-                    ResetGlobalState();
+                    Disconnect();
                     Debug.Log("Unity Remote disconnected from input!");
                     break;
 
@@ -178,6 +182,22 @@ namespace UnityEngine.InputSystem
             }
 
             return false;
+        }
+
+        private static void Disconnect()
+        {
+            InputSystem.RemoveDevice(s_State.touchscreen);
+            InputSystem.RemoveDevice(s_State.accelerometer);
+            if (s_State.gyroscope != null)
+                InputSystem.RemoveDevice(s_State.gyroscope);
+            if (s_State.attitude != null)
+                InputSystem.RemoveDevice(s_State.attitude);
+            if (s_State.gravity != null)
+                InputSystem.RemoveDevice(s_State.gravity);
+            if (s_State.linearAcceleration != null)
+                InputSystem.RemoveDevice(s_State.linearAcceleration);
+
+            ResetGlobalState();
         }
 
         private static void OnDeviceChange(InputDevice device, InputDeviceChange change)

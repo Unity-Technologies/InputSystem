@@ -16,6 +16,25 @@ internal class UnityRemoteTests : CoreTestsFixture
         base.TearDown();
     }
 
+    // We have a kill-switch as a safety fallback just in case this feature somehow
+    // ends up causing problems.
+    [Test]
+    [Category("Remote")]
+    public void Remote_CanDisableUnityRemoteSupport()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
+
+        SendUnityRemoteMessage(UnityRemoteSupport.HelloMessage.Create());
+
+        Assert.That(UnityRemoteSupport.isConnected, Is.False);
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, false);
+
+        SendUnityRemoteMessage(UnityRemoteSupport.HelloMessage.Create());
+
+        Assert.That(UnityRemoteSupport.isConnected, Is.True);
+    }
+
     [Test]
     [Category("Remote")]
     public void Remote_CanReceiveTouchInputFromUnityRemote()
@@ -256,6 +275,9 @@ internal class UnityRemoteTests : CoreTestsFixture
     private unsafe void SendUnityRemoteMessage<TMessage>(TMessage message)
         where TMessage : unmanaged, UnityRemoteSupport.IUnityRemoteMessage
     {
+        if (runtime.onUnityRemoteMessage == null)
+            return;
+
         var ptr = UnsafeUtility.AddressOf(ref message);
         *(byte*)ptr = message.staticType;
         *(int*)((byte*)ptr + 1) = UnsafeUtility.SizeOf<TMessage>();
