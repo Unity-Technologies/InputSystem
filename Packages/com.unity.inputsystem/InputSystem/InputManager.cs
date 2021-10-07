@@ -3397,9 +3397,10 @@ namespace UnityEngine.InputSystem
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)
         {
-            // don't invoke the after update callback if this is an editor update. Otherwise, any
-            // handlers for this delegate that query input state will get stale values.
-            if (updateType == InputUpdateType.Editor)
+            // don't invoke the after update callback if this is an editor update and the game is playing. We
+            // skip event processing when playing in the editor and the game has focus, which means that any
+            // handlers for this delegate that query input state during this update will get no values.
+            if (updateType == InputUpdateType.Editor && gameIsPlaying)
                 return;
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
