@@ -14,21 +14,36 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public class LinkFileGenerator : IUnityLinkerProcessor
+    /// <summary>
+    /// Input system uses runtime reflection to instantiate and discover some capabilities like layouts, processors, interactions, etc.
+    /// Managed linker on high stripping modes is very keen on removing parts of classes or whole classes.
+    /// One way to preserve the classes is to put [Preserve] on class itself and every field/property we're interested in,
+    /// this was proven to be error prone as it's easy to forget an attribute and tedious as everything needs an attribute now.
+    /// 
+    /// Instead this LinkFileGenerator inspects all types in the domain, and if they could be used via reflection,
+    /// we preserve them in all entirety.
+    ///
+    /// In a long run we would like to remove usage of reflection all together, and then this mechanism will be gone too.
+    ///
+    /// Beware, this uses "AppDomain.CurrentDomain.GetAssemblies" which returns editor assemblies,
+    /// but not all classes are available on all platforms, most of platform specific code is wrapped into defines like
+    /// "#if UNITY_EDITOR || UNITY_IOS || PACKAGE_DOCS_GENERATION", and when compiling for Android,
+    /// that particular class wouldn't be available in the final executable, though our link.xml here would still specify it,
+    /// potentially creating linker warnings that we need to later ignore.
+    /// </summary>
+    internal class LinkFileGenerator : IUnityLinkerProcessor
     {
         public int callbackOrder => 0;
 
         public string GenerateAdditionalLinkXmlFile(BuildReport report, UnityLinkerBuildPipelineData data)
         {
-            //AppDomain.CurrentDomain.GetAssemblies()
-            //var assemblies = CompilationPipeline.GetAssemblies(AssembliesType.Player);
             var typesByAssemblies = new Dictionary<System.Reflection.Assembly, Type[]>();
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
             {
                 try
                 {
-                    //var assembly = System.Reflection.Assembly.ReflectionOnlyLoadFrom(unityAssembly.outputPath);
-                    var types = assembly.GetTypes().Where(x => ShouldPreserveType(x)).ToArray();
+                    var types = assembly.GetTypes().Where(ShouldPreserveType).ToArray();
                     if (types.Length > 0)
                        typesByAssemblies.Add(assembly, types);
                 }
@@ -70,13 +85,13 @@ namespace UnityEngine.InputSystem.Editor
                    type.GetCustomAttributes<InputControlAttribute>().Any();
         }
 
-        static bool IsFieldInfoControlLayoutRelated(FieldInfo field)
+        static bool IsFieldRelatedToControlLayouts(FieldInfo field)
         {
             return IsTypeUsedViaReflectionByInputSystem(field.GetType()) ||
                    field.GetCustomAttributes<InputControlAttribute>().Any();
         }
 
-        static bool IsPropertyInfoControlLayoutRelated(PropertyInfo property)
+        static bool IsPropertyRelatedToControlLayouts(PropertyInfo property)
         {
             return IsTypeUsedViaReflectionByInputSystem(property.GetType()) ||
                    property.GetCustomAttributes<InputControlAttribute>().Any();
@@ -88,11 +103,11 @@ namespace UnityEngine.InputSystem.Editor
                 return true;
 
             foreach (var field in type.GetFields())
-                if (IsFieldInfoControlLayoutRelated(field))
+                if (IsFieldRelatedToControlLayouts(field))
                     return true;
 
             foreach (var property in type.GetProperties())
-                if (IsPropertyInfoControlLayoutRelated(property))
+                if (IsPropertyRelatedToControlLayouts(property))
                     return true;
 
             return false;
