@@ -5,8 +5,6 @@ using UnityEngine.UI;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
-////TODO: add some UI buttons that can be clicked
-
 public class UnityRemoteTestScript : MonoBehaviour
 {
     public Camera camera;
