@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
     /// Managed linker on high stripping modes is very keen on removing parts of classes or whole classes.
     /// One way to preserve the classes is to put [Preserve] on class itself and every field/property we're interested in,
     /// this was proven to be error prone as it's easy to forget an attribute and tedious as everything needs an attribute now.
-    /// 
+    ///
     /// Instead this LinkFileGenerator inspects all types in the domain, and if they could be used via reflection,
     /// we preserve them in all entirety.
     ///
@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem.Editor
         public string GenerateAdditionalLinkXmlFile(BuildReport report, UnityLinkerBuildPipelineData data)
         {
             var currentAssemblyName = typeof(LinkFileGenerator).Assembly.GetName().Name;
-            
+
             var typesByAssemblies = new Dictionary<System.Reflection.Assembly, Type[]>();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
@@ -48,10 +48,10 @@ namespace UnityEngine.InputSystem.Editor
                     if (assembly.GetName().Name != currentAssemblyName && !assembly.GetReferencedAssemblies()
                         .Where(x => x.Name == currentAssemblyName).Any())
                         continue;
-                    
+
                     var types = assembly.GetTypes().Where(ShouldPreserveType).ToArray();
                     if (types.Length > 0)
-                       typesByAssemblies.Add(assembly, types);
+                        typesByAssemblies.Add(assembly, types);
                 }
                 catch (ReflectionTypeLoadException)
                 {
@@ -80,27 +80,27 @@ namespace UnityEngine.InputSystem.Editor
             File.WriteAllText(filePathName, sb.ToString());
             return filePathName;
         }
-        
+
         static bool IsTypeUsedViaReflectionByInputSystem(Type type)
         {
             return type.IsSubclassOf(typeof(InputControl)) ||
-                   typeof(IInputStateTypeInfo).IsAssignableFrom(type) ||
-                   typeof(IInputInteraction).IsAssignableFrom(type) ||
-                   typeof(InputProcessor).IsAssignableFrom(type) ||
-                   typeof(InputBindingComposite).IsAssignableFrom(type) ||
-                   type.GetCustomAttributes<InputControlAttribute>().Any();
+                typeof(IInputStateTypeInfo).IsAssignableFrom(type) ||
+                typeof(IInputInteraction).IsAssignableFrom(type) ||
+                typeof(InputProcessor).IsAssignableFrom(type) ||
+                typeof(InputBindingComposite).IsAssignableFrom(type) ||
+                type.GetCustomAttributes<InputControlAttribute>().Any();
         }
 
         static bool IsFieldRelatedToControlLayouts(FieldInfo field)
         {
             return IsTypeUsedViaReflectionByInputSystem(field.GetType()) ||
-                   field.GetCustomAttributes<InputControlAttribute>().Any();
+                field.GetCustomAttributes<InputControlAttribute>().Any();
         }
 
         static bool IsPropertyRelatedToControlLayouts(PropertyInfo property)
         {
             return IsTypeUsedViaReflectionByInputSystem(property.GetType()) ||
-                   property.GetCustomAttributes<InputControlAttribute>().Any();
+                property.GetCustomAttributes<InputControlAttribute>().Any();
         }
 
         static bool ShouldPreserveType(Type type)
