@@ -68,7 +68,6 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     /// </remarks>
     /// <seealso cref="InputSettings.iOSSettings.motionUsage"/>
     [InputControlLayout(stateType = typeof(iOSStepCounterState), variants = "StepCounter", hideInUI = true)]
-    [Preserve]
     public class iOSStepCounter : StepCounter
     {
         private const int kCommandFailure = -1;

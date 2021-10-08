@@ -19,7 +19,6 @@ namespace UnityEngine.InputSystem.Controls
     /// Normalization is not implied. The X and Y coordinates can be in any range or units.
     /// </example>
     /// </remarks>
-    [Scripting.Preserve]
     public class Vector2Control : InputControl<Vector2>
     {
         /// <summary>

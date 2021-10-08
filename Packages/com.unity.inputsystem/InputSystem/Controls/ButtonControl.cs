@@ -14,7 +14,6 @@ namespace UnityEngine.InputSystem.Controls
     /// yield full floating-point values and may thus have a range of values. See
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
     /// </remarks>
-    [Preserve]
     public class ButtonControl : AxisControl
     {
         ////REVIEW: are per-control press points really necessary? can we just drop them?

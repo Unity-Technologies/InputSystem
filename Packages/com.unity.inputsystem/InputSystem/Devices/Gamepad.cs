@@ -363,7 +363,6 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         /// <summary>

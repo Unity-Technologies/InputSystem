@@ -327,7 +327,6 @@ internal class XRTests : CoreTestsFixture
     }
 
     [InputControlLayout(updateBeforeRender = true)]
-    [Preserve]
     private class TestHMD : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]

@@ -528,7 +528,6 @@ partial class CoreTests
         }
     }
 
-    [Preserve]
     private class MyDevice : InputDevice
     {
         public ButtonControl myControl { get; private set; }

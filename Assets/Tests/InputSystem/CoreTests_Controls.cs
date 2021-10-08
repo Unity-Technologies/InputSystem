@@ -1144,7 +1144,6 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
     }
 
-    [Preserve]
     private class DeviceWithoutAnyControls : InputDevice
     {
     }

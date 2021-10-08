@@ -92,7 +92,6 @@ internal partial class CoreTests
         Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
     }
 
-    [Preserve]
     class InteractionThatOnlyPerforms : IInputInteraction<float>
     {
         // Get rid of unused field warning.
@@ -743,7 +742,6 @@ internal partial class CoreTests
         }
     }
 
-    [Preserve]
     private class CancelingTestInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)

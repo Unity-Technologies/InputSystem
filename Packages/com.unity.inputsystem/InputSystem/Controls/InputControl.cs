@@ -106,7 +106,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputControlPath"/>
     /// <seealso cref="InputStateBlock"/>
     [DebuggerDisplay("{DebuggerDisplay(),nq}")]
-    [Scripting.Preserve]
     public abstract class InputControl
     {
         /// <summary>
@@ -979,7 +978,6 @@ namespace UnityEngine.InputSystem
     /// <typeparam name="TValue">Type of value captured by the control. Note that this does not mean
     /// that the control has to store data in the given value format. A control that captures float
     /// values, for example, may be stored in state as byte values instead.</typeparam>
-    [Scripting.Preserve]
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {

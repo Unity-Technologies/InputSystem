@@ -49,7 +49,6 @@ namespace UnityEngine.InputSystem.XInput
     /// "XInputController".
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller")]
-    [Scripting.Preserve]
     public class XInputController : Gamepad
     {
         /// <summary>
@@ -68,7 +67,6 @@ namespace UnityEngine.InputSystem.XInput
         // This follows Xbox One conventions; on Xbox 360, this is start=start and select=back.
         [InputControl(name = "start", displayName = "Menu", alias = "menu")]
         [InputControl(name = "select", displayName = "View", alias = "view")]
-        [Preserve]
         public ButtonControl menu { get; private set; }
 
         /// <summary>

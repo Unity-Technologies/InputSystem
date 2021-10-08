@@ -12,7 +12,6 @@ namespace UnityEngine.InputSystem.DualShock
     /// A Sony DualShock/DualSense controller.
     /// </summary>
     [InputControlLayout(displayName = "PlayStation Controller")]
-    [Preserve]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
         /// <summary>
@@ -24,7 +23,6 @@ namespace UnityEngine.InputSystem.DualShock
         [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "Circle")]
         [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "Cross")]
         [InputControl]
-        [Preserve]
         public ButtonControl touchpadButton { get; protected set; }
 
         /// <summary>

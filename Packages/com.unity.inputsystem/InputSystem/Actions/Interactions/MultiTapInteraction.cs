@@ -25,7 +25,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// <see cref="InputActionPhase.Performed"/>) or the multi-tap is aborted by a timeout being hit (in which
     /// case the interaction will trigger <see cref="InputActionPhase.Canceled"/>).
     /// </remarks>
-    [Preserve]
     public class MultiTapInteraction : IInputInteraction<float>
     {
         /// <summary>

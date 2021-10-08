@@ -15,7 +15,6 @@ namespace UnityEngine.InputSystem.Processors
     /// than just clamping individual axes). Normalizes to the min/max range.
     /// </summary>
     /// <seealso cref="AxisDeadzoneProcessor"/>
-    [Preserve]
     public class StickDeadzoneProcessor : InputProcessor<Vector2>
     {
         /// <summary>
