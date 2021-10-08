@@ -2972,7 +2972,7 @@ namespace UnityEngine.InputSystem
                     ProcessStateChangeMonitorTimeouts();
 
                 Profiler.EndSample();
-                InvokeAfterUpdateCallback();
+                InvokeAfterUpdateCallback(updateType);
                 if (canFlushBuffer)
                     eventBuffer.Reset();
                 m_CurrentUpdate = default;
@@ -3391,12 +3391,18 @@ namespace UnityEngine.InputSystem
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
-            InvokeAfterUpdateCallback();
+            InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
         }
 
-        private void InvokeAfterUpdateCallback()
+        private void InvokeAfterUpdateCallback(InputUpdateType updateType)
         {
+            // don't invoke the after update callback if this is an editor update and the game is playing. We
+            // skip event processing when playing in the editor and the game has focus, which means that any
+            // handlers for this delegate that query input state during this update will get no values.
+            if (updateType == InputUpdateType.Editor && gameIsPlaying)
+                return;
+
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
                 "InputSystem.onAfterUpdate");
         }
