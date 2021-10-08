@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue that broke the VirtualMouseInput component in the editor ([case 1367553](https://issuetracker.unity3d.com/issues/vitrualmouseinput-stickaction-doesnt-work)).
 - Fixed a problem where only using runtimes that are not XR supported causes a compile error.This fix adds back in ENABLE_VR checks to prevent this case (case 1368300)
 - Fixed input action for Android gamepad's right stick will be correctly invoked when only y axis is changing ([case 1308637](https://issuetracker.unity3d.com/issues/android-input-system-right-analog-stick-tracking-is-erratic-when-using-a-gamepad-connected-to-an-android-device)).
+- Fixed "Default constructor not found for type UnityEngine.InputSystem.iOS.LowLevel.iOSStepCounter" any other potential exceptions due to classes, methods, fields and properties being stripped when managed stripping setting set to medium or high ([case 1368761](https://issuetracker.unity3d.com/product/unity/issues/guid/1368761/ TODO fix me)).
 
 ### Added
 
