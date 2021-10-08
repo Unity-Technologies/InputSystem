@@ -150,7 +150,7 @@ public class UnityRemoteTestScript : MonoBehaviour
                 accelerationText = $"Acceleration: x={accelerationValue.x} y={accelerationValue.y} z={accelerationValue.z}";
             }
 
-            text = string.Join('\n', gyroText, attitudeText, gravityText, accelerationText);
+            text = string.Join("\n", gyroText, attitudeText, gravityText, accelerationText);
         }
 
         gyroInputText.text = text;
