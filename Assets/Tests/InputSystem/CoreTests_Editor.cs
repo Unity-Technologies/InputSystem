@@ -2960,6 +2960,18 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_AfterUpdateCallbackIsNotCalledDuringEditorUpdates()
+    {
+        var receivedCalls = 0;
+        InputSystem.onAfterUpdate += () => ++ receivedCalls;
+
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedCalls, Is.Zero);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_InputControlPicker_TouchscreenPickerContainsSingleAndMultiTouchControls()
     {
         var dropdown = new StubInputControlPickerDropdown(new InputControlPickerState(), _ => {});
