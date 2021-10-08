@@ -1,4 +1,4 @@
-#if UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+#if UNITY_XR_AVAILABLE && ENABLE_VR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;

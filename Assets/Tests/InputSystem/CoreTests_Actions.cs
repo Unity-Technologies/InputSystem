@@ -8330,20 +8330,20 @@ partial class CoreTests
         map.actionTriggered += ctx => { throw new InvalidOperationException("TEST EXCEPTION FROM MAP"); };
         action.Enable();
 
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
         LogAssert.Expect(LogType.Error,
             new Regex(
                 ".*InvalidOperationException while executing 'started' callbacks of 'testMap'"));
-        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM ACTION.*"));
         LogAssert.Expect(LogType.Error,
             new Regex(
                 ".*InvalidOperationException while executing 'performed' callbacks of 'testMap/testAction.*'"));
-        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM ACTION.*"));
 
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
         LogAssert.Expect(LogType.Error,
             new Regex(
                 ".*InvalidOperationException while executing 'performed' callbacks of 'testMap'"));
-        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();

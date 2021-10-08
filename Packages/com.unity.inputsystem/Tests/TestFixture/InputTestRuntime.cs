@@ -75,7 +75,21 @@ namespace UnityEngine.InputSystem
                         (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
                         m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
 
-                    onUpdate(type, ref buffer);
+                    try
+                    {
+                        onUpdate(type, ref buffer);
+                    }
+                    catch (Exception e)
+                    {
+                        // Same order as in NativeInputRuntime
+                        Debug.LogException(e);
+                        Debug.LogError($"{e.GetType().Name} during event processing of {type} update; resetting event buffer");
+
+                        // Rethrow exception for test runtime to enable us to assert against it in tests.
+                        m_EventCount = 0;
+                        m_EventWritePosition = 0;
+                        throw;
+                    }
 
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;

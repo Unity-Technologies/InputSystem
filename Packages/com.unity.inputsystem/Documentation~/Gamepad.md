@@ -114,10 +114,10 @@ PlayStation controllers are well supported on different Devices. The Input Syste
 * [`DualShock3GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock3GamepadHID.html): A DualShock 3 controller connected to a desktop computer using the HID interface. Currently only supported on macOS. Doesn't support [rumble](#rumble).
 
 * [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface. Supported on macOS, Windows, UWP, and Linux.
+*
+* [`DualSenseGamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualSenseGamepadHID.html): A DualSense controller connected to a desktop computer using the HID interface. Supported on macOS, Windows.
 
 * [`DualShock4GampadiOS`](../api/UnityEngine.InputSystem.iOS.DualShock4GampadiOS.html): A DualShock 4 controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
-
-[`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class.
 
 * [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_UnityEngine_Color_): Used to set the color of the light bar on the controller.
 

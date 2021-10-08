@@ -64,8 +64,9 @@ namespace UnityEngine.InputSystem.LowLevel
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
+                            // Always report the original exception first to confuse users less about what it the actual failure.
                             Debug.LogException(e);
+                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
                             buffer.Reset();
                         }
 
