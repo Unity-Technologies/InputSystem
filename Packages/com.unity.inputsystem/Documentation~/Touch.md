@@ -4,7 +4,6 @@
 * [Using Touch with Actions](#using-touch-with-actionsactionsmd)
 * [`Touch` class](#enhancedtouchtouch-class)
 * [Touch Simulation](#touch-simulation)
-* [Unity Remote](#unity-remote)
 
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
@@ -13,6 +12,8 @@ Touch support is divided into:
 >__Note__: You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
+
+>__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
 
 ## `Touchscreen` Device
 
@@ -97,7 +98,3 @@ Touch input can be simulated from input on other kinds of [Pointer](./Pointers.m
 In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./Debugging.md).
 
 [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) will add a [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) device and automatically mirror input on any [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html) device to the virtual touchscreen device.
-
-## Unity Remote
-
-The Input System supports the [Unity Remote](https://docs.unity3d.com/Manual/UnityRemote5.html) app that is available for Android and iOS. When connected to the Unity Remote, touch and stylus input, gyroscope and accelerometer, as well as joystick/gamepad input on the mobile device are mirrored to [`InputDevice`](Devices.md)s in the editor.
