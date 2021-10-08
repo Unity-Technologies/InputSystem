@@ -37,12 +37,18 @@ namespace UnityEngine.InputSystem.Editor
 
         public string GenerateAdditionalLinkXmlFile(BuildReport report, UnityLinkerBuildPipelineData data)
         {
+            var currentAssemblyName = typeof(LinkFileGenerator).Assembly.GetName().Name;
+            
             var typesByAssemblies = new Dictionary<System.Reflection.Assembly, Type[]>();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
                 try
                 {
+                    if (assembly.GetName().Name != currentAssemblyName && !assembly.GetReferencedAssemblies()
+                        .Where(x => x.Name == currentAssemblyName).Any())
+                        continue;
+                    
                     var types = assembly.GetTypes().Where(ShouldPreserveType).ToArray();
                     if (types.Length > 0)
                        typesByAssemblies.Add(assembly, types);
