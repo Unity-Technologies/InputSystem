@@ -87,13 +87,38 @@ namespace UnityEngine.InputSystem.Editor
                     root.AddChild(usages);
                     root.AddSeparator();
                 }
-            }
 
+                BuildOpenXRBranch(root);
+            }
+            
             // Devices.
             AddItemsForDevices(root);
-
             return root;
         }
+
+        private void BuildOpenXRBranch(AdvancedDropdownItem advancedDropdownItem)
+        {
+	        var openXRNode = new AdvancedDropdownItem("OpenXR");
+            var interactionProfileNode = new AdvancedDropdownItem("Oculus touch");
+            var leftHandDevice = new OpenXRDropdownItem("Left hand", true);
+            leftHandDevice.AddChild(new ControlDropdownItem(null, "trigger", "Trigger", "", "", true));
+            leftHandDevice.AddChild(new ControlDropdownItem(null, "thumbstick", "Thumbstick", "", "", true));
+            
+            interactionProfileNode.AddChild(leftHandDevice);
+            openXRNode.AddChild(interactionProfileNode);
+	        advancedDropdownItem.AddChild(openXRNode);
+        }
+
+        internal class OpenXRDropdownItem : InputControlDropdownItem
+        {
+	        public OpenXRDropdownItem(string name, bool searchable) : base(name)
+	        {
+		        m_Device = name;
+		        id = name.GetHashCode();
+		        m_Searchable = searchable;
+	        }
+        }
+
 
         protected override AdvancedDropdownItem BuildCustomSearch(string searchString,
             IEnumerable<AdvancedDropdownItem> elements)

@@ -417,6 +417,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public InputActionAsset globalInputActions => m_GlobalInputActions;
+
         /// <summary>
         /// When <c>Application.runInBackground</c> is true, this property determines what happens when application focus changes
         /// (see <a href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html">Application.isFocused</a>) changes and how we handle
@@ -666,6 +668,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+
+        [SerializeField] private InputActionAsset m_GlobalInputActions;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 

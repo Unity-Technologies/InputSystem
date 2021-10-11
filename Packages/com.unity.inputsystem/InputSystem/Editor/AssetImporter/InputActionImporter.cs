@@ -216,6 +216,9 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
+			if(asset == InputSystem.settings.globalInputActions)
+                InputSystem.settings.OnChange();
+
             // Refresh editors.
             InputActionEditorWindow.RefreshAllOnAssetReimport();
         }

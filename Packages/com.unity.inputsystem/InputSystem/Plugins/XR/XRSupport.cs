@@ -1,9 +1,13 @@
 #if UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using com.unity.InputSystem.Editor.OpenXR;
 using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XR
@@ -303,7 +307,9 @@ namespace UnityEngine.InputSystem.XR
 #endif
     static class XRSupport
     {
-        /// <summary>
+	    private const string OpenXRPathConstant = "OpenXR:";
+
+	    /// <summary>
         /// Registers all initial templates and the generalized layout builder with the InputSystem.
         /// </summary>
         public static void Initialize()
@@ -420,6 +426,89 @@ namespace UnityEngine.InputSystem.XR
 #endif
 #endif
 #endif
+
+            #if UNITY_EDITOR
+	        InputSystem.onSettingsChange += () =>
+	        {
+		        var inputActions = InputSystem.settings.globalInputActions;
+
+		        if (inputActions == null)
+			        return;
+
+		        var openXRSets = new List<OpenXRSet>();
+
+		        for (var i = 0; i < inputActions.actionMaps.Count; i++)
+		        {
+			        var mapContainsOpenXRBindings = false;
+			        var actionMap = inputActions.actionMaps[i];
+			        var set = new OpenXRSet(actionMap.name, inputActions.actionMaps.Count - i);
+
+			        foreach (var action in actionMap.actions)
+			        {
+				        var bindings = action.bindings;
+				        var actionContainsOpenXRBindings = false;
+				        var openXrAction = new OpenXRAction(action.name, GetOpenXRActionType(action));
+
+				        foreach (var inputBinding in bindings)
+				        {
+					        var isOpenXRPath = inputBinding.path.StartsWith(OpenXRPathConstant);
+					        if (!isOpenXRPath)
+						        continue;
+
+					        actionContainsOpenXRBindings = true;
+
+					        var pathComponents = inputBinding.path.Substring(OpenXRPathConstant.Length).Split('/');
+					        var interactionPath = $"/interaction_profiles/{pathComponents[0]}/{pathComponents[1]}";
+					        var actionSpace = "/" + string.Join("/", pathComponents.Skip(2));
+
+	                        openXrAction.bindings.Add(new OpenXRBinding(interactionPath, actionSpace));
+				        }
+
+				        if (actionContainsOpenXRBindings)
+				        {
+					        mapContainsOpenXRBindings = true;
+					        set.actions.Add(openXrAction);
+				        }
+			        }
+
+			        if(mapContainsOpenXRBindings)
+						openXRSets.Add(set);
+		        }
+
+		        File.WriteAllText("Library/openxrconfig.json", JsonUtility.ToJson(openXRSets));
+	        };
+            #endif
+        }
+
+        public static OpenXRActionType GetOpenXRActionType(InputAction action)
+        {
+	        if (action == null)
+		        throw new ArgumentNullException("action");
+
+	        // Make sure we have an expected control layout.
+	        var expectedControlLayout = action.expectedControlType;
+	        if (string.IsNullOrEmpty(expectedControlLayout))
+		        throw new ArgumentException($"Cannot determine input type for action '{action}' that has no associated expected control layout",
+			        nameof(action));
+
+	        // Try to fetch the layout.
+	        var layout = EditorInputControlLayoutCache.TryGetLayout(expectedControlLayout);
+	        if (layout == null)
+		        throw new ArgumentException($"Cannot determine input type for action '{action}'; cannot find layout '{expectedControlLayout}'", nameof(action));
+
+	        // Map our supported control types.
+	        var controlType = layout.type;
+	        if (typeof(ButtonControl).IsAssignableFrom(controlType))
+		        return OpenXRActionType.Bool;
+	        if (typeof(InputControl<float>).IsAssignableFrom(controlType))
+		        return OpenXRActionType.Float;
+	        if (typeof(Vector2Control).IsAssignableFrom(controlType))
+		        return OpenXRActionType.Vector2;
+	        if (typeof(PoseControl).IsAssignableFrom(controlType))
+				return OpenXRActionType.Pose;
+
+	        // Everything else throws.
+	        throw new ArgumentException($"Cannot determine input type for action '{action}'; layout '{expectedControlLayout}' with control type '{ controlType.Name}' has no known representation in the OpenXR API", nameof(action));
         }
     }
 }
