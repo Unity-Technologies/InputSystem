@@ -5,7 +5,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.iOS.LowLevel
 {

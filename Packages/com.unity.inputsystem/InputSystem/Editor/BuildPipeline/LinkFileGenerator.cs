@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public string GenerateAdditionalLinkXmlFile(BuildReport report, UnityLinkerBuildPipelineData data)
         {
-            var currentAssemblyName = typeof(LinkFileGenerator).Assembly.GetName().Name;
+            var currentAssemblyName = typeof(UnityEngine.InputSystem.InputSystem).Assembly.GetName().Name;
 
             var typesByAssemblies = new Dictionary<System.Reflection.Assembly, Type[]>();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -45,8 +45,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 try
                 {
-                    if (assembly.GetName().Name != currentAssemblyName && !assembly.GetReferencedAssemblies()
-                        .Where(x => x.Name == currentAssemblyName).Any())
+                    // Skip any assembly that doesn't reference the input system assembly.
+                    if (assembly.GetName().Name != currentAssemblyName && !assembly
+                        .GetReferencedAssemblies().Any(x => x.Name == currentAssemblyName))
                         continue;
 
                     var types = assembly.GetTypes().Where(ShouldPreserveType).ToArray();
@@ -76,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
 
             sb.AppendLine("</linker>");
 
-            var filePathName = Path.Combine(data.inputDirectory, "InputSystemStripping.xml");
+            var filePathName = Path.Combine(data.inputDirectory, "InputSystemLink.xml");
             File.WriteAllText(filePathName, sb.ToString());
             return filePathName;
         }
