@@ -8800,6 +8800,41 @@ partial class CoreTests
         }
     }
 
+    // Corresponds to bug report ticket 1370732.
+    [Test]
+    [Category("Actions")]
+    public void Actions_ResetShouldPreserveEnabledState__IfResetWhileInDisabledState()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
+        var action = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/leftStick");
+        action.Enable();
+        Assert.That(action.enabled, Is.True);
+
+        action.Disable();
+        Assert.That(action.enabled, Is.False);
+
+        action.Reset();
+        Assert.That(action.enabled, Is.False);
+
+        action.Enable();
+        Assert.That(action.enabled, Is.True);
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftStick, new Vector2(0.2f, 0.3f));
+
+            Assert.That(action.inProgress, Is.True);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.2f, 0.3f)));
+            Assert.That(trace,
+                Started(action, value: new Vector2(0.2f, 0.3f))
+                    .AndThen(Performed(action, value: new Vector2(0.2f, 0.3f))));
+        }
+    }
+
     private class MonoBehaviourWithActionProperty : MonoBehaviour
     {
         public InputActionProperty actionProperty;
