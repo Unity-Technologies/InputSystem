@@ -2958,6 +2958,50 @@ partial class CoreTests
         EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_AfterUpdateCallbackIsNotCalledDuringEditorUpdates()
+    {
+        var receivedCalls = 0;
+        InputSystem.onAfterUpdate += () => ++ receivedCalls;
+
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedCalls, Is.Zero);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputControlPicker_TouchscreenPickerContainsSingleAndMultiTouchControls()
+    {
+        var dropdown = new StubInputControlPickerDropdown(new InputControlPickerState(), _ => {});
+        var root = dropdown.BuildRoot();
+
+        Assert.That(() =>
+        {
+            var touchscreen = root.children.FirstOrDefault(c => c.name == "Touchscreen");
+            if (touchscreen == null)
+                return false;
+
+            return touchscreen.children.Any(c => c.name == "Press (Single touch)") &&
+            touchscreen.children.Any(c => c.name == "Press (Multi-touch)");
+        });
+    }
+
+    internal class StubInputControlPickerDropdown : InputControlPickerDropdown
+    {
+        public StubInputControlPickerDropdown(InputControlPickerState state, Action<string> onPickCallback,
+                                              InputControlPicker.Mode mode = InputControlPicker.Mode.PickControl)
+            : base(state, onPickCallback, mode)
+        {
+        }
+
+        public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
+        {
+            return base.BuildRoot();
+        }
+    }
+
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
 }
 #endif // UNITY_EDITOR
