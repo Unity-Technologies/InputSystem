@@ -30,8 +30,6 @@ using UnityEditor;
 ////TODO: add ability to query which device was last used with any of the actions
 ////REVIEW: also give access to the last/current UI event?
 
-////TODO: ToString() method a la PointerInputModule
-
 namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
@@ -2116,6 +2114,22 @@ namespace UnityEngine.InputSystem.UI
                 return null;
 
             return InputActionReference.Create(newAction);
+        }
+
+        public override string ToString()
+        {
+             System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder("<b>Pointer Input Module of type: </b>" + (object) this.GetType());
+             stringBuilder.AppendLine();
+
+             foreach (PointerModel keyValuePair in this.m_PointerStates)
+             {
+               if (keyValuePair.eventData != null)
+               {
+                 stringBuilder.AppendLine("<B>Pointer:</b> " + (object) keyValuePair.screenPosition);
+                 stringBuilder.AppendLine(keyValuePair.eventData.ToString());
+               }
+             }
+             return stringBuilder.ToString();
         }
 
         public InputActionAsset actionsAsset
