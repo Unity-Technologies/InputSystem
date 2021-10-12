@@ -417,7 +417,11 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public InputActionAsset globalInputActions => m_GlobalInputActions;
+        public InputActionAsset globalInputActions
+        {
+	        get => m_GlobalInputActions;
+	        set => m_GlobalInputActions = value;
+        }
 
         /// <summary>
         /// When <c>Application.runInBackground</c> is true, this property determines what happens when application focus changes

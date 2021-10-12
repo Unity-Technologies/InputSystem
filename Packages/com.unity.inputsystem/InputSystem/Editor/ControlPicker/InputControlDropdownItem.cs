@@ -49,6 +49,17 @@ namespace UnityEngine.InputSystem.Editor
             : base(name) {}
     }
 
+    internal class OpenXRControlDropDownItem : InputControlDropdownItem
+    {
+	    public override string controlPathWithDevice => m_ControlPath;
+
+	    public OpenXRControlDropDownItem(string controlName, string displayName) : base(controlName)
+	    {
+		    m_ControlPath = controlName;
+		    name = displayName;
+	    }
+    }
+
     // NOTE: Optional control items, unlike normal control items, are displayed with their internal control
     //       names rather that their display names. The reason is that we're looking at controls that have
     //       the same internal name in one or more derived layouts but each of those derived layouts may

@@ -890,5 +890,26 @@ internal class XRTests : CoreTestsFixture
         Assert.That((device["Vector2/x"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
         Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
     }
+
+    [Test]
+    public void Actions_CanReceiveInputFromOpenXR()
+    {
+	    var inputActionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
+	    var inputMap = inputActionAsset.AddActionMap("TestActionMap");
+	    var inputAction = inputMap.AddAction("Trigger",
+		    binding: "OpenXR:/interaction_profile/test_vendor/test_device/user/hand/left/input/trigger");
+
+	    //bool wasPerformed;
+	    //inputAction.performed += ctx => wasPerformed = true;
+
+	    InputSystem.settings.globalInputActions = inputActionAsset;
+
+        //InputSystem.QueueStateEvent();
+
+        runtime.SetOpenXRActionValue("Trigger", 1);
+        InputSystem.Update();
+
+        Assert.That(inputAction.ReadValue<float>(), Is.EqualTo(1));
+    }
 }
 #endif //ENABLE_VR || ENABLE_AR

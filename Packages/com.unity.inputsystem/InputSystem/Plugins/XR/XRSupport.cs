@@ -8,6 +8,7 @@ using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XR
@@ -433,9 +434,9 @@ namespace UnityEngine.InputSystem.XR
 		        var inputActions = InputSystem.settings.globalInputActions;
 
 		        if (inputActions == null)
-			        return;
+				        return;
 
-		        var openXRSets = new List<OpenXRSet>();
+		        var openXRSets = new OpenXRConfiguration();
 
 		        for (var i = 0; i < inputActions.actionMaps.Count; i++)
 		        {
@@ -457,9 +458,9 @@ namespace UnityEngine.InputSystem.XR
 
 					        actionContainsOpenXRBindings = true;
 
-					        var pathComponents = inputBinding.path.Substring(OpenXRPathConstant.Length).Split('/');
-					        var interactionPath = $"/interaction_profiles/{pathComponents[0]}/{pathComponents[1]}";
-					        var actionSpace = "/" + string.Join("/", pathComponents.Skip(2));
+					        var pathComponents = inputBinding.path.Substring(OpenXRPathConstant.Length + 1).Split('/');
+					        var interactionPath = $"/{pathComponents[0]}/{pathComponents[1]}/{pathComponents[2]}";
+					        var actionSpace = "/" + string.Join("/", pathComponents.Skip(3));
 
 	                        openXrAction.bindings.Add(new OpenXRBinding(interactionPath, actionSpace));
 				        }
@@ -475,8 +476,10 @@ namespace UnityEngine.InputSystem.XR
 						openXRSets.Add(set);
 		        }
 
-		        File.WriteAllText("Library/openxrconfig.json", JsonUtility.ToJson(openXRSets));
+		        File.WriteAllText("Library/openxrconfig.json", JsonUtility.ToJson(openXRSets, true));
 	        };
+
+
             #endif
         }
 

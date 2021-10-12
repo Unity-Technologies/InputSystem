@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace com.unity.InputSystem.Editor.OpenXR
 {
+	[Serializable]
     public struct OpenXRBinding
     {
         // /interaction_profiles/khr/simple_controller
@@ -15,6 +18,7 @@ namespace com.unity.InputSystem.Editor.OpenXR
 	    }
     }
 
+	[Serializable]
     public struct OpenXRAction
     {
 	    public string actionName;
@@ -29,6 +33,7 @@ namespace com.unity.InputSystem.Editor.OpenXR
 	    }
     }
 
+	[Serializable]
     public enum OpenXRActionType
     {
         Bool,
@@ -37,6 +42,7 @@ namespace com.unity.InputSystem.Editor.OpenXR
         Pose
     }
 
+	[Serializable]
     public struct OpenXRSet
     {
 	    public int priority;
@@ -48,6 +54,23 @@ namespace com.unity.InputSystem.Editor.OpenXR
 		    this.name = name;
 		    this.priority = priority;
 		    actions = new List<OpenXRAction>();
+	    }
+    }
+
+    [Serializable]
+    public class OpenXRConfiguration
+    {
+		[SerializeField]
+	    private List<OpenXRSet> sets;
+
+	    public OpenXRConfiguration()
+	    {
+		    sets = new List<OpenXRSet>();
+	    }
+
+	    public void Add(OpenXRSet set)
+	    {
+		    sets.Add(set);
 	    }
     }
 }

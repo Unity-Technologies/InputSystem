@@ -101,8 +101,8 @@ namespace UnityEngine.InputSystem.Editor
 	        var openXRNode = new AdvancedDropdownItem("OpenXR");
             var interactionProfileNode = new AdvancedDropdownItem("Oculus touch");
             var leftHandDevice = new OpenXRDropdownItem("Left hand", true);
-            leftHandDevice.AddChild(new ControlDropdownItem(null, "trigger", "Trigger", "", "", true));
-            leftHandDevice.AddChild(new ControlDropdownItem(null, "thumbstick", "Thumbstick", "", "", true));
+            leftHandDevice.AddChild(new OpenXRControlDropDownItem("OpenXR:/interaction_profiles/oculus/touch_controller/user/hand/left/input/trigger", "Trigger"));
+            leftHandDevice.AddChild(new OpenXRControlDropDownItem("OpenXR:/interaction_profiles/oculus/touch_controller/user/hand/left/input/thumbstick", "Thumbstick"));
             
             interactionProfileNode.AddChild(leftHandDevice);
             openXRNode.AddChild(interactionProfileNode);

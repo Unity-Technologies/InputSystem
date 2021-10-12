@@ -216,8 +216,10 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-			if(asset == InputSystem.settings.globalInputActions)
-                InputSystem.settings.OnChange();
+
+			// if(InputSystem.settings.globalInputActions != null && ctx.assetPath == AssetDatabase.GetAssetPath(InputSystem.settings.globalInputActions))
+
+			EditorApplication.delayCall += () => InputSystem.settings.OnChange();
 
             // Refresh editors.
             InputActionEditorWindow.RefreshAllOnAssetReimport();
