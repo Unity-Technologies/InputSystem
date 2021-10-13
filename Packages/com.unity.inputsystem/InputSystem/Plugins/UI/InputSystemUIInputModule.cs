@@ -247,13 +247,7 @@ namespace UnityEngine.InputSystem.UI
 
             // Sync position.
             var pointerType = eventData.pointerType;
-            if (pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
-            {
-                eventData.position = new Vector2(-1, -1);
-                ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode seems wrong
-                eventData.delta = default;
-            }
-            else if (pointerType == UIPointerType.Tracked)
+            if (pointerType == UIPointerType.Tracked)
             {
                 var position = state.worldPosition;
                 var rotation = state.worldOrientation;
@@ -341,8 +335,7 @@ namespace UnityEngine.InputSystem.UI
             var currentPointerTarget =
                 // If the pointer is a touch that was released the *previous* frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame) ||
-                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+                (eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame) 
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
 
@@ -527,7 +520,6 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessPointerButtonDrag(ref PointerModel.ButtonState button, ExtendedPointerEventData eventData)
         {
             if (!eventData.IsPointerMoving() ||
-                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked) ||
                 eventData.pointerDrag == null)
                 return;
 
