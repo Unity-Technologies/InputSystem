@@ -134,6 +134,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
         ////REVIEW: are these really useful?
         public static readonly FourCC FormatVector2 = new FourCC('V', 'E', 'C', '2');
+        internal const int kFormatVector2 = 'V' << 24 | 'E' << 16 | 'C' << 8 | '2';
+
         public static readonly FourCC FormatVector3 = new FourCC('V', 'E', 'C', '3');
         public static readonly FourCC FormatQuaternion = new FourCC('Q', 'U', 'A', 'T');
         public static readonly FourCC FormatVector2Short = new FourCC('V', 'C', '2', 'S');

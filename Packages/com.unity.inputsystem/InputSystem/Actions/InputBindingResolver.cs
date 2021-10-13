@@ -263,22 +263,34 @@ namespace UnityEngine.InputSystem
                         if (!bindingIsDisabled && !isComposite)
                         {
                             firstControlIndex = memory.controlCount + resolvedControls.Count;
-                            if (devicesForThisMap != null)
+
+                            var devices = devicesForThisMap;
+                            if (devices == null)
+	                            devices = InputSystem.devices;
+
+                            // Search in devices for only this map.
+                            var list = devices.Value;
+                            for (var i = 0; i < list.Count; ++i)
                             {
-                                // Search in devices for only this map.
-                                var list = devicesForThisMap.Value;
-                                for (var i = 0; i < list.Count; ++i)
-                                {
-                                    var device = list[i];
-                                    if (!device.added)
-                                        continue; // Skip devices that have been removed.
-                                    numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
-                                }
-                            }
-                            else
-                            {
-                                // Search globally.
-                                numControls = InputSystem.FindControls(path, ref resolvedControls);
+	                            var device = list[i];
+	                            if (!device.added)
+		                            continue; // Skip devices that have been removed.
+
+	                            var haveMatch = false;
+                                ////TODO: this should be opened up to allow multiple matches
+	                            foreach (var parser in InputControlPath.s_BindingPathParsers)
+	                            {
+		                            var control = parser.TryFindInputControl(device, path, actionName);
+		                            if (control != null)
+		                            {
+                                        resolvedControls.Add(control);
+                                        ++numControls;
+			                            haveMatch = true;
+		                            }
+	                            }
+
+                                if (!haveMatch)
+									numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
                             }
 
                             // Disable binding if it doesn't resolve to any controls.

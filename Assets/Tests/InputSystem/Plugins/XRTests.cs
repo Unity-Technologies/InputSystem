@@ -3,6 +3,7 @@ using System;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices;
 using UnityEngine;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
@@ -896,20 +897,35 @@ internal class XRTests : CoreTestsFixture
     {
 	    var inputActionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
 	    var inputMap = inputActionAsset.AddActionMap("TestActionMap");
-	    var inputAction = inputMap.AddAction("Trigger",
+	    var inputAction = inputMap.AddAction("Trigger", expectedControlLayout: "Axis",
 		    binding: "OpenXR:/interaction_profile/test_vendor/test_device/user/hand/left/input/trigger");
-
-	    //bool wasPerformed;
-	    //inputAction.performed += ctx => wasPerformed = true;
 
 	    InputSystem.settings.globalInputActions = inputActionAsset;
 
-        //InputSystem.QueueStateEvent();
-
-        runtime.SetOpenXRActionValue("Trigger", 1);
+	    runtime.ReportNewInputDevice(new InputDeviceDescription { interfaceName = "OpenXR" });
         InputSystem.Update();
 
+        inputAction.Enable();
+
+        var device = InputSystem.GetDevice<OpenXRDevice>();
+
+        Assert.That(device, Is.Not.Null);
+        Assert.That(device["Trigger"], Is.TypeOf<AxisControl>());
+        Assert.That(inputAction.controls, Is.EquivalentTo(new[] { device["Trigger"] }));
+
+        InputSystem.QueueStateEvent(device,
+	        new OpenXRState
+	        {
+		        ActionId = inputAction.name.GetHashCode(),
+                FloatValue = 1
+	        });
+        InputSystem.Update();
+        
         Assert.That(inputAction.ReadValue<float>(), Is.EqualTo(1));
+
+        inputAction.Disable();
+
+        //Assert.That()....;
     }
 }
 #endif //ENABLE_VR || ENABLE_AR

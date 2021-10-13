@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using com.unity.InputSystem.Editor.OpenXR;
+using Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices;
 using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
@@ -370,6 +371,7 @@ namespace UnityEngine.InputSystem.XR
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
                     .WithProduct("^(Oculus Tracked Remote)"));
+
 #endif
 
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR
@@ -428,7 +430,16 @@ namespace UnityEngine.InputSystem.XR
 #endif
 #endif
 
+	        InputSystem.RegisterLayoutBuilder(() => 
+			        OpenXRDevice.BuildLayout("OpenXR", InputSystem.settings.globalInputActions ?? Enumerable.Empty<InputAction>()), 
+		        "OpenXR", 
+		        matches: new InputDeviceMatcher()
+			        .WithInterface("OpenXR"));
+	        InputSystem.RegisterBindingPathParser(new OpenXRBindingPathParser());
+
             #if UNITY_EDITOR
+
+
 	        InputSystem.onSettingsChange += () =>
 	        {
 		        var inputActions = InputSystem.settings.globalInputActions;

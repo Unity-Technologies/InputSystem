@@ -2,6 +2,8 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -568,9 +570,11 @@ namespace UnityEngine.InputSystem
             return TryFindControl<InputControl>(control, path, indexInPath);
         }
 
+        internal static IList<IBindingPathParser> s_BindingPathParsers = new List<IBindingPathParser>();
+
         public static InputControl[] TryFindControls(InputControl control, string path, int indexInPath = 0)
         {
-            var matches = new InputControlList<InputControl>(Allocator.Temp);
+	        var matches = new InputControlList<InputControl>(Allocator.Temp);
             try
             {
                 TryFindControls(control, path, indexInPath, ref matches);
@@ -774,6 +778,25 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
+	        if (Regex.IsMatch(path, "^[a-zA-Z]+:"))
+	        {
+		        foreach (var parser in s_BindingPathParsers)
+		        {
+			        var matchingControl = parser.TryFindInputControl(control, path);
+			        if (matchingControl != null)
+			        {
+				        var inputControl = matchingControl as TControl;
+
+				        if(matchMultiple && inputControl != null)
+                            matches.Add(inputControl);
+					 
+				        return inputControl;
+			        }
+		        }
+		        return null;
+	        }
+
+
             var pathLength = path.Length;
 
             // Try to get a match. A path spec has three components:

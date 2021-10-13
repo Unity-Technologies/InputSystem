@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -3647,5 +3648,9 @@ namespace UnityEngine.InputSystem
         }
 
 #endif
+	    public static void RegisterBindingPathParser<T>(T parser) where T:IBindingPathParser 
+        {
+		    InputControlPath.s_BindingPathParsers.Add(parser);
+	    }
     }
 }
