@@ -29,6 +29,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Added support for PS5 DualSense controllers on Mac and Windows.
 - Improved the user experience when creating single vs multi-touch touchscreen bindings in the Input Action Asset editor by making both options visible in the input action dropdown menu. Now it's not neccessary to be aware of the touch\*/press path binding syntax ([case 1357664](https://issuetracker.unity3d.com/issues/inputsystem-touchscreens-multi-touch-doesnt-work-when-using-a-custom-inputactionasset)).
+- Added support for the Unity Remote app.
+  * __NOTE__: This unfortunately requires a change in the Unity native runtime. We are in the process of rolling out the change to Unity versions. A public build that receives the change will automatically enable the functionality in the Input System package.
 
 ## [1.1.1] - 2021-09-03
 
