@@ -17,7 +17,6 @@ namespace UnityEngine.InputSystem.Processors
     /// </remarks>
     /// <seealso cref="ScaleVector2Processor"/>
     /// <seealso cref="ScaleVector3Processor"/>
-    [Preserve]
     public class ScaleProcessor : InputProcessor<float>
     {
         /// <summary>

@@ -2096,7 +2096,6 @@ partial class CoreTests
         }
     }
 
-    [Preserve]
     private class ReleaseOnlyTestInteraction : IInputInteraction<float>
     {
         private bool m_WaitingForRelease;
@@ -3465,7 +3464,6 @@ partial class CoreTests
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
-    [Preserve]
     private class ConstantVector2TestProcessor : InputProcessor<Vector2>
     {
         public override Vector2 Process(Vector2 value, InputControl control)
@@ -3948,7 +3946,6 @@ partial class CoreTests
     }
 
     // ReSharper disable once ClassNeverInstantiated.Local
-    [Preserve]
     private class TestInteraction : IInputInteraction
     {
 #pragma warning disable CS0649
@@ -6287,7 +6284,6 @@ partial class CoreTests
     #endif // UNITY_EDITOR
 
     #pragma warning disable CS0649
-    [Preserve]
     private class CompositeWithParameters : InputBindingComposite<float>
     {
         public int intParameter;
@@ -6868,7 +6864,6 @@ partial class CoreTests
         }
     }
 
-    [Preserve]
     private class LogInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)
@@ -7254,7 +7249,6 @@ partial class CoreTests
         LogAssert.NoUnexpectedReceived();
     }
 
-    [Preserve]
     private class CompositeWithVector2Part : InputBindingComposite<Vector2>
     {
         [InputControlAttribute(layout = "Vector2")]
@@ -7288,7 +7282,6 @@ partial class CoreTests
         }
     }
 
-    [Preserve]
     private class CompositeAskingForSourceControl : InputBindingComposite<float>
     {
         [InputControl(layout = "Button")]
@@ -8351,7 +8344,6 @@ partial class CoreTests
         LogAssert.NoUnexpectedReceived();
     }
 
-    [Preserve]
     class TestInteractionCheckingDefaultState : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)

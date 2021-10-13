@@ -124,7 +124,6 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [DesignTimeVisible(false)]
-    [Scripting.Preserve]
     internal class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
         // Taken from platforms\android-<API>\arch-arm\usr\include\android\sensor.h
@@ -139,7 +138,6 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [DesignTimeVisible(false)]
-    [Scripting.Preserve]
     internal class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
         public override Quaternion Process(Quaternion value, InputControl control)
@@ -165,7 +163,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_ACCELEROMETER"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidAccelerometer : Accelerometer
     {
     }
@@ -175,7 +172,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_MAGNETIC_FIELD"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidMagneticFieldSensor : MagneticFieldSensor
     {
     }
@@ -185,7 +181,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GYROSCOPE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidGyroscope : Gyroscope
     {
     }
@@ -195,7 +190,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_LIGHT"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidLightSensor : LightSensor
     {
     }
@@ -205,7 +199,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_PRESSURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidPressureSensor : PressureSensor
     {
     }
@@ -215,7 +208,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_PROXIMITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidProximity : ProximitySensor
     {
     }
@@ -225,7 +217,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GRAVITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidGravitySensor : GravitySensor
     {
     }
@@ -235,7 +226,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_LINEAR_ACCELERATION"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidLinearAccelerationSensor : LinearAccelerationSensor
     {
     }
@@ -245,7 +235,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidRotationVector : AttitudeSensor
     {
     }
@@ -255,7 +244,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_RELATIVE_HUMIDITY"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidRelativeHumidity : HumiditySensor
     {
     }
@@ -265,7 +253,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_AMBIENT_TEMPERATURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidAmbientTemperature : AmbientTemperatureSensor
     {
     }
@@ -275,7 +262,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_STEP_COUNTER"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter", hideInUI = true)]
-    [Scripting.Preserve]
     public class AndroidStepCounter : StepCounter
     {
     }

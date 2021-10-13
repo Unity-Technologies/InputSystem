@@ -14,7 +14,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// duration (which defaults to <see cref="InputSettings.defaultSlowTapTime"/>)
     /// and then released.
     /// </summary>
-    [Preserve]
     [DisplayName("Long Tap")]
     public class SlowTapInteraction : IInputInteraction
     {

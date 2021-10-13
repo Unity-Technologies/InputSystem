@@ -41,7 +41,6 @@ namespace UnityEngine.InputSystem.Composites
     /// and inverted for <see cref="negative"/>. This means that if the buttons are actual axes (e.g.
     /// the triggers on gamepads), then the values correspond to how much the axis is actuated.
     /// </remarks>
-    [Preserve]
     [DisplayStringFormat("{negative}/{positive}")]
     [DisplayName("Positive/Negative Binding")]
     public class AxisComposite : InputBindingComposite<float>

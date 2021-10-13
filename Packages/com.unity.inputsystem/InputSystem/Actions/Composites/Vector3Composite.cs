@@ -31,7 +31,6 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="Vector2Composite"/>
-    [Preserve]
     [DisplayStringFormat("{up}+{down}/{left}+{right}/{forward}+{backward}")]
     [DisplayName("Up/Down/Left/Right/Forward/Backward Composite")]
     public class Vector3Composite : InputBindingComposite<Vector3>

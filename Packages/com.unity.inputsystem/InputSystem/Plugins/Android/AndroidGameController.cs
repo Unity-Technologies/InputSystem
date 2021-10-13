@@ -177,7 +177,6 @@ namespace UnityEngine.InputSystem.Android
     ///  While we can do custom mapping for Samsung, we can never now when will they try to update the driver for Dualshock or some other gamepad
     /// </remarks>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantGamepad)]
-    [Scripting.Preserve]
     public class AndroidGamepad : Gamepad
     {
     }
@@ -187,7 +186,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), hideInUI = true,
         variants = AndroidGameControllerState.kVariantGamepad + InputControlLayout.VariantSeparator + AndroidGameControllerState.kVariantDPadAxes)]
-    [Scripting.Preserve]
     public class AndroidGamepadWithDpadAxes : AndroidGamepad
     {
     }
@@ -197,7 +195,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), hideInUI = true,
         variants = AndroidGameControllerState.kVariantGamepad + InputControlLayout.VariantSeparator + AndroidGameControllerState.kVariantDPadButtons)]
-    [Scripting.Preserve]
     public class AndroidGamepadWithDpadButtons : AndroidGamepad
     {
     }
@@ -206,7 +203,6 @@ namespace UnityEngine.InputSystem.Android
     /// Joystick on Android.
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantJoystick)]
-    [Scripting.Preserve]
     public class AndroidJoystick : Joystick
     {
     }
@@ -216,7 +212,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), displayName = "Android DualShock 4 Gamepad",
         variants = AndroidGameControllerState.kVariantGamepad + InputControlLayout.VariantSeparator + AndroidGameControllerState.kVariantDPadAxes)]
-    [Scripting.Preserve]
     public class DualShock4GamepadAndroid : DualShockGamepad
     {
     }
@@ -226,7 +221,6 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), displayName = "Android Xbox One Controller",
         variants = AndroidGameControllerState.kVariantGamepad + InputControlLayout.VariantSeparator + AndroidGameControllerState.kVariantDPadAxes)]
-    [Scripting.Preserve]
     public class XboxOneGamepadAndroid : XInput.XInputController
     {
     }

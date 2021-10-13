@@ -27,7 +27,6 @@ namespace UnityEngine.InputSystem.Processors
     /// </remarks>
     /// <seealso cref="NormalizeVector2Processor"/>
     /// <seealso cref="NormalizeVector3Processor"/>
-    [Preserve]
     public class NormalizeProcessor : InputProcessor<float>
     {
         /// <summary>

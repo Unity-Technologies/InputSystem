@@ -50,7 +50,6 @@ namespace UnityEngine.InputSystem
     /// from other types of devices.
     /// </remarks>
     [InputControlLayout(stateType = typeof(JoystickState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
     public class Joystick : InputDevice
     {
         /// <summary>

@@ -2238,7 +2238,6 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
-    [Preserve]
     private class TestInteractionWithValueType : IInputInteraction<float>
     {
         public void Process(ref InputInteractionContext context)
