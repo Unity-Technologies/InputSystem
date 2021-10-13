@@ -9,7 +9,6 @@ namespace UnityEngine.InputSystem.Processors
     /// This processor is registered (see <see cref="InputSystem.RegisterProcessor{T}"/>) under the name "normalizeVector3".
     /// </remarks>
     /// <seealso cref="NormalizeVector2Processor"/>
-    [Preserve]
     public class NormalizeVector3Processor : InputProcessor<Vector3>
     {
         /// <summary>

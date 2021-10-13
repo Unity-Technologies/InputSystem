@@ -339,7 +339,6 @@ namespace UnityEngine.InputSystem.DualShock
     /// PS5 DualSense controller that is interfaced to a HID backend.
     /// </summary>
     [InputControlLayout(stateType = typeof(DualSenseHIDInputReport), displayName = "DualSense HID")]
-    [Scripting.Preserve]
     public class DualSenseGamepadHID : DualShockGamepad, IEventMerger, IEventPreProcessor
     {
         // Gamepad might send 3 types of input reports:
@@ -671,7 +670,6 @@ namespace UnityEngine.InputSystem.DualShock
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
     [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true)]
-    [Scripting.Preserve]
     public class DualShock4GamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; protected set; }
@@ -794,7 +792,6 @@ namespace UnityEngine.InputSystem.DualShock
     }
 
     [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true, displayName = "PS3 Controller")]
-    [Scripting.Preserve]
     public class DualShock3GamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; private set; }

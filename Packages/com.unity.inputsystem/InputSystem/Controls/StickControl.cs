@@ -46,7 +46,6 @@ namespace UnityEngine.InputSystem.Controls
     /// the deadzoning of sticks is radial (i.e. the length of the vector is taken into account
     /// which means that <em>both</em> the X and Y axis contribute).
     /// </remarks>
-    [Scripting.Preserve]
     public class StickControl : Vector2Control
     {
         ////REVIEW: should X and Y have "Horizontal" and "Vertical" as long display names and "X" and "Y" as short names?
@@ -76,19 +75,15 @@ namespace UnityEngine.InputSystem.Controls
         // Also puts AxisDeadzones on the axes.
         [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
         [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
-        [Scripting.Preserve]
         public ButtonControl up { get; set; }
 
         [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down")]
-        [Scripting.Preserve]
         public ButtonControl down { get; set; }
 
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left")]
-        [Scripting.Preserve]
         public ButtonControl left { get; set; }
 
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right")]
-        [Scripting.Preserve]
         public ButtonControl right { get; set; }
 
         protected override void FinishSetup()

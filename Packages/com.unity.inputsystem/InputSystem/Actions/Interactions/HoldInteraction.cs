@@ -24,7 +24,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// </code>
     /// </example>
     /// </remarks>
-    [Preserve]
     [DisplayName("Hold")]
     public class HoldInteraction : IInputInteraction
     {

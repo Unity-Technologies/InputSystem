@@ -16,7 +16,6 @@ namespace UnityEngine.InputSystem.Controls
     /// layout specific and does not need to be key-by-key. For general text input, see <see cref="Keyboard.onTextInput"/>.
     /// To find the text displayed on a key, use <see cref="InputControl.displayName"/>.
     /// </remarks>
-    [Preserve]
     public class KeyControl : ButtonControl
     {
         /// <summary>

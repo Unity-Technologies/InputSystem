@@ -3,6 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
+using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 
@@ -222,6 +223,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_FocusChangedMethod(focus);
         }
 
+        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
         public bool isInBatchMode => Application.isBatchMode;
@@ -232,6 +234,52 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isPaused => EditorApplication.isPaused;
         public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            set
+            {
+                if (m_UnityRemoteMessageHandler == value)
+                    return;
+
+                if (m_UnityRemoteMessageHandler != null)
+                {
+                    var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
+                    removeMethod?.Invoke(null, new[] { m_UnityRemoteMessageHandler });
+                    m_UnityRemoteMessageHandler = null;
+                }
+
+                if (value != null)
+                {
+                    var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
+                    addMethod?.Invoke(null, new[] { value });
+                    m_UnityRemoteMessageHandler = value;
+                }
+            }
+        }
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
+            setMethod?.Invoke(null, new object[] { value });
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
+            setMethod?.Invoke(null, new object[] { interval });
+        }
+
+        private MethodInfo GetUnityRemoteAPIMethod(string methodName)
+        {
+            var editorAssembly = typeof(EditorApplication).Assembly;
+            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
+            if (genericRemoteClass == null)
+                return null;
+
+            return genericRemoteClass.GetMethod(methodName);
+        }
+
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
         private Action<PlayModeStateChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
 

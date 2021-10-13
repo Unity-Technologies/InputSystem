@@ -16,21 +16,29 @@
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
+To determine whether a particular sensor is present, you can use its `.current` getter.
+
+```CSharp
+// Determine if a Gyroscope sensor device is present.
+if (Gyroscope.current != null)
+    Debug.Log("Gyroscope present");
+```
+
 Unlike other devices, sensors are disabled by default. To enable a sensor, call [`InputSystem.EnableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_)).
 
-```
+```CSharp
 InputSystem.EnableDevice(Gyroscope.current);
 ```
 
 To disable a sensor, call [`InputSystem.DisableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_).
 
-```
+```CSharp
 InputSystem.DisableDevice(Gyroscope.current);
 ```
 
 To check whether a sensor is currently enabled, use [`InputDevice.enabled`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_enabled).
 
-```
+```CSharp
 if (Gyroscope.current.enabled)
     Debug.Log("Gyroscope is enabled");
 ```
@@ -59,7 +67,7 @@ Each sensor Device implements a single Control which represents the data read by
 
 Sensors sample continuously at a set interval. You can set or query the sampling frequency for each sensor using the [`samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) property. The frequency is expressed in Hertz (number of samples per second).
 
-```
+```CSharp
 // Get sampling frequency of gyro.
 var frequency = Gyroscope.current.samplingFrequency;
 

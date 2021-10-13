@@ -366,6 +366,7 @@ namespace UnityEngine.InputSystem
 
         public bool runInBackground { get; set; } = false;
 
+        public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings
@@ -400,6 +401,25 @@ namespace UnityEngine.InputSystem
         public bool isInPlayMode { get; set; } = true;
         public bool isPaused { get; set; }
         public bool isEditorActive { get; set; } = true;
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            get => m_UnityRemoteMessageHandler;
+            set => m_UnityRemoteMessageHandler = value;
+        }
+
+        public bool? unityRemoteGyroEnabled;
+        public float? unityRemoteGyroUpdateInterval;
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            unityRemoteGyroEnabled = value;
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            unityRemoteGyroUpdateInterval = interval;
+        }
+
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
@@ -419,6 +439,7 @@ namespace UnityEngine.InputSystem
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

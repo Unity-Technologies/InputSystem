@@ -488,7 +488,6 @@ namespace UnityEngine.InputSystem
     /// it is recommended to use the higher-level <see cref="EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
     public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger
     {
         /// <summary>

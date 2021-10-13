@@ -43,7 +43,6 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="TwoModifiersComposite"/>
-    [Preserve]
     [DisplayStringFormat("{modifier}+{binding}")]
     [DisplayName("Binding With One Modifier")]
     public class OneModifierComposite : InputBindingComposite
