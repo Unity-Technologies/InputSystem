@@ -2567,7 +2567,7 @@ partial class CoreTests
 
         Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
 
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         updates.Clear();
 
@@ -2582,7 +2582,7 @@ partial class CoreTests
     public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
     {
         runtime.isInPlayMode = false;
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "<Gamepad>/leftTrigger");

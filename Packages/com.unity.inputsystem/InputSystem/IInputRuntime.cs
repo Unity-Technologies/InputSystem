@@ -165,6 +165,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         bool runInBackground { get; }
 
+        Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
@@ -182,6 +183,11 @@ namespace UnityEngine.InputSystem.LowLevel
         bool isInPlayMode { get;  }
         bool isPaused { get; }
         bool isEditorActive { get; }
+
+        // Functionality related to the Unity Remote.
+        Func<IntPtr, bool> onUnityRemoteMessage { set; }
+        void SetUnityRemoteGyroEnabled(bool value);
+        void SetUnityRemoteGyroUpdateInterval(float interval);
         #endif
     }
 
