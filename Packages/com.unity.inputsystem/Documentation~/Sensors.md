@@ -16,8 +16,6 @@
 
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
->__Note__: To test your app on iOS or Android in the editor with sensor input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote). This currently supports [`Accelerometer`](#accelerometer), [`Gyroscope`](#gyroscope), [`GravitySensor`](#gravitysensor), [`AttitudeSensor`](#attitudesensor), and [`LinearAccelerationSensor`](#linearaccelerationsensor).
-
 To determine whether a particular sensor is present, you can use its `.current` getter.
 
 ```CSharp

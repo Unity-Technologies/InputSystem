@@ -13,8 +13,6 @@ Touch support is divided into:
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
 
->__Note__: To test your app on iOS or Android in the editor with touch input from your mobile device, you can use the Unity Remote as described [here](Debugging.md#unity-remote).
-
 ## `Touchscreen` Device
 
 At the lowest level, a touch screen is represented by an [`InputSystem.Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) Device which captures the touch screen's raw state. Touch screens are based on the [`Pointer`](Pointers.md) layout.
