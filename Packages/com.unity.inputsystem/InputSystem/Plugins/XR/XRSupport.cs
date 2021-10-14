@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem.XR
 #endif
     static class XRSupport
     {
-	    private const string OpenXRPathConstant = "OpenXR:";
+	    internal const string OpenXRPathConstant = "OpenXR:";
 
 	    /// <summary>
         /// Registers all initial templates and the generalized layout builder with the InputSystem.
@@ -490,8 +490,35 @@ namespace UnityEngine.InputSystem.XR
 		        File.WriteAllText("Library/openxrconfig.json", JsonUtility.ToJson(openXRSets, true));
 	        };
 
+	        InputSystem.onActionChange += (o, change) =>
+	        {
+		        if (change != InputActionChange.ActionEnabled && 
+		            change != InputActionChange.ActionDisabled &&
+		            change != InputActionChange.ActionMapEnabled &&
+		            change != InputActionChange.ActionMapDisabled)
+			        return;
 
-            #endif
+		        var openXRDevice = InputSystem.GetDevice<OpenXRDevice>();
+		        if (openXRDevice == null)
+			        return;
+
+		        if (o is InputAction action)
+		        {
+			        if (action.IsOpenXRAction())
+			        {
+				        openXRDevice.SetActionEnabledState(action);
+			        }
+		        }
+                else if (o is InputActionMap actionMap)
+		        {
+			        foreach (var actionMapAction in actionMap.actions)
+			        {
+				        if(actionMapAction.IsOpenXRAction())
+                            openXRDevice.SetActionEnabledState(actionMapAction);
+			        }
+		        }
+	        };
+#endif
         }
 
         public static OpenXRActionType GetOpenXRActionType(InputAction action)
@@ -524,6 +551,20 @@ namespace UnityEngine.InputSystem.XR
 	        // Everything else throws.
 	        throw new ArgumentException($"Cannot determine input type for action '{action}'; layout '{expectedControlLayout}' with control type '{ controlType.Name}' has no known representation in the OpenXR API", nameof(action));
         }
+    }
+
+    public static class OpenXRInputActionExtensions
+    {
+	    public static bool IsOpenXRAction(this InputAction action)
+	    {
+		    foreach (var binding in action.bindings)
+		    {
+			    if (binding.path.StartsWith(XRSupport.OpenXRPathConstant))
+				    return true;
+		    }
+
+		    return false;
+	    }
     }
 }
 #endif // UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION

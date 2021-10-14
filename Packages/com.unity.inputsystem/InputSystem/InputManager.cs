@@ -2655,6 +2655,13 @@ namespace UnityEngine.InputSystem
             ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
+            if (m_Settings.globalInputActions != null
+#if UNITY_EDITOR
+                && m_Runtime.isInPlayMode
+#endif
+            )
+	            m_Settings.globalInputActions.Enable();
+
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");

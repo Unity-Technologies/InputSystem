@@ -893,7 +893,7 @@ internal class XRTests : CoreTestsFixture
     }
 
     [Test]
-    public void Actions_CanReceiveInputFromOpenXR()
+    public unsafe void Actions_CanReceiveInputFromOpenXR()
     {
 	    var inputActionAsset = ScriptableObject.CreateInstance<InputActionAsset>();
 	    var inputMap = inputActionAsset.AddActionMap("TestActionMap");
@@ -904,8 +904,6 @@ internal class XRTests : CoreTestsFixture
 
 	    runtime.ReportNewInputDevice(new InputDeviceDescription { interfaceName = "OpenXR" });
         InputSystem.Update();
-
-        inputAction.Enable();
 
         var device = InputSystem.GetDevice<OpenXRDevice>();
 
@@ -923,9 +921,19 @@ internal class XRTests : CoreTestsFixture
         
         Assert.That(inputAction.ReadValue<float>(), Is.EqualTo(1));
 
+        var commandWasSent = false;
+        runtime.SetDeviceCommandCallback(device, (id, command) =>
+        {
+	        commandWasSent = true;
+	        Assert.That(command->type, Is.EqualTo(SetOpenXRActionEnabledCommand.Type));
+            Assert.That(((SetOpenXRActionEnabledCommand*)command)->actionId, Is.EqualTo(inputAction.name.GetHashCode()));
+            Assert.That(((SetOpenXRActionEnabledCommand*)command)->isEnabled, Is.EqualTo(false));
+            return 0;
+        });
+
         inputAction.Disable();
 
-        //Assert.That()....;
+        Assert.That(commandWasSent, Is.True);
     }
 }
 #endif //ENABLE_VR || ENABLE_AR

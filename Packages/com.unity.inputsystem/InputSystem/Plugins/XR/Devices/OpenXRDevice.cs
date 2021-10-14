@@ -41,6 +41,10 @@ namespace Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices
 			    case InputStateBlock.kFormatVector2:
 				    InputState.Change(control, openXRState->VectorValue, eventPtr: eventPtr);
 				    break;
+
+				case InputStateBlock.kFormatPose:
+					InputState.Change(control, openXRState->PoseValue, eventPtr: eventPtr);
+					break;
 				    
 				default:
 					throw new InvalidOperationException("Unsupported XR control type.");
@@ -82,7 +86,43 @@ namespace Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices
 			    openXrActionToInputControlMap.Add(inputControl.name.GetHashCode(), inputControl);
 		    }
 	    }
+
+	    public void SetActionEnabledState(InputAction action)
+	    {
+		    var command = SetOpenXRActionEnabledCommand.Create(action.name.GetHashCode(), action.enabled);
+		    ExecuteCommand(ref command);
+	    }
     }
+
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct SetOpenXRActionEnabledCommand : IInputDeviceCommandInfo
+    {
+	    public static FourCC Type => new FourCC('O', 'X', 'R', 'C');
+
+	    internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool) + sizeof(int);
+
+	    [FieldOffset(0)]
+	    public InputDeviceCommand baseCommand;
+
+	    [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
+	    public bool isEnabled;
+
+	    [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
+	    public int actionId;
+
+	    public FourCC typeStatic => Type;
+
+	    public static SetOpenXRActionEnabledCommand Create(int actionId, bool enabled)
+	    {
+		    return new SetOpenXRActionEnabledCommand
+		    {
+			    baseCommand = new InputDeviceCommand(Type, kSize),
+			    isEnabled = enabled,
+				actionId = actionId
+		    };
+	    }
+    }
+
 
 	[StructLayout(LayoutKind.Explicit)]
     public struct OpenXRState : IInputStateTypeInfo
@@ -92,7 +132,7 @@ namespace Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices
 		[FieldOffset(4)] public float BooleanValue;
 		[FieldOffset(4)] public float FloatValue;
 		[FieldOffset(4)] public Vector2 VectorValue;
-		[FieldOffset(4)] public bool PoseValue; // active
+		[FieldOffset(4)] public PoseState PoseValue; // active
 
 		public FourCC format => new FourCC("OPXR");
     }
@@ -102,6 +142,27 @@ namespace Packages.com.unity.inputsystem.InputSystem.Plugins.XR.Devices
 	    public InputControl TryFindInputControl(InputControl parent, string path, string action)
 	    {
 		    if (!path.StartsWith("OpenXR:"))
+			    return null;
+
+		    if (action == null && UnityEngine.InputSystem.InputSystem.settings.globalInputActions != null)
+		    {
+			    foreach (var map in UnityEngine.InputSystem.InputSystem.settings.globalInputActions.actionMaps)
+			    {
+				    foreach (var binding in map.bindings)
+				    {
+					    if (binding.path == path)
+					    {
+						    action = binding.action;
+						    break;
+					    }
+				    }
+
+				    if (action != null)
+					    break;
+			    }
+		    }
+
+		    if (action == null)
 			    return null;
 
 		    if (!(parent is OpenXRDevice device))

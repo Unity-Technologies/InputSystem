@@ -1,6 +1,7 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XR;
 
 ////TODO: the Debug.Asserts here should be also be made as checks ahead of time (on the layout)
 
@@ -135,6 +136,8 @@ namespace UnityEngine.InputSystem.LowLevel
         ////REVIEW: are these really useful?
         public static readonly FourCC FormatVector2 = new FourCC('V', 'E', 'C', '2');
         internal const int kFormatVector2 = 'V' << 24 | 'E' << 16 | 'C' << 8 | '2';
+
+        internal const int kFormatPose = 'P' << 24 | 'O' << 16 | 'S' << 8 | 'E';
 
         public static readonly FourCC FormatVector3 = new FourCC('V', 'E', 'C', '3');
         public static readonly FourCC FormatQuaternion = new FourCC('Q', 'U', 'A', 'T');

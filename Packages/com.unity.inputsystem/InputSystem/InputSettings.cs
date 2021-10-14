@@ -420,7 +420,14 @@ namespace UnityEngine.InputSystem
         public InputActionAsset globalInputActions
         {
 	        get => m_GlobalInputActions;
-	        set => m_GlobalInputActions = value;
+	        set
+	        {
+		        if(m_GlobalInputActions != null)
+                    m_GlobalInputActions.Disable();
+
+		        m_GlobalInputActions = value;
+                OnChange();
+	        }
         }
 
         /// <summary>
