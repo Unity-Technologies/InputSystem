@@ -106,6 +106,8 @@ namespace UnityEngine.InputSystem.Editor
 
             if (property.GetParentProperty() != null && property.GetParentProperty().isArray)
                 propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
+            if (property.type == nameof(InputAction) && property.displayName != null && property.displayName.Length > 0)
+                return $"{property.displayName}";
 
             return property.type == nameof(InputActionMap) ?
                 $"Input Action Map{propertyTitleNumeral}" :
