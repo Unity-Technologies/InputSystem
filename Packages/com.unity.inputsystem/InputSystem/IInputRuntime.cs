@@ -89,6 +89,13 @@ namespace UnityEngine.InputSystem.LowLevel
 
         Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
 
+        #if UNITY_EDITOR
+        /// <summary>
+        /// Set delegate to be called during player loop initialization callbacks.
+        /// </summary>
+        Action onPlayerLoopInitialization { get; set; }
+        #endif
+
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
         /// </summary>

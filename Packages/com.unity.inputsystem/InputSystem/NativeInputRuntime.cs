@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
@@ -120,6 +122,46 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        #if UNITY_EDITOR
+        private struct InputSystemPlayerLoopRunnerInitializationSystem {};
+        public Action onPlayerLoopInitialization
+        {
+            get => m_PlayerLoopInitialization;
+            set
+            {
+                // This is a hot-fix for a critical problem in input system, case 1368559, case 1367556, case 1372830
+                // TODO move it to a proper native callback instead
+                if (value != null)
+                {
+                    // Inject ourselves directly to PlayerLoop.Initialization as first subsystem to run,
+                    // Use InputSystemPlayerLoopRunnerInitializationSystem as system type
+                    var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
+                    var initStepIndex = playerLoop.subSystemList.IndexOf(x => x.type == typeof(PlayerLoop.Initialization));
+                    if (initStepIndex >= 0)
+                    {
+                        var systems = playerLoop.subSystemList[initStepIndex].subSystemList;
+
+                        // Check if we're not already injected
+                        if (!systems.Select(x => x.type)
+                            .Contains(typeof(InputSystemPlayerLoopRunnerInitializationSystem)))
+                        {
+                            ArrayHelpers.InsertAt(ref systems, 0, new UnityEngine.LowLevel.PlayerLoopSystem
+                            {
+                                type = typeof(InputSystemPlayerLoopRunnerInitializationSystem),
+                                updateDelegate = () => m_PlayerLoopInitialization?.Invoke()
+                            });
+
+                            playerLoop.subSystemList[initStepIndex].subSystemList = systems;
+                            UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
+                        }
+                    }
+                }
+
+                m_PlayerLoopInitialization = value;
+            }
+        }
+        #endif
+
         public Action<int, string> onDeviceDiscovered
         {
             get => NativeInputSystem.onDeviceDiscovered;
@@ -191,6 +233,9 @@ namespace UnityEngine.InputSystem.LowLevel
         private InputUpdateDelegate m_OnUpdate;
         private Action<InputUpdateType> m_OnBeforeUpdate;
         private Func<InputUpdateType, bool> m_OnShouldRunUpdate;
+        #if UNITY_EDITOR
+        private Action m_PlayerLoopInitialization;
+        #endif
         private float m_PollingFrequency = 60.0f;
         private bool m_DidCallOnShutdown = false;
         private void OnShutdown()
