@@ -48,7 +48,8 @@ partial class CoreTests
         var action8 = map.AddAction("action8", type: InputActionType.Button);
 
         // Enable some actions individually to make sure the code that deals
-        // with re-resolution of already enabled bindings handles 
+        // with re-resolution of already enabled bindings handles the enabling
+        // of just individual actions out of the whole set correctlyuk.
         action1.Enable();
         action2.Enable();
 
@@ -96,28 +97,158 @@ partial class CoreTests
 
         Assert.That(action2.WasPerformedThisFrame());
         Assert.That(!action3.WasPerformedThisFrame());
-        
+
         Release(keyboard.leftShiftKey);
         Release(keyboard.spaceKey);
-        
+
         Press(keyboard.spaceKey);
-        
+
         Assert.That(action1.WasPerformedThisFrame());
         Assert.That(action4.WasPerformedThisFrame());
         Assert.That(action5.WasPerformedThisFrame());
-        
+
         Assert.That(!action2.WasPerformedThisFrame());
         Assert.That(!action3.WasPerformedThisFrame());
-        
+
         ////TODO: this should *NOT* trigger action2 based on the order of the keypresses
         Press(keyboard.leftShiftKey);
-        
+
         Assert.That(!action1.WasPerformedThisFrame());
         Assert.That(!action4.WasPerformedThisFrame());
         Assert.That(!action5.WasPerformedThisFrame());
 
         Assert.That(action2.WasPerformedThisFrame());
         Assert.That(!action3.WasPerformedThisFrame());
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanBindShortcutsInvolvingMultipleDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Mouse>/position");
+
+        action.Enable();
+
+        Press(keyboard.leftShiftKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(default(Vector2)));
+
+        Set(mouse.position, new Vector2(123, 234));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanBindMultipleShortcutSequencesBasedOnSameModifiers()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/a");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/b");
+
+        map.Enable();
+
+        Press(keyboard.leftShiftKey);
+
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(!action2.WasPerformedThisFrame());
+
+        Press(keyboard.aKey);
+
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(!action2.WasPerformedThisFrame());
+
+        Press(keyboard.bKey);
+
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(action2.WasPerformedThisFrame());
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("leftShift", null, "space")]
+    [TestCase("leftShift", "leftAlt", "space")]
+    [Ignore("TODO - will add logic for this in separate PR after #1405")]
+    public void Actions_CanListenForStartOfShortcutSequence(string modifier1, string modifier2, string binding)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding("TwoModifiers")
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With("Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding("OneModifier")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With("Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        var wasStarted = false;
+        action.started += _ => wasStarted = true;
+
+        Press((ButtonControl)keyboard[modifier1]);
+
+        Assert.That(wasStarted, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("leftShift", null, "space")]
+    [TestCase("leftShift", "leftAlt", "space")]
+    [Ignore("TODO - will add logic for this in separate PR after #1405")]
+    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding("TwoModifiers")
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With("Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding("OneModifier")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With("Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed += _ => wasPerformed = true;
+
+        // Press binding first, then modifiers.
+        Press((ButtonControl)keyboard[binding]);
+        Press((ButtonControl)keyboard[modifier1]);
+        if (!string.IsNullOrEmpty(modifier2))
+            Press((ButtonControl)keyboard[modifier2]);
+
+        Assert.That(wasPerformed, Is.False);
     }
 
     #if UNITY_EDITOR
