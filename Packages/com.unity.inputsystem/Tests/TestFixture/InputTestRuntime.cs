@@ -350,6 +350,9 @@ namespace UnityEngine.InputSystem
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
+#if UNITY_EDITOR
+        public Action onPlayerLoopInitialization { get; set; }
+#endif
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
