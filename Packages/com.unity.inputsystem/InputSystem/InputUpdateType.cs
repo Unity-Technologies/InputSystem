@@ -121,7 +121,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnBeforeUpdate();
                     s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    #if UNITY_EDITOR
                     s_LatestNonEditorUpdateType = type;
+                    #endif
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
@@ -142,7 +144,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnUpdate();
                     s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    #if UNITY_EDITOR
                     s_LatestNonEditorUpdateType = type;
+                    #endif
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
