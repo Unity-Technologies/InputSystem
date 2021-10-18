@@ -8060,6 +8060,57 @@ partial class CoreTests
         Assert.That(wasCanceled, Is.True);
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_ControlWithHighestActuationIsTrackedAsActiveControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var buttonAction = new InputAction(type: InputActionType.Button,
+            binding: "<Gamepad>/*Trigger");
+        var passThroughAction = new InputAction(type: InputActionType.PassThrough,
+            binding: "<Gamepad>/*Trigger");
+
+        buttonAction.Enable();
+        passThroughAction.Enable();
+
+        Set(gamepad.leftTrigger, 1f);
+
+        Assert.That(buttonAction.WasPerformedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+
+        Set(gamepad.rightTrigger, 0.5f);
+
+        Assert.That(!buttonAction.WasPerformedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+
+        Set(gamepad.leftTrigger,  0f);
+
+        Assert.That(!buttonAction.WasPerformedThisFrame());
+        Assert.That(!buttonAction.WasReleasedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+
+        Set(gamepad.rightTrigger, 0.6f);
+
+        Assert.That(!buttonAction.WasPerformedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+
+        Set(gamepad.rightTrigger, 0f);
+
+        Assert.That(buttonAction.WasReleasedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.Null);
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1267805/
     [Test]
     [Category("Actions")]

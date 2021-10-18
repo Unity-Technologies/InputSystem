@@ -1358,10 +1358,8 @@ namespace UnityEngine.InputSystem
                     ////        first actuates; the current solution will occasionally run conflict resolution when it doesn't have to
                     ////        but won't require the extra bookkeeping)
                     // Do NOT let this control state change affect the action.
-                    // NOTE: We do not update hasMultipleConcurrentActuations here which means that it may
-                    //       temporarily be wrong. If that happens, we will end up eventually running the
-                    //       conflict resolution code below even when we technically wouldn't need to but
-                    //       it'll sync the actuation state.
+
+                    actionState->hasMultipleConcurrentActuations = true;
                     return true;
                 }
 

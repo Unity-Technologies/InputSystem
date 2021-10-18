@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Changed
+
+#### Actions
+
+- Keyboard shortcut bindings will now "consume" input.
+  * For example, binding `Shift+B` as well as `B` will no longer trigger the `B` only binding when `Shift+B` is pressed.
+
+### Fixed
+
+#### Actions
+
+- Fixed `InputAction.activeControl` not tracking currently active control correctly when the currently active control was released but another bound control was still pressed.
+
 ## [1.1.1] - 2021-09-03
 
 ### Fixed
