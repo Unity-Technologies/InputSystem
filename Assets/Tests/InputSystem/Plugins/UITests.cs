@@ -3373,7 +3373,114 @@ internal class UITests : CoreTestsFixture
             #endif
         }
     }
-    #endif
+#endif
+
+    // Implemented as a method since UI tests doesn't seem to support parameterized tests
+    private IEnumerator Run_UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(bool canRunInBackground)
+    {
+        // Whether we run in the background or not should only move the reset of the mouse button
+        // around. Without running in the background, the reset should happen when we come back into focus.
+        // With running in the background, the reset should happen when we lose focus.
+        runtime.runInBackground = true;
+
+        var scene = CreateUIScene();
+        var mousePosition = scene.From640x480ToScreen(100, 100);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        if (canRunInBackground)
+            runtime.SetCanRunInBackground(mouse.device.deviceId);
+
+        // On sync, send current position but with all buttons up.
+        SyncMouse(mouse, mousePosition);
+
+        // Turn left object into a button.
+        var button = scene.leftGameObject.AddComponent<MyButton>();
+        var clicked = false;
+        button.onClick.AddListener(() => clicked = true);
+
+        yield return null;
+        scene.leftChildReceiver.events.Clear();
+
+        // Put mouse over button and press it.
+        Set(mouse.position, mousePosition);
+        Press(mouse.leftButton);
+
+        Assert.That(scene.actions.UI.Click.phase.IsInProgress(), Is.True);
+
+        var clickCanceled = 0;
+        scene.actions.UI.Click.canceled += _ => ++ clickCanceled;
+
+        yield return null;
+
+        Assert.That(button.receivedPointerDown, Is.True);
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerEnter),
+#if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+#endif
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("type", EventType.InitializePotentialDrag)
+            )
+        );
+
+        scene.leftChildReceiver.events.Clear();
+
+        Debug.Log("TEST Player focus lost");
+        runtime.PlayerFocusLost();
+        if (canRunInBackground)
+            Assert.That(clickCanceled, Is.EqualTo(0));
+        else
+            Assert.That(clickCanceled, Is.EqualTo(1));
+        Debug.Log("TEST OnApplicationFocus false");
+        scene.eventSystem.SendMessage("OnApplicationFocus", false);
+
+        Assert.That(scene.leftChildReceiver.events, Is.Empty);
+        Assert.That(scene.eventSystem.hasFocus, Is.False);
+        Assert.That(clicked, Is.False);
+
+        Debug.Log("Player focus gained");
+        runtime.PlayerFocusGained();
+        Debug.Log("TEST OnApplicationFocus true");
+        scene.eventSystem.SendMessage("OnApplicationFocus", true);
+
+        yield return null;
+
+        // NOTE: We *do* need the pointer up to keep UI state consistent.
+
+        if (canRunInBackground)
+        {
+            Assert.That(scene.eventSystem.hasFocus, Is.True);
+            Assert.That(button.receivedPointerUp, Is.False);
+            Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
+            Assert.That(mouse.leftButton.isPressed, Is.True);
+            Assert.That(clicked, Is.False);
+
+            scene.leftChildReceiver.events.Clear();
+            Release(mouse.leftButton);
+            yield return null;
+        }
+
+        Assert.That(scene.eventSystem.hasFocus, Is.True);
+        Assert.That(button.receivedPointerUp, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
+        Assert.That(mouse.leftButton.isPressed, Is.False);
+        Assert.That(clicked, Is.EqualTo(canRunInBackground));
+    }
+
+    [UnityTest]
+    [Category("Focus")]
+    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonIsNotClickedIfDeviceCannotRunInBackground()
+    {
+        return Run_UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(false);
+    }
+
+    [UnityTest]
+    [Category("Focus")]
+    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonIsClickedIfDeviceCanRunInBackground()
+    {
+        return Run_UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(true);
+    }
 
     [UnityTest]
     [Category("Focus")]
