@@ -1690,6 +1690,9 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionPhase.Waiting"/> (default), <see cref="InputActionPhase.Started"/> (if the action is supposed
         /// to be oscillate between started and performed), or <see cref="InputActionPhase.Performed"/> (if the action is
         /// supposed to perform over and over again until canceled).</param>
+        /// <param name="processNextInteractionsOnCancel">Indicates if the system should try and change the phase of other
+        /// interactions on the same action that are already started or performed after cancelling this interaction. This should be
+        /// false when resetting interactions.</param>
         /// <remarks>
         /// Multiple interactions on the same binding can be started concurrently but the
         /// first interaction that starts will get to drive an action until it either cancels
@@ -1705,7 +1708,7 @@ namespace UnityEngine.InputSystem
         /// long and the SlowTapInteraction will get to drive the action next).
         /// </remarks>
         internal void ChangePhaseOfInteraction(InputActionPhase newPhase, ref TriggerState trigger,
-            InputActionPhase phaseAfterPerformed = InputActionPhase.Waiting)
+            InputActionPhase phaseAfterPerformed = InputActionPhase.Waiting, bool processNextInteractionsOnCancel = true)
         {
             var interactionIndex = trigger.interactionIndex;
             var bindingIndex = trigger.bindingIndex;
@@ -1751,6 +1754,9 @@ namespace UnityEngine.InputSystem
                     // already performed.
 
                     if (!ChangePhaseOfAction(newPhase, ref trigger))
+                        return;
+
+                    if (processNextInteractionsOnCancel == false)
                         return;
 
                     var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
@@ -1942,7 +1948,13 @@ namespace UnityEngine.InputSystem
             // We need to make sure here that any HaveMagnitude flag we may be carrying over from actionState
             // is handled correctly (case 1239551).
             newState.flags = actionState->flags; // Preserve flags.
-            newState.magnitude = trigger.haveMagnitude ? trigger.magnitude : ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+            if (newPhase != InputActionPhase.Canceled)
+                newState.magnitude = trigger.haveMagnitude
+                    ? trigger.magnitude
+                    : ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+            else
+                newState.magnitude = 0;
+
             newState.phase = newPhase;
             if (newPhase == InputActionPhase.Performed)
             {
@@ -2145,7 +2157,7 @@ namespace UnityEngine.InputSystem
                 {
                     case InputActionPhase.Started:
                     case InputActionPhase.Performed:
-                        ChangePhaseOfInteraction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
+                        ChangePhaseOfInteraction(InputActionPhase.Canceled, ref actionStates[actionIndex], processNextInteractionsOnCancel: false);
                         break;
                 }
             }
