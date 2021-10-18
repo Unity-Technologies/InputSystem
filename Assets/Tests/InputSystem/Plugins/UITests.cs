@@ -3427,22 +3427,18 @@ internal class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
 
-        Debug.Log("TEST Player focus lost");
         runtime.PlayerFocusLost();
         if (canRunInBackground)
             Assert.That(clickCanceled, Is.EqualTo(0));
         else
             Assert.That(clickCanceled, Is.EqualTo(1));
-        Debug.Log("TEST OnApplicationFocus false");
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
         Assert.That(scene.eventSystem.hasFocus, Is.False);
         Assert.That(clicked, Is.False);
 
-        Debug.Log("Player focus gained");
         runtime.PlayerFocusGained();
-        Debug.Log("TEST OnApplicationFocus true");
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
 
         yield return null;
