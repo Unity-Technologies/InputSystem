@@ -146,10 +146,6 @@ namespace UnityEngine.InputSystem.LowLevel
 
         ////REVIEW: should these take an InputUpdateType argument?
 
-        // two new requirements:
-        // - ordering of monitors to get expected callback sequence
-        // - resetting of *groups* of monitors
-
         public static void AddChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1, int groupIndex = default)
         {
             if (control == null)
