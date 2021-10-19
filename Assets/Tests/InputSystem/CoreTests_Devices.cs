@@ -2387,6 +2387,46 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanCreateGenericRacingWheel()
+    {
+        var wheel = InputSystem.AddDevice<RacingWheel>();
+
+        Assert.That(RacingWheel.current, Is.SameAs(wheel));
+
+        Assert.That(wheel.allControls.OfType<AxisControl>().Select(c => c.ReadValue()), Is.All.Zero);
+        Assert.That(wheel.gear.ReadValue(), Is.Zero);
+
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.DpadUp), wheel.dpad.up);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.DpadDown), wheel.dpad.down);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.DpadLeft), wheel.dpad.left);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.DpadRight), wheel.dpad.right);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.GearUp), wheel.gearUp);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.GearDown), wheel.gearDown);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.Menu), wheel.menu);
+        AssertButtonPress(wheel, new RacingWheelState().WithButton(RacingWheelButton.View), wheel.view);
+
+        InputSystem.QueueStateEvent(wheel,
+            new RacingWheelState
+            {
+                gear = 123,
+                throttle = 0.234f,
+                brake = 0.345f,
+                clutch = 0.456f,
+                handbrake = 0.567f,
+                wheel = 0.678f,
+            });
+        InputSystem.Update();
+
+        Assert.That(wheel.gear.ReadValue(), Is.EqualTo(123));
+        Assert.That(wheel.throttle.ReadValue(), Is.EqualTo(0.234f));
+        Assert.That(wheel.brake.ReadValue(), Is.EqualTo(0.345f));
+        Assert.That(wheel.clutch.ReadValue(), Is.EqualTo(0.456f));
+        Assert.That(wheel.handbrake.ReadValue(), Is.EqualTo(0.567f));
+        Assert.That(wheel.wheel.ReadValue(), Is.EqualTo(0.678f));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
         var pointer = InputSystem.AddDevice<Pointer>();
