@@ -2145,14 +2145,13 @@ namespace UnityEngine.InputSystem
 
             public void CompactArrays()
             {
-                for (var i = 0; i < count; ++i)
+                for (var i = count - 1; i >= 0; --i)
                 {
                     var memoryRegion = memoryRegions[i];
                     if (memoryRegion.sizeInBits != 0)
                         continue;
 
                     RemoveAt(i);
-                    --i;
                 }
                 needToCompactArrays = false;
             }
