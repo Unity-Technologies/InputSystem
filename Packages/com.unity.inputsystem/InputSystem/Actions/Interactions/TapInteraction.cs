@@ -12,7 +12,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>)
     /// and then released.
     /// </summary>
-    [Preserve]
     [DisplayName("Tap")]
     public class TapInteraction : IInputInteraction
     {

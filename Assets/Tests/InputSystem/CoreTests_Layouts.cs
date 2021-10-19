@@ -237,10 +237,8 @@ partial class CoreTests
         Assert.That(layout["hexDigital"].defaultState.ToInt64(), Is.EqualTo(0x1234));
     }
 
-    [Preserve]
     class TestDeviceWithDefaultState : InputDevice
     {
-        [Preserve]
         [InputControl(defaultState = 0.1234)]
         public AxisControl control { get; set; }
     }
@@ -373,7 +371,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateStructWithArrayOfControls))]
-    [Preserve]
     private class TestDeviceWithArrayOfControls : InputDevice
     {
     }
@@ -451,7 +448,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(commonUsages = new[] {"LeftHand", "RightHand"})]
-    [Preserve]
     private class DeviceWithCommonUsages : InputDevice
     {
     }
@@ -691,14 +687,12 @@ partial class CoreTests
         #endif
     }
 
-    [Preserve]
     private class TestDevice : InputDevice
     {
         [InputControl(processors = "Invert")]
         public ButtonControl button { get; set; }
     }
 
-    [Preserve]
     private class PrecompiledTestDevice : TestDevice
     {
         public PrecompiledTestDevice()
@@ -744,7 +738,6 @@ partial class CoreTests
             }
         ";
 
-        [Preserve]
         public class CustomInvertProcessor : InputProcessor<float>
         {
             public override float Process(float value, InputControl control)
@@ -1185,7 +1178,6 @@ partial class CoreTests
         Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
     }
 
-    [Preserve]
     private class MyButtonControl : ButtonControl
     {
     }
@@ -1256,7 +1248,6 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    [Preserve]
     private class TestLayoutType : Pointer
     {
     }
@@ -1272,11 +1263,9 @@ partial class CoreTests
         Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
     }
 
-    [Preserve]
     class DeviceWithControlProperties : InputDevice
     {
         public ButtonControl propertyWithoutAttribute { get; set; }
-        [Preserve]
         [InputControl]
         public ButtonControl propertyWithAttribute { get; set; }
     }
@@ -1351,7 +1340,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateStructWithPrimitiveFields))]
-    [Preserve]
     private class DeviceWithStateStructWithPrimitiveFields : InputDevice
     {
     }
@@ -1377,7 +1365,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithFixedArray))]
-    [Preserve]
     private class DeviceWithStateStructWithFixedArray : InputDevice
     {
     }
@@ -1655,10 +1642,8 @@ partial class CoreTests
         Assert.That(device.leftStick.x.shortDisplayName, Is.EqualTo("PS Horizontal"));
     }
 
-    [Preserve]
     class TestDeviceWithMinMaxValue : InputDevice
     {
-        [Preserve]
         [InputControl(minValue = 0.1234f, maxValue = 0.5432f)]
         public AxisControl control { get; set; }
     }
@@ -1704,20 +1689,16 @@ partial class CoreTests
         Assert.That(layout["control"].maxValue.ToInt32(), Is.EqualTo(123));
     }
 
-    [Preserve]
     class BaseClassWithControl : InputDevice
     {
-        [Preserve]
         [InputControl]
         public AxisControl controlFromBase { get; set; }
     }
 
-    [Preserve]
     class DerivedClassModifyingControlFromBaseClass : BaseClassWithControl
     {
         // One kink is that InputControlAttribute can only go on fields and properties
         // so we have to put it on some unrelated control.
-        [Preserve]
         [InputControl(name = "controlFromBase", format = "SHRT")]
         public ButtonControl controlFromDerived { get; set; }
     }
@@ -1885,14 +1866,11 @@ partial class CoreTests
         Assert.That(device["button"].synthetic, Is.True);
     }
 
-    [Preserve]
     class DeviceWithAutoOffsetControl : InputDevice
     {
-        [Preserve]
         [InputControl(offset = 4, sizeInBits = 32)]
         public ButtonControl button1;
 
-        [Preserve]
         [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public ButtonControl button2 { get; set; }
     }
@@ -1906,22 +1884,17 @@ partial class CoreTests
         Assert.That(device["button2"].stateBlock.byteOffset, Is.EqualTo(8));
     }
 
-    [Preserve]
     private class BaseDeviceFixedFixedOffsetControl : InputDevice
     {
-        [Preserve]
         [InputControl(offset = 4, format = "FLT")]
         public ButtonControl control;
 
-        [Preserve]
         [InputControl(offset = 8)]
         public AxisControl otherControl;
     }
 
-    [Preserve]
     private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
     {
-        [Preserve]
         [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public new ButtonControl control;
     }
@@ -1985,15 +1958,12 @@ partial class CoreTests
         Assert.That(device["fourth"].stateBlock.sizeInBits, Is.EqualTo(1));
     }
 
-    [Preserve]
     private class DeviceWithMisalignedAutomaticControl : InputDevice
     {
-        [Preserve]
         [InputControl(offset = 0, sizeInBits = 8)]
         public AxisControl control1;
 
         // 4-byte control. Must be aligned to 4 bytes.
-        [Preserve]
         [InputControl(offset = InputStateBlock.AutomaticOffset, sizeInBits = 32)]
         public AxisControl control2;
     }
@@ -2307,13 +2277,11 @@ partial class CoreTests
     }
 
     [InputControlLayout(variants = "A", stateType = typeof(StateWithTwoLayoutVariants))]
-    [Preserve]
     private class DeviceWithLayoutVariantA : InputDevice
     {
     }
 
     [InputControlLayout(variants = "B", stateType = typeof(StateWithTwoLayoutVariants))]
-    [Preserve]
     private class DeviceWithLayoutVariantB : InputDevice
     {
     }
@@ -2591,7 +2559,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(BaseInputState))]
-    [Preserve]
     private class BaseInputDevice : InputDevice
     {
     }
@@ -2602,7 +2569,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(DerivedInputState))]
-    [Preserve]
     private class DerivedInputDevice : InputDevice
     {
     }

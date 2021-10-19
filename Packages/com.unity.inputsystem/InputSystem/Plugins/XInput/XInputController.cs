@@ -48,7 +48,6 @@ namespace UnityEngine.InputSystem.XInput
     /// "XInputController".
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller")]
-    [Scripting.Preserve]
     public class XInputController : Gamepad
     {
         /// <summary>

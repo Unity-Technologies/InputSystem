@@ -117,7 +117,6 @@ namespace UnityEngine.InputSystem.Switch
     /// This controller currently only works when connected via Bluetooth but not when connected over USB.
     /// </remarks>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
-    [Scripting.Preserve]
     public class SwitchProControllerHID : Gamepad
     {
     }

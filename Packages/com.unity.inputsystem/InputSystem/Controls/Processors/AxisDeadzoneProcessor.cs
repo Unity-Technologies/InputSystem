@@ -24,7 +24,6 @@ namespace UnityEngine.InputSystem.Processors
     /// </example>
     /// </remarks>
     /// <seealso cref="StickDeadzoneProcessor"/>
-    [Preserve]
     public class AxisDeadzoneProcessor : InputProcessor<float>
     {
         /// <summary>

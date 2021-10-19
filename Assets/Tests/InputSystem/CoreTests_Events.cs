@@ -490,7 +490,7 @@ partial class CoreTests
         Assert.That(receivedEvents[2].time, Is.EqualTo(2.9).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.3456).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
+        Assert.That(runtime.eventCount, Is.Zero);
 
         receivedEvents.Clear();
 
@@ -509,7 +509,7 @@ partial class CoreTests
         Assert.That(receivedEvents[1].time, Is.EqualTo(3 + 0.002).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.2345).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.EqualTo(2));
+        Assert.That(runtime.eventCount, Is.EqualTo(2));
 
         receivedEvents.Clear();
 
@@ -521,7 +521,7 @@ partial class CoreTests
         Assert.That(receivedEvents[0].time, Is.EqualTo(3 + 1.0 / 60 + 0.001).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.3456).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.EqualTo(1));
+        Assert.That(runtime.eventCount, Is.EqualTo(1));
 
         receivedEvents.Clear();
 
@@ -533,7 +533,7 @@ partial class CoreTests
         Assert.That(receivedEvents[0].time, Is.EqualTo(3 + 2 * (1.0 / 60) + 0.001).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
+        Assert.That(runtime.eventCount, Is.Zero);
 
         receivedEvents.Clear();
 
@@ -544,7 +544,7 @@ partial class CoreTests
         Assert.That(receivedEvents, Has.Count.Zero);
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
+        Assert.That(runtime.eventCount, Is.Zero);
     }
 
     [Test]
@@ -918,7 +918,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(DpadState))]
-    [Preserve]
     private class DpadDevice : InputDevice
     {
     }
@@ -1193,7 +1192,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWith2Bytes))]
-    [Preserve]
     class DeviceWith2ByteState : InputDevice
     {
     }
@@ -1959,7 +1957,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
-    [Preserve]
     private class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
@@ -1972,7 +1969,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
-    [Preserve]
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;
@@ -2424,7 +2420,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(ThrowingExceptionTestDeviceState))]
-    [Preserve]
     private class ThrowingExceptionTestDevice : InputDevice, IInputStateCallbackReceiver
     {
         public class TestException : Exception

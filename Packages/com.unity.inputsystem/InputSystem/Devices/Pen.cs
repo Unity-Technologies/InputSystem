@@ -213,7 +213,6 @@ namespace UnityEngine.InputSystem
     /// tablet surface.
     /// </remarks>
     [InputControlLayout(stateType = typeof(PenState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
     public class Pen : Pointer
     {
         ////TODO: give the tip and eraser a very low press point

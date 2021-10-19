@@ -3450,6 +3450,10 @@ namespace UnityEngine.InputSystem
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             Steam.SteamSupport.Initialize();
             #endif
+
+            #if UNITY_EDITOR
+            UnityRemoteSupport.Initialize();
+            #endif
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION

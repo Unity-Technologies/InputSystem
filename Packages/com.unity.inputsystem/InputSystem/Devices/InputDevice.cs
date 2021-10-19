@@ -143,7 +143,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Keyboard"/>
     /// <seealso cref="Gamepad"/>
     /// <seealso cref="Touchscreen"/>
-    [Scripting.Preserve]
     public class InputDevice : InputControl
     {
         /// <summary>
