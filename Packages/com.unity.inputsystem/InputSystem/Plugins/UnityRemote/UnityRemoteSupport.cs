@@ -281,7 +281,7 @@ namespace UnityEngine.InputSystem
 
             // GetConfigValue is private. Reflect around it.
             var getConfigValueMethod = typeof(EditorSettings).GetMethod("GetConfigValue");
-            if (getConfigValueMethod != null && getConfigValueMethod.Invoke(null, new[] { "UnityRemoteResolution" }) == "Normal")
+            if (getConfigValueMethod != null && (string)getConfigValueMethod.Invoke(null, new[] { "UnityRemoteResolution" }) == "Normal")
             {
                 hdim1 = dimension1;
                 hdim2 = dimension2;
