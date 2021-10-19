@@ -478,9 +478,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException("Composite name cannot be null or empty", nameof(composite));
 
             var actionMap = action.GetOrCreateActionMap();
-
-            ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, processors = processors, isComposite = true, action = action.name};
+            var binding = new InputBinding {name = $"{action.name}_{composite}", path = composite, interactions = interactions, processors = processors, isComposite = true, action = action.name};
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }
