@@ -5,7 +5,6 @@ namespace UnityEngine.InputSystem.Controls
     /// <summary>
     /// A control reading a <see cref="double"/>.
     /// </summary>
-    [Scripting.Preserve]
     public class DoubleControl : InputControl<double>
     {
         /// <summary>

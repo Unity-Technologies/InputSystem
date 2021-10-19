@@ -19,7 +19,6 @@ namespace UnityEngine.InputSystem.Controls
     /// at exactly those memory addresses.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchState))]
-    [Preserve]
     public class TouchControl : InputControl<TouchState>
     {
         /// <summary>

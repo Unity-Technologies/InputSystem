@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.DualShock
         {
             var builder = this.Setup(37, 11, 8)
                 .WithName("DualShock4GamepadHID")
-                .WithDisplayName("PS4 Controller")
+                .WithDisplayName("PlayStation Controller")
                 .WithChildren(0, 19)
                 .WithLayout(new InternedString("DualShock4GamepadHID"))
                 .WithStateBlock(new InputStateBlock { format = new FourCC(1212761120), sizeInBits = 80 });

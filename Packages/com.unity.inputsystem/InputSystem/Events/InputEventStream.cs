@@ -70,6 +70,19 @@ namespace UnityEngine.InputSystem.LowLevel
             m_IsOpen = false;
         }
 
+        public void CleanUpAfterException()
+        {
+            if (!isOpen)
+                return;
+
+            m_NativeBuffer.Reset();
+
+            if (m_AppendBuffer.data.IsCreated)
+                m_AppendBuffer.Dispose();
+
+            m_IsOpen = false;
+        }
+
         public void Write(InputEvent* eventPtr)
         {
             if (m_AppendBuffer.eventCount >= m_MaxAppendedEvents)

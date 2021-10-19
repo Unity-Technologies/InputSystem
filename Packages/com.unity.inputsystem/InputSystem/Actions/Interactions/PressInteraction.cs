@@ -31,7 +31,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
     /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
     /// </remarks>
-    [Preserve]
     [DisplayName("Press")]
     public class PressInteraction : IInputInteraction
     {

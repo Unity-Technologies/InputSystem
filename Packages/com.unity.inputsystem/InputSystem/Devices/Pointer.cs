@@ -83,7 +83,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Pen"/>
     /// <seealso cref="Touchscreen"/>
     [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?

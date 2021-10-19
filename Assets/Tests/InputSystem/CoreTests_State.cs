@@ -706,7 +706,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
-    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }

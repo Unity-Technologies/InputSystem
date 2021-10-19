@@ -669,6 +669,11 @@ namespace UnityEngine.InputSystem
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
+        internal bool IsFeatureEnabled(string featureName)
+        {
+            return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
+        }
+
         internal void OnChange()
         {
             if (InputSystem.settings == this)

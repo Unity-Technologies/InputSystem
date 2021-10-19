@@ -908,11 +908,13 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     "Must set actions on PlayerInput in order to be able to switch control schemes");
 
+            // Find control scheme matching given devices in associated action asset
             var scheme = InputControlScheme.FindControlSchemeForDevices(devices, actions.controlSchemes);
-            if (scheme == null)
+            if (!scheme.HasValue)
                 return false;
 
-            SwitchCurrentControlScheme(scheme.Value.name, devices);
+            var controlScheme = scheme.Value;
+            SwitchControlSchemeInternal(ref controlScheme, devices);
             return true;
         }
 
@@ -950,14 +952,8 @@ namespace UnityEngine.InputSystem
             if (devices == null)
                 throw new ArgumentNullException(nameof(devices));
 
-            using (InputActionRebindingExtensions.DeferBindingResolution())
-            {
-                user.UnpairDevices();
-                for (var i = 0; i < devices.Length; ++i)
-                    InputUser.PerformPairingWithDevice(devices[i], user: user);
-
-                user.ActivateControlScheme(controlScheme);
-            }
+            user.FindControlScheme(controlScheme, out InputControlScheme scheme); // throws if not found
+            SwitchControlSchemeInternal(ref scheme, devices);
         }
 
         public void SwitchCurrentActionMap(string mapNameOrId)
@@ -1927,6 +1923,35 @@ namespace UnityEngine.InputSystem
                 m_InputUser.valid)
             {
                 InputUser.PerformPairingWithDevice(device, user: m_InputUser);
+            }
+        }
+
+        private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, params InputDevice[] devices)
+        {
+            Debug.Assert(devices != null);
+
+            // Note that we are doing two somwhat uncorrelated actions here:
+            // - Switching control scheme
+            // - Explicitly pairing with given devices regardless if making sense with respect to control scheme
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                // Unpair device previously paired but not part of given devices to pair with
+                for (var i = user.pairedDevices.Count - 1; i >= 0; --i)
+                {
+                    if (!devices.ContainsReference(user.pairedDevices[i]))
+                        user.UnpairDevice(user.pairedDevices[i]);
+                }
+
+                // Pair devices not previously paired but that are part of given devices to pair with
+                foreach (var device in devices)
+                {
+                    if (!user.pairedDevices.ContainsReference(device))
+                        InputUser.PerformPairingWithDevice(device, user: user);
+                }
+
+                // Only activate control scheme if its a different scheme
+                if (!user.controlScheme.HasValue || !user.controlScheme.Value.Equals(controlScheme))
+                    user.ActivateControlScheme(controlScheme);
             }
         }
 

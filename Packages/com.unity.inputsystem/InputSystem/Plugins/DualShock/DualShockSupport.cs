@@ -27,6 +27,11 @@ namespace UnityEngine.InputSystem.DualShock
             //       not return anything from IOHIDDevice_GetProduct() and IOHIDevice_GetManufacturer()
             //       even though it will report the expected results when plugged in via USB.
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || UNITY_EDITOR
+            InputSystem.RegisterLayout<DualSenseGamepadHID>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x54C) // Sony Entertainment.
+                    .WithCapability("productId", 0xCE6));
             InputSystem.RegisterLayout<DualShock4GamepadHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")

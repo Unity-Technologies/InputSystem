@@ -23,7 +23,6 @@ namespace UnityEngine.InputSystem.Processors
     /// new InputAction(binding: "&lt;Gamepad&gt;/rightTrigger", processors: "clamp(min=0.3,max=0.7)");
     /// </example>
     /// </remarks>
-    [Preserve]
     public class ClampProcessor : InputProcessor<float>
     {
         /// <summary>

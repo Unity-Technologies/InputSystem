@@ -1032,13 +1032,17 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method can be used to forcibly cancel an action even while it is in progress. Note that unlike
         /// disabling an action, for example, this also effects APIs such as <see cref="WasPressedThisFrame"/>.
+        ///
+        /// Note that invoking this method will not modify enabled state.
         /// </remarks>
         /// <seealso cref="inProgress"/>
         /// <seealso cref="phase"/>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="Disable"/>
         public void Reset()
         {
             var state = GetOrCreateActionMap().m_State;
-            state?.ResetActionState(m_ActionIndexInState, hardReset: true);
+            state?.ResetActionState(m_ActionIndexInState, toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
         }
 
         /// <summary>

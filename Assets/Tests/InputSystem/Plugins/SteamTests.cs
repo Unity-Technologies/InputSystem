@@ -378,7 +378,6 @@ internal class SteamTests : CoreTestsFixture
     }
 
     [InputControlLayout(stateType = typeof(TestControllerState))]
-    [Preserve]
     class TestController : SteamController
     {
         public ButtonControl fire { get; private set; }
