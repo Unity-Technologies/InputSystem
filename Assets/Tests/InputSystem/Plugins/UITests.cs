@@ -2013,7 +2013,7 @@ internal class UITests : CoreTestsFixture
 
         // Clone left button. If we release the button now, there should not be
         // a click because the object pointed to has changed.
-        Object.Instantiate(scene.leftGameObject, scene.parentReceiver.transform);
+        UnityEngine.Object.Instantiate(scene.leftGameObject, scene.parentReceiver.transform);
         Release(mouse.leftButton, queueEventOnly: true);
         scene.ClearEvents();
 
