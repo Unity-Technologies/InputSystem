@@ -143,7 +143,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Keyboard"/>
     /// <seealso cref="Gamepad"/>
     /// <seealso cref="Touchscreen"/>
-    [Scripting.Preserve]
     public class InputDevice : InputControl
     {
         /// <summary>
@@ -621,6 +620,7 @@ namespace UnityEngine.InputSystem
             HasControlsWithDefaultState = 1 << 2,
             HasDontResetControls = 1 << 10,
             HasEventMerger = 1 << 13,
+            HasEventPreProcessor = 1 << 14,
 
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
             Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
@@ -788,6 +788,18 @@ namespace UnityEngine.InputSystem
                     m_DeviceFlags |= DeviceFlags.HasEventMerger;
                 else
                     m_DeviceFlags &= ~DeviceFlags.HasEventMerger;
+            }
+        }
+
+        internal bool hasEventPreProcessor
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasEventPreProcessor) == DeviceFlags.HasEventPreProcessor;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasEventPreProcessor;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasEventPreProcessor;
             }
         }
 

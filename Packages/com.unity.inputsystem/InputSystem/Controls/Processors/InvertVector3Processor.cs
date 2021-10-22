@@ -16,7 +16,6 @@ namespace UnityEngine.InputSystem.Processors
     /// </example>
     /// </remarks>
     /// <seealso cref="InvertVector2Processor"/>
-    [Preserve]
     public class InvertVector3Processor : InputProcessor<Vector3>
     {
         /// <summary>

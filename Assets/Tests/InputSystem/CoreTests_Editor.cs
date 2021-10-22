@@ -350,7 +350,6 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
@@ -359,13 +358,50 @@ partial class CoreTests
         // started with.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Editor);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
         // So running a player update now should make the input come through in player state.
         InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
+    }
 
+    [Test]
+    [Category("Editor")]
+    // Case 1368559
+    // Case 1367556
+    // Case 1372830
+    public void Editor_WhenPlaying_ItsPossibleToQueryPlayerStateAfterEditorUpdate()
+    {
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // ----------------- Engine frame 1
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // ----------------- Engine frame 2
+
+        // Simulate early player loop callback
+        runtime.onPlayerLoopInitialization();
+
+        // This code might be running in EarlyUpdate or FixedUpdate, _before_ Dynamic update is invoked.
+        // We should read values from last player update, meaning we report values from last frame.
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Running a player update now should make the input come through in player state.
+        InputSystem.Update(InputUpdateType.Dynamic);
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
@@ -2238,7 +2274,6 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
-    [Preserve]
     private class TestInteractionWithValueType : IInputInteraction<float>
     {
         public void Process(ref InputInteractionContext context)
@@ -2568,7 +2603,7 @@ partial class CoreTests
 
         Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
 
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         updates.Clear();
 
@@ -2583,7 +2618,7 @@ partial class CoreTests
     public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
     {
         runtime.isInPlayMode = false;
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "<Gamepad>/leftTrigger");
@@ -2956,6 +2991,50 @@ partial class CoreTests
     public void Editor_CanRestartEditorThroughReflection()
     {
         EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_AfterUpdateCallbackIsNotCalledDuringEditorUpdates()
+    {
+        var receivedCalls = 0;
+        InputSystem.onAfterUpdate += () => ++ receivedCalls;
+
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedCalls, Is.Zero);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputControlPicker_TouchscreenPickerContainsSingleAndMultiTouchControls()
+    {
+        var dropdown = new StubInputControlPickerDropdown(new InputControlPickerState(), _ => {});
+        var root = dropdown.BuildRoot();
+
+        Assert.That(() =>
+        {
+            var touchscreen = root.children.FirstOrDefault(c => c.name == "Touchscreen");
+            if (touchscreen == null)
+                return false;
+
+            return touchscreen.children.Any(c => c.name == "Press (Single touch)") &&
+            touchscreen.children.Any(c => c.name == "Press (Multi-touch)");
+        });
+    }
+
+    internal class StubInputControlPickerDropdown : InputControlPickerDropdown
+    {
+        public StubInputControlPickerDropdown(InputControlPickerState state, Action<string> onPickCallback,
+                                              InputControlPicker.Mode mode = InputControlPicker.Mode.PickControl)
+            : base(state, onPickCallback, mode)
+        {
+        }
+
+        public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
+        {
+            return base.BuildRoot();
+        }
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB

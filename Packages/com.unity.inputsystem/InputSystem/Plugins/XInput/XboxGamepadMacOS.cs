@@ -206,7 +206,6 @@ namespace UnityEngine.InputSystem.XInput
     /// to work.
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerOSXState), hideInUI = true)]
-    [Preserve]
     public class XboxGamepadMacOS : XInputController
     {
     }
@@ -221,7 +220,6 @@ namespace UnityEngine.InputSystem.XInput
     /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
-    [Preserve]
     public class XboxOneGampadMacOSWireless : XInputController
     {
     }

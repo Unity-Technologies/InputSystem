@@ -39,7 +39,6 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="Vector3Composite"/>
-    [Preserve]
     [DisplayStringFormat("{up}/{left}/{down}/{right}")] // This results in WASD.
     [DisplayName("Up/Down/Left/Right Composite")]
     public class Vector2Composite : InputBindingComposite<Vector2>

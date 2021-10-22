@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         public static FourCC kFormat = new FourCC('I', 'S', 'C', 'S');
         public FourCC format => kFormat;
 
-        [InputControl(name = "stepCounter")]
+        [InputControl(name = "stepCounter", layout = "Integer")]
         public int stepCounter;
     }
 
