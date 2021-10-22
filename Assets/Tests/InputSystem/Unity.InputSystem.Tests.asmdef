@@ -1,5 +1,6 @@
 {
     "name": "Unity.InputSystem.Tests",
+    "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
@@ -28,6 +29,11 @@
             "name": "com.unity.package-manager-doctools",
             "expression": "1.0",
             "define": "HAVE_DOCTOOLS_INSTALLED"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.1.0a12,2022.1.0a16)",
+            "define": "TEMP_DISABLE_UI_TESTS_ON_TRUNK"
         }
     ],
     "noEngineReferences": false
