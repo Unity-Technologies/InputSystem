@@ -1162,8 +1162,9 @@ namespace UnityEngine.InputSystem
             ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
             ////        it current, no?
             // Make the device current.
-            if (device.enabled)
-                device.MakeCurrent();
+            // BEWARE: if this will not happen for whatever reason, you will break Android sensors,
+            // as they rely on .current for enabling native backend, see https://fogbugz.unity3d.com/f/cases/1371204/
+            device.MakeCurrent();
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
