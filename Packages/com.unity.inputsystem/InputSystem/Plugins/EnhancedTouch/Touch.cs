@@ -332,8 +332,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             {
                 EnhancedTouchSupport.CheckEnabled();
                 // We lazily construct the array of active touches.
-                s_PlayerState.UpdateActiveTouches();
-                return new ReadOnlyArray<Touch>(s_PlayerState.activeTouches, 0, s_PlayerState.activeTouchCount);
+                s_GlobalState.playerState.UpdateActiveTouches();
+                return new ReadOnlyArray<Touch>(s_GlobalState.playerState.activeTouches, 0, s_GlobalState.playerState.activeTouchCount);
             }
         }
 
@@ -356,7 +356,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             get
             {
                 EnhancedTouchSupport.CheckEnabled();
-                return new ReadOnlyArray<Finger>(s_PlayerState.fingers, 0, s_PlayerState.totalFingerCount);
+                return new ReadOnlyArray<Finger>(s_GlobalState.playerState.fingers, 0, s_GlobalState.playerState.totalFingerCount);
             }
         }
 
@@ -372,8 +372,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             {
                 EnhancedTouchSupport.CheckEnabled();
                 // We lazily construct the array of active fingers.
-                s_PlayerState.UpdateActiveFingers();
-                return new ReadOnlyArray<Finger>(s_PlayerState.activeFingers, 0, s_PlayerState.activeFingerCount);
+                s_GlobalState.playerState.UpdateActiveFingers();
+                return new ReadOnlyArray<Finger>(s_GlobalState.playerState.activeFingers, 0, s_GlobalState.playerState.activeFingerCount);
             }
         }
 
@@ -386,7 +386,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             get
             {
                 EnhancedTouchSupport.CheckEnabled();
-                return s_Touchscreens;
+                return s_GlobalState.touchscreens;
             }
         }
 
@@ -403,16 +403,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnFingerDown.AppendWithCapacity(value);
+                s_GlobalState.onFingerDown.AddCallback(value);
             }
             remove
             {
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnFingerDown.IndexOf(value);
-                if (index != -1)
-                    s_OnFingerDown.RemoveAtWithCapacity(index);
+                s_GlobalState.onFingerDown.RemoveCallback(value);
             }
         }
 
@@ -429,16 +427,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnFingerUp.AppendWithCapacity(value);
+                s_GlobalState.onFingerUp.AddCallback(value);
             }
             remove
             {
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnFingerUp.IndexOf(value);
-                if (index != -1)
-                    s_OnFingerUp.RemoveAtWithCapacity(index);
+                s_GlobalState.onFingerUp.RemoveCallback(value);
             }
         }
 
@@ -456,16 +452,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                s_OnFingerMove.AppendWithCapacity(value);
+                s_GlobalState.onFingerMove.AddCallback(value);
             }
             remove
             {
                 EnhancedTouchSupport.CheckEnabled();
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = s_OnFingerMove.IndexOf(value);
-                if (index != -1)
-                    s_OnFingerMove.RemoveAtWithCapacity(index);
+                s_GlobalState.onFingerMove.RemoveCallback(value);
             }
         }
 
@@ -487,7 +481,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// </remarks>
         public static int maxHistoryLengthPerFinger
         {
-            get => s_HistoryLengthPerFinger;
+            get => s_GlobalState.historyLengthPerFinger;
 
             ////TODO
             /*set { throw new NotImplementedException(); }*/
@@ -527,63 +521,90 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         internal static void AddTouchscreen(Touchscreen screen)
         {
-            Debug.Assert(!s_Touchscreens.ContainsReference(screen), "Already added touchscreen");
-            s_Touchscreens.AppendWithCapacity(screen, capacityIncrement: 5);
+            Debug.Assert(!s_GlobalState.touchscreens.ContainsReference(screen), "Already added touchscreen");
+            s_GlobalState.touchscreens.AppendWithCapacity(screen, capacityIncrement: 5);
 
             // Add finger tracking to states.
-            s_PlayerState.AddFingers(screen);
-            #if UNITY_EDITOR
-            s_EditorState.AddFingers(screen);
-            #endif
+            s_GlobalState.playerState.AddFingers(screen);
+#if UNITY_EDITOR
+            s_GlobalState.editorState.AddFingers(screen);
+#endif
         }
 
         internal static void RemoveTouchscreen(Touchscreen screen)
         {
-            Debug.Assert(s_Touchscreens.ContainsReference(screen), "Did not add touchscreen");
+            Debug.Assert(s_GlobalState.touchscreens.ContainsReference(screen), "Did not add touchscreen");
 
             // Remove from list.
-            var index = s_Touchscreens.IndexOfReference(screen);
-            s_Touchscreens.RemoveAtWithCapacity(index);
+            var index = s_GlobalState.touchscreens.IndexOfReference(screen);
+            s_GlobalState.touchscreens.RemoveAtWithCapacity(index);
 
             // Remove fingers from states.
-            s_PlayerState.RemoveFingers(screen);
-            #if UNITY_EDITOR
-            s_EditorState.RemoveFingers(screen);
-            #endif
+            s_GlobalState.playerState.RemoveFingers(screen);
+#if UNITY_EDITOR
+            s_GlobalState.editorState.RemoveFingers(screen);
+#endif
         }
 
         ////TODO: only have this hooked when we actually need it
         internal static void BeginUpdate()
         {
-            #if UNITY_EDITOR
-            if ((InputState.currentUpdateType == InputUpdateType.Editor && s_PlayerState.updateMask != InputUpdateType.Editor) ||
-                (InputState.currentUpdateType != InputUpdateType.Editor && s_PlayerState.updateMask == InputUpdateType.Editor))
+#if UNITY_EDITOR
+            if ((InputState.currentUpdateType == InputUpdateType.Editor && s_GlobalState.playerState.updateMask != InputUpdateType.Editor) ||
+                (InputState.currentUpdateType != InputUpdateType.Editor && s_GlobalState.playerState.updateMask == InputUpdateType.Editor))
             {
                 // Either swap in editor state and retain currently active player state in s_EditorState
                 // or swap player state back in.
-                MemoryHelpers.Swap(ref s_PlayerState, ref s_EditorState);
+                MemoryHelpers.Swap(ref s_GlobalState.playerState, ref s_GlobalState.editorState);
             }
-            #endif
+#endif
 
             // If we have any touches in activeTouches that are ended or canceled,
             // we need to clear them in the next frame.
-            if (s_PlayerState.haveActiveTouchesNeedingRefreshNextUpdate)
-                s_PlayerState.haveBuiltActiveTouches = false;
+            if (s_GlobalState.playerState.haveActiveTouchesNeedingRefreshNextUpdate)
+                s_GlobalState.playerState.haveBuiltActiveTouches = false;
         }
 
         private readonly Finger m_Finger;
         internal InputStateHistory<TouchState>.Record m_TouchRecord;
 
-        internal static InlinedArray<Touchscreen> s_Touchscreens;
-        internal static int s_HistoryLengthPerFinger = 64;
-        internal static InlinedArray<Action<Finger>> s_OnFingerDown;
-        internal static InlinedArray<Action<Finger>> s_OnFingerMove;
-        internal static InlinedArray<Action<Finger>> s_OnFingerUp;
+        /// <summary>
+        /// Holds global (static) touch state.
+        /// </summary>
+        internal struct GlobalState
+        {
+            internal InlinedArray<Touchscreen> touchscreens;
+            internal int historyLengthPerFinger;
+            internal CallbackArray<Action<Finger>> onFingerDown;
+            internal CallbackArray<Action<Finger>> onFingerMove;
+            internal CallbackArray<Action<Finger>> onFingerUp;
 
-        internal static FingerAndTouchState s_PlayerState;
-        #if UNITY_EDITOR
-        internal static FingerAndTouchState s_EditorState;
-        #endif
+            internal FingerAndTouchState playerState;
+#if UNITY_EDITOR
+            internal FingerAndTouchState editorState;
+#endif
+        }
+
+        private static GlobalState CreateGlobalState()
+        {   // Convenient method since parameterized construction is default
+            return new GlobalState { historyLengthPerFinger = 64 };
+        }
+
+        internal static GlobalState s_GlobalState = CreateGlobalState();
+
+        internal static ISavedState SaveAndResetState()
+        {
+            // Save current state
+            var savedState = new SavedStructState<GlobalState>(
+                ref s_GlobalState,
+                (ref GlobalState state) => s_GlobalState = state,
+                () => { /* currently nothing to dispose */ });
+
+            // Reset global state
+            s_GlobalState = CreateGlobalState();
+
+            return savedState;
+        }
 
         // In scenarios where we have to support multiple different types of input updates (e.g. in editor or in
         // player when both dynamic and fixed input updates are enabled), we need more than one copy of touch state.

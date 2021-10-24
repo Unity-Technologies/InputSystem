@@ -255,7 +255,7 @@ PlayerSettings:
   clonedFromGUID: 00000000000000000000000000000000
   templatePackageId: 
   templateDefaultScene: 
-  AndroidTargetArchitectures: 5
+  AndroidTargetArchitectures: 1
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: '{inproject}: {inproject}: {inproject}: '
@@ -631,7 +631,9 @@ PlayerSettings:
   il2cppCompilerConfiguration:
     Android: 0
   managedStrippingLevel:
+    Android: 3
     Standalone: 3
+    iPhone: 3
   incrementalIl2cppBuild: {}
   allowUnsafeCode: 1
   additionalIl2CppArgs: 

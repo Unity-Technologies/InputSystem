@@ -22,6 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
@@ -42,6 +43,8 @@ partial class CoreTests
             var versionString = packageJson.version;
             if (versionString.Contains("-preview"))
                 versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
+            else if (versionString.Contains("-pre"))
+                versionString = versionString.Substring(0, versionString.IndexOf("-pre"));
             return new Version(versionString);
         }
     }
@@ -337,25 +340,68 @@ partial class CoreTests
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
-    // Editor updates are confusing in that they denote just another point in the
-    // application loop where we push out events. They do not mean that the events
-    // we send necessarily go to the editor state buffers.
     [Test]
     [Category("Editor")]
-    public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
+    public void Editor_WhenPlaying_EditorUpdatesKeepSeparateStateFromPlayerUpdates()
     {
-        InputEditorUserSettings.lockInputToGameView = true;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Piping input into an editor update now should not result in it being consumed
+        // as the game is running and has focus. We should see the blank state the editor
+        // started with.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // So running a player update now should make the input come through in player state.
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Editor")]
+    // Case 1368559
+    // Case 1367556
+    // Case 1372830
+    public void Editor_WhenPlaying_ItsPossibleToQueryPlayerStateAfterEditorUpdate()
+    {
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // ----------------- Engine frame 1
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
+        // ----------------- Engine frame 2
+
+        // Simulate early player loop callback
+        runtime.onPlayerLoopInitialization();
+
+        // This code might be running in EarlyUpdate or FixedUpdate, _before_ Dynamic update is invoked.
+        // We should read values from last player update, meaning we report values from last frame.
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Running a player update now should make the input come through in player state.
         InputSystem.Update(InputUpdateType.Dynamic);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
@@ -798,7 +844,7 @@ partial class CoreTests
         };
         tree.Reload();
 
-        Assert.That(tree.rootItem, Is.TypeOf<TreeViewItem>());
+        Assert.That(tree.rootItem, Is.TypeOf<InputActionTreeView.ActionMapListItem>());
         Assert.That(tree.rootItem.children, Has.Count.EqualTo(2));
         Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
         Assert.That(tree.rootItem.children[1], Is.TypeOf<ActionMapTreeItem>());
@@ -1927,6 +1973,57 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_ActionTree_CanDeleteMultipleBindings()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map1");
+        var action1 = map1.AddAction("action1");
+        action1.AddBinding("<Gamepad>/leftStick");
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Gamepad>/dpad");
+
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"), true);
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"), true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
+
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action1"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Is.Null);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_ActionTree_CanDeleteComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2177,7 +2274,6 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
-    [Preserve]
     private class TestInteractionWithValueType : IInputInteraction<float>
     {
         public void Process(ref InputInteractionContext context)
@@ -2360,6 +2456,105 @@ partial class CoreTests
         throw new NotImplementedException();
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanForceKeyboardAndMouseInputToGameViewWithoutFocus()
+    {
+        runtime.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(keyboard.enabled, Is.True);
+        Assert.That(mouse.enabled, Is.True);
+
+        Press(keyboard.spaceKey, queueEventOnly: true);
+        Press(mouse.leftButton, queueEventOnly: true);
+
+        // First make sure the editor is *not* eating this input.
+        var eventCountBefore = InputSystem.metrics.totalEventCount;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputSystem.metrics.totalEventCount, Is.EqualTo(eventCountBefore));
+
+        Assert.That(keyboard.spaceKey.isPressed, Is.False);
+        Assert.That(mouse.leftButton.isPressed, Is.False);
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(keyboard.spaceKey.isPressed, Is.True);
+        Assert.That(mouse.leftButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenNotInPlayMode_AllInputGoesToEditor()
+    {
+        // Give us a setting where in play mode, gamepad input would go to the game
+        // regardless of focus.
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        runtime.isInPlayMode = false;
+
+        Press(gamepad.buttonSouth);
+        Press(mouse.leftButton);
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+        Set(gamepad.leftTrigger, 0.5f, queueEventOnly: true);
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+
+        // Try running a dynamic update. Outside of play mode, this should do nothing.
+        var eventCountBefore = InputSystem.metrics.totalEventCount;
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(InputSystem.metrics.totalEventCount, Is.EqualTo(eventCountBefore));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Running the editor update now, we should see the event for the gamepad popping up.
+        InputSystem.Update();
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f));
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public unsafe void Editor_WhenEditorIsActivated_AllDevicesAreSynced()
+    {
+        runtime.isInPlayMode = false;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var receivedMouseSync = false;
+        runtime.SetDeviceCommandCallback(mouse, (id, commandPtr) =>
+        {
+            if (commandPtr->type == RequestSyncCommand.Type)
+                receivedMouseSync = true;
+            return InputDeviceCommand.GenericFailure;
+        });
+
+        runtime.isEditorActive = false;
+        InputSystem.Update();
+
+        Assert.That(receivedMouseSync, Is.False);
+
+        runtime.isEditorActive = true;
+        InputSystem.Update();
+
+        Assert.That(receivedMouseSync, Is.True);
+    }
+
     // While going into play mode, the editor will be unresponsive. So what will happen is that when the user clicks the
     // play mode button and then moves the mouse around while Unity is busy going into play mode, the game will receive
     // a huge pointer motion delta in one of its first frames. If pointer motion is tied to camera motion, for example,
@@ -2392,6 +2587,61 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsManually, InputUpdateType.Manual)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate, InputUpdateType.Dynamic)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
+    public void Editor_WhenRunUpdatesInEditModeIsEnabled_PlayerUpdatesRunOutsideOfPlayMode(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.updateMode = updateMode;
+
+        var updates = new List<InputUpdateType>();
+        InputSystem.onBeforeUpdate += () => updates.Add(InputState.currentUpdateType);
+
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
+
+        updates.Clear();
+
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor, updateType }));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+
+        var performedCallCount = 0;
+        action.performed += context => performedCallCount++;
+        action.Enable();
+
+        Set(gamepad.leftTrigger, 0f);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(performedCallCount, Is.EqualTo(0));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
+
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_LeavingPlayMode_DestroysAllActionStates()
     {
         InputSystem.AddDevice<Gamepad>();
@@ -2403,7 +2653,7 @@ partial class CoreTests
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         action.Enable();
 
-        Assert.That(InputActionState.s_GlobalList.length, Is.EqualTo(1));
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
 
@@ -2411,8 +2661,136 @@ partial class CoreTests
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
-        Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_RemovesAllInputUsersAndStopsListeningForUnpairedDeviceActivity()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed += (control, ptr) => {};
+
+        Assert.That(user.valid, Is.True);
+        Assert.That(InputUser.all, Has.Count.EqualTo(1));
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(user.valid, Is.False);
+        Assert.That(InputUser.all, Has.Count.Zero);
+
+        // Send an event to make sure InputUser removed its event hook.
+        Press(gamepad.buttonSouth);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_ReenablesAllDevicesTemporarilyDisabledDueToFocus()
+    {
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.ResetAndDisableAllDevices;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Set(mouse.position, new Vector2(123, 234));
+        Press(gamepad.buttonSouth);
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(gamepad.enabled, Is.False);
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+
+        Assert.That(gamepad.enabled, Is.True);
+        Assert.That(gamepad.disabledWhileInBackground, Is.False);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_DiscardsInputActionAssetChanges()
+    {
+        // Control schemes
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .AddControlScheme("AddedControlScheme"), "Add control scheme");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .RemoveControlScheme("ControlSchemeToRemove"), "Remove control scheme");
+
+        // Action maps
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .AddActionMap("NewActionMap"), "Add action map");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .RemoveActionMap("ActionMapToRemove"), "Remove action map");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("ActionMapToModify")
+            .AddAction("NewAction"), "Add action");
+
+        // Actions
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .RemoveAction(), "Remove action");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .Rename("New Action"), "Modify action");
+
+        // Bindings
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("ActionMapToModify")
+            .AddBinding("<Gamepad>/buttonNorth"), "Add new binding");
+
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .ApplyBindingOverride("<Gamepad>/buttonNorth"), "Modify binding");
+    }
+
+    private void AssertAssetIsUnmodifiedAfterExitingPlayMode(Action<InputActionAsset> action, string message = "")
+    {
+        var m_TestAssetPath = $"Assets/__TestInputAsset.{InputActionAsset.Extension}";
+
+        var inputActionMap = new InputActionMap("DefaultActionMap");
+        var inputAction = inputActionMap.AddAction("DefaultAction");
+        inputAction.AddBinding("<Gamepad>/buttonSouth");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(inputActionMap);
+
+        asset.AddActionMap("ActionMapToRemove");
+        asset.AddActionMap("ActionMapToModify");
+        asset.AddControlScheme("ControlSchemeToRemove");
+
+        File.WriteAllText(m_TestAssetPath, asset.ToJson());
+        AssetDatabase.ImportAsset(m_TestAssetPath);
+        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        var originalJson = asset.ToJson();
+        AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var assetGuid, out long _);
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        action?.Invoke(asset);
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.
@@ -2450,6 +2828,8 @@ partial class CoreTests
         Assert.That(device.parent, Is.Null);
         Assert.That(device.device, Is.SameAs(device));
         Assert.That(device.children.Select(x => x.path), Is.EquivalentTo(original.children.Select(x => x.path)));
+        Assert.That(device.hasControlsWithDefaultState, Is.EqualTo(original.hasControlsWithDefaultState));
+        Assert.That(device.hasDontResetControls, Is.EqualTo(original.hasDontResetControls));
 
         Assert.That(device.allControls.Count, Is.EqualTo(original.allControls.Count));
         Assert.That(device.allControls.Select(x => x.name), Is.EquivalentTo(original.allControls.Select(x => x.name)));
@@ -2470,6 +2850,7 @@ partial class CoreTests
         Assert.That(device.allControls.Select(x => x.isSetupFinished), Is.EquivalentTo(original.allControls.Select(x => x.isSetupFinished)));
         Assert.That(device.allControls.Select(x => x.usages), Is.EquivalentTo(original.allControls.Select(x => x.usages)));
         Assert.That(device.allControls.Select(x => x.aliases), Is.EquivalentTo(original.allControls.Select(x => x.aliases)));
+        Assert.That(device.allControls.Select(x => x.dontReset), Is.EquivalentTo(original.allControls.Select(x => x.dontReset)));
 
         // Check that all InputControl getters were initialized correctly.
         Assert.That(
@@ -2610,6 +2991,50 @@ partial class CoreTests
     public void Editor_CanRestartEditorThroughReflection()
     {
         EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_AfterUpdateCallbackIsNotCalledDuringEditorUpdates()
+    {
+        var receivedCalls = 0;
+        InputSystem.onAfterUpdate += () => ++ receivedCalls;
+
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedCalls, Is.Zero);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputControlPicker_TouchscreenPickerContainsSingleAndMultiTouchControls()
+    {
+        var dropdown = new StubInputControlPickerDropdown(new InputControlPickerState(), _ => {});
+        var root = dropdown.BuildRoot();
+
+        Assert.That(() =>
+        {
+            var touchscreen = root.children.FirstOrDefault(c => c.name == "Touchscreen");
+            if (touchscreen == null)
+                return false;
+
+            return touchscreen.children.Any(c => c.name == "Press (Single touch)") &&
+            touchscreen.children.Any(c => c.name == "Press (Multi-touch)");
+        });
+    }
+
+    internal class StubInputControlPickerDropdown : InputControlPickerDropdown
+    {
+        public StubInputControlPickerDropdown(InputControlPickerState state, Action<string> onPickCallback,
+                                              InputControlPicker.Mode mode = InputControlPicker.Mode.PickControl)
+            : base(state, onPickCallback, mode)
+        {
+        }
+
+        public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
+        {
+            return base.BuildRoot();
+        }
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB

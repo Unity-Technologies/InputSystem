@@ -79,10 +79,12 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         {
             buttonValues[(int)button] = rawValue;
 
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (value)
-                buttons |= (uint)1 << (int)button;
+                buttons |= bit;
             else
-                buttons &= ~(uint)1 << (int)button;
+                buttons &= ~bit;
 
             return this;
         }
@@ -105,7 +107,6 @@ namespace UnityEngine.InputSystem.iOS
     /// be represented as an iOSGameController.
     /// </remarks>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
-    [Scripting.Preserve]
     public class iOSGameController : Gamepad
     {
     }
@@ -114,7 +115,6 @@ namespace UnityEngine.InputSystem.iOS
     /// An Xbox One Bluetooth controller connected to an iOS device.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Xbox One Gamepad")]
-    [Scripting.Preserve]
     public class XboxOneGampadiOS : XInput.XInputController
     {
     }
@@ -123,7 +123,6 @@ namespace UnityEngine.InputSystem.iOS
     /// A PlayStation DualShock 4 controller connected to an iOS device.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualShock 4 Gamepad")]
-    [Scripting.Preserve]
     public class DualShock4GampadiOS : DualShockGamepad
     {
     }

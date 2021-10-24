@@ -94,6 +94,11 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        internal void ClearSelectionOnItem(AdvancedDropdownItem item)
+        {
+            GetStateForItem(item).selectedIndex = -1;
+        }
+
         internal int GetSelectedIndex(AdvancedDropdownItem item)
         {
             return GetStateForItem(item).selectedIndex;

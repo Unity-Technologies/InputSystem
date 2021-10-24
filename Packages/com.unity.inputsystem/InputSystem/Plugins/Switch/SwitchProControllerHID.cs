@@ -60,9 +60,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(8)] public ushort rightStickX;
         [FieldOffset(10)] public ushort rightStickY;
 
-        public float leftTrigger => ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f;
+        public float leftTrigger => ((buttons & (1U << (int)Button.ZL)) != 0) ? 1f : 0f;
 
-        public float rightTrigger => ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f;
+        public float rightTrigger => ((buttons & (1U << (int)Button.ZR)) != 0) ? 1f : 0f;
 
         public enum Button
         {
@@ -89,7 +89,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
         public SwitchProControllerHIDInputState WithButton(Button button, bool value = true)
         {
-            var bit = (uint)1 << (int)button;
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (value)
                 buttons |= bit;
             else
@@ -116,7 +117,6 @@ namespace UnityEngine.InputSystem.Switch
     /// This controller currently only works when connected via Bluetooth but not when connected over USB.
     /// </remarks>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
-    [Scripting.Preserve]
     public class SwitchProControllerHID : Gamepad
     {
     }

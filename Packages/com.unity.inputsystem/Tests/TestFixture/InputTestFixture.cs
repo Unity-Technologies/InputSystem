@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine.InputSystem.Controls;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -89,10 +90,17 @@ namespace UnityEngine.InputSystem
                 // Push current input system state on stack.
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
 
+                // Override the editor messing with logic like canRunInBackground and focus and
+                // make it behave like in the player.
                 #if UNITY_EDITOR
-                // Make sure we're not affected by the user giving focus away from the
-                // game view.
-                InputEditorUserSettings.lockInputToGameView = true;
+                InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                #endif
+
+                // For a [UnityTest] play mode test, we don't want editor updates interfering with the test,
+                // so turn them off.
+                #if UNITY_EDITOR
+                if (Application.isPlaying && IsUnityTest())
+                    InputSystem.s_Manager.m_UpdateMask &= ~InputUpdateType.Editor;
                 #endif
 
                 // We use native collections in a couple places. We when leak them, we want to know where exactly
@@ -120,6 +128,9 @@ namespace UnityEngine.InputSystem
                 m_OnPlayModeStateChange = OnPlayModeStateChange;
                 EditorApplication.playModeStateChanged += m_OnPlayModeStateChange;
                 #endif
+
+                // Always want to merge by default
+                InputSystem.settings.disableRedundantEventsMerging = false;
             }
             catch (Exception exception)
             {
@@ -146,17 +157,6 @@ namespace UnityEngine.InputSystem
 
             try
             {
-                // Destroy any GameObject in the current scene that isn't hidden and isn't the
-                // test runner object. Do this first so that any cleanup finds the system in the
-                // state it expects.
-                var scene = SceneManager.GetActiveScene();
-                foreach (var go in scene.GetRootGameObjects())
-                {
-                    if (go.hideFlags != 0 || go.name.Contains("tests runner"))
-                        continue;
-                    Object.DestroyImmediate(go);
-                }
-
                 InputSystem.Restore();
                 runtime.Dispose();
 
@@ -179,6 +179,36 @@ namespace UnityEngine.InputSystem
             }
 
             m_Initialized = false;
+        }
+
+        // True if the current test is a [UnityTest].
+        private static bool IsUnityTest()
+        {
+            var test = TestContext.CurrentContext.Test;
+            var className = test.ClassName;
+            var methodName = test.MethodName;
+
+            // Doesn't seem like there's a proper way to get the current test method based on
+            // the information provided by NUnit (see https://github.com/nunit/nunit/issues/3354).
+
+            var type = Type.GetType(className);
+            if (type == null)
+            {
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    type = assembly.GetType(className);
+                    if (type != null)
+                        break;
+                }
+            }
+            if (type == null)
+                return false;
+
+            var method = type.GetMethod(methodName);
+            if (method == null)
+                return false;
+
+            return method.GetCustomAttribute<UnityTestAttribute>() != null;
         }
 
         #if UNITY_EDITOR
@@ -213,6 +243,17 @@ namespace UnityEngine.InputSystem
                     Assert.That(controlAsButton.isPressed, Is.True,
                         $"Expected button {controlAsButton} to be pressed");
             }
+        }
+
+        public static void AssertStickValues(StickControl stick, Vector2 stickValue, float up, float down, float left,
+            float right)
+        {
+            Assert.That(stick.ReadUnprocessedValue(), Is.EqualTo(stickValue));
+
+            Assert.That(stick.up.ReadUnprocessedValue(), Is.EqualTo(up).Within(0.0001), "Incorrect 'up' value");
+            Assert.That(stick.down.ReadUnprocessedValue(), Is.EqualTo(down).Within(0.0001), "Incorrect 'down' value");
+            Assert.That(stick.left.ReadUnprocessedValue(), Is.EqualTo(left).Within(0.0001), "Incorrect 'left' value");
+            Assert.That(stick.right.ReadUnprocessedValue(), Is.EqualTo(right).Within(0.0001), "Incorrect 'right' value");
         }
 
         private Dictionary<Key, Tuple<string, int>> m_KeyInfos;
@@ -370,6 +411,8 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction), time: time,
                 duration: duration, value: value);
         }
+
+        ////REVIEW: Should we determine queueEventOnly automatically from whether we're in a UnityTest?
 
         // ReSharper disable once MemberCanBeProtected.Global
         public void Press(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
@@ -662,6 +705,16 @@ namespace UnityEngine.InputSystem
             {
                 runtime.currentTime = value;
                 runtime.dontAdvanceTimeNextDynamicUpdate = true;
+            }
+        }
+
+        internal float unscaledGameTime
+        {
+            get => runtime.unscaledGameTime;
+            set
+            {
+                runtime.unscaledGameTime = value;
+                runtime.dontAdvanceUnscaledGameTimeNextDynamicUpdate = true;
             }
         }
 

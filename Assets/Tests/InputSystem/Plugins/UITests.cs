@@ -1,7 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -9,17 +13,30 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
+using Image = UnityEngine.UI.Image;
 using Is = UnityEngine.TestTools.Constraints.Is;
+using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
+
+#if UNITY_2021_2_OR_NEWER
+using UnityEngine.UIElements;
+#endif
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
 
-internal class UITests : InputTestFixture
+internal class UITests : CoreTestsFixture
 {
     private struct TestObjects
     {
@@ -32,6 +49,7 @@ internal class UITests : InputTestFixture
         public UICallbackReceiver parentReceiver;
         public UICallbackReceiver leftChildReceiver;
         public UICallbackReceiver rightChildReceiver;
+        public DefaultInputActions actions;
 
         // Assume a 640x480 resolution and translate the given coordinates from a resolution
         // in that space to coordinates in the current camera screen space.
@@ -52,12 +70,38 @@ internal class UITests : InputTestFixture
             var transform = gameObject.GetComponent<RectTransform>();
             return RectTransformUtility.RectangleContainsScreenPoint(transform, screenPoint, camera, default);
         }
+
+        public void ClearEvents()
+        {
+            parentReceiver.events.Clear();
+            leftChildReceiver.events.Clear();
+            rightChildReceiver.events.Clear();
+        }
+    }
+
+    [SetUp]
+    public override void Setup()
+    {
+        base.Setup();
+    }
+
+    private static TestObjects CreateUIScene()
+    {
+        var scene = CreateTestUI();
+        scene.actions = new DefaultInputActions();
+
+        scene.uiModule.point = InputActionReference.Create(scene.actions.UI.Point);
+        scene.uiModule.leftClick = InputActionReference.Create(scene.actions.UI.Click);
+
+        scene.actions.UI.Enable();
+
+        return scene;
     }
 
     // Set up a InputSystemUIInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI
     // from activity on input devices.
-    private static TestObjects CreateUIAndPlayer(Rect viewport = default, bool noFirstSelected = false, string namePrefix = "")
+    private static TestObjects CreateTestUI(Rect viewport = default, bool noFirstSelected = false, string namePrefix = "")
     {
         var objects = new TestObjects();
 
@@ -65,6 +109,7 @@ internal class UITests : InputTestFixture
         var systemObject = new GameObject(namePrefix + "System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
         var uiModule = systemObject.AddComponent<InputSystemUIInputModule>();
+        uiModule.UnassignActions();
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
 
@@ -138,21 +183,38 @@ internal class UITests : InputTestFixture
         return objects;
     }
 
-    private static void AssignDefaultActions(ref TestObjects setup)
+    [Test]
+    [Category("UI")]
+    public void UI_InputModuleHasDefaultActions()
     {
-        var defaultActions = new DefaultInputActions();
+        var go = new GameObject();
+        var uiModule = go.AddComponent<InputSystemUIInputModule>();
 
-        setup.uiModule.actionsAsset = defaultActions.asset;
-        setup.uiModule.cancel = InputActionReference.Create(defaultActions.UI.Cancel);
-        setup.uiModule.submit = InputActionReference.Create(defaultActions.UI.Submit);
-        setup.uiModule.move = InputActionReference.Create(defaultActions.UI.Navigate);
-        setup.uiModule.leftClick = InputActionReference.Create(defaultActions.UI.Click);
-        setup.uiModule.rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
-        setup.uiModule.middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
-        setup.uiModule.point = InputActionReference.Create(defaultActions.UI.Point);
-        setup.uiModule.scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
+        Assert.That(uiModule.actionsAsset, Is.Not.Null);
+        Assert.That(uiModule.point?.action, Is.SameAs(uiModule.actionsAsset["UI/Point"]));
+        Assert.That(uiModule.leftClick?.action, Is.SameAs(uiModule.actionsAsset["UI/Click"]));
+        Assert.That(uiModule.rightClick?.action, Is.SameAs(uiModule.actionsAsset["UI/RightClick"]));
+        Assert.That(uiModule.middleClick?.action, Is.SameAs(uiModule.actionsAsset["UI/MiddleClick"]));
+        Assert.That(uiModule.scrollWheel?.action, Is.SameAs(uiModule.actionsAsset["UI/ScrollWheel"]));
+        Assert.That(uiModule.submit?.action, Is.SameAs(uiModule.actionsAsset["UI/Submit"]));
+        Assert.That(uiModule.cancel?.action, Is.SameAs(uiModule.actionsAsset["UI/Cancel"]));
+        Assert.That(uiModule.move?.action, Is.SameAs(uiModule.actionsAsset["UI/Navigate"]));
+        Assert.That(uiModule.trackedDeviceOrientation?.action, Is.SameAs(uiModule.actionsAsset["UI/TrackedDeviceOrientation"]));
+        Assert.That(uiModule.trackedDevicePosition?.action, Is.SameAs(uiModule.actionsAsset["UI/TrackedDevicePosition"]));
 
-        defaultActions.Enable();
+        uiModule.UnassignActions();
+
+        Assert.That(uiModule.actionsAsset, Is.Null);
+        Assert.That(uiModule.point, Is.Null);
+        Assert.That(uiModule.leftClick, Is.Null);
+        Assert.That(uiModule.rightClick, Is.Null);
+        Assert.That(uiModule.middleClick, Is.Null);
+        Assert.That(uiModule.scrollWheel, Is.Null);
+        Assert.That(uiModule.submit, Is.Null);
+        Assert.That(uiModule.cancel, Is.Null);
+        Assert.That(uiModule.move, Is.Null);
+        Assert.That(uiModule.trackedDeviceOrientation, Is.Null);
+        Assert.That(uiModule.trackedDevicePosition, Is.Null);
     }
 
     // Comprehensive test for general pointer input behaviors.
@@ -163,11 +225,12 @@ internal class UITests : InputTestFixture
     //       click like the docs say) and also has some questionable behaviors that we opt to do different (for example, we perform
     //       click detection *before* invoking click handlers so that clickCount and clickTime correspond to the current click instead
     //       of to the previous click).
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
-    #if UNITY_IOS || UNITY_TVOS
+#if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-    #endif
+#endif
     // All pointer input goes through a single code path. Goes for Pointer-derived devices as well as for TrackedDevice input but
     // also any other input that can deliver point and click functionality.
     //
@@ -193,7 +256,7 @@ internal class UITests : InputTestFixture
         var trackedOrientation = isTracked ? Quaternion.Euler(0, -90, 0) : default;
         var trackedPosition = isTracked ? new Vector3(0.001f, 0.001f, 0.001f) : default;
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         const string kActions = @"
             {
@@ -261,8 +324,8 @@ internal class UITests : InputTestFixture
 
         if (isTracked)
         {
-            Set(device, "deviceRotation", trackedOrientation);
-            Set(device, "devicePosition", trackedPosition);
+            Set(device, "deviceRotation", trackedOrientation, queueEventOnly: true);
+            Set(device, "devicePosition", trackedPosition, queueEventOnly: true);
         }
 
         // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
@@ -277,26 +340,37 @@ internal class UITests : InputTestFixture
         var secondScreenPosition = scene.From640x480ToScreen(100, 200);
         var thirdScreenPosition = scene.From640x480ToScreen(350, 200);
 
+        var clickTime = 0f;
+        var clickCount = 0;
+
         // Move pointer over left child.
         currentTime = 1;
-        runtime.unscaledGameTime = 1;
+        unscaledGameTime = 1;
         if (isTouch)
         {
-            BeginTouch(1, firstScreenPosition);
+            BeginTouch(1, firstScreenPosition, queueEventOnly: true);
         }
         else if (isTracked)
         {
             trackedOrientation = Quaternion.Euler(0, -35, 0);
-            Set(device, "deviceRotation", trackedOrientation);
+            Set(device, "deviceRotation", trackedOrientation, queueEventOnly: true);
         }
         else
         {
-            Set((Vector2Control)pointAction.controls[0], firstScreenPosition);
+            Set((Vector2Control)pointAction.controls[0], firstScreenPosition, queueEventOnly: true);
         }
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(isTouch ? 3 : 1));
-        Assert.That(scene.parentReceiver.events, Has.Count.EqualTo(1));
+        const int kHaveMovementEvents =
+#if UNITY_2021_2_OR_NEWER
+            1
+#else
+            0
+#endif
+        ;
+
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo((isTouch ? 3 : 1) + kHaveMovementEvents));
+        Assert.That(scene.parentReceiver.events, Has.Count.EqualTo(1 + kHaveMovementEvents));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
@@ -321,6 +395,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(trackedOrientation));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDevicePosition, Is.EqualTo(trackedPosition));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+        ////REVIEW: For touch, should the initial pointer event really have a delta or should it be (0,0) when we first touch the screen?
         Assert.That(scene.leftChildReceiver.events[0].pointerData.delta, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(Vector2.zero));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.Zero);
@@ -373,59 +448,89 @@ internal class UITests : InputTestFixture
             // Touch has no ability to point without pressing so pointer enter event is followed
             // right by pointer down event.
 
-            // Pointer Down.
-            Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.PointerDown));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.clickTime, Is.Zero);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.clickCount, Is.Zero);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerDrag, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPress, Is.Null); // This is set only after the event has been processed.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.Null); // This is set only after the event has been processed.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null); // This actually means lastPointerPress, i.e. last value of pointerPress before current.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
+#if UNITY_2021_2_OR_NEWER
+            // PointerMove.
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerMove));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.device, Is.SameAs(device));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerType, Is.EqualTo(pointerType));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerId, Is.EqualTo(pointerId));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.touchId, Is.EqualTo(touchId));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.delta, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance)); // Same as PointerEnter.
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pressPosition, Is.EqualTo(default(Vector2)));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.clickTime, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.clickCount, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerDrag, Is.Null);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPress, Is.Null); // This is set only after the event has been processed.
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.rawPointerPress, Is.Null); // This is set only after the event has been processed.
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.lastPress, Is.Null); // This actually means lastPointerPress, i.e. last value of pointerPress before current.
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.dragging, Is.False);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.eligibleForClick, Is.False);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.hovered, Is.Empty); // Same as PointerEnter.
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerCurrentRaycast.screenPosition,
                 Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.gameObject, Is.Null);
+            Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.screenPosition,
+                Is.EqualTo(default(Vector2)).Using(Vector2EqualityComparer.Instance));
+#endif
+
+            // PointerDown.
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerDown));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.device, Is.SameAs(device));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerType, Is.EqualTo(pointerType));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerId, Is.EqualTo(pointerId));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.touchId, Is.EqualTo(touchId));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.delta, Is.EqualTo(Vector2.zero));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.clickTime, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.clickCount, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerDrag, Is.Null);
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerPress, Is.Null); // This is set only after the event has been processed.
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.rawPointerPress, Is.Null); // This is set only after the event has been processed.
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.lastPress, Is.Null); // This actually means lastPointerPress, i.e. last value of pointerPress before current.
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.dragging, Is.False);
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.eligibleForClick, Is.True);
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerCurrentRaycast.screenPosition,
+                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].pointerData.pointerPressRaycast.screenPosition,
                 Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
 
-            // Initialize Potential Drag.
-            Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.InitializePotentialDrag));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.clickTime, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.clickCount, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.lastPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerCurrentRaycast.screenPosition,
+            // InitializePotentialDrag.
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].type, Is.EqualTo(EventType.InitializePotentialDrag));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerId, Is.EqualTo(pointerId));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.touchId, Is.EqualTo(touchId));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerType, Is.EqualTo(pointerType));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.delta, Is.EqualTo(Vector2.zero));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.clickTime, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.clickCount, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.lastPress, Is.Null);
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.dragging, Is.False);
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.eligibleForClick, Is.True);
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerCurrentRaycast.screenPosition,
                 Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerPressRaycast.screenPosition,
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
+            Assert.That(scene.leftChildReceiver.events[2 + kHaveMovementEvents].pointerData.pointerPressRaycast.screenPosition,
                 Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
         }
         else
@@ -434,215 +539,142 @@ internal class UITests : InputTestFixture
 
             scene.leftChildReceiver.events.Clear();
 
-            PressAndRelease(clickControl);
-            scene.eventSystem.InvokeUpdate();
+            PressAndRelease(clickControl, queueEventOnly: true);
+            yield return null;
 
-            Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(4));
+            clickTime = unscaledGameTime;
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("button", clickButton),
+                    AllEvents("pointerId", pointerId),
+                    AllEvents("touchId", touchId),
+                    AllEvents("device", device),
+                    AllEvents("pointerType", pointerType),
+                    AllEvents("position", firstScreenPosition),
+                    AllEvents("delta", Vector2.zero),
+                    AllEvents("pressPosition", firstScreenPosition),
+                    AllEvents("pointerEnter", scene.leftGameObject),
+                    AllEvents("pointerCurrentRaycast.gameObject", scene.leftGameObject),
+                    AllEvents("pointerCurrentRaycast.screenPosition", firstScreenPosition),
+                    AllEvents("pointerPressRaycast.gameObject", scene.leftGameObject),
+                    AllEvents("pointerPressRaycast.screenPosition", firstScreenPosition),
+                    AllEvents("hovered", new[] { scene.leftGameObject, scene.parentGameObject }),
+                    AllEvents("lastPress", null),
+                    AllEvents("dragging", false),
+                    AllEvents("eligibleForClick", true),
 
-            Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerDown));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.Zero); // Click detection comes after pointer down event.
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickCount, Is.Zero);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerDrag, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPress, Is.Null); // This is set only after the event has been processed.
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.Null); // This is set only after the event has been processed.
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.Null); // This actually means lastPointerPress, i.e. last value of pointerPress before current.
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                    // PointerDown.
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("clickTime", 0f),
+                    OneEvent("clickCount", 0),
+                    OneEvent("pointerDrag", null),
+                    OneEvent("pointerPress", null),
+                    OneEvent("rawPointerPress", null),
+                    OneEvent("useDragThreshold", true),
 
-            Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.InitializePotentialDrag));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.clickTime, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.clickCount, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                    // InitializePotentialDrag.
+                    OneEvent("type", EventType.InitializePotentialDrag),
+                    OneEvent("clickTime", 0f),
+                    OneEvent("clickCount", 0),
+                    OneEvent("pointerDrag", scene.leftGameObject),
+                    OneEvent("pointerPress", scene.leftGameObject),
+                    OneEvent("rawPointerPress", scene.leftGameObject),
+                    OneEvent("useDragThreshold", false),
 
-            Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.PointerUp));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.clickTime, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.clickCount, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.lastPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                    // PointerUp.
+                    OneEvent("type", EventType.PointerUp),
+                    OneEvent("clickTime", unscaledGameTime),
+                    OneEvent("clickCount", 1),
+                    OneEvent("pointerDrag", scene.leftGameObject),
+                    OneEvent("pointerPress", scene.leftGameObject),
+                    OneEvent("rawPointerPress", scene.leftGameObject),
+                    OneEvent("useDragThreshold", false),
 
-            Assert.That(scene.leftChildReceiver.events[3].type, Is.EqualTo(EventType.PointerClick));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.clickTime, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.clickCount, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.lastPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                    // PointerClick.
+                    OneEvent("type", EventType.PointerClick),
+                    OneEvent("clickTime", clickTime),
+                    OneEvent("clickCount", 1),
+                    OneEvent("pointerDrag", scene.leftGameObject),
+                    OneEvent("pointerPress", scene.leftGameObject),
+                    OneEvent("rawPointerPress", scene.leftGameObject),
+                    OneEvent("useDragThreshold", false)
+                )
+            );
 
             Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
             scene.leftChildReceiver.events.Clear();
 
             // Press again to start drag.
-            runtime.unscaledGameTime = 1.2f; // Advance so we can tell whether this got picked up by click detection (but stay below clickSpeed).
-            Press(clickControl);
-            scene.eventSystem.InvokeUpdate();
+            unscaledGameTime = 1.2f; // Advance so we can tell whether this got picked up by click detection (but stay below clickSpeed).
+            Press(clickControl, queueEventOnly: true);
+            yield return null;
 
-            Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
-            Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerDown));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerDrag, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPress, Is.Null); // This is set only after the event has been processed.
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.Null); // This is set only after the event has been processed.
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("button", clickButton),
+                    AllEvents("pointerId", pointerId),
+                    AllEvents("touchId", touchId),
+                    AllEvents("device", device),
+                    AllEvents("pointerType", pointerType),
+                    AllEvents("position", firstScreenPosition),
+                    AllEvents("pressPosition", firstScreenPosition),
+                    AllEvents("delta", Vector2.zero),
+                    AllEvents("pointerEnter", scene.leftGameObject),
+                    AllEvents("dragging", false),
+                    AllEvents("eligibleForClick", true),
+                    AllEvents("hovered", new[] { scene.leftGameObject, scene.parentGameObject }),
+                    AllEvents("pointerCurrentRaycast.gameObject", scene.leftGameObject),
+                    AllEvents("pointerCurrentRaycast.screenPosition", firstScreenPosition),
+                    AllEvents("pointerPressRaycast.gameObject", scene.leftGameObject),
+                    AllEvents("pointerPressRaycast.screenPosition", firstScreenPosition),
 
-            Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.InitializePotentialDrag));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(device));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(pointerType));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.touchId, Is.EqualTo(touchId));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.position, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.clickTime, Is.EqualTo(1.2f)); // Click detection ran in-between PointerDown and InitializePotentialDrag.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.clickCount, Is.EqualTo(2));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                    // PointerDown.
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("clickTime", clickTime),
+                    OneEvent("clickCount", 1),
+                    OneEvent("pointerDrag", null),
+                    OneEvent("pointerPress", null), // This is set only after the event has been processed.
+                    OneEvent("rawPointerPress", null), // This is set only after the event has been processed.
+                    OneEvent("lastPress", scene.leftGameObject),
+                    OneEvent("useDragThreshold", true),
+
+                    // InitializePotentialDrag.
+                    OneEvent("type", EventType.InitializePotentialDrag),
+                    OneEvent("clickTime", clickTime),
+                    OneEvent("clickCount", 1),
+                    OneEvent("pointerDrag", scene.leftGameObject),
+                    OneEvent("pointerPress", scene.leftGameObject),
+                    OneEvent("rawPointerPress", scene.leftGameObject),
+                    OneEvent("lastPress", null), // See PointerModel.ButtonState.CopyPressStateTo.
+                    OneEvent("useDragThreshold", false) // We set it in OnInitializePotentialDrag.
+                )
+            );
 
             Assert.That(scene.rightChildReceiver.events, Is.Empty);
         }
 
         scene.leftChildReceiver.events.Clear();
-        var clickCount = isTouch ? 1 : 2;
-        var clickTime = isTouch ? 1f : 1.2f;
+        clickCount = isTouch ? 0 : 1;
 
         // Move. Still over left object.
         runtime.unscaledGameTime = 2;
         if (isTouch)
         {
-            MoveTouch(1, secondScreenPosition);
+            MoveTouch(1, secondScreenPosition, queueEventOnly: true);
         }
         else if (isTracked)
         {
             trackedOrientation = Quaternion.Euler(0, -30, 0);
-            Set(device, "deviceRotation", trackedOrientation);
+            Set(device, "deviceRotation", trackedOrientation, queueEventOnly: true);
         }
         else
         {
-            Set((Vector2Control)pointAction.controls[0], secondScreenPosition);
+            Set((Vector2Control)pointAction.controls[0], secondScreenPosition, queueEventOnly: true);
         }
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
 
         if (isTracked)
         {
@@ -653,87 +685,109 @@ internal class UITests : InputTestFixture
             secondScreenPosition = scene.leftChildReceiver.events[0].pointerData.position;
         }
 
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(device));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.button, Is.EqualTo(clickButton));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(pointerType));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.touchId, Is.EqualTo(touchId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(trackedOrientation));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDevicePosition, Is.EqualTo(trackedPosition));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.position, Is.EqualTo(secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.delta, Is.EqualTo(secondScreenPosition - firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.Null);
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.False);
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.eligibleForClick, Is.True);
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-            Is.EqualTo(secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-            Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", pointerType),
+                AllEvents("pointerId", pointerId),
+                AllEvents("touchId", touchId),
+                AllEvents("device", device),
+                AllEvents("position", secondScreenPosition),
+                AllEvents("delta", secondScreenPosition - firstScreenPosition),
+                AllEvents("trackedDeviceOrientation", trackedOrientation),
+                AllEvents("trackedDevicePosition", trackedPosition),
+                AllEvents("pointerEnter", scene.leftGameObject),
+                AllEvents("useDragThreshold", false), // We set it in OnInitializePotentialDrag.
+                AllEvents("eligibleForClick", true),
+                AllEvents("hovered", new[] { scene.leftGameObject, scene.parentGameObject }),
+                AllEvents("pointerCurrentRaycast.gameObject", scene.leftGameObject),
+                AllEvents("pointerCurrentRaycast.screenPosition", secondScreenPosition),
 
-        Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(device));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.button, Is.EqualTo(clickButton));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(pointerType));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.touchId, Is.EqualTo(touchId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.position, Is.EqualTo(secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.delta, Is.EqualTo(secondScreenPosition - firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.clickTime, Is.EqualTo(clickTime));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.clickCount, Is.EqualTo(clickCount));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.True);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
-            Is.EqualTo(secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
-            Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                // PointerMove.
+#if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+                OneEvent("dragging", false),
+                // Again, pointer movement is processed exclusively "from" the left button.
+                OneEvent("button", PointerEventData.InputButton.Left),
+                OneEvent("pressPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+                OneEvent("clickTime", clickButton == PointerEventData.InputButton.Left ? clickTime : 0f),
+                OneEvent("clickCount", clickButton == PointerEventData.InputButton.Left ? clickCount : 0),
+                OneEvent("pointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("rawPointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("pointerDrag", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
+                OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+#endif
+
+                // BeginDrag.
+                OneEvent("type", EventType.BeginDrag),
+                OneEvent("button", clickButton),
+                OneEvent("dragging", false),
+                OneEvent("pressPosition", firstScreenPosition),
+                OneEvent("clickTime", clickTime),
+                OneEvent("clickCount", clickCount),
+                OneEvent("pointerPress", scene.leftGameObject),
+                OneEvent("rawPointerPress", scene.leftGameObject),
+                OneEvent("pointerDrag", scene.leftGameObject),
+                OneEvent("lastPress", null),
+                OneEvent("pointerPressRaycast.gameObject", scene.leftGameObject),
+                OneEvent("pointerPressRaycast.screenPosition", firstScreenPosition),
+
+                // Dragging.
+                OneEvent("type", EventType.Dragging),
+                OneEvent("button", clickButton),
+                OneEvent("dragging", true),
+                OneEvent("pressPosition", firstScreenPosition),
+                OneEvent("clickTime", clickTime),
+                OneEvent("clickCount", clickCount),
+                OneEvent("pointerPress", scene.leftGameObject),
+                OneEvent("rawPointerPress", scene.leftGameObject),
+                OneEvent("pointerDrag", scene.leftGameObject),
+                OneEvent("lastPress", null),
+                OneEvent("pointerPressRaycast.gameObject", scene.leftGameObject),
+                OneEvent("pointerPressRaycast.screenPosition", firstScreenPosition)
+            )
+        );
 
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
-        Assert.That(scene.parentReceiver.events, Is.Empty);
+        Assert.That(scene.parentReceiver.events,
+            EventSequence(
+#if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove)
+#endif
+            )
+        );
 
         scene.leftChildReceiver.events.Clear();
+        scene.parentReceiver.events.Clear();
 
         // Move over to right object.
         runtime.unscaledGameTime = 2.5f;
         if (isTouch)
         {
-            MoveTouch(1, thirdScreenPosition);
+            MoveTouch(1, thirdScreenPosition, queueEventOnly: true);
         }
         else if (isTracked)
         {
             trackedOrientation = Quaternion.Euler(0, 30, 0);
-            Set(device, "deviceRotation", trackedOrientation);
+            Set(device, "deviceRotation", trackedOrientation, queueEventOnly: true);
         }
         else
         {
-            Set((Vector2Control)pointAction.controls[0], thirdScreenPosition);
+            Set((Vector2Control)pointAction.controls[0], thirdScreenPosition, queueEventOnly: true);
         }
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
-        Assert.That(scene.parentReceiver.events, Is.Empty); // Should not have seen pointer enter/exit on parent.
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
+        // Should not have seen pointer enter/exit on parent (we only moved from one of its
+        // children to another) but *should* have seen a move event.
+        Assert.That(scene.parentReceiver.events,
+            EventSequence(
+#if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove)
+#endif
+            )
+        );
 
         if (isTracked)
         {
@@ -747,120 +801,111 @@ internal class UITests : InputTestFixture
         // Input module (like StandaloneInputModule on mouse path) processes move first which is why
         // we get an exit *before* a drag even though it would make more sense the other way round.
 
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.delta, Is.EqualTo(thirdScreenPosition - secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject })); // Updated from pointer enter.
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-            Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-        // Moves (pointer enter/exit) are always keyed to the left button. So when clicking with another one,
-        // press positions on the moves will be zero.
-        if (clickButton == PointerEventData.InputButton.Left)
-        {
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        }
-        else
-        {
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(default(Vector2)));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.Zero);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.clickCount, Is.Zero);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerDrag, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.Null);
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition, Is.EqualTo(default(Vector2)));
-        }
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerId", pointerId),
+                AllEvents("position", thirdScreenPosition),
+                AllEvents("delta", thirdScreenPosition - secondScreenPosition),
+                AllEvents("useDragThreshold", false), // We set it in OnInitializePotentialDrag.
+                AllEvents("pointerCurrentRaycast.gameObject", scene.rightGameObject),
+                AllEvents("pointerCurrentRaycast.screenPosition", thirdScreenPosition),
 
-        // The drag is sent after the PointerEnter below so it already has the information from the pointer enter.
-        Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.button, Is.EqualTo(clickButton));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.delta, Is.EqualTo(thirdScreenPosition - secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.clickTime, Is.EqualTo(clickTime));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.clickCount, Is.EqualTo(clickCount));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.True);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
-            Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
-            Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+                // Moves (pointer enter/exit) are always keyed to the left button. So when clicking with another one,
+                // press positions on the moves will be zero.
 
-        Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(thirdScreenPosition - secondScreenPosition).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.parentGameObject })); // Right GO gets added after.
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-            Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-        if (clickButton == PointerEventData.InputButton.Left)
-        {
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.Null);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        }
-        else
-        {
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(default(Vector2)));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickTime, Is.Zero);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickCount, Is.Zero);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.Null);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.False);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.Null);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.Null);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.Null);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition, Is.EqualTo(default(Vector2)));
-        }
+                // PointerMove.
+#if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+                OneEvent("button", PointerEventData.InputButton.Left),
+                OneEvent("pointerEnter", scene.leftGameObject),
+                OneEvent("hovered", new[] { scene.leftGameObject, scene.parentGameObject }),
+                OneEvent("pressPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+                OneEvent("clickTime", clickButton == PointerEventData.InputButton.Left ? clickTime : 0f),
+                OneEvent("clickCount", clickButton == PointerEventData.InputButton.Left ? clickCount : 0),
+                OneEvent("pointerDrag", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("pointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("rawPointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
+                OneEvent("dragging", clickButton == PointerEventData.InputButton.Left ? true : false),
+                OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+#endif
+
+                // PointerExit.
+                OneEvent("type", EventType.PointerExit),
+                OneEvent("button", PointerEventData.InputButton.Left),
+                OneEvent("pointerEnter", scene.leftGameObject),
+                OneEvent("hovered", new[] { scene.leftGameObject, scene.parentGameObject }),
+                OneEvent("pressPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+                OneEvent("clickTime", clickButton == PointerEventData.InputButton.Left ? clickTime : 0f),
+                OneEvent("clickCount", clickButton == PointerEventData.InputButton.Left ? clickCount : 0),
+                OneEvent("pointerDrag", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("pointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("rawPointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
+                OneEvent("dragging", clickButton == PointerEventData.InputButton.Left ? true : false),
+                OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+
+                // Dragging.
+                // The drag is sent after the PointerEnter is sent to the right child so it already has the information
+                // from the pointer enter.
+                OneEvent("type", EventType.Dragging),
+                OneEvent("button", clickButton),
+                OneEvent("pointerEnter", scene.rightGameObject),
+                OneEvent("hovered", new[] { scene.rightGameObject, scene.parentGameObject }),
+                OneEvent("pressPosition", firstScreenPosition),
+                OneEvent("clickTime", clickTime),
+                OneEvent("clickCount", clickCount),
+                OneEvent("pointerDrag", scene.leftGameObject),
+                OneEvent("pointerPress", scene.leftGameObject),
+                OneEvent("rawPointerPress", scene.leftGameObject),
+                OneEvent("lastPress", null),
+                OneEvent("dragging", true),
+                OneEvent("pointerPressRaycast.gameObject", scene.leftGameObject),
+                OneEvent("pointerPressRaycast.screenPosition", firstScreenPosition)
+            )
+        );
+
+        Assert.That(scene.rightChildReceiver.events,
+            EventSequence(
+                AllEvents("button", PointerEventData.InputButton.Left),
+                AllEvents("pointerId", pointerId),
+                AllEvents("position", thirdScreenPosition),
+                AllEvents("delta", thirdScreenPosition - secondScreenPosition),
+                AllEvents("pointerEnter", scene.rightGameObject),
+                AllEvents("useDragThreshold", false), // We set it in OnInitializePotentialDrag.
+                AllEvents("hovered", new[] { scene.parentGameObject }), // Right GO gets added after.
+                AllEvents("pointerCurrentRaycast.gameObject", scene.rightGameObject),
+                AllEvents("pointerCurrentRaycast.screenPosition", thirdScreenPosition),
+                AllEvents("pressPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+                AllEvents("clickTime", clickButton == PointerEventData.InputButton.Left ? clickTime : 0f),
+                AllEvents("clickCount", clickButton == PointerEventData.InputButton.Left ? clickCount : 0),
+                AllEvents("pointerDrag", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                AllEvents("dragging", clickButton == PointerEventData.InputButton.Left ? true : false),
+                AllEvents("pointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                AllEvents("rawPointerPress", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                AllEvents("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
+                AllEvents("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
+                AllEvents("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
+
+                OneEvent("type", EventType.PointerEnter)
+#if UNITY_2021_2_OR_NEWER
+                , OneEvent("type", EventType.PointerMove)
+#endif
+            )
+        );
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
+        scene.parentReceiver.events.Clear();
 
         // Release.
         if (isTouch)
-            EndTouch(1, thirdScreenPosition);
+            EndTouch(1, thirdScreenPosition, queueEventOnly: true);
         else
-            Release(clickControl);
-        scene.eventSystem.InvokeUpdate();
+            Release(clickControl, queueEventOnly: true);
+        yield return null;
 
         // Left child should have seen pointer up and end drag.
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -872,14 +917,14 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(isTouch ? null : scene.rightGameObject)); // Pointer-exit comes before pointer-up.
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject)); // Pointer-exit comes before pointer-up.
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.True);
         Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(isTouch ? Enumerable.Empty<GameObject>() : new[] { scene.rightGameObject, scene.parentGameObject }));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
             Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
@@ -895,14 +940,14 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.clickTime, Is.EqualTo(clickTime));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.clickCount, Is.EqualTo(clickCount));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(isTouch ? null : scene.rightGameObject));
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.SameAs(scene.leftGameObject)); // Remembers last pointerPress.
         Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.True);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(isTouch ? Enumerable.Empty<GameObject>() : new[] { scene.rightGameObject, scene.parentGameObject }));
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
             Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
@@ -910,128 +955,42 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
             Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
 
-        // For touch, the pointer ceases to exist so we get exit events.
-        if (isTouch)
-        {
-            Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.False);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
+        Assert.That(scene.parentReceiver.events, Is.Empty);
 
-            Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(2));
-            Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject)); // Reset after event.
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject)); // Drop not yet processed.
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.Null);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+        // Right child should have seen drop.
+        Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
+        Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.Drop));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.button, Is.EqualTo(clickButton));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject)); // For the drop, this is still set.
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.True);
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
+            Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
+            Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
 
-            // Parent should have seen an exit, too.
-            Assert.That(scene.parentReceiver.events, Has.Count.EqualTo(1));
-            Assert.That(scene.parentReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
-            Assert.That(scene.parentReceiver.events[0].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.parentReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.parentReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
-            Assert.That(scene.parentReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject)); // Reset after event.
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject)); // Drop not yet processed.
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.parentReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.parentReceiver.events[0].pointerData.lastPress, Is.Null);
-            Assert.That(scene.parentReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.parentReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            ////REVIEW: This behavior is inconsistent between "normal" pointer-enter/exit sequences but is consistent with what StandaloneInputModule does.
-            ////        However, it seems wrong that on one path, GOs are removed one-by-one from `hovered` as the callbacks step through the hierarchy, whereas
-            ////        on the other path, the list stays unmodified until the end and is then cleared en-bloc.
-            Assert.That(scene.parentReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.parentReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-
-            // Right child should have seen drop.
-            Assert.That(scene.rightChildReceiver.events[1].type, Is.EqualTo(EventType.Drop));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.clickTime, Is.EqualTo(clickTime));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.clickCount, Is.EqualTo(clickCount));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerEnter, Is.SameAs(null));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerPress, Is.SameAs(scene.leftGameObject)); // For the drop, this is still set.
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(Enumerable.Empty<GameObject>()));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        }
-        else
-        {
-            // For mouse and pen, pointer stays put.
-            Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
-            Assert.That(scene.parentReceiver.events, Is.Empty); // No change on parent.
-
-            // Right child should have seen drop.
-            Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
-            Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.Drop));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.button, Is.EqualTo(clickButton));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(Vector2.zero));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pressPosition, Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickTime, Is.EqualTo(clickTime));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.clickCount, Is.EqualTo(clickCount));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerDrag, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPress, Is.SameAs(scene.leftGameObject)); // For the drop, this is still set.
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
-                Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.gameObject, Is.SameAs(scene.leftGameObject));
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition,
-                Is.EqualTo(firstScreenPosition).Using(Vector2EqualityComparer.Instance));
-        }
-
-        scene.parentReceiver.events.Clear();
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // Scroll.
         if (scrollAction.controls.Count > 0)
         {
-            Set((Vector2Control)scrollAction.controls[0], Vector2.one);
-            scene.eventSystem.InvokeUpdate();
+            Set((Vector2Control)scrollAction.controls[0], Vector2.one, queueEventOnly: true);
+            yield return null;
 
             Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
             Assert.That(scene.leftChildReceiver.events, Is.Empty);
@@ -1072,16 +1031,126 @@ internal class UITests : InputTestFixture
                 Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition, Is.EqualTo(default(Vector2)));
             }
         }
+
+        // For touch, the pointer should cease to exist one frame after and we should get exit events.
+        if (isTouch)
+        {
+            scene.leftChildReceiver.events.Clear();
+            scene.rightChildReceiver.events.Clear();
+            scene.parentReceiver.events.Clear();
+
+            yield return null;
+
+            Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.False);
+
+            // Right child should have seen exit.
+            Assert.That(scene.rightChildReceiver.events,
+                EventSequence(
+                    AllEvents("pointerId", pointerId),
+                    AllEvents("position", thirdScreenPosition),
+                    AllEvents("delta", Vector2.zero),
+                    AllEvents("pressPosition", firstScreenPosition),
+                    AllEvents("clickTime", clickTime),
+                    AllEvents("clickCount", clickCount),
+                    AllEvents("pointerDrag", null),
+                    AllEvents("pointerPress", null),
+                    AllEvents("rawPointerPress", null),
+                    AllEvents("lastPress", scene.leftGameObject),
+                    AllEvents("dragging", false),
+                    AllEvents("useDragThreshold", false),
+                    AllEvents("pointerCurrentRaycast.gameObject", scene.rightGameObject),
+                    AllEvents("pointerCurrentRaycast.screenPosition", thirdScreenPosition),
+                    AllEvents("pointerPressRaycast.gameObject", scene.leftGameObject),
+                    AllEvents("pointerPressRaycast.screenPosition", firstScreenPosition),
+
+                    // PointerExit.
+                    OneEvent("type", EventType.PointerExit),
+                    OneEvent("button", PointerEventData.InputButton.Left), // PointerExit always coming from left buffer.
+                    OneEvent("pointerEnter", scene.rightGameObject), // Reset after event.
+                    OneEvent("hovered", new[] { scene.rightGameObject, scene.parentGameObject })
+                )
+            );
+
+            // Parent should have seen an exit, too. However, no PointerMove as we
+            // released the touch in a position we had already moved to.
+            Assert.That(scene.parentReceiver.events,
+                EventSequence(
+                    AllEvents("button", PointerEventData.InputButton.Left),
+                    AllEvents("pointerId", pointerId),
+                    AllEvents("position", thirdScreenPosition),
+                    AllEvents("delta", Vector2.zero),
+                    AllEvents("pressPosition", firstScreenPosition),
+                    AllEvents("clickTime", clickTime),
+                    AllEvents("clickCount", clickCount),
+                    AllEvents("pointerEnter", scene.rightGameObject),
+                    AllEvents("pointerDrag", null),
+                    AllEvents("pointerPress", null),
+                    AllEvents("rawPointerPress", null),
+                    AllEvents("lastPress", scene.leftGameObject),
+                    AllEvents("dragging", false),
+                    AllEvents("useDragThreshold", false), // We set it in OnInitializePotentialDrag.
+                    ////REVIEW: This behavior is inconsistent between "normal" pointer-enter/exit sequences but is consistent with what StandaloneInputModule does.
+                    ////        However, it seems wrong that on one path, GOs are removed one-by-one from `hovered` as the callbacks step through the hierarchy, whereas
+                    ////        on the other path, the list stays unmodified until the end and is then cleared en-bloc.
+                    AllEvents("hovered", new[] { scene.rightGameObject, scene.parentGameObject }),
+                    AllEvents("pointerCurrentRaycast.gameObject", scene.rightGameObject),
+                    AllEvents("pointerCurrentRaycast.screenPosition", thirdScreenPosition),
+                    AllEvents("pointerPressRaycast.gameObject", scene.leftGameObject),
+                    AllEvents("pointerPressRaycast.screenPosition", firstScreenPosition),
+
+                    OneEvent("type", EventType.PointerExit)
+                )
+            );
+        }
     }
 
+#endif
+
+    // https://fogbugz.unity3d.com/f/cases/1232705/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanReceivePointerExitsWhenChangingUIStateWithoutMovingPointer()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = new DefaultInputActions();
+        scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
+
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
+
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
+
+        scene.parentReceiver.events.Clear();
+
+        // Hide the left GO. Should send a pointer exit.
+        scene.leftGameObject.SetActive(false);
+        yield return null;
+
+        // We already disabled the left GO so ExecuteEvents will refuse to send OnPointerExit
+        // to it. However, we should see the exit on the still-active parent.
+        Assert.That(scene.parentReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerExit),
+                AllEvents("position", scene.From640x480ToScreen(100, 100)),
+                AllEvents("pointerEnter", scene.leftGameObject)
+            )
+        );
+    }
+
+#endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
-    #if UNITY_IOS || UNITY_TVOS
+#if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-    #endif
+#endif
     public IEnumerator UI_CanDriveUIFromMultiplePointers(UIPointerBehavior pointerBehavior)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1095,7 +1164,7 @@ internal class UITests : InputTestFixture
         var trackedDevice1 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
         var trackedDevice2 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
         scene.uiModule.pointerBehavior = pointerBehavior;
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1292,6 +1361,9 @@ internal class UITests : InputTestFixture
         }
     }
 
+#endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanDriveUIFromMultipleTouches()
@@ -1300,7 +1372,7 @@ internal class UITests : InputTestFixture
 
         // Prevent default selection of left object. This means that we will not have to contend with selections at all
         // in this test as they are driven from UI objects and not by the input module itself.
-        var scene = CreateUIAndPlayer(noFirstSelected: true);
+        var scene = CreateTestUI(noFirstSelected: true);
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -1441,6 +1513,22 @@ internal class UITests : InputTestFixture
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(3), Is.True);
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fifthPosition));
+        Assert.That(scene.leftChildReceiver.events, Is.Empty);
+
+        scene.eventSystem.InvokeUpdate();
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(1), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(2), Is.False);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(3), Is.True);
 
@@ -1450,13 +1538,6 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fifthPosition));
-        Assert.That(scene.rightChildReceiver.events,
-            Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fifthPosition));
-        Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
@@ -1487,15 +1568,18 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
     }
 
+#endif
+
     // https://fogbugz.unity3d.com/f/cases/1190150/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanUseTouchSimulationWithUI()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var scene = CreateUIAndPlayer();
-        AssignDefaultActions(ref scene);
+        var scene = CreateTestUI();
+        scene.uiModule.AssignDefaultActions();
         TouchSimulation.Enable();
 
         try
@@ -1515,16 +1599,20 @@ internal class UITests : InputTestFixture
             Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
             Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.EqualTo(1));
             Assert.That(scene.uiModule.m_PointerTouchControls[0], Is.SameAs(Touchscreen.current.touches[0]));
-            Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(3));
-            Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Touch));
-            Assert.That(scene.leftChildReceiver.events[0].pointerData.touchId, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.PointerDown));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(UIPointerType.Touch));
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.touchId, Is.EqualTo(1));
-            Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.InitializePotentialDrag));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(UIPointerType.Touch));
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.touchId, Is.EqualTo(1));
+            Assert.That(scene.leftChildReceiver.events.Select(x => x.type),
+                Is.EquivalentTo(new[]
+                {
+                    EventType.PointerEnter,
+#if UNITY_2021_2_OR_NEWER
+                    EventType.PointerMove,
+#endif
+                    EventType.PointerDown,
+                    EventType.InitializePotentialDrag
+                }));
+            Assert.That(scene.leftChildReceiver.events,
+                Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.pointerType == UIPointerType.Touch));
+            Assert.That(scene.leftChildReceiver.events,
+                Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.touchId == 1));
 
             // Release the mouse button so the touch ends. TouchSimulation.Disable() will remove
             // the touchscreen and thus cancel ongoing actions (like Point). This should not result
@@ -1538,6 +1626,8 @@ internal class UITests : InputTestFixture
         }
     }
 
+#endif
+
     #if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
     #endif
@@ -1550,7 +1640,7 @@ internal class UITests : InputTestFixture
         var trackedDevice1 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
         var trackedDevice2 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = new InputActionMap("map");
@@ -1578,12 +1668,18 @@ internal class UITests : InputTestFixture
         Set(trackedDevice1.deviceRotation, Quaternion.Euler(0, -30, 0));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice1.deviceId),
+                AllEvents("device", trackedDevice1),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -30, 0)),
+                OneEvent("type", EventType.PointerEnter)
+                #if UNITY_2021_2_OR_NEWER
+                , OneEvent("type", EventType.PointerMove)
+                #endif
+            )
+        );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -1592,12 +1688,18 @@ internal class UITests : InputTestFixture
         Set(trackedDevice2.deviceRotation, Quaternion.Euler(0, -31, 0));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice2.deviceId),
+                AllEvents("device", trackedDevice2),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -31, 0)),
+                OneEvent("type", EventType.PointerEnter)
+                #if UNITY_2021_2_OR_NEWER
+                , OneEvent("type", EventType.PointerMove)
+                #endif
+            )
+        );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -1606,27 +1708,18 @@ internal class UITests : InputTestFixture
         PressAndRelease((ButtonControl)trackedDevice1["button"]);
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(4));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerDown));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
-        Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.InitializePotentialDrag));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
-        Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.PointerUp));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
-        Assert.That(scene.leftChildReceiver.events[3].type, Is.EqualTo(EventType.PointerClick));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice1.deviceId),
+                AllEvents("device", trackedDevice1),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -30, 0)),
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("type", EventType.InitializePotentialDrag),
+                OneEvent("type", EventType.PointerUp),
+                OneEvent("type", EventType.PointerClick)
+            )
+        );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -1635,27 +1728,18 @@ internal class UITests : InputTestFixture
         PressAndRelease((ButtonControl)trackedDevice2["button"]);
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(4));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerDown));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
-        Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.InitializePotentialDrag));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
-        Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.PointerUp));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
-        Assert.That(scene.leftChildReceiver.events[3].type, Is.EqualTo(EventType.PointerClick));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice2.deviceId),
+                AllEvents("device", trackedDevice2),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -31, 0)),
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("type", EventType.InitializePotentialDrag),
+                OneEvent("type", EventType.PointerUp),
+                OneEvent("type", EventType.PointerClick)
+            )
+        );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -1664,18 +1748,30 @@ internal class UITests : InputTestFixture
         Set(trackedDevice1.deviceRotation, Quaternion.Euler(0, 30, 0));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 30, 0)));
-        Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 30, 0)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice1.deviceId),
+                AllEvents("device", trackedDevice1),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
+                #if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+                #endif
+                OneEvent("type", EventType.PointerExit)
+            )
+        );
+        Assert.That(scene.rightChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice1.deviceId),
+                AllEvents("device", trackedDevice1),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
+                OneEvent("type", EventType.PointerEnter)
+                #if UNITY_2021_2_OR_NEWER
+                , OneEvent("type", EventType.PointerMove)
+                #endif
+            )
+        );
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
@@ -1684,18 +1780,30 @@ internal class UITests : InputTestFixture
         Set(trackedDevice2.deviceRotation, Quaternion.Euler(0, 31, 0));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 31, 0)));
-        Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 31, 0)));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice2.deviceId),
+                AllEvents("device", trackedDevice2),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
+                #if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+                #endif
+                OneEvent("type", EventType.PointerExit)
+            )
+        );
+        Assert.That(scene.rightChildReceiver.events,
+            EventSequence(
+                AllEvents("pointerType", UIPointerType.Tracked),
+                AllEvents("pointerId", trackedDevice2.deviceId),
+                AllEvents("device", trackedDevice2),
+                AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
+                OneEvent("type", EventType.PointerEnter)
+                #if UNITY_2021_2_OR_NEWER
+                , OneEvent("type", EventType.PointerMove)
+                #endif
+            )
+        );
     }
 
     // There's nothing preventing the user from binding actions for pointer-type input to devices that aren't pointers.
@@ -1703,6 +1811,7 @@ internal class UITests : InputTestFixture
     // from non-pointer devices, we need to decide what to do. What the UI input module does is try to find a pointer (classic
     // or tracked) into which to route the input. Only if it can't find an existing pointer to route the input into will it
     // resort to turning the non-pointer device into a (likely non-functional) pointer.
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanTriggerPointerClicksFromNonPointerDevices()
@@ -1710,7 +1819,7 @@ internal class UITests : InputTestFixture
         var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
         var uiActions = actions.AddActionMap("UI");
@@ -1741,6 +1850,377 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.clickCount == 0));
     }
 
+#endif
+
+    // https://fogbugz.unity3d.com/f/cases/1317239/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanDetectClicks_WithSuccessiveClicksReflectedInClickCount()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = new DefaultInputActions();
+        scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
+        scene.uiModule.leftClick = InputActionReference.Create(actions.UI.Click);
+
+        Set(mouse.position, scene.From640x480ToScreen(100, 100), queueEventOnly: true);
+
+        yield return null;
+
+        scene.ClearEvents();
+        Press(mouse.leftButton, queueEventOnly: true);
+
+        yield return null;
+
+        // No click yet.
+        // NOTE: This is different from StandaloneInputModule which immediately ups
+        //       clickCount on press. However, until we release we don't know yet whether
+        //       we actually have a click or a drag (or neither).
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("clickCount", 0),
+                AllEvents("clickTime", 0f),
+                AllEvents("lastPress", null)
+            )
+        );
+
+        scene.ClearEvents();
+        Release(mouse.leftButton, queueEventOnly: true);
+
+        yield return null;
+
+        var clickTime = runtime.unscaledGameTime;
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("clickCount", 1),
+                AllEvents("clickTime", clickTime),
+                AllEvents("lastPress", null)
+            )
+        );
+
+        scene.ClearEvents();
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
+
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                // PointerDown.
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("clickCount", 1),
+                OneEvent("clickTime", clickTime),
+
+                // InitializePotentialDrag.
+                OneEvent("type", EventType.InitializePotentialDrag),
+                OneEvent("clickCount", 1),
+                OneEvent("clickTime", clickTime),
+
+                // PointerUp.
+                OneEvent("type", EventType.PointerUp),
+                OneEvent("clickCount", 2),
+                OneEvent("clickTime", runtime.unscaledGameTime),
+
+                // PointerClick.
+                OneEvent("type", EventType.PointerClick),
+                OneEvent("clickCount", 2),
+                OneEvent("clickTime", runtime.unscaledGameTime)
+            )
+        );
+
+        clickTime = runtime.unscaledGameTime;
+        scene.ClearEvents();
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
+
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                // PointerDown.
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("clickCount", 2),
+                OneEvent("clickTime", clickTime),
+
+                // InitializePotentialDrag.
+                OneEvent("type", EventType.InitializePotentialDrag),
+                OneEvent("clickCount", 2),
+                OneEvent("clickTime", clickTime),
+
+                // PointerUp.
+                OneEvent("type", EventType.PointerUp),
+                OneEvent("clickCount", 3),
+                OneEvent("clickTime", runtime.unscaledGameTime),
+
+                // PointerClick.
+                OneEvent("type", EventType.PointerClick),
+                OneEvent("clickCount", 3),
+                OneEvent("clickTime", runtime.unscaledGameTime)
+            )
+        );
+
+        clickTime = runtime.unscaledGameTime;
+        scene.ClearEvents();
+        Press(mouse.leftButton, queueEventOnly: true);
+
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("clickCount", 3),
+                AllEvents("clickTime", clickTime)
+            )
+        );
+
+        scene.ClearEvents();
+        Release(mouse.leftButton, queueEventOnly: true);
+
+        // Doesn't matter how long we hold the button. If we don't move far enough by the time we release and we still
+        // have the same UI element underneath us, it's a click.
+        runtime.unscaledGameTime += 1f;
+        yield return null;
+
+        clickTime = runtime.unscaledGameTime;
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("clickCount", 4),
+                AllEvents("clickTime", clickTime)
+            )
+        );
+
+        scene.ClearEvents();
+
+        // However, when more than 0.3s elapses between release and next press, it resets
+        // the click sequence.
+        Press(mouse.leftButton, queueEventOnly: true);
+        runtime.unscaledGameTime += 1f;
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                // On button down, we still see the state from the previous click (we don't
+                // know yet whether we clicked on the same object).
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("clickCount", 4),
+                OneEvent("clickTime", clickTime),
+
+                // Before InitializePotentialDrag, we reset.
+                OneEvent("type", EventType.InitializePotentialDrag),
+                OneEvent("clickCount", 0),
+                OneEvent("clickTime", 0f)
+            )
+        );
+        clickTime = runtime.unscaledGameTime;
+
+        // Clone left button. If we release the button now, there should not be
+        // a click because the object pointed to has changed.
+        UnityEngine.Object.Instantiate(scene.leftGameObject, scene.parentReceiver.transform);
+        Release(mouse.leftButton, queueEventOnly: true);
+        scene.ClearEvents();
+
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                AllEvents("clickCount", 0),
+                AllEvents("clickTime", 0f)
+            )
+        );
+    }
+
+#endif
+
+    // The UI input module needs to return true from IsPointerOverGameObject() for touches
+    // that have ended in the current frame. I.e. even though the touch is already concluded
+    // at the InputDevice level, the UI module needs to maintain state for one more frame.
+    //
+    // https://fogbugz.unity3d.com/f/cases/1347048/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_TouchPointersAreKeptForOneFrameAfterRelease()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+
+        actions.Enable();
+
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        yield return null;
+
+        BeginTouch(1, new Vector2(100, 100), queueEventOnly: true);
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        EndTouch(1, new Vector2(100, 100), queueEventOnly: true);
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
+    }
+
+#endif
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CallingIsPointerOverGameObject_FromActionCallback_ResultsInWarning()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+
+        pointAction.performed += ctx => { EventSystem.current.IsPointerOverGameObject(); };
+
+        actions.Enable();
+
+        yield return null;
+
+        LogAssert.Expect(LogType.Warning, new Regex("Calling IsPointerOverGameObject\\(\\) from within event processing .* will not work as expected"));
+
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+
+        yield return null;
+    }
+
+#if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+#endif
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanGetRaycastResultMatchingEvent()
+    {
+        InputSystem.RegisterLayout(kTrackedDeviceWithButton);
+
+        var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
+        var scene = CreateTestUI();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough, binding: "*/devicePosition");
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough, binding: "*/deviceRotation");
+        var clickAction = map.AddAction("click", type: InputActionType.PassThrough, binding: "*/button");
+
+        scene.uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        scene.uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        map.Enable();
+
+        // Point device away from objects.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
+        yield return null;
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Point device at left child.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
+        scene.eventSystem.InvokeUpdate();
+
+        var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(raycastResult.isValid, Is.True);
+
+        //2021.2 added an additional move event.
+#if UNITY_2021_2_OR_NEWER
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
+#else
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
+#endif
+        Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
+
+        var eventRaycastResult = scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast;
+        Assert.That(raycastResult.worldPosition, Is.EqualTo(eventRaycastResult.worldPosition));
+        Assert.That(raycastResult.worldNormal, Is.EqualTo(eventRaycastResult.worldNormal));
+        Assert.That(raycastResult.distance, Is.EqualTo(eventRaycastResult.distance));
+        Assert.That(raycastResult.module, Is.EqualTo(eventRaycastResult.module));
+        Assert.That(raycastResult.screenPosition, Is.EqualTo(eventRaycastResult.screenPosition));
+        Assert.That(raycastResult.gameObject, Is.EqualTo(eventRaycastResult.gameObject));
+
+        // Move back off the object
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
+        scene.eventSystem.InvokeUpdate();
+
+        raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(raycastResult.isValid, Is.False);
+    }
+
+    #if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+    #endif
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_XRTrackingOriginTransformModifiesTrackedPointers()
+    {
+        InputSystem.RegisterLayout(kTrackedDeviceWithButton);
+
+        var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
+
+        var scene = CreateTestUI();
+
+        var xrTrackingOrigin = new GameObject("XRStage").transform;
+        scene.uiModule.xrTrackingOrigin = xrTrackingOrigin;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough, binding: "*/devicePosition");
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough, binding: "*/deviceRotation");
+        var clickAction = map.AddAction("click", type: InputActionType.PassThrough, binding: "*/button");
+
+        scene.uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        scene.uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        map.Enable();
+
+        // Point both devices away from objects.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
+
+        yield return null;
+
+        var trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.False);
+
+        // Point device at left child.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
+        scene.eventSystem.InvokeUpdate();
+
+        trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.True);
+        Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.leftGameObject));
+
+        // Rotate so right object is targetted
+        xrTrackingOrigin.rotation = Quaternion.Euler(0f, 60, 0f);
+        scene.eventSystem.InvokeUpdate();
+
+        trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.True);
+        Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.rightGameObject));
+
+        xrTrackingOrigin.position = Vector3.up * 1000f;
+        scene.eventSystem.InvokeUpdate();
+
+        trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.False);
+    }
+
     [UnityTest]
     [Category("UI")]
     [Ignore("TODO")]
@@ -1756,7 +2236,7 @@ internal class UITests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
         var uiActions = actions.AddActionMap("UI");
@@ -1770,6 +2250,7 @@ internal class UITests : InputTestFixture
         scene.uiModule.leftClick = InputActionReference.Create(clickAction);
 
         // Remove the test listeners as they will allocate GC memory.
+        Component.DestroyImmediate(scene.parentReceiver);
         Component.DestroyImmediate(scene.leftChildReceiver);
         Component.DestroyImmediate(scene.rightChildReceiver);
 
@@ -1817,6 +2298,7 @@ internal class UITests : InputTestFixture
         }, Is.Not.AllocatingGCMemory());
     }
 
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     // Check that two players can have separate UI, and that both selections will stay active when
@@ -1829,8 +2311,8 @@ internal class UITests : InputTestFixture
         // it vertically across the screen.
         var players = new[]
         {
-            CreateUIAndPlayer(new Rect(0, 0, 1, 0.5f), namePrefix: "Player1 "),
-            CreateUIAndPlayer(new Rect(0, 0.5f, 1, 0.5f), namePrefix: "Player2 ")
+            CreateTestUI(new Rect(0, 0, 1, 0.5f), namePrefix: "Player1 "),
+            CreateTestUI(new Rect(0, 0.5f, 1, 0.5f), namePrefix: "Player2 ")
         };
 
         // Create asset
@@ -1905,6 +2387,8 @@ internal class UITests : InputTestFixture
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
     }
 
+#endif
+
     [UnityTest]
     [Category("UI")]
     // Check that two players can have separate UI and control it using separate gamepads, using
@@ -1913,7 +2397,7 @@ internal class UITests : InputTestFixture
     {
         // Create devices.
         var gamepads = new[] { InputSystem.AddDevice<Gamepad>(), InputSystem.AddDevice<Gamepad>() };
-        var players = new[] { CreateUIAndPlayer(new Rect(0, 0, 0.5f, 1)), CreateUIAndPlayer(new Rect(0.5f, 0, 0.5f, 1)) };
+        var players = new[] { CreateTestUI(new Rect(0, 0, 0.5f, 1)), CreateTestUI(new Rect(0.5f, 0, 0.5f, 1)) };
 
         for (var i = 0; i < 2; i++)
         {
@@ -2024,11 +2508,7 @@ internal class UITests : InputTestFixture
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        // Get rid of deadzones to simplify test.
-        InputSystem.settings.defaultDeadzoneMax = 1;
-        InputSystem.settings.defaultDeadzoneMin = 0;
-
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -2052,8 +2532,7 @@ internal class UITests : InputTestFixture
         // Left object should have been selected as part of enabling the event system and module.
         // This is key to having navigation work.
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Select));
+        Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Select)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2062,10 +2541,11 @@ internal class UITests : InputTestFixture
         Set(gamepad.leftStick, new Vector2(1, 0.5f));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveDir, Is.EqualTo(MoveDirection.Right));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveVector, Is.EqualTo(new Vector2(1, 0.5f).normalized).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("moveDir", MoveDirection.Right),
+                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2074,10 +2554,11 @@ internal class UITests : InputTestFixture
         Set(gamepad.leftStick, new Vector2(-1, 0.5f));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveDir, Is.EqualTo(MoveDirection.Left));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveVector, Is.EqualTo(new Vector2(-1, 0.5f).normalized).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("moveDir", MoveDirection.Left),
+                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2086,10 +2567,11 @@ internal class UITests : InputTestFixture
         Set(gamepad.leftStick, new Vector2(-0.5f, 1));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveDir, Is.EqualTo(MoveDirection.Up));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveVector, Is.EqualTo(new Vector2(-0.5f, 1).normalized).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("moveDir", MoveDirection.Up),
+                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2098,36 +2580,38 @@ internal class UITests : InputTestFixture
         Set(gamepad.leftStick, new Vector2(0.5f, -1));
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveDir, Is.EqualTo(MoveDirection.Down));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveVector, Is.EqualTo(new Vector2(0.5f, -1).normalized).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("moveDir", MoveDirection.Down),
+                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
 
         // Check repeat delay. Wait enough to cross both delay and subsequent repeat. We should
         // still only get one repeat event.
-        runtime.unscaledGameTime = 1.21f;
+        unscaledGameTime += 1.21f;
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveDir, Is.EqualTo(MoveDirection.Down));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveVector, Is.EqualTo(new Vector2(0.5f, -1).normalized).Using(Vector2EqualityComparer.Instance));
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("moveDir", MoveDirection.Down),
+                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
 
         scene.leftChildReceiver.events.Clear();
 
         // Check repeat rate. Same here; doesn't matter how much time we pass as long as we cross
         // the repeat rate threshold.
-        runtime.unscaledGameTime = 2;
+        unscaledGameTime += 2;
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveDir, Is.EqualTo(MoveDirection.Down));
-        Assert.That(scene.leftChildReceiver.events[0].axisData.moveVector, Is.EqualTo(new Vector2(0.5f, -1).normalized).Using(Vector2EqualityComparer.Instance));
-        Assert.That(scene.rightChildReceiver.events, Is.Empty);
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("moveDir", MoveDirection.Down),
+                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
 
         scene.leftChildReceiver.events.Clear();
 
@@ -2135,8 +2619,7 @@ internal class UITests : InputTestFixture
         PressAndRelease(gamepad.buttonSouth);
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Submit));
+        Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Submit)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2145,8 +2628,7 @@ internal class UITests : InputTestFixture
         PressAndRelease(gamepad.buttonEast);
         scene.eventSystem.InvokeUpdate();
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.Cancel));
+        Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Cancel)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2212,13 +2694,14 @@ internal class UITests : InputTestFixture
         Assert.That(uiModule.point?.action, Is.Null);
     }
 
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanChangeControlsOnActions()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -2255,13 +2738,126 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse));
     }
 
+#endif
+
+    private class InputSystemUIInputModuleTestScene_Setup : IPrebuildSetup, IPostBuildCleanup
+    {
+        public void Setup()
+        {
+#if UNITY_EDITOR
+            EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
+                { path = UITestScene.TestScenePath, enabled = true }).ToArray();
+#endif
+        }
+
+        public void Cleanup()
+        {
+#if UNITY_EDITOR
+            Debug.Log("Running post build cleanup");
+            var scenes = EditorBuildSettings.scenes.ToList();
+            scenes.RemoveAll(s => s.path == UITestScene.TestScenePath);
+            EditorBuildSettings.scenes = scenes.ToArray();
+#endif
+        }
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenMultipleInputModulesExist_ActionsAreNotDisabledUntilTheLastInputModuleIsDisabled()
+    {
+        var firstScene = UITestScene.LoadScene();
+        yield return null;
+
+        var secondScene = UITestScene.LoadScene();
+        yield return null;
+
+        var unloadOperation = SceneManager.UnloadSceneAsync(firstScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        var pointAction = secondScene.InputModule.point.action;
+        Assert.That(pointAction.enabled, Is.True);
+
+        unloadOperation = SceneManager.UnloadSceneAsync(secondScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        Assert.That(pointAction.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("UI")]
+    public void UI_WhenDisablingInputModule_ActionsAreNotDisabledIfTheyWereNotEnabledByTheInputModule()
+    {
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var inputModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        GameObject.DestroyImmediate(eventSystemGO);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenAssigningInputModuleAction_PreviousOwnedActionsAreDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        var previousAction = inputModule.point.action;
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        Assert.That(previousAction.enabled, Is.False);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenAssigningInputModuleAction_ExternalActionsAreNotDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var scrollAction = map.AddAction("scroll", type: InputActionType.PassThrough, binding: "<Mouse>/scroll/x");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        inputModule.point = InputActionReference.Create(pointAction);
+        inputModule.point = InputActionReference.Create(scrollAction);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
     [UnityTest]
     [Category("UI")]
     [Ignore("TODO")]
     public IEnumerator TODO_UI_WhenEnabled_InitialPointerPositionIsPickedUp()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         // Put mouse over left object.
         Set(mouse.position, scene.From640x480ToScreen(100, 100));
@@ -2361,6 +2957,7 @@ internal class UITests : InputTestFixture
     }
 
     // https://forum.unity.com/threads/feature-request-option-to-disable-deselect-in-ui-input-module.761531
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanPreventAutomaticDeselectionOfGameObjects()
@@ -2374,7 +2971,7 @@ internal class UITests : InputTestFixture
 
         actions.Enable();
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         // Resize parent to span only half the screen.
         ((RectTransform)scene.parentGameObject.transform).anchorMax = new Vector2(0.5f, 1);
@@ -2421,6 +3018,61 @@ internal class UITests : InputTestFixture
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
+#endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+
+        pointAction.wantsInitialStateCheck = true;
+        clickAction.wantsInitialStateCheck = true;
+
+        actions.Enable();
+
+        var scene = CreateTestUI();
+
+        scene.uiModule.actionsAsset = actions;
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        yield return null;
+
+        BeginTouch(1, scene.From640x480ToScreen(100, 100), queueEventOnly: true);
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        actions.Disable();
+        yield return null;
+
+        // UI module keeps pointer over GO in frame of release.
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
+
+        actions.Enable();
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+
+        pointAction.ApplyBindingOverride("<Touchscreen>/primaryTouch/position");
+        yield return null;
+
+        Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
+    }
+
+#endif
+
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
     ////        IMO is whether navigation should even be affected that way by not having a current selection. Seems to me that the
     ////        the system should remember the last selected object and start up navigation from there when nothing is selected.
@@ -2442,7 +3094,7 @@ internal class UITests : InputTestFixture
 
         actions.Enable();
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         scene.uiModule.actionsAsset = actions;
         scene.uiModule.point = InputActionReference.Create(pointAction);
@@ -2484,6 +3136,398 @@ internal class UITests : InputTestFixture
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
+    [Test]
+    [Category("UI")]
+    public void UI_CanDriveVirtualMouseCursorFromGamepad()
+    {
+        const float kCursorSpeed = 100;
+        const float kScrollSpeed = 25;
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.SetActive(false);
+        eventSystemGO.AddComponent<EventSystem>();
+        eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var canvasGO = new GameObject();
+        canvasGO.SetActive(false);
+        canvasGO.AddComponent<Canvas>();
+
+        var cursorGO = new GameObject();
+        cursorGO.SetActive(false);
+        var cursorTransform = cursorGO.AddComponent<RectTransform>();
+        var cursorInput = cursorGO.AddComponent<VirtualMouseInput>();
+        cursorInput.cursorSpeed = kCursorSpeed;
+        cursorInput.scrollSpeed = kScrollSpeed;
+        cursorInput.cursorTransform = cursorTransform;
+        cursorTransform.SetParent(canvasGO.transform, worldPositionStays: false);
+        cursorTransform.pivot = new Vector2(0.5f, 0.5f);
+        cursorTransform.anchorMin = Vector2.zero;
+        cursorTransform.anchorMax = Vector2.zero;
+        cursorTransform.anchoredPosition = new Vector2(123, 234);
+
+        var positionAction = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/*stick");
+        var leftButtonAction = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var rightButtonAction = new InputAction(binding: "<Gamepad>/rightShoulder");
+        var middleButtonAction = new InputAction(binding: "<Gamepad>/leftShoulder");
+        var forwardButtonAction = new InputAction(binding: "<Gamepad>/buttonWest");
+        var backButtonAction = new InputAction(binding: "<Gamepad>/buttonEast");
+        var scrollWheelAction = new InputAction();
+        scrollWheelAction.AddCompositeBinding("2DVector(mode=2)")
+            .With("Up", "<Gamepad>/leftTrigger")
+            .With("Down", "<Gamepad>/rightTrigger")
+            .With("Left", "<Gamepad>/dpad/left")
+            .With("Right", "<Gamepad>/dpad/right");
+
+        cursorInput.stickAction = new InputActionProperty(positionAction);
+        cursorInput.leftButtonAction = new InputActionProperty(leftButtonAction);
+        cursorInput.rightButtonAction = new InputActionProperty(rightButtonAction);
+        cursorInput.middleButtonAction = new InputActionProperty(middleButtonAction);
+        cursorInput.scrollWheelAction = new InputActionProperty(scrollWheelAction);
+        cursorInput.forwardButtonAction = new InputActionProperty(forwardButtonAction);
+        cursorInput.backButtonAction = new InputActionProperty(backButtonAction);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Get rid of deadzones to simplify computations.
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
+        eventSystemGO.SetActive(true);
+        canvasGO.SetActive(true);
+        cursorGO.SetActive(true);
+
+        // Make sure the component added a virtual mouse.
+        var virtualMouse = Mouse.current;
+        Assert.That(virtualMouse, Is.Not.Null);
+        Assert.That(virtualMouse.layout, Is.EqualTo("VirtualMouse"));
+        Assert.That(cursorInput.virtualMouse, Is.SameAs(virtualMouse));
+
+        // Make sure we can disable and re-enable the component.
+        cursorGO.SetActive(false);
+
+        Assert.That(Mouse.current, Is.Null);
+
+        cursorGO.SetActive(true);
+
+        Assert.That(Mouse.current, Is.Not.Null);
+        Assert.That(Mouse.current, Is.SameAs(virtualMouse));
+
+        // Ensure everything is at default values.
+        // Starting position should be that of the cursor's initial transform.
+        Assert.That(virtualMouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(virtualMouse.delta.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(virtualMouse.scroll.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(virtualMouse.leftButton.isPressed, Is.False);
+        Assert.That(virtualMouse.rightButton.isPressed, Is.False);
+        Assert.That(virtualMouse.middleButton.isPressed, Is.False);
+        Assert.That(cursorTransform.anchoredPosition, Is.EqualTo(new Vector2(123, 234)));
+
+        // Now move the mouse cursor with the left stick and ensure we get a response.
+        currentTime = 1;
+        Set(gamepad.leftStick, new Vector2(0.25f, 0.75f));
+
+        // No time has passed yet so first frame shouldn't move at all.
+        Assert.That(virtualMouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(virtualMouse.delta.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(cursorTransform.anchoredPosition, Is.EqualTo(new Vector2(123, 234)));
+
+        currentTime = 1.4;
+        InputSystem.Update();
+
+        const float kFirstDeltaX = kCursorSpeed * 0.25f * 0.4f;
+        const float kFirstDeltaY = kCursorSpeed * 0.75f * 0.4f;
+
+        Assert.That(virtualMouse.position.ReadValue(), Is.EqualTo(new Vector2(123 + kFirstDeltaX, 234 + kFirstDeltaY)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(virtualMouse.delta.ReadValue(), Is.EqualTo(new Vector2(kFirstDeltaX, kFirstDeltaY)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(cursorTransform.anchoredPosition, Is.EqualTo(new Vector2(123 + kFirstDeltaX, 234 + kFirstDeltaY)).Using(Vector2EqualityComparer.Instance));
+
+        // Each update should move the cursor along while the stick is actuated.
+        currentTime = 2;
+        InputSystem.Update();
+
+        const float kSecondDeltaX = kCursorSpeed * 0.25f * 0.6f;
+        const float kSecondDeltaY = kCursorSpeed * 0.75f * 0.6f;
+
+        Assert.That(virtualMouse.position.ReadValue(), Is.EqualTo(new Vector2(123 + kFirstDeltaX + kSecondDeltaX, 234 + kFirstDeltaY + kSecondDeltaY)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(virtualMouse.delta.ReadValue(), Is.EqualTo(new Vector2(kSecondDeltaX, kSecondDeltaY)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(cursorTransform.anchoredPosition, Is.EqualTo(new Vector2(123 + kFirstDeltaX + kSecondDeltaX, 234 + kFirstDeltaY + kSecondDeltaY)).Using(Vector2EqualityComparer.Instance));
+
+        // Only the final state of the stick in an update should matter.
+        currentTime = 3;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.34f, 0.45f)});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.45f, 0.56f)});
+        InputSystem.Update();
+
+        const float kThirdDeltaX = kCursorSpeed * 0.45f;
+        const float kThirdDeltaY = kCursorSpeed * 0.56f;
+
+        Assert.That(virtualMouse.position.ReadValue(), Is.EqualTo(new Vector2(123 + kFirstDeltaX + kSecondDeltaX + kThirdDeltaX, 234 + kFirstDeltaY + kSecondDeltaY + kThirdDeltaY)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(virtualMouse.delta.ReadValue(), Is.EqualTo(new Vector2(kThirdDeltaX, kThirdDeltaY)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(cursorTransform.anchoredPosition, Is.EqualTo(new Vector2(123 + kFirstDeltaX + kSecondDeltaX + kThirdDeltaX, 234 + kFirstDeltaY + kSecondDeltaY + kThirdDeltaY)).Using(Vector2EqualityComparer.Instance));
+
+        var leftClickAction = new InputAction(binding: "<Mouse>/leftButton");
+        var middleClickAction = new InputAction(binding: "<Mouse>/middleButton");
+        var rightClickAction = new InputAction(binding: "<Mouse>/rightButton");
+        var forwardClickAction = new InputAction(binding: "<Mouse>/forwardButton");
+        var backClickAction = new InputAction(binding: "<Mouse>/backButton");
+        var scrollAction = new InputAction(binding: "<Mouse>/scroll");
+
+        leftClickAction.Enable();
+        middleClickAction.Enable();
+        rightClickAction.Enable();
+        forwardClickAction.Enable();
+        backClickAction.Enable();
+        scrollAction.Enable();
+
+        // Press buttons.
+        PressAndRelease(gamepad.buttonSouth);
+        Assert.That(leftClickAction.triggered);
+        PressAndRelease(gamepad.rightShoulder);
+        Assert.That(rightClickAction.triggered);
+        PressAndRelease(gamepad.leftShoulder);
+        Assert.That(middleClickAction.triggered);
+        PressAndRelease(gamepad.buttonWest);
+        Assert.That(forwardClickAction.triggered);
+        PressAndRelease(gamepad.buttonEast);
+        Assert.That(backClickAction.triggered);
+
+        // Scroll wheel.
+        Set(gamepad.leftTrigger, 0.5f);
+        Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, kScrollSpeed * 0.5f)).Using(Vector2EqualityComparer.Instance));
+        Set(gamepad.rightTrigger, 0.3f);
+        Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, kScrollSpeed * (0.5f - 0.3f))).Using(Vector2EqualityComparer.Instance));
+        Set(gamepad.leftTrigger, 0);
+        Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, -kScrollSpeed * 0.3f)).Using(Vector2EqualityComparer.Instance));
+        Press(gamepad.dpad.left);
+        Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-kScrollSpeed, -kScrollSpeed * 0.3f)).Using(Vector2EqualityComparer.Instance));
+        Press(gamepad.dpad.right);
+        Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, -kScrollSpeed * 0.3f)).Using(Vector2EqualityComparer.Instance));
+        Release(gamepad.dpad.left);
+        Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(kScrollSpeed, -kScrollSpeed * 0.3f)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    // Strictly speaking, this functionality is available as of 2021.1 but we can't add a reference to the "com.unity.ui" package
+    // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
+    // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
+    // can have a reference to UITK that doesn't break things in previous versions of Unity.
+    #if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [UnityTest]
+    [Category("UI")]
+    #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+    [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
+    #endif
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True);
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiRoot = uiDocument.rootVisualElement;
+            var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
+            var scrollView = uiRoot.Query<ScrollView>("ScrollView").First();
+
+            var clickReceived = false;
+            uiButton.clicked += () => clickReceived = true;
+            // NOTE: We do *NOT* do the following as the gamepad submit action will *not* trigger a ClickEvent.
+            //uiButton.RegisterCallback<ClickEvent>(_ => clickReceived = true);
+
+            yield return null;
+
+            var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
+
+            Set(mouse.position, buttonCenter, queueEventOnly: true);
+            Press(mouse.leftButton, queueEventOnly: true);
+
+            ////TODO: look at BaseInput and whether we need to override it in order for IME to go through our codepaths
+            ////TODO: look into or document raycasting aspect (GraphicRaycaster) when using UITK (disable raycaster?)
+            ////TODO: fix scroll wheel bindings on virtual cursor sample
+
+            yield return null;
+
+            Assert.That(uiButton.HasMouseCapture(), Is.True);
+
+            Release(mouse.leftButton, queueEventOnly: true);
+
+            yield return null;
+
+            Assert.That(uiButton.HasMouseCapture(), Is.False);
+            Assert.That(clickReceived, Is.True);
+
+            // Put mouse in upper right corner and scroll down.
+            Assert.That(scrollView.verticalScroller.value, Is.Zero);
+            Set(mouse.position, scrollViewCenter, queueEventOnly: true);
+            yield return null;
+            Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
+            yield return null;
+
+            ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
+            // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
+            // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
+            #if UNITY_2021_3_OR_NEWER
+            Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
+            #endif
+
+            // Try a button press with the gamepad.
+            // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
+            //       For now focus the button manually.
+            uiButton.Focus();
+            clickReceived = false;
+            PressAndRelease(gamepad.buttonSouth, queueEventOnly: true);
+            yield return null;
+
+            Assert.That(clickReceived, Is.True);
+
+            ////TODO: tracked device support (not yet supported by UITK)
+        }
+        finally
+        {
+            SceneManager.UnloadSceneAsync(scene);
+        }
+
+        // Wait for unload to complete.
+        yield return null;
+    }
+
+    private class UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup : IPrebuildSetup
+    {
+        public void Setup()
+        {
+            #if UNITY_EDITOR
+            EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
+                { path = "Assets/Tests/InputSystem/Assets/UITKTestScene.unity", enabled = true }).ToArray();
+            #endif
+        }
+    }
+    #endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [UnityTest]
+    [Category("Focus")]
+    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonIsNotClicked()
+    {
+        // Whether we run in the background or not should only move the reset of the mouse button
+        // around. Without running in the background, the reset should happen when we come back into focus.
+        // With running in the background, the reset should happen when we lose focus.
+        runtime.runInBackground = true;
+
+        var scene = CreateUIScene();
+        var mousePosition = scene.From640x480ToScreen(100, 100);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // On sync, send current position but with all buttons up.
+        SyncMouse(mouse, mousePosition);
+
+        // Turn left object into a button.
+        var button = scene.leftGameObject.AddComponent<MyButton>();
+        var clicked = false;
+        button.onClick.AddListener(() => clicked = true);
+
+        yield return null;
+        scene.leftChildReceiver.events.Clear();
+
+        // Put mouse over button and press it.
+        Set(mouse.position, mousePosition);
+        Press(mouse.leftButton);
+
+        Assert.That(scene.actions.UI.Click.phase.IsInProgress(), Is.True);
+
+        var clickCanceled = 0;
+        scene.actions.UI.Click.canceled += _ => ++ clickCanceled;
+
+        yield return null;
+
+        Assert.That(button.receivedPointerDown, Is.True);
+        Assert.That(scene.leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerEnter),
+#if UNITY_2021_2_OR_NEWER
+                OneEvent("type", EventType.PointerMove),
+#endif
+                OneEvent("type", EventType.PointerDown),
+                OneEvent("type", EventType.InitializePotentialDrag)
+            )
+        );
+
+        scene.leftChildReceiver.events.Clear();
+
+        runtime.PlayerFocusLost();
+        Assert.That(clickCanceled, Is.EqualTo(1));
+        scene.eventSystem.SendMessage("OnApplicationFocus", false);
+
+        Assert.That(scene.leftChildReceiver.events, Is.Empty);
+        Assert.That(scene.eventSystem.hasFocus, Is.False);
+        Assert.That(clicked, Is.False);
+
+        runtime.PlayerFocusGained();
+        scene.eventSystem.SendMessage("OnApplicationFocus", true);
+
+        yield return null;
+
+        // NOTE: We *do* need the pointer up to keep UI state consistent.
+
+        Assert.That(scene.eventSystem.hasFocus, Is.True);
+        Assert.That(button.receivedPointerUp, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
+        Assert.That(mouse.leftButton.isPressed, Is.False);
+        Assert.That(clicked, Is.False);
+    }
+
+#endif
+
+    public class MyButton : UnityEngine.UI.Button
+    {
+        public bool receivedPointerDown;
+        public bool receivedPointerUp;
+        public override void OnPointerDown(PointerEventData eventData)
+        {
+            receivedPointerDown = true;
+            base.OnPointerDown(eventData);
+        }
+
+        public override void OnPointerUp(PointerEventData eventData)
+        {
+            receivedPointerUp = true;
+            base.OnPointerDown(eventData);
+        }
+    }
+
+    private unsafe void SyncMouse(Mouse mouse, Vector2 mousePosition)////FIXME: mousePosition should be by reference.
+    {
+        runtime.SetDeviceCommandCallback(mouse,
+            (id, command) =>
+            {
+                if (command->type == RequestSyncCommand.Type)
+                {
+                    InputSystem.QueueStateEvent(mouse, new MouseState { position = mousePosition });
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+    }
+
+    // This test requires some functionality which ATM is only available through InputTestRuntime (namely, being able to create
+    // native devices and set up IOCTLs for them).
+    [Test]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public void TODO_UI_CanDriveVirtualMouseCursorFromGamepad_AndWarpSystemMouseIfPresent()
+    {
+        Assert.Fail();
+    }
+
     private const string kTrackedDeviceWithButton = @"
         {
             ""name"" : ""TrackedDeviceWithButton"",
@@ -2514,6 +3558,9 @@ internal class UITests : InputTestFixture
         PointerUp,
         PointerEnter,
         PointerExit,
+#if UNITY_2021_2_OR_NEWER
+        PointerMove,
+#endif
         Select,
         Deselect,
         InitializePotentialDrag,
@@ -2528,6 +3575,9 @@ internal class UITests : InputTestFixture
     }
 
     private class UICallbackReceiver : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler,
+#if UNITY_2021_2_OR_NEWER
+        IPointerMoveHandler,
+#endif
         IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler, IInitializePotentialDragHandler,
         IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
     {
@@ -2580,6 +3630,14 @@ internal class UITests : InputTestFixture
         {
             events.Add(new Event(EventType.PointerUp, ClonePointerEventData(eventData)));
         }
+
+#if UNITY_2021_2_OR_NEWER
+        public void OnPointerMove(PointerEventData eventData)
+        {
+            events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
+        }
+
+#endif
 
         public void OnMove(AxisEventData eventData)
         {
@@ -2646,7 +3704,7 @@ internal class UITests : InputTestFixture
 
         private static AxisEventData CloneAxisEventData(AxisEventData eventData)
         {
-            return new AxisEventData(EventSystem.current)
+            return new ExtendedAxisEventData(EventSystem.current)
             {
                 moveVector = eventData.moveVector,
                 moveDir = eventData.moveDir
@@ -2680,7 +3738,16 @@ internal class UITests : InputTestFixture
                 touchId = extendedEventData.touchId,
                 pointerType = extendedEventData.pointerType,
                 trackedDeviceOrientation = extendedEventData.trackedDeviceOrientation,
-                trackedDevicePosition = extendedEventData.trackedDevicePosition
+                trackedDevicePosition = extendedEventData.trackedDevicePosition,
+#if UNITY_2021_1_OR_NEWER
+                pressure = eventData.pressure,
+                tangentialPressure = eventData.tangentialPressure,
+                altitudeAngle = eventData.altitudeAngle,
+                azimuthAngle = eventData.azimuthAngle,
+                twist = eventData.twist,
+                radius = eventData.radius,
+                radiusVariance = eventData.radiusVariance,
+#endif
             };
 
             // Can't set lastPress directly.
@@ -2693,6 +3760,8 @@ internal class UITests : InputTestFixture
 
     private class TestEventSystem : MultiplayerEventSystem
     {
+        public bool hasFocus;
+
         public void InvokeUpdate()
         {
             Update();
@@ -2702,8 +3771,151 @@ internal class UITests : InputTestFixture
         {
             // Sync our focus state to that of the test runtime rather than to the Unity test runner (where
             // debugging may still focus and thus alter the test run).
-            hasFocus = ((InputTestRuntime)InputRuntime.s_Instance).hasFocus;
+            hasFocus = ((InputTestRuntime)InputRuntime.s_Instance).isPlayerFocused;
+            this.hasFocus = hasFocus;
             base.OnApplicationFocus(hasFocus);
         }
+    }
+
+    private static KeyValuePair<string, object> OneEvent(string property, object value)
+    {
+        return new KeyValuePair<string, object>("OneEvent_" + property, value);
+    }
+
+    private static KeyValuePair<string, object> AllEvents(string property, object value)
+    {
+        return new KeyValuePair<string, object>("AllEvents_" + property, value);
+    }
+
+    private static EventConstraint EventSequence(params KeyValuePair<string, object>[] values)
+    {
+        return new EventConstraint(values);
+    }
+
+    private class EventConstraint : Constraint
+    {
+        public KeyValuePair<string, object>[] values { get; }
+
+        public EventConstraint(KeyValuePair<string, object>[] values)
+        {
+            this.values = values;
+            Description = string.Join("\n", values.Select(p => $"{p.Key}={p.Value}"));
+        }
+
+        public override ConstraintResult ApplyTo(object actual)
+        {
+            if (!(actual is List<UICallbackReceiver.Event>))
+                throw new ArgumentException($"Expecting List<UICallbackReceiver> but got {actual}",
+                    nameof(actual));
+
+            var events = (List<UICallbackReceiver.Event>)actual;
+
+            bool Compare(string propertyPath, UICallbackReceiver.Event evt, object value)
+            {
+                var eventObject = propertyPath == "type" ? (object)evt : evt.data;
+                object eventPropertyValue = null;
+                Type eventPropertyType = null;
+                foreach (var propertyName in propertyPath.Split('.'))
+                {
+                    if (eventPropertyValue != null)
+                        eventObject = eventPropertyValue;
+                    if (eventObject == null)
+                        return false;
+                    var eventProperty = eventObject.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+                    if (eventProperty == null)
+                    {
+                        // Sadly, "hovered" is a field.
+                        var field = eventObject.GetType().GetField(propertyName, BindingFlags.Instance | BindingFlags.Public);
+                        if (field == null)
+                            throw new Exception($"Could not find '{propertyName}' field or property on {eventObject}");
+                        eventPropertyValue = field.GetValue(eventObject);
+                        eventPropertyType = field.FieldType;
+                    }
+                    else
+                    {
+                        eventPropertyValue = eventProperty.GetValue(eventObject);
+                        eventPropertyType = eventProperty.PropertyType;
+                    }
+                }
+
+                bool result;
+                if (eventPropertyType == typeof(float))
+                    result = Mathf.Approximately((float)eventPropertyValue, (float)value);
+                else if (eventPropertyType == typeof(double))
+                    result = NumberHelpers.Approximately((double)eventPropertyValue, (double)value);
+                else if (eventPropertyType == typeof(Vector2))
+                    result = Vector2EqualityComparer.Instance.Equals((Vector2)eventPropertyValue, (Vector2)value);
+                else if (eventPropertyType == typeof(Vector3))
+                    result = Vector3EqualityComparer.Instance.Equals((Vector3)eventPropertyValue, (Vector3)value);
+                else if (eventPropertyType == typeof(Quaternion))
+                {
+                    var q1 = (Quaternion)eventPropertyValue;
+                    var q2 = (Quaternion)value;
+                    result = Mathf.Approximately(q1.x, q2.x)
+                        && Mathf.Approximately(q1.y, q2.y)
+                        && Mathf.Approximately(q1.z, q2.z)
+                        && Mathf.Approximately(q1.w, q2.w);
+                }
+                else if (typeof(IEnumerable<GameObject>).IsAssignableFrom(eventPropertyType))
+                {
+                    // This check corresponds to Is.EquivalentTo(), i.e. it only checks for the presence of the same
+                    // elements but not for the order of them. The `hovered` property does not maintain a specific
+                    // order but rather adds new elements to the end (and thus child elements may appear before *or*
+                    // after their parents).
+                    var eventPropertyList = (IEnumerable<GameObject>)eventPropertyValue;
+                    var valueList = (IEnumerable<GameObject>)value;
+                    result = eventPropertyList.All(x => valueList.Contains(x))
+                        && eventPropertyList.Count() == valueList.Count();
+                }
+                else
+                    result = value == null || eventPropertyValue == null ? ReferenceEquals(eventPropertyValue, value) : eventPropertyValue.Equals(value);
+
+                if (!result)
+                    Debug.Log(
+                        $"Expected '{propertyPath}' to be '{value}' ({value?.GetType().GetNiceTypeName()}) but got '{eventPropertyValue}' ({eventPropertyValue?.GetType().GetNiceTypeName()}) instead!");
+                return result;
+            }
+
+            if (values.Where(x => x.Key.StartsWith("AllEvents_"))
+                .Any(p => events.Any(e => !Compare(p.Key.Substring("AllEvents_".Length), e, p.Value))))
+                return new ConstraintResult(this, actual, false);
+
+            // Take all OneEvent_XXX entries.
+            if (values.Where(x => x.Key.StartsWith("OneEvent_"))
+                // Group them.
+                .GroupBy(x => x.Key)
+                // Compare each entry in the group to the respective entry in `values`.
+                .Any(g =>
+                    g.Zip(events,
+                        (a, b) => Compare(g.Key.Substring("OneEvent_".Length), b, a.Value))
+                        .Any(b => !b) ||
+                    g.Count() != events.Count))
+                return new ConstraintResult(this, actual, false);
+
+            return new ConstraintResult(this, actual, true);
+        }
+    }
+
+    private class UITestScene
+    {
+        private UITestScene(Scene scene)
+        {
+            Scene = scene;
+        }
+
+        public static UITestScene LoadScene(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
+        {
+#if UNITY_EDITOR
+            var scene = EditorSceneManager.LoadSceneInPlayMode(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#else
+            var scene = SceneManager.LoadScene(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#endif
+            return new UITestScene(scene);
+        }
+
+        public Scene Scene { get; }
+        public InputSystemUIInputModule InputModule => Scene.GetRootGameObjects()[0].GetComponent<InputSystemUIInputModule>();
+
+        public const string TestScenePath = "Assets/Tests/InputSystem/Assets/UIInputModuleTestScene.unity";
     }
 }

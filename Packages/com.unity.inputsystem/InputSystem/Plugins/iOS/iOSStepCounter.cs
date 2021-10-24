@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || PACKAGE_DOCS_GENERATION
+#if UNITY_EDITOR || UNITY_IOS || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using AOT;
 using Unity.Collections.LowLevel.Unsafe;
@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         public static FourCC kFormat = new FourCC('I', 'S', 'C', 'S');
         public FourCC format => kFormat;
 
-        [InputControl(name = "stepCounter")]
+        [InputControl(name = "stepCounter", layout = "Integer")]
         public int stepCounter;
     }
 

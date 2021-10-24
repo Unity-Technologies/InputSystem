@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
@@ -92,7 +93,6 @@ internal partial class CoreTests
         Assert.That(multiTapAction.GetTimeoutCompletionPercentage(), Is.EqualTo(1).Within(0.0001));
     }
 
-    [Preserve]
     class InteractionThatOnlyPerforms : IInputInteraction<float>
     {
         // Get rid of unused field warning.
@@ -440,6 +440,30 @@ internal partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1346786/
+    [Test]
+    [Category("Actions")]
+    public void Actions_HoldInteraction_DoesNotGetStuck_WhenHeldAndReleasedInSameEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.4)");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Press(gamepad.buttonSouth, time: 10, queueEventOnly: true);
+            Release(gamepad.buttonSouth, time: 10.41, queueEventOnly: true);
+            currentTime = 10.5;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10, value: 1.0)
+                    .AndThen(Performed<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)) // Note the zero value; button is already released.
+                    .AndThen(Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ReleasedHoldInteractionIsCancelled_WithMultipleBindings()
@@ -719,7 +743,6 @@ internal partial class CoreTests
         }
     }
 
-    [Preserve]
     private class CancelingTestInteraction : IInputInteraction
     {
         public void Process(ref InputInteractionContext context)
@@ -770,5 +793,22 @@ internal partial class CoreTests
 
         Assert.That(canceledCount, Is.EqualTo(1));
         Assert.That(canceledValue, Is.EqualTo(0.0));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1354098/
+    [Test]
+    [Category("Actions")]
+    public void Actions_DoesNotThrowWhenDeviceIsDisconnectedWhileControlIsPressed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("Action",
+            binding: "<Gamepad>/buttonSouth",
+            interactions: "Press,Press"); // this bug occurs when there are multiple interactions on a binding
+        action.Enable();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(() => InputSystem.RemoveDevice(gamepad), Throws.Nothing);
     }
 }

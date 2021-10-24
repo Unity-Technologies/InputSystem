@@ -1,4 +1,4 @@
-#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#if UNITY_XR_AVAILABLE && ENABLE_VR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.XR;
@@ -188,16 +188,12 @@ namespace UnityEngine.InputSystem.XR
         public float rightEyeOpenAmount { get; set; }
     }
 
-    [Preserve]
     public class BoneControl : InputControl<Bone>
     {
-        [Preserve]
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
         public IntegerControl parentBoneIndex { get; private set; }
-        [Preserve]
         [InputControl(offset = 4, displayName = "Position")]
         public Vector3Control position { get; private set; }
-        [Preserve]
         [InputControl(offset = 16, displayName = "Rotation")]
         public QuaternionControl rotation { get; private set; }
 
@@ -228,28 +224,20 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
-    [Preserve]
     public class EyesControl : InputControl<Eyes>
     {
-        [Preserve]
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
         public Vector3Control leftEyePosition { get; private set; }
-        [Preserve]
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
         public QuaternionControl leftEyeRotation { get; private set; }
-        [Preserve]
         [InputControl(offset = 28, displayName = "RightEyePosition")]
         public Vector3Control rightEyePosition { get; private set; }
-        [Preserve]
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
         public QuaternionControl rightEyeRotation { get; private set; }
-        [Preserve]
         [InputControl(offset = 56, displayName = "FixationPoint")]
         public Vector3Control fixationPoint { get; private set; }
-        [Preserve]
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
         public AxisControl leftEyeOpenAmount { get; private set; }
-        [Preserve]
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
         public AxisControl rightEyeOpenAmount { get; private set; }
 
@@ -308,6 +296,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
+#if !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             InputSystem.RegisterLayout<PoseControl>("Pose");
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
@@ -316,7 +305,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<XRController>();
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
-
+#if ENABLE_VR
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR
             InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.WMRHMD>(
                 matches: new InputDeviceMatcher()
@@ -417,7 +406,9 @@ namespace UnityEngine.InputSystem.XR
                     .WithProduct(@"^(HTC V2-XD/XE)")
             );
 #endif
+#endif
+#endif
         }
     }
 }
-#endif // (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#endif // UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION

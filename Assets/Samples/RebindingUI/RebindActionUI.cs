@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.Events;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
 ////TODO: localization support

@@ -1,4 +1,4 @@
-#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#if UNITY_XR_AVAILABLE && ENABLE_VR || PACKAGE_DOCS_GENERATION && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
@@ -49,4 +49,4 @@ namespace UnityEngine.InputSystem.XR.Haptics
         }
     }
 }
-#endif // (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
+#endif // UNITY_XR_AVAILABLE  || PACKAGE_DOCS_GENERATION

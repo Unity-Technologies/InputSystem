@@ -16,16 +16,16 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// An asset containing action maps and control schemes.
+    /// An asset that contains action maps and control schemes.
     /// </summary>
     /// <remarks>
     /// InputActionAssets can be created in code but are usually stored in JSON format on
-    /// disk with the ".inputactions" extension and are imported by Unity using a custom
+    /// disk with the ".inputactions" extension. Unity imports them with a custom
     /// importer.
     ///
     /// To create an InputActionAsset in code, use the <c>Singleton</c> API and populate the
     /// asset with the methods found in <see cref="InputActionSetupExtensions"/>. Alternatively,
-    /// you can load an InputActionAsset directly from a string in JSON format using <see cref="FromJson"/>.
+    /// you can use <see cref="FromJson"/> to load an InputActionAsset directly from a string in JSON format.
     ///
     /// <example>
     /// <code>
@@ -36,7 +36,13 @@ namespace UnityEngine.InputSystem
     /// </code>
     /// </example>
     ///
-    /// Each asset can contain arbitrary many action maps that can be enabled and disabled individually
+    /// If you use the API to modify an InputActionAsset while in Play mode,
+    /// it does not survive the transition back to Edit Mode. Unity tracks and reloads modified assets
+    /// from disk when exiting Play mode. This is done so that you can realistically test the input
+    /// related functionality of your application i.e. control rebinding etc, without inadvertently changing
+    /// the input asset.
+    ///
+    /// Each asset can contain arbitrary many action maps that you can enable and disable individually
     /// (see <see cref="InputActionMap.Enable"/> and <see cref="InputActionMap.Disable"/>) or in bulk
     /// (see <see cref="Enable"/> and <see cref="Disable"/>). The name of each action map must be unique.
     /// The list of action maps can be queried from <see cref="actionMaps"/>.
@@ -230,49 +236,11 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionMap.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get
-            {
-                if (m_DevicesCount < 0)
-                    return null;
-                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
-            }
+            get => m_Devices.Get();
             set
             {
-                if (value == null)
-                {
-                    if (m_DevicesCount < 0)
-                        return; // No change.
-
-                    if (m_DevicesArray != null & m_DevicesCount > 0)
-                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = -1;
-                }
-                else
-                {
-                    // See if the array actually changes content. Avoids re-resolving when there
-                    // is no need to.
-                    if (m_DevicesCount == value.Value.Count)
-                    {
-                        var noChange = true;
-                        for (var i = 0; i < m_DevicesCount; ++i)
-                        {
-                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
-                            {
-                                noChange = false;
-                                break;
-                            }
-                        }
-                        if (noChange)
-                            return;
-                    }
-
-                    if (m_DevicesCount > 0)
-                        m_DevicesArray.Clear(ref m_DevicesCount);
-                    m_DevicesCount = 0;
-                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                }
-
-                ReResolveIfNecessary();
+                if (m_Devices.Set(value))
+                    ReResolveIfNecessary();
             }
         }
 
@@ -891,6 +859,13 @@ namespace UnityEngine.InputSystem
             return GetEnumerator();
         }
 
+        internal void MarkAsDirty()
+        {
+#if UNITY_EDITOR
+            InputSystem.TrackDirtyInputActionAsset(this);
+#endif
+        }
+
         private void ReResolveIfNecessary()
         {
             if (m_SharedStateForAllMaps == null)
@@ -924,8 +899,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private int m_DevicesCount = -1;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
 
         [Serializable]
         internal struct WriteFileJson

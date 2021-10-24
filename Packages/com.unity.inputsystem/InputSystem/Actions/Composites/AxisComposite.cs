@@ -41,7 +41,6 @@ namespace UnityEngine.InputSystem.Composites
     /// and inverted for <see cref="negative"/>. This means that if the buttons are actual axes (e.g.
     /// the triggers on gamepads), then the values correspond to how much the axis is actuated.
     /// </remarks>
-    [Preserve]
     [DisplayStringFormat("{negative}/{positive}")]
     [DisplayName("Positive/Negative Binding")]
     public class AxisComposite : InputBindingComposite<float>
@@ -132,34 +131,35 @@ namespace UnityEngine.InputSystem.Composites
         /// <inheritdoc />
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            var negativeValue = context.ReadValue<float>(negative);
-            var positiveValue = context.ReadValue<float>(positive);
+            var negativeMagnitude = context.EvaluateMagnitude(negative);
+            var positiveMagnitude = context.EvaluateMagnitude(positive);
 
-            ////TODO: take partial actuation into account (e.g. amount of actuation of gamepad trigger should result in partial actuation of axis)
-            ////REVIEW: should this respect press points?
-
-            var negativeIsPressed = negativeValue > 0;
-            var positiveIsPressed = positiveValue > 0;
+            var negativeIsPressed = negativeMagnitude > 0;
+            var positiveIsPressed = positiveMagnitude > 0;
 
             if (negativeIsPressed == positiveIsPressed)
             {
                 switch (whichSideWins)
                 {
                     case WhichSideWins.Negative:
-                        return -negativeValue;
+                        positiveIsPressed = false;
+                        break;
 
                     case WhichSideWins.Positive:
-                        return positiveValue;
+                        negativeIsPressed = false;
+                        break;
 
                     case WhichSideWins.Neither:
                         return midPoint;
                 }
             }
 
-            if (negativeIsPressed)
-                return -negativeValue;
+            var mid = midPoint;
 
-            return positiveValue;
+            if (negativeIsPressed)
+                return mid - (mid - minValue) * negativeMagnitude;
+
+            return mid + (maxValue - mid) * positiveMagnitude;
         }
 
         /// <inheritdoc />

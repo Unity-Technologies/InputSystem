@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -800,6 +801,34 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    [TestCase("<Gamepad>{LeftHand}foo/*/left", "layout:Gamepad,usage:LeftHand,name:foo", "wildcard:", "name:left")]
+    [TestCase("<Keyboard>/#(;)", "layout:Keyboard", "displayName:;")]
+    public void Controls_CanParseControlPath(string path, params string[] parts)
+    {
+        var parsed = InputControlPath.Parse(path).ToArray();
+
+        Assert.That(parsed, Has.Length.EqualTo(parts.Length));
+        Assert.That(parsed.Zip(parts, (a, b) =>
+        {
+            var properties = b.Split(',');
+            return properties.All(p =>
+            {
+                var nameAndValue = p.Split(':').ToArray();
+                switch (nameAndValue[0])
+                {
+                    case "layout": return a.layout == nameAndValue[1];
+                    case "usage": return a.usages.Count() == 1 && a.usages.First() == nameAndValue[1];
+                    case "name": return a.name == nameAndValue[1];
+                    case "displayName": return a.displayName == nameAndValue[1];
+                    case "wildcard": return a.isWildcard;
+                }
+                return false;
+            });
+        }), Has.All.True);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanFindControlsByType()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -975,6 +1004,48 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanCustomizeDefaultButtonPressPoint()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.settings.defaultButtonPressPoint = 0.4f;
+
+        Set(gamepad.leftTrigger, 0.39f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+
+        Set(gamepad.leftTrigger, 0.4f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
+
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+
+        InputSystem.settings.defaultButtonPressPoint = 0;
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
+
+        // Setting the trigger to 0 requires the system to be "smart" enough to
+        // figure out that 0 as a default button press point doesn't make sense
+        // and that instead the press point should clamp off at some low, non-zero value.
+        // https://fogbugz.unity3d.com/f/cases/1349002/
+        Set(gamepad.leftTrigger, 0f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+
+        Set(gamepad.leftTrigger, 0.001f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
+
+        InputSystem.settings.defaultButtonPressPoint = -1;
+        Set(gamepad.leftTrigger, 0f);
+
+        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanCustomizePressPointOfGamepadTriggers()
     {
         var json = @"
@@ -1032,9 +1103,6 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254559")]
-#endif
     public void Controls_CanTurnControlPathIntoHumanReadableText()
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
@@ -1043,14 +1111,14 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XR Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo(GamepadState.ButtonSouthDisplayName + " [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
 
         // OmitDevice.
         Assert.That(
             InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth",
-                InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo(GamepadState.ButtonSouthDisplayName));
+                InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("Button South"));
         Assert.That(
             InputControlPath.ToHumanReadableString("*/{PrimaryAction}",
                 InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("PrimaryAction"));
@@ -1073,10 +1141,9 @@ partial class CoreTests
         // Pretend 'a' key is mapped to 'q' in current keyboard layout.
         SetKeyInfo(Key.A, "q");
 
-        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("q [Keyboard]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
     }
 
-    [Preserve]
     private class DeviceWithoutAnyControls : InputDevice
     {
     }

@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.UI;
 #endif
 
+////TODO: add support for keeping a player's InputUser alive and reconnecting back to it
+
 ////TODO: when joining is *off*, allow auto-switching even in multiplayer
 
 ////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same
@@ -308,7 +310,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (!m_ActionsInitialized && gameObject.activeSelf)
+                if (!m_ActionsInitialized && gameObject.activeInHierarchy)
                     InitializeActions();
                 return m_Actions;
             }
@@ -321,7 +323,7 @@ namespace UnityEngine.InputSystem
                 if (m_Actions != null)
                 {
                     m_Actions.Disable();
-                    if (m_Enabled)
+                    if (m_ActionsInitialized)
                         UninitializeActions();
                 }
 
@@ -348,6 +350,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="SwitchCurrentControlScheme(UnityEngine.InputSystem.InputDevice[])"/>
         /// <seealso cref="defaultControlScheme"/>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
         public string currentControlScheme
         {
             get
@@ -607,15 +610,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ActionTriggeredCallbacks.AppendWithCapacity(value, 5);
+                m_ActionTriggeredCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ActionTriggeredCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ActionTriggeredCallbacks.RemoveAtWithCapacity(index);
+                m_ActionTriggeredCallbacks.RemoveCallback(value);
             }
         }
 
@@ -638,15 +639,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceLostCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceLostCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceLostCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceLostCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceLostCallbacks.RemoveCallback(value);
             }
         }
 
@@ -669,15 +668,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_DeviceRegainedCallbacks.AppendWithCapacity(value, 5);
+                m_DeviceRegainedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_DeviceRegainedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_DeviceRegainedCallbacks.RemoveAtWithCapacity(index);
+                m_DeviceRegainedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -698,15 +695,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                m_ControlsChangedCallbacks.AppendWithCapacity(value, 5);
+                m_ControlsChangedCallbacks.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                var index = m_ControlsChangedCallbacks.IndexOf(value);
-                if (index != -1)
-                    m_ControlsChangedCallbacks.RemoveAtWithCapacity(index);
+                m_ControlsChangedCallbacks.RemoveCallback(value);
             }
         }
 
@@ -819,6 +814,24 @@ namespace UnityEngine.InputSystem
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
 
         /// <summary>
+        /// Return the first device of the given type from <see cref="devices"/> paired to the player.
+        /// If no device of this type is paired to the player, return <c>null</c>.
+        /// </summary>
+        /// <typeparam name="TDevice">Type of device to look for (such as <see cref="Mouse"/>). Can be a supertype
+        /// of the actual device type. For example, querying for <see cref="Pointer"/>, may return a <see cref="Mouse"/>.</typeparam>
+        /// <returns>The first device paired to the player that is of the given type or <c>null</c> if the player
+        /// does not have a matching device.</returns>
+        /// <seealso cref="devices"/>
+        public TDevice GetDevice<TDevice>()
+            where TDevice : InputDevice
+        {
+            foreach (var device in devices)
+                if (device is TDevice deviceOfType)
+                    return deviceOfType;
+            return null;
+        }
+
+        /// <summary>
         /// Enable input on the player.
         /// </summary>
         /// <remarks>
@@ -865,6 +878,28 @@ namespace UnityEngine.InputSystem
             DeactivateInput();
         }
 
+        /// <summary>
+        /// Switch the current control scheme to one that fits the given set of devices.
+        /// </summary>
+        /// <param name="devices">A list of input devices. Note that if any of the devices is already paired to another
+        /// player, the device will end up paired to both players.</param>
+        /// <returns>True if the switch was successful, false otherwise. The latter can happen, for example, if
+        /// <see cref="actions"/> does not have a control scheme that fits the given set of devices.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="devices"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="actions"/> has not been assigned.</exception>
+        /// <remarks>
+        /// The player's currently paired devices (see <see cref="devices"/>) will get unpaired.
+        ///
+        /// <example>
+        /// <code>
+        /// // Switch the first player to keyboard and mouse.
+        /// PlayerInput.all[0]
+        ///     .SwitchCurrentControlScheme(Keyboard.current, Mouse.current);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="currentControlScheme"/>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
         public bool SwitchCurrentControlScheme(params InputDevice[] devices)
         {
             if (devices == null)
@@ -873,16 +908,43 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     "Must set actions on PlayerInput in order to be able to switch control schemes");
 
+            // Find control scheme matching given devices in associated action asset
             var scheme = InputControlScheme.FindControlSchemeForDevices(devices, actions.controlSchemes);
-            if (scheme == null)
+            if (!scheme.HasValue)
                 return false;
 
-            SwitchCurrentControlScheme(scheme.Value.name, devices);
+            var controlScheme = scheme.Value;
+            SwitchControlSchemeInternal(ref controlScheme, devices);
             return true;
         }
 
         ////REVIEW: these should just be SwitchControlScheme
 
+        /// <summary>
+        /// Switch the player to use the given control scheme together with the given devices.
+        /// </summary>
+        /// <param name="controlScheme">Name of the control scheme. See <see cref="InputControlScheme.name"/>.</param>
+        /// <param name="devices">A list of devices.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="devices"/> is <c>null</c> -or- <paramref name="controlScheme"/> is
+        /// <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This method can be used to explicitly force a combination of control scheme and a specific set of
+        /// devices.
+        ///
+        /// <example>
+        /// <code>
+        /// // Put player 1 on the "Gamepad" control scheme together
+        /// // with the second gamepad.
+        /// PlayerInput.all[0].SwitchControlScheme(
+        ///     "Gamepad",
+        ///     Gamepad.all[1]);
+        /// </code>
+        /// </example>
+        ///
+        /// The player's currently paired devices (see <see cref="devices"/>) will get unpaired.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
+        /// <seealso cref="currentControlScheme"/>
         public void SwitchCurrentControlScheme(string controlScheme, params InputDevice[] devices)
         {
             if (string.IsNullOrEmpty(controlScheme))
@@ -890,14 +952,8 @@ namespace UnityEngine.InputSystem
             if (devices == null)
                 throw new ArgumentNullException(nameof(devices));
 
-            using (InputActionRebindingExtensions.DeferBindingResolution())
-            {
-                user.UnpairDevices();
-                for (var i = 0; i < devices.Length; ++i)
-                    InputUser.PerformPairingWithDevice(devices[i], user: user);
-
-                user.ActivateControlScheme(controlScheme);
-            }
+            user.FindControlScheme(controlScheme, out InputControlScheme scheme); // throws if not found
+            SwitchControlSchemeInternal(ref scheme, devices);
         }
 
         public void SwitchCurrentActionMap(string mapNameOrId)
@@ -1106,14 +1162,14 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
         [NonSerialized] private bool m_Enabled;
-        [NonSerialized] private bool m_ActionsInitialized;
+        [NonSerialized] internal bool m_ActionsInitialized;
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceLostCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
-        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
-        [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceLostCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
+        [NonSerialized] private CallbackArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
+        [NonSerialized] private CallbackArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private Func<InputDevice, InputEventPtr, bool> m_PreFilterUnpairedDeviceUsedDelegate;
         [NonSerialized] private bool m_OnUnpairedDeviceUsedHooked;
@@ -1188,31 +1244,12 @@ namespace UnityEngine.InputSystem
 
                             // Find action for event.
                             var action = m_Actions.FindAction(id);
-                            if (action != null)
-                            {
-                                ////REVIEW: really wish we had a single callback
-                                action.performed += actionEvent.Invoke;
-                                action.canceled += actionEvent.Invoke;
-                                action.started += actionEvent.Invoke;
-                            }
-                            else
-                            {
-                                // Cannot find action. Log error.
-                                if (!string.IsNullOrEmpty(actionEvent.actionName))
-                                {
-                                    // We have an action name. Show in message.
-                                    Debug.LogError(
-                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                                else
-                                {
-                                    // We have no action name. Best we have is ID.
-                                    Debug.LogError(
-                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{m_Actions}",
-                                        this);
-                                }
-                            }
+                            if (action == null)
+                                continue;
+
+                            action.performed += actionEvent.Invoke;
+                            action.canceled += actionEvent.Invoke;
+                            action.started += actionEvent.Invoke;
                         }
                     }
                     break;
@@ -1620,6 +1657,8 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            HandleControlsChanged();
+
             // Trigger join event.
             PlayerInputManager.instance?.NotifyPlayerJoined(this);
         }
@@ -1884,6 +1923,35 @@ namespace UnityEngine.InputSystem
                 m_InputUser.valid)
             {
                 InputUser.PerformPairingWithDevice(device, user: m_InputUser);
+            }
+        }
+
+        private void SwitchControlSchemeInternal(ref InputControlScheme controlScheme, params InputDevice[] devices)
+        {
+            Debug.Assert(devices != null);
+
+            // Note that we are doing two somwhat uncorrelated actions here:
+            // - Switching control scheme
+            // - Explicitly pairing with given devices regardless if making sense with respect to control scheme
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                // Unpair device previously paired but not part of given devices to pair with
+                for (var i = user.pairedDevices.Count - 1; i >= 0; --i)
+                {
+                    if (!devices.ContainsReference(user.pairedDevices[i]))
+                        user.UnpairDevice(user.pairedDevices[i]);
+                }
+
+                // Pair devices not previously paired but that are part of given devices to pair with
+                foreach (var device in devices)
+                {
+                    if (!user.pairedDevices.ContainsReference(device))
+                        InputUser.PerformPairingWithDevice(device, user: user);
+                }
+
+                // Only activate control scheme if its a different scheme
+                if (!user.controlScheme.HasValue || !user.controlScheme.Value.Equals(controlScheme))
+                    user.ActivateControlScheme(controlScheme);
             }
         }
 

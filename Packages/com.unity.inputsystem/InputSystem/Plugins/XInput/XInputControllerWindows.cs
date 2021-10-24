@@ -79,7 +79,8 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerWindowsState WithButton(Button button)
         {
-            buttons |= (ushort)((uint)1 << (int)button);
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            buttons |= (ushort)(1U << (int)button);
             return this;
         }
     }
@@ -91,7 +92,6 @@ namespace UnityEngine.InputSystem.XInput
     /// An <see cref="XInputController"/> compatible game controller connected to a Windows desktop machine.
     /// </summary>
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
-    [Preserve]
     public class XInputControllerWindows : XInputController
     {
     }

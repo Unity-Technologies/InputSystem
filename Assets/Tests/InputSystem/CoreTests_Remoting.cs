@@ -22,10 +22,10 @@ partial class CoreTests
 
         using (var remote = new FakeRemote())
         {
-            Assert.That(remote.manager.devices, Has.Count.EqualTo(2));
-            Assert.That(remote.manager.devices, Has.Exactly(1).InstanceOf<Gamepad>().With.Property("layout").EqualTo("Gamepad"));
-            Assert.That(remote.manager.devices, Has.Exactly(1).InstanceOf<Keyboard>().With.Property("layout").EqualTo("Keyboard"));
-            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+            Assert.That(remote.remoteManager.devices, Has.Count.EqualTo(2));
+            Assert.That(remote.remoteManager.devices, Has.Exactly(1).InstanceOf<Gamepad>().With.Property("layout").EqualTo("Gamepad"));
+            Assert.That(remote.remoteManager.devices, Has.Exactly(1).InstanceOf<Keyboard>().With.Property("layout").EqualTo("Keyboard"));
+            Assert.That(remote.remoteManager.devices, Has.All.With.Property("remote").True);
         }
     }
 
@@ -66,19 +66,19 @@ partial class CoreTests
 
         using (var remote = new FakeRemote())
         {
-            Assert.That(remote.manager.ListControlLayouts(), Has.None.EqualTo("TestLayout_NOT_GENERATED")); // Not remoted.
-            Assert.That(remote.manager.ListControlLayouts(), Has.Exactly(1).EqualTo("TestLayout_GENERATED")); // Remoted.
+            Assert.That(remote.remoteManager.ListControlLayouts(), Has.None.EqualTo("TestLayout_NOT_GENERATED")); // Not remoted.
+            Assert.That(remote.remoteManager.ListControlLayouts(), Has.Exactly(1).EqualTo("TestLayout_GENERATED")); // Remoted.
 
             // Make sure we do not remote "normal" layouts.
-            Assert.That(remote.manager.ListControlLayouts(),
+            Assert.That(remote.remoteManager.ListControlLayouts(),
                 Has.None.Matches((string s) => s.StartsWith("Remote::") && s.EndsWith("Gamepad")));
 
             // Add a device using the layout builder.
             InputSystem.AddDevice("TestLayout_GENERATED");
 
-            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
-            Assert.That(remote.manager.devices[0].layout, Is.EqualTo("TestLayout_GENERATED"));
-            Assert.That(remote.manager.devices[0].remote, Is.True);
+            Assert.That(remote.remoteManager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.remoteManager.devices[0].layout, Is.EqualTo("TestLayout_GENERATED"));
+            Assert.That(remote.remoteManager.devices[0].remote, Is.True);
 
             // Register another "normal" layout.
             InputSystem.RegisterLayout(@"
@@ -91,7 +91,7 @@ partial class CoreTests
                 }
             ");
 
-            Assert.That(remote.manager.ListControlLayouts(), Has.None.EqualTo("OtherLayout_NOT_GENERATED")); // Not remoted.
+            Assert.That(remote.remoteManager.ListControlLayouts(), Has.None.EqualTo("OtherLayout_NOT_GENERATED")); // Not remoted.
 
             // Register another generated layout.
             InputSystem.RegisterLayoutBuilder(() =>
@@ -104,15 +104,15 @@ partial class CoreTests
                 return builder.Build();
             }, "OtherLayout_GENERATED");
 
-            Assert.That(remote.manager.ListControlLayouts(), Has.Exactly(1).EqualTo("OtherLayout_GENERATED")); // Remoted.
+            Assert.That(remote.remoteManager.ListControlLayouts(), Has.Exactly(1).EqualTo("OtherLayout_GENERATED")); // Remoted.
 
             // Remove the two layouts we just added. Shouldn't make a difference
             // on the remote.
             InputSystem.RemoveLayout("OtherLayout_GENERATED");
             InputSystem.RemoveLayout("OtherLayout_NOT_GENERATED");
 
-            Assert.That(remote.manager.ListControlLayouts(), Has.None.EqualTo("OtherLayout_NOT_GENERATED")); // Not remoted.
-            Assert.That(remote.manager.ListControlLayouts(), Has.Exactly(1).EqualTo("OtherLayout_GENERATED")); // Remoted.
+            Assert.That(remote.remoteManager.ListControlLayouts(), Has.None.EqualTo("OtherLayout_NOT_GENERATED")); // Not remoted.
+            Assert.That(remote.remoteManager.ListControlLayouts(), Has.Exactly(1).EqualTo("OtherLayout_GENERATED")); // Remoted.
         }
     }
 
@@ -128,9 +128,9 @@ partial class CoreTests
 
             // Make second input manager process the events it got.
             // NOTE: This will also switch the system to the state buffers from the second input manager.
-            remote.manager.Update();
+            remote.remoteManager.Update();
 
-            var remoteGamepad = (Gamepad)remote.manager.devices[0];
+            var remoteGamepad = (Gamepad)remote.remoteManager.devices[0];
 
             Assert.That(remoteGamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
             Assert.That(remoteGamepad.lastUpdateTime, Is.EqualTo(0.1234).Within(0.000001));
@@ -144,11 +144,28 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var remote = new FakeRemote())
         {
-            Assert.That(remote.manager.devices.Count, Is.EqualTo(1));
+            Assert.That(remote.remoteManager.devices.Count, Is.EqualTo(1));
 
             InputSystem.RemoveDevice(gamepad);
 
-            Assert.That(remote.manager.devices.Count, Is.Zero);
+            Assert.That(remote.remoteManager.devices.Count, Is.Zero);
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_DevicesWithExistingUsage_WillUpdateSendToRemote()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.RightHand);
+
+        using (var remote = new FakeRemote())
+        {
+            var remoteGamepad = (Gamepad)remote.remoteManager.devices[0];
+            Assert.That(remoteGamepad.usages, Has.Count.EqualTo(2));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
         }
     }
 
@@ -159,12 +176,88 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var remote = new FakeRemote())
         {
-            var remoteGamepad = (Gamepad)remote.manager.devices[0];
+            var remoteGamepad = (Gamepad)remote.remoteManager.devices[0];
             Assert.That(remoteGamepad.usages, Has.Count.Zero);
 
+            // Can Set
             InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
-
+            Assert.That(remoteGamepad.usages, Has.Count.EqualTo(1));
             Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+
+            // Can Replace
+            InputSystem.SetDeviceUsage(gamepad, CommonUsages.RightHand);
+            Assert.That(remoteGamepad.usages, Has.Count.EqualTo(1));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+
+            //Can Clear
+            InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.LeftHand);
+            InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.RightHand);
+            Assert.That(remoteGamepad.usages, Has.Count.Zero);
+
+            //Can Set Multiple
+            InputSystem.AddDeviceUsage(gamepad, CommonUsages.LeftHand);
+            InputSystem.AddDeviceUsage(gamepad, CommonUsages.RightHand);
+            Assert.That(remoteGamepad.usages, Has.Count.EqualTo(2));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_ResettingDevice_WillSendChangeToRemotes()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>(); // Use a device with dontReset controls so that a soft reset won't just turn into a hard reset.
+        Press(mouse.leftButton);
+
+        using (var remote = new FakeRemote())
+        {
+            var remoteMouse = (Mouse)remote.remoteManager.devices[0];
+
+            // Process remoted events.
+            remote.SwitchToRemoteState();
+            remote.remoteManager.Update();
+
+            Assert.That(remoteMouse.leftButton.isPressed, Is.True);
+
+            var remoteMouseWasSoftReset = false;
+            var remoteMouseWasHardReset = false;
+            remote.remoteManager.onDeviceChange += (device, change) =>
+            {
+                if (device == remoteMouse && change == InputDeviceChange.SoftReset)
+                {
+                    Assert.That(remoteMouseWasSoftReset, Is.False);
+                    remoteMouseWasSoftReset = true;
+                }
+                if (device == remoteMouse && change == InputDeviceChange.HardReset)
+                {
+                    Assert.That(remoteMouseWasHardReset, Is.False);
+                    remoteMouseWasHardReset = true;
+                }
+            };
+
+            remote.SwitchToLocalState();
+            InputSystem.ResetDevice(mouse);
+            InputSystem.Update();
+
+            remote.SwitchToRemoteState();
+            remote.remoteManager.Update();
+
+            Assert.That(remoteMouse.leftButton.isPressed, Is.False);
+            Assert.That(remoteMouseWasSoftReset, Is.True);
+            Assert.That(remoteMouseWasHardReset, Is.False);
+
+            remoteMouseWasSoftReset = false;
+
+            remote.SwitchToLocalState();
+            InputSystem.ResetDevice(mouse, alsoResetDontResetControls: true);
+            InputSystem.Update();
+
+            remote.SwitchToRemoteState();
+            remote.remoteManager.Update();
+
+            Assert.That(remoteMouseWasSoftReset, Is.False);
+            Assert.That(remoteMouseWasHardReset, Is.True);
         }
     }
 
@@ -372,18 +465,20 @@ partial class CoreTests
     private class FakeRemote : IDisposable
     {
         public InputTestRuntime runtime;
-        public InputManager manager;
 
         public InputRemoting local;
         public InputRemoting remote;
 
+        public InputManager localManager => local.manager;
+        public InputManager remoteManager => remote.manager;
+
         public FakeRemote()
         {
             runtime = new InputTestRuntime();
-            manager = new InputManager();
+            var manager = new InputManager();
             manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.InstallRuntime(runtime);
             manager.InitializeData();
+            manager.InstallRuntime(runtime);
             manager.ApplySettings();
 
             local = new InputRemoting(InputSystem.s_Manager);
@@ -406,6 +501,18 @@ partial class CoreTests
             local.StartSending();
         }
 
+        public void SwitchToRemoteState()
+        {
+            InputSystem.s_Manager = remoteManager;
+            InputStateBuffers.SwitchTo(remoteManager.m_StateBuffers, remoteManager.defaultUpdateType);
+        }
+
+        public void SwitchToLocalState()
+        {
+            InputSystem.s_Manager = localManager;
+            InputStateBuffers.SwitchTo(localManager.m_StateBuffers, localManager.defaultUpdateType);
+        }
+
         public void Dispose()
         {
             if (runtime != null)
@@ -413,15 +520,14 @@ partial class CoreTests
                 runtime.Dispose();
                 runtime = null;
             }
-            if (manager != null)
+            if (remoteManager != null)
             {
-                Object.Destroy(manager.m_Settings);
-                manager.Destroy();
+                Object.Destroy(remoteManager.m_Settings);
+                remoteManager.Destroy();
             }
         }
     }
 
-    [Preserve]
     private class MyDevice : InputDevice
     {
         public ButtonControl myControl { get; private set; }

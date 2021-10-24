@@ -12,7 +12,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
 
-internal class OnScreenTests : InputTestFixture
+internal class OnScreenTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -162,6 +162,7 @@ internal class OnScreenTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.None.InstanceOf<Keyboard>());
     }
 
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     // https://fogbugz.unity3d.com/f/cases/1271942
     [UnityTest]
     [Category("Devices")]
@@ -263,10 +264,35 @@ internal class OnScreenTests : InputTestFixture
         Assert.That(Gamepad.all[0].buttonSouth.isPressed, Is.False);
     }
 
+#endif
+
+    // https://fogbugz.unity3d.com/f/cases/1305016/
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanUseKeyboardCurrentAfterDisablingOnScreenButton()
+    {
+        var systemKeyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(Keyboard.current, Is.EqualTo(systemKeyboard));
+
+        var gameObject = new GameObject();
+        var button = gameObject.AddComponent<OnScreenButton>();
+        button.controlPath = "<Keyboard>/a";
+
+        Assert.That(Keyboard.current, Is.Not.EqualTo(systemKeyboard));
+        Assert.That(Keyboard.current, Is.Not.Null);
+
+        gameObject.SetActive(false);
+
+        Assert.That(Keyboard.current, Is.EqualTo(systemKeyboard));
+    }
+
     private class TestEventSystem : EventSystem
     {
+        public bool hasFocus;
         public new void OnApplicationFocus(bool hasFocus)
         {
+            this.hasFocus = hasFocus;
             base.OnApplicationFocus(hasFocus);
         }
 

@@ -151,12 +151,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         public event Action<InputEventPtr> onEvent
         {
-            add
-            {
-                if (!m_EventListeners.Contains(value))
-                    m_EventListeners.Append(value);
-            }
-            remove => m_EventListeners.Remove(value);
+            add => m_EventListeners.AddCallback(value);
+            remove => m_EventListeners.RemoveCallback(value);
         }
 
         public InputEventTrace(InputDevice device, long bufferSizeInBytes = kDefaultBufferSize, bool growBuffer = false,
@@ -712,7 +708,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [NonSerialized] private Func<InputEventPtr, InputDevice, bool> m_OnFilterEvent;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
-        [SerializeField] private InlinedArray<Action<InputEventPtr>> m_EventListeners;
+        [NonSerialized] private CallbackArray<Action<InputEventPtr>> m_EventListeners;
 
         // Buffer for storing event trace. Allocated in native so that we can survive a
         // domain reload without losing event traces.
@@ -928,8 +924,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
 
             // Notify listeners.
-            for (var i = 0; i < m_EventListeners.length; ++i)
-                m_EventListeners[i](new InputEventPtr((InputEvent*)buffer));
+            if (m_EventListeners.length > 0)
+                DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners, new InputEventPtr((InputEvent*)buffer),
+                    "InputEventTrace.onEvent");
 
             Profiler.EndSample();
         }
@@ -1327,7 +1324,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 // returned from MoveNext).
                 if (currentEventPtr.type == FrameMarkerEvent)
                 {
-                    if (!MoveNext(false, out currentEventPtr))
+                    if (!MoveNext(false, out var nextEvent))
                     {
                         // Last frame.
                         Finished();
@@ -1335,8 +1332,14 @@ namespace UnityEngine.InputSystem.LowLevel
                     }
 
                     // Check for empty frame.
-                    if (currentEventPtr.type == FrameMarkerEvent)
+                    if (nextEvent.type == FrameMarkerEvent)
+                    {
+                        --position;
+                        m_Enumerator.m_Current = currentEventPtr;
                         return;
+                    }
+
+                    currentEventPtr = nextEvent;
                 }
 
                 // Inject our events into the frame.

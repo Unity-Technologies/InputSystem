@@ -601,7 +601,8 @@ You can also use this method to replace the text string with images.
     // Call GetBindingDisplayString() such that it also returns information about the
     // name of the device layout and path of the control on the device. This information
     // is useful for reliably associating imagery with individual controls.
-    var bindingString = action.GetBindingDisplayString(out deviceLayout, out controlPath);
+    // NOTE: The first argument is the index of the binding within InputAction.bindings.
+    var bindingString = action.GetBindingDisplayString(0, out deviceLayout, out controlPath);
 
     // If it's a gamepad, look up an icon for the control.
     Sprite icon = null;
@@ -656,26 +657,11 @@ Note that a single [Binding path](Controls.md#control-paths) can match multiple 
 
 * A specific Device path such as `<DualShockGamepad>/buttonEast` matches the "Circle" button on a [PlayStation controller](Gamepad.md#playstation-controllers). If you have multiple PlayStation controllers connected, it resolves to the "Circle" button on each of these controllers.
 
-* An abstract Device path such as `<Gamepad>/buttonEast` matches the right action button on any connected gamepad. If you have a PlayStation controller and an [Xbox controller](Gamepad.md#xbox) connected, it resolves the "Circle" button on the PlayStation controller, and to the "B" button on the Xbox controller.
+* An abstract Device path such as `<Gamepad>/buttonEast` matches the right action button on any connected gamepad. If you have a PlayStation controller and an [Xbox controller](Gamepad.md#xbox-controllers) connected, it resolves to the "Circle" button on the PlayStation controller, and to the "B" button on the Xbox controller.
 
 * A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any Control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any Control tagged with the "Submit" [usage](Controls.md#control-usages) on any Device.
 
-If there are multiple Bindings on the same Action that all reference the same Control(s), only the first such Binding will successfully bind to the control.
-
-```CSharp
-var action1 = new InputAction();
-
-action1.AddBinding("<Gamepad>/buttonSouth");
-action1.AddBinding("<Gamepad>/buttonSouth"); // This binding will be ignored.
-
-var action2 = new InputAction();
-
-action2.AddBinding("<Gamepad>/buttonSouth");
-// Add a binding that implicitly matches the first binding, too. When binding resolution
-// happens, this binding will only receive buttonNorth, buttonWest, and buttonEast, but not
-// buttonSouth as the first binding already received that control.
-action2.AddBinding("<Gamepad>/button*");
-```
+If there are multiple Bindings on the same Action that all reference the same Control(s), the Control will effectively feed into the Action multiple times. This is to allow, for example, a single Control to produce different input on the same Action by virtue of being bound in a different fashion (composites, processors, interactions, etc). However, regardless of how many times a Control is bound on any given action, it will only be mentioned once in the Action's [array of `controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls).
 
 To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
 
@@ -706,6 +692,14 @@ If you don't want your Action to perform disambiguation, you can set your Action
 
 ### Initial state check
 
-Actions with the type set to [Value](Actions.md#value) perform an initial state check when they are first enabled, to check the current state of any bound Control, and to set the Action's value to the highest value of any bound Control.
+After an Action is [enabled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_enabled), it will start reacting to input as it comes in. However, at the time the Action is enabled, one or more of the Controls that are [bound](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls) to an action may already have a non-default state at that point.
 
-Actions with the type set to [Button](Actions.md#button) don't perform any initial state check, so that only buttons pressed after the Action was enabled have any effect on the Action.
+Using what is referred to as an "initial state check", an Action can be made to respond to such a non-default state as if the state change happened *after* the Action was enabled. The way this works is that in the first input [update](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) after the Action was enabled, all its bound controls are checked in turn. If any of them has a non-default state, the Action responds right away.
+
+This check is implicitly enabled for [Value](Actions.md#value) actions. If, for example, you have a `Move` Action bound to the left stick on the gamepad and the stick is already pushed in a direction when `Move` is enabled, the character will immediately start walking.
+
+By default, [Button](Actions.md#button) and [Pass-Through](Actions.md#pass-through) type Actions, do not perform this check. A button that is pressed when its respective Action is enabled first needs to be released and then pressed again for it to trigger the Action.
+
+However, you can manually enable initial state checks on these types of Actions using the checkbox in the editor:
+
+![Initial State Check](./Images/InitialStateCheck.png)

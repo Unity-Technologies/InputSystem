@@ -106,7 +106,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputControlPath"/>
     /// <seealso cref="InputStateBlock"/>
     [DebuggerDisplay("{DebuggerDisplay(),nq}")]
-    [Scripting.Preserve]
     public abstract class InputControl
     {
         /// <summary>
@@ -578,14 +577,14 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the value of the control is equal in both <paramref name="firstStatePtr"/> and
         /// <paramref name="secondStatePtr"/>.</returns>
         /// <remarks>
-        /// Unlike <see cref="CompareState"/>, this method will have to do more than just compare the memory
+        /// Unlike <see cref="CompareValue"/>, this method will have to do more than just compare the memory
         /// for the control in the two state buffers. It will have to read out state for the control and run
         /// the full processing machinery for the control to turn the state into a final, processed value.
-        /// CompareValue is thus more costly than <see cref="CompareState"/>.
+        /// CompareValue is thus more costly than <see cref="CompareValue"/>.
         ///
         /// This method will apply epsilons (<see cref="Mathf.Epsilon"/>) when comparing floats.
         /// </remarks>
-        /// <seealso cref="CompareState"/>
+        /// <seealso cref="CompareValue"/>
         public abstract unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr);
 
         /// <summary>
@@ -858,6 +857,7 @@ namespace UnityEngine.InputSystem
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
             IsButton = 1 << 3,
+            DontReset = 1 << 4,
             SetupFinished = 1 << 5, // Can't be modified once this is set.
             UsesStateFromOtherControl = 1 << 6,
         }
@@ -895,6 +895,18 @@ namespace UnityEngine.InputSystem
                     m_ControlFlags |= ControlFlags.ConfigUpToDate;
                 else
                     m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool dontReset
+        {
+            get => (m_ControlFlags & ControlFlags.DontReset) == ControlFlags.DontReset;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.DontReset;
+                else
+                    m_ControlFlags &= ~ControlFlags.DontReset;
             }
         }
 
@@ -966,7 +978,6 @@ namespace UnityEngine.InputSystem
     /// <typeparam name="TValue">Type of value captured by the control. Note that this does not mean
     /// that the control has to store data in the given value format. A control that captures float
     /// values, for example, may be stored in state as byte values instead.</typeparam>
-    [Scripting.Preserve]
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {

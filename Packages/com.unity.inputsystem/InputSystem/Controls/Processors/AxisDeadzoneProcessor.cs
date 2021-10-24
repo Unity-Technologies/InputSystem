@@ -24,17 +24,22 @@ namespace UnityEngine.InputSystem.Processors
     /// </example>
     /// </remarks>
     /// <seealso cref="StickDeadzoneProcessor"/>
-    [Preserve]
     public class AxisDeadzoneProcessor : InputProcessor<float>
     {
         /// <summary>
         /// Lower bound (inclusive) below which input values get clamped. Corresponds to 0 in the normalized range.
         /// </summary>
+        /// <remarks>
+        /// If this is equal to 0 (the default), <see cref="InputSettings.defaultDeadzoneMin"/> is used instead.
+        /// </remarks>
         public float min;
 
         /// <summary>
         /// Upper bound (inclusive) beyond which input values get clamped. Corresponds to 1 in the normalized range.
         /// </summary>
+        /// <remarks>
+        /// If this is equal to 0 (the default), <see cref="InputSettings.defaultDeadzoneMax"/> is used instead.
+        /// </remarks>
         public float max;
 
         private float minOrDefault => min == default ? InputSystem.settings.defaultDeadzoneMin : min;

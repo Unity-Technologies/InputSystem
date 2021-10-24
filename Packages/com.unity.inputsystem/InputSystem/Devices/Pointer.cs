@@ -41,9 +41,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", processors = "AutoWindowSpace", dontReset = true)]
 #else
-        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point")]
+        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", dontReset = true)]
 #endif
         public Vector2 position;
 
@@ -83,7 +83,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Pen"/>
     /// <seealso cref="Touchscreen"/>
     [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -95,7 +94,7 @@ namespace UnityEngine.InputSystem
         /// Within player code, the coordinates are in the coordinate space of Unity's <c>Display</c>.
         ///
         /// Within editor code, the coordinates are in the coordinate space of the current <c>EditorWindow</c>
-        /// This means that if you query <see cref="Mouse.position"/> in <c>EditorWindow.OnGUI</c>, for example,
+        /// This means that if you query the <see cref="Mouse"/> <see cref="position"/> in <c>EditorWindow.OnGUI</c>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
         /// <c>Event.mousePosition</c>).
         /// </remarks>

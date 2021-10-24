@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -34,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position.</value>
         /// <seealso cref="Pointer.position"/>
-        [InputControl(usage = "Point")]
+        [InputControl(usage = "Point", dontReset = true)]
         [FieldOffset(0)]
         public Vector2 position;
 
@@ -110,10 +111,12 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>Same PenState with an updated <see cref="buttons"/> mask.</returns>
         public PenState WithButton(PenButton button, bool state = true)
         {
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (state)
-                buttons |= (ushort)(1 << (int)button);
+                buttons |= (ushort)bit;
             else
-                buttons &= (ushort)~(1 << (int)button);
+                buttons &= (ushort)~bit;
             return this;
         }
 
@@ -210,7 +213,6 @@ namespace UnityEngine.InputSystem
     /// tablet surface.
     /// </remarks>
     [InputControlLayout(stateType = typeof(PenState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
     public class Pen : Pointer
     {
         ////TODO: give the tip and eraser a very low press point
@@ -322,7 +324,7 @@ namespace UnityEngine.InputSystem
         /// Return the given pen button.
         /// </summary>
         /// <param name="button">Pen button to return.</param>
-        /// <exception cref="InvalidEnumArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
+        /// <exception cref="ArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
         public ButtonControl this[PenButton button]
         {
             get

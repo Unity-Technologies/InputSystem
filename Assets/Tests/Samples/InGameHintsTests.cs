@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.XInput;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
-public class InGameHintsTests : InputTestFixture
+public class InGameHintsTests : CoreTestsFixture
 {
     [UnityTest]
     [Category("Samples")]

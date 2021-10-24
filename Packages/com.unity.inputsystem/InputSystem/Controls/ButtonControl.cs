@@ -14,7 +14,6 @@ namespace UnityEngine.InputSystem.Controls
     /// yield full floating-point values and may thus have a range of values. See
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
     /// </remarks>
-    [Preserve]
     public class ButtonControl : AxisControl
     {
         ////REVIEW: are per-control press points really necessary? can we just drop them?
@@ -53,7 +52,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>Effective value to use for press point thresholds.</value>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        public float pressPointOrDefault => pressPoint >= 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
+        public float pressPointOrDefault => pressPoint > 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
 
         /// <summary>
         /// Default-initialize the control.
@@ -91,6 +90,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
+        /// <seealso cref="InputSystem.onAnyButtonPress"/>
         public bool isPressed => IsValueConsideredPressed(ReadValue());
 
         public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
@@ -101,5 +101,9 @@ namespace UnityEngine.InputSystem.Controls
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
         internal static float s_GlobalDefaultButtonPressPoint;
         internal static float s_GlobalDefaultButtonReleaseThreshold;
+
+        // We clamp button press points to this value as allowing 0 as the press point causes all buttons
+        // to implicitly be pressed all the time. Not useful.
+        internal const float kMinButtonPressPoint = 0.0001f;
     }
 }

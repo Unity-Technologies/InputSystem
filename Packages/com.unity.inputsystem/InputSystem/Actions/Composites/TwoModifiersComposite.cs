@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     ///
     /// However, this can also be used to "gate" other types of controls. For example, a "look"
-    /// action could be bound to mouse <see cref="Mouse.delta"/> such that the <see cref="Keyboard.altKey"/> and
+    /// action could be bound to mouse <see cref="Pointer.delta"/> such that the <see cref="Keyboard.altKey"/> and
     /// <see cref="Keyboard.shiftKey"/> on the keyboard have to be pressed in order for the player to be able to
     /// look around.
     ///
@@ -55,8 +55,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="OneModifierComposite"/>
-    [Preserve]
-    [DisplayStringFormat("{modifier1}+{modifier2}+{button}")]
+    [DisplayStringFormat("{modifier1}+{modifier2}+{binding}")]
     [DisplayName("Binding With Two Modifiers")]
     public class TwoModifiersComposite : InputBindingComposite
     {

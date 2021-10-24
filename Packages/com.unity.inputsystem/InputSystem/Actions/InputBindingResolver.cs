@@ -155,6 +155,7 @@ namespace UnityEngine.InputSystem
             InputAction currentCompositeAction = null;
             var bindingMaskOnThisMap = map.m_BindingMask;
             var devicesForThisMap = map.devices;
+            var isSingletonAction = map.m_SingletonAction != null;
 
             // Can't use `using` as we need to use it with `ref`.
             var resolvedControls = new InputControlList<InputControl>(Allocator.Temp);
@@ -200,15 +201,15 @@ namespace UnityEngine.InputSystem
                         InputAction action = null;
                         if (!isPartOfComposite)
                         {
-                            if (!string.IsNullOrEmpty(actionName))
+                            if (isSingletonAction)
+                            {
+                                // Singleton actions always ignore names.
+                                actionIndexInMap = 0;
+                            }
+                            else if (!string.IsNullOrEmpty(actionName))
                             {
                                 ////REVIEW: should we fail here if we don't manage to find the action
                                 actionIndexInMap = map.FindActionIndex(actionName);
-                            }
-                            else if (map.m_SingletonAction != null)
-                            {
-                                // Special-case for singleton actions that don't have names.
-                                actionIndexInMap = 0;
                             }
 
                             if (actionIndexInMap != InputActionState.kInvalidIndex)
@@ -278,40 +279,6 @@ namespace UnityEngine.InputSystem
                             {
                                 // Search globally.
                                 numControls = InputSystem.FindControls(path, ref resolvedControls);
-                            }
-
-                            // Check for controls that are already bound to the action through other
-                            // bindings. The first binding that grabs a specific control gets to "own" it.
-                            if (numControls > 0)
-                            {
-                                for (var i = 0; i < n; ++i)
-                                {
-                                    ref var otherBindingState = ref bindingStatesPtr[bindingStartIndex + i];
-
-                                    // Skip if binding has no controls.
-                                    if (otherBindingState.controlCount == 0)
-                                        continue;
-
-                                    // Skip if binding isn't from same action.
-                                    if (otherBindingState.actionIndex != actionStartIndex + actionIndexInMap)
-                                        continue;
-
-                                    // Check for controls in the set that we just resolved that are also on the other
-                                    // binding. Each such control we find, we kick out of the list.
-                                    for (var k = 0; k < numControls; ++k)
-                                    {
-                                        var controlOnCurrentBinding = resolvedControls[firstControlIndex + k - memory.controlCount];
-                                        var controlIndexOnOtherBinding = resolvedControls.IndexOf(controlOnCurrentBinding,
-                                            otherBindingState.controlStartIndex - memory.controlCount, otherBindingState.controlCount);
-                                        if (controlIndexOnOtherBinding != -1)
-                                        {
-                                            // Control is bound to a previous binding. Remove it from the current binding.
-                                            resolvedControls.RemoveAt(firstControlIndex + k - memory.controlCount);
-                                            --numControls;
-                                            --k;
-                                        }
-                                    }
-                                }
                             }
 
                             // Disable binding if it doesn't resolve to any controls.
@@ -407,7 +374,8 @@ namespace UnityEngine.InputSystem
                                 throw new InvalidOperationException(
                                     $"Binding '{unresolvedBinding}' that is part of composite '{composites[currentCompositeIndex]}' is missing a name");
 
-                            // Give a part index for the
+                            // Assign an index to the current part of the composite which
+                            // can be used by the composite to read input from this part.
                             partIndex = AssignCompositePartIndex(composites[currentCompositeIndex], unresolvedBinding.name,
                                 ref currentCompositePartCount);
 

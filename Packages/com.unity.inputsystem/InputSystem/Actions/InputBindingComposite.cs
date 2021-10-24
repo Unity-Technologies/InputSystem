@@ -26,7 +26,6 @@ namespace UnityEngine.InputSystem
     /// for more details about composites and for how to define custom composites.
     /// </remarks>
     /// <seealso cref="InputSystem.RegisterBindingComposite{T}"/>
-    [Preserve]
     public abstract class InputBindingComposite
     {
         /// <summary>
@@ -284,7 +283,6 @@ namespace UnityEngine.InputSystem
     /// of how to create a custom composite.
     /// </remarks>
     /// <seealso cref="InputSystem.RegisterBindingComposite{T}"/>
-    [Preserve]
     public abstract class InputBindingComposite<TValue> : InputBindingComposite
         where TValue : struct
     {

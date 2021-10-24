@@ -5,10 +5,12 @@
     * [Device events](#device-events)
     * [Text events](#text-events)
 * [Working with events](#working-with-events)
-    * [Monitoring events](#monitoring-events)
+    * [Listening to events](#listening-to-events)
     * [Reading state events](#reading-state-events)
     * [Creating events](#creating-events)
     * [Capturing events](#capturing-events)
+* [Processing events](#processing-events)
+    * [Merging of events](#merging-of-events)
 
 The Input System is event-driven. All input is delivered as events, and you can generate custom input by injecting events. You can also observe all source input by listening in on the events flowing through the system.
 
@@ -49,14 +51,17 @@ A [`DeltaStateEvent`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.ht
 
 Device events indicate a change that is relevant to a Device as a whole. If you're interested in these events, it is usually more convenient to subscribe to the higher-level [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) event rather then processing [`InputEvents`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html) yourself.
 
-There are two types of Device events:
+There are three types of Device events:
 
 * [`DeviceRemoveEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceRemoveEvent.html) (`'DREM'`)
 * [`DeviceConfigurationEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceConfigurationEvent.html) (`'DCFG'`)
+* [`DeviceResetEvent`](../api/UnityEngine.InputSystem.LowLevel.DeviceResetEvent.html) (`'DRST'`)
 
 `DeviceRemovedEvent` indicates that a Device has been removed or disconnected. To query the device that has been removed, you can use the common [`deviceId`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html#UnityEngine_InputSystem_LowLevel_InputEvent_deviceId) field. This event doesn't have any additional data.
 
 `DeviceConfigurationEvent` indicates that the configuration of a Device has changed. The meaning of this is Device-specific. This might signal, for example, that the layout used by the keyboard has changed or that, on a console, a gamepad has changed which player ID(s) it is assigned to. You can query the changed device from the common [`deviceId`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html#UnityEngine_InputSystem_LowLevel_InputEvent_deviceId) field. This event doesn't have any additional data.
+
+`DeviceResetEvent` indicates that a device should get reset. This will trigger [`InputSystem.ResetDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_) to be called on the Device.
 
 ### Text events
 
@@ -69,9 +74,40 @@ There are two types of text events:
 
 ## Working with events
 
-### Monitoring events
+### Listening to events
 
 If you want to do any monitoring or processing on incoming events yourself, subscribe to the [`InputSystem.onEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onEvent) callback.
+
+```CSharp
+InputSystem.onEvent +=
+   (eventPtr, device) =>
+   {
+       Debug.Log($"Received event for {device}");
+   };
+```
+
+An [`IObservable`](https://docs.microsoft.com/en-us/dotnet/api/system.iobservable-1) interface is provided to more conveniently process events.
+
+```CSharp
+// Wait for first button press on a gamepad.
+InputSystem.onEvent
+    .ForDevice<Gamepad>()
+    .Where(e => e.HasButtonPress())
+    .CallOnce(ctrl => Debug.Log($"Button {ctrl} pressed"));
+```
+
+To enumerate the controls that have value changes in an event, you can use [`InputControlExtensions.EnumerateChangedControls`](../api/UnityEngine.InputSystem.InputControlExtensions.html#UnityEngine_InputSystem_InputControlExtensions_EnumerateChangedControls_UnityEngine_InputSystem_LowLevel_InputEventPtr_UnityEngine_InputSystem_InputDevice_System_Single_).
+
+```CSharp
+InputSystem.onEvent
+    .Call(eventPtr =>
+    {
+        foreach (var control in eventPtr.EnumerateChangedControls())
+            Debug.Log($"Control {control} changed value to {control.ReadValueFromEventAsObject(eventPtr)}");
+    };
+```
+
+This is significantly more efficient than manually iterating over [`InputDevice.allControls`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_allControls) and reading out the value of each control from the event.
 
 ### Reading state events
 
@@ -196,4 +232,66 @@ controller.PlayAllFramesOnyByOne();
 
 // Replay events in a way that tries to simulate original event timing.
 controller.PlayAllEventsAccordingToTimestamps();
+```
+
+## Processing events
+
+[Events](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html) are collected on a queue by the Unity runtime. This queue is regularly flushed out and the events on it processed. Events can be added to the queue manually by calling [`InputSystem.QueueEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueEvent_UnityEngine_InputSystem_LowLevel_InputEventPtr_).
+
+Each time input is processed, [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) is called implicitly by the Unity runtime.
+
+The interval at which this happens is determined by the ["Update Mode"](Settings.md#update-mode) configured in the settings. By default, input is processed in each frame __before__ <c>MonoBehaviour.Update</c> methods are called. If the setting is changed to process input in fixed updates, then this changes to input being processed each time before <c>MonoBehaviour.FixedUpdate</c> methods are called.
+
+Normally, when input is processed, __all__ outstanding input events on the queue will be consumed. There are two exceptions to this, however.
+
+When using [`UpdateMode.ProcessEventsInFixedUpdate`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html#UnityEngine_InputSystem_InputSettings_UpdateMode_ProcessEventsInFixedUpdate), the Input System attempts to associate events with the timeslice of the corresponding <c>FixedUpdate</c>. This is based on the [timestamps](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html#UnityEngine_InputSystem_LowLevel_InputEvent_time) of the events and a "best effort" at calculating the corresponding timeslice of the current <c>FixedUpdated</c>.
+
+The other exception are [`BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html#UnityEngine_InputSystem_LowLevel_InputUpdateType_BeforeRender) updates. These updates are run after fixed or dynamic updates but before rendering and used used exclusively to update devices such as VR headsets that need the most up-to-date tracking data. Other input is not consumed from such updates and these updates are only enabled if such devices are actually present. `BeforeRender` updates are not considered separate frames as far as input is concerned.
+
+>__Note__: Manually calling [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) is strongly advised against except within tests employing [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) or when explicitly setting the system to [manual update mode](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html#UnityEngine_InputSystem_InputSettings_UpdateMode_ProcessEventsManually).
+
+Methods such as [`InputAction.WasPerformedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame) and [`InputAction.WasPerformedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame) operate implicitly based on the [`InputSystem.Update`] cadence described above. Meaning, that they refer to the state as per the __last__ fixed/dynamic/manual update happened.
+
+You can query the [current/last update type](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_currentUpdateType) and [count](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_updateCount) from [`InputState`](../api/UnityEngine.InputSystem.LowLevel.InputState.html).
+
+### Merging of events
+
+Input system uses event mering to reduce amount of events required to be processed.
+This greatly improves performance when working with high refresh rate devices like 8000 Hz mice, touchscreens and others.
+
+For example let's take a stream of 7 mouse events coming in the same update:
+
+```
+
+Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       Mouse
+Event no1   Event no2   Event no3   Event no4   Event no5   Event no6   Event no7
+Time 1      Time 2      Time 3      Time 4      Time 5      Time 6      Time 7
+Pos(10,20)  Pos(12,21)  Pos(13,23)  Pos(14,24)  Pos(16,25)  Pos(17,27)  Pos(18,28)
+Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)
+BtnLeft(0)  BtnLeft(0)  BtnLeft(0)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)
+```
+
+To reduce workload we can skip events that are not encoding button state changes:
+
+```
+                        Mouse       Mouse                               Mouse
+                        Time 3      Time 4                              Time 7
+                        Event no3   Event no4                           Event no7
+                        Pos(13,23)  Pos(14,24)                          Pos(18,28)
+                        Delta(3,3)  Delta(1,1)                          Delta(4,4)
+                        BtnLeft(0)  BtnLeft(1)                          BtnLeft(1)
+```
+
+In that case we combine no1, no2, no3 together into no3 and accumulate the delta,
+then we keep no4 because it stores the transition from button unpressed to button pressed,
+and it's important to keep the exact timestamp of such transition.
+Later we combine no5, no6, no7 together into no7 because it is the last event in the update.
+
+Currently this approach is implemented for:
+- `FastMouse`, combines events unless `buttons` or `clickCount` differ in `MouseState`.
+- `Touchscreen`, combines events unless `touchId`, `phaseId` or `flags` differ in `TouchState`.
+
+You can disable merging of events by:
+```
+InputSystem.settings.disableRedundantEventsMerging = true;
 ```

@@ -15,7 +15,7 @@ using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.HID;
 #endif
 
-internal class DualShockTests : InputTestFixture
+internal class DualShockTests : CoreTestsFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     public DualShockGamepad Devices_SupportsDualShockAsHID<TDevice, TState>(TState state)
@@ -63,6 +63,13 @@ internal class DualShockTests : InputTestFixture
         Assert.That(gamepad.rightShoulder.isPressed);
         Assert.That(gamepad.leftStickButton.isPressed);
         Assert.That(gamepad.rightStickButton.isPressed);
+
+        ////REVIEW: Should we just kill these buttons? Do they provide any value?
+        // PS controller adds buttons for the left and right trigger. Make sure these are marked as
+        // synthetic so they don't get picked up as double input.
+        // https://fogbugz.unity3d.com/f/cases/1293734
+        Assert.That(gamepad["leftTriggerButton"].synthetic, Is.True);
+        Assert.That(gamepad["rightTriggerButton"].synthetic, Is.True);
 
         return gamepad;
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
@@ -235,6 +242,16 @@ internal class DualShockTests : InputTestFixture
         Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.123f * 255)));
         Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.456f * 255)));
         Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.789f * 255)));
+
+        receivedCommand = null;
+        gamepad.SetMotorSpeedsAndLightBarColor(0.5f, 0.5f, new Color(0.5f, 0.5f, 0.5f));
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.lowFrequencyMotorSpeed, Is.EqualTo((byte)(0.5 * 255)));
+        Assert.That(receivedCommand.Value.highFrequencyMotorSpeed, Is.EqualTo((byte)(0.5 * 255)));
+        Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.5f * 255)));
+        Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.5f * 255)));
+        Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.5f * 255)));
     }
 
 #endif

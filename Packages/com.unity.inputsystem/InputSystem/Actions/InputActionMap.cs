@@ -261,54 +261,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionAsset.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get
-            {
-                if (m_DevicesCount < 0)
-                {
-                    // Return asset's device list if we have none (only if we're part of an asset).
-                    if (asset != null)
-                        return asset.devices;
-                    return null;
-                }
-                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
-            }
+            // Return asset's device list if we have none (only if we're part of an asset).
+            get => m_Devices.Get() ?? m_Asset?.devices;
             set
             {
-                if (value == null)
-                {
-                    if (m_DevicesCount < 0)
-                        return; // No change.
-
-                    if (m_DevicesArray != null & m_DevicesCount > 0)
-                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = -1;
-                }
-                else
-                {
-                    // See if the array actually changes content. Avoids re-resolving when there
-                    // is no need to.
-                    if (m_DevicesCount == value.Value.Count)
-                    {
-                        var noChange = true;
-                        for (var i = 0; i < m_DevicesCount; ++i)
-                        {
-                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
-                            {
-                                noChange = false;
-                                break;
-                            }
-                        }
-                        if (noChange)
-                            return;
-                    }
-
-                    if (m_DevicesCount > 0)
-                        m_DevicesArray.Clear(ref m_DevicesCount);
-                    m_DevicesCount = 0;
-                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                }
-
-                LazyResolveBindings();
+                if (m_Devices.Set(value))
+                    LazyResolveBindings();
             }
         }
 
@@ -350,15 +308,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputAction.canceled"/>
         public event Action<InputAction.CallbackContext> actionTriggered
         {
-            add => m_ActionCallbacks.AppendWithCapacity(value);
-            remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
+            add => m_ActionCallbacks.AddCallback(value);
+            remove => m_ActionCallbacks.RemoveCallback(value);
         }
 
         public InputActionMap()
         {
-            // For some reason, when using UnityEngine.Object.Instantiate the -1 initialization
-            // does not come through except if explicitly done here in the default constructor.
-            m_DevicesCount = -1;
         }
 
         /// <summary>
@@ -370,7 +325,6 @@ namespace UnityEngine.InputSystem
             : this()
         {
             m_Name = name;
-            m_DevicesCount = -1;
         }
 
         /// <summary>
@@ -465,7 +419,7 @@ namespace UnityEngine.InputSystem
         /// <param name="id">ID (as in <see cref="InputAction.id"/>) of the action.</param>
         /// <returns>The action with the given ID or null if no action in the map has
         /// the given ID.</returns>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         public InputAction FindAction(Guid id)
         {
             var index = FindActionIndex(id);
@@ -739,12 +693,68 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_NeedToResolveBindings;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private int m_DevicesCount = -1;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal DeviceArray m_Devices;
 
-        [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
+        [NonSerialized] internal CallbackArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 
         internal static int s_DeferBindingResolution;
+
+        internal struct DeviceArray
+        {
+            private bool m_HaveValue;
+            private int m_DeviceCount;
+            private InputDevice[] m_DeviceArray; // May have extra capacity; we won't let go once allocated.
+
+            public int IndexOf(InputDevice device)
+            {
+                return m_DeviceArray.IndexOfReference(device, m_DeviceCount);
+            }
+
+            public bool Remove(InputDevice device)
+            {
+                var index = IndexOf(device);
+                if (index < 0)
+                    return false;
+                m_DeviceArray.EraseAtWithCapacity(ref m_DeviceCount, index);
+                return true;
+            }
+
+            public ReadOnlyArray<InputDevice>? Get()
+            {
+                if (!m_HaveValue)
+                    return null;
+                return new ReadOnlyArray<InputDevice>(m_DeviceArray, 0, m_DeviceCount);
+            }
+
+            public bool Set(ReadOnlyArray<InputDevice>? devices)
+            {
+                if (!devices.HasValue)
+                {
+                    if (!m_HaveValue)
+                        return false; // No change.
+                    if (m_DeviceCount > 0)
+                        Array.Clear(m_DeviceArray, 0, m_DeviceCount);
+                    m_DeviceCount = 0;
+                    m_HaveValue = false;
+                }
+                else
+                {
+                    // See if the array actually changes content. Avoids re-resolving when there
+                    // is no need to.
+                    var array = devices.Value;
+                    if (m_HaveValue && array.Count == m_DeviceCount && array.HaveEqualReferences(m_DeviceArray, m_DeviceCount))
+                        return false;
+
+                    if (m_DeviceCount > 0)
+                        m_DeviceArray.Clear(ref m_DeviceCount);
+                    m_HaveValue = true;
+                    m_DeviceCount = 0;
+                    ArrayHelpers.AppendListWithCapacity(ref m_DeviceArray, ref m_DeviceCount, array);
+                }
+
+                return true;
+            }
+        }
 
         /// <summary>
         /// Return the list of bindings for just the given actions.
@@ -826,6 +836,25 @@ namespace UnityEngine.InputSystem
                 m_SingletonAction.m_BindingsCount = m_Bindings.Length;
                 m_SingletonAction.m_ControlStartIndex = 0;
                 m_SingletonAction.m_ControlCount = m_State?.totalControlCount ?? 0;
+
+                // Only complication, InputActionState allows a control to appear multiple times
+                // on the same action and InputAction.controls[] doesn't.
+                if (m_ControlsForEachAction.HaveDuplicateReferences(0, m_SingletonAction.m_ControlCount))
+                {
+                    var numControls = 0;
+                    var controls = new InputControl[m_SingletonAction.m_ControlCount];
+                    for (var i = 0; i < m_SingletonAction.m_ControlCount; ++i)
+                    {
+                        if (!controls.ContainsReference(m_ControlsForEachAction[i]))
+                        {
+                            controls[numControls] = m_ControlsForEachAction[i];
+                            ++numControls;
+                        }
+                    }
+
+                    m_ControlsForEachAction = controls;
+                    m_SingletonAction.m_ControlCount = numControls;
+                }
             }
             else
             {
@@ -933,17 +962,27 @@ namespace UnityEngine.InputSystem
                         // but do not really resolve to controls themselves).
                         if (m_State != null && !m_Bindings[sourceBindingToCopy].isComposite)
                         {
-                            var controlCountForBinding = m_State
-                                .bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy].controlCount;
+                            ref var bindingState = ref m_State.bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy];
+
+                            var controlCountForBinding = bindingState.controlCount;
                             if (controlCountForBinding > 0)
                             {
-                                Array.Copy(m_State.controls,
-                                    m_State.bindingStates[mapIndices.bindingStartIndex + sourceBindingToCopy]
-                                        .controlStartIndex,
-                                    m_ControlsForEachAction, currentControlIndex, controlCountForBinding);
+                                // Internally, we allow several bindings on a given action to resolve to the same control.
+                                // Externally, however, InputAction.controls[] is a set and thus should not contain duplicates.
+                                // So, instead of just doing a straight copy here, we copy controls one by one.
 
-                                currentControlIndex += controlCountForBinding;
-                                currentAction.m_ControlCount += controlCountForBinding;
+                                var controlStartIndexForBinding = bindingState.controlStartIndex;
+                                for (var n = 0; n < controlCountForBinding; ++n)
+                                {
+                                    var control = m_State.controls[controlStartIndexForBinding + n];
+                                    if (!m_ControlsForEachAction.ContainsReference(currentAction.m_ControlStartIndex,
+                                        currentAction.m_ControlCount, control))
+                                    {
+                                        m_ControlsForEachAction[currentControlIndex] = control;
+                                        ++currentControlIndex;
+                                        ++currentAction.m_ControlCount;
+                                    }
+                                }
                             }
                         }
 
@@ -1183,20 +1222,50 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc/>
         public int FindBinding(InputBinding mask, out InputAction action)
         {
+            var index = FindBindingRelativeToMap(mask);
+            if (index == -1)
+            {
+                action = null;
+                return -1;
+            }
+
+            action = m_SingletonAction ?? FindAction(bindings[index].action);
+            return action.BindingIndexOnMapToBindingIndexOnAction(index);
+        }
+
+        /// <summary>
+        /// Find the index of the first binding that matches the given mask.
+        /// </summary>
+        /// <param name="mask">A binding. See <see cref="InputBinding.Matches"/> for details.</param>
+        /// <returns>Index into <see cref="InputAction.bindings"/> of <paramref name="action"/> of the binding
+        /// that matches <paramref name="mask"/>. If no binding matches, will return -1.</returns>
+        /// <remarks>
+        /// For details about matching bindings by a mask, see <see cref="InputBinding.Matches"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var index = playerInput.actions.FindBindingRelativeToMap(
+        ///     new InputBinding { path = "&lt;Gamepad&gt;/buttonSouth" });
+        ///
+        /// if (index != -1)
+        ///     Debug.Log($"Found binding with index {index}");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.Matches"/>
+        /// <seealso cref="bindings"/>
+        internal int FindBindingRelativeToMap(InputBinding mask)
+        {
             var bindings = m_Bindings;
             var bindingsCount = bindings.LengthSafe();
 
-            for (var n = 0; n < bindingsCount; ++n)
+            for (var i = 0; i < bindingsCount; ++i)
             {
-                ref var binding = ref bindings[n];
+                ref var binding = ref bindings[i];
                 if (mask.Matches(ref binding))
-                {
-                    action = m_SingletonAction ?? FindAction(binding.action);
-                    return action.BindingIndexOnMapToBindingIndexOnAction(n);
-                }
+                    return i;
             }
 
-            action = null;
             return -1;
         }
 
@@ -1336,6 +1405,7 @@ namespace UnityEngine.InputSystem
                         : null,
                     m_Processors = processors,
                     m_Interactions = interactions,
+                    wantsInitialStateCheck = initialStateCheck,
                 };
             }
         }
@@ -1349,6 +1419,7 @@ namespace UnityEngine.InputSystem
             public string expectedControlType;
             public string processors;
             public string interactions;
+            public bool initialStateCheck;
 
             public static WriteActionJson FromAction(InputAction action)
             {
@@ -1360,6 +1431,7 @@ namespace UnityEngine.InputSystem
                     expectedControlType = action.m_ExpectedControlType,
                     processors = action.processors,
                     interactions = action.interactions,
+                    initialStateCheck = action.wantsInitialStateCheck,
                 };
             }
         }

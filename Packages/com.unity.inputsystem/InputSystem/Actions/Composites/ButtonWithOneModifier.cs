@@ -45,7 +45,6 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="ButtonWithTwoModifiers"/>
-    [Preserve]
     [DesignTimeVisible(false)] // Obsoleted by OneModifierComposite
     [DisplayStringFormat("{modifier}+{button}")]
     public class ButtonWithOneModifier : InputBindingComposite<float>

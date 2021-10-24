@@ -15,7 +15,6 @@ namespace UnityEngine.InputSystem.Processors
     /// </code>
     /// </example>
     /// </remarks>
-    [Preserve]
     public class InvertProcessor : InputProcessor<float>
     {
         /// <summary>

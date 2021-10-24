@@ -18,7 +18,6 @@ namespace UnityEngine.InputSystem.Processors
     /// </remarks>
     /// <seealso cref="Pointer.position"/>
     [DesignTimeVisible(false)]
-    [Scripting.Preserve]
     public class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
         /// <summary>

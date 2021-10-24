@@ -1,4 +1,4 @@
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)
+#if ENABLE_VR || ENABLE_AR
 using System;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
 using DeviceRole = UnityEngine.XR.InputDeviceRole;
 
-internal class XRTests : InputTestFixture
+internal class XRTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
@@ -117,7 +117,7 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        Assert.AreEqual(createdDevice.layout, "XRInputV1::Manufacturer::XRThisLayoutShouldhave1ValidName");
+        Assert.AreEqual(createdDevice.layout, "XRInputV1::__Manufacturer::XR_ThisLayoutShouldhave1ValidName");
     }
 
     [Test]
@@ -327,7 +327,6 @@ internal class XRTests : InputTestFixture
     }
 
     [InputControlLayout(updateBeforeRender = true)]
-    [Preserve]
     private class TestHMD : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]
@@ -361,8 +360,8 @@ internal class XRTests : InputTestFixture
             var rotationAction = new InputAction();
             rotationAction.AddBinding("<TestHMD>/quaternion");
 
-            tpd.positionAction = positionAction;
-            tpd.rotationAction = rotationAction;
+            tpd.positionInput = new InputActionProperty(positionAction);
+            tpd.rotationInput = new InputActionProperty(rotationAction);
 
             // before render only
             var go1 = tpd.gameObject;
@@ -428,6 +427,71 @@ internal class XRTests : InputTestFixture
             Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
             Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
         }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_EnablesAndDisablesDirectActions()
+    {
+        var positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
+        var rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+
+        var go = new GameObject();
+        var component = go.AddComponent<TrackedPoseDriver>();
+        component.enabled = false;
+        component.positionInput = positionInput;
+        component.rotationInput = rotationInput;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+
+        component.enabled = true;
+
+        Assert.That(positionInput.action.enabled, Is.True);
+        Assert.That(rotationInput.action.enabled, Is.True);
+
+        component.enabled = false;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_DoesNotEnableOrDisableReferenceActions()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("Position", binding: "<TestHMD>/vector3");
+        map.AddAction("Rotation", binding: "<TestHMD>/quaternion");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var positionReference = ScriptableObject.CreateInstance<InputActionReference>();
+        var rotationReference = ScriptableObject.CreateInstance<InputActionReference>();
+        positionReference.Set(asset, "map", "Position");
+        rotationReference.Set(asset, "map", "Rotation");
+
+        var positionInput = new InputActionProperty(positionReference);
+        var rotationInput = new InputActionProperty(rotationReference);
+
+        var go = new GameObject();
+        var component = go.AddComponent<TrackedPoseDriver>();
+        component.enabled = false;
+        component.positionInput = positionInput;
+        component.rotationInput = rotationInput;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+
+        component.enabled = true;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
+
+        component.enabled = false;
+
+        Assert.That(positionInput.action.enabled, Is.False);
+        Assert.That(rotationInput.action.enabled, Is.False);
     }
 
     [Test]
@@ -826,4 +890,4 @@ internal class XRTests : InputTestFixture
         Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
     }
 }
-#endif // (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && (ENABLE_VR || ENABLE_AR)
+#endif //ENABLE_VR || ENABLE_AR
