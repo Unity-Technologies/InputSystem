@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed `InputTestFixture` incorrectly running input updates out of sync with the player loop ([case 1341740](https://issuetracker.unity3d.com/issues/buttoncontrol-dot-waspressedthisframe-is-false-when-using-inputtestfixture-dot-press)).
+  * This had effects such as `InputAction.WasPressedThisFrame()` returning false expectedly.
+
 ## [1.2.0] - 2021-10-22
 
 ### Changed

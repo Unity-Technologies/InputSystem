@@ -451,7 +451,10 @@ namespace UnityEngine.InputSystem
         /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
         /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
         /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
-        /// as they will not yet see the state change.</param>
+        /// as they will not yet see the state change.
+        ///
+        /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
+        /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the control.</typeparam>
         /// <example>
         /// <code>
@@ -484,7 +487,10 @@ namespace UnityEngine.InputSystem
         /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
         /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
         /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
-        /// as they will not yet see the state change.</param>
+        /// as they will not yet see the state change.
+        ///
+        /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
+        /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
         /// <example>
         /// <code>
@@ -500,6 +506,9 @@ namespace UnityEngine.InputSystem
             if (!control.device.added)
                 throw new ArgumentException(
                     $"Device of control '{control}' has not been added to the system", nameof(control));
+
+            if (IsUnityTest())
+                queueEventOnly = true;
 
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
