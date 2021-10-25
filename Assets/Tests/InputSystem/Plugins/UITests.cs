@@ -225,11 +225,12 @@ internal class UITests : CoreTestsFixture
     //       click like the docs say) and also has some questionable behaviors that we opt to do different (for example, we perform
     //       click detection *before* invoking click handlers so that clickCount and clickTime correspond to the current click instead
     //       of to the previous click).
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
-    #if UNITY_IOS || UNITY_TVOS
+#if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-    #endif
+#endif
     // All pointer input goes through a single code path. Goes for Pointer-derived devices as well as for TrackedDevice input but
     // also any other input that can deliver point and click functionality.
     //
@@ -447,7 +448,7 @@ internal class UITests : CoreTestsFixture
             // Touch has no ability to point without pressing so pointer enter event is followed
             // right by pointer down event.
 
-            #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
             // PointerMove.
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerMove));
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
@@ -475,7 +476,7 @@ internal class UITests : CoreTestsFixture
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.gameObject, Is.Null);
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.screenPosition,
                 Is.EqualTo(default(Vector2)).Using(Vector2EqualityComparer.Instance));
-            #endif
+#endif
 
             // PointerDown.
             Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerDown));
@@ -702,7 +703,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerCurrentRaycast.screenPosition", secondScreenPosition),
 
                 // PointerMove.
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("dragging", false),
                 // Again, pointer movement is processed exclusively "from" the left button.
@@ -716,7 +717,7 @@ internal class UITests : CoreTestsFixture
                 OneEvent("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
                 OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
-                #endif
+#endif
 
                 // BeginDrag.
                 OneEvent("type", EventType.BeginDrag),
@@ -751,9 +752,9 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
         Assert.That(scene.parentReceiver.events,
             EventSequence(
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
 
@@ -782,9 +783,9 @@ internal class UITests : CoreTestsFixture
         // children to another) but *should* have seen a move event.
         Assert.That(scene.parentReceiver.events,
             EventSequence(
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
 
@@ -813,7 +814,7 @@ internal class UITests : CoreTestsFixture
                 // press positions on the moves will be zero.
 
                 // PointerMove.
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("button", PointerEventData.InputButton.Left),
                 OneEvent("pointerEnter", scene.leftGameObject),
@@ -828,7 +829,7 @@ internal class UITests : CoreTestsFixture
                 OneEvent("dragging", clickButton == PointerEventData.InputButton.Left ? true : false),
                 OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
-                #endif
+#endif
 
                 // PointerExit.
                 OneEvent("type", EventType.PointerExit),
@@ -889,9 +890,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
 
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
 
@@ -1103,7 +1104,10 @@ internal class UITests : CoreTestsFixture
         }
     }
 
+#endif
+
     // https://fogbugz.unity3d.com/f/cases/1232705/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanReceivePointerExitsWhenChangingUIStateWithoutMovingPointer()
@@ -1136,14 +1140,17 @@ internal class UITests : CoreTestsFixture
         );
     }
 
+#endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
-    #if UNITY_IOS || UNITY_TVOS
+#if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-    #endif
+#endif
     public IEnumerator UI_CanDriveUIFromMultiplePointers(UIPointerBehavior pointerBehavior)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1354,6 +1361,9 @@ internal class UITests : CoreTestsFixture
         }
     }
 
+#endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanDriveUIFromMultipleTouches()
@@ -1558,7 +1568,10 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
     }
 
+#endif
+
     // https://fogbugz.unity3d.com/f/cases/1190150/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanUseTouchSimulationWithUI()
@@ -1590,9 +1603,9 @@ internal class UITests : CoreTestsFixture
                 Is.EquivalentTo(new[]
                 {
                     EventType.PointerEnter,
-                    #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                     EventType.PointerMove,
-                    #endif
+#endif
                     EventType.PointerDown,
                     EventType.InitializePotentialDrag
                 }));
@@ -1612,6 +1625,8 @@ internal class UITests : CoreTestsFixture
             TouchSimulation.Disable();
         }
     }
+
+#endif
 
     #if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
@@ -1796,6 +1811,7 @@ internal class UITests : CoreTestsFixture
     // from non-pointer devices, we need to decide what to do. What the UI input module does is try to find a pointer (classic
     // or tracked) into which to route the input. Only if it can't find an existing pointer to route the input into will it
     // resort to turning the non-pointer device into a (likely non-functional) pointer.
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanTriggerPointerClicksFromNonPointerDevices()
@@ -1834,7 +1850,10 @@ internal class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.clickCount == 0));
     }
 
+#endif
+
     // https://fogbugz.unity3d.com/f/cases/1317239/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanDetectClicks_WithSuccessiveClicksReflectedInClickCount()
@@ -2008,11 +2027,14 @@ internal class UITests : CoreTestsFixture
         );
     }
 
+#endif
+
     // The UI input module needs to return true from IsPointerOverGameObject() for touches
     // that have ended in the current frame. I.e. even though the touch is already concluded
     // at the InputDevice level, the UI module needs to maintain state for one more frame.
     //
     // https://fogbugz.unity3d.com/f/cases/1347048/
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_TouchPointersAreKeptForOneFrameAfterRelease()
@@ -2047,6 +2069,8 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.False);
     }
+
+#endif
 
     [UnityTest]
     [Category("UI")]
@@ -2274,6 +2298,7 @@ internal class UITests : CoreTestsFixture
         }, Is.Not.AllocatingGCMemory());
     }
 
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     // Check that two players can have separate UI, and that both selections will stay active when
@@ -2361,6 +2386,8 @@ internal class UITests : CoreTestsFixture
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
     }
+
+#endif
 
     [UnityTest]
     [Category("UI")]
@@ -2667,6 +2694,7 @@ internal class UITests : CoreTestsFixture
         Assert.That(uiModule.point?.action, Is.Null);
     }
 
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanChangeControlsOnActions()
@@ -2709,6 +2737,8 @@ internal class UITests : CoreTestsFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse));
     }
+
+#endif
 
     private class InputSystemUIInputModuleTestScene_Setup : IPrebuildSetup, IPostBuildCleanup
     {
@@ -2927,6 +2957,7 @@ internal class UITests : CoreTestsFixture
     }
 
     // https://forum.unity.com/threads/feature-request-option-to-disable-deselect-in-ui-input-module.761531
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanPreventAutomaticDeselectionOfGameObjects()
@@ -2987,6 +3018,9 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
+#endif
+
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
@@ -3036,6 +3070,8 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
     }
+
+#endif
 
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
     ////        IMO is whether navigation should even be affected that way by not having a current selection. Seems to me that the
@@ -3274,7 +3310,7 @@ internal class UITests : CoreTestsFixture
     // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
     // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
-    #if UNITY_2021_2_OR_NEWER
+    #if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
     #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
@@ -3375,6 +3411,7 @@ internal class UITests : CoreTestsFixture
     }
     #endif
 
+#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("Focus")]
     public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonIsNotClicked()
@@ -3415,9 +3452,9 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.PointerEnter),
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-                #endif
+#endif
                 OneEvent("type", EventType.PointerDown),
                 OneEvent("type", EventType.InitializePotentialDrag)
             )
@@ -3446,6 +3483,8 @@ internal class UITests : CoreTestsFixture
         Assert.That(mouse.leftButton.isPressed, Is.False);
         Assert.That(clicked, Is.False);
     }
+
+#endif
 
     public class MyButton : UnityEngine.UI.Button
     {

@@ -1162,8 +1162,9 @@ namespace UnityEngine.InputSystem
             ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
             ////        it current, no?
             // Make the device current.
-            if (device.enabled)
-                device.MakeCurrent();
+            // BEWARE: if this will not happen for whatever reason, you will break Android sensors,
+            // as they rely on .current for enabling native backend, see https://fogbugz.unity3d.com/f/cases/1371204/
+            device.MakeCurrent();
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
@@ -1901,6 +1902,9 @@ namespace UnityEngine.InputSystem
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onPlayerFocusChanged = null;
                 m_Runtime.onShouldRunUpdate = null;
+                #if UNITY_EDITOR
+                m_Runtime.onPlayerLoopInitialization = null;
+                #endif
             }
 
             m_Runtime = runtime;
@@ -1908,6 +1912,9 @@ namespace UnityEngine.InputSystem
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onPlayerFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
+            #if UNITY_EDITOR
+            m_Runtime.onPlayerLoopInitialization = OnPlayerLoopInitialization;
+            #endif
             m_Runtime.pollingFrequency = pollingFrequency;
             m_HasFocus = m_Runtime.isPlayerFocused;
 
@@ -2010,6 +2017,11 @@ namespace UnityEngine.InputSystem
         internal InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputUpdateType m_CurrentUpdate;
         internal InputStateBuffers m_StateBuffers;
+
+        #if UNITY_EDITOR
+        // remember time offset to correctly restore it after editor mode is done
+        private double latestNonEditorTimeOffsetToRealtimeSinceStartup;
+        #endif
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
@@ -2211,7 +2223,7 @@ namespace UnityEngine.InputSystem
 
             // Switch to buffers.
             InputStateBuffers.SwitchTo(m_StateBuffers,
-                InputUpdate.s_LastUpdateType != InputUpdateType.None ? InputUpdate.s_LastUpdateType : defaultUpdateType);
+                InputUpdate.s_LatestUpdateType != InputUpdateType.None ? InputUpdate.s_LatestUpdateType : defaultUpdateType);
 
             ////TODO: need to update state change monitors
         }
@@ -2829,6 +2841,18 @@ namespace UnityEngine.InputSystem
             m_CurrentUpdate = default;
         }
 
+        private void OnPlayerLoopInitialization()
+        {
+            if (!gameIsPlaying || // if game is not playing
+                !InputUpdate.s_LatestUpdateType.IsEditorUpdate() || // or last update was not editor update
+                !InputUpdate.s_LatestNonEditorUpdateType.IsPlayerUpdate()) // or update before that was not player update
+                return; // then no need to restore anything
+
+            InputUpdate.RestoreStateAfterEditorUpdate();
+            InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = latestNonEditorTimeOffsetToRealtimeSinceStartup;
+            InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdate.s_LatestUpdateType);
+        }
+
 #endif
 
         internal bool ShouldRunUpdate(InputUpdateType updateType)
@@ -2908,8 +2932,13 @@ namespace UnityEngine.InputSystem
             // Update metrics.
             ++m_Metrics.totalUpdateCount;
 
-            InputUpdate.s_LastUpdateRetainedEventCount = 0;
-            InputUpdate.s_LastUpdateRetainedEventBytes = 0;
+            #if UNITY_EDITOR
+            // If current update is editor update and previous update was non-editor,
+            // store the time offset so we can restore it right after editor update is complete
+            if (((updateType & InputUpdateType.Editor) == InputUpdateType.Editor) && (m_CurrentUpdate & InputUpdateType.Editor) == 0)
+                latestNonEditorTimeOffsetToRealtimeSinceStartup =
+                    InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+            #endif
 
             // Store current time offset.
             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
@@ -3367,11 +3396,6 @@ namespace UnityEngine.InputSystem
                 m_Metrics.totalEventProcessingTime +=
                     ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
                 m_Metrics.totalEventLagTime += totalEventLag;
-
-                // Remember how much data we retained so that we don't count it against the next
-                // batch of events that we receive.
-                InputUpdate.s_LastUpdateRetainedEventCount = (uint)m_InputEventStream.numEventsRetainedInBuffer;
-                InputUpdate.s_LastUpdateRetainedEventBytes = m_InputEventStream.numBytesRetainedInBuffer;
 
                 m_InputEventStream.Close(ref eventBuffer);
             }

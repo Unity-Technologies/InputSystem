@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
@@ -792,5 +793,22 @@ internal partial class CoreTests
 
         Assert.That(canceledCount, Is.EqualTo(1));
         Assert.That(canceledValue, Is.EqualTo(0.0));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1354098/
+    [Test]
+    [Category("Actions")]
+    public void Actions_DoesNotThrowWhenDeviceIsDisconnectedWhileControlIsPressed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("Action",
+            binding: "<Gamepad>/buttonSouth",
+            interactions: "Press,Press"); // this bug occurs when there are multiple interactions on a binding
+        action.Enable();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(() => InputSystem.RemoveDevice(gamepad), Throws.Nothing);
     }
 }
