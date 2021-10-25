@@ -355,6 +355,9 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return -1;
 
+            // First time we hit this method, we populate the lookup table.
+            SetUpActionLookupTable();
+
             var actionCount = m_Actions.Length;
 
             var isOldBracedFormat = nameOrId.StartsWith("{") && nameOrId.EndsWith("}");
@@ -368,6 +371,9 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            if (m_ActionIndexByNameOrId.TryGetValue(nameOrId, out var actionIndex))
+                return actionIndex;
+
             for (var i = 0; i < actionCount; ++i)
             {
                 var action = m_Actions[i];
@@ -376,6 +382,27 @@ namespace UnityEngine.InputSystem
             }
 
             return InputActionState.kInvalidIndex;
+        }
+
+        private void SetUpActionLookupTable()
+        {
+            if (m_ActionIndexByNameOrId != null || m_Actions == null)
+                return;
+
+            m_ActionIndexByNameOrId = new Dictionary<string, int>();
+
+            var actionCount = m_Actions.Length;
+            for (var i = 0; i < actionCount; ++i)
+            {
+                var action = m_Actions[i];
+                action.MakeSureIdIsInPlace();
+
+                // We create three lookup paths for each action:
+                // (1) By case-sensitive name.
+                // (2) By case-insensitive name
+                m_ActionIndexByNameOrId[action.name] = i;
+                m_ActionIndexByNameOrId[action.m_Id] = i;
+            }
         }
 
         private int FindActionIndex(Guid id)
@@ -663,10 +690,13 @@ namespace UnityEngine.InputSystem
         /// isn't, we create a separate array with the bindings sorted by action and have each action reference
         /// a slice through <see cref="InputAction.m_BindingsStartIndex"/> and <see cref="InputAction.m_BindingsCount"/>.
         /// </remarks>
-        /// <seealso cref="SetUpPerActionCachedBindingData"/>
+        /// <seealso cref="SetUpPerActionControlAndBindingArrays"/>
         [NonSerialized] private InputBinding[] m_BindingsForEachAction;
 
         [NonSerialized] private InputControl[] m_ControlsForEachAction;
+
+        [NonSerialized] private bool m_ControlsForEachActionInitialized;
+        [NonSerialized] private bool m_BindingsForEachActionInitialized;
 
         /// <summary>
         /// Number of actions currently enabled in the map.
@@ -696,6 +726,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal DeviceArray m_Devices;
 
         [NonSerialized] internal CallbackArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
+
+        [NonSerialized] internal Dictionary<string, int> m_ActionIndexByNameOrId;
 
         internal static int s_DeferBindingResolution;
 
@@ -780,8 +812,8 @@ namespace UnityEngine.InputSystem
             Debug.Assert(!action.isSingletonAction || m_SingletonAction == action, "Action is not a singleton action");
 
             // See if we need to refresh.
-            if (m_BindingsForEachAction == null)
-                SetUpPerActionCachedBindingData();
+            if (!m_BindingsForEachActionInitialized)
+                SetUpPerActionControlAndBindingArrays();
 
             return new ReadOnlyArray<InputBinding>(m_BindingsForEachAction, action.m_BindingsStartIndex,
                 action.m_BindingsCount);
@@ -796,8 +828,8 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap == this);
             Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
 
-            if (m_ControlsForEachAction == null)
-                SetUpPerActionCachedBindingData();
+            if (!m_ControlsForEachActionInitialized)
+                SetUpPerActionControlAndBindingArrays();
 
             return new ReadOnlyArray<InputControl>(m_ControlsForEachAction, action.m_ControlStartIndex,
                 action.m_ControlCount);
@@ -815,11 +847,17 @@ namespace UnityEngine.InputSystem
         /// controls yet (i.e. <see cref="m_State"/> is <c>null</c>). Otherwise, using <see cref="InputAction.bindings"/>
         /// may trigger a control resolution which would be surprising.
         /// </remarks>
-        private unsafe void SetUpPerActionCachedBindingData()
+        private unsafe void SetUpPerActionControlAndBindingArrays()
         {
             // Handle case where we don't have any bindings.
             if (m_Bindings == null)
+            {
+                m_ControlsForEachAction = null;
+                m_BindingsForEachAction = null;
+                m_ControlsForEachActionInitialized = true;
+                m_BindingsForEachActionInitialized = true;
                 return;
+            }
 
             if (m_SingletonAction != null)
             {
@@ -1003,13 +1041,19 @@ namespace UnityEngine.InputSystem
                     m_BindingsForEachAction = newBindingsArray;
                 }
             }
+
+            m_ControlsForEachActionInitialized = true;
+            m_BindingsForEachActionInitialized = true;
         }
 
         ////TODO: re-use allocations such that only grow the arrays and hit zero GC allocs when we already have enough memory
-        internal void ClearPerActionCachedBindingData()
+        internal void ClearCachedActionData()
         {
-            m_BindingsForEachAction = null;
-            m_ControlsForEachAction = null;
+            m_BindingsForEachActionInitialized = default;
+            m_ControlsForEachActionInitialized = default;
+            m_BindingsForEachAction = default;
+            m_ControlsForEachAction = default;
+            m_ActionIndexByNameOrId = default;
         }
 
         internal void GenerateId()
@@ -1807,7 +1851,7 @@ namespace UnityEngine.InputSystem
 
             // Make sure we don't retain any cached per-action data when using serialization
             // to doctor around in action map configurations in the editor.
-            ClearPerActionCachedBindingData();
+            ClearCachedActionData();
         }
 
         #endregion
