@@ -108,7 +108,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
   name: Build Tests on {{ editor.version }} on android {{ backend.name }}
   agent:
       type: Unity::VM
-      image: mobile/android-execution-base:stable
+      image: mobile/android-package-ci-win:latest
       flavor: b1.xlarge
   commands:
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
@@ -127,7 +127,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
   name: Run Tests on {{ editor.version }} on android {{ backend.name }}
   agent:
       type: Unity::mobile::shield
-      image: mobile/android-execution-base:stable
+      image: mobile/android-package-ci-win:latest
       flavor: b1.medium
   # Skip repository cloning
   skip_checkout: true
