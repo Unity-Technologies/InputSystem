@@ -3413,7 +3413,7 @@ internal class UITests : CoreTestsFixture
 
 #if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     static bool[] canRunInBackgroundValueSource = new bool[] { false, true };
-    
+
     [UnityTest]
     public IEnumerator Run_UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(
         [ValueSource(nameof(canRunInBackgroundValueSource))] bool canRunInBackground)
