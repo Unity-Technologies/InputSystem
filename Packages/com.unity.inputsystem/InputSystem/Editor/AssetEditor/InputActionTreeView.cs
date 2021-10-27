@@ -888,8 +888,12 @@ namespace UnityEngine.InputSystem.Editor
                 // If we have a binding group to set for new bindings, overwrite the binding's
                 // group with it.
                 if (!string.IsNullOrEmpty(bindingGroupForNewBindings))
+                {
                     InputActionSerializationHelpers.ChangeBinding(property,
                         groups: bindingGroupForNewBindings);
+                }
+
+                onBindingAdded?.Invoke(property);
             }
 
             return property;
@@ -1108,6 +1112,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var bindingProperty = InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty,
                 groups: bindingGroupForNewBindings);
+            onBindingAdded?.Invoke(bindingProperty);
             OnNewItemAdded(bindingProperty);
         }
 
@@ -1125,6 +1130,7 @@ namespace UnityEngine.InputSystem.Editor
                     nameof(compositeName));
             var compositeProperty = InputActionSerializationHelpers.AddCompositeBinding(actionProperty,
                 actionMapProperty, compositeName, compositeType, groups: bindingGroupForNewBindings);
+            onBindingAdded?.Invoke(compositeProperty);
             OnNewItemAdded(compositeProperty);
         }
 
@@ -1390,6 +1396,7 @@ namespace UnityEngine.InputSystem.Editor
         public Action<ActionTreeItemBase> onDoubleClick { get; set; }
         public Action<ActionTreeItemBase> onBeginRename { get; set; }
         public Func<TreeViewItem> onBuildTree { get; set; }
+        public Action<SerializedProperty> onBindingAdded { get; set; }
 
         public bool drawHeader { get; set; }
         public bool drawPlusButton { get; set; }
