@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed an issue where touches were being retained on focus loss ([case 1364017](https://issuetracker.unity3d.com/issues/input-system-new-input-system-registering-active-touches-when-app-loses-focus)).
+
 ## [1.2.0] - 2021-10-22
 
 ### Changed

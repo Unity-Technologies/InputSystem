@@ -1140,4 +1140,17 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touchscreen.current.touches[0].isInProgress, Is.True);
         Assert.That(Touchscreen.current.touches[0].position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
     }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public unsafe void EnhancedTouch_ClearsActiveTouchesOnFocusLost()
+    {
+        BeginTouch(1, new Vector2(0.123f, 0.456f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        runtime.PlayerFocusLost();
+        runtime.PlayerFocusGained();
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches, Is.Empty);
+    }
 }
