@@ -41,6 +41,7 @@ internal class UITests : CoreTestsFixture
     private struct TestObjects
     {
         public Camera camera;
+        public Canvas canvas;
         public InputSystemUIInputModule uiModule;
         public TestEventSystem eventSystem;
         public GameObject parentGameObject;
@@ -101,7 +102,7 @@ internal class UITests : CoreTestsFixture
     // Set up a InputSystemUIInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI
     // from activity on input devices.
-    private static TestObjects CreateTestUI(Rect viewport = default, bool noFirstSelected = false, string namePrefix = "")
+    private static TestObjects CreateTestUI(Rect viewport = default, bool noFirstSelected = false, string namePrefix = "", bool makeSelectable = false)
     {
         var objects = new TestObjects();
 
@@ -125,6 +126,7 @@ internal class UITests : CoreTestsFixture
         canvasObject.AddComponent<GraphicRaycaster>();
         canvasObject.AddComponent<TrackedDeviceRaycaster>();
         canvas.worldCamera = objects.camera;
+        objects.canvas = canvas;
 
         // Set up a GameObject hierarchy that we send events to. In a real setup,
         // this would be a hierarchy involving UI components.
@@ -140,6 +142,8 @@ internal class UITests : CoreTestsFixture
         leftChildGameObject.AddComponent<Image>();
         objects.leftChildReceiver = leftChildGameObject.AddComponent<UICallbackReceiver>();
         objects.leftGameObject = leftChildGameObject;
+        if (makeSelectable)
+            leftChildGameObject.AddComponent<Selectable>();
 
         var rightChildGameObject = new GameObject(namePrefix + "Right Child");
         rightChildGameObject.SetActive(false);
@@ -147,6 +151,8 @@ internal class UITests : CoreTestsFixture
         rightChildGameObject.AddComponent<Image>();
         objects.rightChildReceiver = rightChildGameObject.AddComponent<UICallbackReceiver>();
         objects.rightGameObject = rightChildGameObject;
+        if (makeSelectable)
+            rightChildGameObject.AddComponent<Selectable>();
 
         parentTransform.SetParent(canvasObject.transform, worldPositionStays: false);
         leftChildTransform.SetParent(parentTransform, worldPositionStays: false);
@@ -2389,15 +2395,29 @@ internal class UITests : CoreTestsFixture
 
 #endif
 
-    [UnityTest]
-    [Category("UI")]
     // Check that two players can have separate UI and control it using separate gamepads, using
     // MultiplayerEventSystem.
+    [UnityTest]
+    [Category("UI")]
     public IEnumerator UI_CanOperateMultiplayerUILocallyUsingGamepads()
     {
         // Create devices.
         var gamepads = new[] { InputSystem.AddDevice<Gamepad>(), InputSystem.AddDevice<Gamepad>() };
-        var players = new[] { CreateTestUI(new Rect(0, 0, 0.5f, 1)), CreateTestUI(new Rect(0.5f, 0, 0.5f, 1)) };
+
+        // Create scene with side-by-side split-screen.
+        var players = new[]
+        {
+            CreateTestUI(new Rect(0, 0, 0.5f, 1), namePrefix: "Player1", makeSelectable: true), // Left
+            CreateTestUI(new Rect(0.5f, 0, 0.5f, 1), namePrefix: "Player2", makeSelectable: true) // Right
+        };
+
+        // Offset player #2's canvas by moving its camera such that the resulting UI will be to the *right*
+        // of that of player #1. This is important as it will, by default, make player #2's UI navigatable
+        // from player #1 using the navigation logic in Selectable.
+        var screenWidthInWorldSpace =
+            Mathf.Abs(players[1].camera.ScreenToWorldPoint(new Vector3(0, 0, players[1].canvas.planeDistance)).x -
+                players[1].camera.ScreenToWorldPoint(new Vector3(Screen.width, 0, players[1].canvas.planeDistance)).x);
+        players[1].camera.transform.Translate(new Vector3(screenWidthInWorldSpace, 0, 0));
 
         for (var i = 0; i < 2; i++)
         {
@@ -2407,9 +2427,9 @@ internal class UITests : CoreTestsFixture
             // Create actions.
             var map = new InputActionMap("map");
             asset.AddActionMap(map);
-            var moveAction = map.AddAction("move", type: InputActionType.PassThrough);
-            var submitAction = map.AddAction("submit", type: InputActionType.PassThrough);
-            var cancelAction = map.AddAction("cancel", type: InputActionType.PassThrough);
+            var moveAction = map.AddAction("move", type: InputActionType.Value);
+            var submitAction = map.AddAction("submit", type: InputActionType.Button);
+            var cancelAction = map.AddAction("cancel", type: InputActionType.Button);
 
             // Create bindings.
             moveAction.AddBinding(gamepads[i].leftStick);
@@ -2421,85 +2441,85 @@ internal class UITests : CoreTestsFixture
             players[i].uiModule.submit = InputActionReference.Create(submitAction);
             players[i].uiModule.cancel = InputActionReference.Create(cancelAction);
 
-            players[i].leftChildReceiver.moveTo = players[i].rightGameObject;
-            players[i].rightChildReceiver.moveTo = players[i].leftGameObject;
-
             // Enable the whole thing.
             map.Enable();
         }
 
-        // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
 
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
 
-        // Reset initial selection
         players[0].leftChildReceiver.events.Clear();
         players[1].leftChildReceiver.events.Clear();
 
-        // Check Player 0 Move Axes
-        InputSystem.QueueDeltaStateEvent(gamepads[0].leftStick, new Vector2(1.0f, 0.0f));
-        InputSystem.Update();
+        // Move right on player #1's gamepad.
+        Set(gamepads[0].leftStick, Vector2.right);
+        yield return null;
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        // Player #1 should have moved from left to right object.
+        Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
+        Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
+
+        Assert.That(players[0].leftChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move),
+                OneEvent("type", EventType.Deselect)));
+        Assert.That(players[0].rightChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Select)));
+
+        players[0].leftChildReceiver.events.Clear();
+        players[0].rightChildReceiver.events.Clear();
+
+        // No change for player #2.
+        Assert.That(players[1].leftChildReceiver.events, Is.Empty);
+        Assert.That(players[1].rightChildReceiver.events, Is.Empty);
+
+        // https://fogbugz.unity3d.com/f/cases/1306361/
+        // Move right on player #1's gamepad AGAIN. This should *not* cross
+        // over to player #2's UI but should instead not result in any selection change.
+        Set(gamepads[0].leftStick, Vector2.zero);
+        yield return null;
+        Set(gamepads[0].leftStick, Vector2.right);
+        yield return null;
 
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
 
-        Assert.That(players[0].leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(players[0].leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
-        Assert.That(players[0].leftChildReceiver.events[1].type, Is.EqualTo(EventType.Deselect));
-        players[0].leftChildReceiver.events.Clear();
+        Assert.That(players[0].leftChildReceiver.events, Is.Empty);
+        Assert.That(players[0].rightChildReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.Move))); // OnMove will still get called to *attempt* a move.
 
-        Assert.That(players[0].rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(players[0].rightChildReceiver.events[0].type, Is.EqualTo(EventType.Select));
+        players[0].leftChildReceiver.events.Clear();
         players[0].rightChildReceiver.events.Clear();
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        // No change for player #2.
+        Assert.That(players[1].leftChildReceiver.events, Is.Empty);
+        Assert.That(players[1].rightChildReceiver.events, Is.Empty);
+
+        Set(gamepads[0].leftStick, Vector2.zero);
 
         // Check Player 0 Submit
         PressAndRelease(gamepads[0].buttonSouth);
+        players[0].eventSystem.InvokeUpdate();
+        players[1].eventSystem.InvokeUpdate();
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        Assert.That(players[0].rightChildReceiver.events,
+            EventSequence(OneEvent("type", EventType.Submit)));
+        Assert.That(players[1].leftChildReceiver.events, Is.Empty);
 
-        Assert.That(players[0].rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(players[0].rightChildReceiver.events[0].type, Is.EqualTo(EventType.Submit));
         players[0].rightChildReceiver.events.Clear();
 
         // Check Player 1 Submit
         PressAndRelease(gamepads[1].buttonSouth);
+        players[0].eventSystem.InvokeUpdate();
+        players[1].eventSystem.InvokeUpdate();
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
-        Assert.That(players[1].leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(players[1].leftChildReceiver.events[0].type, Is.EqualTo(EventType.Submit));
-        players[1].leftChildReceiver.events.Clear();
-
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-        }
+        Assert.That(players[1].leftChildReceiver.events,
+            EventSequence(OneEvent("type", EventType.Submit)));
+        Assert.That(players[0].rightChildReceiver.events, Is.Empty);
     }
 
     [UnityTest]
@@ -3603,7 +3623,6 @@ internal class UITests : CoreTestsFixture
         }
 
         public List<Event> events = new List<Event>();
-        public GameObject moveTo;
 
         public void OnPointerClick(PointerEventData eventData)
         {
@@ -3642,8 +3661,6 @@ internal class UITests : CoreTestsFixture
         public void OnMove(AxisEventData eventData)
         {
             events.Add(new Event(EventType.Move, CloneAxisEventData(eventData)));
-            if (moveTo != null)
-                EventSystem.current.SetSelectedGameObject(moveTo, eventData);
         }
 
         public void OnSubmit(BaseEventData eventData)

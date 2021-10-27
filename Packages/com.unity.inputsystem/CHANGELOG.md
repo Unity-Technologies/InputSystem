@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed `MultiplayerEventSystem` not preventing keyboard and gamepad/joystick navigation from one player's UI moving to another player's UI ([case 1306361](https://issuetracker.unity3d.com/issues/input-system-ui-input-module-lets-the-player-navigate-across-other-canvases)).
+  * This fix relies on a `CanvasGroup` being injected into each `playerRoot` and the `interactable` property of the group being toggled back and forth depending on which part of the UI is being updated.
+
 ## [1.2.0] - 2021-10-22
 
 ### Changed
