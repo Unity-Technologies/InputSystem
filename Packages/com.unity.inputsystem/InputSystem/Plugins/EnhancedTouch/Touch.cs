@@ -725,7 +725,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
                     var history = finger.m_StateHistory;
                     var touchRecordCount = history.Count;
-                    if (touchRecordCount == 0)
+                    if (touchRecordCount == 0 || !finger.currentTouch.valid)
                         continue;
 
                     // We're walking newest-first through the touch history but want the resulting list of
