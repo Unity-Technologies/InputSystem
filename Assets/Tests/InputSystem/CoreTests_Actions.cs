@@ -2125,29 +2125,21 @@ partial class CoreTests
         action.AddBinding("<Keyboard>/s", interactions: "press(behavior=1)");
         action.Enable();
 
-        // Press A:
-        // Press B:
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
         InputSystem.Update();
 
         Assert.That(!action.WasPerformedThisFrame());
 
-        // Press A:
-        // Press B:
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
         InputSystem.Update();
 
         Assert.That(!action.WasPerformedThisFrame());
 
-        // Press A:
-        // Press B:
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
         InputSystem.Update();
 
         Assert.That(!action.WasPerformedThisFrame());
 
-        // Press A:
-        // Press B:
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.Update();
 
