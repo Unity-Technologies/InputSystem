@@ -5112,6 +5112,33 @@ partial class CoreTests
         Assert.That(commandWasSent, Is.True);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1340793/
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanWriteStateOfKeyboardSyntheticModifierKeys()
+    {
+        // DiscreteButtons (which, amongst other things, we use for the keyboard's ctrl/shift/alt
+        // combined left+right modifiers) are generally not easily writable as their on and off
+        // states may correspond to multiple possible input states. However, for the keyboard, that
+        // is not really the case as we can simply consider
+        //
+        //   0 ==> both left and right key are set to 0
+        //   1 ==> both left and right key are set to 1
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Press(keyboard.ctrlKey);
+        Press(keyboard.shiftKey);
+        Press(keyboard.altKey);
+
+        Assert.That(keyboard.leftCtrlKey.isPressed, Is.True);
+        Assert.That(keyboard.rightCtrlKey.isPressed, Is.True);
+        Assert.That(keyboard.leftShiftKey.isPressed, Is.True);
+        Assert.That(keyboard.rightShiftKey.isPressed, Is.True);
+        Assert.That(keyboard.leftAltKey.isPressed, Is.True);
+        Assert.That(keyboard.rightAltKey.isPressed, Is.True);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_RemovingKeyboardMakesNextKeyboardCurrent()

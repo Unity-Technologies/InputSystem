@@ -182,7 +182,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var statePtr = (byte*)(useDefaultState ? device.defaultStatePtr : device.currentStatePtr) + (int)stateOffset;
             var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
 
-            var buffer = new NativeArray<byte>((int)eventSize, allocator);
+            var buffer = new NativeArray<byte>((int)eventSize.AlignToMultipleOf(4), allocator);
             var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();
 
             stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.deviceId, InputRuntime.s_Instance.currentTime);
