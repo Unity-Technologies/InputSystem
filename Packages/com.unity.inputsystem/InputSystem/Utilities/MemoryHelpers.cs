@@ -388,6 +388,15 @@ namespace UnityEngine.InputSystem.Utilities
             if (bitCount > sizeof(int) * 8)
                 throw new ArgumentException("Trying to write more than 32 bits as int", nameof(bitCount));
 
+            // Shift the pointer up on larger bitmasks and retry.
+            if (bitOffset > 32)
+            {
+                var newBitOffset = (int)bitOffset % 32;
+                var intOffset = ((int)bitOffset - newBitOffset) / 32;
+                ptr = (byte*)ptr + (intOffset * 4);
+                bitOffset = (uint)newBitOffset;
+            }
+
             // Bits out of byte.
             if (bitOffset + bitCount <= 8)
             {
