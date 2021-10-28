@@ -482,16 +482,23 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Resize the current event memory buffer to the specified size.
         /// </summary>
-        /// <param name="newBufferSize"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public bool Resize(long newBufferSize)
+        /// <param name="newBufferSize">Size to allocate for the buffer.</param>
+        /// <param name="newMaxBufferSize">Optional parameter to specifying the mark up to which the buffer is allowed to grow. By default,
+        /// this is negative which indicates the buffer should not grow. In this case, <see cref="maxSizeInBytes"/> will be set
+        /// to <paramref name="newBufferSize"/>. If this parameter is a non-negative number, it must be greater than or equal to
+        /// <paramref name="newBufferSize"/> and will become the new value for <see cref="maxSizeInBytes"/>.</param>
+        /// <returns>True if the new buffer was successfully allocated.</returns>
+        /// <exception cref="ArgumentException"><paramref name="newBufferSize"/> is negative.</exception>
+        public bool Resize(long newBufferSize, long newMaxBufferSize = -1)
         {
             if (newBufferSize <= 0)
                 throw new ArgumentException("Size must be positive", nameof(newBufferSize));
 
             if (m_EventBufferSize == newBufferSize)
                 return true;
+
+            if (newMaxBufferSize < newBufferSize)
+                newMaxBufferSize = newBufferSize;
 
             // Allocate.
             var newEventBuffer = (byte*)UnsafeUtility.Malloc(newBufferSize, 4, Allocator.Persistent);
@@ -551,9 +558,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventBuffer = newEventBuffer;
             m_EventBufferHead = newEventBuffer;
             m_EventBufferTail = m_EventBuffer + m_EventSizeInBytes;
-
-            if (m_MaxEventBufferSize < newBufferSize)
-                m_MaxEventBufferSize = newBufferSize;
+            m_MaxEventBufferSize = newMaxBufferSize;
 
             ++m_ChangeCounter;
 
