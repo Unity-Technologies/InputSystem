@@ -97,6 +97,21 @@ namespace UnityEngine.InputSystem.Processors
             return percentage;
         }
 
+        internal static float Denormalize(float value, float min, float max, float zero)
+        {
+            if (zero < min)
+                zero = min;
+
+            if (min < zero)
+            {
+                if (value < 0)
+                    return min + (zero - min) * (value * -1f);
+                return zero + (max - zero) * value;
+            }
+
+            return min + (max - min) * value;
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {
