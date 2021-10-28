@@ -591,7 +591,7 @@ partial class CoreTests
 
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.deviceId));
             Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
-            Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
+            Assert.That(stateEventPtr->baseEvent.sizeInBytes.AlignToMultipleOf(4), Is.EqualTo(buffer.Length));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes,
                 Is.EqualTo(InputEvent.kBaseEventSize + sizeof(FourCC) + mouse.stateBlock.alignedSizeInBytes));
             Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));
