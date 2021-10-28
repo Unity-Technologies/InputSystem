@@ -317,6 +317,36 @@ partial class CoreTests
             Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1336240/
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanWriteIntoHalfAxesOfSticks()
+    {
+        // Disable deadzoning.
+        InputSystem.settings.defaultDeadzoneMax = 1;
+        InputSystem.settings.defaultDeadzoneMin = 0;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftStick.left, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(Vector2.left));
+
+        // Set "right" to 1 as well. This is a conflicting state. Result should
+        // be that left is 0 and right is 1.
+        Set(gamepad.leftStick.right, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(Vector2.right));
+
+        Set(gamepad.leftStick.up, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo((Vector2.right + Vector2.up).normalized));
+
+        Set(gamepad.leftStick.down, 1f);
+
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo((Vector2.right + Vector2.down).normalized));
+    }
+
     [Test]
     [Category("Controls")]
     public void Controls_CanEvaluateMagnitude()
