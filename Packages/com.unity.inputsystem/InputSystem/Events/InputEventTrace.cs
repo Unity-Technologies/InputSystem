@@ -483,7 +483,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Resize the current event memory buffer to the specified size.
         /// </summary>
         /// <param name="newBufferSize">Size to allocate for the buffer.</param>
-        /// <param name="newMaxBufferSize">Specifies the mark up to which the buffer is allowed to grow.
+        /// <param name="newMaxBufferSize">Specifies the mark up to which the buffer is allowed to grow. 
         /// If this is negative, it indicates that the buffer should not grow. In this case, <see cref="maxSizeInBytes"/> will be set
         /// to <paramref name="newBufferSize"/>. If this parameter is a non-negative number, it must be greater than or equal to
         /// <paramref name="newBufferSize"/> and will become the new value for <see cref="maxSizeInBytes"/>.</param>
