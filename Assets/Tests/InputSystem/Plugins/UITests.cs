@@ -23,6 +23,7 @@ using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
+using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -3310,7 +3311,7 @@ internal class UITests : CoreTestsFixture
     // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
     // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
-    #if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+#if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
@@ -3412,6 +3413,7 @@ internal class UITests : CoreTestsFixture
 #endif
 
 #if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    [Preserve]
     static bool[] canRunInBackgroundValueSource = new bool[] { false, true };
 
     [UnityTest]
