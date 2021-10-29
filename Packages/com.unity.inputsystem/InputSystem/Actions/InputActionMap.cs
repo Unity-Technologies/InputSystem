@@ -397,9 +397,9 @@ namespace UnityEngine.InputSystem
                 var action = m_Actions[i];
                 action.MakeSureIdIsInPlace();
 
-                // We create three lookup paths for each action:
+                // We create two lookup paths for each action:
                 // (1) By case-sensitive name.
-                // (2) By case-insensitive name
+                // (2) By GUID string.
                 m_ActionIndexByNameOrId[action.name] = i;
                 m_ActionIndexByNameOrId[action.m_Id] = i;
             }
