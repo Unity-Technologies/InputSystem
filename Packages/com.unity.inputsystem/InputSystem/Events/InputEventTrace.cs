@@ -483,13 +483,13 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Resize the current event memory buffer to the specified size.
         /// </summary>
         /// <param name="newBufferSize">Size to allocate for the buffer.</param>
-        /// <param name="newMaxBufferSize">Optional parameter to specifying the mark up to which the buffer is allowed to grow. By default,
-        /// this is negative which indicates the buffer should not grow. In this case, <see cref="maxSizeInBytes"/> will be set
+        /// <param name="newMaxBufferSize">Specifies the mark up to which the buffer is allowed to grow. 
+        /// If this is negative, it indicates that the buffer should not grow. In this case, <see cref="maxSizeInBytes"/> will be set
         /// to <paramref name="newBufferSize"/>. If this parameter is a non-negative number, it must be greater than or equal to
         /// <paramref name="newBufferSize"/> and will become the new value for <see cref="maxSizeInBytes"/>.</param>
         /// <returns>True if the new buffer was successfully allocated.</returns>
         /// <exception cref="ArgumentException"><paramref name="newBufferSize"/> is negative.</exception>
-        public bool Resize(long newBufferSize, long newMaxBufferSize = -1)
+        public bool Resize(long newBufferSize, long newMaxBufferSize)
         {
             if (newBufferSize <= 0)
                 throw new ArgumentException("Size must be positive", nameof(newBufferSize));
@@ -563,6 +563,19 @@ namespace UnityEngine.InputSystem.LowLevel
             ++m_ChangeCounter;
 
             return true;
+        }
+
+        /// <summary>
+        /// Resize the current event memory buffer to the specified size.
+        /// </summary>
+        /// <param name="newBufferSize">Size to allocate for the buffer.</param>
+        /// <returns>True if the new buffer was successfully allocated.</returns>
+        /// <exception cref="ArgumentException"><paramref name="newBufferSize"/> is negative.</exception>
+        /// <remarks>Also see <see cref="Resize(long, long)"/> for additional control over dynamic buffer
+        /// growth.</remarks>
+        public void Resize(long newBufferSize)
+        {
+            Resize(newBufferSize, -1);
         }
 
         /// <summary>
