@@ -1080,7 +1080,13 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
+                    // Check if we have multiple concurrent actuations on the same action. This may lead us
+                    // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
+                    // one of higher magnitude) or may even lead us to switch to processing a different binding
+                    // (e.g. when an input of previously greater magnitude has now fallen below the level of another
+                    // ongoing input with now higher magnitude).
                     var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
+                    bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
                     // Check actuation level.
                     if (!isConflictingInput)
@@ -1405,6 +1411,7 @@ namespace UnityEngine.InputSystem
                                 continue;
 
                             actionState->interactionIndex = interactionStartIndex + i;
+                            trigger.interactionIndex = interactionStartIndex + i;
                             break;
                         }
                     }

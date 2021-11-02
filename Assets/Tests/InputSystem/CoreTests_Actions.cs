@@ -2146,6 +2146,60 @@ partial class CoreTests
         Assert.That(action.WasPerformedThisFrame());
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1309797/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_ProcessesInteractionsOnAllActiveBindings_AcrossDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var pressAction = new InputAction();
+        pressAction.AddBinding("<Keyboard>/space", interactions: "press(behavior=0)");
+        pressAction.AddBinding("<Mouse>/leftButton", interactions: "press(behavior=0)");
+        pressAction.Enable();
+
+        var releaseAction = new InputAction();
+        releaseAction.AddBinding("<Keyboard>/space", interactions: "press(behavior=1)");
+        releaseAction.AddBinding("<Mouse>/leftButton", interactions: "press(behavior=1)");
+        releaseAction.Enable();
+
+        Press(mouse.leftButton);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(pressAction.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(releaseAction.activeControl, Is.SameAs(mouse.leftButton)); // Was still started.
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(pressAction.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(releaseAction.activeControl, Is.SameAs(mouse.leftButton));
+
+        Release(mouse.leftButton);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False); // !!
+        Assert.That(pressAction.activeControl, Is.SameAs(keyboard.spaceKey));
+        Assert.That(releaseAction.activeControl, Is.SameAs(keyboard.spaceKey));
+
+        Release(keyboard.spaceKey);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(pressAction.activeControl, Is.Null);
+        Assert.That(releaseAction.activeControl, Is.Null);
+
+        Press(mouse.leftButton);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(pressAction.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(releaseAction.activeControl, Is.SameAs(mouse.leftButton));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
