@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed writing values into the half-axis controls of sticks (such as `Gamepad.leftStick.left`) producing incorrect values on the stick ([case 1336240](https://issuetracker.unity3d.com/issues/inputtestfixture-tests-return-inverted-values-when-pressing-gamepads-left-or-down-joystick-buttons)).
 - Fixed setting size of event trace in input debugger always growing back to largest size set before.
+- Fixed `InputSystem.RegisterLayoutOverride` resulting in the layout that overrides are being applied to losing the connection to its base layout ([case 1377719](https://fogbugz.unity3d.com/f/cases/1377719/)).
 
 #### Actions
 
