@@ -107,7 +107,6 @@ namespace UnityEngine.InputSystem
 
         internal static string CleanSlashes(this String pathComponent)
         {
-            // Replace / with the similarly looking ／ character.
             return pathComponent.Replace(Separator, SeparatorReplacement);
         }
 
