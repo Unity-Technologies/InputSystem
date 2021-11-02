@@ -173,6 +173,10 @@ namespace UnityEngine.InputSystem.Layouts
                     name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
             }
 
+            // Make sure name does not contain any slashes.
+            if (name.ToString().IndexOf(InputControlPath.Separator) != -1)
+                name = new InternedString(name.ToString().CleanSlashes());
+
             // Variant defaults to variants of layout.
             if (variants.IsEmpty())
             {

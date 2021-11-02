@@ -646,7 +646,7 @@ namespace UnityEngine.InputSystem
 
             var map = action.m_ActionMap;
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range in EnableControls");
 
             // Go through all bindings in the map and for all that belong to the given action,
             // enable the associated controls.
@@ -682,7 +682,7 @@ namespace UnityEngine.InputSystem
 
             // Mark all actions as disabled.
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range in DisableAllActions");
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             var actionCount = mapIndices[mapIndex].actionCount;
             for (var i = 0; i < actionCount; ++i)
@@ -708,7 +708,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range in DisableControls(InputActionMap)");
 
             // Remove state monitors from all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
@@ -742,7 +742,7 @@ namespace UnityEngine.InputSystem
 
             var map = action.m_ActionMap;
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range in DisableControls(InputAction)");
 
             // Go through all bindings in the map and for all that belong to the given action,
             // disable the associated controls.
@@ -1012,7 +1012,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         private void ProcessControlStateChange(int mapIndex, int controlIndex, int bindingIndex, double time, InputEventPtr eventPtr)
         {
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range in ProcessControlStateChange");
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
 

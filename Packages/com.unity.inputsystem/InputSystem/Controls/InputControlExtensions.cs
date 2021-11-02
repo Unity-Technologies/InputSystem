@@ -912,7 +912,7 @@ namespace UnityEngine.InputSystem
             var device = control.device;
 
             builder.Append('<');
-            builder.Append(deviceLayout);
+            builder.Append(deviceLayout.Replace("\\", "\\\\").Replace(">", "\\>"));
             builder.Append('>');
 
             // Add usages of device, if any.
@@ -920,14 +920,16 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < deviceUsages.Count; ++i)
             {
                 builder.Append('{');
-                builder.Append(deviceUsages[i]);
+                builder.Append(deviceUsages[i].ToString().Replace("\\", "\\\\").Replace("}", "\\}"));
                 builder.Append('}');
             }
 
-            builder.Append('/');
+            builder.Append(InputControlPath.Separator);
 
-            var devicePath = device.path;
-            var controlPath = control.path;
+            // If any of the components contains a backslash, double it up as in control paths,
+            // these serve as escape characters.
+            var devicePath = device.path.Replace("\\", "\\\\");
+            var controlPath = control.path.Replace("\\", "\\\\");
             builder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
 
             return builder.ToString();
