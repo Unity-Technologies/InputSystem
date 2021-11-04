@@ -1567,6 +1567,8 @@ partial class CoreTests
     public unsafe void Devices_CanBeDisabledAndReEnabled()
     {
         var device = InputSystem.AddDevice<Mouse>();
+        var nativeBackendDisableWasCalled = false;
+        var nativeBackendEnableWasCalled = false;
 
         bool? disabled = null;
         runtime.SetDeviceCommandCallback(device.deviceId,
@@ -1576,6 +1578,7 @@ partial class CoreTests
                 {
                     Assert.That(disabled, Is.Null);
                     disabled = true;
+                    nativeBackendDisableWasCalled = true;
                     return InputDeviceCommand.GenericSuccess;
                 }
 
@@ -1583,6 +1586,7 @@ partial class CoreTests
                 {
                     Assert.That(disabled, Is.Null);
                     disabled = false;
+                    nativeBackendEnableWasCalled = true;
                     return InputDeviceCommand.GenericSuccess;
                 }
 
@@ -1597,6 +1601,7 @@ partial class CoreTests
         Assert.That(device.enabled, Is.False);
         Assert.That(disabled.HasValue, Is.True);
         Assert.That(disabled.Value, Is.True);
+        Assert.That(nativeBackendDisableWasCalled, Is.True);
 
         // Make sure that state sent against the device is ignored.
         InputSystem.QueueStateEvent(device, new MouseState { buttons = 0xffff });
@@ -1611,6 +1616,7 @@ partial class CoreTests
         Assert.That(device.enabled, Is.True);
         Assert.That(disabled.HasValue, Is.True);
         Assert.That(disabled.Value, Is.False);
+        Assert.That(nativeBackendEnableWasCalled, Is.True);
     }
 
     [Test]
@@ -3504,6 +3510,26 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_AddingDisabledSensorMakesItCurrent()
+    {
+        var deviceId = runtime.ReportNewInputDevice<Accelerometer>();
+        runtime.SetDeviceCommandCallback(deviceId,
+            new QueryEnabledStateCommand
+            {
+                baseCommand = new InputDeviceCommand(QueryEnabledStateCommand.Type, QueryEnabledStateCommand.kSize),
+                isEnabled = false
+            });
+
+        InputSystem.Update();
+
+        Assert.That(Accelerometer.current, Is.Not.Null);
+        Assert.That(Accelerometer.current.enabled, Is.False);
+
+        InputSystem.EnableDevice(Accelerometer.current);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetSensorSamplingFrequency()
     {
         var sensor = InputSystem.AddDevice<Accelerometer>();
@@ -5084,6 +5110,33 @@ partial class CoreTests
         ////REVIEW: should this require IME to be enabled?
         keyboard.SetIMECursorPosition(Vector2.one);
         Assert.That(commandWasSent, Is.True);
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1340793/
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanWriteStateOfKeyboardSyntheticModifierKeys()
+    {
+        // DiscreteButtons (which, amongst other things, we use for the keyboard's ctrl/shift/alt
+        // combined left+right modifiers) are generally not easily writable as their on and off
+        // states may correspond to multiple possible input states. However, for the keyboard, that
+        // is not really the case as we can simply consider
+        //
+        //   0 ==> both left and right key are set to 0
+        //   1 ==> both left and right key are set to 1
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Press(keyboard.ctrlKey);
+        Press(keyboard.shiftKey);
+        Press(keyboard.altKey);
+
+        Assert.That(keyboard.leftCtrlKey.isPressed, Is.True);
+        Assert.That(keyboard.rightCtrlKey.isPressed, Is.True);
+        Assert.That(keyboard.leftShiftKey.isPressed, Is.True);
+        Assert.That(keyboard.rightShiftKey.isPressed, Is.True);
+        Assert.That(keyboard.leftAltKey.isPressed, Is.True);
+        Assert.That(keyboard.rightAltKey.isPressed, Is.True);
     }
 
     [Test]

@@ -28,6 +28,16 @@
             "name": "com.unity.package-manager-doctools",
             "expression": "1.0",
             "define": "HAVE_DOCTOOLS_INSTALLED"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.1.0a12,2022.1.0a16)",
+            "define": "TEMP_DISABLE_UI_TESTS_ON_TRUNK"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.1.0a15,2022.1.0a16)",
+            "define": "TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK"
         }
     ],
     "noEngineReferences": false

@@ -1162,8 +1162,9 @@ namespace UnityEngine.InputSystem
             ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
             ////        it current, no?
             // Make the device current.
-            if (device.enabled)
-                device.MakeCurrent();
+            // BEWARE: if this will not happen for whatever reason, you will break Android sensors,
+            // as they rely on .current for enabling native backend, see https://fogbugz.unity3d.com/f/cases/1371204/
+            device.MakeCurrent();
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
@@ -1640,6 +1641,10 @@ namespace UnityEngine.InputSystem
             else if (m_StateChangeMonitors.Length <= deviceIndex)
                 Array.Resize(ref m_StateChangeMonitors, m_DevicesCount);
 
+            // If we have removed monitors
+            if (!isProcessingEvents && m_StateChangeMonitors[deviceIndex].needToCompactArrays)
+                m_StateChangeMonitors[deviceIndex].CompactArrays();
+
             // Add record.
             m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
         }
@@ -1679,7 +1684,7 @@ namespace UnityEngine.InputSystem
             if (deviceIndex >= m_StateChangeMonitors.Length)
                 return;
 
-            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex, isProcessingEvents);
 
             // Remove pending timeouts on the monitor.
             for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
@@ -2081,6 +2086,7 @@ namespace UnityEngine.InputSystem
             public MemoryHelpers.BitRegion[] memoryRegions;
             public StateChangeMonitorListener[] listeners;
             public DynamicBitfield signalled;
+            public bool needToCompactArrays;
 
             public int count => signalled.length;
 
@@ -2105,21 +2111,25 @@ namespace UnityEngine.InputSystem
                 signalled.SetLength(signalled.length + 1);
             }
 
-            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
+            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex, bool deferRemoval)
             {
-                // NOTE: This must *not* actually destroy the record for the monitor as we may currently be traversing the
-                //       arrays in FireStateChangeNotifications. Instead, we only invalidate entries here and leave it to
-                //       ProcessStateChangeMonitors to compact arrays.
-
                 if (listeners == null)
                     return;
 
                 for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        listeners[i] = default;
-                        memoryRegions[i] = default;
-                        signalled.ClearBit(i);
+                        if (deferRemoval)
+                        {
+                            listeners[i] = default;
+                            memoryRegions[i] = default;
+                            signalled.ClearBit(i);
+                            needToCompactArrays = true;
+                        }
+                        else
+                        {
+                            RemoveAt(i);
+                        }
                         break;
                     }
             }
@@ -2130,6 +2140,30 @@ namespace UnityEngine.InputSystem
                 // our count to zero.
                 listeners.Clear(count);
                 signalled.SetLength(0);
+
+                needToCompactArrays = false;
+            }
+
+            public void CompactArrays()
+            {
+                for (var i = count - 1; i >= 0; --i)
+                {
+                    var memoryRegion = memoryRegions[i];
+                    if (memoryRegion.sizeInBits != 0)
+                        continue;
+
+                    RemoveAt(i);
+                }
+                needToCompactArrays = false;
+            }
+
+            private void RemoveAt(int i)
+            {
+                var numListeners = count;
+                var numMemoryRegions = count;
+                listeners.EraseAtWithCapacity(ref numListeners, i);
+                memoryRegions.EraseAtWithCapacity(ref numMemoryRegions, i);
+                signalled.SetLength(count - 1);
             }
         }
 
@@ -3489,6 +3523,8 @@ namespace UnityEngine.InputSystem
 
             if (haveChangedSignalsBitfield)
                 m_StateChangeMonitors[deviceIndex].signalled = signals;
+
+            m_StateChangeMonitors[deviceIndex].needToCompactArrays = false;
 
             return signalled;
         }
