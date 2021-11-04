@@ -116,9 +116,10 @@ namespace UnityEngine.InputSystem.UI
             {
                 var hits = Physics.RaycastAll(ray, hitDistance, m_BlockingMask);
 
-                if (hits.Length > 0 && hits[0].distance < hitDistance)
+                if (hits.Length > 0)
                 {
-                    hitDistance = hits[0].distance;
+                    // Distance to the closest 3D object on the ray's way
+                    hitDistance = hits.Select(hit => hit.distance).Min();
                 }
             }
             #endif

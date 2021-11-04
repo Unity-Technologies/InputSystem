@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed writing values into the half-axis controls of sticks (such as `Gamepad.leftStick.left`) producing incorrect values on the stick ([case 1336240](https://issuetracker.unity3d.com/issues/inputtestfixture-tests-return-inverted-values-when-pressing-gamepads-left-or-down-joystick-buttons)).
 - Fixed setting size of event trace in input debugger always growing back to largest size set before.
+- Fixed `TrackedDeviceRaycaster.cs` 3D occlusion check not working correctly. Issue unity forums thread link: https://forum.unity.com/threads/input-system-trackeddeviceraycaster-cs-3d-occlusion-check-not-working-correctly.1193089/
 
 #### Actions
 
