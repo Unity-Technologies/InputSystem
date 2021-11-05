@@ -102,13 +102,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private static string GetPropertyTitle(SerializedProperty property)
         {
-            var propertyTitleNumeral = string.Empty;
+            if (property.GetParentProperty() == null && property.displayName != null &&
+                property.displayName.Length > 0 && property.type == nameof(InputAction))
+            {
+                return $"{property.displayName}";
+            }
 
+            var propertyTitleNumeral = string.Empty;
             if (property.GetParentProperty() != null && property.GetParentProperty().isArray)
                 propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
-            if (property.type == nameof(InputAction) && property.displayName != null && property.displayName.Length > 0)
-                return $"{property.displayName}";
-
             return property.type == nameof(InputActionMap) ?
                 $"Input Action Map{propertyTitleNumeral}" :
                 $"Input Action{propertyTitleNumeral}";
