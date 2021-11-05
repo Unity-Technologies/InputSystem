@@ -3351,7 +3351,7 @@ internal class UITests : CoreTestsFixture
             yield return null;
 
             var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
-            var buttonOutside = new Vector2(uiButton.worldBound.center.x, Screen.height - (uiButton.worldBound.max.y + 10));
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
             var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
 
             Set(mouse.position, buttonCenter, queueEventOnly: true);
