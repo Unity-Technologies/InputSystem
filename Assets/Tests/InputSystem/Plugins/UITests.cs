@@ -3317,7 +3317,6 @@ internal class UITests : CoreTestsFixture
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-    #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
 #endif
