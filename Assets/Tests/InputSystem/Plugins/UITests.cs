@@ -3413,7 +3413,6 @@ internal class UITests : CoreTestsFixture
 #endif
 
 #if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
-    [Preserve]
     static bool[] canRunInBackgroundValueSource = new bool[] { false, true };
 
     [UnityTest]
