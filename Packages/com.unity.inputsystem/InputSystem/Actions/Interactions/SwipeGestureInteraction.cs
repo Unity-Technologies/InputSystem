@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
@@ -48,8 +47,15 @@ namespace UnityEngine.InputSystem.Interactions
         /// </remarks>
         public float recognizeDistance;
 
-        private const float defaultCompletionDistance = 0.6f;
-        private const float defaultRecognitionDistance = 0.2f;
+        /// <summary>
+        /// Default value to use for the completionDistance <see cref="SwipeGestureInteraction.completionDistance"/> if it has not been set.
+        /// </summary>
+        public const float defaultCompletionDistance = 0.6f;
+
+        /// <summary>
+        /// Default value to use for the recognizeDistance <see cref="SwipeGestureInteraction.recognizeDistance"/> if it has not been set.
+        /// </summary>
+        public const float defaultRecognitionDistance = 0.2f;
 
         private float completionDistanceOrDefault => completionDistance > 0.0 ? completionDistance : defaultCompletionDistance;
         private float recognizeDistanceOrDefault => recognizeDistance > 0.0 ? recognizeDistance : defaultRecognitionDistance;
@@ -142,4 +148,39 @@ namespace UnityEngine.InputSystem.Interactions
             timePressed = 0;
         }
     }
+
+    #if UNITY_EDITOR
+    /// <summary>
+    /// UI that is displayed when editing <see cref="SwipeGestureInteraction"/> in the editor.
+    /// </summary>
+    internal class SwipeGestureInteractionEditor : InputParameterEditor<SwipeGestureInteraction>
+    {
+        protected override void OnEnable()
+        {
+            m_TimeoutSetting.Initialize("Gesture Timeout",
+                "Time (in seconds) within which time the gesture has be be completed otherwise it will not register",
+                "Default Gesture Timeout",
+                () => target.timeout, v => target.timeout = v, () => InputSystem.settings.defaultGestureTimeout);
+            m_CompletionDistanceSetting.Initialize("Completion Distance",
+                "Horizontal distance that the gesture has to travel before it can be considered a completed gesture",
+                "Default Completion Distance",
+                () => target.completionDistance, x => target.completionDistance = x, () => SwipeGestureInteraction.defaultCompletionDistance);
+            m_StartRecognitionDistanceSetting.Initialize("Start Gesture Recognition Distance",
+                "Horizontal distance that needs to be travelled before we begin to recognize the start of a potential gesture",
+                "Default Start Recognition Distance",
+                () => target.recognizeDistance, x => target.recognizeDistance = x, () => SwipeGestureInteraction.defaultRecognitionDistance);
+        }
+        public override void OnGUI()
+        {
+            m_TimeoutSetting.OnGUI();
+            m_CompletionDistanceSetting.OnGUI();
+            m_StartRecognitionDistanceSetting.OnGUI();
+        }
+
+        private CustomOrDefaultSetting m_TimeoutSetting;
+        private CustomOrDefaultSetting m_CompletionDistanceSetting;
+        private CustomOrDefaultSetting m_StartRecognitionDistanceSetting;
+    }
+    #endif
+
 }
