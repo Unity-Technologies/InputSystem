@@ -1884,6 +1884,7 @@ namespace UnityEngine.InputSystem
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
             interactions.AddTypeRegistration("MultiTap", typeof(MultiTapInteraction));
             interactions.AddTypeRegistration("Press", typeof(PressInteraction));
+            interactions.AddTypeRegistration("SwipeGesture", typeof(SwipeGestureInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));

@@ -390,6 +390,18 @@ namespace UnityEngine.InputSystem
                 OnChange();
             }
         }
+        public float defaultGestureTimeout
+        {
+            get => m_DefaultGestureTimeout;
+            set
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (m_DefaultGestureTimeout == value)
+                    return;
+                m_DefaultGestureTimeout= value;
+                OnChange();
+            }
+        }
 
         public float tapRadius
         {
@@ -663,6 +675,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
+        [SerializeField] private float m_DefaultGestureTimeout = 1.0f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
