@@ -505,11 +505,43 @@ internal partial class CoreTests
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
             trace.Clear();
 
-            // Continue in same direction to trigger recognition start again
-            stickPos.x = 0.80f;
+            // Apply some vertical motion to cancel the gesture
+            stickPos.x = 0.3f;
+            stickPos.y = 0.5f;
             Move(gamepad.leftStick, position: stickPos, time: 12.50);
 
-            Assert.That(trace, Performed<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12.50));
+            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12.50));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            trace.Clear();
+
+            // Put the stick back in the center
+            stickPos.x = 0.0f;
+            stickPos.y = 0.0f;
+            Move(gamepad.leftStick, position: stickPos, time: 12.75);
+
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            trace.Clear();
+
+            // Move slighty right
+            stickPos.x = 0.17f; // NOTE: minimum registered value
+            Move(gamepad.leftStick, position: stickPos, time: 13.0);
+
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            trace.Clear();
+
+            // Move further right to start the gesture recognition
+            stickPos.x = 0.3f;
+            Move(gamepad.leftStick, position: stickPos, time: 13.25);
+
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 13.25));
+            trace.Clear();
+
+            // Continue in same direction far enough to trigger gesture completion
+            stickPos.x = 0.90f;
+            Move(gamepad.leftStick, position: stickPos, time: 13.50);
+
+            Assert.That(trace, Performed<SwipeGestureInteraction>(action, gamepad.leftStick, time: 13.50));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting)); // NOTE: Reset to waiting immediately after performed
             trace.Clear();
         }

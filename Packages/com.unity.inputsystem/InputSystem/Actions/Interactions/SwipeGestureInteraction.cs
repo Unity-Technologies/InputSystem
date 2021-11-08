@@ -40,6 +40,11 @@ namespace UnityEngine.InputSystem.Interactions
         public float completionDistance;
 
         /// <summary>
+        /// Default value to use for the completionDistance <see cref="SwipeGestureInteraction.completionDistance"/> if it has not been set.
+        /// </summary>
+        public const float defaultCompletionDistance = 0.6f;
+
+        /// <summary>
         /// Horizontal distance that needs to be travelled in a single direction before we start to consider this gesture as beginning.
         /// </summary>
         /// <remarks>
@@ -48,21 +53,28 @@ namespace UnityEngine.InputSystem.Interactions
         public float recognizeDistance;
 
         /// <summary>
-        /// Default value to use for the completionDistance <see cref="SwipeGestureInteraction.completionDistance"/> if it has not been set.
-        /// </summary>
-        public const float defaultCompletionDistance = 0.6f;
-
-        /// <summary>
         /// Default value to use for the recognizeDistance <see cref="SwipeGestureInteraction.recognizeDistance"/> if it has not been set.
         /// </summary>
         public const float defaultRecognitionDistance = 0.2f;
+
+        /// <summary>
+        /// Total vertical distance that is allowed to be travelled up or down without causing the gesture to be canceled.
+        /// </summary>
+        /// <remarks>
+        /// If this is less than or equal to 0 (the default), <see cref="SwipeGestureInteraction.defaultVerticalTolerance"/> is used.
+        /// </remarks>
+        public float verticalTolerance;
+
+        /// <summary>
+        /// Default value to use for the verticalTolerance <see cref="SwipeGestureInteraction.verticalTolerance"/> if it has not been set.
+        /// </summary>
+        public const float defaultVerticalTolerance = 0.07f;
 
         private float completionDistanceOrDefault => completionDistance > 0.0 ? completionDistance : defaultCompletionDistance;
         private float recognizeDistanceOrDefault => recognizeDistance > 0.0 ? recognizeDistance : defaultRecognitionDistance;
         private float timeoutOrDefault => timeout > 0.0 ? timeout : InputSystem.settings.defaultGestureTimeout;
         private double timePressed;
-
-        // TODO: Y tolerance before cancelling
+        private float verticalToleranceOrDefault => verticalTolerance > 0.0 ? verticalTolerance : defaultVerticalTolerance;
 
         // Position when started tracking gesture or changed direction. Used to calulate total distance covered.
         private Vector2 startOrInflectionPoint = Vector2.zero;
@@ -82,13 +94,28 @@ namespace UnityEngine.InputSystem.Interactions
                 direction = currentDirection; // Initialise with first direction detected
             }
 
+            // Used to check the total distance covered so far in gesture
+            var deltaFromInflectionX = Mathf.Abs(startOrInflectionPoint.x - currentPos.x);
+            var deltaFromInflectionY = Mathf.Abs(startOrInflectionPoint.y - currentPos.y);
+            bool isExceededYTolerance = (deltaFromInflectionY > verticalToleranceOrDefault);
+            bool isDirectionChanged = (direction != currentDirection);
+
             // Changed direction before completing gesture, therefore it can't be completed
+            // Or too much vertical movement to consider the gesture
             // Start tracking again
-            if (direction != currentDirection)
+            if (isDirectionChanged || isExceededYTolerance)
             {
-                direction = currentDirection;
-                startOrInflectionPoint = lastPos;
+                // For direction changes the Inflection Point X will be last point before direction changed occurred.
+                // But for all other cases, it is important to begin tracking from the current position so that we have
+                // zero deltaY from the beginning.
+                startOrInflectionPoint = currentPos;
+                if (isDirectionChanged)
+                {
+                    startOrInflectionPoint.x = lastPos.x;
+                }
+
                 lastPos = currentPos;
+                direction = currentDirection;
                 if (context.phase == InputActionPhase.Started)
                 {
                     context.Canceled();
@@ -97,8 +124,6 @@ namespace UnityEngine.InputSystem.Interactions
             }
             lastPos = currentPos;
 
-            // Used to check the total distance covered in a single direction
-            var deltaFromInflectionX = Mathf.Abs(startOrInflectionPoint.x - currentPos.x);
 
             if (context.timerHasExpired)
             {
@@ -169,17 +194,23 @@ namespace UnityEngine.InputSystem.Interactions
                 "Horizontal distance that needs to be travelled before we begin to recognize the start of a potential gesture",
                 "Default Start Recognition Distance",
                 () => target.recognizeDistance, x => target.recognizeDistance = x, () => SwipeGestureInteraction.defaultRecognitionDistance);
+            m_VerticalToleranceSetting.Initialize("Vertical Tolerance Distance",
+                "Vertical distance that is allowed to be travelled without causing the gesture to be canceled",
+                "Default Vertical Tolerance Distance",
+                () => target.recognizeDistance, x => target.recognizeDistance = x, () => SwipeGestureInteraction.defaultRecognitionDistance);
         }
         public override void OnGUI()
         {
             m_TimeoutSetting.OnGUI();
             m_CompletionDistanceSetting.OnGUI();
             m_StartRecognitionDistanceSetting.OnGUI();
+            m_VerticalToleranceSetting.OnGUI();
         }
 
         private CustomOrDefaultSetting m_TimeoutSetting;
         private CustomOrDefaultSetting m_CompletionDistanceSetting;
         private CustomOrDefaultSetting m_StartRecognitionDistanceSetting;
+        private CustomOrDefaultSetting m_VerticalToleranceSetting;
     }
     #endif
 
