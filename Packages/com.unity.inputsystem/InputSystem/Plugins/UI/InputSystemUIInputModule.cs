@@ -1406,16 +1406,16 @@ namespace UnityEngine.InputSystem.UI
 
         private bool IsAnyActionEnabled()
         {
-            return (m_PointAction?.action?.enabled ?? true) &&
-                (m_LeftClickAction?.action?.enabled ?? true) &&
-                (m_RightClickAction?.action?.enabled ?? true) &&
-                (m_MiddleClickAction?.action?.enabled ?? true) &&
-                (m_MoveAction?.action?.enabled ?? true) &&
-                (m_SubmitAction?.action?.enabled ?? true) &&
-                (m_CancelAction?.action?.enabled ?? true) &&
-                (m_ScrollWheelAction?.action?.enabled ?? true) &&
-                (m_TrackedDeviceOrientationAction?.action?.enabled ?? true) &&
-                (m_TrackedDevicePositionAction?.action?.enabled ?? true);
+            return (m_PointAction?.action?.enabled ?? false) &&
+                (m_LeftClickAction?.action?.enabled ?? false) &&
+                (m_RightClickAction?.action?.enabled ?? false) &&
+                (m_MiddleClickAction?.action?.enabled ?? false) &&
+                (m_MoveAction?.action?.enabled ?? false) &&
+                (m_SubmitAction?.action?.enabled ?? false) &&
+                (m_CancelAction?.action?.enabled ?? false) &&
+                (m_ScrollWheelAction?.action?.enabled ?? false) &&
+                (m_TrackedDeviceOrientationAction?.action?.enabled ?? false) &&
+                (m_TrackedDevicePositionAction?.action?.enabled ?? false);
         }
 
         private void EnableAllActions()
@@ -2141,11 +2141,9 @@ namespace UnityEngine.InputSystem.UI
                     submit = UpdateReferenceForNewAsset(submit);
                     cancel = UpdateReferenceForNewAsset(cancel);
 
+                    HookActions();
                     if (wasEnabled)
-                    {
-                        HookActions();
                         EnableAllActions();
-                    }
                 }
             }
         }

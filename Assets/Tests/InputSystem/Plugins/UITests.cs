@@ -2806,6 +2806,59 @@ internal class UITests : CoreTestsFixture
         Assert.That(pointAction.enabled, Is.True);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1371332/
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenAssigningInputModuleActionAsset_OldInputsAreDisconnected_AndNewInputsAreConnected()
+    {
+        var mouse1 = InputSystem.AddDevice<Mouse>();
+        var mouse2 = InputSystem.AddDevice<Mouse>();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var inputModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        yield return null;
+
+        var actions1 = new DefaultInputActions();
+        actions1.devices = new[] { mouse1 };
+
+        inputModule.actionsAsset = actions1.asset;
+
+        Assert.That(actions1.UI.enabled, Is.True);
+
+        Set(mouse1.position, new Vector2(123, 234));
+        Set(mouse2.position, new Vector2(234, 345));
+
+        yield return null;
+
+        Assert.That(inputModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.MouseOrPen));
+        Assert.That(inputModule.m_PointerStates[0].screenPosition, Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(inputModule.m_PointerStates[0].eventData.device, Is.SameAs(mouse1));
+
+        var actions2 = new DefaultInputActions();
+        actions2.devices = new[] { mouse2 };
+
+        actions1.Disable();
+
+        inputModule.actionsAsset = actions2.asset;
+
+        Assert.That(actions1.UI.enabled, Is.False);
+        Assert.That(actions2.UI.enabled, Is.False);
+
+        actions1.Enable();
+        actions2.Enable();
+
+        Set(mouse1.position, new Vector2(234, 345));
+        Set(mouse2.position, new Vector2(345, 456));
+
+        yield return null;
+
+        Assert.That(inputModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.MouseOrPen));
+        Assert.That(inputModule.m_PointerStates[0].screenPosition, Is.EqualTo(new Vector2(345, 456)));
+        Assert.That(inputModule.m_PointerStates[0].eventData.device, Is.SameAs(mouse2));
+    }
+
     [UnityTest]
     [Category("UI")]
     [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
