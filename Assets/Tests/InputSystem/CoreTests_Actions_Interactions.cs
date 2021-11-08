@@ -444,6 +444,16 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformSwipeInteraction()
     {
+        //TODOs:
+        //TODO: Figure out why it doesn't register in Unity InputActions binding UI (Step 8)
+        //TODO: Used Joypad in tests. What about Mouse or Touch? Maybe they would have been simpler to start with
+        //TODO: Figure out stick deadzone and value processing rules
+        //TODO: Implement a proper gesture shape e.g. Circle
+        /*        Assert.That(stickAction.ReadValueAsObject(),
+                    Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                        .Using(Vector2EqualityComparer.Instance));
+        */
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
         InputSystem.RegisterInteraction<SwipeGestureInteraction>();
 
@@ -468,16 +478,16 @@ internal partial class CoreTests
             stickPos.x = -0.3f;
             Move(gamepad.leftStick, position: stickPos, time: 10.25);
 
-            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 10.25));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 10.25));
             trace.Clear();
 
             // Move in opposite direction too early to cancel recognition
             stickPos.x = -0.17f;
             Move(gamepad.leftStick, position: stickPos, time: 10.50);
 
-            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 10.50));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 10.50));
             trace.Clear();
 
             // Continue moving the stick in the same direction to trigger start of recognition again
@@ -485,33 +495,33 @@ internal partial class CoreTests
             stickPos.x = 0.0f;
             Move(gamepad.leftStick, position: stickPos, time: 10.75);
 
-            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 10.75));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 10.75));
             trace.Clear();
 
             // Timeout Expiration: continue moving the stick in the same direction take too long to complete it
             stickPos.x = 0.17f;
             Move(gamepad.leftStick, position: stickPos, time: 12);
 
-            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12));
             trace.Clear();
 
             // Continue in same direction to trigger recognition start again
-            stickPos.x = 0.25f;
+            stickPos.x = 0.35f;
             Move(gamepad.leftStick, position: stickPos, time: 12.25);
 
-            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12.25));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12.25));
             trace.Clear();
 
             // Apply some vertical motion to cancel the gesture
-            stickPos.x = 0.3f;
+            stickPos.x = 0.4f;
             stickPos.y = 0.5f;
             Move(gamepad.leftStick, position: stickPos, time: 12.50);
 
-            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12.50));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(trace, Canceled<SwipeGestureInteraction>(action, gamepad.leftStick, time: 12.50));
             trace.Clear();
 
             // Put the stick back in the center
@@ -537,12 +547,33 @@ internal partial class CoreTests
             Assert.That(trace, Started<SwipeGestureInteraction>(action, gamepad.leftStick, time: 13.25));
             trace.Clear();
 
-            // Continue in same direction far enough to trigger gesture completion
-            stickPos.x = 0.90f;
+            // Continue in same direction far enough to complete gesture stage 1
+            stickPos.x = 0.9f;
             Move(gamepad.leftStick, position: stickPos, time: 13.50);
 
-            Assert.That(trace, Performed<SwipeGestureInteraction>(action, gamepad.leftStick, time: 13.50));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            trace.Clear();
+
+            // Move opposite to start the second gesture stage
+            stickPos.x = 0.89f;
+            Move(gamepad.leftStick, position: stickPos, time: 13.75);
+
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            trace.Clear();
+
+            // Continue moving in opposite to complete full gesture
+            stickPos.x = 0.3f;
+            Move(gamepad.leftStick, position: stickPos, time: 14.0);
+
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting)); // NOTE: Reset to waiting immediately after performed
+            Assert.That(trace, Performed<SwipeGestureInteraction>(action, gamepad.leftStick, time: 14.0));
+            trace.Clear();
+
+            // Slight motion should not be enough to trigger start if all values are reset properly after Performed gesture
+            stickPos.x = 0.29f;
+            Move(gamepad.leftStick, position: stickPos, time: 14.25);
+
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
             trace.Clear();
         }
     }

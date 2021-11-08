@@ -7,11 +7,11 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is moved continually along the horizontal axis in a single direction
+    /// Performs the action if the control is moved continually along the horizontal axis in a single direction for aset distance and then moved quickly back in the opposite direction.
     /// a minimum distance <see cref="completionDistance"/>.
     /// </summary>
     /// <remarks>
-    /// The action is canceled if the horizontal direction is changed or if the timeout is reached
+    /// The action is canceled if the horizontal direction before the completionDistance <see cref="completionDistance"/> or if the timeout is reached
     /// before the gesture is completed <see cref="timeout"/>.
     /// The action will enter the Started phase after a short distance has been travelled continuously along a
     /// single horizontal direction <see cref="recognitionDistance"/>.
@@ -83,6 +83,9 @@ namespace UnityEngine.InputSystem.Interactions
         private enum Direction { Left, Right, None };
         private Direction direction = Direction.None;
 
+        private enum GestureStage { FirstSwipe, WaitingForSecondSwipeStart, SecondSwipe };
+        private GestureStage stage = GestureStage.FirstSwipe;
+
         /// <inheritdoc />
         public void Process(ref InputInteractionContext context)
         {
@@ -93,43 +96,64 @@ namespace UnityEngine.InputSystem.Interactions
             {
                 direction = currentDirection; // Initialise with first direction detected
             }
+            bool isDirectionChanged = (direction != currentDirection);
+            direction = currentDirection; // Setup for next round
 
             // Used to check the total distance covered so far in gesture
             var deltaFromInflectionX = Mathf.Abs(startOrInflectionPoint.x - currentPos.x);
             var deltaFromInflectionY = Mathf.Abs(startOrInflectionPoint.y - currentPos.y);
             bool isExceededYTolerance = (deltaFromInflectionY > verticalToleranceOrDefault);
-            bool isDirectionChanged = (direction != currentDirection);
 
-            // Changed direction before completing gesture, therefore it can't be completed
-            // Or too much vertical movement to consider the gesture
-            // Start tracking again
-            if (isDirectionChanged || isExceededYTolerance)
+            // Check for cancelation due to unexpected directional changes or moving vertically
+            if (isDirectionChanged)
             {
                 // For direction changes the Inflection Point X will be last point before direction changed occurred.
-                // But for all other cases, it is important to begin tracking from the current position so that we have
-                // zero deltaY from the beginning.
-                startOrInflectionPoint = currentPos;
-                if (isDirectionChanged)
-                {
-                    startOrInflectionPoint.x = lastPos.x;
-                }
+                // The Y point should be preserved.
+                startOrInflectionPoint.x = lastPos.x;
 
-                lastPos = currentPos;
-                direction = currentDirection;
+                if (stage == GestureStage.WaitingForSecondSwipeStart)
+                {
+                    stage = GestureStage.SecondSwipe;  // Entering second swipe stage
+                    return;
+                }
+                else
+                {
+                    var inflectionX = startOrInflectionPoint.x;
+                    OnCancel(ref context); // Cancel if direction change was unexpectedly
+                    startOrInflectionPoint.x = inflectionX; // Preserve inflection point after OnCancel reset it
+                    return;
+                }
+            }
+            // Too much vertical movement to consider the gesture
+            if (isExceededYTolerance)
+            {
+                OnCancel(ref context);
+                return;
+            }
+            if (context.timerHasExpired)
+            {
+                OnCancel(ref context);
+                return;
+            }
+
+            // Cancel and start tracking again
+            void OnCancel(ref InputInteractionContext context)
+            {
+                OnReset();
                 if (context.phase == InputActionPhase.Started)
                 {
                     context.Canceled();
                 }
-                return;
             }
-            lastPos = currentPos;
-
-
-            if (context.timerHasExpired)
+            void OnReset()
             {
-                context.Canceled();
-                return;
+                // Important to restart from current position so that there is zero deltaY from the beginning.
+                startOrInflectionPoint = currentPos;
+                lastPos = currentPos;
+                stage = GestureStage.FirstSwipe;
             }
+
+            lastPos = currentPos; // Setup for next round
 
             switch (context.phase)
             {
@@ -147,21 +171,30 @@ namespace UnityEngine.InputSystem.Interactions
                     // Timelimit to complete the gesture has exceeded.
                     if (context.time - timePressed >= timeoutOrDefault)
                     {
-                        context.Canceled();
+                        OnCancel(ref context);
                         return;
                     }
 
                     // Check if we reached enough distance to call the gesture completed
                     if (deltaFromInflectionX > completionDistanceOrDefault)
                     {
-                        context.Performed();
-                        return;
+                        if (stage == GestureStage.SecondSwipe)
+                        {
+                            OnReset();
+                            context.Performed();
+                            return;
+                        }
+                        else
+                        {
+                            stage = GestureStage.WaitingForSecondSwipeStart;
+                        }
                     }
 
                     break;
 
                 case InputActionPhase.Performed:
                     // Once it's performed we are finished and begin checking for new gestures
+                    OnReset();
                     context.Canceled();
                     break;
             }
