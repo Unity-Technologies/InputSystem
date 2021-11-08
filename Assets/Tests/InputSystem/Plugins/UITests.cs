@@ -3325,7 +3325,7 @@ internal class UITests : CoreTestsFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.AddDevice<Touchscreen>();
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
@@ -3403,14 +3403,16 @@ internal class UITests : CoreTestsFixture
                 return ve.Query<VisualElement>().Active().ToList().Contains(ve);
             }
 
+            InputSystem.RemoveDevice(mouse);
+
             // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
-            BeginTouch(1, buttonCenter, queueEventOnly: true);
+            BeginTouch(1, buttonCenter, queueEventOnly: true, screen: touchscreen);
             yield return null;
             Assert.That(IsActive(uiButton), Is.True);
 
-            BeginTouch(2, buttonOutside, queueEventOnly: true);
+            BeginTouch(2, buttonOutside, queueEventOnly: true, screen: touchscreen);
             yield return null;
-            EndTouch(2, buttonOutside, queueEventOnly: true);
+            EndTouch(2, buttonOutside, queueEventOnly: true, screen: touchscreen);
             yield return null;
 
             if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
@@ -3418,9 +3420,11 @@ internal class UITests : CoreTestsFixture
             else
                 Assert.That(IsActive(uiButton), Is.True);
 
-            EndTouch(1, buttonCenter, queueEventOnly: true);
+            EndTouch(1, buttonCenter, queueEventOnly: true, screen: touchscreen);
             yield return null;
             Assert.That(IsActive(uiButton), Is.False);
+
+            InputSystem.RemoveDevice(touchscreen);
         }
         finally
         {
