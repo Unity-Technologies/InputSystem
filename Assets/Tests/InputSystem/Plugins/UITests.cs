@@ -3311,7 +3311,7 @@ internal class UITests : CoreTestsFixture
     // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
     // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
-#if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+#if UNITY_2021_2_OR_NEWER
     [UnityTest]
     [Category("UI")]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
@@ -3403,25 +3403,44 @@ internal class UITests : CoreTestsFixture
                 return ve.Query<VisualElement>().Active().ToList().Contains(ve);
             }
 
+            // Move the mouse away from the button to check that touch inputs are also able to activate it.
+            Set(mouse.position, buttonOutside, queueEventOnly: true);
+            yield return null;
             InputSystem.RemoveDevice(mouse);
 
+            int uiButtonDownCount = 0;
+            int uiButtonUpCount = 0;
+            uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
+            uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
+
             // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
-            BeginTouch(1, buttonCenter, queueEventOnly: true, screen: touchscreen);
+            BeginTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(0));
             Assert.That(IsActive(uiButton), Is.True);
 
-            BeginTouch(2, buttonOutside, queueEventOnly: true, screen: touchscreen);
+            BeginTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
-            EndTouch(2, buttonOutside, queueEventOnly: true, screen: touchscreen);
+            EndTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
 
             if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(1));
                 Assert.That(IsActive(uiButton), Is.False);
+            }
             else
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(0));
                 Assert.That(IsActive(uiButton), Is.True);
+            }
 
-            EndTouch(1, buttonCenter, queueEventOnly: true, screen: touchscreen);
+            EndTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(1));
             Assert.That(IsActive(uiButton), Is.False);
 
             InputSystem.RemoveDevice(touchscreen);
