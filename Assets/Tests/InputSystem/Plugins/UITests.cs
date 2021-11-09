@@ -3408,23 +3408,39 @@ internal class UITests : CoreTestsFixture
             yield return null;
             InputSystem.RemoveDevice(mouse);
 
+            int uiButtonDownCount = 0;
+            int uiButtonUpCount = 0;
+            uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
+            uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
+
             // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
             BeginTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(0));
             Assert.That(IsActive(uiButton), Is.True);
 
             BeginTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
             EndTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
 
             if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(1));
                 Assert.That(IsActive(uiButton), Is.False);
+            }
             else
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(0));
                 Assert.That(IsActive(uiButton), Is.True);
+            }
 
             EndTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(1));
             Assert.That(IsActive(uiButton), Is.False);
 
             InputSystem.RemoveDevice(touchscreen);
