@@ -1960,6 +1960,39 @@ partial class CoreTests
         Assert.That(gyro.angularVelocity.ReadValue(), Is.EqualTo(Vector3.zero));
     }
 
+    class DeviceWithCustomReset : InputDevice, ICustomDeviceReset
+    {
+        [InputControl]
+        public AxisControl axis { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            axis = GetChildControl<AxisControl>("axis");
+        }
+
+        public unsafe void Reset()
+        {
+            InputState.Change(axis, 1f);
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCustomizeResetOfDevice()
+    {
+        var device = InputSystem.AddDevice<DeviceWithCustomReset>();
+
+        Set(device.axis, 0.45f);
+
+        InputSystem.ResetDevice(device);
+
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(1f));
+
+        InputSystem.ResetDevice(device, alsoResetDontResetControls: true);
+
+        Assert.That(device.axis.ReadValue(), Is.Zero);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_WhenDeviceIsReset_AndResetsAreObservableStateChanges()
