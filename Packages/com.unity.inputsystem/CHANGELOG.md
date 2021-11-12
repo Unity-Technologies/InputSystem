@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - The artificial `ctrl`, `shift`, and `alt` controls (which combine the left and right controls into one) on the keyboard can now be written to and no longer throw `NotSupportedException` when trying to do so ([case 1340793](https://issuetracker.unity3d.com/issues/on-screen-button-errors-on-mouse-down-slash-up-when-its-control-path-is-set-to-control-keyboard)).
+- All devices are now resynced/reset in next update after entering play mode, this is needed to read current state of devices before any intentional input is provided ([case 1231907](https://issuetracker.unity3d.com/issues/mouse-coordinates-reported-as-00-until-the-first-move)).
 
 ### Fixed
 
