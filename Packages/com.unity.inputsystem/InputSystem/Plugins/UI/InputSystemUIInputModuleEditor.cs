@@ -127,7 +127,12 @@ namespace UnityEngine.InputSystem.UI.Editor
                 if (m_AvailableActionsInAsset == null)
                     continue;
 
-                var index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
+                // find the input action reference from the asset that matches the input action reference from the
+                // InputSystemUIInputModule that is currently selected. Note we can't use reference equality of the
+                // two InputActionReference objects here because in ReassignActions above, we create new instances
+                // every time it runs.
+                var index = IndexOfInputActionInAsset(((InputActionReference)m_ReferenceProperties[i]?.objectReferenceValue)?.action);
+
                 EditorGUI.BeginChangeCheck();
                 index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
 
@@ -137,6 +142,26 @@ namespace UnityEngine.InputSystem.UI.Editor
 
             if (GUI.changed)
                 serializedObject.ApplyModifiedProperties();
+        }
+
+        private int IndexOfInputActionInAsset(InputAction inputAction)
+        {
+            // return 0 instead of -1 here because the zero-th index refers to the 'None' binding.
+            if (inputAction == null)
+                return 0;
+
+            var index = 0;
+            for (var j = 0; j < m_AvailableActionsInAsset.Length; j++)
+            {
+                if (m_AvailableActionsInAsset[j].action != null &&
+                    m_AvailableActionsInAsset[j].action == inputAction)
+                {
+                    index = j + 1;
+                    break;
+                }
+            }
+
+            return index;
         }
     }
 }

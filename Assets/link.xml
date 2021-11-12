@@ -7,5 +7,6 @@
      -->
     <assembly fullname="UnityEngine.TestRunner" preserve="all"/>
     <assembly fullname="Unity.PerformanceTesting" preserve="all"/>
+    <assembly fullname="nunit.framework" preserve="all"/>
 
 </linker>
