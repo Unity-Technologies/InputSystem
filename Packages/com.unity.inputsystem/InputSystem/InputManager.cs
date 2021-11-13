@@ -2526,27 +2526,40 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+#if UNITY_EDITOR
         private void SyncAllDevicesWhenEditorIsActivated()
         {
-            #if UNITY_EDITOR
             var isActive = m_Runtime.isEditorActive;
             if (isActive == m_EditorIsActive)
                 return;
 
             m_EditorIsActive = isActive;
             if (m_EditorIsActive)
-            {
-                for (var i = 0; i < m_DevicesCount; ++i)
-                {
-                    // When the editor comes back into focus, we actually do want resets to happen
-                    // for devices that don't support syncs as they will likely have missed input while
-                    // we were in the background.
-                    if (!m_Devices[i].RequestSync())
-                        ResetDevice(m_Devices[i], issueResetCommand: true);
-                }
-            }
-            #endif
+                SyncAllDevices();
         }
+
+        private void SyncAllDevices()
+        {
+            for (var i = 0; i < m_DevicesCount; ++i)
+            {
+                // When the editor comes back into focus, we actually do want resets to happen
+                // for devices that don't support syncs as they will likely have missed input while
+                // we were in the background.
+                if (!m_Devices[i].RequestSync())
+                    ResetDevice(m_Devices[i], issueResetCommand: true);
+            }
+        }
+
+        internal void SyncAllDevicesAfterEnteringPlayMode()
+        {
+            // Because we ignore all events between exiting edit mode and entering play mode,
+            // that includes any potential device resets/syncs/etc,
+            // we need to resync all devices after we're in play mode proper.
+            ////TODO: this is a hacky workaround, implement a proper solution where events from sync/resets are not ignored.
+            SyncAllDevices();
+        }
+
+#endif
 
         private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
         {
@@ -2943,7 +2956,9 @@ namespace UnityEngine.InputSystem
             RestoreDevicesAfterDomainReloadIfNecessary();
 
             // In the editor, we issue a sync on all devices when the editor comes back to the foreground.
+            #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
+            #endif
 
             if ((updateType & m_UpdateMask) == 0)
             {
