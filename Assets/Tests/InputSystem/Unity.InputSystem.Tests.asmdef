@@ -36,7 +36,7 @@
         },
         {
             "name": "Unity",
-            "expression": "[2022.1.0a15,2022.1.0a16)",
+            "expression": "[2022.1.0a15,2022.1.0a17)",
             "define": "TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK"
         }
     ],
