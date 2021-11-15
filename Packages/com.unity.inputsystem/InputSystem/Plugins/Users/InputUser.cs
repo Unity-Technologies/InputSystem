@@ -1515,8 +1515,8 @@ namespace UnityEngine.InputSystem.Users
 
                     // Search all lost devices. Could affect multiple users.
                     // Note that RemoveDeviceFromUser removes one element, hence no advancement of deviceIndex.
-                    for (var deviceIndex = FindLostDevice(0, device.deviceId); deviceIndex != -1; 
-                            deviceIndex = FindLostDevice(deviceIndex, device.deviceId) )
+                    for (var deviceIndex = FindLostDevice(0, device.deviceId); deviceIndex != -1;
+                         deviceIndex = FindLostDevice(deviceIndex, device.deviceId))
                     {
                         // Find user. Must be there as we found the device in s_AllLostDevices.
                         var userIndex = -1;
