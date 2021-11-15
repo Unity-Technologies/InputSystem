@@ -1506,10 +1506,17 @@ namespace UnityEngine.InputSystem.Users
                 // New device was added. See if it was a device we previously lost on a user.
                 case InputDeviceChange.Added:
                 {
-                    // Could be a previously lost device. Could affect multiple users. Repeatedly search in
-                    // s_AllLostDevices until we can't find the device anymore.
-                    var deviceIndex = s_GlobalState.allLostDevices.IndexOfReference(device, s_GlobalState.allLostDeviceCount);
-                    while (deviceIndex != -1)
+                    int FindLostDevice(int deviceIndex, int deviceId)
+                    {   // Note that we compare by Device ID since the lost device may be another instance
+                        // since its recreated during layout override. For other cases its the same reference.
+                        return s_GlobalState.allLostDevices.IndexOf((d) => d.deviceId == device.deviceId,
+                            deviceIndex, s_GlobalState.allLostDeviceCount);
+                    }
+
+                    // Search all lost devices. Could affect multiple users.
+                    // Note that RemoveDeviceFromUser removes one element, hence no advancement of deviceIndex.
+                    for (var deviceIndex = FindLostDevice(0, device.deviceId); deviceIndex != -1; 
+                            deviceIndex = FindLostDevice(deviceIndex, device.deviceId) )
                     {
                         // Find user. Must be there as we found the device in s_AllLostDevices.
                         var userIndex = -1;
@@ -1523,20 +1530,15 @@ namespace UnityEngine.InputSystem.Users
                             }
                         }
 
-                        // Remove from list of lost devices. No notification.
-                        RemoveDeviceFromUser(userIndex, device, asLostDevice: true);
+                        // Remove from list of lost devices. No notification. Notice that we need to use device
+                        // from lost device list even if its another instance.
+                        RemoveDeviceFromUser(userIndex, s_GlobalState.allLostDevices[deviceIndex], asLostDevice: true);
 
                         // Notify.
                         Notify(userIndex, InputUserChange.DeviceRegained, device);
 
                         // Add back as normally paired device.
                         AddDeviceToUser(userIndex, device);
-
-                        // Search for another user who had lost the same device.
-                        // Note: s_AllLostDevices is modified (element erased) from within RemoveDeviceFromUser,
-                        //       hence, deviceIndex is not advanced and s_AllLostDeviceCount is one less than
-                        //       previous linear search iteration.
-                        deviceIndex = s_GlobalState.allLostDevices.IndexOfReference(device, deviceIndex, s_GlobalState.allLostDeviceCount);
                     }
                     break;
                 }

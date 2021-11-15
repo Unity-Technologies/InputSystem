@@ -24,6 +24,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where UI button clicks could be ignored by `InputSystemUIInputModule` if modifying on-screen devices from Update() callbacks [1365070](https://issuetracker.unity3d.com/product/unity/issues/guid/1365070).
 - Fixed incorrect indentation of input actions in the inspector ([case 1285546](https://issuetracker.unity3d.com/product/unity/issues/guid/1285546/)).
 - Fixed a problem with UI Toolkit buttons remaining active when multiple fingers are used on a touchscreen, using `InputSystemUIInputModule` with pointerBehavior set to `UIPointerBehavior.SingleUnifiedPointer`. UI Toolkit will now always receive the same pointerId when that option is in use, regardless of the hardware component that produced the pointer event. ([case 1369081](https://issuetracker.unity3d.com/issues/transitions-get-stuck-when-pointer-behavior-is-set-to-single-unified-pointer-and-multiple-touches-are-made)).
+- Fixed a problem with `InputUser` where devices would be removed and not added again after layout overrides preventing certain devices, e.g. gamepads to not work correctly when associated with action map bindings tied to `PlayerInput`. ([case 1347320](https://issuetracker.unity3d.com/product/unity/issues/guid/1347320)).
 
 #### Actions
 

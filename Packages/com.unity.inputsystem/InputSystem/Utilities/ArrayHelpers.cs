@@ -176,6 +176,20 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
+        public static int IndexOf<TValue>(this TValue[] array, Predicate<TValue> predicate, int startIndex = 0, int count = -1)
+        {
+            if (array != null)
+            {
+                var end = startIndex + (count < 0 ? array.Length - startIndex : count);
+                for (var i = startIndex; i < end; ++i)
+                {
+                    if (predicate(array[i]))
+                        return i;
+                }
+            }
+            return -1;
+        }
+
         public static int IndexOfReference<TFirst, TSecond>(this TFirst[] array, TSecond value, int count = -1)
             where TSecond : class
             where TFirst : TSecond
