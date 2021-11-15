@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
 
             sb.AppendLine("</linker>");
 
-            var filePathName = Path.Combine(data.inputDirectory, "InputSystemLink.xml");
+            var filePathName = Path.Combine("Temp/InputSystemLink.xml");
             File.WriteAllText(filePathName, sb.ToString());
             return filePathName;
         }
