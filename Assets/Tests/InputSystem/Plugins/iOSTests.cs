@@ -20,6 +20,7 @@ internal class iOSTests : CoreTestsFixture
     [TestCase(null, typeof(iOSGameController), typeof(Gamepad))]
     [TestCase("Xbox Wireless Controller", typeof(XboxOneGampadiOS), typeof(XInputController))]
     [TestCase("DUALSHOCK 4 Wireless Controller", typeof(DualShock4GampadiOS), typeof(DualShockGamepad))]
+    [TestCase("DualSense Wireless Controller", typeof(DualSenseGampadiOS), typeof(DualShockGamepad))]
     public void Devices_SupportsiOSGamePad(string product, Type deviceType, Type parentType)
     {
         var device = InputSystem.AddDevice(
