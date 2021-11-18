@@ -1,8 +1,5 @@
 editors:
-  - version: 2019.4
-  - version: 2020.3
-  - version: 2021.2
-  - version: trunk
+  - version: d4a6bbd2acaad40635e0997f299b183f0e975e44
 platforms:
   - name: win
     type: Unity::VM
