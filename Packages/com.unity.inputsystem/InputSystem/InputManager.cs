@@ -3717,7 +3717,7 @@ namespace UnityEngine.InputSystem
             ////REVIEW: Should we do this only for events but not for InputState.Change()?
             // If noise filtering on .current is turned on and the device may have noise,
             // determine if the event carries signal or not.
-            var noiseMask = device.noisy && m_Settings.filterNoiseOnCurrent
+            var noiseMask = device.noisy
                 ? (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset
                 : null;
             // Compare the current state of the device to the newly received state but overlay
