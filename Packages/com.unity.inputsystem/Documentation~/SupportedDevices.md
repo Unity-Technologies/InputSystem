@@ -43,7 +43,7 @@ On UWP only USB connection is supported, motor rumble and lightbar are not worki
 >6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 >8. Unity officially supports PS4 controllers only on [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
->9. Switch Joy-Cons are not currently supported on Windows and Mac. Also, Switch Pro controllers are supported only when connected via Bluetooth but not when connected via wired USB.
+>9. Switch Joy-Cons are not currently supported on Windows and Mac.
 >10. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
 On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
 On Android it's expected to be working from Android 12.

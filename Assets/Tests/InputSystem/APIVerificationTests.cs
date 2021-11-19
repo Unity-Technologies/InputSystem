@@ -778,6 +778,10 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public bool filterNoiseOnCurrent { get; set; }
     ")]
+    // SwitchProControllerHID inherited from IInputStateCallbackReceiver and IEventPreProcessor, both are internal interfaces 
+    [Property("Exclusions", @"1.0.0
+        public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
