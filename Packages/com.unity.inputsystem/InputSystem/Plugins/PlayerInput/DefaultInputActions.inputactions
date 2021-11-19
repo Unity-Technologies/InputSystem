@@ -12,7 +12,8 @@
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": true,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "Look",
@@ -21,7 +22,8 @@
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": true,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "Fire",
@@ -30,7 +32,8 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 }
             ],
             "bindings": [
@@ -267,7 +270,8 @@
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "Submit",
@@ -276,7 +280,8 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "Cancel",
@@ -285,7 +290,8 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "Point",
@@ -294,7 +300,8 @@
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": true,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "Click",
@@ -303,7 +310,8 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": true,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "ScrollWheel",
@@ -312,7 +320,8 @@
                     "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "MiddleClick",
@@ -321,7 +330,8 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "RightClick",
@@ -330,7 +340,8 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "TrackedDevicePosition",
@@ -339,7 +350,8 @@
                     "expectedControlType": "Vector3",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 },
                 {
                     "name": "TrackedDeviceOrientation",
@@ -348,7 +360,8 @@
                     "expectedControlType": "Quaternion",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": false,
+                    "alwaysRunProcessors": false
                 }
             ],
             "bindings": [

@@ -641,6 +641,29 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Normally, processors only run when at least one bound control is actuated. When this flag is true, processors
+        /// will run even when no control is actuated. This flag is false by default.
+        /// </summary>
+        /// <remarks>
+        /// An example of when this can be useful is when a normalize processor is attached to an axis binding,
+        /// say the x axis of a gamepad thumbstick, where the default value should be 0.5 i.e. when the
+        /// thumbstick is at rest, calling <see cref="ReadValue{TValue}"/> should return 0.5. When this flag is
+        /// false, the returned value will be 0 at rest.
+        /// </remarks>
+        public bool alwaysRunProcessors
+        {
+            get => (m_Flags & ActionFlags.AlwaysProcessControlValue) != 0;
+            set
+            {
+                if (value)
+                    m_Flags |= ActionFlags.AlwaysProcessControlValue;
+                else
+                    m_Flags &= ~ActionFlags.AlwaysProcessControlValue;
+            }
+        }
+
+
+        /// <summary>
         /// Construct an unnamed, free-standing action that is not part of any map or asset
         /// and has no bindings. Bindings can be added with <see
         /// cref="InputActionSetupExtensions.AddBinding(InputAction,string,string,string,string)"/>.
@@ -990,7 +1013,17 @@ namespace UnityEngine.InputSystem
                 {
                     var controlIndex = actionStatePtr->controlIndex;
                     if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
+                    {
+                        m_MostRecentlyUsedControlIndex = controlIndex;
+                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, m_MostRecentlyUsedControlIndex);
+                    }
+                }
+                // if no control is actuated, and the action has opted-in to always processing the control value,
+                // run the default control value through the most recently actuated binding's processors
+                else if (alwaysRunProcessors && m_MostRecentlyUsedControlIndex != InputActionState.kInvalidIndex)
+                {
+                    result = state.ApplyBindingProcessors(actionStatePtr->bindingIndex, result,
+                        state.controls[m_MostRecentlyUsedControlIndex] as InputControl<TValue>);
                 }
             }
 
@@ -1458,6 +1491,12 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal CallbackArray<Action<CallbackContext>> m_OnPerformed;
 
         /// <summary>
+        /// Remember the most recently actuated control so we can apply binding processors in cases
+        /// where alwaysRunProcessors is true.
+        /// </summary>
+        [NonSerialized] private int m_MostRecentlyUsedControlIndex = InputActionState.kInvalidIndex;
+
+        /// <summary>
         /// Whether the action is a loose action created in code (e.g. as a property on a component).
         /// </summary>
         /// <remarks>
@@ -1471,6 +1510,13 @@ namespace UnityEngine.InputSystem
         internal enum ActionFlags
         {
             WantsInitialStateCheck = 1 << 0,
+
+            /// <summary>
+            /// When reading an action value using ReadValue, the default value is returned if the action is not
+            /// actuated. This flag forces the binding processors to be applied even if the action is in the
+            /// default state.
+            /// </summary>
+            AlwaysProcessControlValue = 1 << 1
         }
 
         private InputActionState.TriggerState currentState

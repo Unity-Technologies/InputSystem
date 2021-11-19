@@ -593,3 +593,6 @@ Use this code:
 Go to __Windows > Analysis > Input Debugger__(Debugging.md), then double click on a Device to see its Controls. You can also click the __Remote Devices__ button to remotely see Devices from Unity Players deployed to any connected computers or devices.
 
 [//]: # (TODO: working on having device setups from players mirrored 1:1 into the running input system in the editor (including having their input available in the editor))
+
+# …normalize input even when my control is in its default position?
+If you have a normalization processor attached to an axis control, say gamepad left stick X axis, that makes the axis range go from 0 to 1, you can make the `InputAction.ReadValue` method return 0.5 for the default, non-actuated, position by turning on the Always Run Processors option for your action. This option will force even default control values to be processed by all processors attached to the most recently actuated binding on that action. This of course applies to all types of processors, not just normalization.

@@ -27,6 +27,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_SelectedActionType = (InputActionType)m_ActionTypeProperty.intValue;
             m_WantsInitialStateCheck = (m_ActionFlagsProperty.intValue & (int)InputAction.ActionFlags.WantsInitialStateCheck) != 0;
+            m_AlwaysProcessControlValue = (m_ActionFlagsProperty.intValue & (int)InputAction.ActionFlags.AlwaysProcessControlValue) != 0;
 
             BuildControlTypeList();
             m_SelectedControlType = Array.IndexOf(m_ControlTypeList, m_ExpectedControlTypeProperty.stringValue);
@@ -42,6 +43,12 @@ namespace UnityEngine.InputSystem.Editor
                     "Whether in the next input update after the action was enabled, the action should "
                     + "immediately trigger if any of its bound controls are currently in a non-default state. "
                     + "This check happens implicitly for Value actions but can be explicitly enabled for Button and Pass-Through actions.");
+            if (s_AlwaysProcessControlValueLabel == null)
+                s_AlwaysProcessControlValueLabel = EditorGUIUtility.TrTextContent("Always Run Processors",
+                    "Run binding processors even when the associated control is not actuated. This is useful in "
+                    + "several circumstances. For example, normalizing the range of an axis control using a Normalize " +
+                    " processor so that the non-actuated default value is 0.5 instead of 0. Note that only the bindings "
+                    + "from the most recently actuated control are applied.");
         }
 
         protected override void DrawGeneralProperties()
@@ -54,6 +61,8 @@ namespace UnityEngine.InputSystem.Editor
 
             if ((InputActionType)m_SelectedActionType != InputActionType.Value)
                 m_WantsInitialStateCheck = EditorGUILayout.Toggle(s_WantsInitialStateCheckLabel, m_WantsInitialStateCheck);
+
+            m_AlwaysProcessControlValue = EditorGUILayout.Toggle(s_AlwaysProcessControlValueLabel, m_AlwaysProcessControlValue);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -70,6 +79,11 @@ namespace UnityEngine.InputSystem.Editor
                     m_ActionFlagsProperty.intValue |= (int)InputAction.ActionFlags.WantsInitialStateCheck;
                 else
                     m_ActionFlagsProperty.intValue &= ~(int)InputAction.ActionFlags.WantsInitialStateCheck;
+
+                if (m_AlwaysProcessControlValue)
+                    m_ActionFlagsProperty.intValue |= (int)InputAction.ActionFlags.AlwaysProcessControlValue;
+                else
+                    m_ActionFlagsProperty.intValue &= ~(int)InputAction.ActionFlags.AlwaysProcessControlValue;
 
                 m_ActionTypeProperty.serializedObject.ApplyModifiedProperties();
                 UpdateProcessors(m_ExpectedControlTypeProperty.stringValue);
@@ -121,10 +135,12 @@ namespace UnityEngine.InputSystem.Editor
         private int m_SelectedControlType;
         private Enum m_SelectedActionType;
         private bool m_WantsInitialStateCheck;
+        private bool m_AlwaysProcessControlValue;
 
         private static GUIContent s_ActionTypeLabel;
         private static GUIContent s_ControlTypeLabel;
         private static GUIContent s_WantsInitialStateCheckLabel;
+        private static GUIContent s_AlwaysProcessControlValueLabel;
     }
 }
 #endif // UNITY_EDITOR

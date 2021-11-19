@@ -2384,16 +2384,24 @@ namespace UnityEngine.InputSystem
                 value = controlOfType.ReadValue();
             }
 
+            value = ApplyBindingProcessors(bindingIndex, value, controlOfType);
+
+            return value;
+        }
+
+        internal TValue ApplyBindingProcessors<TValue>(int bindingIndex, TValue value, InputControl<TValue> control) where TValue : struct
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+
             // Run value through processors, if any.
             var processorCount = bindingStates[bindingIndex].processorCount;
-            if (processorCount > 0)
+            if (processorCount <= 0) return value;
+
+            var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
+            for (var i = 0; i < processorCount; ++i)
             {
-                var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
-                for (var i = 0; i < processorCount; ++i)
-                {
-                    if (processors[processorStartIndex + i] is InputProcessor<TValue> processor)
-                        value = processor.Process(value, controlOfType);
-                }
+                if (processors[processorStartIndex + i] is InputProcessor<TValue> processor)
+                    value = processor.Process(value, control);
             }
 
             return value;

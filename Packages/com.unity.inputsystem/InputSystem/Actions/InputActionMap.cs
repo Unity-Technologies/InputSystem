@@ -1368,6 +1368,7 @@ namespace UnityEngine.InputSystem
             public string interactions;
             public bool passThrough;
             public bool initialStateCheck;
+            public bool alwaysRunProcessors;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -1406,6 +1407,7 @@ namespace UnityEngine.InputSystem
                     m_Processors = processors,
                     m_Interactions = interactions,
                     wantsInitialStateCheck = initialStateCheck,
+                    alwaysRunProcessors = alwaysRunProcessors
                 };
             }
         }
@@ -1420,6 +1422,7 @@ namespace UnityEngine.InputSystem
             public string processors;
             public string interactions;
             public bool initialStateCheck;
+            public bool alwaysRunProcessors;
 
             public static WriteActionJson FromAction(InputAction action)
             {
@@ -1432,6 +1435,7 @@ namespace UnityEngine.InputSystem
                     processors = action.processors,
                     interactions = action.interactions,
                     initialStateCheck = action.wantsInitialStateCheck,
+                    alwaysRunProcessors = action.alwaysRunProcessors,
                 };
             }
         }

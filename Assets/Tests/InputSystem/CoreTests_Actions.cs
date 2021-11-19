@@ -9000,6 +9000,47 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WhenAlwaysProcessControlValueFlagIsSet_ProcessorsRunEvenWhenControlIsNotActuated()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", processors: "normalize(min=-1,max=1,zero=-1)", expectedControlType: "Axis");
+        action.AddBinding("<gamepad>/leftStick/x");
+        action.alwaysRunProcessors = true;
+        action.Enable();
+
+        Set(gamepad.leftStick.x, -1);
+        action.ReadValue<float>();
+        Set(gamepad.leftStick.x, 0);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.5));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenAlwaysProcessControlValueFlagIsSet_OnlyProcessorsOfMostRecentlyActuatedControlAreRun()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", expectedControlType: "Axis");
+        action.AddBinding("<gamepad>/leftStick/x", processors: "normalize(min=-1,max=1,zero=-1)");
+        action.AddBinding("<gamepad>/buttonSouth", processors: "normalize(min=-0.5,max=0.5,zero=-1)");
+        action.alwaysRunProcessors = true;
+        action.Enable();
+
+        Press(gamepad.buttonSouth);
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(1.5f));
+        Release(gamepad.buttonSouth);
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.5f));
+
+        Set(gamepad.leftStick.x, -1);
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
+        Set(gamepad.leftStick.x, 0);
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.5));
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {

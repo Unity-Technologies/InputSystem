@@ -30,6 +30,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed an issue where `InputAction.Enable` would not reuse memory allocated prior and thus lead to memory leaks ([case 1367442](https://issuetracker.unity3d.com/issues/input-system-puts-a-lot-of-pressure-on-the-garbage-collector-when-enabling-and-disabling-inputactionmaps)).
 
+#### Added
+
+- Actions now have a switch (Always Run Processors) to enable them to always apply processors to a binding even if the control for the binding is not actuated. This is useful for any binding that normalizes input ranges in such a way that the default input value should not be zero ([case 1293728](https://issuetracker.unity3d.com/product/unity/issues/guid/1293728/)).
+
 ## [1.2.0] - 2021-10-22
 
 ### Changed
