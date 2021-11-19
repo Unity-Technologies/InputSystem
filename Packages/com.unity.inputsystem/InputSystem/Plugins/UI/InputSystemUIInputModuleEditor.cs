@@ -161,7 +161,7 @@ namespace UnityEngine.InputSystem.UI.Editor
                     if (m_ReferenceProperties[i].objectReferenceValue != null &&
                         (m_ReferenceProperties[i].objectReferenceValue is InputActionReference reference))
                         retrievedName = MakeActionReferenceNameUsableInGenericMenu(reference.ToDisplayName());
-                
+
                     EditorGUILayout.Popup(s_ActionNiceNames[i], 0, new[] {retrievedName});
                 }
                 EditorGUI.EndDisabledGroup();
