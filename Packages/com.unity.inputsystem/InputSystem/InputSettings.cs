@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -666,6 +667,12 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+        
+        #if UNITY_2022_1_OR_NEWER
+        [SerializeField] private WindowsGamepadBackend m_WindowsGamepadBackend = WindowsGamepadBackend.WindowsGamingInput;
+        #else
+        [SerializeField] private WindowsGamepadBackend m_WindowsGamepadBackend = WindowsGamepadBackend.XInput;
+        #endif
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
@@ -681,6 +688,26 @@ namespace UnityEngine.InputSystem
         }
 
         internal const int s_OldUnsupportedFixedAndDynamicUpdateSetting = 0;
+
+        public enum WindowsGamepadBackend
+        {
+            XInput = 1,
+            WindowsGamingInput = 2,
+        }
+        
+        public WindowsGamepadBackend windowsGamepadBackend 
+        {
+            get => m_WindowsGamepadBackend;
+            set
+            {
+                if (m_WindowsGamepadBackend == value)
+                    return;
+
+                m_WindowsGamepadBackend = value;
+                OnChange();
+            }
+        }
+
 
         /// <summary>
         /// How the input system should update.
@@ -806,6 +833,34 @@ namespace UnityEngine.InputSystem
             /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
             /// </summary>
             AllDeviceInputAlwaysGoesToGameView,
+        }
+    }
+    
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    internal struct WindowsSetGamepadBackendCommand : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('W', 'G', 'B', 'C'); } }
+
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(int);
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
+        public int windowsGamepadBackend;
+
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
+        public static WindowsSetGamepadBackendCommand Create(InputSettings.WindowsGamepadBackend backend)
+        {
+            return new WindowsSetGamepadBackendCommand
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                windowsGamepadBackend = (int)backend
+            };
         }
     }
 }

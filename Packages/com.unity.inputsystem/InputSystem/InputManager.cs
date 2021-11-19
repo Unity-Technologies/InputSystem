@@ -2716,6 +2716,9 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
+
+            var backend = WindowsSetGamepadBackendCommand.Create(m_Settings.windowsGamepadBackend);
+            m_Runtime.DeviceCommand(-1, ref backend);
         }
 
         internal void AddAvailableDevicesThatAreNowRecognized()

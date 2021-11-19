@@ -23,6 +23,12 @@ namespace UnityEngine.InputSystem.XInput
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             InputSystem.RegisterLayout<XInputControllerWindows>(
                 matches: new InputDeviceMatcher().WithInterface("XInput"));
+            
+            // This is only if we go with a route of disabling XInput and listening to HID directly!
+            // Not needed if we go with Windows.Gaming.Input
+            InputSystem.RegisterLayout<XboxGamepadWindowsHID>(
+                matches: new InputDeviceMatcher().WithInterface("HID")
+                    .WithProduct("Xbox.*for Windows"));
 #endif
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             InputSystem.RegisterLayout<XboxGamepadMacOS>(
