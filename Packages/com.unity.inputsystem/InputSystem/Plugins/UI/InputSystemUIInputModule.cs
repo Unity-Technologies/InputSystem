@@ -2197,9 +2197,9 @@ namespace UnityEngine.InputSystem.UI
         private Action<object> m_OnControlsChangedDelegate;
 
         // Pointer-type input (also tracking-type).
-        private int m_CurrentPointerId = -1; // Keeping track of the current pointer avoids searches in most cases.
-        private int m_CurrentPointerIndex = -1;
-        internal UIPointerType m_CurrentPointerType = UIPointerType.None;
+        [NonSerialized] private int m_CurrentPointerId = -1; // Keeping track of the current pointer avoids searches in most cases.
+        [NonSerialized] private int m_CurrentPointerIndex = -1;
+        [NonSerialized] internal UIPointerType m_CurrentPointerType = UIPointerType.None;
         internal InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
         internal InlinedArray<InputControl> m_PointerTouchControls;
         internal InlinedArray<PointerModel> m_PointerStates;
