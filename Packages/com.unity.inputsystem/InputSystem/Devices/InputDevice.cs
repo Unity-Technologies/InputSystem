@@ -476,13 +476,10 @@ namespace UnityEngine.InputSystem
         /// feed events into the input system even if not being actually in use. If, for example, an
         /// Xbox gamepad and PS4 gamepad are both connected to a PC and the user is playing with the
         /// Xbox gamepad, the PS4 gamepad would still constantly make itself <see cref="Gamepad.current"/>
-        /// by simply flooding the system with events.
-        ///
-        /// By enabling <see cref="InputSettings.filterNoiseOnCurrent"/> (disabled by default),
-        /// noise on <c>.current</c> getters will be filtered out and a device will only see <c>MakeCurrent</c>
-        /// getting called if there input was detected on non-noisy controls.
+        /// by simply flooding the system with events. Hence why by default,  noise on <c>.current</c> getters
+        /// will be filtered out and a device will only see <c>MakeCurrent</c> getting called if there input
+        /// was detected on non-noisy controls.
         /// </remarks>
-        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="Pointer.current"/>
         /// <seealso cref="Gamepad.current"/>
         /// <seealso cref="Mouse.current"/>

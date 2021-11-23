@@ -720,19 +720,15 @@ namespace UnityEngine.InputSystem.UI
             set => m_MoveRepeatRate = value;
         }
 
+        private bool explictlyIgnoreFocus => InputSystem.settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus;
+
         private bool shouldIgnoreFocus
         {
-            get
-            {
-                if (InputSystem.settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
-                    return true;
-
-                // By default, key this on whether running the background is enabled or not. Rationale is that
-                // if running in the background is enabled, we already have rules in place what kind of input
-                // is allowed through and what isn't. And for the input that *IS* allowed through, the UI should
-                // react.
-                return InputRuntime.s_Instance.runInBackground;
-            }
+            // By default, key this on whether running the background is enabled or not. Rationale is that
+            // if running in the background is enabled, we already have rules in place what kind of input
+            // is allowed through and what isn't. And for the input that *IS* allowed through, the UI should
+            // react.
+            get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground;
         }
 
         [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
@@ -1908,6 +1904,15 @@ namespace UnityEngine.InputSystem.UI
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
         //       button *clicks* when an action resets. However, we still need to send pointer ups.
 
+        private bool IgnoreNextClick(ref InputAction.CallbackContext context)
+        {
+            // If explicitly ignoring focus due to setting, never ignore clicks
+            if (explictlyIgnoreFocus)
+                return false;
+            // If context is cancelled (by focus change), ignore next click if device cannot run in background.
+            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground;
+        }
+
         private void OnLeftClickCallback(InputAction.CallbackContext context)
         {
             var index = GetPointerStateIndexFor(ref context);
@@ -1917,7 +1922,7 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateForIndex(index);
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (context.canceled)
+            if (IgnoreNextClick(ref context))
                 state.leftButton.ignoreNextClick = true;
         }
 
@@ -1930,7 +1935,7 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateForIndex(index);
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (context.canceled)
+            if (IgnoreNextClick(ref context))
                 state.leftButton.ignoreNextClick = true;
         }
 
@@ -1943,7 +1948,7 @@ namespace UnityEngine.InputSystem.UI
             ref var state = ref GetPointerStateForIndex(index);
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (context.canceled)
+            if (IgnoreNextClick(ref context))
                 state.leftButton.ignoreNextClick = true;
         }
 
@@ -2051,6 +2056,11 @@ namespace UnityEngine.InputSystem.UI
 #if UNITY_2021_1_OR_NEWER
         public override int ConvertUIToolkitPointerId(PointerEventData sourcePointerData)
         {
+            // Case 1369081: when using SingleUnifiedPointer, the same (default) pointerId should be sent to UIToolkit
+            // regardless of pointer type or finger id.
+            if (m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                return UIElements.PointerId.mousePointerId;
+
             return sourcePointerData is ExtendedPointerEventData ep
                 ? ep.uiToolkitPointerId
                 : base.ConvertUIToolkitPointerId(sourcePointerData);
