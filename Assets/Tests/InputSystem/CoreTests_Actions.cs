@@ -16,6 +16,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.XInput;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
@@ -8373,6 +8374,44 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors,
             Has.All.Matches(
                 (InputManager.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1367442/
+    [Test]
+    [Category("Actions")]
+    public void Actions_EnablingAndDisablingRepeatedly_DoesNotAllocate()
+    {
+        InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        // Warm up JIT.
+        var actions = new DefaultInputActions();
+        actions.Enable();
+        actions.Disable();
+
+        // Now for real.
+        actions = new DefaultInputActions();
+
+        actions.Enable();
+
+        var kProfilerRegion1 = "Actions_EnablingAndDisablingRepeatedly_DoesNotAllocate_DISABLE";
+        var kProfilerRegion2 = "Actions_EnablingAndDisablingRepeatedly_DoesNotAllocate_ENABLE";
+
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion1);
+            actions.Disable();
+            Profiler.EndSample();
+        },
+            Is.Not.AllocatingGCMemory());
+
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion2);
+            actions.Enable();
+            Profiler.EndSample();
+        },
+            Is.Not.AllocatingGCMemory());
     }
 
     // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.
