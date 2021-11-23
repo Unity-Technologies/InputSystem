@@ -919,7 +919,7 @@ namespace UnityEngine.InputSystem
             var device = control.device;
 
             builder.Append('<');
-            builder.Append(deviceLayout.Replace("\\", "\\\\").Replace(">", "\\>"));
+            builder.Append(deviceLayout.Escape("\\>", "\\>"));
             builder.Append('>');
 
             // Add usages of device, if any.
@@ -927,7 +927,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < deviceUsages.Count; ++i)
             {
                 builder.Append('{');
-                builder.Append(deviceUsages[i].ToString().Replace("\\", "\\\\").Replace("}", "\\}"));
+                builder.Append(deviceUsages[i].ToString().Escape("\\}", "\\}"));
                 builder.Append('}');
             }
 

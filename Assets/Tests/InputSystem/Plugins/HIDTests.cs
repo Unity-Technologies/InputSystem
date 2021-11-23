@@ -1319,6 +1319,7 @@ internal class HIDTests : CoreTestsFixture
     [TestCase('\\')]
     [TestCase('>')]
     [TestCase('<')]
+    [TestCase(' ')]
     public void Devices_CanHaveReservedCharactersInHIDDeviceNames(char character)
     {
         var hidDescriptor = new HID.HIDDeviceDescriptor
