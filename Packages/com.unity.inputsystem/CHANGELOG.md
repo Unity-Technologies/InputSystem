@@ -32,6 +32,7 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- Fixed opening a new project (or one that needs a full reimport) leading to several exceptions in the console if the most recently opened project was closed with a `.inputactions` editor open ([case 1313185](https://issuetracker.unity3d.com/issues/exceptions-about-previously-open-action-map-being-thrown-when-opening-new-project)).
 - Fixed incorrect indentation of input actions in the inspector ([case 1285546](https://issuetracker.unity3d.com/product/unity/issues/guid/1285546/)).
 - Fixed an issue where serialized `InputAction` properties would have display name "Input Action" in the Inspector window instead of their given name. ([case 1367240](https://issuetracker.unity3d.com/product/unity/issues/guid/1367240)).
 - Fixed an issue where `InputAction.Enable` would not reuse memory allocated prior and thus lead to memory leaks ([case 1367442](https://issuetracker.unity3d.com/issues/input-system-puts-a-lot-of-pressure-on-the-garbage-collector-when-enabling-and-disabling-inputactionmaps)).
