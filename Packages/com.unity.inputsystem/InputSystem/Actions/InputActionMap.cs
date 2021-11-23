@@ -395,6 +395,9 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < actionCount; ++i)
             {
                 var action = m_Actions[i];
+
+                // We want to make sure an action ID cannot change *after* we have created the table.
+                // NOTE: The *name* of an action, however, *may* change.
                 action.MakeSureIdIsInPlace();
 
                 // We create two lookup paths for each action:
@@ -403,6 +406,11 @@ namespace UnityEngine.InputSystem
                 m_ActionIndexByNameOrId[action.name] = i;
                 m_ActionIndexByNameOrId[action.m_Id] = i;
             }
+        }
+
+        internal void ClearActionLookupTable()
+        {
+            m_ActionIndexByNameOrId?.Clear();
         }
 
         private int FindActionIndex(Guid id)
@@ -1069,6 +1077,7 @@ namespace UnityEngine.InputSystem
         {
             // Clear cached controls for actions. Don't need to necessarily clear m_BindingsForEachAction.
             m_ControlsForEachAction = null;
+            m_ControlsForEachActionInitialized = false;
 
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
@@ -1129,6 +1138,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void ResolveBindings()
         {
+            m_ControlsForEachActionInitialized = false;
+
             // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
             // we don't trigger a re-resolve while we're already resolving bindings.
             using (InputActionRebindingExtensions.DeferBindingResolution())
@@ -1240,6 +1251,7 @@ namespace UnityEngine.InputSystem
 
                         ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
                         map.m_ControlsForEachAction = null;
+                        map.m_ControlsForEachActionInitialized = false;
 
                         if (map.m_SingletonAction != null)
                             InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);
@@ -1852,6 +1864,7 @@ namespace UnityEngine.InputSystem
             // Make sure we don't retain any cached per-action data when using serialization
             // to doctor around in action map configurations in the editor.
             ClearCachedActionData();
+            ClearActionLookupTable();
         }
 
         #endregion

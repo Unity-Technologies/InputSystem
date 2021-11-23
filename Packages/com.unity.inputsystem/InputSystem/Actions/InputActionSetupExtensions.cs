@@ -836,6 +836,7 @@ namespace UnityEngine.InputSystem
 
             var oldName = action.m_Name;
             action.m_Name = newName;
+            actionMap?.ClearActionLookupTable();
 
             if (actionMap?.asset != null)
                 actionMap?.asset.MarkAsDirty();
