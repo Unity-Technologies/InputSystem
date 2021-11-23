@@ -13,7 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - The artificial `ctrl`, `shift`, and `alt` controls (which combine the left and right controls into one) on the keyboard can now be written to and no longer throw `NotSupportedException` when trying to do so ([case 1340793](https://issuetracker.unity3d.com/issues/on-screen-button-errors-on-mouse-down-slash-up-when-its-control-path-is-set-to-control-keyboard)).
-- All devices are now resynced/reset in next update after entering play mode, this is needed to read current state of devices before any intentional input is provided ([case 1231907](https://issuetracker.unity3d.com/issues/mouse-coordinates-reported-as-00-until-the-first-move)).
+- All devices are now re-synced/reset in next update after entering play mode, this is needed to read current state of devices before any intentional input is provided ([case 1231907](https://issuetracker.unity3d.com/issues/mouse-coordinates-reported-as-00-until-the-first-move)).
 - Replaced `UnityLinkerBuildPipelineData.inputDirectory` with hardcoded `Temp` folder because `inputDirectory` is deprecated.
 - Deprecated `InputSettings.filterNoiseOnCurrent`. Now noise filtering is always enabled. Device only will become `.current` if any non-noise control have changed state.
 
@@ -38,6 +38,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed interactions such as `Press` not getting processed correctly when having multiple of them on different bindings of the same action and receiving simultaneous input on all of them ([case 1364667](https://issuetracker.unity3d.com/issues/new-input-system-stops-working-after-pressing-2-keyboard-buttons-at-the-same-time)).
   * If, for example, you bind the A and S key on the same action, put a `Press` interaction on both, and then press both keys, interactions would get missed or got stuck.
 - Fixed `InputAction.IsPressed`/`WasPressed`/`WasReleased` returning incorrect results when binding multiple buttons on the same action and pressing/releasing them simultaneously.
+- Fixed interactions involving timeouts (such as `HoldInteraction`) performing erroneous delayed triggers on actions when input is composed of multiple controls ([1251231](https://issuetracker.unity3d.com/issues/input-system-composites-hold-interaction-can-be-performed-when-no-keys-are-hold)).
+  * For example, if you bind `Shift+B` using a `OneModifierComposite` and put a `HoldInteraction` on the binding, then depending on the order in which the keys are pressed, you would sometimes see the action spuriously getting triggered when in fact no input was received.
 
 ## [1.2.0] - 2021-10-22
 
