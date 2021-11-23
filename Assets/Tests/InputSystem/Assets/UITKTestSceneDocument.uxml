@@ -1,6 +1,8 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Button text="Button" display-tooltip-when-elided="true" name="Button" focusable="true" style="justify-content: flex-start; height: 100%; width: 50%; align-items: stretch; left: auto; flex-grow: 1;" />
-    <ui:ScrollView name="ScrollView" style="flex-grow: 1; width: 50%; height: 100px; left: 50%; top: 0; flex-direction: column; flex-basis: auto; position: absolute;">
-        <ui:TextField picking-mode="Ignore" value="filler text" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&#10;" multiline="false" readonly="true" style="font-size: 50px; white-space: normal;" />
-    </ui:ScrollView>
+    <ui:VisualElement style="width: 640px; height: 480px;">
+        <ui:ScrollView name="ScrollView" style="flex-grow: 1; width: 50%; height: 100px; left: 50%; top: 0; flex-direction: column; flex-basis: auto; position: absolute;">
+            <ui:TextField picking-mode="Ignore" value="filler text" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&#10;" multiline="false" readonly="true" style="font-size: 50px; white-space: normal;" />
+        </ui:ScrollView>
+        <ui:Button text="Button" display-tooltip-when-elided="true" name="Button" focusable="true" style="justify-content: flex-start; height: 100%; width: 50%; align-items: stretch; left: auto; flex-grow: 1;" />
+    </ui:VisualElement>
 </ui:UXML>

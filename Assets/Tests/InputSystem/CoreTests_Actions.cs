@@ -2114,6 +2114,93 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1364667/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_ProcessesInteractionsOnAllActiveBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddBinding("<Keyboard>/a", interactions: "press(behavior=1)");
+        action.AddBinding("<Keyboard>/s", interactions: "press(behavior=1)");
+        action.Enable();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(!action.WasPerformedThisFrame());
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(!action.WasPerformedThisFrame());
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
+        InputSystem.Update();
+
+        Assert.That(!action.WasPerformedThisFrame());
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(action.WasPerformedThisFrame());
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1309797/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_ProcessesInteractionsOnAllActiveBindings_AcrossDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var pressAction = new InputAction();
+        pressAction.AddBinding("<Keyboard>/space", interactions: "press(behavior=0)");
+        pressAction.AddBinding("<Mouse>/leftButton", interactions: "press(behavior=0)");
+        pressAction.Enable();
+
+        var releaseAction = new InputAction();
+        releaseAction.AddBinding("<Keyboard>/space", interactions: "press(behavior=1)");
+        releaseAction.AddBinding("<Mouse>/leftButton", interactions: "press(behavior=1)");
+        releaseAction.Enable();
+
+        Press(mouse.leftButton);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(pressAction.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(releaseAction.activeControl, Is.SameAs(mouse.leftButton)); // Was still started.
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(pressAction.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(releaseAction.activeControl, Is.SameAs(mouse.leftButton));
+
+        Release(mouse.leftButton);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False); // !!
+        Assert.That(pressAction.activeControl, Is.SameAs(keyboard.spaceKey));
+        Assert.That(releaseAction.activeControl, Is.SameAs(keyboard.spaceKey));
+
+        Release(keyboard.spaceKey);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(pressAction.activeControl, Is.Null);
+        Assert.That(releaseAction.activeControl, Is.Null);
+
+        Press(mouse.leftButton);
+
+        Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(releaseAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(pressAction.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(releaseAction.activeControl, Is.SameAs(mouse.leftButton));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
@@ -2190,6 +2277,51 @@ partial class CoreTests
 
             Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_CanHandleButtonPressesAndReleases()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/*trigger");
+        action.Enable();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+        Assert.That(action.activeControl, Is.Null);
+
+        Set(gamepad.leftTrigger, 1f);
+
+        Assert.That(action.IsPressed(), Is.True);
+        Assert.That(action.WasPressedThisFrame(), Is.True);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+        Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
+
+        Set(gamepad.rightTrigger, 0.6f);
+
+        Assert.That(action.IsPressed(), Is.True);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+        Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
+
+        Set(gamepad.leftTrigger, 0f);
+
+        Assert.That(action.IsPressed(), Is.True);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+        Assert.That(action.activeControl, Is.SameAs(gamepad.rightTrigger));
+
+        Set(gamepad.rightTrigger, 0f);
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.True);
+        Assert.That(action.activeControl, Is.Null);
     }
 
     // There can be situations where two different controls are driven from the same state. Most prominently, this is

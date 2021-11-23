@@ -3277,6 +3277,7 @@ namespace UnityEngine.InputSystem
 
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
