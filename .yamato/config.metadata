@@ -1,5 +1,5 @@
 editors:
-  - version: d4a6bbd2acaad40635e0997f299b183f0e975e44
+  - version: 5e2ac778e08501f066384234f79629ad6ece77ac
 platforms:
   - name: win
     type: Unity::VM
