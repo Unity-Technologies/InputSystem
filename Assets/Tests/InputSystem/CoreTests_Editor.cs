@@ -3031,6 +3031,7 @@ partial class CoreTests
         {
         }
 
+        #pragma warning disable CS0114
         public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
         {
             return base.BuildRoot();
