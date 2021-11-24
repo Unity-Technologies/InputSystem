@@ -1610,12 +1610,9 @@ internal class UITests : CoreTestsFixture
                     AllEvents("pointerType", UIPointerType.Touch),
                     AllEvents("touchId", 1),
                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-                    OneEvent("type", EventType.PointerEnter)
-                    #if UNITY_2021_2_OR_NEWER
-                    , OneEvent("type", EventType.PointerMove)
-                    #endif
-                    , OneEvent("type", EventType.PointerDown)
-                    , OneEvent("type", EventType.InitializePotentialDrag)
+                    OneEvent("type", EventType.PointerEnter),
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("type", EventType.InitializePotentialDrag)
                 )
             );
 
@@ -1667,12 +1664,9 @@ internal class UITests : CoreTestsFixture
                     AllEvents("pointerType", UIPointerType.Touch),
                     AllEvents("touchId", 2),
                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-                    OneEvent("type", EventType.PointerEnter)
-                    #if UNITY_2021_2_OR_NEWER
-                    , OneEvent("type", EventType.PointerMove)
-                    #endif
-                    , OneEvent("type", EventType.PointerDown)
-                    , OneEvent("type", EventType.InitializePotentialDrag)
+                    OneEvent("type", EventType.PointerEnter),
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("type", EventType.InitializePotentialDrag)
                 )
             );
 
