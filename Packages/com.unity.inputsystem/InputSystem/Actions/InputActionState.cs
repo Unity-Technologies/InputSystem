@@ -1397,6 +1397,9 @@ namespace UnityEngine.InputSystem
                     if (actionState->bindingIndex != bindingWithHighestActuation)
                     {
                         // If there's an interaction currently driving the action, reset it.
+                        // NOTE: This will also cancel an ongoing timer. So, say we're currently 0.5 seconds into
+                        //       a 1 second "Hold" when the user shifts to a different control, then this code here
+                        //       will *cancel* the current "Hold" and restart from scratch.
                         if (actionState->interactionIndex != kInvalidIndex)
                             ResetInteractionState(trigger.mapIndex, actionState->bindingIndex, actionState->interactionIndex);
 
@@ -1668,8 +1671,7 @@ namespace UnityEngine.InputSystem
             // If there's already a timeout running, cancel it first.
             ref var interactionState = ref interactionStates[interactionIndex];
             if (interactionState.isTimerRunning)
-                StopTimeout(trigger.mapIndex, interactionState.triggerControlIndex, trigger.bindingIndex,
-                    interactionIndex);
+                StopTimeout(interactionIndex);
 
             // Add new timeout.
             manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, monitorIndex,
@@ -1679,28 +1681,26 @@ namespace UnityEngine.InputSystem
             interactionState.isTimerRunning = true;
             interactionState.timerStartTime = currentTime;
             interactionState.timerDuration = seconds;
+            interactionState.timerMonitorIndex = monitorIndex;
         }
 
-        private void StopTimeout(int mapIndex, int controlIndex, int bindingIndex, int interactionIndex)
+        private void StopTimeout(int interactionIndex)
         {
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index out of range");
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount, "Interaction index out of range");
 
-            var manager = InputSystem.s_Manager;
-            var monitorIndex =
-                ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+            ref var interactionState = ref interactionStates[interactionIndex];
 
-            manager.RemoveStateChangeMonitorTimeout(this, monitorIndex, interactionIndex);
+            var manager = InputSystem.s_Manager;
+            manager.RemoveStateChangeMonitorTimeout(this, interactionState.timerMonitorIndex, interactionIndex);
 
             // Update state.
-            ref var interactionState = ref interactionStates[interactionIndex];
             interactionState.isTimerRunning = false;
             interactionState.totalTimeoutCompletionDone += interactionState.timerDuration;
             interactionState.totalTimeoutCompletionTimeRemaining =
                 Mathf.Max(interactionState.totalTimeoutCompletionTimeRemaining - interactionState.timerDuration, 0);
             interactionState.timerDuration = default;
             interactionState.timerStartTime = default;
+            interactionState.timerMonitorIndex = default;
         }
 
         /// <summary>
@@ -1750,8 +1750,7 @@ namespace UnityEngine.InputSystem
             // Any time an interaction changes phase, we cancel all pending timeouts.
             ref var interactionState = ref interactionStates[interactionIndex];
             if (interactionState.isTimerRunning)
-                StopTimeout(trigger.mapIndex, interactionState.triggerControlIndex, trigger.bindingIndex,
-                    trigger.interactionIndex);
+                StopTimeout(trigger.interactionIndex);
 
             // Update interaction state.
             interactionState.phase = newPhase;
@@ -2201,10 +2200,7 @@ namespace UnityEngine.InputSystem
 
             // Clean up timer.
             if (interactionStates[interactionIndex].isTimerRunning)
-            {
-                var controlIndex = interactionStates[interactionIndex].triggerControlIndex;
-                StopTimeout(mapIndex, controlIndex, bindingIndex, interactionIndex);
-            }
+                StopTimeout(interactionIndex);
 
             // Reset state record.
             interactionStates[interactionIndex] =
@@ -2696,7 +2692,7 @@ namespace UnityEngine.InputSystem
         /// Records the current state of a single interaction attached to a binding.
         /// Each interaction keeps track of its own trigger control and phase progression.
         /// </summary>
-        [StructLayout(LayoutKind.Explicit, Size = 40)]
+        [StructLayout(LayoutKind.Explicit, Size = 48)]
         internal struct InteractionState
         {
             [FieldOffset(0)] private ushort m_TriggerControlIndex;
@@ -2708,6 +2704,7 @@ namespace UnityEngine.InputSystem
             [FieldOffset(24)] private double m_PerformedTime;
             [FieldOffset(32)] private float m_TotalTimeoutCompletionTimeDone;
             [FieldOffset(36)] private float m_TotalTimeoutCompletionTimeRemaining;
+            [FieldOffset(40)] private long m_TimerMonitorIndex;
 
             public int triggerControlIndex
             {
@@ -2755,6 +2752,12 @@ namespace UnityEngine.InputSystem
             {
                 get => m_TotalTimeoutCompletionTimeRemaining;
                 set => m_TotalTimeoutCompletionTimeRemaining = value;
+            }
+
+            public long timerMonitorIndex
+            {
+                get => m_TimerMonitorIndex;
+                set => m_TimerMonitorIndex = value;
             }
 
             public bool isTimerRunning
