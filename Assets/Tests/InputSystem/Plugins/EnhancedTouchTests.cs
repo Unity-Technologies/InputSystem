@@ -1160,30 +1160,20 @@ internal class EnhancedTouchTests : CoreTestsFixture
         {
             // When running in the background, next update after focus loss sees touches cancelled
             // and update after that sees them gone.
-
             InputSystem.Update(InputUpdateType.Dynamic);
-
-            Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
-            Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Canceled));
-
-            InputSystem.Update();
-
-            Assert.That(Touch.activeTouches, Is.Empty);
         }
         else
         {
             // When not running in the background, the same thing happens but only on focus gain.
-
             runtime.PlayerFocusGained();
-
             InputSystem.Update();
-
-            Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
-            Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Canceled));
-
-            InputSystem.Update();
-
-            Assert.That(Touch.activeTouches, Is.Empty);
         }
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Canceled));
+
+        InputSystem.Update();
+
+        Assert.That(Touch.activeTouches, Is.Empty);
     }
 }
