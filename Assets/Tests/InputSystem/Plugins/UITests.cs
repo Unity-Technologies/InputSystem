@@ -3314,14 +3314,18 @@ internal class UITests : CoreTestsFixture
 #if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
 #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
-    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule()
+    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule(UIPointerBehavior pointerBehavior)
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
@@ -3337,6 +3341,8 @@ internal class UITests : CoreTestsFixture
             var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
             var scrollView = uiRoot.Query<ScrollView>("ScrollView").First();
 
+            uiModule.pointerBehavior = pointerBehavior;
+
             var clickReceived = false;
             uiButton.clicked += () => clickReceived = true;
             // NOTE: We do *NOT* do the following as the gamepad submit action will *not* trigger a ClickEvent.
@@ -3345,6 +3351,7 @@ internal class UITests : CoreTestsFixture
             yield return null;
 
             var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
             var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
 
             Set(mouse.position, buttonCenter, queueEventOnly: true);
@@ -3390,6 +3397,53 @@ internal class UITests : CoreTestsFixture
             Assert.That(clickReceived, Is.True);
 
             ////TODO: tracked device support (not yet supported by UITK)
+
+            static bool IsActive(VisualElement ve)
+            {
+                return ve.Query<VisualElement>().Active().ToList().Contains(ve);
+            }
+
+            // Move the mouse away from the button to check that touch inputs are also able to activate it.
+            Set(mouse.position, buttonOutside, queueEventOnly: true);
+            yield return null;
+            InputSystem.RemoveDevice(mouse);
+
+            int uiButtonDownCount = 0;
+            int uiButtonUpCount = 0;
+            uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
+            uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
+
+            // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
+            BeginTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(0));
+            Assert.That(IsActive(uiButton), Is.True);
+
+            BeginTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+            EndTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+
+            if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(1));
+                Assert.That(IsActive(uiButton), Is.False);
+            }
+            else
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(0));
+                Assert.That(IsActive(uiButton), Is.True);
+            }
+
+            EndTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(1));
+            Assert.That(IsActive(uiButton), Is.False);
+
+            InputSystem.RemoveDevice(touchscreen);
         }
         finally
         {
