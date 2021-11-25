@@ -1099,6 +1099,9 @@ namespace UnityEngine.InputSystem
         /// east (bit position 5), so if both buttons were pressed in the given event, button north would be returned.</remarks>
         public static InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
         {
+            if (eventPtr.type != StateEvent.Type || eventPtr.type != DeltaStateEvent.Type)
+                return null;
+
             if (magnitude < 0)
                 magnitude = InputSystem.settings.defaultButtonPressPoint;
 

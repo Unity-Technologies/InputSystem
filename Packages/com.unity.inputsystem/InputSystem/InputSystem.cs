@@ -2402,7 +2402,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="onEvent"/>
         public static IObservable<InputControl> onAnyButtonPress =>
             onEvent
-                .Where(evt => evt.type == StateEvent.Type || evt.type == DeltaStateEvent.Type)
                 .Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
 
         /// <summary>
