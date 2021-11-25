@@ -3534,10 +3534,10 @@ internal class UITests : CoreTestsFixture
 #endif
 
 #if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
-    static bool[] canRunInBackgroundValueSource = new bool[] { false, true };
+    static bool[] canRunInBackgroundValueSource = new[] { false, true };
 
     [UnityTest]
-    public IEnumerator Run_UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(
+    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(
         [ValueSource(nameof(canRunInBackgroundValueSource))] bool canRunInBackground)
     {
         // Whether we run in the background or not should only move the reset of the mouse button
