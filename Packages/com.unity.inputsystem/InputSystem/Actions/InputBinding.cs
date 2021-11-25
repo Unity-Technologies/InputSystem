@@ -435,7 +435,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private string m_Path;
         [SerializeField] private string m_Interactions;
         [SerializeField] private string m_Processors;
-        [SerializeField] private string m_Groups;
+        [SerializeField] internal string m_Groups;
         [SerializeField] private string m_Action;
         [SerializeField] internal Flags m_Flags;
 
