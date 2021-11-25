@@ -1641,6 +1641,10 @@ namespace UnityEngine.InputSystem
             else if (m_StateChangeMonitors.Length <= deviceIndex)
                 Array.Resize(ref m_StateChangeMonitors, m_DevicesCount);
 
+            // If we have removed monitors
+            if (!isProcessingEvents && m_StateChangeMonitors[deviceIndex].needToCompactArrays)
+                m_StateChangeMonitors[deviceIndex].CompactArrays();
+
             // Add record.
             m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
         }
@@ -1680,7 +1684,7 @@ namespace UnityEngine.InputSystem
             if (deviceIndex >= m_StateChangeMonitors.Length)
                 return;
 
-            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex, isProcessingEvents);
 
             // Remove pending timeouts on the monitor.
             for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
@@ -2082,6 +2086,7 @@ namespace UnityEngine.InputSystem
             public MemoryHelpers.BitRegion[] memoryRegions;
             public StateChangeMonitorListener[] listeners;
             public DynamicBitfield signalled;
+            public bool needToCompactArrays;
 
             public int count => signalled.length;
 
@@ -2106,21 +2111,25 @@ namespace UnityEngine.InputSystem
                 signalled.SetLength(signalled.length + 1);
             }
 
-            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
+            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex, bool deferRemoval)
             {
-                // NOTE: This must *not* actually destroy the record for the monitor as we may currently be traversing the
-                //       arrays in FireStateChangeNotifications. Instead, we only invalidate entries here and leave it to
-                //       ProcessStateChangeMonitors to compact arrays.
-
                 if (listeners == null)
                     return;
 
                 for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        listeners[i] = default;
-                        memoryRegions[i] = default;
-                        signalled.ClearBit(i);
+                        if (deferRemoval)
+                        {
+                            listeners[i] = default;
+                            memoryRegions[i] = default;
+                            signalled.ClearBit(i);
+                            needToCompactArrays = true;
+                        }
+                        else
+                        {
+                            RemoveAt(i);
+                        }
                         break;
                     }
             }
@@ -2131,6 +2140,30 @@ namespace UnityEngine.InputSystem
                 // our count to zero.
                 listeners.Clear(count);
                 signalled.SetLength(0);
+
+                needToCompactArrays = false;
+            }
+
+            public void CompactArrays()
+            {
+                for (var i = count - 1; i >= 0; --i)
+                {
+                    var memoryRegion = memoryRegions[i];
+                    if (memoryRegion.sizeInBits != 0)
+                        continue;
+
+                    RemoveAt(i);
+                }
+                needToCompactArrays = false;
+            }
+
+            private void RemoveAt(int i)
+            {
+                var numListeners = count;
+                var numMemoryRegions = count;
+                listeners.EraseAtWithCapacity(ref numListeners, i);
+                memoryRegions.EraseAtWithCapacity(ref numMemoryRegions, i);
+                signalled.SetLength(count - 1);
             }
         }
 
@@ -2493,27 +2526,40 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+#if UNITY_EDITOR
         private void SyncAllDevicesWhenEditorIsActivated()
         {
-            #if UNITY_EDITOR
             var isActive = m_Runtime.isEditorActive;
             if (isActive == m_EditorIsActive)
                 return;
 
             m_EditorIsActive = isActive;
             if (m_EditorIsActive)
-            {
-                for (var i = 0; i < m_DevicesCount; ++i)
-                {
-                    // When the editor comes back into focus, we actually do want resets to happen
-                    // for devices that don't support syncs as they will likely have missed input while
-                    // we were in the background.
-                    if (!m_Devices[i].RequestSync())
-                        ResetDevice(m_Devices[i], issueResetCommand: true);
-                }
-            }
-            #endif
+                SyncAllDevices();
         }
+
+        private void SyncAllDevices()
+        {
+            for (var i = 0; i < m_DevicesCount; ++i)
+            {
+                // When the editor comes back into focus, we actually do want resets to happen
+                // for devices that don't support syncs as they will likely have missed input while
+                // we were in the background.
+                if (!m_Devices[i].RequestSync())
+                    ResetDevice(m_Devices[i], issueResetCommand: true);
+            }
+        }
+
+        internal void SyncAllDevicesAfterEnteringPlayMode()
+        {
+            // Because we ignore all events between exiting edit mode and entering play mode,
+            // that includes any potential device resets/syncs/etc,
+            // we need to resync all devices after we're in play mode proper.
+            ////TODO: this is a hacky workaround, implement a proper solution where events from sync/resets are not ignored.
+            SyncAllDevices();
+        }
+
+#endif
 
         private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
         {
@@ -2910,7 +2956,9 @@ namespace UnityEngine.InputSystem
             RestoreDevicesAfterDomainReloadIfNecessary();
 
             // In the editor, we issue a sync on all devices when the editor comes back to the foreground.
+            #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
+            #endif
 
             if ((updateType & m_UpdateMask) == 0)
             {
@@ -3491,6 +3539,8 @@ namespace UnityEngine.InputSystem
             if (haveChangedSignalsBitfield)
                 m_StateChangeMonitors[deviceIndex].signalled = signals;
 
+            m_StateChangeMonitors[deviceIndex].needToCompactArrays = false;
+
             return signalled;
         }
 
@@ -3667,18 +3717,13 @@ namespace UnityEngine.InputSystem
             ////REVIEW: Should we do this only for events but not for InputState.Change()?
             // If noise filtering on .current is turned on and the device may have noise,
             // determine if the event carries signal or not.
-            var makeDeviceCurrent = true;
-            if (device.noisy && m_Settings.filterNoiseOnCurrent)
-            {
-                // Compare the current state of the device to the newly received state but overlay
-                // the comparison by the noise mask.
-
-                var noiseMask = (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset;
-
-                makeDeviceCurrent =
-                    !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
-                        0, stateSize * 8, mask: noiseMask);
-            }
+            var noiseMask = device.noisy
+                ? (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset
+                : null;
+            // Compare the current state of the device to the newly received state but overlay
+            // the comparison by the noise mask.
+            var makeDeviceCurrent = !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                0, stateSize * 8, mask: noiseMask);
 
             // Buffer flip.
             var flipped = FlipBuffersForDeviceIfNecessary(device, updateType);

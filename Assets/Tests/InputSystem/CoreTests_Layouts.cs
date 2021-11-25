@@ -972,6 +972,49 @@ partial class CoreTests
         Assert.That(device["extraControl"].layout, Is.EqualTo("Axis"));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1377719/
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ApplyingOverride_DoesNotAlterExistingInheritanceHierarchy()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button1"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button2"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        const string derivedLayoutOverride = @"
+            {
+                ""name"" : ""DerivedLayoutOverride"",
+                ""extend"" : ""DerivedLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button3"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
+        InputSystem.RegisterLayoutOverride(derivedLayoutOverride);
+
+        var layout = InputSystem.LoadLayout("DerivedLayout");
+        Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] { new InternedString("BaseLayout") }));
+
+        var device = InputSystem.AddDevice("DerivedLayout");
+        Assert.That(new[] { 1, 2, 3 }.Select(i => device["button" + i]), Is.All.TypeOf<ButtonControl>());
+    }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanOverrideCommonUsagesOnExistingLayout()
