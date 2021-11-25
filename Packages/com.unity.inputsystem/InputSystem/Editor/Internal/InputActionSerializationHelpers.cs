@@ -624,6 +624,15 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
         }
+
+        public static void RemoveUnusedBindingGroups(SerializedProperty binding, ReadOnlyArray<InputControlScheme> controlSchemes)
+        {
+            var groupsProperty = binding.FindPropertyRelative(nameof(InputBinding.m_Groups));
+            groupsProperty.stringValue = string.Join(InputBinding.kSeparatorString,
+                groupsProperty.stringValue
+                    .Split(InputBinding.Separator)
+                    .Where(g => controlSchemes.Any(c => c.bindingGroup.Equals(g, StringComparison.InvariantCultureIgnoreCase))));
+        }
     }
 }
 #endif // UNITY_EDITOR
