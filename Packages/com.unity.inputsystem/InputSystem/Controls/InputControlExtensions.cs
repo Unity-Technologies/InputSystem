@@ -1068,9 +1068,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Return true if the given <paramref name="eventPtr"/> has any <see cref="Input"/>
         /// </summary>
-        /// <param name="eventPtr"></param>
-        /// <param name="magnitude"></param>
-        /// <param name="buttonControlsOnly"></param>
+        /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls. See <see cref="InputControl.isButton"/>.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
@@ -1085,9 +1085,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Get the first pressed button from the given event or null if the event doesn't contain a new button press.
         /// </summary>
-        /// <param name="eventPtr"></param>
-        /// <param name="magnitude"></param>
-        /// <param name="buttonControlsOnly"></param>
+        /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls. See <see cref="InputControl.isButton"/>.</param>
         /// <returns>The control that was pressed.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
@@ -1099,7 +1099,7 @@ namespace UnityEngine.InputSystem
         /// east (bit position 5), so if both buttons were pressed in the given event, button north would be returned.</remarks>
         public static InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
         {
-            if (eventPtr.type != StateEvent.Type || eventPtr.type != DeltaStateEvent.Type)
+            if (eventPtr.type != StateEvent.Type && eventPtr.type != DeltaStateEvent.Type)
                 return null;
 
             if (magnitude < 0)
@@ -1118,8 +1118,8 @@ namespace UnityEngine.InputSystem
         /// Enumerate all pressed buttons in the given event.
         /// </summary>
         /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
-        /// <param name="magnitude"></param>
-        /// <param name="buttonControlsOnly"></param>
+        /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls. See <see cref="InputControl.isButton"/>.</param>
         /// <returns>An enumerable collection containing all buttons that were pressed in the given event.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
