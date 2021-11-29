@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine.InputSystem.Controls;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using NUnit.Framework.Internal;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -79,6 +80,7 @@ namespace UnityEngine.InputSystem
                 // Apparently, NUnit is reusing instances :(
                 m_KeyInfos = default;
                 m_IsUnityTest = default;
+                m_CurrentTest = default;
 
                 // Disable input debugger so we don't waste time responding to all the
                 // input system activity from the tests.
@@ -183,6 +185,7 @@ namespace UnityEngine.InputSystem
         }
 
         private bool? m_IsUnityTest;
+        private Test m_CurrentTest;
 
         // True if the current test is a [UnityTest].
         private bool IsUnityTest()
@@ -190,10 +193,10 @@ namespace UnityEngine.InputSystem
             // We cache this value so that any call after the first in a test no
             // longer allocates GC memory. Otherwise we'll run into trouble with
             // DoesNotAllocate tests.
-            if (m_IsUnityTest.HasValue)
+            var test = TestContext.CurrentTestExecutionContext.CurrentTest;
+            if (m_IsUnityTest.HasValue && m_CurrentTest == test)
                 return m_IsUnityTest.Value;
 
-            var test = TestContext.CurrentContext.Test;
             var className = test.ClassName;
             var methodName = test.MethodName;
 
@@ -221,6 +224,7 @@ namespace UnityEngine.InputSystem
                 m_IsUnityTest = method?.GetCustomAttribute<UnityTestAttribute>() != null;
             }
 
+            m_CurrentTest = test;
             return m_IsUnityTest.Value;
         }
 
