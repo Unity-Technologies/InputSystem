@@ -1315,14 +1315,17 @@ internal class HIDTests : CoreTestsFixture
     // https://fogbugz.unity3d.com/f/cases/1335465/
     [Test]
     [Category("Devices")]
-    // Il2cpp seems to have trouble with slashes in character literals used in attributes.
-    [TestCase('\u002F')] // '/'
-    [TestCase('\u005C')] // '\'
-    [TestCase('>')]
-    [TestCase('<')]
-    [TestCase(' ')]
-    public void Devices_CanHaveReservedCharactersInHIDDeviceNames(char character)
+    [TestCase("/")]
+    [TestCase("\\")]
+    [TestCase(">")]
+    [TestCase("<")]
+    [TestCase(" ")]
+    public void Devices_CanHaveReservedCharactersInHIDDeviceNames(string characterStr)
     {
+        // Il2cpp seems to have trouble with slashes in character literals used in attributes
+        // so we pass the character as a string instead.
+        var character = characterStr[0];
+
         var hidDescriptor = new HID.HIDDeviceDescriptor
         {
             usage = (int)HID.GenericDesktop.Joystick,
