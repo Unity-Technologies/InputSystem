@@ -97,6 +97,19 @@ namespace UnityEngine.InputSystem
 
         public const char Separator = '/';
 
+        // We consider / a reserved character in control names. So, when this character does creep
+        // in there (e.g. from a device product name), we need to do something about it. We replace
+        // it with this character here.
+        // NOTE: Display names have no such restriction.
+        // NOTE: There are some Unicode characters that look sufficiently like a slash (e.g. FULLWIDTH SOLIDUS)
+        //       but that only makes for rather confusing output. So we just replace with a blank.
+        internal const char SeparatorReplacement = ' ';
+
+        internal static string CleanSlashes(this String pathComponent)
+        {
+            return pathComponent.Replace(Separator, SeparatorReplacement);
+        }
+
         public static string Combine(InputControl parent, string path)
         {
             if (parent == null)
@@ -116,7 +129,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Options for customizing the behavior of <see cref="ToHumanReadableString"/>.
+        /// Options for customizing the behavior of <see cref="ToHumanReadableString(string,HumanReadableStringOptions,InputControl)"/>.
         /// </summary>
         [Flags]
         public enum HumanReadableStringOptions
@@ -356,7 +369,7 @@ namespace UnityEngine.InputSystem
                 return null;
 
             if (parser.current.m_Layout.length > 0)
-                return parser.current.m_Layout.ToString();
+                return parser.current.m_Layout.ToString().Unescape();
 
             if (parser.current.isWildcard)
                 return Wildcard;
@@ -410,7 +423,7 @@ namespace UnityEngine.InputSystem
             if (parser.current.isWildcard)
                 return Wildcard;
 
-            return FindControlLayoutRecursive(ref parser, deviceLayoutName);
+            return FindControlLayoutRecursive(ref parser, deviceLayoutName.Unescape());
         }
 
         private static string FindControlLayoutRecursive(ref PathParser parser, string layoutName)
@@ -535,6 +548,8 @@ namespace UnityEngine.InputSystem
             while (posInStr < strLength && posInMatchTo < matchToLength)
             {
                 var nextChar = str[posInStr];
+                if (nextChar == '\\' && posInStr + 1 < strLength)
+                    nextChar = str[++posInStr];
                 if (nextChar == '*')
                 {
                     ////TODO: make sure we don't end up with ** here
@@ -1047,7 +1062,7 @@ namespace UnityEngine.InputSystem
                 }
                 else
                 {
-                    if (nextCharInPath == '/')
+                    if (nextCharInPath == '/' && componentType == PathComponentType.Name)
                         break;
                     if ((nextCharInPath == '>' && componentType == PathComponentType.Layout)
                         || (nextCharInPath == '}' && componentType == PathComponentType.Usage)
@@ -1329,17 +1344,13 @@ namespace UnityEngine.InputSystem
                 if (!m_Layout.isEmpty)
                 {
                     // Check for direct match.
-                    var layoutMatches = Substring.Compare(m_Layout, control.layout,
-                        StringComparison.OrdinalIgnoreCase) == 0;
+                    var layoutMatches = ComparePathElementToString(m_Layout, control.layout);
                     if (!layoutMatches)
                     {
                         // No direct match but base layout may match.
                         var baseLayout = control.m_Layout;
                         while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout) && !layoutMatches)
-                        {
-                            layoutMatches = Substring.Compare(m_Layout, baseLayout.ToString(),
-                                StringComparison.OrdinalIgnoreCase) == 0;
-                        }
+                            layoutMatches = ComparePathElementToString(m_Layout, baseLayout.ToString());
                     }
 
                     if (!layoutMatches)
@@ -1356,7 +1367,7 @@ namespace UnityEngine.InputSystem
                             var controlUsages = control.usages;
                             var haveUsageMatch = false;
                             for (var ci = 0; ci < controlUsages.Count; ++ci)
-                                if (Substring.Compare(controlUsages[ci].ToString(), m_Usages[i], StringComparison.OrdinalIgnoreCase) == 0)
+                                if (ComparePathElementToString(m_Usages[i], controlUsages[ci]))
                                 {
                                     haveUsageMatch = true;
                                     break;
@@ -1372,15 +1383,39 @@ namespace UnityEngine.InputSystem
                 if (!m_Name.isEmpty && !isWildcard)
                 {
                     ////FIXME: unlike the matching path we have in MatchControlsRecursive, this does not take aliases into account
-                    if (Substring.Compare(control.name, m_Name, StringComparison.OrdinalIgnoreCase) != 0)
+                    if (!ComparePathElementToString(m_Name, control.name))
                         return false;
                 }
 
                 // Match display name.
                 if (!m_DisplayName.isEmpty)
                 {
-                    if (Substring.Compare(control.displayName, m_DisplayName,
-                        StringComparison.OrdinalIgnoreCase) != 0)
+                    if (!ComparePathElementToString(m_DisplayName, control.displayName))
+                        return false;
+                }
+
+                return true;
+            }
+
+            // In a path, characters may be escaped so in those cases, we can't just compare
+            // character-by-character.
+            private static bool ComparePathElementToString(Substring pathElement, string element)
+            {
+                var pathElementLength = pathElement.length;
+                var elementLength = element.Length;
+
+                // `element` is expected to not include escape sequence. `pathElement` may.
+                // So if `element` is longer than `pathElement`, the two can't be a match.
+                if (elementLength > pathElementLength)
+                    return false;
+
+                for (var i = 0; i < pathElementLength && i < elementLength; ++i)
+                {
+                    var ch = pathElement[i];
+                    if (ch == '\\' && i + 1 < pathElementLength)
+                        ch = pathElement[++i];
+
+                    if (char.ToLowerInvariant(ch) != char.ToLowerInvariant(element[i]))
                         return false;
                 }
 
@@ -1515,7 +1550,11 @@ namespace UnityEngine.InputSystem
 
                 var partStartIndex = rightIndexInPath;
                 while (rightIndexInPath < length && path[rightIndexInPath] != terminator)
+                {
+                    if (path[rightIndexInPath] == '\\' && rightIndexInPath + 1 < length)
+                        ++rightIndexInPath;
                     ++rightIndexInPath;
+                }
 
                 var partLength = rightIndexInPath - partStartIndex;
                 if (rightIndexInPath < length && terminator != '/')

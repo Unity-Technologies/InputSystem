@@ -3412,7 +3412,7 @@ internal class UITests : CoreTestsFixture
 
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
-        Assert.That(scene.isLoaded, Is.True);
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
 
         try
         {
@@ -3446,17 +3446,17 @@ internal class UITests : CoreTestsFixture
 
             yield return null;
 
-            Assert.That(uiButton.HasMouseCapture(), Is.True);
+            Assert.That(uiButton.HasMouseCapture(), Is.True, "Expected uiButton to have mouse capture");
 
             Release(mouse.leftButton, queueEventOnly: true);
 
             yield return null;
 
-            Assert.That(uiButton.HasMouseCapture(), Is.False);
+            Assert.That(uiButton.HasMouseCapture(), Is.False, "Expected uiButton to no longer have mouse capture");
             Assert.That(clickReceived, Is.True);
 
             // Put mouse in upper right corner and scroll down.
-            Assert.That(scrollView.verticalScroller.value, Is.Zero);
+            Assert.That(scrollView.verticalScroller.value, Is.Zero, "Expected verticalScroller to be all the way up");
             Set(mouse.position, scrollViewCenter, queueEventOnly: true);
             yield return null;
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
@@ -3477,7 +3477,7 @@ internal class UITests : CoreTestsFixture
             PressAndRelease(gamepad.buttonSouth, queueEventOnly: true);
             yield return null;
 
-            Assert.That(clickReceived, Is.True);
+            Assert.That(clickReceived, Is.True, "Expected to have received click");
 
             ////TODO: tracked device support (not yet supported by UITK)
 
@@ -3491,40 +3491,40 @@ internal class UITests : CoreTestsFixture
             yield return null;
             InputSystem.RemoveDevice(mouse);
 
-            int uiButtonDownCount = 0;
-            int uiButtonUpCount = 0;
+            var uiButtonDownCount = 0;
+            var uiButtonUpCount = 0;
             uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
             uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
 
             // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
             BeginTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
-            Assert.That(uiButtonDownCount, Is.EqualTo(1));
-            Assert.That(uiButtonUpCount, Is.EqualTo(0));
-            Assert.That(IsActive(uiButton), Is.True);
+            Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 0");
+            Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
+            Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
 
             BeginTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
             EndTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
-            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
 
             if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
             {
-                Assert.That(uiButtonUpCount, Is.EqualTo(1));
-                Assert.That(IsActive(uiButton), Is.False);
+                Assert.That(uiButtonUpCount, Is.EqualTo(1), "Expected uiButtonUpCount to be 1");
+                Assert.That(IsActive(uiButton), Is.False, "Expected uiButton to no longer be active");
             }
             else
             {
-                Assert.That(uiButtonUpCount, Is.EqualTo(0));
-                Assert.That(IsActive(uiButton), Is.True);
+                Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
+                Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
             }
 
             EndTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
-            Assert.That(uiButtonDownCount, Is.EqualTo(1));
-            Assert.That(uiButtonUpCount, Is.EqualTo(1));
-            Assert.That(IsActive(uiButton), Is.False);
+            Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
+            Assert.That(uiButtonUpCount, Is.EqualTo(1), "Expected uiButtonUpCount to be 1");
+            Assert.That(IsActive(uiButton), Is.False, "Expected uiButton to no longer be active");
 
             InputSystem.RemoveDevice(touchscreen);
         }
