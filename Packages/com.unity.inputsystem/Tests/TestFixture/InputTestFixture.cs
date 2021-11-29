@@ -78,6 +78,7 @@ namespace UnityEngine.InputSystem
             {
                 // Apparently, NUnit is reusing instances :(
                 m_KeyInfos = default;
+                m_IsUnityTest = default;
 
                 // Disable input debugger so we don't waste time responding to all the
                 // input system activity from the tests.
@@ -181,9 +182,17 @@ namespace UnityEngine.InputSystem
             m_Initialized = false;
         }
 
+        private bool? m_IsUnityTest;
+
         // True if the current test is a [UnityTest].
-        private static bool IsUnityTest()
+        private bool IsUnityTest()
         {
+            // We cache this value so that any call after the first in a test no
+            // longer allocates GC memory. Otherwise we'll run into trouble with
+            // DoesNotAllocate tests.
+            if (m_IsUnityTest.HasValue)
+                return m_IsUnityTest.Value;
+
             var test = TestContext.CurrentContext.Test;
             var className = test.ClassName;
             var methodName = test.MethodName;
@@ -201,14 +210,18 @@ namespace UnityEngine.InputSystem
                         break;
                 }
             }
+
             if (type == null)
-                return false;
+            {
+                m_IsUnityTest = false;
+            }
+            else
+            {
+                var method = type.GetMethod(methodName);
+                m_IsUnityTest = method?.GetCustomAttribute<UnityTestAttribute>() != null;
+            }
 
-            var method = type.GetMethod(methodName);
-            if (method == null)
-                return false;
-
-            return method.GetCustomAttribute<UnityTestAttribute>() != null;
+            return m_IsUnityTest.Value;
         }
 
         #if UNITY_EDITOR
