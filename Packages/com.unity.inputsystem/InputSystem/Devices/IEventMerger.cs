@@ -1,6 +1,4 @@
-using UnityEngine.InputSystem.LowLevel;
-
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     internal interface IEventMerger
     {
