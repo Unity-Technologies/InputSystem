@@ -2912,6 +2912,9 @@ internal class UITests : CoreTestsFixture
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(1, 2) });
         InputSystem.Update();
 
+        // Get rid of IsUnityTest() GC hit.
+        PressAndRelease(mouse.leftButton);
+
         // Make sure we don't get an allocation from the string literal.
         var kProfilerRegion = "UI_MovingAndClickingMouseDoesNotAllocateMemory";
 
