@@ -1203,7 +1203,7 @@ internal class UITests : CoreTestsFixture
         // Put mouse1 over left object.
         var firstPosition = scene.From640x480ToScreen(100, 100);
         Set(mouse1.position, firstPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
@@ -1217,7 +1217,7 @@ internal class UITests : CoreTestsFixture
         // Put mouse2 over right object.
         var secondPosition = scene.From640x480ToScreen(350, 200);
         Set(mouse2.position, secondPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         switch (pointerBehavior)
         {
@@ -1251,9 +1251,9 @@ internal class UITests : CoreTestsFixture
         // Need two updates as otherwise we'd end up with just another pointer of the right object
         // which would not result in an event.
         Set(trackedDevice1, "deviceRotation", Quaternion.Euler(0, -30, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
         Set(trackedDevice2, "deviceRotation", Quaternion.Euler(0, 30, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         var leftPosition = scene.From640x480ToScreen(80, 240);
         var rightPosition = scene.From640x480ToScreen(560, 240);
@@ -1314,9 +1314,9 @@ internal class UITests : CoreTestsFixture
 
         // Touch right object on first touchscreen and left object on second touchscreen.
         BeginTouch(1, secondPosition, screen: touch1);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
         BeginTouch(1, firstPosition, screen: touch2);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         switch (pointerBehavior)
         {
@@ -1398,7 +1398,7 @@ internal class UITests : CoreTestsFixture
         // Touch left object.
         var firstPosition = scene.From640x480ToScreen(100, 100);
         BeginTouch(1, firstPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1426,7 +1426,7 @@ internal class UITests : CoreTestsFixture
         // Touch right object.
         var secondPosition = scene.From640x480ToScreen(350, 200);
         BeginTouch(2, secondPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1454,7 +1454,7 @@ internal class UITests : CoreTestsFixture
         // Drag left object over right object.
         var thirdPosition = scene.From640x480ToScreen(355, 210);
         MoveTouch(1, thirdPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1487,7 +1487,7 @@ internal class UITests : CoreTestsFixture
         // Touch left object again.
         var fourthPosition = scene.From640x480ToScreen(123, 123);
         BeginTouch(3, fourthPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1509,7 +1509,7 @@ internal class UITests : CoreTestsFixture
         // End second touch.
         var fifthPosition = scene.From640x480ToScreen(355, 205);
         EndTouch(2, fifthPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1525,7 +1525,7 @@ internal class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fifthPosition));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1546,7 +1546,7 @@ internal class UITests : CoreTestsFixture
         // Begin second touch again.
         var sixthPosition = scene.From640x480ToScreen(345, 195);
         BeginTouch(2, sixthPosition);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
         Assert.That(scene.eventSystem.IsPointerOverGameObject(touchScreen.deviceId), Is.True);
@@ -1734,7 +1734,7 @@ internal class UITests : CoreTestsFixture
 
         // Point first device at left child.
         Set(trackedDevice1.deviceRotation, Quaternion.Euler(0, -30, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -1754,7 +1754,7 @@ internal class UITests : CoreTestsFixture
 
         // Point second device at left child.
         Set(trackedDevice2.deviceRotation, Quaternion.Euler(0, -31, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -1774,7 +1774,8 @@ internal class UITests : CoreTestsFixture
 
         // Click button on first device.
         PressAndRelease((ButtonControl)trackedDevice1["button"]);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
+
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -1794,7 +1795,7 @@ internal class UITests : CoreTestsFixture
 
         // Click button on second device.
         PressAndRelease((ButtonControl)trackedDevice2["button"]);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -1814,7 +1815,7 @@ internal class UITests : CoreTestsFixture
 
         // Point first device at right child.
         Set(trackedDevice1.deviceRotation, Quaternion.Euler(0, 30, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -1846,7 +1847,7 @@ internal class UITests : CoreTestsFixture
 
         // Point second device at right child.
         Set(trackedDevice2.deviceRotation, Quaternion.Euler(0, 31, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -1904,12 +1905,12 @@ internal class UITests : CoreTestsFixture
 
         // Move mouse over right object.
         Set(mouse.position, scene.From640x480ToScreen(350, 200));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         scene.rightChildReceiver.events.Clear();
 
         Press(keyboard.spaceKey);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
@@ -2200,7 +2201,7 @@ internal class UITests : CoreTestsFixture
 
         // Point device at left child.
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
@@ -2223,7 +2224,7 @@ internal class UITests : CoreTestsFixture
 
         // Move back off the object
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.False);
@@ -2268,7 +2269,7 @@ internal class UITests : CoreTestsFixture
 
         // Point device at left child.
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.True);
@@ -2276,14 +2277,14 @@ internal class UITests : CoreTestsFixture
 
         // Rotate so right object is targetted
         xrTrackingOrigin.rotation = Quaternion.Euler(0f, 60, 0f);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.True);
         Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.rightGameObject));
 
         xrTrackingOrigin.position = Vector3.up * 1000f;
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.False);
@@ -2298,9 +2299,9 @@ internal class UITests : CoreTestsFixture
         Assert.Fail();
     }
 
-    [UnityTest]
+    [Test]
     [Category("UI")]
-    public IEnumerator UI_ClickDraggingMouseDoesNotAllocateGCMemory()
+    public void UI_ClickDraggingMouseDoesNotAllocateGCMemory()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -2322,7 +2323,7 @@ internal class UITests : CoreTestsFixture
         Component.DestroyImmediate(scene.leftChildReceiver);
         Component.DestroyImmediate(scene.rightChildReceiver);
 
-        yield return null;
+        scene.eventSystem.InvokeUpdate();
 
         // The first time we go through this, we allocate some memory (not garbage, just memory that is going to be reused over
         // and over). The events, the hovered list, stuff like that. So do one click drag as a dry run and then do it for real.
@@ -2423,10 +2424,8 @@ internal class UITests : CoreTestsFixture
         // Click left gameObject of player 0.
         InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(100, 100), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(100, 100), buttons = 0 });
-        InputSystem.Update();
 
-        foreach (var player in players)
-            player.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.Null);
@@ -2435,10 +2434,7 @@ internal class UITests : CoreTestsFixture
         InputSystem.QueueStateEvent(mouse, new MouseState { position = players[1].From640x480ToScreen(400, 100), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = players[1].From640x480ToScreen(400, 100), buttons = 0 });
 
-        InputSystem.Update();
-
-        foreach (var player in players)
-            player.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
@@ -2446,10 +2442,8 @@ internal class UITests : CoreTestsFixture
         // Click right gameObject of player 0.
         InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(400, 100), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(400, 100), buttons = 0 });
-        InputSystem.Update();
 
-        foreach (var player in players)
-            player.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
@@ -2508,14 +2502,8 @@ internal class UITests : CoreTestsFixture
 
         // Check Player 0 Move Axes
         InputSystem.QueueDeltaStateEvent(gamepads[0].leftStick, new Vector2(1.0f, 0.0f));
-        InputSystem.Update();
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        yield return null;
 
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].rightGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
@@ -2529,22 +2517,12 @@ internal class UITests : CoreTestsFixture
         Assert.That(players[0].rightChildReceiver.events[0].type, Is.EqualTo(EventType.Select));
         players[0].rightChildReceiver.events.Clear();
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        yield return null;
 
         // Check Player 0 Submit
         PressAndRelease(gamepads[0].buttonSouth);
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        yield return null;
 
         Assert.That(players[0].rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(players[0].rightChildReceiver.events[0].type, Is.EqualTo(EventType.Submit));
@@ -2553,21 +2531,10 @@ internal class UITests : CoreTestsFixture
         // Check Player 1 Submit
         PressAndRelease(gamepads[1].buttonSouth);
 
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-            player.eventSystem.InvokeUpdate();
-        }
+        yield return null;
+
         Assert.That(players[1].leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(players[1].leftChildReceiver.events[0].type, Is.EqualTo(EventType.Submit));
-        players[1].leftChildReceiver.events.Clear();
-
-        foreach (var player in players)
-        {
-            Assert.That(player.leftChildReceiver.events, Is.Empty);
-            Assert.That(player.rightChildReceiver.events, Is.Empty);
-        }
     }
 
     [UnityTest]
@@ -2607,7 +2574,7 @@ internal class UITests : CoreTestsFixture
 
         // Move right.
         Set(gamepad.leftStick, new Vector2(1, 0.5f));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -2620,7 +2587,7 @@ internal class UITests : CoreTestsFixture
 
         // Move left.
         Set(gamepad.leftStick, new Vector2(-1, 0.5f));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -2633,7 +2600,7 @@ internal class UITests : CoreTestsFixture
 
         // Move up.
         Set(gamepad.leftStick, new Vector2(-0.5f, 1));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -2646,7 +2613,7 @@ internal class UITests : CoreTestsFixture
 
         // Move down.
         Set(gamepad.leftStick, new Vector2(0.5f, -1));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -2660,7 +2627,7 @@ internal class UITests : CoreTestsFixture
         // Check repeat delay. Wait enough to cross both delay and subsequent repeat. We should
         // still only get one repeat event.
         unscaledGameTime += 1.21f;
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -2673,7 +2640,7 @@ internal class UITests : CoreTestsFixture
         // Check repeat rate. Same here; doesn't matter how much time we pass as long as we cross
         // the repeat rate threshold.
         unscaledGameTime += 2;
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
@@ -2685,7 +2652,7 @@ internal class UITests : CoreTestsFixture
 
         // Submit.
         PressAndRelease(gamepad.buttonSouth);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Submit)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2694,7 +2661,7 @@ internal class UITests : CoreTestsFixture
 
         // Cancel.
         PressAndRelease(gamepad.buttonEast);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events, EventSequence(OneEvent("type", EventType.Cancel)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2705,9 +2672,9 @@ internal class UITests : CoreTestsFixture
         scene.eventSystem.sendNavigationEvents = false;
 
         Set(gamepad.leftStick, default);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
         Set(gamepad.leftStick, new Vector2(1, 1));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2785,7 +2752,7 @@ internal class UITests : CoreTestsFixture
 
         // Put mouse over left object.
         Set(mouse.position, scene.From640x480ToScreen(100, 100));
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter));
 
@@ -2794,6 +2761,7 @@ internal class UITests : CoreTestsFixture
         // Unbind click. This should not yet result in the pointer getting removed as we still
         // have the position binding.
         clickAction.ApplyBindingOverride(string.Empty);
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
@@ -2940,7 +2908,7 @@ internal class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
 
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -3011,6 +2979,9 @@ internal class UITests : CoreTestsFixture
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(1, 2) });
         InputSystem.Update();
 
+        // Get rid of IsUnityTest() GC hit.
+        PressAndRelease(mouse.leftButton);
+
         // Make sure we don't get an allocation from the string literal.
         var kProfilerRegion = "UI_MovingAndClickingMouseDoesNotAllocateMemory";
 
@@ -3058,14 +3029,14 @@ internal class UITests : CoreTestsFixture
         // Click on left GO and make sure it gets selected.
         Set(mouse.position, scene.From640x480ToScreen(10, 10));
         PressAndRelease(mouse.leftButton);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
 
         // Click on empty right side and make sure the selection gets cleared.
         Set(mouse.position, scene.From640x480ToScreen(400, 10));
         PressAndRelease(mouse.leftButton);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.Null);
 
@@ -3074,14 +3045,14 @@ internal class UITests : CoreTestsFixture
         // Click on left GO and make sure it gets selected.
         Set(mouse.position, scene.From640x480ToScreen(10, 10));
         PressAndRelease(mouse.leftButton);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
 
         // Click on empty right side and make sure our selection does NOT get cleared.
         Set(mouse.position, scene.From640x480ToScreen(400, 10));
         PressAndRelease(mouse.leftButton);
-        scene.eventSystem.InvokeUpdate();
+        yield return null;
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
@@ -3567,6 +3538,7 @@ internal class UITests : CoreTestsFixture
         // Put mouse over button and press it.
         Set(mouse.position, mousePosition);
         Press(mouse.leftButton);
+        yield return null;
 
         Assert.That(scene.actions.UI.Click.phase.IsInProgress(), Is.True);
 
