@@ -46,6 +46,7 @@ namespace UnityEngine.InputSystem.UI
         }
 
         private CanvasGroup m_CanvasGroup;
+        private bool m_CanvasGroupWasAddedByUs;
 
         private static int s_MultiplayerEventSystemCount;
         private static MultiplayerEventSystem[] s_MultiplayerEventSystems;
@@ -65,7 +66,12 @@ namespace UnityEngine.InputSystem.UI
             {
                 m_CanvasGroup = m_PlayerRoot.GetComponent<CanvasGroup>();
                 if (m_CanvasGroup == null)
+                {
                     m_CanvasGroup = m_PlayerRoot.AddComponent<CanvasGroup>();
+                    m_CanvasGroupWasAddedByUs = true;
+                }
+                else
+                    m_CanvasGroupWasAddedByUs = false;
             }
             else
             {
@@ -78,6 +84,12 @@ namespace UnityEngine.InputSystem.UI
             var index = s_MultiplayerEventSystems.IndexOfReference(this);
             if (index != -1)
                 s_MultiplayerEventSystems.EraseAtWithCapacity(ref s_MultiplayerEventSystemCount, index);
+
+            if (m_CanvasGroupWasAddedByUs)
+                Destroy(m_CanvasGroup);
+
+            m_CanvasGroup = default;
+            m_CanvasGroupWasAddedByUs = default;
 
             base.OnDisable();
         }
