@@ -1315,8 +1315,9 @@ internal class HIDTests : CoreTestsFixture
     // https://fogbugz.unity3d.com/f/cases/1335465/
     [Test]
     [Category("Devices")]
-    [TestCase('/')]
-    [TestCase('\\')]
+    // Il2cpp seems to have trouble with slashes in character literals used in attributes.
+    [TestCase('\u002F')] // '/'
+    [TestCase('\u005C')] // '\'
     [TestCase('>')]
     [TestCase('<')]
     [TestCase(' ')]
