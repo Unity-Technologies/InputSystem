@@ -31,6 +31,12 @@ namespace UnityEngine.InputSystem.iOS
                     .WithDeviceClass("iOSGameController")
                     .WithProduct("DUALSHOCK 4 Wireless Controller"));
 
+            InputSystem.RegisterLayout<DualSenseGampadiOS>("DualSenseGampadiOS",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("iOS")
+                    .WithDeviceClass("iOSGameController")
+                    .WithProduct("DualSense Wireless Controller"));
+
             InputSystem.RegisterLayoutMatcher("GravitySensor",
                 new InputDeviceMatcher()
                     .WithInterface("iOS")

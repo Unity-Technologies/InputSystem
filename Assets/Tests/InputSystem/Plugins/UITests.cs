@@ -23,6 +23,7 @@ using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
+using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -3310,17 +3311,21 @@ internal class UITests : CoreTestsFixture
     // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
     // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
-    #if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+#if UNITY_2021_2_OR_NEWER && !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     [UnityTest]
     [Category("UI")]
-    #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
+#if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-    #endif
+#endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
-    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule()
+    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule(UIPointerBehavior pointerBehavior)
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
@@ -3336,6 +3341,8 @@ internal class UITests : CoreTestsFixture
             var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
             var scrollView = uiRoot.Query<ScrollView>("ScrollView").First();
 
+            uiModule.pointerBehavior = pointerBehavior;
+
             var clickReceived = false;
             uiButton.clicked += () => clickReceived = true;
             // NOTE: We do *NOT* do the following as the gamepad submit action will *not* trigger a ClickEvent.
@@ -3344,6 +3351,7 @@ internal class UITests : CoreTestsFixture
             yield return null;
 
             var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
             var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
 
             Set(mouse.position, buttonCenter, queueEventOnly: true);
@@ -3374,9 +3382,9 @@ internal class UITests : CoreTestsFixture
             ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
             // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
             // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
-            #if UNITY_2021_3_OR_NEWER
+#if UNITY_2021_3_OR_NEWER
             Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
-            #endif
+#endif
 
             // Try a button press with the gamepad.
             // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
@@ -3389,6 +3397,53 @@ internal class UITests : CoreTestsFixture
             Assert.That(clickReceived, Is.True);
 
             ////TODO: tracked device support (not yet supported by UITK)
+
+            static bool IsActive(VisualElement ve)
+            {
+                return ve.Query<VisualElement>().Active().ToList().Contains(ve);
+            }
+
+            // Move the mouse away from the button to check that touch inputs are also able to activate it.
+            Set(mouse.position, buttonOutside, queueEventOnly: true);
+            yield return null;
+            InputSystem.RemoveDevice(mouse);
+
+            int uiButtonDownCount = 0;
+            int uiButtonUpCount = 0;
+            uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
+            uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
+
+            // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
+            BeginTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(0));
+            Assert.That(IsActive(uiButton), Is.True);
+
+            BeginTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+            EndTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+
+            if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(1));
+                Assert.That(IsActive(uiButton), Is.False);
+            }
+            else
+            {
+                Assert.That(uiButtonUpCount, Is.EqualTo(0));
+                Assert.That(IsActive(uiButton), Is.True);
+            }
+
+            EndTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(uiButtonDownCount, Is.EqualTo(1));
+            Assert.That(uiButtonUpCount, Is.EqualTo(1));
+            Assert.That(IsActive(uiButton), Is.False);
+
+            InputSystem.RemoveDevice(touchscreen);
         }
         finally
         {
@@ -3403,18 +3458,20 @@ internal class UITests : CoreTestsFixture
     {
         public void Setup()
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
                 { path = "Assets/Tests/InputSystem/Assets/UITKTestScene.unity", enabled = true }).ToArray();
-            #endif
+#endif
         }
     }
-    #endif
+#endif
 
 #if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
+    static bool[] canRunInBackgroundValueSource = new[] { false, true };
+
     [UnityTest]
-    [Category("Focus")]
-    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonIsNotClicked()
+    public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(
+        [ValueSource(nameof(canRunInBackgroundValueSource))] bool canRunInBackground)
     {
         // Whether we run in the background or not should only move the reset of the mouse button
         // around. Without running in the background, the reset should happen when we come back into focus.
@@ -3425,6 +3482,9 @@ internal class UITests : CoreTestsFixture
         var mousePosition = scene.From640x480ToScreen(100, 100);
 
         var mouse = InputSystem.AddDevice<Mouse>();
+        if (canRunInBackground)
+            runtime.SetCanRunInBackground(mouse.device.deviceId);
+        Assert.That(mouse.device.canRunInBackground, Is.EqualTo(canRunInBackground)); // sanity check precondition
 
         // On sync, send current position but with all buttons up.
         SyncMouse(mouse, mousePosition);
@@ -3463,7 +3523,10 @@ internal class UITests : CoreTestsFixture
         scene.leftChildReceiver.events.Clear();
 
         runtime.PlayerFocusLost();
-        Assert.That(clickCanceled, Is.EqualTo(1));
+        if (canRunInBackground)
+            Assert.That(clickCanceled, Is.EqualTo(0));
+        else
+            Assert.That(clickCanceled, Is.EqualTo(1));
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
@@ -3477,11 +3540,24 @@ internal class UITests : CoreTestsFixture
 
         // NOTE: We *do* need the pointer up to keep UI state consistent.
 
+        if (canRunInBackground)
+        {
+            Assert.That(scene.eventSystem.hasFocus, Is.True);
+            Assert.That(button.receivedPointerUp, Is.False);
+            Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
+            Assert.That(mouse.leftButton.isPressed, Is.True);
+            Assert.That(clicked, Is.False);
+
+            scene.leftChildReceiver.events.Clear();
+            Release(mouse.leftButton);
+            yield return null;
+        }
+
         Assert.That(scene.eventSystem.hasFocus, Is.True);
         Assert.That(button.receivedPointerUp, Is.True);
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
         Assert.That(mouse.leftButton.isPressed, Is.False);
-        Assert.That(clicked, Is.False);
+        Assert.That(clicked, Is.EqualTo(canRunInBackground));
     }
 
 #endif

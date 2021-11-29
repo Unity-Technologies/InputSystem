@@ -623,7 +623,7 @@ namespace UnityEngine.InputSystem
             {
                 screen = Touchscreen.current;
                 if (screen == null)
-                    throw new InvalidOperationException("No touchscreen has been added");
+                    screen = InputSystem.AddDevice<Touchscreen>();
             }
 
             InputSystem.QueueStateEvent(screen, new TouchState
