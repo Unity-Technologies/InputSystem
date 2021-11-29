@@ -17,11 +17,13 @@ however, it has to be formatted properly to pass verification tests.
 - Replaced `UnityLinkerBuildPipelineData.inputDirectory` with hardcoded `Temp` folder because `inputDirectory` is deprecated.
 - Deprecated `InputSettings.filterNoiseOnCurrent`. Now noise filtering is always enabled. Device only will become `.current` if any non-noise control have changed state.
 - A device reset (such as when focus is lost) on `Touchscreen` will now result in all ongoing touches getting cancelled instead of all touches being simply reset to default state.
+- Calling `InputTestFixture.Press`, `InputTestFixture.Set`, etc. from within a `[UnityTest]` will no longer immediately process input. Instead, input will be processed like it normally would as part of the Unity player loop.
 
 ### Fixed
 
 - Fixed writing values into the half-axis controls of sticks (such as `Gamepad.leftStick.left`) producing incorrect values on the stick ([case 1336240](https://issuetracker.unity3d.com/issues/inputtestfixture-tests-return-inverted-values-when-pressing-gamepads-left-or-down-joystick-buttons)).
 - Fixed setting size of event trace in input debugger always growing back to largest size set before.
+- Fixed successive clicks not getting triggered with `TouchSimulation` on when not moving the mouse in-between clicks ([case 1330014](https://issuetracker.unity3d.com/issues/onclick-isnt-triggered-on-the-second-click-when-the-mouse-isnt-moved-and-simulate-touch-input-from-mouse-or-pen-is-enabled)).
 - Fixed `InputSystemUIInputModule` showing incorrect bindings after pressing the 'Fix UI Input Module' button in PlayerInput component([case 1319968](https://issuetracker.unity3d.com/product/unity/issues/guid/1319968/)).
 - Fixed an issue where UI button clicks could be ignored by `InputSystemUIInputModule` if modifying on-screen devices from Update() callbacks ([case 1365070](https://issuetracker.unity3d.com/product/unity/issues/guid/1365070)).
 - Fixed an issue with `InputSystemUIInputModule` that would cause UI to stop responding during play mode after changing a script file while Recompile and Continue mode is active, or by forcing a script recompile using `RequestScriptCompilation`([case 1324215](https://issuetracker.unity3d.com/product/unity/issues/guid/1324215/)).
@@ -34,6 +36,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Touch.activeTouches` still registering touches after the app loses focus ([case 1364017](https://issuetracker.unity3d.com/issues/input-system-new-input-system-registering-active-touches-when-app-loses-focus)).
 - Fixed `MultiplayerEventSystem` not preventing keyboard and gamepad/joystick navigation from one player's UI moving to another player's UI ([case 1306361](https://issuetracker.unity3d.com/issues/input-system-ui-input-module-lets-the-player-navigate-across-other-canvases)).
   * This fix relies on a `CanvasGroup` being injected into each `playerRoot` and the `interactable` property of the group being toggled back and forth depending on which part of the UI is being updated.
+- Fixed `InputTestFixture` incorrectly running input updates out of sync with the player loop ([case 1341740](https://issuetracker.unity3d.com/issues/buttoncontrol-dot-waspressedthisframe-is-false-when-using-inputtestfixture-dot-press)).
+  * This had effects such as `InputAction.WasPressedThisFrame()` returning false expectedly.
 
 #### Actions
 
