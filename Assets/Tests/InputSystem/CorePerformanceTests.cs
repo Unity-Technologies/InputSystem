@@ -410,6 +410,62 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
     }
 
+    public enum LookupByName
+    {
+        CaseMatches,
+        CaseDoesNotMatch
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [TestCase(LookupByName.CaseMatches)]
+    [TestCase(LookupByName.CaseDoesNotMatch)]
+    public void Performance_LookupActionByName(LookupByName lookup)
+    {
+        const int kActionCount = 100;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        for (var n = 0; n < kActionCount; ++n)
+            map.AddAction("action" + n);
+
+        Measure.Method(() =>
+        {
+            var _ = asset[(lookup == LookupByName.CaseDoesNotMatch ? "ACTION" : "action") + (int)(kActionCount * 0.75f)];
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void Performance_LookupActionByGuid()
+    {
+        const int kActionCount = 100;
+
+        InputAction actionToFind = null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        for (var n = 0; n < kActionCount; ++n)
+        {
+            var action = map.AddAction("action" + n);
+            action.GenerateId();
+
+            if (n == (int)(kActionCount * 0.75f))
+                actionToFind = action;
+        }
+
+        Measure.Method(() =>
+        {
+            Assert.That(asset[actionToFind.id.ToString()], Is.SameAs(actionToFind));
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
     // We're hitting MatchesPrefix a lot from rebinding, so make sure it's performing reasonably well.
     [Test, Performance]
     [Category("Performance")]

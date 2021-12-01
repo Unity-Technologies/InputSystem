@@ -41,6 +41,7 @@ namespace UnityEngine.InputSystem
             return null;
         }
 
+        ////REVIEW: This ist too high up in the class hierarchy; can be applied to any kind of control without it being readily apparent what exactly it means
         /// <summary>
         /// Check whether the given control is considered pressed according to the button press threshold.
         /// </summary>
@@ -99,8 +100,14 @@ namespace UnityEngine.InputSystem
             var magnitude = control.EvaluateMagnitude();
             if (magnitude < 0)
             {
-                ////REVIEW: we probably want to do a value comparison on this path to compare it to the default value
-                return true;
+                // We know the control is not in default state but we also know it doesn't support
+                // magnitude. So, all we can say is that it is actuated. Not how much it is actuated.
+                //
+                // If we're looking for a specific threshold here, consider the control to always
+                // be under. But if not, consider it actuated "by virtue of not being in default state".
+                if (Mathf.Approximately(threshold, 0))
+                    return true;
+                return false;
             }
 
             if (Mathf.Approximately(threshold, 0))
@@ -912,7 +919,7 @@ namespace UnityEngine.InputSystem
             var device = control.device;
 
             builder.Append('<');
-            builder.Append(deviceLayout);
+            builder.Append(deviceLayout.Escape("\\>", "\\>"));
             builder.Append('>');
 
             // Add usages of device, if any.
@@ -920,14 +927,16 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < deviceUsages.Count; ++i)
             {
                 builder.Append('{');
-                builder.Append(deviceUsages[i]);
+                builder.Append(deviceUsages[i].ToString().Escape("\\}", "\\}"));
                 builder.Append('}');
             }
 
-            builder.Append('/');
+            builder.Append(InputControlPath.Separator);
 
-            var devicePath = device.path;
-            var controlPath = control.path;
+            // If any of the components contains a backslash, double it up as in control paths,
+            // these serve as escape characters.
+            var devicePath = device.path.Replace("\\", "\\\\");
+            var controlPath = control.path.Replace("\\", "\\\\");
             builder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
 
             return builder.ToString();

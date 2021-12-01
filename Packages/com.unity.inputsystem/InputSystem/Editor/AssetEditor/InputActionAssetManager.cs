@@ -29,10 +29,7 @@ namespace UnityEngine.InputSystem.Editor
             get
             {
                 Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID), "Asset GUID is empty");
-                var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-                if (string.IsNullOrEmpty(assetPath))
-                    throw new InvalidOperationException("Could not determine asset path for " + m_AssetGUID);
-                return assetPath;
+                return AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             }
         }
 
@@ -133,7 +130,17 @@ namespace UnityEngine.InputSystem.Editor
 
         public void LoadImportedObjectFromGuid()
         {
-            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(path);
+            // https://fogbugz.unity3d.com/f/cases/1313185/
+            // InputActionEditorWindow being an EditorWindow, it will be saved as part of the editor's
+            // window layout. When a project is opened that has no Library/ folder, the layout from the
+            // most recently opened project is used. Which means that when opening an .inputactions
+            // asset in project A, then closing it, and then opening project B, restoring the window layout
+            // also tries to restore the InputActionEditorWindow having that very same asset open -- which
+            // will lead nowhere except there happens to be an InputActionAsset with the very same GUID in
+            // the project.
+            var assetPath = path;
+            if (!string.IsNullOrEmpty(assetPath))
+                m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
 
         public void ApplyChanges()
