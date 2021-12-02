@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.UI
         }
 
         // Cached instances for raycasts hits to minimize GC.
-        [NonSerialized] private List<RaycastHitData> m_RaycastResultsCache = new();
+        [NonSerialized] private List<RaycastHitData> m_RaycastResultsCache = new List<RaycastHitData>();
 
         internal void PerformRaycast(ExtendedPointerEventData eventData, List<RaycastResult> resultAppendList)
         {
@@ -168,7 +168,7 @@ namespace UnityEngine.InputSystem.UI
 
         internal static InlinedArray<TrackedDeviceRaycaster> s_Instances;
 
-        static readonly List<RaycastHitData> s_SortedGraphics = new();
+        private static readonly List<RaycastHitData> s_SortedGraphics = new List<RaycastHitData>();
         private void SortedRaycastGraphics(Canvas canvas, Ray ray, List<RaycastHitData> results)
         {
             var graphics = GraphicRegistry.GetGraphicsForCanvas(canvas);
