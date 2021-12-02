@@ -58,6 +58,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed control schemes of bindings not getting updates when being pasted from one `.inputactions` asset into another ([case 1276106](https://issuetracker.unity3d.com/issues/input-system-control-schemes-are-not-resolved-when-copying-bindings-between-inputactionassets)).
   * For example, if you copied a binding from an asset that had a "Gamepad" control scheme into an asset that had none, the resulting binding would be unusable.
   * All associations with control schemes that do not exist in the target asset are now removed from bindings upon pasting.
+- Fixed `InputActionSetupExtensions.AddCompositeBinding` not setting name of composite (fix contributed by [reapazor](https://github.com/reapazor)).
 
 ## [1.2.0] - 2021-10-22
 
