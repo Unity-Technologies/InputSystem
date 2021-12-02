@@ -1415,20 +1415,6 @@ namespace UnityEngine.InputSystem.UI
                 && m_TrackedDevicePositionAction?.action == null;
         }
 
-        private bool IsAnyActionEnabled()
-        {
-            return (m_PointAction?.action?.enabled ?? true) &&
-                (m_LeftClickAction?.action?.enabled ?? true) &&
-                (m_RightClickAction?.action?.enabled ?? true) &&
-                (m_MiddleClickAction?.action?.enabled ?? true) &&
-                (m_MoveAction?.action?.enabled ?? true) &&
-                (m_SubmitAction?.action?.enabled ?? true) &&
-                (m_CancelAction?.action?.enabled ?? true) &&
-                (m_ScrollWheelAction?.action?.enabled ?? true) &&
-                (m_TrackedDeviceOrientationAction?.action?.enabled ?? true) &&
-                (m_TrackedDevicePositionAction?.action?.enabled ?? true);
-        }
-
         private void EnableAllActions()
         {
             EnableInputAction(m_PointAction);
@@ -2144,6 +2130,10 @@ namespace UnityEngine.InputSystem.UI
             if (oldAction == null)
                 return null;
 
+            var oldActionEnabled = oldAction.enabled;
+            if (oldActionEnabled)
+                DisableInputAction(actionReference);
+
             var oldActionMap = oldAction.actionMap;
             Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
 
@@ -2155,7 +2145,11 @@ namespace UnityEngine.InputSystem.UI
             if (newAction == null)
                 return null;
 
-            return InputActionReference.Create(newAction);
+            var reference = InputActionReference.Create(newAction);
+            if (oldActionEnabled)
+                EnableInputAction(reference);
+
+            return reference;
         }
 
         public InputActionAsset actionsAsset
@@ -2165,9 +2159,6 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (value != m_ActionsAsset)
                 {
-                    var wasEnabled = IsAnyActionEnabled();
-
-                    DisableAllActions();
                     UnhookActions();
 
                     m_ActionsAsset = value;
@@ -2180,12 +2171,10 @@ namespace UnityEngine.InputSystem.UI
                     scrollWheel = UpdateReferenceForNewAsset(scrollWheel);
                     submit = UpdateReferenceForNewAsset(submit);
                     cancel = UpdateReferenceForNewAsset(cancel);
+                    trackedDeviceOrientation = UpdateReferenceForNewAsset(trackedDeviceOrientation);
+                    trackedDevicePosition = UpdateReferenceForNewAsset(trackedDevicePosition);
 
-                    if (wasEnabled)
-                    {
-                        HookActions();
-                        EnableAllActions();
-                    }
+                    HookActions();
                 }
             }
         }
