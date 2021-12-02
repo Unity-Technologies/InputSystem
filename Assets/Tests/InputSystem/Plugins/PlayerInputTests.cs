@@ -2142,6 +2142,39 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerJoined, Is.True);
     }
 
+    [Test] // Mimics what is reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenOverridingDeviceLayout_LostDeviceShouldBeResolvedAndRepaired()
+    {
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        go.SetActive(true);
+
+        // Actuate gamepad to pair with user (other option would be initially paired)
+        Press(gamepad.buttonSouth);
+        Assert.That(playerInput.devices[0], Is.SameAs(gamepad));
+
+        // Register a layout override (this will recreate device)
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""GamepadPlayerUsageTags"",
+                ""extend"" : ""Gamepad"",
+                ""commonUsages"" : [
+                    ""Player1"", ""Player2""
+                ]
+            }
+        ");
+
+        // As reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
+        // there would be no device assigned after registered layout override since this
+        // would recreate the device with the same device id (but a new instance).
+        Assert.That(playerInput.devices.Count, Is.EqualTo(1));
+        Assert.That(playerInput.devices[0], !Is.SameAs(gamepad)); // expected replacement (by design, not a requirement)
+        Assert.That(playerInput.devices[0].name, Is.EqualTo(gamepad.name));
+    }
+
     // An action is either
     //   (a) button-like, or
     //   (b) axis-like, or
