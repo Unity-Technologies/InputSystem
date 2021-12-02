@@ -1261,6 +1261,87 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteBinding_IntoDifferentAsset()
+    {
+        var asset1 = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset1.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+        asset1.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+
+        var map1 = asset1.AddActionMap("map");
+        var action1 = map1.AddAction("actionOnlyInFirstAsset");
+        var action2 = map1.AddAction("actionInBothAssets");
+        action1.AddBinding("<Gamepad>/leftStick", groups: "Gamepad");
+        action1.AddBinding("<Keyboard>/a", groups: "Keyboard");
+        action2.AddBinding("*/{Back}", groups: "Gamepad;Keyboard");
+
+        var asset2 = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset2.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+        asset2.AddControlScheme("Mouse").WithRequiredDevice<Mouse>();
+
+        var map2 = asset2.AddActionMap("map");
+        map2.AddAction("actionOnlyInSecondAsset");
+        map2.AddAction("actionInBothAssets");
+
+        var serializedObject1 = new SerializedObject(asset1);
+        var tree1 = new InputActionTreeView(serializedObject1)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject1),
+        };
+        tree1.Reload();
+
+        var serializedObject2 = new SerializedObject(asset2);
+        var tree2 = new InputActionTreeView(serializedObject2)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject2),
+            onBindingAdded = prop => InputActionSerializationHelpers.RemoveUnusedBindingGroups(prop, asset2.controlSchemes)
+        };
+        tree2.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            // Copy <Gamepad>/leftStick binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionOnlyInSecondAsset.
+            tree2.SelectItem("map/actionOnlyInSecondAsset");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children, Has.Count.EqualTo(1));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+
+            // Copy <Keyboard>/a binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionOnlyInSecondAsset in second asset.
+            tree2.SelectItem("map/actionOnlyInSecondAsset");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children, Has.Count.EqualTo(2));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[1].As<BindingTreeItem>().groups, Is.EqualTo(""));
+
+            // Copy */{Back} binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionInBothAssets in second asset.
+            // NOTE: Apparently, we don't currently support just pasting it straight onto the map.
+            tree2.SelectItem("map/actionInBothAssets");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionInBothAssets"].children, Has.Count.EqualTo(1));
+            Assert.That(tree2["map/actionInBothAssets"].children[0].As<BindingTreeItem>().path, Is.EqualTo("*/{Back}"));
+            Assert.That(tree2["map/actionInBothAssets"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_ActionTree_CannotCopyPasteBinding_IntoActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -3035,6 +3116,7 @@ partial class CoreTests
         {
         }
 
+        #pragma warning disable CS0114
         public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
         {
             return base.BuildRoot();

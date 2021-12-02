@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine.InputSystem.Controls;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using NUnit.Framework.Internal;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -78,6 +79,8 @@ namespace UnityEngine.InputSystem
             {
                 // Apparently, NUnit is reusing instances :(
                 m_KeyInfos = default;
+                m_IsUnityTest = default;
+                m_CurrentTest = default;
 
                 // Disable input debugger so we don't waste time responding to all the
                 // input system activity from the tests.
@@ -181,10 +184,19 @@ namespace UnityEngine.InputSystem
             m_Initialized = false;
         }
 
+        private bool? m_IsUnityTest;
+        private Test m_CurrentTest;
+
         // True if the current test is a [UnityTest].
-        private static bool IsUnityTest()
+        private bool IsUnityTest()
         {
-            var test = TestContext.CurrentContext.Test;
+            // We cache this value so that any call after the first in a test no
+            // longer allocates GC memory. Otherwise we'll run into trouble with
+            // DoesNotAllocate tests.
+            var test = TestContext.CurrentTestExecutionContext.CurrentTest;
+            if (m_IsUnityTest.HasValue && m_CurrentTest == test)
+                return m_IsUnityTest.Value;
+
             var className = test.ClassName;
             var methodName = test.MethodName;
 
@@ -201,14 +213,19 @@ namespace UnityEngine.InputSystem
                         break;
                 }
             }
+
             if (type == null)
-                return false;
+            {
+                m_IsUnityTest = false;
+            }
+            else
+            {
+                var method = type.GetMethod(methodName);
+                m_IsUnityTest = method?.GetCustomAttribute<UnityTestAttribute>() != null;
+            }
 
-            var method = type.GetMethod(methodName);
-            if (method == null)
-                return false;
-
-            return method.GetCustomAttribute<UnityTestAttribute>() != null;
+            m_CurrentTest = test;
+            return m_IsUnityTest.Value;
         }
 
         #if UNITY_EDITOR
@@ -451,7 +468,10 @@ namespace UnityEngine.InputSystem
         /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
         /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
         /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
-        /// as they will not yet see the state change.</param>
+        /// as they will not yet see the state change.
+        ///
+        /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
+        /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the control.</typeparam>
         /// <example>
         /// <code>
@@ -484,7 +504,10 @@ namespace UnityEngine.InputSystem
         /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
         /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
         /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
-        /// as they will not yet see the state change.</param>
+        /// as they will not yet see the state change.
+        ///
+        /// Note that this parameter will be ignored if the test is a <c>[UnityTest]</c>. Multi-frame
+        /// playmode tests will automatically process input as part of the Unity player loop.</param>
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
         /// <example>
         /// <code>
@@ -500,6 +523,9 @@ namespace UnityEngine.InputSystem
             if (!control.device.added)
                 throw new ArgumentException(
                     $"Device of control '{control}' has not been added to the system", nameof(control));
+
+            if (IsUnityTest())
+                queueEventOnly = true;
 
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
@@ -614,7 +640,7 @@ namespace UnityEngine.InputSystem
             {
                 screen = Touchscreen.current;
                 if (screen == null)
-                    throw new InvalidOperationException("No touchscreen has been added");
+                    screen = InputSystem.AddDevice<Touchscreen>();
             }
 
             InputSystem.QueueStateEvent(screen, new TouchState

@@ -1140,4 +1140,40 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touchscreen.current.touches[0].isInProgress, Is.True);
         Assert.That(Touchscreen.current.touches[0].position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
     }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void EnhancedTouch_ActiveTouchesGetCanceledOnFocusLoss_WithRunInBackgroundBeing(bool runInBackground)
+    {
+        runtime.runInBackground = runInBackground;
+
+        BeginTouch(1, new Vector2(123, 456));
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
+
+        runtime.PlayerFocusLost();
+
+        if (runInBackground)
+        {
+            // When running in the background, next update after focus loss sees touches cancelled
+            // and update after that sees them gone.
+            InputSystem.Update(InputUpdateType.Dynamic);
+        }
+        else
+        {
+            // When not running in the background, the same thing happens but only on focus gain.
+            runtime.PlayerFocusGained();
+            InputSystem.Update();
+        }
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Canceled));
+
+        InputSystem.Update();
+
+        Assert.That(Touch.activeTouches, Is.Empty);
+    }
 }
