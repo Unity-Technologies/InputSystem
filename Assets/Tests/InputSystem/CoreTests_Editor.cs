@@ -2167,6 +2167,9 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/a")
             .With("Positive", "<Keyboard>/b");
 
+        // Wipe name that AddCompositeBinding assigned.
+        action.ChangeBinding(0).WithName(null);
+
         var so = new SerializedObject(asset);
         var tree = new InputActionTreeView(so)
         {
