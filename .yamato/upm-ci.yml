@@ -179,8 +179,8 @@ all_tests:
           only:
             - "develop"
 
-{% for run in ["", "_dryrun"] %}
-publish{{run}}:
+{% for run in (1..2) %}
+publish{% cycle "", "_dryrun" %}:
   name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
