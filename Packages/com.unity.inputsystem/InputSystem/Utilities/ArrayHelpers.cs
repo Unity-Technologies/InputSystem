@@ -178,15 +178,16 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static int IndexOf<TValue>(this TValue[] array, Predicate<TValue> predicate, int startIndex = 0, int count = -1)
         {
-            if (array != null)
+            if (array == null)
+                return -1;
+
+            var end = startIndex + (count < 0 ? array.Length - startIndex : count);
+            for (var i = startIndex; i < end; ++i)
             {
-                var end = startIndex + (count < 0 ? array.Length - startIndex : count);
-                for (var i = startIndex; i < end; ++i)
-                {
-                    if (predicate(array[i]))
-                        return i;
-                }
+                if (predicate(array[i]))
+                    return i;
             }
+
             return -1;
         }
 

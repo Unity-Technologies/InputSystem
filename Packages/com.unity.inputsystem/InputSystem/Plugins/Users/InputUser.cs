@@ -1506,17 +1506,10 @@ namespace UnityEngine.InputSystem.Users
                 // New device was added. See if it was a device we previously lost on a user.
                 case InputDeviceChange.Added:
                 {
-                    int FindLostDevice(int deviceIndex, int deviceId)
-                    {   // Note that we compare by Device ID since the lost device may be another instance
-                        // since its recreated during layout override. For other cases its the same reference.
-                        return s_GlobalState.allLostDevices.IndexOf((d) => d.deviceId == device.deviceId,
-                            deviceIndex, s_GlobalState.allLostDeviceCount);
-                    }
-
                     // Search all lost devices. Could affect multiple users.
                     // Note that RemoveDeviceFromUser removes one element, hence no advancement of deviceIndex.
-                    for (var deviceIndex = FindLostDevice(0, device.deviceId); deviceIndex != -1;
-                         deviceIndex = FindLostDevice(deviceIndex, device.deviceId))
+                    for (var deviceIndex = FindLostDevice(device); deviceIndex != -1;
+                         deviceIndex = FindLostDevice(device, deviceIndex))
                     {
                         // Find user. Must be there as we found the device in s_AllLostDevices.
                         var userIndex = -1;
@@ -1603,6 +1596,22 @@ namespace UnityEngine.InputSystem.Users
                     break;
                 }
             }
+        }
+
+        private static int FindLostDevice(InputDevice device, int startIndex = 0)
+        {
+            // Compare both by device ID and by reference. We may be looking at a device that was recreated
+            // due to layout changes (new InputDevice instance, same ID) or a device that was reconnected
+            // and thus fetched out of `disconnectedDevices` (same InputDevice instance, new ID).
+
+            var newDeviceId = device.deviceId;
+            for (var i = startIndex; i < s_GlobalState.allLostDeviceCount; ++i)
+            {
+                var lostDevice = s_GlobalState.allLostDevices[i];
+                if (device == lostDevice || lostDevice.deviceId == newDeviceId) return i;
+            }
+
+            return -1;
         }
 
         // We hook this into InputSystem.onEvent when listening for activity on unpaired devices.
