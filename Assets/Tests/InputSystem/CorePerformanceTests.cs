@@ -28,6 +28,33 @@ internal class CorePerformanceTests : CoreTestsFixture
         NativeLeakDetection.Mode = NativeLeakDetectionMode.Disabled;
     }
 
+    [Test, Performance]
+    [Category("Performance")]
+    public void TestBurstKeyboard()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        int iteration = 0;
+
+        Measure.Method(() =>
+            {
+                if(iteration++ % 2 == 0)
+                {
+                    Press(keyboard.aKey);
+                    Press(keyboard.wKey);
+                    Press(keyboard.spaceKey);
+                }
+                else
+                {
+                    Release(keyboard.aKey);
+                    Release(keyboard.wKey);
+                    Release(keyboard.spaceKey);
+                }
+            })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
     ////TODO: same test but with several actions listening on each gamepad
     [Test, Performance]
     [Category("Performance")]

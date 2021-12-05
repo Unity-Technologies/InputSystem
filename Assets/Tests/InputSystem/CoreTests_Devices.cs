@@ -35,6 +35,34 @@ partial class CoreTests
 {
     [Test]
     [Category("Devices")]
+    public void Keyboard_CanProcessEvents()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        int keyChangedCount = 0;
+
+        var key = Key.DownArrow;
+        var keyControl = keyboard.downArrowKey;
+
+        keyControl.OnChanged += value => { keyChangedCount++; };
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+        InputSystem.Update();
+
+        Assert.That(keyChangedCount, Is.EqualTo(1));
+        Assert.That(keyControl.wasPressedThisFrame, Is.True);
+        Assert.That(keyControl.wasReleasedThisFrame, Is.False);
+        Assert.That(keyControl.isPressed, Is.True);
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(keyChangedCount, Is.EqualTo(2));
+        Assert.That(keyControl.wasPressedThisFrame, Is.False);
+        Assert.That(keyControl.wasReleasedThisFrame, Is.True);
+        Assert.That(keyControl.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetAllDevices()
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();

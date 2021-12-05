@@ -3322,6 +3322,10 @@ namespace UnityEngine.InputSystem
 
                             var eventPtr = new InputEventPtr(currentEventReadPtr);
 
+
+                            if(device is Keyboard keyboard)
+                                keyboard.ProcessEvent(eventPtr);
+
                             // Ignore the event if the last state update we received for the device was
                             // newer than this state event is. We don't allow devices to go back in time.
                             //

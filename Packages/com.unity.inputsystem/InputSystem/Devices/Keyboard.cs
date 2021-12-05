@@ -1,9 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Burst;
+using Unity.Collections;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Layouts;
 
 ////FIXME: display names for keys should be localized key names, not just printable characters (e.g. "Space" should be called "Leertaste")
@@ -863,6 +868,219 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
+        private unsafe KeyboardState currentState;
+        private unsafe KeyboardState* currentStatePntr;
+        private ProfilerMarker m_DetectChangedKeysProfileMarker;
+        private ProfilerMarker m_UpdateControlsProfileMarker;
+
+
+        public unsafe Keyboard()
+        {
+            fixed (KeyboardState* ptr = &currentState)
+                currentStatePntr = ptr;
+
+            m_KeyStrings = m_KeyStrings = new[]
+            {
+                "space",
+                "enter",
+                "tab",
+                "backquote",
+                "quote",
+                "semicolon",
+                "comma",
+                "period",
+                "slash",
+                "backslash",
+                "leftbracket",
+                "rightbracket",
+                "minus",
+                "equals",
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+                "g",
+                "h",
+                "i",
+                "j",
+                "k",
+                "l",
+                "m",
+                "n",
+                "o",
+                "p",
+                "q",
+                "r",
+                "s",
+                "t",
+                "u",
+                "v",
+                "w",
+                "x",
+                "y",
+                "z",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "0",
+                "leftshift",
+                "rightshift",
+                "leftalt",
+                "rightalt",
+                "leftctrl",
+                "rightctrl",
+                "leftmeta",
+                "rightmeta",
+                "contextmenu",
+                "escape",
+                "leftarrow",
+                "rightarrow",
+                "uparrow",
+                "downarrow",
+                "backspace",
+                "pagedown",
+                "pageup",
+                "home",
+                "end",
+                "insert",
+                "delete",
+                "capslock",
+                "numlock",
+                "printscreen",
+                "scrolllock",
+                "pause",
+                "numpadenter",
+                "numpaddivide",
+                "numpadmultiply",
+                "numpadplus",
+                "numpadminus",
+                "numpadperiod",
+                "numpadequals",
+                "numpad0",
+                "numpad1",
+                "numpad2",
+                "numpad3",
+                "numpad4",
+                "numpad5",
+                "numpad6",
+                "numpad7",
+                "numpad8",
+                "numpad9",
+                "f1",
+                "f2",
+                "f3",
+                "f4",
+                "f5",
+                "f6",
+                "f7",
+                "f8",
+                "f9",
+                "f10",
+                "f11",
+                "f12",
+                "oem1",
+                "oem2",
+                "oem3",
+                "oem4",
+                "oem5",
+            };
+
+            m_ChangedBitsCount = new NativeArray<int>(1, Allocator.Persistent);
+            m_ControlIndicies = new NativeArray<int>(m_KeyStrings.Length, Allocator.Persistent);
+
+            m_DetectChangedKeysProfileMarker = new ProfilerMarker(ProfilerCategory.Input, "Keyboard::Detect changed keys");
+            m_UpdateControlsProfileMarker = new ProfilerMarker(ProfilerCategory.Input, "Keyboard::Update controls");
+        }
+
+        [BurstCompile(CompileSynchronously = true)]
+        public unsafe struct GetIndicesOfChangedBitsJob : IJob
+        {
+            [NativeDisableUnsafePtrRestriction] private byte* m_EventState;
+            [NativeDisableUnsafePtrRestriction] private byte* m_CurrentState;
+            [WriteOnly] private NativeArray<int> m_Output;
+            [WriteOnly] private NativeArray<int> m_ChangedBitsCount;
+
+            public GetIndicesOfChangedBitsJob(byte* eventState, byte* currentState, NativeArray<int> output, NativeArray<int> changedBitsCount)
+            {
+                m_EventState = eventState;
+                m_CurrentState = currentState;
+                m_Output = output;
+                m_ChangedBitsCount = changedBitsCount;
+            }
+            
+            public void Execute()
+            {
+                var previousKeyboardState = *(ulong*) m_CurrentState;
+                var eventState = *(ulong*) m_EventState;
+
+                var changedStates = previousKeyboardState ^ eventState;
+
+                var pos = 0;
+                while (changedStates != 0)
+                {
+                    m_Output[pos++] = math.tzcnt(changedStates);
+                    changedStates &= changedStates - 1;
+                }
+
+                previousKeyboardState = *(ulong*)(m_CurrentState + 8) & 0xFFFFFFFFFF2D;
+                eventState = *(ulong*)(m_EventState + 8) & 0xFFFFFFFFFF2D;
+
+                changedStates = previousKeyboardState ^ eventState;
+
+                while (changedStates != 0)
+                {
+                    m_Output[pos++] = 64 + math.tzcnt(changedStates);
+                    changedStates &= changedStates - 1;
+                }
+
+                m_ChangedBitsCount[0] = pos;
+            }
+        }
+
+        public unsafe void ProcessEvent(InputEventPtr inputEvent)
+        {
+            var stateEvent = StateEvent.FromUnchecked(inputEvent);
+            if (stateEvent->stateFormat != KeyboardState.Format)
+                return;
+
+            var eventState = (KeyboardState*) stateEvent->state;
+
+            m_DetectChangedKeysProfileMarker.Begin();
+            
+            var getIndicesOfChangedBitsJob = new GetIndicesOfChangedBitsJob(
+                (byte*)eventState, 
+                (byte*)currentStatePntr,
+                m_ControlIndicies, 
+                m_ChangedBitsCount);
+            getIndicesOfChangedBitsJob.Schedule().Complete();
+            
+            var count = m_ChangedBitsCount[0];
+            for (var i = 0; i < count; i++)
+            {
+                m_UpdateControlsProfileMarker.Begin();
+                keys[m_ControlIndicies[i] - 1].NotifyStateChanged(
+                    MemoryHelpers.ReadSingleBit(eventState, (uint)m_ControlIndicies[i]));
+                m_UpdateControlsProfileMarker.End();
+            }
+            m_DetectChangedKeysProfileMarker.End();
+
+            currentState = *eventState;
+        }
+
+        public void Dispose()
+        {
+            m_ControlIndicies.Dispose();
+            m_ChangedBitsCount.Dispose();
+        }
+
         /// <summary>
         /// Total number of key controls on a keyboard, i.e. the number of controls
         /// in <see cref="allKeys"/>.
@@ -2007,135 +2225,23 @@ namespace UnityEngine.InputSystem
         /// </summary>
         protected override void FinishSetup()
         {
-            var keyStrings = new[]
+            m_Keys = new KeyControl[m_KeyStrings.Length];
+            for (var i = 0; i < m_KeyStrings.Length; ++i)
             {
-                "space",
-                "enter",
-                "tab",
-                "backquote",
-                "quote",
-                "semicolon",
-                "comma",
-                "period",
-                "slash",
-                "backslash",
-                "leftbracket",
-                "rightbracket",
-                "minus",
-                "equals",
-                "a",
-                "b",
-                "c",
-                "d",
-                "e",
-                "f",
-                "g",
-                "h",
-                "i",
-                "j",
-                "k",
-                "l",
-                "m",
-                "n",
-                "o",
-                "p",
-                "q",
-                "r",
-                "s",
-                "t",
-                "u",
-                "v",
-                "w",
-                "x",
-                "y",
-                "z",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5",
-                "6",
-                "7",
-                "8",
-                "9",
-                "0",
-                "leftshift",
-                "rightshift",
-                "leftalt",
-                "rightalt",
-                "leftctrl",
-                "rightctrl",
-                "leftmeta",
-                "rightmeta",
-                "contextmenu",
-                "escape",
-                "leftarrow",
-                "rightarrow",
-                "uparrow",
-                "downarrow",
-                "backspace",
-                "pagedown",
-                "pageup",
-                "home",
-                "end",
-                "insert",
-                "delete",
-                "capslock",
-                "numlock",
-                "printscreen",
-                "scrolllock",
-                "pause",
-                "numpadenter",
-                "numpaddivide",
-                "numpadmultiply",
-                "numpadplus",
-                "numpadminus",
-                "numpadperiod",
-                "numpadequals",
-                "numpad0",
-                "numpad1",
-                "numpad2",
-                "numpad3",
-                "numpad4",
-                "numpad5",
-                "numpad6",
-                "numpad7",
-                "numpad8",
-                "numpad9",
-                "f1",
-                "f2",
-                "f3",
-                "f4",
-                "f5",
-                "f6",
-                "f7",
-                "f8",
-                "f9",
-                "f10",
-                "f11",
-                "f12",
-                "oem1",
-                "oem2",
-                "oem3",
-                "oem4",
-                "oem5",
-            };
-            m_Keys = new KeyControl[keyStrings.Length];
-            for (var i = 0; i < keyStrings.Length; ++i)
-            {
-                m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
+                m_Keys[i] = GetChildControl<KeyControl>(m_KeyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
                 m_Keys[i].keyCode = (Key)(i + 1);
             }
-            Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
+            Debug.Assert(m_KeyStrings[(int)Key.OEM5 - 1] == "oem5",
                 "keyString array layout doe not match Key enum layout");
             anyKey = GetChildControl<AnyKeyControl>("anyKey");
             shiftKey = GetChildControl<ButtonControl>("shift");
             ctrlKey = GetChildControl<ButtonControl>("ctrl");
             altKey = GetChildControl<ButtonControl>("alt");
             imeSelected = GetChildControl<ButtonControl>("IMESelected");
+
 
             base.FinishSetup();
         }
@@ -2202,6 +2308,9 @@ namespace UnityEngine.InputSystem
         private string m_KeyboardLayoutName;
         private KeyControl[] m_Keys;
         private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
+        private NativeArray<int> m_ControlIndicies;
+        private NativeArray<int> m_ChangedBitsCount;
+        private string[] m_KeyStrings;
 
         /// <summary>
         /// Raw array of key controls on the keyboard.

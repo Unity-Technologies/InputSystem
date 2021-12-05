@@ -981,6 +981,8 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
+        public event Action<TValue> OnChanged;
+
         public override Type valueType => typeof(TValue);
 
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
@@ -1200,5 +1202,10 @@ namespace UnityEngine.InputSystem
         #endif
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
+
+        protected void NotifyStateChangedInternal(TValue value)
+        {
+            OnChanged?.Invoke(value);
+        }
     }
 }

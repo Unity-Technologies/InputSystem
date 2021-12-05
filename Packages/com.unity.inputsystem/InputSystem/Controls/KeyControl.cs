@@ -73,6 +73,16 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        public void NotifyStateChanged(bool value)
+        {
+            if (value)
+                m_LastPressedUpdateCount = InputState.updateCount;
+            else
+                m_LastReleasedUpdateCount = InputState.updateCount;
+
+            NotifyStateChangedInternal(value ? 1f : 0f);
+        }
+
         // Cached configuration data for the key. We fetch this from the
         // device on demand.
         private int m_ScanCode;

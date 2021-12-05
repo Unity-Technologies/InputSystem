@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 
@@ -91,19 +92,36 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
-        public bool isPressed => IsValueConsideredPressed(ReadValue());
+        public bool isPressed => m_LastReleasedUpdateCount < m_LastPressedUpdateCount;// IsValueConsideredPressed(ReadValue());
 
-        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasPressedThisFrame => m_LastPressedUpdateCount == InputState.updateCount;// device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
-        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasReleasedThisFrame => m_LastReleasedUpdateCount == InputState.updateCount;// device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
         internal static float s_GlobalDefaultButtonPressPoint;
         internal static float s_GlobalDefaultButtonReleaseThreshold;
 
+        protected uint m_LastPressedUpdateCount;
+        protected uint m_LastReleasedUpdateCount;
+
         // We clamp button press points to this value as allowing 0 as the press point causes all buttons
         // to implicitly be pressed all the time. Not useful.
         internal const float kMinButtonPressPoint = 0.0001f;
+
+        public void NotifyStateChanged(float value)
+        {
+            if (value > pressPoint)
+            {
+                m_LastPressedUpdateCount = InputState.updateCount;
+            }
+            else if(value < pressPoint)
+            {
+                m_LastReleasedUpdateCount = InputState.updateCount;
+            }
+
+            NotifyStateChangedInternal(value);
+        }
     }
 }
