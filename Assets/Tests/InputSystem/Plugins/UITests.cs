@@ -251,6 +251,8 @@ internal class UITests : CoreTestsFixture
     [TestCase("GenericDeviceWithPointingAbility", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
     public IEnumerator UI_CanDriveUIFromPointer(string deviceLayout, UIPointerType pointerType, PointerEventData.InputButton clickButton)
     {
+        ResetTime();
+
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
         InputSystem.RegisterLayout(kGenericDeviceWithPointingAbility);
 
