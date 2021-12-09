@@ -135,10 +135,44 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
+        [SerializeField]
+        InputActionProperty m_TrackingStateFlags;
+        public InputActionProperty trackingStateFlags
+        {
+            get => m_TrackingStateFlags;
+            set { m_TrackingStateFlags = value; }
+        }
+
+
+        /// <summary>
+        /// Bitflag enum which represents what data was set on an associated Pose struct
+        /// This matches UnityXRInputTrackingStateFlags 
+        /// </summary>
+
+        [Flags]
+        protected enum PoseDataFlags
+        {
+            /// <summary>
+            /// No data was actually set on the pose
+            /// </summary>
+            NoData = 0,
+            /// <summary>
+            /// If this flag is set, position data was updated on the associated pose struct
+            /// </summary>
+            Position = 1 << 0,
+            /// <summary>
+            /// If this flag is set, rotation data was updated on the associated pose struct
+            /// </summary>
+            Rotation = 1 << 1,
+        };
+
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
+        bool m_HasTrackingStateFlags = false;
+        PoseDataFlags m_CurrentTrackingStateFlags = PoseDataFlags.NoData;
         bool m_RotationBound;
         bool m_PositionBound;
+
 
         void BindActions()
         {
@@ -320,19 +354,40 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation)
+        protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation, bool hasTrackingStateFlagInfo, PoseDataFlags trackingStateFlags)
         {
-            if (m_TrackingType == TrackingType.RotationAndPosition ||
-                m_TrackingType == TrackingType.RotationOnly)
+            if (hasTrackingStateFlagInfo)
             {
-                transform.localRotation = newRotation;
+                if ((trackingStateFlags & PoseDataFlags.Position) == PoseDataFlags.Position &&
+                    m_TrackingType == TrackingType.RotationAndPosition ||
+                    m_TrackingType == TrackingType.RotationOnly)
+                {
+                    transform.localRotation = newRotation;
+                }
+
+                if ((trackingStateFlags & PoseDataFlags.Rotation) == PoseDataFlags.Rotation &&
+                    m_TrackingType == TrackingType.RotationAndPosition ||
+                    m_TrackingType == TrackingType.PositionOnly)
+                {
+                    transform.localPosition = newPosition;
+                }
+            }
+            else
+            {
+                // previous behavior
+                if (m_TrackingType == TrackingType.RotationAndPosition ||
+                    m_TrackingType == TrackingType.RotationOnly)
+                {
+                    transform.localRotation = newRotation;
+                }
+
+                if (m_TrackingType == TrackingType.RotationAndPosition ||
+                    m_TrackingType == TrackingType.PositionOnly)
+                {
+                    transform.localPosition = newPosition;
+                }
             }
 
-            if (m_TrackingType == TrackingType.RotationAndPosition ||
-                m_TrackingType == TrackingType.PositionOnly)
-            {
-                transform.localPosition = newPosition;
-            }
         }
 
         bool HasStereoCamera()
@@ -343,7 +398,17 @@ namespace UnityEngine.InputSystem.XR
 
         protected virtual void PerformUpdate()
         {
-            SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
+            if (m_TrackingStateFlags != null && m_TrackingStateFlags.action != null && m_TrackingStateFlags.action.bindings.Count > 0)
+            {
+                m_CurrentTrackingStateFlags = (PoseDataFlags)m_TrackingStateFlags.action.ReadValue<int>();
+                m_HasTrackingStateFlags = true;
+            }
+            else
+            {
+                m_HasTrackingStateFlags = false;
+            }
+
+            SetLocalTransform(m_CurrentPosition, m_CurrentRotation, m_HasTrackingStateFlags, m_CurrentTrackingStateFlags);
         }
 
         #region DEPRECATED
