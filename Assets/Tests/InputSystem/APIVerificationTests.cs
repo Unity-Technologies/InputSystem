@@ -476,6 +476,9 @@ class APIVerificationTests
     [Test]
     [Category("API")]
     [Ignore("Still needs a lot of documentation work to happen")]
+    #if UNITY_EDITOR_OSX
+    [Explicit]     // Fails due to file system permissions on yamato, but works locally.
+    #endif
     #if !HAVE_DOCTOOLS_INSTALLED
     //[Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
     #endif
@@ -567,6 +570,9 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    #if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+    #endif
     public void API_MonoBehavioursHaveHelpUrls()
     {
         // We exclude abstract MonoBehaviours as these can't show up in the Unity inspector.
