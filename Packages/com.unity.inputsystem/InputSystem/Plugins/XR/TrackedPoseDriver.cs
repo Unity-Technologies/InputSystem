@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -144,32 +145,8 @@ namespace UnityEngine.InputSystem.XR
         }
 
 
-        /// <summary>
-        /// Bitflag enum which represents what data was set on an associated Pose struct
-        /// This matches UnityXRInputTrackingStateFlags 
-        /// </summary>
-
-        [Flags]
-        protected enum PoseDataFlags
-        {
-            /// <summary>
-            /// No data was actually set on the pose
-            /// </summary>
-            NoData = 0,
-            /// <summary>
-            /// If this flag is set, position data was updated on the associated pose struct
-            /// </summary>
-            Position = 1 << 0,
-            /// <summary>
-            /// If this flag is set, rotation data was updated on the associated pose struct
-            /// </summary>
-            Rotation = 1 << 1,
-        };
-
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
-        bool m_HasTrackingStateFlags = false;
-        PoseDataFlags m_CurrentTrackingStateFlags = PoseDataFlags.NoData;
         bool m_RotationBound;
         bool m_PositionBound;
 
@@ -300,7 +277,7 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// This function is called when the object becomes enabled and active.
         /// </summary>
-        protected void OnEnable()
+        protected void OnEnable() 
         {
             InputSystem.onAfterUpdate += UpdateCallback;
             BindActions();
@@ -354,18 +331,24 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation, bool hasTrackingStateFlagInfo, PoseDataFlags trackingStateFlags)
+
+        protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation)
+        {
+            SetLocalTransform(newPosition, newRotation, false, InputTrackingState.None);
+        }
+
+        protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation, bool hasTrackingStateFlagInfo, InputTrackingState trackingStateFlags)
         {
             if (hasTrackingStateFlagInfo)
             {
-                if ((trackingStateFlags & PoseDataFlags.Position) == PoseDataFlags.Position &&
+                if ((trackingStateFlags & InputTrackingState.Rotation) == InputTrackingState.Rotation &&
                     m_TrackingType == TrackingType.RotationAndPosition ||
                     m_TrackingType == TrackingType.RotationOnly)
                 {
                     transform.localRotation = newRotation;
                 }
 
-                if ((trackingStateFlags & PoseDataFlags.Rotation) == PoseDataFlags.Rotation &&
+                if ((trackingStateFlags & InputTrackingState.Position) == InputTrackingState.Position &&
                     m_TrackingType == TrackingType.RotationAndPosition ||
                     m_TrackingType == TrackingType.PositionOnly)
                 {
@@ -398,17 +381,19 @@ namespace UnityEngine.InputSystem.XR
 
         protected virtual void PerformUpdate()
         {
+            InputTrackingState currentTrackingStateFlags = InputTrackingState.None;
+            bool hasTrackingStateFlags = false;
             if (m_TrackingStateFlags != null && m_TrackingStateFlags.action != null && m_TrackingStateFlags.action.bindings.Count > 0)
             {
-                m_CurrentTrackingStateFlags = (PoseDataFlags)m_TrackingStateFlags.action.ReadValue<int>();
-                m_HasTrackingStateFlags = true;
+                currentTrackingStateFlags = (InputTrackingState)m_TrackingStateFlags.action.ReadValue<int>();
+                hasTrackingStateFlags = true;
             }
             else
             {
-                m_HasTrackingStateFlags = false;
+                hasTrackingStateFlags = false;
             }
 
-            SetLocalTransform(m_CurrentPosition, m_CurrentRotation, m_HasTrackingStateFlags, m_CurrentTrackingStateFlags);
+            SetLocalTransform(m_CurrentPosition, m_CurrentRotation, hasTrackingStateFlags, currentTrackingStateFlags);
         }
 
         #region DEPRECATED
