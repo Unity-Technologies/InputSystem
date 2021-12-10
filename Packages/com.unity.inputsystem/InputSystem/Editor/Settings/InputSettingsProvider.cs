@@ -105,7 +105,6 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
 
                 EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
 
                 // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
@@ -260,7 +259,6 @@ namespace UnityEngine.InputSystem.Editor
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
             m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
-            m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
             m_DefaultButtonPressPoint = m_SettingsObject.FindProperty("m_DefaultButtonPressPoint");
@@ -272,7 +270,6 @@ namespace UnityEngine.InputSystem.Editor
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
-            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on .current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
             m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
                 + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
@@ -398,7 +395,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
         [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
-        [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
         [NonSerialized] private SerializedProperty m_DefaultButtonPressPoint;
@@ -418,7 +414,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
-        private GUIContent m_FilterNoiseOnCurrentContent;
         private GUIContent m_CompensateForScreenOrientationContent;
         private GUIContent m_BackgroundBehaviorContent;
         private GUIContent m_EditorInputBehaviorInPlayModeContent;

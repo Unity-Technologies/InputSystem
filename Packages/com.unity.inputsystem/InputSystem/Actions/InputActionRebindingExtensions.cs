@@ -706,7 +706,7 @@ namespace UnityEngine.InputSystem
 
             if (matchCount > 0)
             {
-                actionMap.ClearPerActionCachedBindingData();
+                actionMap.ClearCachedActionData();
                 actionMap.LazyResolveBindings();
             }
 
@@ -740,7 +740,7 @@ namespace UnityEngine.InputSystem
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
 
-            actionMap.ClearPerActionCachedBindingData();
+            actionMap.ClearCachedActionData();
             actionMap.LazyResolveBindings();
         }
 
@@ -835,7 +835,7 @@ namespace UnityEngine.InputSystem
                         binding.RemoveOverrides();
                     }
 
-                    actionMap.ClearPerActionCachedBindingData();
+                    actionMap.ClearCachedActionData();
                     actionMap.LazyResolveBindings();
                 }
             }
@@ -874,7 +874,7 @@ namespace UnityEngine.InputSystem
                 bindings[i].overrideProcessors = null;
             }
 
-            actionMap.ClearPerActionCachedBindingData();
+            actionMap.ClearCachedActionData();
             actionMap.LazyResolveBindings();
         }
 

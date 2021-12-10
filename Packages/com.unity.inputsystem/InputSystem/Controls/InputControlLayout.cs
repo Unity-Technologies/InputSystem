@@ -2026,6 +2026,7 @@ namespace UnityEngine.InputSystem.Layouts
                             overrideLayout.isOverride = false;
                             overrideLayout.isGenericTypeOfDevice = layout.isGenericTypeOfDevice;
                             overrideLayout.m_Name = layout.name;
+                            overrideLayout.m_BaseLayouts = layout.m_BaseLayouts;
 
                             layout = overrideLayout;
                             layout.m_AppliedOverrides.Append(overrideName);

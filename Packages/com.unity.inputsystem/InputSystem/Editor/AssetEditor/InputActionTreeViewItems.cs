@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: sync expanded state of SerializedProperties to expanded state of tree (will help preserving expansion in inspector)
 
@@ -461,6 +462,8 @@ namespace UnityEngine.InputSystem.Editor
         public override GUIStyle colorTagStyle => Styles.blueRect;
         public override bool canRename => true;
 
+        public string compositeName => NameAndParameters.ParseName(path);
+
         public override void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameComposite(property, newName);
@@ -503,7 +506,10 @@ namespace UnityEngine.InputSystem.Editor
             var item = new CompositeBindingTreeItem(bindingProperty);
 
             item.depth = parent.depth + 1;
-            item.displayName = !string.IsNullOrEmpty(item.name) ? item.name : ObjectNames.NicifyVariableName(item.path);
+            item.displayName = !string.IsNullOrEmpty(item.name)
+                ? item.name
+                : ObjectNames.NicifyVariableName(NameAndParameters.ParseName(item.path));
+
             parent.AddChild(item);
 
             return item;
@@ -531,7 +537,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ExpectedControlLayout == null)
                 {
                     var partName = name;
-                    var compositeName = ((CompositeBindingTreeItem)parent).name;
+                    var compositeName = ((CompositeBindingTreeItem)parent).compositeName;
                     var layoutName = InputBindingComposite.GetExpectedControlLayoutName(compositeName, partName);
                     m_ExpectedControlLayout = layoutName ?? "";
                 }

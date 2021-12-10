@@ -13,7 +13,6 @@ using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
@@ -1311,6 +1310,60 @@ internal class HIDTests : CoreTestsFixture
     {
         Assert.That(HID.UsagePageToString((HID.UsagePage) 0xff01), Is.EqualTo("Vendor-Defined"));
         Assert.That(HID.UsageToString((HID.UsagePage) 0xff01, 0x33), Is.Null);
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1335465/
+    [Test]
+    [Category("Devices")]
+    [TestCase("/")]
+    [TestCase("\\")]
+    [TestCase(">")]
+    [TestCase("<")]
+    [TestCase(" ")]
+    public void Devices_CanHaveReservedCharactersInHIDDeviceNames(string characterStr)
+    {
+        // Il2cpp seems to have trouble with slashes in character literals used in attributes
+        // so we pass the character as a string instead.
+        var character = characterStr[0];
+
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usage = (int)HID.Button.Primary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 32, reportSizeInBits = 1 },
+                new HID.HIDElementDescriptor { usage = (int)HID.Button.Secondary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 33, reportSizeInBits = 1 },
+            }
+        };
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "Test" + character + "HID",
+                capabilities = hidDescriptor.ToJson()
+            });
+
+        Assert.That(device.name, Is.EqualTo("TestVendor Test" + (character == '/' ? InputControlPath.SeparatorReplacement : character) + "HID"));
+        Assert.That(device.displayName, Is.EqualTo("Test" + character + "HID"));
+
+        var action = new InputAction(binding: "<Keyboard>/space");
+
+        // Interactively rebind the action to refer to the device's button.
+        using (action.PerformInteractiveRebinding()
+               .OnMatchWaitForAnother(0)
+               .Start())
+        {
+            Press((ButtonControl)device["button2"]);
+        }
+
+        Assert.That(InputControlPath.TryGetDeviceLayout(action.bindings[0].effectivePath), Is.EqualTo(device.layout));
+        Assert.That(InputControlPath.TryGetControlLayout(action.bindings[0].effectivePath), Is.EqualTo("Button"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { device["button2"]}));
     }
 }
 #endif
