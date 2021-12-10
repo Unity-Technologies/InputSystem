@@ -1,12 +1,10 @@
 using System.Linq;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 internal partial class CoreTests
 {
@@ -462,6 +460,64 @@ internal partial class CoreTests
                     .AndThen(Performed<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)) // Note the zero value; button is already released.
                     .AndThen(Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 10.41, value: 0f)));
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1251231/
+    [Test]
+    [Category("Actions")]
+    public void Actions_HoldInteraction_CanBePerformedWhenInvolvingMoreThanOneControl()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        // Add several bindings just to ensure that if conflict resolution is in the mix,
+        // things don't go sideways.
+
+        var action = new InputAction(interactions: "hold(duration=2)");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Keyboard>/a")
+            .With("Button", "<Keyboard>/s");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Mouse>/leftButton")
+            .With("Button", "<Mouse>/rightButton");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Button", "<Mouse>/rightButton");
+
+        action.Enable();
+
+        var startedCount = 0;
+        var performedCount = 0;
+        var canceledCount = 0;
+
+        action.started += _ => ++ startedCount;
+        action.performed += _ => ++ performedCount;
+        action.canceled += _ => ++ canceledCount;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(startedCount, Is.EqualTo(1));
+        Assert.That(performedCount, Is.Zero);
+        Assert.That(canceledCount, Is.Zero);
+
+        // Release before hold time.
+        InputSystem.QueueStateEvent(keyboard, default(KeyboardState));
+        InputSystem.Update();
+
+        Assert.That(startedCount, Is.EqualTo(1));
+        Assert.That(performedCount, Is.Zero);
+        Assert.That(canceledCount, Is.EqualTo(1));
+
+        currentTime += 3;
+
+        InputSystem.Update();
+
+        Assert.That(startedCount, Is.EqualTo(1));
+        Assert.That(performedCount, Is.Zero);
+        Assert.That(canceledCount, Is.EqualTo(1));
     }
 
     [Test]

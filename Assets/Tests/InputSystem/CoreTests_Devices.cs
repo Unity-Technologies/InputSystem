@@ -1960,6 +1960,39 @@ partial class CoreTests
         Assert.That(gyro.angularVelocity.ReadValue(), Is.EqualTo(Vector3.zero));
     }
 
+    class DeviceWithCustomReset : InputDevice, ICustomDeviceReset
+    {
+        [InputControl]
+        public AxisControl axis { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            axis = GetChildControl<AxisControl>("axis");
+        }
+
+        public unsafe void Reset()
+        {
+            InputState.Change(axis, 1f);
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCustomizeResetOfDevice()
+    {
+        var device = InputSystem.AddDevice<DeviceWithCustomReset>();
+
+        Set(device.axis, 0.45f);
+
+        InputSystem.ResetDevice(device);
+
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(1f));
+
+        InputSystem.ResetDevice(device, alsoResetDontResetControls: true);
+
+        Assert.That(device.axis.ReadValue(), Is.Zero);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_WhenDeviceIsReset_AndResetsAreObservableStateChanges()
@@ -3975,7 +4008,7 @@ partial class CoreTests
 
         Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
 
-        InputSystem.QueueStateEvent(gamepad1, new GamepadState());
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.A));
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad1));
@@ -3985,6 +4018,28 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AreNotMadeCurrentWhenReceivingStateEventWithNoControlsChanged()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.A));
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.SameAs(gamepad1));
+
+        InputSystem.QueueStateEvent(gamepad2, new GamepadState().WithButton(GamepadButton.B));
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.SameAs(gamepad2));
+
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState().WithButton(GamepadButton.A));
+        InputSystem.Update();
+
+        // If none of the controls changed, a state event shouldn't switch current gamepad.
+        Assert.That(Gamepad.current, Is.SameAs(gamepad2));
     }
 
     [Test]
@@ -4010,15 +4065,6 @@ partial class CoreTests
         Assert.That(gamepad1.leftTrigger.noisy, Is.True);
         Assert.That(gamepad1.rightTrigger.noisy, Is.False);
         Assert.That(Gamepad.current, Is.SameAs(gamepad2));
-
-        var receivedSettingsChange = false;
-        InputSystem.onSettingsChange += () => receivedSettingsChange = true;
-
-        // Enable filtering. Off by default.
-        InputSystem.settings.filterNoiseOnCurrent = true;
-
-        Assert.That(InputSystem.settings.filterNoiseOnCurrent, Is.True);
-        Assert.That(receivedSettingsChange, Is.True);
 
         // Send delta state without noise on first gamepad.
         InputSystem.QueueDeltaStateEvent(gamepad1.leftStick, new Vector2(0.123f, 0.234f));
@@ -4053,13 +4099,6 @@ partial class CoreTests
         Assert.That(Gamepad.current, Is.SameAs(gamepad1));
     }
 
-    [Test]
-    [Category("Devices")]
-    public void Devices_FilteringNoiseOnCurrentIsTurnedOffByDefault()
-    {
-        Assert.That(InputSystem.settings.filterNoiseOnCurrent, Is.False);
-    }
-
     // We currently do not read out actual values during noise detection. This means that any state change on a control
     // that isn't marked as noisy will pass the noise filter. If, for example, the sticks are wiggled but they are still
     // below deadzone threshold, they will still classify as carrying signal. To do that differently, we would have to
@@ -4070,8 +4109,6 @@ partial class CoreTests
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice<Gamepad>();
-
-        InputSystem.settings.filterNoiseOnCurrent = true;
 
         // Actuate leftStick below deadzone threshold.
         InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftStick = new Vector2(0.001f, 0.001f)});

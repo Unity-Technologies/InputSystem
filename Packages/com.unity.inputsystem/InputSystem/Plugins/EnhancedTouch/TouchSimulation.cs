@@ -181,9 +181,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 {
                     // No, so add it.
                     touchIndex = m_Touches.IndexOfReference((ButtonControl)null);
-                    m_Touches[touchIndex] = (ButtonControl)control;
                     if (touchIndex >= 0) // If negative, we're at max touch count and can't add more.
+                    {
+                        m_Touches[touchIndex] = (ButtonControl)control;
                         UpdateTouch(touchIndex, pointerIndex, TouchPhase.Began, eventPtr);
+                    }
                 }
                 else
                 {

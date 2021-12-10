@@ -1,6 +1,4 @@
-using UnityEngine.InputSystem.LowLevel;
-
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Gives an opportunity for device to modify event data in-place before it gets propagated to the rest of the system.
