@@ -162,7 +162,6 @@ internal class OnScreenTests : CoreTestsFixture
         Assert.That(InputSystem.devices, Has.None.InstanceOf<Keyboard>());
     }
 
-#if !TEMP_DISABLE_UI_TESTS_ON_TRUNK
     // https://fogbugz.unity3d.com/f/cases/1271942
     [UnityTest]
     [Category("Devices")]
@@ -263,8 +262,6 @@ internal class OnScreenTests : CoreTestsFixture
 
         Assert.That(Gamepad.all[0].buttonSouth.isPressed, Is.False);
     }
-
-#endif
 
     // https://fogbugz.unity3d.com/f/cases/1305016/
     [Test]
