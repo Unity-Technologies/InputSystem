@@ -641,7 +641,7 @@ partial class CoreTests
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        runtime.currentTimeForFixedUpdate = 1;
+        runtime.currentTimeForFixedUpdate = runtime.currentTime + 1;
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
     }
@@ -1030,6 +1030,35 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanDetermineIfControlIsPressed()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftStick, Vector2.one);
+        Set(gamepad.leftTrigger, 0.6f);
+        Press(gamepad.buttonSouth);
+
+        //// https://jira.unity3d.com/browse/ISX-926
+        ////REVIEW: IsPressed() should probably be renamed. As is apparent from the calls here, it's not always
+        ////        readily apparent that the way it is defined ("actuation level at least at button press threshold")
+        ////        does not always connect to what it intuitively means for the specific control.
+
+        Assert.That(gamepad.leftTrigger.IsPressed(), Is.True);
+        Assert.That(gamepad.rightTrigger.IsPressed(), Is.False);
+        Assert.That(gamepad.buttonSouth.IsPressed(), Is.True);
+        Assert.That(gamepad.buttonNorth.IsPressed(), Is.False);
+        Assert.That(gamepad.leftStick.IsPressed(), Is.True); // Note how this diverges from the actual meaning of "is the left stick pressed?"
+        Assert.That(gamepad.rightStick.IsPressed(), Is.False);
+
+        // https://fogbugz.unity3d.com/f/cases/1374024/
+        // Calling it on the entire device should be false.
+        Assert.That(gamepad.IsPressed(), Is.False);
     }
 
     [Test]

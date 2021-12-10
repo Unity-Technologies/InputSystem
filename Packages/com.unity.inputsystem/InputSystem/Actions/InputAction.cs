@@ -1372,7 +1372,7 @@ namespace UnityEngine.InputSystem
                         var duration = interactionState.timerDuration;
                         var startTime = interactionState.timerStartTime;
                         var endTime = startTime + duration;
-                        var remainingTime = endTime - InputRuntime.s_Instance.currentTime;
+                        var remainingTime = endTime - InputState.currentTime;
                         if (remainingTime <= 0)
                             timerCompletion = 1;
                         else

@@ -1344,87 +1344,95 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, change);
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
 
-            var defaultStatePtr = device.defaultStatePtr;
-            var deviceStateBlockSize = device.stateBlock.alignedSizeInBytes;
-
-            // Allocate temp memory to hold one state event.
-            ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
-            ////        to tell synthetic input (or input sources in general) apart
-            // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
-            //       like any other input. If we don't do that but rather just call UpdateState() with a null event
-            //       pointer, the change will be considered an internal state change and will get ignored by some
-            //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
-            //       by ignoring any change that is not coming from an input event).
-            using (var tempBuffer =
-                       new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + (int)deviceStateBlockSize, Allocator.Temp))
+            // If the device implements its own reset, let it handle it.
+            if (!alsoResetDontResetControls && device is ICustomDeviceReset customReset)
             {
-                var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
-                var statePtr = stateEventPtr->state;
-                var currentTime = m_Runtime.currentTime;
-
-                // Set up the state event.
-                ref var stateBlock = ref device.m_StateBlock;
-                stateEventPtr->baseEvent.type = StateEvent.Type;
-                stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
-                stateEventPtr->baseEvent.time = currentTime;
-                stateEventPtr->baseEvent.deviceId = device.deviceId;
-                stateEventPtr->baseEvent.eventId = -1;
-                stateEventPtr->stateFormat = device.m_StateBlock.format;
-
-                // Decide whether we perform a soft reset or a hard reset.
-                if (isHardReset)
-                {
-                    // Perform a hard reset where we wipe the entire device and set a full
-                    // reset request to the backend.
-                    UnsafeUtility.MemCpy(statePtr,
-                        (byte*)defaultStatePtr + stateBlock.byteOffset,
-                        deviceStateBlockSize);
-                }
-                else
-                {
-                    // Perform a soft reset where we exclude any dontReset control (which is automatically
-                    // toggled on for noisy controls) and do *NOT* send a reset request to the backend.
-
-                    var currentStatePtr = device.currentStatePtr;
-                    var resetMaskPtr = m_StateBuffers.resetMaskBuffer;
-
-                    // To preserve values from dontReset controls, we need to first copy their current values.
-                    UnsafeUtility.MemCpy(statePtr,
-                        (byte*)currentStatePtr + stateBlock.byteOffset,
-                        deviceStateBlockSize);
-
-                    // And then we copy over default values masked by dontReset bits.
-                    MemoryHelpers.MemCpyMasked(statePtr,
-                        (byte*)defaultStatePtr + stateBlock.byteOffset,
-                        (int)deviceStateBlockSize,
-                        (byte*)resetMaskPtr + stateBlock.byteOffset);
-                }
-
-                UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
-                    new InputEventPtr((InputEvent*)stateEventPtr));
-
-                // In the editor, we don't want to issue RequestResetCommand to devices based on focus of the game view
-                // as this would also reset device state for the editor. And we don't need the reset commands in this case
-                // as -- unlike in the player --, Unity keeps running and we will keep seeing OS messages for these devices.
-                // So, in the editor, we generally suppress reset commands.
-                //
-                // The only exception is when the editor itself loses focus. We issue sync requests to all devices when
-                // coming back into focus. But for any device that doesn't support syncs, we actually do want to have a
-                // reset command reach the background.
-                //
-                // Finally, in the player, we also avoid reset commands when disabling a device as these are pointless.
-                // We sync/reset when enabling a device in the backend.
-                var doIssueResetCommand = isHardReset;
-                if (issueResetCommand != null)
-                    doIssueResetCommand = issueResetCommand.Value;
-                #if UNITY_EDITOR
-                else if (m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
-                    doIssueResetCommand = false;
-                #endif
-
-                if (doIssueResetCommand)
-                    device.RequestReset();
+                customReset.Reset();
             }
+            else
+            {
+                var defaultStatePtr = device.defaultStatePtr;
+                var deviceStateBlockSize = device.stateBlock.alignedSizeInBytes;
+
+                // Allocate temp memory to hold one state event.
+                ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
+                ////        to tell synthetic input (or input sources in general) apart
+                // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
+                //       like any other input. If we don't do that but rather just call UpdateState() with a null event
+                //       pointer, the change will be considered an internal state change and will get ignored by some
+                //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
+                //       by ignoring any change that is not coming from an input event).
+                using (var tempBuffer =
+                           new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + (int)deviceStateBlockSize, Allocator.Temp))
+                {
+                    var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
+                    var statePtr = stateEventPtr->state;
+                    var currentTime = m_Runtime.currentTime;
+
+                    // Set up the state event.
+                    ref var stateBlock = ref device.m_StateBlock;
+                    stateEventPtr->baseEvent.type = StateEvent.Type;
+                    stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
+                    stateEventPtr->baseEvent.time = currentTime;
+                    stateEventPtr->baseEvent.deviceId = device.deviceId;
+                    stateEventPtr->baseEvent.eventId = -1;
+                    stateEventPtr->stateFormat = device.m_StateBlock.format;
+
+                    // Decide whether we perform a soft reset or a hard reset.
+                    if (isHardReset)
+                    {
+                        // Perform a hard reset where we wipe the entire device and set a full
+                        // reset request to the backend.
+                        UnsafeUtility.MemCpy(statePtr,
+                            (byte*)defaultStatePtr + stateBlock.byteOffset,
+                            deviceStateBlockSize);
+                    }
+                    else
+                    {
+                        // Perform a soft reset where we exclude any dontReset control (which is automatically
+                        // toggled on for noisy controls) and do *NOT* send a reset request to the backend.
+
+                        var currentStatePtr = device.currentStatePtr;
+                        var resetMaskPtr = m_StateBuffers.resetMaskBuffer;
+
+                        // To preserve values from dontReset controls, we need to first copy their current values.
+                        UnsafeUtility.MemCpy(statePtr,
+                            (byte*)currentStatePtr + stateBlock.byteOffset,
+                            deviceStateBlockSize);
+
+                        // And then we copy over default values masked by dontReset bits.
+                        MemoryHelpers.MemCpyMasked(statePtr,
+                            (byte*)defaultStatePtr + stateBlock.byteOffset,
+                            (int)deviceStateBlockSize,
+                            (byte*)resetMaskPtr + stateBlock.byteOffset);
+                    }
+
+                    UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
+                        new InputEventPtr((InputEvent*)stateEventPtr));
+                }
+            }
+
+            // In the editor, we don't want to issue RequestResetCommand to devices based on focus of the game view
+            // as this would also reset device state for the editor. And we don't need the reset commands in this case
+            // as -- unlike in the player --, Unity keeps running and we will keep seeing OS messages for these devices.
+            // So, in the editor, we generally suppress reset commands.
+            //
+            // The only exception is when the editor itself loses focus. We issue sync requests to all devices when
+            // coming back into focus. But for any device that doesn't support syncs, we actually do want to have a
+            // reset command reach the background.
+            //
+            // Finally, in the player, we also avoid reset commands when disabling a device as these are pointless.
+            // We sync/reset when enabling a device in the backend.
+            var doIssueResetCommand = isHardReset;
+            if (issueResetCommand != null)
+                doIssueResetCommand = issueResetCommand.Value;
+            #if UNITY_EDITOR
+            else if (m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
+                doIssueResetCommand = false;
+            #endif
+
+            if (doIssueResetCommand)
+                device.RequestReset();
         }
 
         public InputDevice TryGetDevice(string nameOrLayout)
@@ -3717,18 +3725,13 @@ namespace UnityEngine.InputSystem
             ////REVIEW: Should we do this only for events but not for InputState.Change()?
             // If noise filtering on .current is turned on and the device may have noise,
             // determine if the event carries signal or not.
-            var makeDeviceCurrent = true;
-            if (device.noisy && m_Settings.filterNoiseOnCurrent)
-            {
-                // Compare the current state of the device to the newly received state but overlay
-                // the comparison by the noise mask.
-
-                var noiseMask = (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset;
-
-                makeDeviceCurrent =
-                    !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
-                        0, stateSize * 8, mask: noiseMask);
-            }
+            var noiseMask = device.noisy
+                ? (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset
+                : null;
+            // Compare the current state of the device to the newly received state but overlay
+            // the comparison by the noise mask.
+            var makeDeviceCurrent = !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                0, stateSize * 8, mask: noiseMask);
 
             // Buffer flip.
             var flipped = FlipBuffersForDeviceIfNecessary(device, updateType);
