@@ -529,10 +529,7 @@ namespace UnityEngine.InputSystem
 
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
-                ////REVIEW: should we by default take the time from the device here?
-                if (time >= 0)
-                    eventPtr.time = time;
-                eventPtr.time += timeOffset;
+                eventPtr.time = (time >= 0 ? time : InputState.currentTime) + timeOffset;
                 control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
@@ -650,7 +647,7 @@ namespace UnityEngine.InputSystem
                 position = position,
                 delta = delta,
                 pressure = pressure,
-            }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
+            }, (time >= 0 ? time : InputState.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();
         }
@@ -726,10 +723,10 @@ namespace UnityEngine.InputSystem
         /// <value>Current time used by the input system.</value>
         public double currentTime
         {
-            get => runtime.currentTime;
+            get => runtime.currentTime - runtime.currentTimeOffsetToRealtimeSinceStartup;
             set
             {
-                runtime.currentTime = value;
+                runtime.currentTime = value + runtime.currentTimeOffsetToRealtimeSinceStartup;
                 runtime.dontAdvanceTimeNextDynamicUpdate = true;
             }
         }

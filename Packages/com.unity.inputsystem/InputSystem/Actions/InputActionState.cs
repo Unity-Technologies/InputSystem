@@ -489,7 +489,7 @@ namespace UnityEngine.InputSystem
             if (actionState->phase != InputActionPhase.Waiting && actionState->phase != InputActionPhase.Disabled)
             {
                 // Cancellation calls should receive current time.
-                actionState->time = InputRuntime.s_Instance.currentTime;
+                actionState->time = InputState.currentTime;
 
                 // If the action got triggered from an interaction, go and reset all interactions on the binding
                 // that got triggered.
@@ -900,7 +900,7 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InitialActionStateCheck");
 
             // Use current time as time of control state change.
-            var time = InputRuntime.s_Instance.currentTime;
+            var time = InputState.currentTime;
 
             ////REVIEW: should we store this data in a separate place rather than go through all bindingStates?
 

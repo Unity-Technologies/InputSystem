@@ -3082,21 +3082,21 @@ partial class CoreTests
         BeginTouch(4, new Vector2(0.123f, 0.234f), time: 0.1);
         BeginTouch(5, new Vector2(0.234f, 0.345f), time: 0.2);
 
-        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1));
-        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2));
+        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1).Within(0.0001));
+        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2).Within(0.0001));
 
         MoveTouch(4, new Vector2(0.345f, 0.456f), time: 0.3);
         MoveTouch(4, new Vector2(0.456f, 0.567f), time: 0.3);
         MoveTouch(5, new Vector2(0.567f, 0.678f), time: 0.4);
 
-        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1));
-        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2));
+        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1).Within(0.0001));
+        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2).Within(0.0001));
 
         EndTouch(4, new Vector2(0.123f, 0.234f), time: 0.5);
         EndTouch(5, new Vector2(0.234f, 0.345f), time: 0.5);
 
-        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1));
-        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2));
+        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1).Within(0.0001));
+        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2).Within(0.0001));
     }
 
     [Test]
@@ -3132,14 +3132,14 @@ partial class CoreTests
             Assert.That(allTouchTaps[1].control, Is.SameAs(touchscreen.touches[0].tap));
             Assert.That(allTouchTaps[0].ReadValue(), Is.EqualTo(1));
             Assert.That(allTouchTaps[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.3));
-            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.3));
+            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.3).Within(0.0001));
+            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.3).Within(0.0001));
             Assert.That(allTouchTaps[2].control, Is.SameAs(touchscreen.touches[1].tap));
             Assert.That(allTouchTaps[3].control, Is.SameAs(touchscreen.touches[1].tap));
             Assert.That(allTouchTaps[2].ReadValue(), Is.EqualTo(1));
             Assert.That(allTouchTaps[3].ReadValue(), Is.EqualTo(0));
-            Assert.That(allTouchTaps[2].time, Is.EqualTo(0.3));
-            Assert.That(allTouchTaps[3].time, Is.EqualTo(0.3));
+            Assert.That(allTouchTaps[2].time, Is.EqualTo(0.3).Within(0.0001));
+            Assert.That(allTouchTaps[3].time, Is.EqualTo(0.3).Within(0.0001));
 
             // The primary touch switched from touch #0 to touch #1 when we released
             // touch #0 while touch #1 was still ongoing. Even though touch #1 then
@@ -3166,16 +3166,16 @@ partial class CoreTests
             Assert.That(allTouchTaps[1].control, Is.SameAs(touchscreen.touches[0].tap));
             Assert.That(allTouchTaps[0].ReadValue(), Is.EqualTo(1));
             Assert.That(allTouchTaps[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.8));
-            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.8));
+            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.8).Within(0.0001));
+            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.8).Within(0.0001));
 
             Assert.That(primaryTouchTap, Has.Count.EqualTo(2));
             Assert.That(primaryTouchTap[0].control, Is.SameAs(touchscreen.primaryTouch.tap));
             Assert.That(primaryTouchTap[1].control, Is.SameAs(touchscreen.primaryTouch.tap));
             Assert.That(primaryTouchTap[0].ReadValue(), Is.EqualTo(1));
             Assert.That(primaryTouchTap[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(primaryTouchTap[0].time, Is.EqualTo(0.8));
-            Assert.That(primaryTouchTap[1].time, Is.EqualTo(0.8));
+            Assert.That(primaryTouchTap[0].time, Is.EqualTo(0.8).Within(0.0001));
+            Assert.That(primaryTouchTap[1].time, Is.EqualTo(0.8).Within(0.0001));
         }
     }
 
@@ -3183,6 +3183,8 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanDetectTouchTaps_AndKeepTrackOfTapCounts()
     {
+        ResetTime();
+
         // Give us known tap settings.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
@@ -3202,7 +3204,7 @@ partial class CoreTests
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.EqualTo(2));
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.EqualTo(2));
 
-        runtime.currentTime = 10;
+        currentTime = 10;
         InputSystem.Update();
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.Zero);
