@@ -5470,6 +5470,87 @@ partial class CoreTests
         Assert.That(mouseScrollAtKeyPressEvent, Is.EqualTo(new Vector2(5, 5)));
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_EventMerging_DoesntMergeOverFixedUpdateTimeBoundary()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 0;
+
+        var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+        int performedCount = 0;
+        Vector2 mousePosition = Vector2.zero;
+        moveAction.performed += ctx =>
+        {
+            performedCount++;
+            mousePosition = ctx.ReadValue<Vector2>();
+        };
+        moveAction.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(1.0f, 2.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 1);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(2.0f, 3.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 2);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(3.0f, 4.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 3);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(4.0f, 5.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 4);
+
+        // only first two events should be processed and merged together
+        {
+            runtime.currentTimeForFixedUpdate = 2.1f;
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(performedCount, Is.EqualTo(1));
+            Assert.That(mousePosition, Is.EqualTo(new Vector2(2, 3)));
+            Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(2, 2)));
+
+            performedCount = 0;
+            mousePosition = Vector2.zero;
+        }
+
+        // if we advance fixed update slightly forward, no events get processed
+        {
+            runtime.currentTimeForFixedUpdate = 2.8f;
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(performedCount, Is.EqualTo(0));
+            Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(0, 0)));
+        }
+
+        // and last two events should be processed and merged together
+        {
+            runtime.currentTimeForFixedUpdate = 4.1f;
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(performedCount, Is.EqualTo(1));
+            Assert.That(mousePosition, Is.EqualTo(new Vector2(4, 5)));
+            Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(2, 2)));
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct PreProcessorTestDeviceState : IInputStateTypeInfo
     {
