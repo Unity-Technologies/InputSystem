@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - Deprecated `InputSettings.filterNoiseOnCurrent`. Now noise filtering is always enabled. Device only will become `.current` if any non-noise control have changed state.
 - A device reset (such as when focus is lost) on `Touchscreen` will now result in all ongoing touches getting cancelled instead of all touches being simply reset to default state.
 - Calling `InputTestFixture.Press`, `InputTestFixture.Set`, etc. from within a `[UnityTest]` will no longer immediately process input. Instead, input will be processed like it normally would as part of the Unity player loop.
+- Added `TrackingStateFlags` to the tracked pose driver packaged with the input system. Assigning this to an IntegerControl which provides TrackingState information will now correctly only apply those elements that actually recieved reliable data. If a TrackingStateFlags is not provided, it is assumed both position and rotation are valid.
 
 ### Fixed
 
