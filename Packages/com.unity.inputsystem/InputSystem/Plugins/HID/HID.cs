@@ -461,7 +461,7 @@ namespace UnityEngine.InputSystem.HID
 
                             knownElements.Add(elementIndex);
 
-                            // Add control.
+                            var control2 = 
                                 builder.AddControl(control.ControlName)
                                     .WithDisplayName(control.DisplayName)
                                     .WithLayout(control.Layout)
@@ -472,9 +472,9 @@ namespace UnityEngine.InputSystem.HID
                                     .WithDefaultState(element.DetermineDefaultState())
                                     .WithProcessors(element.DetermineProcessors());
 
-                            // var parameters = element.DetermineParameters();
-                            // if (!string.IsNullOrEmpty(parameters))
-                            //     control.WithParameters(parameters);
+                            var parameters = element.DetermineParameters();
+                            if (!string.IsNullOrEmpty(parameters))
+                                control2.WithParameters(parameters);
 
                             // var usages = element.DetermineUsages();
                             // if (usages != null)
