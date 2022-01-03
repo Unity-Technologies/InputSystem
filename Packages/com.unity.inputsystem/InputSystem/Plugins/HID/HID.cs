@@ -44,6 +44,56 @@ namespace UnityEngine.InputSystem.HID
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     public class HID : InputDevice
     {
+        internal static class DeviceDatabase
+        {
+            public struct ControlDescription
+            {
+                public UsagePage ExpectedUsagePage;
+                public uint ExpectedUsage;
+                
+                public string ControlName;
+                public string DisplayName;
+                public string Layout;
+
+                public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string controlName, string displayName, string layout)
+                {
+                    ExpectedUsagePage = expectedUsagePage;
+                    ExpectedUsage = expectedUsage;
+                    ControlName = controlName;
+                    DisplayName = displayName;
+                    Layout = layout;
+                }
+            }
+
+            public struct DeviceDescription
+            {
+                public int VendorId;
+                public int ProductId;
+                public string BaseLayoutName;
+                public string LayoutName;
+                public ControlDescription[] Descriptions;
+            }
+
+            public static DeviceDescription? TryToMatch(int vendorId, int productId)
+            {
+                if (vendorId == 0x046d && productId == 0xcd16)
+                {
+                    return new DeviceDescription
+                    {
+                        VendorId = 0x046d,
+                        ProductId = 0xcd16,
+                        BaseLayoutName = "Gamepad",
+                        LayoutName = "Logitech Dual Action Gamepad",
+                        Descriptions = new[]
+                        {
+                            new ControlDescription(UsagePage.Button, 2, "buttonSouth", "A", "Button")
+                        }
+                    };
+                }
+                return null;
+            }
+        }
+        
         internal const string kHIDInterface = "HID";
         internal const string kHIDNamespace = "HID";
 
