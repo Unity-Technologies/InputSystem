@@ -46,16 +46,18 @@ namespace UnityEngine.InputSystem.HID
     {
         internal static class DeviceDatabase
         {
+            [Serializable]
             public struct ControlDescription
             {
                 public UsagePage ExpectedUsagePage;
                 public uint ExpectedUsage;
-                
+
                 public string ControlName;
                 public string DisplayName;
                 public string Layout;
 
-                public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string controlName, string displayName, string layout)
+                public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string controlName,
+                    string displayName, string layout)
                 {
                     ExpectedUsagePage = expectedUsagePage;
                     ExpectedUsage = expectedUsage;
@@ -65,35 +67,62 @@ namespace UnityEngine.InputSystem.HID
                 }
             }
 
-            public struct DeviceDescription
+            [Serializable]
+            public struct KnownDevice
             {
+                public bool IsKnown;
                 public int VendorId;
                 public int ProductId;
+                public Type BaseType;
                 public string BaseLayoutName;
                 public string LayoutName;
-                public ControlDescription[] Descriptions;
+                public string DisplayName;
+                public ControlDescription[] Controls;
             }
 
-            public static DeviceDescription? TryToMatch(int vendorId, int productId)
+            public static KnownDevice TryToFind(int vendorId, int productId)
             {
-                if (vendorId == 0x046d && productId == 0xcd16)
+                if (vendorId == 0x046d && productId == 0xc216)
                 {
-                    return new DeviceDescription
+                    return new KnownDevice
                     {
+                        IsKnown = true,
                         VendorId = 0x046d,
                         ProductId = 0xcd16,
+                        BaseType = typeof(Gamepad),
                         BaseLayoutName = "Gamepad",
-                        LayoutName = "Logitech Dual Action Gamepad",
-                        Descriptions = new[]
+                        LayoutName = "LogitechDualActionGamepadLayout",
+                        DisplayName = "Logitech Dual Action Gamepad",
+                        Controls = new[]
                         {
-                            new ControlDescription(UsagePage.Button, 2, "buttonSouth", "A", "Button")
+                            new ControlDescription(UsagePage.Button, 1, "buttonWest", "X", "Button"),
+                            new ControlDescription(UsagePage.Button, 2, "buttonSouth", "A", "Button"),
+                            new ControlDescription(UsagePage.Button, 3, "buttonEast", "B", "Button"),
+                            new ControlDescription(UsagePage.Button, 4, "buttonNorth", "Y", "Button"),
+
+                            new ControlDescription(UsagePage.Button, 5, "leftShoulder", "Left Shoulder", "Button"),
+                            new ControlDescription(UsagePage.Button, 6, "rightShoulder", "Right Shoulder", "Button"),
+                            new ControlDescription(UsagePage.Button, 7, "leftTrigger", "Left Trigger", "Button"),
+                            new ControlDescription(UsagePage.Button, 8, "rightTrigger", "Right Trigger", "Button"),
+
+                            new ControlDescription(UsagePage.Button, 11, "leftStickPress", "Left Stick Press", "Button"),
+                            new ControlDescription(UsagePage.Button, 12, "rightStickPress", "Right Stick Press", "Button"),
+                            
+                            new ControlDescription(UsagePage.Undefined, 0, "leftStick", "Left Stick 2", "Stick"),
+                            new ControlDescription(UsagePage.GenericDesktop, (uint)GenericDesktop.X, "leftStick/x", "X", "Axis"),
+                            new ControlDescription(UsagePage.GenericDesktop, (uint)GenericDesktop.Y, "leftStick/y", "Y", "Axis"),
+
+                            new ControlDescription(UsagePage.Undefined, 0, "rightStick", "Right Stick 2", "Stick"),
+                            new ControlDescription(UsagePage.GenericDesktop, (uint)GenericDesktop.Z, "rightStick/x", "X", "Axis"),
+                            new ControlDescription(UsagePage.GenericDesktop, (uint)GenericDesktop.Rz, "rightStick/y", "Y", "Axis"),
                         }
                     };
                 }
-                return null;
+
+                return new KnownDevice { IsKnown = false };
             }
         }
-        
+
         internal const string kHIDInterface = "HID";
         internal const string kHIDNamespace = "HID";
 
@@ -101,15 +130,24 @@ namespace UnityEngine.InputSystem.HID
         /// Command code for querying the HID report descriptor from a device.
         /// </summary>
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
-        public static FourCC QueryHIDReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'D'); } }
+        public static FourCC QueryHIDReportDescriptorDeviceCommandType
+        {
+            get { return new FourCC('H', 'I', 'D', 'D'); }
+        }
 
         /// <summary>
         /// Command code for querying the HID report descriptor size in bytes from a device.
         /// </summary>
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
-        public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
+        public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType
+        {
+            get { return new FourCC('H', 'I', 'D', 'S'); }
+        }
 
-        public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'P'); } }
+        public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType
+        {
+            get { return new FourCC('H', 'I', 'D', 'P'); }
+        }
 
         /// <summary>
         /// The HID device descriptor as received from the system.
@@ -124,6 +162,7 @@ namespace UnityEngine.InputSystem.HID
                         m_HIDDescriptor = JsonUtility.FromJson<HIDDeviceDescriptor>(description.capabilities);
                     m_HaveParsedHIDDescriptor = true;
                 }
+
                 return m_HIDDescriptor;
             }
         }
@@ -149,7 +188,8 @@ namespace UnityEngine.InputSystem.HID
             // Read HID descriptor.
             var hidDeviceDescriptor = ReadHIDDeviceDescriptor(ref description, executeDeviceCommand);
 
-            if (!HIDSupport.supportedHIDUsages.Contains(new HIDSupport.HIDPageUsage(hidDeviceDescriptor.usagePage, hidDeviceDescriptor.usage)))
+            if (!HIDSupport.supportedHIDUsages.Contains(new HIDSupport.HIDPageUsage(hidDeviceDescriptor.usagePage,
+                    hidDeviceDescriptor.usage)))
                 return null;
 
             // Determine if there's any usable elements on the device.
@@ -170,13 +210,21 @@ namespace UnityEngine.InputSystem.HID
             if (!hasUsableElements)
                 return null;
 
+            var knownDevice = DeviceDatabase.TryToFind(hidDeviceDescriptor.vendorId, hidDeviceDescriptor.productId);
+
             ////TODO: we should be able to differentiate a HID joystick from other joysticks in bindings alone
             // Determine base layout.
             var baseType = typeof(HID);
             var baseLayout = "HID";
-            if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
+            if (knownDevice.IsKnown)
             {
-                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick || hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
+                baseType = knownDevice.BaseType;
+                baseLayout = knownDevice.BaseLayoutName;
+            }
+            else if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
+            {
+                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick ||
+                    hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
                 {
                     baseLayout = "Joystick";
                     baseType = typeof(Joystick);
@@ -189,10 +237,10 @@ namespace UnityEngine.InputSystem.HID
             // is we tag the usage name onto the layout name *except* if it's a joystick or gamepad. This
             // gives us nicer names for joysticks while still disambiguating other devices correctly.
             var usageName = "";
-            if (baseLayout != "Joystick")
+            if (baseLayout == "HID")
             {
                 usageName = hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop
-                    ? $" {(GenericDesktop) hidDeviceDescriptor.usage}"
+                    ? $" {(GenericDesktop)hidDeviceDescriptor.usage}"
                     : $" {hidDeviceDescriptor.usagePage}-{hidDeviceDescriptor.usage}";
             }
 
@@ -203,7 +251,11 @@ namespace UnityEngine.InputSystem.HID
             // We go with the string versions if we have them and with the numeric versions if we don't.
             string layoutName;
             var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
-            if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
+            if (knownDevice.IsKnown)
+            {
+                layoutName = knownDevice.LayoutName;
+            }
+            else if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = $"{kHIDNamespace}::{description.manufacturer} {description.product}{usageName}";
             }
@@ -233,8 +285,9 @@ namespace UnityEngine.InputSystem.HID
             // InputControlLayout instance.
             var layout = new HIDLayoutBuilder
             {
-                displayName = description.product,
+                displayName = knownDevice.IsKnown ? knownDevice.DisplayName : description.product,
                 hidDescriptor = hidDeviceDescriptor,
+                knownDevice = knownDevice,
                 parentLayout = baseLayout,
                 deviceType = baseType ?? typeof(HID)
             };
@@ -288,14 +341,16 @@ namespace UnityEngine.InputSystem.HID
                 {
                     // Now try to fetch the HID descriptor.
                     using (var buffer =
-                               InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
+                           InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType,
+                               (int)sizeOfDescriptorInBytes))
                     {
                         var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
                         if (executeCommandDelegate(ref *commandPtr) != sizeOfDescriptorInBytes)
                             return new HIDDeviceDescriptor();
 
                         // Try to parse the HID report descriptor.
-                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
+                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr,
+                                (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
                             return new HIDDeviceDescriptor();
                     }
 
@@ -311,9 +366,12 @@ namespace UnityEngine.InputSystem.HID
                     // unparsed/binary descriptors from the device (and where getting element offsets is only possible
                     // with some dirty hacks we're performing in the native runtime).
 
-                    const int kMaxDescriptorBufferSize = 2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
+                    const int
+                        kMaxDescriptorBufferSize =
+                            2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
                     using (var buffer =
-                               InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
+                           InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType,
+                               kMaxDescriptorBufferSize))
                     {
                         var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
                         var utf8Length = executeCommandDelegate(ref *commandPtr);
@@ -323,10 +381,11 @@ namespace UnityEngine.InputSystem.HID
                         // Turn UTF-8 buffer into string.
                         ////TODO: is there a way to not have to copy here?
                         var utf8 = new byte[utf8Length];
-                        fixed(byte* utf8Ptr = utf8)
+                        fixed (byte* utf8Ptr = utf8)
                         {
                             UnsafeUtility.MemCpy(utf8Ptr, commandPtr->payloadPtr, utf8Length);
                         }
+
                         var descriptorJson = Encoding.UTF8.GetString(utf8, 0, (int)utf8Length);
 
                         // Try to parse the HID report descriptor.
@@ -373,6 +432,7 @@ namespace UnityEngine.InputSystem.HID
         {
             public string displayName;
             public HIDDeviceDescriptor hidDescriptor;
+            public DeviceDatabase.KnownDevice knownDevice;
             public string parentLayout;
             public Type deviceType;
 
@@ -386,124 +446,222 @@ namespace UnityEngine.InputSystem.HID
                     stateFormat = new FourCC('H', 'I', 'D')
                 };
 
-                var xElement = Array.Find(hidDescriptor.elements,
-                    element => element.usagePage == UsagePage.GenericDesktop &&
-                    element.usage == (int)GenericDesktop.X);
-                var yElement = Array.Find(hidDescriptor.elements,
-                    element => element.usagePage == UsagePage.GenericDesktop &&
-                    element.usage == (int)GenericDesktop.Y);
-
-                ////REVIEW: in case the X and Y control are non-contiguous, should we even turn them into a stick
-                ////REVIEW: there *has* to be an X and a Y for us to be able to successfully create a joystick
-                // If GenericDesktop.X and GenericDesktop.Y are both present, turn the controls
-                // into a stick.
-                var haveStick = xElement.usage == (int)GenericDesktop.X && yElement.usage == (int)GenericDesktop.Y;
-                if (haveStick)
+                if (knownDevice.IsKnown)
                 {
-                    int bitOffset, byteOffset, sizeInBits;
-                    if (xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
+                    var knownElements = new HashSet<int>();
+                    
+                    foreach (var control in knownDevice.Controls)
                     {
-                        bitOffset = xElement.reportOffsetInBits % 8;
-                        byteOffset = xElement.reportOffsetInBits / 8;
-                        sizeInBits = (yElement.reportOffsetInBits + yElement.reportSizeInBits) -
-                            xElement.reportOffsetInBits;
+                        if (control.ExpectedUsagePage != UsagePage.Undefined)
+                        {
+                            var elementIndex = Array.FindIndex(hidDescriptor.elements, x => x.usagePage == control.ExpectedUsagePage && x.usage == control.ExpectedUsage);
+                            var element = hidDescriptor.elements[elementIndex];
+                            if (element.reportType != HIDReportType.Input)
+                                continue;
+
+                            knownElements.Add(elementIndex);
+
+                            // Add control.
+                                builder.AddControl(control.ControlName)
+                                    .WithDisplayName(control.DisplayName)
+                                    .WithLayout(control.Layout)
+                                    .WithByteOffset((uint)element.reportOffsetInBits / 8)
+                                    .WithBitOffset((uint)element.reportOffsetInBits % 8)
+                                    .WithSizeInBits((uint)element.reportSizeInBits)
+                                    .WithFormat(element.DetermineFormat())
+                                    .WithDefaultState(element.DetermineDefaultState())
+                                    .WithProcessors(element.DetermineProcessors());
+
+                            // var parameters = element.DetermineParameters();
+                            // if (!string.IsNullOrEmpty(parameters))
+                            //     control.WithParameters(parameters);
+
+                            // var usages = element.DetermineUsages();
+                            // if (usages != null)
+                            //     control.WithUsages(usages);
+
+                            //element.AddChildControls(ref element, name, ref builder);
+                        }
+                        else
+                        {
+                            builder.AddControl(control.ControlName)
+                                .WithDisplayName(control.DisplayName)
+                                .WithLayout(control.Layout)
+                                .WithByteOffset(0)
+                                .WithBitOffset(0)
+                                .WithSizeInBits(0);
+
+                        }
                     }
-                    else
+                    
+                    // Process HID descriptor.
+                    var elements = hidDescriptor.elements;
+                    var elementCount = elements.Length;
+                    for (var i = 0; i < elementCount; ++i)
                     {
-                        bitOffset = yElement.reportOffsetInBits % 8;
-                        byteOffset = yElement.reportOffsetInBits / 8;
-                        sizeInBits = (xElement.reportOffsetInBits + xElement.reportSizeInBits) -
-                            yElement.reportSizeInBits;
+                        ref var element = ref elements[i];
+                        if (element.reportType != HIDReportType.Input)
+                            continue;
+
+                        if (knownElements.Contains(i))
+                            continue;
+
+
+                        var layout = element.DetermineLayout();
+                        if (layout != null)
+                        {
+                            // Assign unique name.
+                            var name = element.DetermineName();
+                            Debug.Assert(!string.IsNullOrEmpty(name));
+                            name = StringHelpers.MakeUniqueName(name, builder.controls, x => x.name);
+
+                            // Add control.
+                            var control =
+                                builder.AddControl(name)
+                                    .WithDisplayName(element.DetermineDisplayName())
+                                    .WithLayout(layout)
+                                    .WithByteOffset((uint)element.reportOffsetInBits / 8)
+                                    .WithBitOffset((uint)element.reportOffsetInBits % 8)
+                                    .WithSizeInBits((uint)element.reportSizeInBits)
+                                    .WithFormat(element.DetermineFormat())
+                                    .WithDefaultState(element.DetermineDefaultState())
+                                    .WithProcessors(element.DetermineProcessors());
+
+                            var parameters = element.DetermineParameters();
+                            if (!string.IsNullOrEmpty(parameters))
+                                control.WithParameters(parameters);
+
+                            var usages = element.DetermineUsages();
+                            if (usages != null)
+                                control.WithUsages(usages);
+
+                            element.AddChildControls(ref element, name, ref builder);
+                        }
                     }
-
-                    const string stickName = "stick";
-                    builder.AddControl(stickName)
-                        .WithDisplayName("Stick")
-                        .WithLayout("Stick")
-                        .WithBitOffset((uint)bitOffset)
-                        .WithByteOffset((uint)byteOffset)
-                        .WithSizeInBits((uint)sizeInBits)
-                        .WithUsages(CommonUsages.Primary2DMotion);
-
-                    var xElementParameters = xElement.DetermineParameters();
-                    var yElementParameters = yElement.DetermineParameters();
-
-                    builder.AddControl(stickName + "/x")
-                        .WithFormat(xElement.isSigned ? InputStateBlock.FormatSBit : InputStateBlock.FormatBit)
-                        .WithByteOffset((uint)(xElement.reportOffsetInBits / 8 - byteOffset))
-                        .WithBitOffset((uint)(xElement.reportOffsetInBits % 8))
-                        .WithSizeInBits((uint)xElement.reportSizeInBits)
-                        .WithParameters(xElementParameters)
-                        .WithDefaultState(xElement.DetermineDefaultState())
-                        .WithProcessors(xElement.DetermineProcessors());
-
-                    builder.AddControl(stickName + "/y")
-                        .WithFormat(yElement.isSigned ? InputStateBlock.FormatSBit : InputStateBlock.FormatBit)
-                        .WithByteOffset((uint)(yElement.reportOffsetInBits / 8 - byteOffset))
-                        .WithBitOffset((uint)(yElement.reportOffsetInBits % 8))
-                        .WithSizeInBits((uint)yElement.reportSizeInBits)
-                        .WithParameters(yElementParameters)
-                        .WithDefaultState(yElement.DetermineDefaultState())
-                        .WithProcessors(yElement.DetermineProcessors());
-
-                    // Propagate parameters needed on x and y to the four button controls.
-                    builder.AddControl(stickName + "/up")
-                        .WithParameters(
-                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert=true"));
-                    builder.AddControl(stickName + "/down")
-                        .WithParameters(
-                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=0,clampMax=1,invert=false"));
-                    builder.AddControl(stickName + "/left")
-                        .WithParameters(
-                            StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert"));
-                    builder.AddControl(stickName + "/right")
-                        .WithParameters(
-                            StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=0,clampMax=1"));
                 }
-
-                // Process HID descriptor.
-                var elements = hidDescriptor.elements;
-                var elementCount = elements.Length;
-                for (var i = 0; i < elementCount; ++i)
+                else
                 {
-                    ref var element = ref elements[i];
-                    if (element.reportType != HIDReportType.Input)
-                        continue;
+                    var xElement = Array.Find(hidDescriptor.elements,
+                        element => element.usagePage == UsagePage.GenericDesktop &&
+                                   element.usage == (int)GenericDesktop.X);
+                    var yElement = Array.Find(hidDescriptor.elements,
+                        element => element.usagePage == UsagePage.GenericDesktop &&
+                                   element.usage == (int)GenericDesktop.Y);
 
-                    // Skip X and Y if we already turned them into a stick.
-                    if (haveStick && (element.Is(UsagePage.GenericDesktop, (int)GenericDesktop.X) ||
-                                      element.Is(UsagePage.GenericDesktop, (int)GenericDesktop.Y)))
-                        continue;
-
-                    var layout = element.DetermineLayout();
-                    if (layout != null)
+                    ////REVIEW: in case the X and Y control are non-contiguous, should we even turn them into a stick
+                    ////REVIEW: there *has* to be an X and a Y for us to be able to successfully create a joystick
+                    // If GenericDesktop.X and GenericDesktop.Y are both present, turn the controls
+                    // into a stick.
+                    var haveStick = xElement.usage == (int)GenericDesktop.X && yElement.usage == (int)GenericDesktop.Y;
+                    if (haveStick)
                     {
-                        // Assign unique name.
-                        var name = element.DetermineName();
-                        Debug.Assert(!string.IsNullOrEmpty(name));
-                        name = StringHelpers.MakeUniqueName(name, builder.controls, x => x.name);
+                        int bitOffset, byteOffset, sizeInBits;
+                        if (xElement.reportOffsetInBits <= yElement.reportOffsetInBits)
+                        {
+                            bitOffset = xElement.reportOffsetInBits % 8;
+                            byteOffset = xElement.reportOffsetInBits / 8;
+                            sizeInBits = (yElement.reportOffsetInBits + yElement.reportSizeInBits) -
+                                         xElement.reportOffsetInBits;
+                        }
+                        else
+                        {
+                            bitOffset = yElement.reportOffsetInBits % 8;
+                            byteOffset = yElement.reportOffsetInBits / 8;
+                            sizeInBits = (xElement.reportOffsetInBits + xElement.reportSizeInBits) -
+                                         yElement.reportSizeInBits;
+                        }
 
-                        // Add control.
-                        var control =
-                            builder.AddControl(name)
-                                .WithDisplayName(element.DetermineDisplayName())
-                                .WithLayout(layout)
-                                .WithByteOffset((uint)element.reportOffsetInBits / 8)
-                                .WithBitOffset((uint)element.reportOffsetInBits % 8)
-                                .WithSizeInBits((uint)element.reportSizeInBits)
-                                .WithFormat(element.DetermineFormat())
-                                .WithDefaultState(element.DetermineDefaultState())
-                                .WithProcessors(element.DetermineProcessors());
+                        const string stickName = "stick";
+                        builder.AddControl(stickName)
+                            .WithDisplayName("Stick")
+                            .WithLayout("Stick")
+                            .WithBitOffset((uint)bitOffset)
+                            .WithByteOffset((uint)byteOffset)
+                            .WithSizeInBits((uint)sizeInBits)
+                            .WithUsages(CommonUsages.Primary2DMotion);
 
-                        var parameters = element.DetermineParameters();
-                        if (!string.IsNullOrEmpty(parameters))
-                            control.WithParameters(parameters);
+                        var xElementParameters = xElement.DetermineParameters();
+                        var yElementParameters = yElement.DetermineParameters();
 
-                        var usages = element.DetermineUsages();
-                        if (usages != null)
-                            control.WithUsages(usages);
+                        builder.AddControl(stickName + "/x")
+                            .WithFormat(xElement.isSigned ? InputStateBlock.FormatSBit : InputStateBlock.FormatBit)
+                            .WithByteOffset((uint)(xElement.reportOffsetInBits / 8 - byteOffset))
+                            .WithBitOffset((uint)(xElement.reportOffsetInBits % 8))
+                            .WithSizeInBits((uint)xElement.reportSizeInBits)
+                            .WithParameters(xElementParameters)
+                            .WithDefaultState(xElement.DetermineDefaultState())
+                            .WithProcessors(xElement.DetermineProcessors());
 
-                        element.AddChildControls(ref element, name, ref builder);
+                        builder.AddControl(stickName + "/y")
+                            .WithFormat(yElement.isSigned ? InputStateBlock.FormatSBit : InputStateBlock.FormatBit)
+                            .WithByteOffset((uint)(yElement.reportOffsetInBits / 8 - byteOffset))
+                            .WithBitOffset((uint)(yElement.reportOffsetInBits % 8))
+                            .WithSizeInBits((uint)yElement.reportSizeInBits)
+                            .WithParameters(yElementParameters)
+                            .WithDefaultState(yElement.DetermineDefaultState())
+                            .WithProcessors(yElement.DetermineProcessors());
+
+                        // Propagate parameters needed on x and y to the four button controls.
+                        builder.AddControl(stickName + "/up")
+                            .WithParameters(
+                                StringHelpers.Join(",", yElementParameters,
+                                    "clamp=2,clampMin=-1,clampMax=0,invert=true"));
+                        builder.AddControl(stickName + "/down")
+                            .WithParameters(
+                                StringHelpers.Join(",", yElementParameters,
+                                    "clamp=2,clampMin=0,clampMax=1,invert=false"));
+                        builder.AddControl(stickName + "/left")
+                            .WithParameters(
+                                StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert"));
+                        builder.AddControl(stickName + "/right")
+                            .WithParameters(
+                                StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=0,clampMax=1"));
+                    }
+
+                    // Process HID descriptor.
+                    var elements = hidDescriptor.elements;
+                    var elementCount = elements.Length;
+                    for (var i = 0; i < elementCount; ++i)
+                    {
+                        ref var element = ref elements[i];
+                        if (element.reportType != HIDReportType.Input)
+                            continue;
+
+                        // Skip X and Y if we already turned them into a stick.
+                        if (haveStick && (element.Is(UsagePage.GenericDesktop, (int)GenericDesktop.X) ||
+                                          element.Is(UsagePage.GenericDesktop, (int)GenericDesktop.Y)))
+                            continue;
+
+                        var layout = element.DetermineLayout();
+                        if (layout != null)
+                        {
+                            // Assign unique name.
+                            var name = element.DetermineName();
+                            Debug.Assert(!string.IsNullOrEmpty(name));
+                            name = StringHelpers.MakeUniqueName(name, builder.controls, x => x.name);
+
+                            // Add control.
+                            var control =
+                                builder.AddControl(name)
+                                    .WithDisplayName(element.DetermineDisplayName())
+                                    .WithLayout(layout)
+                                    .WithByteOffset((uint)element.reportOffsetInBits / 8)
+                                    .WithBitOffset((uint)element.reportOffsetInBits % 8)
+                                    .WithSizeInBits((uint)element.reportSizeInBits)
+                                    .WithFormat(element.DetermineFormat())
+                                    .WithDefaultState(element.DetermineDefaultState())
+                                    .WithProcessors(element.DetermineProcessors());
+
+                            var parameters = element.DetermineParameters();
+                            if (!string.IsNullOrEmpty(parameters))
+                                control.WithParameters(parameters);
+
+                            var usages = element.DetermineUsages();
+                            if (usages != null)
+                                control.WithUsages(usages);
+
+                            element.AddChildControls(ref element, name, ref builder);
+                        }
                     }
                 }
 
@@ -530,7 +688,8 @@ namespace UnityEngine.InputSystem.HID
             UsageModifier = 0x06
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms",
+            MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum HIDElementFlags
         {
@@ -564,7 +723,9 @@ namespace UnityEngine.InputSystem.HID
             public int reportId;
             public int reportSizeInBits;
             public int reportOffsetInBits;
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
+
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms",
+                MessageId = "flags", Justification = "No better term for underlying data.")]
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
@@ -727,6 +888,7 @@ namespace UnityEngine.InputSystem.HID
                                     return "Dpad";
                                 break;
                         }
+
                         break;
                 }
 
@@ -752,9 +914,9 @@ namespace UnityEngine.InputSystem.HID
             internal InternedString[] DetermineUsages()
             {
                 if (usagePage == UsagePage.Button && usage == 1)
-                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
+                    return new[] { CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction };
                 if (usagePage == UsagePage.Button && usage == 2)
-                    return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                    return new[] { CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction };
                 if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.Rz)
                     return new[] { CommonUsages.Twist };
                 ////TODO: assign hatswitch usage to first and only to first hatswitch element
@@ -807,7 +969,8 @@ namespace UnityEngine.InputSystem.HID
                 if (Mathf.Approximately(0f, min) && Mathf.Approximately(0f, max))
                     return null;
                 var zero = min + (max - min) / 2.0f;
-                return string.Format(CultureInfo.InvariantCulture, "normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min, max, zero);
+                return string.Format(CultureInfo.InvariantCulture,
+                    "normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min, max, zero);
             }
 
             internal string DetermineProcessors()
@@ -834,6 +997,7 @@ namespace UnityEngine.InputSystem.HID
                             case (int)GenericDesktop.Wheel:
                                 return "axisDeadzone";
                         }
+
                         break;
                 }
 
@@ -864,6 +1028,7 @@ namespace UnityEngine.InputSystem.HID
                                     if ((ulong)logicalMax < maxValue)
                                         return new PrimitiveValue(logicalMax + 1);
                                 }
+
                                 break;
 
                             case (int)GenericDesktop.X:
@@ -889,15 +1054,18 @@ namespace UnityEngine.InputSystem.HID
                                     if (defaultValue != 0)
                                         return new PrimitiveValue(defaultValue);
                                 }
+
                                 break;
                         }
+
                         break;
                 }
 
                 return new PrimitiveValue();
             }
 
-            internal void AddChildControls(ref HIDElementDescriptor element, string controlName, ref InputControlLayout.Builder builder)
+            internal void AddChildControls(ref HIDElementDescriptor element, string controlName,
+                ref InputControlLayout.Builder builder)
             {
                 if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
                 {
@@ -996,6 +1164,7 @@ namespace UnityEngine.InputSystem.HID
             /// USB product ID.
             /// </summary>
             public int productId;
+
             public int usage;
             public UsagePage usagePage;
 
