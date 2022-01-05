@@ -51,7 +51,8 @@ namespace UnityEngine.InputSystem.HID
             {
                 public UsagePage ExpectedUsagePage;
                 public uint ExpectedUsage;
-                public string ControlName;
+                public string Element;
+                public string Control;
                 public bool Invert;
 
                 // [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
@@ -76,68 +77,163 @@ negative value, such as -128 for an 8-bit value).
                  * 
                  */
 
-                public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string controlName,
-                    bool invert = false)
-                {
-                    ExpectedUsagePage = expectedUsagePage;
-                    ExpectedUsage = expectedUsage;
-                    ControlName = controlName;
-                    Invert = invert;
-                }
+                // public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string _control,
+                //     bool invert = false)
+                // {
+                //     ExpectedUsagePage = expectedUsagePage;
+                //     ExpectedUsage = expectedUsage;
+                //     Element = "";
+                //     Control = _control;
+                //     Invert = invert;
+                // }
             }
 
             [Serializable]
             public struct KnownDevice
             {
-                public bool IsKnown;
+                public string Name;
                 public int VendorId;
                 public int ProductId;
+                public string Type;
+
+                public bool IsKnown;
                 public Type BaseType;
                 public string BaseLayoutName;
                 public string LayoutName;
-                public string DisplayName;
+
                 public ControlDescription[] Controls;
+            }
+            
+            private static readonly string databaseFileJson = @"
+{
+    ""Devices"": [
+        {
+            ""Name"": ""Logitech Dual Action Gamepad"",
+            ""VendorId"": 1133,
+            ""ProductId"": 49686,
+            ""Type"": ""Gamepad"",
+            ""Controls"": [
+                {""Control"": ""buttonWest"",      ""Element"": ""Button::1""},
+                {""Control"": ""buttonSouth"",     ""Element"": ""Button::2""},
+                {""Control"": ""buttonEast"",      ""Element"": ""Button::3""},
+                {""Control"": ""buttonNorth"",     ""Element"": ""Button::4""},
+                {""Control"": ""leftShoulder"",    ""Element"": ""Button::5""},
+                {""Control"": ""rightShoulder"",   ""Element"": ""Button::6""},
+                {""Control"": ""leftTrigger"",     ""Element"": ""Button::7""},
+                {""Control"": ""rightTrigger"",    ""Element"": ""Button::8""},
+                {""Control"": ""start"",           ""Element"": ""Button::9""},
+                {""Control"": ""select"",          ""Element"": ""Button::10""},
+                {""Control"": ""leftStickPress"",  ""Element"": ""Button::11""},
+                {""Control"": ""rightStickPress"", ""Element"": ""Button::12""},
+                {""Control"": ""dpad"",            ""Element"": ""GenericDesktop::HatSwitch""},
+                {""Control"": ""leftStick/x"",     ""Element"": ""GenericDesktop::X""},
+                {""Control"": ""leftStick/y"",     ""Element"": ""GenericDesktop::Y"", ""Invert"": true},
+                {""Control"": ""rightStick/x"",    ""Element"": ""GenericDesktop::Z""},
+                {""Control"": ""rightStick/y"",    ""Element"": ""GenericDesktop::Rz"", ""Invert"": true}
+            ]
+        }
+    ]
+}
+";
+
+            private static Dictionary<(int, int), KnownDevice> database = new Dictionary<(int, int), KnownDevice>();
+            private static bool databaseLoaded = false;
+
+            private struct WhyJsonParserIsSoBad
+            {
+                public KnownDevice[] Devices;
             }
 
             public static KnownDevice TryToFind(int vendorId, int productId)
             {
-                if (vendorId == 0x046d && productId == 0xc216)
+                //if (!databaseLoaded)
                 {
-                    return new KnownDevice
+                    var db = JsonUtility.FromJson<WhyJsonParserIsSoBad>(databaseFileJson);
+                    
+                    foreach (var knownDevice in db.Devices)
                     {
-                        IsKnown = true,
-                        VendorId = 0x046d,
-                        ProductId = 0xcd16,
-                        BaseType = typeof(Gamepad),
-                        BaseLayoutName = "Gamepad",
-                        LayoutName = "LogitechDualActionGamepadLayout",
-                        DisplayName = "Logitech Dual Action Gamepad",
-                        Controls = new ControlDescription[]
+                        var kd = knownDevice;
+                        kd.IsKnown = true;
+                        kd.BaseType = typeof(Gamepad); // TODO
+                        kd.BaseLayoutName = kd.Type;
+                        kd.LayoutName = kd.Name;
+
+                        for (var i = 0; i < kd.Controls.Length; ++i)
                         {
-                            new(UsagePage.Button, 1, "buttonWest"),
-                            new(UsagePage.Button, 2, "buttonSouth"),
-                            new(UsagePage.Button, 3, "buttonEast"),
-                            new(UsagePage.Button, 4, "buttonNorth"),
-                            new(UsagePage.Button, 5, "leftShoulder"),
-                            new(UsagePage.Button, 6, "rightShoulder"),
-                            new(UsagePage.Button, 7, "leftTrigger"),
-                            new(UsagePage.Button, 8, "rightTrigger"),
-                            new(UsagePage.Button, 9, "start"),
-                            new(UsagePage.Button, 10, "select"),
-                            new(UsagePage.Button, 11, "leftStickPress"),
-                            new(UsagePage.Button, 12, "rightStickPress"),
-                            new(UsagePage.Undefined, 0, "leftStick"),
-                            new(UsagePage.GenericDesktop, (uint)GenericDesktop.X, "leftStick/x"),
-                            new(UsagePage.GenericDesktop, (uint)GenericDesktop.Y, "leftStick/y", invert: true),
-                            new(UsagePage.Undefined, 0, "rightStick"),
-                            new(UsagePage.GenericDesktop, (uint)GenericDesktop.Z, "rightStick/x"),
-                            new(UsagePage.GenericDesktop, (uint)GenericDesktop.Rz, "rightStick/y", invert: true),
-                            new(UsagePage.GenericDesktop, (uint)GenericDesktop.HatSwitch, "dpad")
+                            var cd = kd.Controls[i];
+                            var p = cd.Element.Split("::");
+                            switch (p[0])
+                            {
+                                case "Button": cd.ExpectedUsagePage = UsagePage.Button;
+                                    cd.ExpectedUsage = uint.Parse(p[1]);
+                                    break;
+                                case "GenericDesktop": cd.ExpectedUsagePage = UsagePage.GenericDesktop;
+                                    switch (p[1])
+                                    {
+                                        case "HatSwitch": cd.ExpectedUsage = (uint)GenericDesktop.HatSwitch; break;
+                                        case "X": cd.ExpectedUsage = (uint)GenericDesktop.X; break;
+                                        case "Y": cd.ExpectedUsage = (uint)GenericDesktop.Y; break;
+                                        case "Z": cd.ExpectedUsage = (uint)GenericDesktop.Z; break;
+                                        case "Rz": cd.ExpectedUsage = (uint)GenericDesktop.Rz; break;
+                                        default: cd.ExpectedUsage = 0;
+                                            break;
+                                    }
+                                    break;
+                                default:
+                                    cd.ExpectedUsagePage = UsagePage.Undefined;
+                                    cd.ExpectedUsage = 0;
+                                    break;
+                            }
+
+                            kd.Controls[i] = cd;
                         }
-                    };
+                        
+                        database[(kd.VendorId, kd.ProductId)] = kd;
+                    }
+                    
+                    
+                    databaseLoaded = true;
                 }
 
-                return new KnownDevice { IsKnown = false };
+                return database.GetValueOrDefault((vendorId, productId));
+                
+                // if (vendorId == 0x046d && productId == 0xc216)
+                // {
+                //     return new KnownDevice
+                //     {
+                //         IsKnown = true,
+                //         VendorId = 0x046d,
+                //         ProductId = 0xcd16,
+                //         BaseType = typeof(Gamepad),
+                //         BaseLayoutName = "Gamepad",
+                //         LayoutName = "LogitechDualActionGamepadLayout",
+                //         DisplayName = "Logitech Dual Action Gamepad",
+                //         Controls = new ControlDescription[]
+                //         {
+                //             new(UsagePage.Button, 1, "buttonWest"),
+                //             new(UsagePage.Button, 2, "buttonSouth"),
+                //             new(UsagePage.Button, 3, "buttonEast"),
+                //             new(UsagePage.Button, 4, "buttonNorth"),
+                //             new(UsagePage.Button, 5, "leftShoulder"),
+                //             new(UsagePage.Button, 6, "rightShoulder"),
+                //             new(UsagePage.Button, 7, "leftTrigger"),
+                //             new(UsagePage.Button, 8, "rightTrigger"),
+                //             new(UsagePage.Button, 9, "start"),
+                //             new(UsagePage.Button, 10, "select"),
+                //             new(UsagePage.Button, 11, "leftStickPress"),
+                //             new(UsagePage.Button, 12, "rightStickPress"),
+                //             new(UsagePage.Undefined, 0, "leftStick"),
+                //             new(UsagePage.GenericDesktop, (uint)GenericDesktop.X, "leftStick/x"),
+                //             new(UsagePage.GenericDesktop, (uint)GenericDesktop.Y, "leftStick/y", invert: true),
+                //             new(UsagePage.Undefined, 0, "rightStick"),
+                //             new(UsagePage.GenericDesktop, (uint)GenericDesktop.Z, "rightStick/x"),
+                //             new(UsagePage.GenericDesktop, (uint)GenericDesktop.Rz, "rightStick/y", invert: true),
+                //             new(UsagePage.GenericDesktop, (uint)GenericDesktop.HatSwitch, "dpad")
+                //         }
+                //     };
+                // }
+                //
+                // return new KnownDevice { IsKnown = false };
             }
         }
 
@@ -304,7 +400,7 @@ negative value, such as -128 for an 8-bit value).
             var layout = new HIDLayoutBuilder
             {
                 layoutName = layoutName,
-                displayName = knownDevice.IsKnown ? knownDevice.DisplayName : description.product,
+                displayName = knownDevice.IsKnown ? knownDevice.Name : description.product,
                 hidDescriptor = hidDeviceDescriptor,
                 knownDevice = knownDevice,
                 parentLayout = baseLayout,
@@ -474,13 +570,15 @@ negative value, such as -128 for an 8-bit value).
                     {
                         var elementIndex = Array.FindIndex(hidDescriptor.elements,
                             x => x.usagePage == control.ExpectedUsagePage && x.usage == control.ExpectedUsage);
+                        if (elementIndex < 0 || elementIndex >= hidDescriptor.elements.Length)
+                            continue;
                         var element = hidDescriptor.elements[elementIndex];
                         if (element.reportType != HIDReportType.Input)
                             continue;
 
                         var sb = new StringBuilder();
                         sb.Append("{");
-                        sb.Append($"\"name\":\"{control.ControlName}\"");
+                        sb.Append($"\"name\":\"{control.Control}\"");
 
                         if (control.ExpectedUsagePage == UsagePage.GenericDesktop && control.ExpectedUsage == (uint)GenericDesktop.HatSwitch)
                         {
@@ -526,7 +624,7 @@ negative value, such as -128 for an 8-bit value).
                             // All of this is just soooo wrong, but let's roll with it for a prototype
                             sb.Clear();
                             sb.Append("{");
-                            sb.Append($"\"name\":\"{control.ControlName}/up\"");
+                            sb.Append($"\"name\":\"{control.Control}/up\"");
                             sb.Append($",\"layout\":\"DiscreteButton\"");
                             sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
                             sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
@@ -540,7 +638,7 @@ negative value, such as -128 for an 8-bit value).
 
                             sb.Clear();
                             sb.Append("{");
-                            sb.Append($"\"name\":\"{control.ControlName}/right\"");
+                            sb.Append($"\"name\":\"{control.Control}/right\"");
                             sb.Append($",\"layout\":\"DiscreteButton\"");
                             sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
                             sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
@@ -553,7 +651,7 @@ negative value, such as -128 for an 8-bit value).
 
                             sb.Clear();
                             sb.Append("{");
-                            sb.Append($"\"name\":\"{control.ControlName}/down\"");
+                            sb.Append($"\"name\":\"{control.Control}/down\"");
                             sb.Append($",\"layout\":\"DiscreteButton\"");
                             sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
                             sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
@@ -566,7 +664,7 @@ negative value, such as -128 for an 8-bit value).
 
                             sb.Clear();
                             sb.Append("{");
-                            sb.Append($"\"name\":\"{control.ControlName}/left\"");
+                            sb.Append($"\"name\":\"{control.Control}/left\"");
                             sb.Append($",\"layout\":\"DiscreteButton\"");
                             sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
                             sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
@@ -577,6 +675,32 @@ negative value, such as -128 for an 8-bit value).
                             sb.Append("}");
                             controlsJson.Add(sb.ToString());
                         }
+                        else if (control.ExpectedUsagePage == UsagePage.GenericDesktop &&
+                                 control.ExpectedUsage == (uint)GenericDesktop.X)
+                        {
+                            // clear out vector2 binary offset
+                            sb.Clear();
+                            sb.Append("{");
+                            sb.Append($"\"name\":\"leftStick\"");
+                            sb.Append($",\"offset\":\"0\"");
+                            sb.Append($",\"bit\":\"0\"");
+                            sb.Append($",\"sizeInBits\":\"0\"");
+                            //sb.Append($",\"format\":\"\""); // ???
+                            sb.Append("}");
+                            
+                            controlsJson.Add(sb.ToString());
+                            sb.Clear();
+                            sb.Append("{");
+                            sb.Append($"\"name\":\"rightStick\"");
+                            sb.Append($",\"offset\":\"0\"");
+                            sb.Append($",\"bit\":\"0\"");
+                            sb.Append($",\"sizeInBits\":\"0\"");
+                            //sb.Append($",\"format\":\"\""); // ???
+                            sb.Append("}");
+                            controlsJson.Add(sb.ToString());
+                        }
+
+                            
 
                         // string name;
                         // string layout;
@@ -603,15 +727,15 @@ negative value, such as -128 for an 8-bit value).
                     {
                         // nuke binary mapping to composite controls
                         // TODO this is wrong, there should be some magic like reading state from another control or something
-                        var sb = new StringBuilder();
-                        sb.Append("{");
-                        sb.Append($"\"name\":\"{control.ControlName}\"");
-                        sb.Append($",\"offset\":\"0\"");
-                        sb.Append($",\"bit\":\"0\"");
-                        sb.Append($",\"sizeInBits\":\"0\"");
-                        //sb.Append($",\"format\":\"\""); // ???
-                        sb.Append("}");
-                        controlsJson.Add(sb.ToString());
+                        // var sb = new StringBuilder();
+                        // sb.Append("{");
+                        // sb.Append($"\"name\":\"{control.Control}\"");
+                        // sb.Append($",\"offset\":\"0\"");
+                        // sb.Append($",\"bit\":\"0\"");
+                        // sb.Append($",\"sizeInBits\":\"0\"");
+                        // //sb.Append($",\"format\":\"\""); // ???
+                        // sb.Append("}");
+                        // controlsJson.Add(sb.ToString());
                     }
 
 
