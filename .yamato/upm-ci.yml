@@ -46,7 +46,7 @@ build_ios_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on ios
   agent:
     type: Unity::VM::osx
-    image: mobile/macos-10.15-testing:stable
+    image: mobile/macos-10.15-testing:latest
     flavor: b1.large
   commands:
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
@@ -66,7 +66,7 @@ run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
       type: Unity::mobile::iPhone
-      image: mobile/macos-10.15-testing:stable
+      image: mobile/macos-10.15-testing:latest
       flavor: b1.medium
   skip_checkout: true
   dependencies:
@@ -87,7 +87,7 @@ build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
     type: Unity::VM::osx
-    image: mobile/macos-10.15-testing:stable
+    image: mobile/macos-10.15-testing:latest
     flavor: b1.large
   commands:
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
@@ -184,7 +184,7 @@ publish{% cycle "", "_dryrun" %}:
   name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
-    image: package-ci/win10:stable
+    image: package-ci/win10:latest
     flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1
