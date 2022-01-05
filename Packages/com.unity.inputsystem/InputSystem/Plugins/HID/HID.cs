@@ -53,13 +53,13 @@ namespace UnityEngine.InputSystem.HID
                 public uint ExpectedUsage;
                 public string ControlName;
                 public bool Invert;
-                
+
                 // [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
                 // [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
                 // [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
                 // [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
                 // [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
-                
+
                 /*
                  *Indicates whether the control has a state in which it
 is not sending meaningful data. One possible use of
@@ -76,7 +76,8 @@ negative value, such as -128 for an 8-bit value).
                  * 
                  */
 
-                public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string controlName, bool invert = false)
+                public ControlDescription(UsagePage expectedUsagePage, uint expectedUsage, string controlName,
+                    bool invert = false)
                 {
                     ExpectedUsagePage = expectedUsagePage;
                     ExpectedUsage = expectedUsage;
@@ -480,27 +481,102 @@ negative value, such as -128 for an 8-bit value).
                         var sb = new StringBuilder();
                         sb.Append("{");
                         sb.Append($"\"name\":\"{control.ControlName}\"");
-                        sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
-                        sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
-                        sb.Append($",\"sizeInBits\":\"{(uint)element.reportSizeInBits}\"");
+
+                        if (control.ExpectedUsagePage == UsagePage.GenericDesktop && control.ExpectedUsage == (uint)GenericDesktop.HatSwitch)
+                        {
+                            // force calculation based on children
+                            sb.Append($",\"offset\":\"0\"");
+                            sb.Append($",\"bit\":\"0\"");
+                            sb.Append($",\"sizeInBits\":\"0\"");
+                        }
+                        else
+                        {
+                            sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
+                            sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
+                            sb.Append($",\"sizeInBits\":\"{(uint)element.reportSizeInBits}\"");
+                        }
+                        
                         sb.Append($",\"format\":\"{element.DetermineFormat().ToString()}\"");
-                        sb.Append($",\"defaultState\":\"{element.DetermineDefaultState().ToString(CultureInfo.InvariantCulture)}\"");
+                        sb.Append(
+                            $",\"defaultState\":\"{element.DetermineDefaultState().ToString(CultureInfo.InvariantCulture)}\"");
                         sb.Append($",\"processors\":\"{element.DetermineProcessors()}\"");
                         var parameters = element.DetermineParameters(true);
                         if (control.Invert)
                             parameters = "invert" + (string.IsNullOrEmpty(parameters) ? "" : ",") + parameters;
                         if (!string.IsNullOrEmpty(parameters))
                             sb.Append($",\"parameters\":\"{parameters}\"");
-                        
+
                         //         .WithDefaultState(element.DetermineDefaultState())
                         //         .WithProcessors(element.DetermineProcessors());
                         //
                         // var parameters = element.DetermineParameters();
                         // if (!string.IsNullOrEmpty(parameters))
                         //     control2.WithParameters(parameters);
-                        
+
                         sb.Append("}");
                         controlsJson.Add(sb.ToString());
+
+                        if (control.ExpectedUsagePage == UsagePage.GenericDesktop &&
+                            control.ExpectedUsage == (uint)GenericDesktop.HatSwitch)
+                        {
+                            var nullValue = element.DetermineDefaultState();
+                            if (nullValue.isEmpty)
+                                return;
+
+                            // All of this is just soooo wrong, but let's roll with it for a prototype
+                            sb.Clear();
+                            sb.Append("{");
+                            sb.Append($"\"name\":\"{control.ControlName}/up\"");
+                            sb.Append($",\"layout\":\"DiscreteButton\"");
+                            sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
+                            sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
+                            sb.Append($",\"sizeInBits\":\"{(uint)element.reportSizeInBits}\"");
+                            sb.Append($",\"format\":\"{InputStateBlock.FormatBit.ToString()}\"");
+                            parameters =
+                                $"minValue={element.logicalMax},maxValue={element.logicalMin + 1},nullValue={nullValue.ToString()},wrapAtValue={element.logicalMax}";
+                            sb.Append($",\"parameters\":\"{parameters}\"");
+                            sb.Append("}");
+                            controlsJson.Add(sb.ToString());
+
+                            sb.Clear();
+                            sb.Append("{");
+                            sb.Append($"\"name\":\"{control.ControlName}/right\"");
+                            sb.Append($",\"layout\":\"DiscreteButton\"");
+                            sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
+                            sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
+                            sb.Append($",\"sizeInBits\":\"{(uint)element.reportSizeInBits}\"");
+                            sb.Append($",\"format\":\"{InputStateBlock.FormatBit.ToString()}\"");
+                            parameters = $"minValue={element.logicalMin + 1},maxValue={element.logicalMin + 3}";
+                            sb.Append($",\"parameters\":\"{parameters}\"");
+                            sb.Append("}");
+                            controlsJson.Add(sb.ToString());
+
+                            sb.Clear();
+                            sb.Append("{");
+                            sb.Append($"\"name\":\"{control.ControlName}/down\"");
+                            sb.Append($",\"layout\":\"DiscreteButton\"");
+                            sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
+                            sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
+                            sb.Append($",\"sizeInBits\":\"{(uint)element.reportSizeInBits}\"");
+                            sb.Append($",\"format\":\"{InputStateBlock.FormatBit.ToString()}\"");
+                            parameters = $"minValue={element.logicalMin + 3},maxValue={element.logicalMin + 5}";
+                            sb.Append($",\"parameters\":\"{parameters}\"");
+                            sb.Append("}");
+                            controlsJson.Add(sb.ToString());
+
+                            sb.Clear();
+                            sb.Append("{");
+                            sb.Append($"\"name\":\"{control.ControlName}/left\"");
+                            sb.Append($",\"layout\":\"DiscreteButton\"");
+                            sb.Append($",\"offset\":\"{(uint)element.reportOffsetInBits / 8}\"");
+                            sb.Append($",\"bit\":\"{(uint)element.reportOffsetInBits % 8}\"");
+                            sb.Append($",\"sizeInBits\":\"{(uint)element.reportSizeInBits}\"");
+                            sb.Append($",\"format\":\"{InputStateBlock.FormatBit.ToString()}\"");
+                            parameters = $"minValue={element.logicalMin + 5},maxValue={element.logicalMin + 7}";
+                            sb.Append($",\"parameters\":\"{parameters}\"");
+                            sb.Append("}");
+                            controlsJson.Add(sb.ToString());
+                        }
 
                         // string name;
                         // string layout;
@@ -1049,7 +1125,9 @@ negative value, such as -128 for an 8-bit value).
                         case (int)GenericDesktop.Ry:
                         case (int)GenericDesktop.Vy:
                         case (int)GenericDesktop.Vbry:
-                            return dontBeSmart == false ? StringHelpers.Join(",", "invert", DetermineAxisNormalizationParameters()) : DetermineAxisNormalizationParameters();
+                            return dontBeSmart == false
+                                ? StringHelpers.Join(",", "invert", DetermineAxisNormalizationParameters())
+                                : DetermineAxisNormalizationParameters();
                     }
                 }
 
