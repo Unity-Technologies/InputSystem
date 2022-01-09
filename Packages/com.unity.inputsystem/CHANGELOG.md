@@ -11,6 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ### Fixed
+* Fixed an issue where a layout-override registered via `InputSystem.RegisterLayoutOverride(...)` would cause the editor to malfunction or crash if the layout override had a name already used by an existing layout. (case 1377685).
+* Fixed an issue where attempting to replace an existing layout-override by using an existing layout-override name didn't work as expected and would instead aggregate overrides instead of replacing them when an override with the given name already exists.
 
 #### Actions
 

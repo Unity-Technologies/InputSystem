@@ -898,6 +898,78 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanReplaceExistingOverrideToExistingLayouts()
+    {
+        // Add a control to existing Mouse layout.
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ");
+
+        //var device = InputSystem.AddDevice<Mouse>();
+
+        //Assert.That(device["extraControl"], Is.TypeOf<ButtonControl>());
+
+        // Replace previous override in Mouse layout
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""anotherControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ");
+
+        var device = InputSystem.AddDevice<Mouse>();
+        Assert.That(device["anotherControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    [Test] // Case 1377685 - according to use-case
+    [Category("Layouts")] 
+    public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameNameInJson()
+    {
+        // Add a control to mice. (Notice that name and extend is set to the same)
+        const string json = @"
+            {
+                ""name"" : ""Mouse"", 
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        Assert.That(() => InputSystem.RegisterLayoutOverride(json),
+            Throws.Exception.With.Message.Contain("Layout overrides must have unique names"));
+    }
+
+    [Test] // Case 1377685 - variant using explicit name
+    [Category("Layouts")]
+    public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameNameExplicitly()
+    {
+        // Add a control to mice. (Notice that name and extend is set to the same)
+        const string json = @"
+            {
+                ""name"" : ""IrrelevantGivenAsArgumentInsteadOfJson"", 
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        Assert.That(() => InputSystem.RegisterLayoutOverride(json, "Mouse"),
+            Throws.Exception.With.Message.Contain("Layout overrides must have unique names"));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanApplyOverridesToMultipleLayouts()
     {
         // Add a control to mice.
