@@ -13,10 +13,11 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).
+- Fixed `InvalidCastException: Specified cast is not valid.` being thrown when clicking on menu separators in the control picker ([case 1388049](https://issuetracker.unity3d.com/issues/invalidcastexception-is-thrown-when-selecting-the-header-of-an-advanceddropdown)).
 
 #### Actions
 
-* Fixed `InputAction.GetTimeoutCompletionPercentage` jumping to 100% completion early ([case 1377009](https://issuetracker.unity3d.com/issues/gettimeoutcompletionpercentage-returns-1-after-0-dot-1s-when-hold-action-was-started-even-though-it-is-not-performed-yet)).
+- Fixed `InputAction.GetTimeoutCompletionPercentage` jumping to 100% completion early ([case 1377009](https://issuetracker.unity3d.com/issues/gettimeoutcompletionpercentage-returns-1-after-0-dot-1s-when-hold-action-was-started-even-though-it-is-not-performed-yet)).
 
 ## [1.3.0] - 2021-12-10
 
