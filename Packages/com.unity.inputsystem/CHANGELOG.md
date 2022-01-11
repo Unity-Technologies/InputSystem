@@ -12,6 +12,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+* Fixed `OnScreenButton` triggering `NullReferenceException` in combination with custom devices ([case 1380790 ](https://issuetracker.unity3d.com/issues/nullreferenceexception-error-when-setting-on-screen-button-to-a-custom-device)).
+
 #### Actions
 
 * Fixed `InputAction.GetTimeoutCompletionPercentage` jumping to 100% completion early ([case 1377009](https://issuetracker.unity3d.com/issues/gettimeoutcompletionpercentage-returns-1-after-0-dot-1s-when-hold-action-was-started-even-though-it-is-not-performed-yet)).
