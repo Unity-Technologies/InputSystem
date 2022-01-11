@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     /// <summary>
     /// Structure of HID input reports for Switch Pro controllers.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 6)]
+    [StructLayout(LayoutKind.Explicit, Size = 7)]
     internal struct SwitchProControllerHIDInputState : IInputStateTypeInfo
     {
         public static FourCC Format = new FourCC('S', 'P', 'V', 'S'); // Switch Pro Virtual State
@@ -60,7 +60,11 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [InputControl(name = "rightTrigger", displayName = "ZR", shortDisplayName = "ZR", format = "BIT", bit = (uint)Button.ZR)]
         [InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
         [InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
-        [FieldOffset(4)] public ushort buttons;
+        [FieldOffset(4)] public ushort buttons1;
+
+        [InputControl(name = "capture", layout = "Button", displayName = "Capture", bit = (uint)Button.Capture - 16)]
+        [InputControl(name = "home", layout = "Button", displayName = "Home", bit = (uint)Button.Home - 16)]
+        [FieldOffset(6)] public byte buttons2;
 
         public enum Button
         {
@@ -83,6 +87,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
             ZR = 13,
             Plus = 14,
             Minus = 15,
+            Capture = 16,
+            Home = 17,
 
             X = North,
             B = South,
@@ -100,12 +106,23 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set(Button button, bool state)
         {
-            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
-            var bit = (ushort)(1U << (int)button);
-            if (state)
-                buttons = (ushort)(buttons | bit);
-            else
-                buttons &= (ushort)~bit;
+            Debug.Assert((int)button < 18, $"Expected button < 18");
+            if ((int)button < 16)
+            {
+                var bit = (ushort)(1U << (int)button);
+                if (state)
+                    buttons1 = (ushort)(buttons1 | bit);
+                else
+                    buttons1 &= (ushort)~bit;
+            }
+            else if ((int)button < 18)
+            {
+                var bit = (byte)(1U << ((int)button - 16));
+                if (state)
+                    buttons2 = (byte)(buttons2 | bit);
+                else
+                    buttons2 &= (byte)~bit;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -132,9 +149,19 @@ namespace UnityEngine.InputSystem.Switch
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
     public class SwitchProControllerHID : Gamepad, IInputStateCallbackReceiver, IEventPreProcessor
     {
+        [InputControl(name = "capture", displayName = "Capture")]
+        public ButtonControl captureButton { get; protected set; }
+
+        [InputControl(name = "home", displayName = "Home")]
+        public ButtonControl homeButton { get; protected set; }
+
         protected override void OnAdded()
         {
             base.OnAdded();
+
+            captureButton = GetChildControl<ButtonControl>("capture");
+            homeButton = GetChildControl<ButtonControl>("home");
+
             HandshakeRestart();
         }
 
@@ -268,9 +295,9 @@ namespace UnityEngine.InputSystem.Switch
             public SwitchProControllerHIDInputState ToHIDInputReport()
             {
                 var leftXByte = (byte)NumberHelpers.RemapUIntBitsToNormalizeFloatToUIntBits(leftX, 16, 8);
-                var leftYByte = (byte)(0xff - (byte)NumberHelpers.RemapUIntBitsToNormalizeFloatToUIntBits(leftY, 16, 8));
+                var leftYByte = (byte)NumberHelpers.RemapUIntBitsToNormalizeFloatToUIntBits(leftY, 16, 8);
                 var rightXByte = (byte)NumberHelpers.RemapUIntBitsToNormalizeFloatToUIntBits(rightX, 16, 8);
-                var rightYByte = (byte)(0xff - (byte)NumberHelpers.RemapUIntBitsToNormalizeFloatToUIntBits(rightY, 16, 8));
+                var rightYByte = (byte)NumberHelpers.RemapUIntBitsToNormalizeFloatToUIntBits(rightY, 16, 8);
 
                 var state = new SwitchProControllerHIDInputState
                 {
@@ -292,6 +319,8 @@ namespace UnityEngine.InputSystem.Switch
                 state.Set(SwitchProControllerHIDInputState.Button.Plus, (buttons1 & 0x02) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.StickL, (buttons1 & 0x04) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.StickR, (buttons1 & 0x08) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Home, (buttons1 & 0x10) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Capture, (buttons1 & 0x20) != 0);
 
                 var left = false;
                 var up = false;
@@ -389,6 +418,8 @@ namespace UnityEngine.InputSystem.Switch
                 state.Set(SwitchProControllerHIDInputState.Button.Plus, (buttons1 & 0x02) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.StickR, (buttons1 & 0x04) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.StickL, (buttons1 & 0x08) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Home, (buttons1 & 0x10) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Capture, (buttons1 & 0x20) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.Down, (buttons2 & 0x01) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.Up, (buttons2 & 0x02) != 0);
                 state.Set(SwitchProControllerHIDInputState.Button.Right, (buttons2 & 0x04) != 0);
