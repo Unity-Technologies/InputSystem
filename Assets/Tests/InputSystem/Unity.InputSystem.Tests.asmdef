@@ -39,6 +39,11 @@
             "name": "Unity",
             "expression": "[2021.2,2021.3)",
             "define": "TEMP_DISABLE_UITOOLKIT_TEST"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.1,2022.2)",
+            "define": "TEMP_DISABLE_UITOOLKIT_TEST"
         }
     ],
     "noEngineReferences": false
