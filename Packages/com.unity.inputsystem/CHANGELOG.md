@@ -13,6 +13,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).
+- Fixed `InputControlPath.Matches` incorrectly reporting matches when only a prefix was matching.
+  * This would, for example, cause `Keyboard.eKey` to be matched by `<Keyboard>/escape`.
+  * Fix contributed by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1485](https://github.com/Unity-Technologies/InputSystem/pull/1485).
 
 #### Actions
 
