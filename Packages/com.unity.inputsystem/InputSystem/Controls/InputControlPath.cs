@@ -1404,7 +1404,7 @@ namespace UnityEngine.InputSystem
                 var pathElementLength = pathElement.length;
                 var elementLength = element.Length;
 
-                for (int i = 0, j = 0;;i++, j++)
+                for (int i = 0, j = 0;; i++, j++)
                 {
                     var pathElementDone = i == pathElementLength;
                     var elementDone     = j == elementLength;

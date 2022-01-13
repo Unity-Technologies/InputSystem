@@ -1243,7 +1243,7 @@ partial class CoreTests
         Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
     }
-    
+
     [Test]
     [Category("Controls")]
     public void Controls_MatchingPath_DoesNotMatchPrefixOnly()
