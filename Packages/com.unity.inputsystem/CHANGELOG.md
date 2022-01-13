@@ -10,6 +10,25 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+## Changed
+
+* `Button` type `InputAction`s now go to `started` when a button goes from a press to below the release threshold but not yet to 0 ([case ]
+  ```CSharp
+  // Before:
+  Set(Gamepad.current.rightTrigger, 0.7f); // Performed (pressed)
+  Set(Gamepad.current.rightTrigger, 0.2f); // Canceled (released)
+  Set(Gamepad.current.rightTrigger, 0.1f); // Started!!
+  Set(Gamepad.current.rightTrigger, 0f);   // Canceled
+
+  // Now:
+  Set(Gamepad.current.rightTrigger, 0.7f); // Performed (pressed)
+  Set(Gamepad.current.rightTrigger, 0.2f); // Started (released but not fully)
+  Set(Gamepad.current.rightTrigger, 0.1f); // <Nothing>
+  Set(Gamepad.current.rightTrigger, 0f);   // Canceled
+  ```
+  - This also applies to `PressInteraction` when set to `Press` behavior.
+  - In effect, it means that a button will be in `started` or `performed` phase for as long as its value is not 0 and will only go to `canceled` once dropping to 0.
+
 ### Fixed
 
 - Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).

@@ -72,7 +72,10 @@ namespace UnityEngine.InputSystem.Interactions
                         if (actuation <= releasePointOrDefault)
                         {
                             m_WaitingForRelease = false;
-                            context.Canceled();
+                            if (Mathf.Approximately(0f, actuation))
+                                context.Canceled();
+                            else
+                                context.Started();
                         }
                     }
                     else if (actuation >= pressPointOrDefault)
@@ -84,6 +87,10 @@ namespace UnityEngine.InputSystem.Interactions
                     else if (actuation > 0 && !context.isStarted)
                     {
                         context.Started();
+                    }
+                    else if (Mathf.Approximately(0f, actuation) && context.isStarted)
+                    {
+                        context.Canceled();
                     }
                     break;
 

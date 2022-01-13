@@ -461,7 +461,7 @@ partial class CoreTests
 
             // No change on left trigger action, right trigger action cancels.
             Assert.That(leftTriggerButtonTrace, Is.Empty);
-            Assert.That(rightTriggerButtonTrace, Canceled(rightTriggerButton, gamepad.rightTrigger, value: 0f));
+            Assert.That(rightTriggerButtonTrace, Started(rightTriggerButton, gamepad.rightTrigger, value: 0.6f));
 
             Assert.That(leftTriggerValueTrace, Performed(leftTriggerValue, gamepad.leftTrigger, value: 0.6f));
             Assert.That(rightTriggerValueTrace, Performed(rightTriggerValue, gamepad.rightTrigger, value: 0.6f));
@@ -475,8 +475,8 @@ partial class CoreTests
             Set(gamepad.rightTrigger, 0.4f);
 
             // Left trigger cancels, right trigger *starts* again (but doesn't perform).
-            Assert.That(leftTriggerButtonTrace, Canceled(leftTriggerButton, gamepad.leftTrigger, value: 0f));
-            Assert.That(rightTriggerButtonTrace, Started(rightTriggerButton, gamepad.rightTrigger, 0.4f));
+            Assert.That(leftTriggerButtonTrace, Started(leftTriggerButton, gamepad.leftTrigger, value: 0.4f));
+            Assert.That(rightTriggerButtonTrace, Is.Empty);
 
             Assert.That(leftTriggerValueTrace, Performed(leftTriggerValue, gamepad.leftTrigger, value: 0.4f));
             Assert.That(rightTriggerValueTrace, Performed(rightTriggerValue, gamepad.rightTrigger, value: 0.4f));
@@ -490,7 +490,7 @@ partial class CoreTests
             Set(gamepad.rightTrigger, 0f);
 
             // No change on left and right trigger actions.
-            Assert.That(leftTriggerButtonTrace, Is.Empty);
+            Assert.That(leftTriggerButtonTrace, Canceled(leftTriggerButton, gamepad.leftTrigger, 0f));
             Assert.That(rightTriggerButtonTrace, Canceled(rightTriggerButton, gamepad.rightTrigger, 0f));
 
             Assert.That(leftTriggerValueTrace, Canceled(leftTriggerValue, gamepad.leftTrigger, value: 0f));
@@ -514,6 +514,72 @@ partial class CoreTests
 
             Assert.That(leftTriggerButtonTrace, Canceled(leftTriggerButton, gamepad.leftTrigger, value: 0f));
             Assert.That(rightTriggerButtonTrace, Canceled(rightTriggerButton, gamepad.rightTrigger, value: 0f));
+        }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1393330/
+    [Test]
+    [Category("Actions")]
+    public void Actions_ButtonActions_GoBackToStartedWhenHeldBelowReleasePoint()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        InputSystem.settings.buttonReleaseThreshold = 0.8f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Make sure both PressInteraction and the default interaction handles this exactly the same way.
+        var buttonAction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/rightTrigger");
+        var pressAction = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/rightTrigger", interactions: "press");
+
+        buttonAction.Enable();
+        pressAction.Enable();
+
+        using (var buttonTrace = new InputActionTrace(buttonAction))
+        using (var pressTrace = new InputActionTrace(pressAction))
+        {
+            // Started.
+            Set(gamepad.rightTrigger, 0.3f);
+
+            Assert.That(buttonTrace, Started(buttonAction, value: 0.3f));
+            Assert.That(pressTrace, Started(pressAction, value: 0.3f));
+
+            buttonTrace.Clear();
+            pressTrace.Clear();
+
+            // Started.
+            Set(gamepad.rightTrigger, 0.1f);
+
+            Assert.That(buttonTrace, Is.Empty);
+            Assert.That(pressTrace, Is.Empty);
+
+            // Performed.
+            Set(gamepad.rightTrigger, 0.6f);
+
+            Assert.That(buttonTrace, Performed(buttonAction, value: 0.6f));
+            Assert.That(pressTrace, Performed(pressAction, value: 0.6f));
+
+            buttonTrace.Clear();
+            pressTrace.Clear();
+
+            // Performed.
+            Set(gamepad.rightTrigger, 0.7f);
+
+            Assert.That(buttonTrace, Is.Empty);
+            Assert.That(pressTrace, Is.Empty);
+
+            // Started.
+            Set(gamepad.rightTrigger, 0.3f);
+
+            Assert.That(buttonTrace, Started(buttonAction, value: 0.3f));
+            Assert.That(pressTrace, Started(pressAction, value: 0.3f));
+
+            buttonTrace.Clear();
+            pressTrace.Clear();
+
+            // Canceled.
+            Set(gamepad.rightTrigger, 0);
+
+            Assert.That(buttonTrace, Canceled(buttonAction, value: 0));
+            Assert.That(pressTrace, Canceled(pressAction, value: 0));
         }
     }
 
