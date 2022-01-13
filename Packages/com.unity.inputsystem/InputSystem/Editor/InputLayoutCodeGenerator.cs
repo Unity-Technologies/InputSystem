@@ -231,7 +231,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine();
 
             if (device.noisy)
-	            writer.WriteLine("builder.IsNoisy(true);");
+                writer.WriteLine("builder.IsNoisy(true);");
 
             writer.WriteLine("builder.Finish();");
             writer.EndBlock();
