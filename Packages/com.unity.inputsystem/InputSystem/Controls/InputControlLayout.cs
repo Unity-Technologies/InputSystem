@@ -475,6 +475,18 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        public bool isNoisy
+        {
+            get => (m_Flags & Flags.IsNoisy) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.IsNoisy;
+                else
+                    m_Flags &= ~Flags.IsNoisy;
+            }
+        }
+
         /// <summary>
         /// Override value for <see cref="InputDevice.canRunInBackground"/>. If this is set by the
         /// layout, it will prevent <see cref="QueryCanRunInBackground"/> from being issued. However, other
@@ -976,6 +988,7 @@ namespace UnityEngine.InputSystem.Layouts
                 m_Description = layoutAttribute?.description,
                 m_DisplayName = layoutAttribute?.displayName,
                 canRunInBackground = layoutAttribute?.canRunInBackgroundInternal,
+                isNoisy = layoutAttribute?.isNoisy ?? false
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -1023,6 +1036,7 @@ namespace UnityEngine.InputSystem.Layouts
             IsOverride = 1 << 2,
             CanRunInBackground = 1 << 3,
             CanRunInBackgroundIsSet = 1 << 4,
+            IsNoisy = 1 << 5
         }
 
         private InputControlLayout(string name, Type type)

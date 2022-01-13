@@ -146,8 +146,6 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine($"    .WithDisplayName(\"{device.displayName}\")");
             writer.WriteLine($"    .WithChildren({device.m_ChildStartIndex}, {device.m_ChildCount})");
             writer.WriteLine($"    .WithLayout(new InternedString(\"{device.layout}\"))");
-            if (device.noisy)
-                writer.WriteLine("    .IsNoisy(true)");
             writer.WriteLine($"    .WithStateBlock(new InputStateBlock {{ format = new FourCC({(int)device.stateBlock.format}), sizeInBits = {device.stateBlock.sizeInBits} }});");
 
             // Add controls to device.
@@ -231,6 +229,10 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             writer.WriteLine();
+
+            if (device.noisy)
+	            writer.WriteLine("builder.IsNoisy(true);");
+
             writer.WriteLine("builder.Finish();");
             writer.EndBlock();
 

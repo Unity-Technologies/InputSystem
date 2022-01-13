@@ -230,6 +230,7 @@ namespace UnityEngine.InputSystem.DualShock
                 , 29361167u, 29885456u, 33562641u, 37756946u
             });
 
+            builder.IsNoisy(true);
             builder.Finish();
         }
 
