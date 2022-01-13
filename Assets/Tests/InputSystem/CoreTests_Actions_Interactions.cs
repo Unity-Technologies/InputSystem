@@ -181,7 +181,10 @@ internal partial class CoreTests
         var map1 = new InputActionMap("map1");
         var map2 = new InputActionMap("map2");
         map1.AddAction(name: "action1", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
-        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "press,hold(duration=0.4)");
+        // https://fogbugz.unity3d.com/f/cases/1392559
+        // Having `press` after `hold` ensures that we have an interaction waiting in performed state and
+        // thus also exercise that path in InputActionState.
+        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "hold(duration=0.4),press");
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
