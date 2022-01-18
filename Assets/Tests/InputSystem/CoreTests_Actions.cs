@@ -2321,6 +2321,34 @@ partial class CoreTests
         Assert.That(action.activeControl, Is.Null);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1389858/
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleBoundControls_ValueChangesOfEqualMagnitudeAreNotIgnored()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Gamepad>/dpad");
+
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.dpad, Vector2.left);
+
+            Assert.That(trace, Started(action, value: Vector2.left, control: gamepad.dpad)
+                .AndThen(Performed(action, value: Vector2.left, control: gamepad.dpad)));
+
+            trace.Clear();
+
+            Set(gamepad.dpad, Vector2.right);
+
+            Assert.That(trace, Performed(action, value: Vector2.right, control: gamepad.dpad));
+        }
+    }
+
     // There can be situations where two different controls are driven from the same state. Most prominently, this is
     // the case with the Pointer.button control that subclasses usually rewrite to whatever their primary button is.
     [Test]

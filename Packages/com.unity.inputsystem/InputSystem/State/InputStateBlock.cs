@@ -414,7 +414,7 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 case kFormatBit:
                     if (sizeInBits == 1)
-                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);////REVIEW: Shouldn't this be the global button press point?
                     else
                         MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;
