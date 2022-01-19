@@ -197,6 +197,7 @@ partial class CoreTests
         action3.AddBinding("<Gamepad>/buttonSouth");
         action4.AddBinding("<Gamepad>/buttonSouth"); // Should not be removed; different action.
 
+        ////REVIEW: This setup here doesn't seem to make any sense; there's probably no need to support something like this.
         action5.AddBinding("<Gamepad>/buttonSouth", interactions: "press(behavior=0)");
         action5.AddBinding("<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
         action5.AddBinding("<Gamepad>/buttonSouth", processors: "invert");
@@ -8834,6 +8835,7 @@ partial class CoreTests
                     .AndThen(Started(pressAction, touchscreen.press, 1, time: 0.3))
                     .AndThen(Performed(pressAction, touchscreen.press, 1, time: 0.3))
                     .AndThen(Performed(positionAction, touchscreen.position, new Vector2(10, 20), time: 0.4))
+                    .AndThen(Performed(pressAction, touchscreen.press, 1, time: 0.4)) // Because `press` is tied to `phase` which changes state twice (but not value).
                     .AndThen(Started(deltaAction, touchscreen.delta, new Vector2(9, 18), time: 0.4))
                     .AndThen(Performed(deltaAction, touchscreen.delta, new Vector2(9, 18), time: 0.4))
                     .AndThen(Canceled(pressAction, touchscreen.press, 0, time: 0.5))

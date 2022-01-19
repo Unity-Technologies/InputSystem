@@ -1588,10 +1588,6 @@ namespace UnityEngine.InputSystem
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                             phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
                     }
-                    else
-                    {
-                        Debug.Assert(false, "Value type actions should not be left in performed state");
-                    }
                     break;
                 }
 
