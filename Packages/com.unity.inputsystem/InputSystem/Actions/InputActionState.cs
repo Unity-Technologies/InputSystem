@@ -1567,9 +1567,19 @@ namespace UnityEngine.InputSystem
                     {
                         var actuation = ComputeMagnitude(ref trigger);
                         var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
-                        var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
-                        if (actuation <= threshold)
+                        if (Mathf.Approximately(0f, actuation))
+                        {
                             ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                        }
+                        else
+                        {
+                            var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
+                            if (actuation <= threshold)
+                            {
+                                // Button released to below threshold but not fully released.
+                                ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
+                            }
+                        }
                     }
                     else if (actionState->isPassThrough)
                     {
