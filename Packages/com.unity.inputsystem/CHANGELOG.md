@@ -33,6 +33,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).
 - Fixed `InvalidCastException: Specified cast is not valid.` being thrown when clicking on menu separators in the control picker ([case 1388049](https://issuetracker.unity3d.com/issues/invalidcastexception-is-thrown-when-selecting-the-header-of-an-advanceddropdown)).
+- Fixed accessing `InputAction`s directly during `RuntimeInitializeOnLoad` not initializing the input system as a whole and leading to exceptions ([case 1378614](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-error-is-thrown-when-using-input-actions-in-builds)).
 
 #### Actions
 
