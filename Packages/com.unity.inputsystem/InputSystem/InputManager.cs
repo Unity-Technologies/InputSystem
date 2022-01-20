@@ -373,7 +373,7 @@ namespace UnityEngine.InputSystem
             m_Layouts.layoutStrings[internedLayoutName] = json;
             if (isOverride)
             {
-                m_Layouts.layoutOverrideNames.Add(internedLayoutName); // set semantics
+                m_Layouts.layoutOverrideNames.Add(internedLayoutName);
                 for (var i = 0; i < baseLayouts.length; ++i)
                 {
                     var baseLayoutName = baseLayouts[i];

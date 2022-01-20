@@ -911,10 +911,6 @@ partial class CoreTests
             }
         ");
 
-        //var device = InputSystem.AddDevice<Mouse>();
-
-        //Assert.That(device["extraControl"], Is.TypeOf<ButtonControl>());
-
         // Replace previous override in Mouse layout
         InputSystem.RegisterLayoutOverride(@"
             {
@@ -930,12 +926,10 @@ partial class CoreTests
         Assert.That(device["anotherControl"], Is.TypeOf<ButtonControl>());
     }
 
-    [Test] // Case 1377685 - according to use-case
-    [Category("Layouts")]
-    public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameNameInJson()
+    private static class FaultyOverrideJson
     {
-        // Add a control to mice. (Notice that name and extend is set to the same)
-        const string json = @"
+        // Name and extend set to same name
+        public const string CircularDependencyJson = @"
             {
                 ""name"" : ""Mouse"",
                 ""extend"" : ""Mouse"",
@@ -945,16 +939,8 @@ partial class CoreTests
             }
         ";
 
-        Assert.That(() => InputSystem.RegisterLayoutOverride(json),
-            Throws.Exception.With.Message.Contain("Layout overrides must have unique names"));
-    }
-
-    [Test] // Case 1377685 - variant using explicit name
-    [Category("Layouts")]
-    public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameNameExplicitly()
-    {
-        // Add a control to mice. (Notice that name and extend is set to the same)
-        const string json = @"
+        // Should be combined with given explicit name "Mouse"
+        public const string SameExplicitNameJson = @"
             {
                 ""name"" : ""IrrelevantGivenAsArgumentInsteadOfJson"",
                 ""extend"" : ""Mouse"",
@@ -963,8 +949,15 @@ partial class CoreTests
                 ]
             }
         ";
+    }
 
-        Assert.That(() => InputSystem.RegisterLayoutOverride(json, "Mouse"),
+    [Test] // Case 1377685 - according to use-case
+    [Category("Layouts")]
+    [TestCase(FaultyOverrideJson.CircularDependencyJson, null)]
+    [TestCase(FaultyOverrideJson.SameExplicitNameJson, "Mouse")]
+    public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameName(string overrideJson, string name)
+    {
+        Assert.That(() => InputSystem.RegisterLayoutOverride(overrideJson, name),
             Throws.Exception.With.Message.Contain("Layout overrides must have unique names"));
     }
 
