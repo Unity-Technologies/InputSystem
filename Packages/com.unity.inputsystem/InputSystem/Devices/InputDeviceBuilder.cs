@@ -194,7 +194,7 @@ namespace UnityEngine.InputSystem.Layouts
             control.m_Device = m_Device;
 
             // this has to be done down here instead of in the device block above because the state for the
-            // device needs to be set up before setting noisy or error out because the device's m_Device
+            // device needs to be set up before setting noisy or it will throw because the device's m_Device
             // hasn't been set yet. Yes, a device's m_Device is itself.
             if (control is InputDevice)
                 control.noisy = layout.isNoisy;

@@ -148,6 +148,9 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine($"    .WithLayout(new InternedString(\"{device.layout}\"))");
             writer.WriteLine($"    .WithStateBlock(new InputStateBlock {{ format = new FourCC({(int)device.stateBlock.format}), sizeInBits = {device.stateBlock.sizeInBits} }});");
 
+            if (device.noisy)
+                writer.WriteLine("builder.IsNoisy(true);");
+
             // Add controls to device.
             writer.WriteLine();
             foreach (var layout in usedControlLayouts)
@@ -229,9 +232,6 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             writer.WriteLine();
-
-            if (device.noisy)
-                writer.WriteLine("builder.IsNoisy(true);");
 
             writer.WriteLine("builder.Finish();");
             writer.EndBlock();

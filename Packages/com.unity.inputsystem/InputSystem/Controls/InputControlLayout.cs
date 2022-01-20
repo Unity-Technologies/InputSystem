@@ -475,6 +475,11 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        /// <summary>
+        /// Mark the input device created from this layout as noisy, irrespective of whether or not any
+        /// of its controls have been marked as noisy.
+        /// </summary>
+        /// <seealso cref="InputControlLayoutAttribute.isNoisy"/>
         public bool isNoisy
         {
             get => (m_Flags & Flags.IsNoisy) != 0;

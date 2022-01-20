@@ -7,6 +7,7 @@ using System.Linq;
 using System.CodeDom.Compiler;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.Scripting;
@@ -3058,13 +3059,30 @@ partial class CoreTests
     internal static Type Compile(string code, string typeName, string options = null)
     {
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
-        var cp = new CompilerParameters();
-        cp.CompilerOptions = options;
+        var cp = new CompilerParameters { CompilerOptions = options };
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
         var cr = codeProvider.CompileAssemblyFromSource(cp, code);
-        Assert.That(cr.Errors, Is.Empty);
+
         var assembly = cr.CompiledAssembly;
+
+        // on some machines/environments, mono/mcs (which the codedom compiler uses) outputs a byte order mark after a successful compile, which
+        // codedom interprets as an error. Check for that here and just load the assembly manually in that case
+        if (cr.Errors.HasErrors)
+        {
+            if(!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
+                Assert.Fail($"Compilation failed: {cr.Errors}");
+
+            foreach (var tempFile in cr.TempFiles)
+            {
+                if (tempFile is string tempFileStr && tempFileStr.EndsWith("dll"))
+                {
+                    assembly = Assembly.Load(new AssemblyName { CodeBase = tempFileStr });
+                    break;
+                }
+            }
+        }
+
         Assert.That(assembly, Is.Not.Null);
         var type = assembly.GetType(typeName);
         Assert.That(type, Is.Not.Null);
