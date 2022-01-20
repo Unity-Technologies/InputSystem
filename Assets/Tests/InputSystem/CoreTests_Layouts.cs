@@ -931,13 +931,13 @@ partial class CoreTests
     }
 
     [Test] // Case 1377685 - according to use-case
-    [Category("Layouts")] 
+    [Category("Layouts")]
     public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameNameInJson()
     {
         // Add a control to mice. (Notice that name and extend is set to the same)
         const string json = @"
             {
-                ""name"" : ""Mouse"", 
+                ""name"" : ""Mouse"",
                 ""extend"" : ""Mouse"",
                 ""controls"" : [
                     { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
@@ -956,7 +956,7 @@ partial class CoreTests
         // Add a control to mice. (Notice that name and extend is set to the same)
         const string json = @"
             {
-                ""name"" : ""IrrelevantGivenAsArgumentInsteadOfJson"", 
+                ""name"" : ""IrrelevantGivenAsArgumentInsteadOfJson"",
                 ""extend"" : ""Mouse"",
                 ""controls"" : [
                     { ""name"" : ""extraControl"", ""layout"" : ""Button"" }

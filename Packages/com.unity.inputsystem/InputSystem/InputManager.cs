@@ -354,19 +354,19 @@ namespace UnityEngine.InputSystem
             }
 
             // Add it to our records.
-            var isReplacement = m_Layouts.HasLayout(internedLayoutName); 
+            var isReplacement = m_Layouts.HasLayout(internedLayoutName);
             if (isReplacement && isOverride)
             {   // Do not allow a layout override to replace a "base layout" by name, but allow layout overrides
                 // to replace an existing layout override.
                 // This is required to guarantee that its a hierarchy (directed graph) rather
                 // than a cyclic graph.
-                
+
                 var isReplacingOverride = m_Layouts.layoutOverrideNames.Contains(internedLayoutName);
                 if (!isReplacingOverride)
                 {
                     throw new ArgumentException($"Failed to register layout override '{internedLayoutName}'" +
-                                                $"since a layout named '{internedLayoutName}' already exist. Layout overrides must " +
-                                                $"have unique names with respect to existing layouts.");    
+                        $"since a layout named '{internedLayoutName}' already exist. Layout overrides must " +
+                        $"have unique names with respect to existing layouts.");
                 }
             }
 
@@ -380,7 +380,7 @@ namespace UnityEngine.InputSystem
                     m_Layouts.layoutOverrides.TryGetValue(baseLayoutName, out var overrideList);
                     if (!isReplacement)
                         ArrayHelpers.Append(ref overrideList, internedLayoutName);
-                    
+
 
                     m_Layouts.layoutOverrides[baseLayoutName] = overrideList;
                 }
