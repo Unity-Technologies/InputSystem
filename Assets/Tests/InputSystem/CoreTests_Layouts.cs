@@ -2667,4 +2667,27 @@ partial class CoreTests
         InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Vertical);
         Assert.That(gamepad.usages, Is.Empty);
     }
+
+    private struct TestNoisyDeviceWithNoExplicityNoisyControlsState : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Button")]
+        public bool control;
+
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
+    }
+
+    [InputControlLayout(stateType = typeof(TestNoisyDeviceWithNoExplicityNoisyControlsState), isNoisy = true)]
+    private class TestNoisyDeviceWithNoExplicityNoisyControls : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanMarkDeviceNoisy_WhenDeviceHasNoExplicitlyNoisyControls()
+    {
+        InputSystem.RegisterLayout<TestNoisyDeviceWithNoExplicityNoisyControls>("Test");
+        var device = InputDevice.Build<InputDevice>("Test");
+
+        Assert.That(device.noisy, Is.True);
+    }
 }
