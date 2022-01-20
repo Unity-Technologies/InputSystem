@@ -3070,7 +3070,7 @@ partial class CoreTests
         // codedom interprets as an error. Check for that here and just load the assembly manually in that case
         if (cr.Errors.HasErrors)
         {
-            if(!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
+            if (!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
                 Assert.Fail($"Compilation failed: {cr.Errors}");
 
             foreach (var tempFile in cr.TempFiles)
