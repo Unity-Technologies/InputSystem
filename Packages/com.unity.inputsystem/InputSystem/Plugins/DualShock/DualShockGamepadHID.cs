@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// Structure of HID input reports for PS4 DualShock 4 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    internal struct DualShock4HIDInputReport : IInputStateTypeInfo
+    public struct DualShock4HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
 

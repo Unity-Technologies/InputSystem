@@ -7,7 +7,11 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    internal enum AndroidKeyCode
+    /// <summary>
+    /// Enum used to identity the key in the Android key event. See <see cref="AndroidGameControllerState.buttons"/>.
+    /// See https://developer.android.com/reference/android/view/KeyEvent#constants_1 for more details.
+    /// </summary>
+    public enum AndroidKeyCode
     {
         Unknown = 0,
         SoftLeft = 1,

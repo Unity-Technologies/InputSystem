@@ -10,16 +10,19 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
+    /// <summary>
+    /// Default state layout for Android game controller.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct AndroidGameControllerState : IInputStateTypeInfo
+    public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
     {
         public const int MaxAxes = 48;
         public const int MaxButtons = 220;
 
-        internal const string kVariantGamepad = "Gamepad";
-        internal const string kVariantJoystick = "Joystick";
-        internal const string kVariantDPadAxes = "DpadAxes";
-        internal const string kVariantDPadButtons = "DpadButtons";
+        public const string kVariantGamepad = "Gamepad";
+        public const string kVariantJoystick = "Joystick";
+        public const string kVariantDPadAxes = "DpadAxes";
+        public const string kVariantDPadButtons = "DpadButtons";
 
         internal const uint kAxisOffset = sizeof(uint) * (uint)((MaxButtons + 31) / 32);
 
