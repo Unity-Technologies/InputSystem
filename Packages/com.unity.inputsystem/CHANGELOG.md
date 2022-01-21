@@ -40,6 +40,9 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed `InputAction.GetTimeoutCompletionPercentage` jumping to 100% completion early ([case 1377009](https://issuetracker.unity3d.com/issues/gettimeoutcompletionpercentage-returns-1-after-0-dot-1s-when-hold-action-was-started-even-though-it-is-not-performed-yet)).
 
+### Added
+- Added support for SteelSeries Nimbus+ gamepad on Mac via HID and explicit layout (Addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
+
 ## [1.3.0] - 2021-12-10
 
 ### Changed
