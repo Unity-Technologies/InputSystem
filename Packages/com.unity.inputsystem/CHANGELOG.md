@@ -32,7 +32,6 @@ however, it has to be formatted properly to pass verification tests.
   - UnityEngine.InputSystem.Android.LowLevel.AndroidAxis
   - UnityEngine.InputSystem.Android.LowLevel.AndroidGameControllerState
   - UnityEngine.InputSystem.Android.LowLevel.AndroidKeyCode
-  - UnityEngine.InputSystem.DualShock.LowLevel.DualShock4HIDInputReport
 
 
 ### Fixed
