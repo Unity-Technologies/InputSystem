@@ -591,9 +591,19 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
+            var enabled = action.enabled;
+            if (enabled)
+                action.Disable();
+
             bindingOverride.action = action.name;
             var actionMap = action.GetOrCreateActionMap();
             ApplyBindingOverride(actionMap, bindingOverride);
+
+            if (enabled)
+            {
+                action.Enable();
+                action.RequestInitialStateCheckOnEnabledAction();
+            }
         }
 
         /// <summary>
@@ -705,10 +715,7 @@ namespace UnityEngine.InputSystem
             }
 
             if (matchCount > 0)
-            {
-                actionMap.ClearCachedActionData();
-                actionMap.LazyResolveBindings();
-            }
+                actionMap.OnBindingModified();
 
             return matchCount;
         }
@@ -740,8 +747,7 @@ namespace UnityEngine.InputSystem
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
 
-            actionMap.ClearCachedActionData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         /// <summary>
@@ -835,8 +841,7 @@ namespace UnityEngine.InputSystem
                         binding.RemoveOverrides();
                     }
 
-                    actionMap.ClearCachedActionData();
-                    actionMap.LazyResolveBindings();
+                    actionMap.OnBindingModified();
                 }
             }
         }
@@ -874,8 +879,7 @@ namespace UnityEngine.InputSystem
                 bindings[i].overrideProcessors = null;
             }
 
-            actionMap.ClearCachedActionData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         ////REVIEW: are the IEnumerable variations worth having?

@@ -174,7 +174,7 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Action_WithMultipleInteractions_DoesNotThrowWhenUsingMultipleMaps()
+    public void Actions_WithMultipleInteractions_DoNotThrowWhenUsingMultipleMaps()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
