@@ -3232,6 +3232,8 @@ partial class CoreTests
 
     public class ModificationCases : IEnumerable
     {
+        public ModificationCases() {}
+
         public IEnumerator GetEnumerator()
         {
             bool ModificationAppliesToSingletonAction(Modification modification)
