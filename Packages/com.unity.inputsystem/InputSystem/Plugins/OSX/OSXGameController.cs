@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.OSX.LowLevel;
+using UnityEngine.InputSystem.Controls;
 
 namespace UnityEngine.InputSystem.OSX.LowLevel
 {
@@ -11,8 +12,22 @@ namespace UnityEngine.InputSystem.OSX.LowLevel
     /// Structure of HID input reports for SteelSeries Nimbus+ controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 8)]
-    internal struct NimbusControllerHIDInputState : IInputStateTypeInfo
+    internal struct NimbusPlusHIDInputReport : IInputStateTypeInfo
     {
+        /// <summary>
+        /// A dummy vendor ID made available by OSX when supporting Nimbus+ via HID.
+        /// This is exposed by OSX instead of the true SteelSeries vendor ID 0x1038.
+        /// </summary>
+        public const int OSXVendorId = 0xd;
+
+        /// <summary>
+        /// A dummy product ID made available by OSX when supporting Nimbus+ via HID.
+        /// This is exposed by OSX instead of the true Nimbus+ product ID 0x1422.
+        /// </summary>
+        public const int OSXProductId = 0x0;
+
+        public FourCC format => new FourCC('H', 'I', 'D');
+
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "SBYT", parameters = "")]
         [InputControl(name = "leftStick/left", offset = 0, format = "SBYT", parameters = "clamp=1,clampMin=-1,clampMax=0,invert")]
@@ -52,12 +67,10 @@ namespace UnityEngine.InputSystem.OSX.LowLevel
         [InputControl(name = "rightShoulder", bit = 1)]
         [InputControl(name = "leftStickPress", bit = 2)]
         [InputControl(name = "rightStickPress", bit = 3)]
-        [InputControl(name = "menuButton", layout = "Button", bit = 4)]
+        [InputControl(name = "homeButton", layout = "Button", bit = 4)]
         [InputControl(name = "select", bit = 5)]
         [InputControl(name = "start", bit = 6)]
         [FieldOffset(7)] public byte buttons2;
-
-        public FourCC format => new FourCC('H', 'I', 'D');
     }
 }
 
@@ -65,12 +78,30 @@ namespace UnityEngine.InputSystem.OSX
 {
     /// <summary>
     /// Steel Series Nimbus+ uses iOSGameController MFI when on iOS but
-    /// is just a standard HID on osx.
+    /// is just a standard HID on OSX. Note that the gamepad is made available
+    /// with incorrect VID/PID by OSX. Instead of
     /// </summary>
-    [InputControlLayout(stateType = typeof(NimbusControllerHIDInputState), displayName = "nimbus+ Gamepad")]
+    [InputControlLayout(stateType = typeof(NimbusPlusHIDInputReport), displayName = "Nimbus+ Gamepad")]
     [Scripting.Preserve]
-    public class NimbusGameController : Gamepad
+    public class NimbusGamepadHid : Gamepad
     {
+        /// <summary>
+        /// The center button in the middle section of the controller.
+        /// </summary>
+        /// <remarks>
+        /// Note that this button is also picked up by OS.
+        /// </remarks>
+        /// <value>Same as <see cref="Gamepad.selectButton"/>.</value>
+        [InputControl(name = "homeButton", displayName = "Home", shortDisplayName = "Home")]
+        public ButtonControl homeButton { get; protected set; }
+
+        /// <inheritdoc />
+        protected override void FinishSetup()
+        {
+            homeButton = GetChildControl<ButtonControl>("homeButton");
+
+            base.FinishSetup();
+        }
     }
 }
 #endif // UNITY_EDITOR || UNITY_STANDALONE_OSX

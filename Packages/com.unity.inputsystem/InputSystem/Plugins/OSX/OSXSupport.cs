@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.OSX.LowLevel;
 
 namespace UnityEngine.InputSystem.OSX
 {
@@ -12,9 +13,12 @@ namespace UnityEngine.InputSystem.OSX
     {
         public static void Initialize()
         {
-            InputSystem.RegisterLayout<NimbusGameController>(
+            // Note that OSX reports manufacturer "Unknown"
+            InputSystem.RegisterLayout<NimbusGamepadHid>(
                 matches: new InputDeviceMatcher()
-                    .WithProduct("Nimbus+"));
+                    .WithProduct("Nimbus+", supportRegex: false)
+                    .WithCapability("vendorId", NimbusPlusHIDInputReport.OSXVendorId)
+                    .WithCapability("productId", NimbusPlusHIDInputReport.OSXProductId));
         }
     }
 }
