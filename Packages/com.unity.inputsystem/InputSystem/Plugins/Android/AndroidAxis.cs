@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_ANDROID
+#if UNITY_EDITOR || UNITY_ANDROID || PACKAGE_DOCS_GENERATION
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
