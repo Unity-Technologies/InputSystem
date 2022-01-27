@@ -477,8 +477,11 @@ namespace UnityEngine.InputSystem
                     // Correlate action with its trigger state.
                     action.m_ActionIndexInState = actionIndex;
 
+                    Debug.Assert(runningIndexInBindingIndices < ushort.MaxValue, "Binding start index on action exceeds limit");
+                    newMemory.actionBindingIndicesAndCounts[actionIndex * 2] = (ushort)runningIndexInBindingIndices;
+
                     // Collect bindings for action.
-                    var bindingStartIndexForAction = runningIndexInBindingIndices;
+                    var firstBindingIndexForAction = -1;
                     var bindingCountForAction = 0;
                     var numPossibleConcurrentActuations = 0;
 
@@ -496,6 +499,9 @@ namespace UnityEngine.InputSystem
                         ++runningIndexInBindingIndices;
                         ++bindingCountForAction;
 
+                        if (firstBindingIndexForAction == -1)
+                            firstBindingIndexForAction = bindingIndex;
+
                         // Keep track of how many concurrent actuations we may be seeing on the action so that
                         // we know whether we need to enable conflict resolution or not.
                         if (bindingState->isComposite)
@@ -511,9 +517,11 @@ namespace UnityEngine.InputSystem
                             numPossibleConcurrentActuations += bindingState->controlCount;
                         }
                     }
-                    Debug.Assert(bindingStartIndexForAction < ushort.MaxValue, "Binding start index on action exceeds limit");
+
+                    if (firstBindingIndexForAction == -1)
+                        firstBindingIndexForAction = 0;
+
                     Debug.Assert(bindingCountForAction < ushort.MaxValue, "Binding count on action exceeds limit");
-                    newMemory.actionBindingIndicesAndCounts[actionIndex * 2] = (ushort)bindingStartIndexForAction;
                     newMemory.actionBindingIndicesAndCounts[actionIndex * 2 + 1] = (ushort)bindingCountForAction;
 
                     // See if we may need conflict resolution on this action. Never needed for pass-through actions.
@@ -534,6 +542,7 @@ namespace UnityEngine.InputSystem
                         isPassThrough = isPassThroughAction,
                         isButton = isButtonAction,
                         mayNeedConflictResolution = mayNeedConflictResolution,
+                        bindingIndex = firstBindingIndexForAction
                     };
                 }
 

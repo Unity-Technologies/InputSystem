@@ -925,11 +925,11 @@ namespace UnityEngine.InputSystem
         ////TODO: ReadValue(void*, int)
 
         /// <summary>
-        /// Read the current value of the action. This is the last value received on <see cref="started"/>,
-        /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
+        /// Read the current value of the control that is driving this action. If no bound control is actuated, returns
+        /// default(TValue), but note that binding processors are always applied.
         /// </summary>
         /// <typeparam name="TValue">Value type to read. Must match the value type of the binding/control that triggered.</typeparam>
-        /// <returns>The current value of the action or <c>default(TValue)</c> if the action is not currently in-progress.</returns>
+        /// <returns>The current value of the control/binding that is driving this action with all binding processors applied.</returns>
         /// <remarks>
         /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
         /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
@@ -980,21 +980,13 @@ namespace UnityEngine.InputSystem
         public unsafe TValue ReadValue<TValue>()
             where TValue : struct
         {
-            var result = default(TValue);
-
             var state = GetOrCreateActionMap().m_State;
-            if (state != null)
-            {
-                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                if (actionStatePtr->phase.IsInProgress())
-                {
-                    var controlIndex = actionStatePtr->controlIndex;
-                    if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
-                }
-            }
+            if (state == null) return default(TValue);
 
-            return result;
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            return phase.IsInProgress()
+                ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
+                : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
         }
 
         /// <summary>
@@ -1891,8 +1883,13 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
             {
                 var value = default(TValue);
-                if (m_State != null && phase.IsInProgress())
-                    value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
+                if (m_State != null)
+                {
+                    value = phase.IsInProgress() ?
+                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
+                        m_State.ApplyProcessors(bindingIndex, value);
+                }
+
                 return value;
             }
 
