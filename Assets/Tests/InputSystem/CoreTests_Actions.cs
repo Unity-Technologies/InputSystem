@@ -3213,6 +3213,7 @@ partial class CoreTests
                 .Property("path").EqualTo("<Keyboard>/rightArrow"));
     }
 
+    [Serializable]
     public enum Modification
     {
         AddBinding,
@@ -3284,7 +3285,7 @@ partial class CoreTests
                         }
                     }
 
-                    yield return new object[] { value, func() };
+                    yield return new TestCaseData(value, actions);
                 }
             }
         }
