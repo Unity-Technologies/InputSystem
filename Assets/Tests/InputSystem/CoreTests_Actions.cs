@@ -3232,6 +3232,7 @@ partial class CoreTests
 
     public class ModificationCases : IEnumerable
     {
+        [Preserve]
         public ModificationCases() {}
 
         public IEnumerator GetEnumerator()
