@@ -20,6 +20,7 @@
 * [Control schemes](#control-schemes)
 * [Details](#details)
   * [Binding resolution](#binding-resolution)
+    * [Binding resolution while Actions are enabled](#binding-resolution-while-actions-are-enabled)
     * [Choosing which Devices to use](#choosing-which-devices-to-use)
   * [Disambiguation](#disambiguation)
   * [Initial state check](#initial-state-check)
@@ -664,6 +665,18 @@ Note that a single [Binding path](Controls.md#control-paths) can match multiple 
 If there are multiple Bindings on the same Action that all reference the same Control(s), the Control will effectively feed into the Action multiple times. This is to allow, for example, a single Control to produce different input on the same Action by virtue of being bound in a different fashion (composites, processors, interactions, etc). However, regardless of how many times a Control is bound on any given action, it will only be mentioned once in the Action's [array of `controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls).
 
 To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
+
+To be notified when binding resolution happens, you can listen to [`InputSystem.onActionChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onActionChange) which triggers [`InputActionChange.BoundControlsAboutToChange`](../api/UnityEngine.InputSystem.InputActionChange.html#UnityEngine_InputSystem_InputActionChange_BoundControlsAboutToChange) before modifying Control lists and triggers [`InputActionChange.BoundControlsChanged`](../api/UnityEngine.InputSystem.InputActionChange.html#UnityEngine_InputSystem_InputActionChange_BoundControlsChanged) after having updated them.
+
+#### Binding resolution while Actions are enabled
+
+In certain situations, the [Controls](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls) bound to an Action have to be updated more than once. For example, if a new [Device](Devices.md) becomes usable with an Action, the Action may now pick up input from additional controls. Also, if Bindings are added, removed, or modified, Control lists will need to be updated.
+
+This updating of Controls usually happens transparently in the background. However, when an Action is [enabled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_enabled) and especially when it is [in progress](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsInProgress_), there may be a noticeable effect on the Action.
+
+Adding or removing a device &ndash; either [globally](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices) or to/from the [device list](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_devices) of an Action &ndash; will remain transparent __except__ if an Action is in progress and it is the device of its [active Control](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) that is being removed. In this case, the Action will automatically be [cancelled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
+
+Modifying the [binding mask](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_bindingMask) or modifying any of the Bindings (such as through [rebinding](#interactive-rebinding) or by adding or removing bindings) will, however, lead to all enabled Actions being temporarily disabled and then re-enabled and resumed.
 
 #### Choosing which Devices to use
 
