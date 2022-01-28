@@ -9,7 +9,8 @@ using UnityEngine.InputSystem.Controls;
 namespace UnityEngine.InputSystem.OSX.LowLevel
 {
     /// <summary>
-    /// Structure of HID input reports for SteelSeries Nimbus+ controllers.
+    /// Structure of HID input reports for SteelSeries Nimbus+ controllers supported
+    /// via HID on OSX.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 8)]
     internal struct NimbusPlusHIDInputReport : IInputStateTypeInfo
@@ -79,7 +80,8 @@ namespace UnityEngine.InputSystem.OSX
     /// <summary>
     /// Steel Series Nimbus+ uses iOSGameController MFI when on iOS but
     /// is just a standard HID on OSX. Note that the gamepad is made available
-    /// with incorrect VID/PID by OSX. Instead of
+    /// with incorrect VID/PID by OSX instead of the true VID/PID registred with
+    /// USB.org for this device.
     /// </summary>
     [InputControlLayout(stateType = typeof(NimbusPlusHIDInputReport), displayName = "Nimbus+ Gamepad")]
     [Scripting.Preserve]
@@ -91,7 +93,6 @@ namespace UnityEngine.InputSystem.OSX
         /// <remarks>
         /// Note that this button is also picked up by OS.
         /// </remarks>
-        /// <value>Same as <see cref="Gamepad.selectButton"/>.</value>
         [InputControl(name = "homeButton", displayName = "Home", shortDisplayName = "Home")]
         public ButtonControl homeButton { get; protected set; }
 
@@ -99,6 +100,7 @@ namespace UnityEngine.InputSystem.OSX
         protected override void FinishSetup()
         {
             homeButton = GetChildControl<ButtonControl>("homeButton");
+            Debug.Assert(homeButton != null);
 
             base.FinishSetup();
         }

@@ -13,7 +13,8 @@ namespace UnityEngine.InputSystem.OSX
     {
         public static void Initialize()
         {
-            // Note that OSX reports manufacturer "Unknown"
+            // Note that OSX reports manufacturer "Unknown" and a bogus VID/PID according
+            // to matcher below.
             InputSystem.RegisterLayout<NimbusGamepadHid>(
                 matches: new InputDeviceMatcher()
                     .WithProduct("Nimbus+", supportRegex: false)
