@@ -1070,7 +1070,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
         /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
-        /// <param name="buttonControlsOnly">Whether the method should only consider button controls. See <see cref="InputControl.isButton"/>.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
@@ -1125,11 +1125,11 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
         /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
-        /// <param name="buttonControlsOnly">Whether the method should only consider button controls. See <see cref="InputControl.isButton"/>.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls.</param>
         /// <returns>An enumerable collection containing all buttons that were pressed in the given event.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
         /// <exception cref="ArgumentException">The <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
-        /// <remarks>Returns an empty enumerable if the <paramref name="eventPtr"/> is not a StateEvent or DeltaStateEvent.</remarks>
+        /// <remarks>Returns an empty enumerable if the <paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</remarks>
         /// <seealso cref="EnumerateChangedControls"/>
         /// <seealso cref="ButtonControl.isPressed"/>
         public static IEnumerable<InputControl> GetAllButtonPresses(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
