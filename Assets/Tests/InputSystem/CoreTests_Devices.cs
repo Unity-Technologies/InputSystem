@@ -2436,7 +2436,33 @@ partial class CoreTests
         var device = InputSystem.AddDevice(layoutName);
         var control = (DeltaControl)device[controlPath];
 
-        Set(control, new Vector2(123, 234));
+        if (device is Touchscreen) // No delta events on Touchscreens.
+        {
+            // Delta on Begin will always be (0,0).
+            BeginTouch(1, new Vector2(0, 0));
+            MoveTouch(1, new Vector2(123, 234));
+        }
+        else
+            Set(control, new Vector2(123, 234));
+
+        Assert.That(control.x.ReadValue(), Is.EqualTo(123).Within(0.0001));
+        Assert.That(control.left.ReadValue(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(control.right.ReadValue(), Is.EqualTo(123).Within(0.0001));
+        Assert.That(control.y.ReadValue(), Is.EqualTo(234).Within(0.0001));
+        Assert.That(control.up.ReadValue(), Is.EqualTo(234).Within(0.0001));
+        Assert.That(control.down.ReadValue(), Is.EqualTo(0).Within(0.0001));
+
+        if (device is Touchscreen) // No delta events on Touchscreens.
+            MoveTouch(1, new Vector2(-123, -234), delta: new Vector2(-123, -234));
+        else
+            Set(control, new Vector2(-123, -234));
+
+        Assert.That(control.x.ReadValue(), Is.EqualTo(-123).Within(0.0001));
+        Assert.That(control.left.ReadValue(), Is.EqualTo(123).Within(0.0001));
+        Assert.That(control.right.ReadValue(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(control.y.ReadValue(), Is.EqualTo(-234).Within(0.0001));
+        Assert.That(control.up.ReadValue(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(control.down.ReadValue(), Is.EqualTo(234).Within(0.0001));
     }
 
     [Test]
