@@ -36,9 +36,10 @@ namespace UnityEngine.InputSystem.Composites
     /// acceleration control(s), and setting <see cref="whichSideWins"/> to <see cref="WhichSideWins.Negative"/>,
     /// if the break button is pressed, it will always cause the acceleration button to be ignored.
     ///
-    /// The values returned are the actual actuation values of the buttons, unaltered for <see cref="positive"/>
-    /// and inverted for <see cref="negative"/>. This means that if the buttons are actual axes (e.g.
-    /// the triggers on gamepads), then the values correspond to how much the axis is actuated.
+    /// The actual <em>absolute</em> values of <see cref="negative"/> and <see cref="positive"/> are used
+    /// to scale <see cref="minValue"/> and <see cref="maxValue"/> respectively. So if, for example, <see cref="positive"/>
+    /// is bound to <see cref="Gamepad.rightTrigger"/> and the trigger is at a value of 0.5, then the resulting
+    /// value is <c>maxValue * 0.5</c> (the actual formula is <c>midPoint + (maxValue - midPoint) * positive</c>).
     /// </remarks>
     [DisplayStringFormat("{negative}/{positive}")]
     [DisplayName("Positive/Negative Binding")]
@@ -132,10 +133,11 @@ namespace UnityEngine.InputSystem.Composites
         /// <inheritdoc />
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            var negativeValue = context.ReadValue<float>(negative);
-            var positiveValue = context.ReadValue<float>(positive);
-            var negativeIsActuated = Mathf.Abs(negativeValue) > Mathf.Epsilon;
-            var positiveIsActuated = Mathf.Abs(positiveValue) > Mathf.Epsilon;
+            var negativeValue = Mathf.Abs(context.ReadValue<float>(negative));
+            var positiveValue = Mathf.Abs(context.ReadValue<float>(positive));
+
+            var negativeIsActuated = negativeValue > Mathf.Epsilon;
+            var positiveIsActuated = positiveValue > Mathf.Epsilon;
 
             if (negativeIsActuated == positiveIsActuated)
             {
