@@ -6,13 +6,10 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
-    /// A single axis value computed from a "negative" and a "positive" button.
+    /// A single axis value computed from one axis that pulls in the <see cref="negative"/> direction (<see cref="minValue"/>) and one
+    /// axis that pulls in the <see cref="positive"/> direction (<see cref="maxValue"/>).
     /// </summary>
     /// <remarks>
-    /// This composite allows to arrange any arbitrary two buttons from a device in an
-    /// axis configuration such that one button pushes in one direction and the other
-    /// pushes in the opposite direction.
-    ///
     /// The limits of the axis are determined by <see cref="minValue"/> and <see cref="maxValue"/>.
     /// By default, they are set to <c>[-1..1]</c>. The values can be set as parameters.
     ///
@@ -25,7 +22,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </code>
     /// </example>
     ///
-    /// If both buttons are pressed at the same time, the behavior depends on <see cref="whichSideWins"/>.
+    /// If both axes are actuated at the same time, the behavior depends on <see cref="whichSideWins"/>.
     /// By default, neither side will win (<see cref="WhichSideWins.Neither"/>) and the result
     /// will be 0 (or, more precisely, the midpoint between <see cref="minValue"/> and <see cref="maxValue"/>).
     /// This can be customized to make the positive side win (<see cref="WhichSideWins.Positive"/>)
