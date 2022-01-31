@@ -21,6 +21,21 @@ namespace UnityEngine.InputSystem.Switch
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x57e) // Nintendo
                     .WithCapability("productId", 0x2009)); // Pro Controller.
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0f0d) // Hori Co., Ltd
+                    .WithCapability("productId", 0x00c1)); // HORIPAD for Nintendo Switch
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x20d6) // PowerA NSW Fusion Wired FightPad
+                    .WithCapability("productId", 0xa712));
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f) // PDP Wired Fight Pad Pro: Mario
+                    .WithCapability("productId", 0x0185));
         #endif
         }
     }
