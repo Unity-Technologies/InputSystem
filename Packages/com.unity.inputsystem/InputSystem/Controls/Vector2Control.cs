@@ -15,9 +15,9 @@ namespace UnityEngine.InputSystem.Controls
     ///     Mouse.current.position.x.ReadValue(),
     ///     Mouse.current.position.y.ReadValue()));
     /// </code>
+    /// </example>
     ///
     /// Normalization is not implied. The X and Y coordinates can be in any range or units.
-    /// </example>
     /// </remarks>
     public class Vector2Control : InputControl<Vector2>
     {

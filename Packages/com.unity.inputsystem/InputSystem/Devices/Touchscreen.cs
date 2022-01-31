@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space movement delta.</value>
         /// <seealso cref="TouchControl.delta"/>
-        [InputControl(displayName = "Delta")]
+        [InputControl(displayName = "Delta", layout = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
@@ -368,7 +368,7 @@ namespace UnityEngine.InputSystem.LowLevel
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
-        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
+        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta", layout = "Delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
