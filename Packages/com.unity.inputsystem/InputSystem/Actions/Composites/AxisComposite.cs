@@ -2,7 +2,6 @@ using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -46,24 +45,26 @@ namespace UnityEngine.InputSystem.Composites
     public class AxisComposite : InputBindingComposite<float>
     {
         /// <summary>
-        /// Binding for the button that controls the positive direction of the axis.
+        /// Binding for the axis input that controls the negative [<see cref="minValue"/>..0] direction of the
+        /// combined axis.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int negative = 0;
+        [InputControl(layout = "Axis")] public int negative = 0;
 
         /// <summary>
-        /// Binding for the button that controls the negative direction of the axis.
+        /// Binding for the axis input that controls the positive [0..<see cref="maxValue"/>] direction of the
+        /// combined axis.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int positive = 0;
+        [InputControl(layout = "Axis")] public int positive = 0;
 
         /// <summary>
         /// The lower bound that the axis is limited to. -1 by default.
@@ -131,22 +132,21 @@ namespace UnityEngine.InputSystem.Composites
         /// <inheritdoc />
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            var negativeMagnitude = context.EvaluateMagnitude(negative);
-            var positiveMagnitude = context.EvaluateMagnitude(positive);
+            var negativeValue = context.ReadValue<float>(negative);
+            var positiveValue = context.ReadValue<float>(positive);
+            var negativeIsActuated = Mathf.Abs(negativeValue) > Mathf.Epsilon;
+            var positiveIsActuated = Mathf.Abs(positiveValue) > Mathf.Epsilon;
 
-            var negativeIsPressed = negativeMagnitude > 0;
-            var positiveIsPressed = positiveMagnitude > 0;
-
-            if (negativeIsPressed == positiveIsPressed)
+            if (negativeIsActuated == positiveIsActuated)
             {
                 switch (whichSideWins)
                 {
                     case WhichSideWins.Negative:
-                        positiveIsPressed = false;
+                        positiveIsActuated = false;
                         break;
 
                     case WhichSideWins.Positive:
-                        negativeIsPressed = false;
+                        negativeIsActuated = false;
                         break;
 
                     case WhichSideWins.Neither:
@@ -156,10 +156,10 @@ namespace UnityEngine.InputSystem.Composites
 
             var mid = midPoint;
 
-            if (negativeIsPressed)
-                return mid - (mid - minValue) * negativeMagnitude;
+            if (negativeIsActuated)
+                return mid - (mid - minValue) * negativeValue;
 
-            return mid + (maxValue - mid) * positiveMagnitude;
+            return mid + (maxValue - mid) * positiveValue;
         }
 
         /// <inheritdoc />
