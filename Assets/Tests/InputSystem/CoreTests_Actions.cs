@@ -31,7 +31,7 @@ partial class CoreTests
 {
     [Test]
     [Category("Actions")]
-    public void Actions_WhenBindingsAreResolved_BindingIndexPointsToFirstBindingInAction()
+    public void Actions_ReadingValueRightAfterEnabling_AppliesProcessorsFromFirstBinding()
     {
         InputSystem.AddDevice<Gamepad>();
 
@@ -47,7 +47,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WhenResetActionState_BindingIndexPointsToFirstBindingInAction()
+    public void Actions_ReadingValueRightAfterResetting_AppliesProcessorsFromFirstBinding()
     {
         InputSystem.AddDevice<Gamepad>();
 
