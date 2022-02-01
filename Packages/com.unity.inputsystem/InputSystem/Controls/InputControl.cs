@@ -973,6 +973,13 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+	    public event Action<InputControl, double> OnValueChanged;
+
+	    public virtual void NotifyStateChanged(double time)
+	    {
+		    OnValueChanged?.Invoke(this, time);
+	    }
     }
 
     /// <summary>
@@ -984,9 +991,16 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
+	    public new event Action<InputControl<TValue>, TValue, double> OnValueChanged;
+
         public override Type valueType => typeof(TValue);
 
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
+
+        public override void NotifyStateChanged(double time)
+        {
+	        OnValueChanged?.Invoke(this, ReadValue(), time);
+        }
 
         /// <summary>
         /// Get the control's current value as read from <see cref="InputControl.currentStatePtr"/>
