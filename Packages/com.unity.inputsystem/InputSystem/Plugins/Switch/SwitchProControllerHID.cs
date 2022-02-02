@@ -272,8 +272,102 @@ namespace UnityEngine.InputSystem.Switch
                 stateEvent->stateFormat = SwitchProControllerHIDInputState.Format;
                 return true;
             }
+            else if (size == 8 || size == 9) // official accessories send 8 byte reports
+            {
+                // On Windows HID stack we somehow get 1 byte extra prepended, so if we get 9 bytes, subtract one, see ISX-993
+                // This is written in such way that if we fix it in backend, we wont break the package (Unity will report 8 bytes instead of 9 bytes).
+                var bugOffset = size == 9 ? 1 : 0;
+                var data = ((SwitchInputOnlyReport*)((byte*)stateEvent->state + bugOffset))->ToHIDInputReport();
+                *((SwitchProControllerHIDInputState*)stateEvent->state) = data;
+                stateEvent->stateFormat = SwitchProControllerHIDInputState.Format;
+                return true;
+            }
             else
                 return false; // skip unrecognized reportId
+        }
+
+        [StructLayout(LayoutKind.Explicit, Size = kSize)]
+        private struct SwitchInputOnlyReport
+        {
+            public const int kSize = 7;
+
+            [FieldOffset(0)] public byte buttons0;
+            [FieldOffset(1)] public byte buttons1;
+            [FieldOffset(2)] public byte hat;
+            [FieldOffset(3)] public byte leftX;
+            [FieldOffset(4)] public byte leftY;
+            [FieldOffset(5)] public byte rightX;
+            [FieldOffset(6)] public byte rightY;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public SwitchProControllerHIDInputState ToHIDInputReport()
+            {
+                var state = new SwitchProControllerHIDInputState
+                {
+                    leftStickX = leftX,
+                    leftStickY = leftY,
+                    rightStickX = rightX,
+                    rightStickY = rightY
+                };
+
+                state.Set(SwitchProControllerHIDInputState.Button.Y, (buttons0 & 0x01) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.B, (buttons0 & 0x02) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.A, (buttons0 & 0x04) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.X, (buttons0 & 0x08) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.L, (buttons0 & 0x10) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.R, (buttons0 & 0x20) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.ZL, (buttons0 & 0x40) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.ZR, (buttons0 & 0x80) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Minus, (buttons1 & 0x01) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Plus, (buttons1 & 0x02) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.StickL, (buttons1 & 0x04) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.StickR, (buttons1 & 0x08) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Home, (buttons1 & 0x10) != 0);
+                state.Set(SwitchProControllerHIDInputState.Button.Capture, (buttons1 & 0x20) != 0);
+
+                var left = false;
+                var up = false;
+                var right = false;
+                var down = false;
+
+                switch (hat)
+                {
+                    case 0:
+                        up = true;
+                        break;
+                    case 1:
+                        up = true;
+                        right = true;
+                        break;
+                    case 2:
+                        right = true;
+                        break;
+                    case 3:
+                        down = true;
+                        right = true;
+                        break;
+                    case 4:
+                        down = true;
+                        break;
+                    case 5:
+                        down = true;
+                        left = true;
+                        break;
+                    case 6:
+                        left = true;
+                        break;
+                    case 7:
+                        up = true;
+                        left = true;
+                        break;
+                }
+
+                state.Set(SwitchProControllerHIDInputState.Button.Left, left);
+                state.Set(SwitchProControllerHIDInputState.Button.Up, up);
+                state.Set(SwitchProControllerHIDInputState.Button.Right, right);
+                state.Set(SwitchProControllerHIDInputState.Button.Down, down);
+                return state;
+            }
         }
 
         [StructLayout(LayoutKind.Explicit, Size = kSize)]

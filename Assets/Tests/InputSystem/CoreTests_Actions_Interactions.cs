@@ -338,7 +338,7 @@ internal partial class CoreTests
 
             Set(gamepad.leftTrigger, 0.3f);
 
-            Assert.That(trace, Canceled(action, control: gamepad.leftTrigger, value: 0f));
+            Assert.That(trace, Started(action, control: gamepad.leftTrigger, value: 0.3f));
         }
     }
 

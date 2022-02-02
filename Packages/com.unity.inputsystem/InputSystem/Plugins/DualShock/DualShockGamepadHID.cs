@@ -669,7 +669,7 @@ namespace UnityEngine.InputSystem.DualShock
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true)]
+    [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true, isNoisy = true)]
     public class DualShock4GamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; protected set; }
