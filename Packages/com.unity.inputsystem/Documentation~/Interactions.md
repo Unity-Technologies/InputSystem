@@ -116,7 +116,9 @@ action.AddBinding("<Gamepad>/leftStick")
 
 ### Interactions applied to Actions
 
-Interactions on Actions work very similar to Interactions on Bindings, but they affect all Controls bound to an Action, not just the ones coming from a specific Binding. If there are Interactions on both the Binding and the Action, the Input System processes the ones from the binding first.
+Applying Interactions directly to an Action is equivalent to applying them to all Bindings for the Action. It is thus more or less a shortcut that avoids manually adding the same Interaction(s) to each of the Bindings.
+
+If Interactions are applied __both__ to an Action and to its Bindings, then the effect is the same as if the Action's Interactions are *appended* to the list of Interactions on each of the Bindings. This means that the Binding's Interactions are applied *first*, and then the Action's Interactions are applied *after*.
 
 You can add and edit Interactions on Actions in the [Input Action Assets](ActionAssets.md) editor window the [same way](#interactions-applied-to-bindings) as you would do for Bindings: select an Action to Edit, then add the Interactions in the right window pane.
 
