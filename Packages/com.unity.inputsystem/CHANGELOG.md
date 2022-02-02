@@ -31,6 +31,8 @@ however, it has to be formatted properly to pass verification tests.
 - Processors are now always applied when reading action values through `InputAction.ReadValue<>` or `CallbackContext.ReadValue<>`. Previously, if no bound control was actuated, ReadValue calls would return the default value for the action type but not run the value through the processors.([case 1293728](https://issuetracker.unity3d.com/product/unity/issues/guid/1293728/)).
 
 ### Fixed
+* Fixed an issue where a layout-override registered via `InputSystem.RegisterLayoutOverride(...)` would cause the editor to malfunction or crash if the layout override had a name already used by an existing layout. (case 1377685).
+* Fixed an issue where attempting to replace an existing layout-override by using an existing layout-override name didn't work as expected and would instead aggregate overrides instead of replacing them when an override with the given name already exists.
 
 - Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).
 - Fixed `InvalidCastException: Specified cast is not valid.` being thrown when clicking on menu separators in the control picker ([case 1388049](https://issuetracker.unity3d.com/issues/invalidcastexception-is-thrown-when-selecting-the-header-of-an-advanceddropdown)).
