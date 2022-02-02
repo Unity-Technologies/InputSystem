@@ -204,7 +204,7 @@ if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
 There are two mechanisms that most notably make use of Control actuation:
 
 - [Interactive rebinding](ActionBindings.md#interactive-rebinding) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable Controls to find the one that is actuated the most.
-- [Disambiguation](ActionBindings.md#disambiguation) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
+- [Conflict resolution](ActionBindings.md#conflict-resolution) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
 
 ## Noisy Controls
 
