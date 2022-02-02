@@ -80,6 +80,29 @@ internal class SwitchTests : CoreTestsFixture
         }.WithButton(button);
     }
 
+    [Test]
+    [Category("Devices")]
+    [TestCase(0x0f0d, 0x00c1)]
+    [TestCase(0x20d6, 0xa712)]
+    [TestCase(0x0e6f, 0x0185)]
+    public void Devices_SupportsSwitchLikeControllers(int vendorId, int productId)
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            vendorId = vendorId,
+            productId = productId,
+        };
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            });
+
+        Assert.That(device, Is.TypeOf<SwitchProControllerHID>());
+    }
+
 #endif
 }
 #endif
