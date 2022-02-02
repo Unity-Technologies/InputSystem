@@ -1147,10 +1147,6 @@ namespace UnityEngine.InputSystem
             LazyResolveBindings(fullResolve: true);
         }
 
-        internal void OnDeviceAddedOrRemoved()
-        {
-        }
-
         ////TODO: re-use allocations such that only grow the arrays and hit zero GC allocs when we already have enough memory
         internal void ClearCachedActionData(bool onlyControls = false)
         {
