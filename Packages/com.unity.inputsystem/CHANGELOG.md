@@ -40,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `InputControlPath.Matches` incorrectly reporting matches when only a prefix was matching.
   * This would, for example, cause `Keyboard.eKey` to be matched by `<Keyboard>/escape`.
   * Fix contributed by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1485](https://github.com/Unity-Technologies/InputSystem/pull/1485).
+- Fixed accessing `InputAction`s directly during `RuntimeInitializeOnLoad` not initializing the input system as a whole and leading to exceptions ([case 1378614](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-error-is-thrown-when-using-input-actions-in-builds)).
 
 #### Actions
 

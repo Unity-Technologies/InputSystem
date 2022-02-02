@@ -117,6 +117,8 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(map != null, "Received null map");
 
+            InputSystem.EnsureInitialized();
+
             var actionsInThisMap = map.m_Actions;
             var bindingsInThisMap = map.m_Bindings;
             var bindingCountInThisMap = bindingsInThisMap?.Length ?? 0;
