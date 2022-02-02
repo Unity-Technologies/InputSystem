@@ -919,7 +919,7 @@ namespace UnityEngine.InputSystem
             var device = control.device;
 
             builder.Append('<');
-            builder.Append(deviceLayout);
+            builder.Append(deviceLayout.Escape("\\>", "\\>"));
             builder.Append('>');
 
             // Add usages of device, if any.
@@ -927,14 +927,16 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < deviceUsages.Count; ++i)
             {
                 builder.Append('{');
-                builder.Append(deviceUsages[i]);
+                builder.Append(deviceUsages[i].ToString().Escape("\\}", "\\}"));
                 builder.Append('}');
             }
 
-            builder.Append('/');
+            builder.Append(InputControlPath.Separator);
 
-            var devicePath = device.path;
-            var controlPath = control.path;
+            // If any of the components contains a backslash, double it up as in control paths,
+            // these serve as escape characters.
+            var devicePath = device.path.Replace("\\", "\\\\");
+            var controlPath = control.path.Replace("\\", "\\\\");
             builder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
 
             return builder.ToString();
@@ -1066,9 +1068,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Return true if the given <paramref name="eventPtr"/> has any <see cref="Input"/>
         /// </summary>
-        /// <param name="eventPtr"></param>
-        /// <param name="magnitude"></param>
-        /// <param name="buttonControlsOnly"></param>
+        /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
@@ -1083,20 +1085,29 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Get the first pressed button from the given event or null if the event doesn't contain a new button press.
         /// </summary>
-        /// <param name="eventPtr"></param>
-        /// <param name="magnitude"></param>
-        /// <param name="buttonControlsOnly"></param>
+        /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <param name="magnitude">The threshold value that a control must be actuated by (see
+        /// <see cref="InputControl.EvaluateMagnitude()"/>) to be considered pressed. If not given, defaults to <see
+        /// cref="InputSettings.defaultButtonPressPoint"/>.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider <see cref="ButtonControl"/>s. Otherwise,
+        /// any <see cref="InputControl"/> that has an actuation (see <see cref="InputControl.EvaluateMagnitude()"/>) equal to
+        /// or greater than the given <paramref name="magnitude"/> will be considered a pressed button. This is 'true' by
+        /// default.</param>
         /// <returns>The control that was pressed.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
-        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
-        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <exception cref="ArgumentException">The <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot
+        /// be found.</exception>
         /// <seealso cref="EnumerateChangedControls"/>
         /// <seealso cref="ButtonControl.isPressed"/>
         /// <remarks>Buttons will be evaluated in the order that they appear in the devices layout i.e. the bit position of each control
         /// in the devices state memory. For example, in the gamepad state, button north (bit position 4) will be evaluated before button
-        /// east (bit position 5), so if both buttons were pressed in the given event, button north would be returned.</remarks>
+        /// east (bit position 5), so if both buttons were pressed in the given event, button north would be returned.
+        /// Note that the function returns null if the <paramref name="eventPtr"/> is not a StateEvent or DeltaStateEvent.</remarks>
         public static InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
         {
+            if (eventPtr.type != StateEvent.Type && eventPtr.type != DeltaStateEvent.Type)
+                return null;
+
             if (magnitude < 0)
                 magnitude = InputSystem.settings.defaultButtonPressPoint;
 
@@ -1113,16 +1124,19 @@ namespace UnityEngine.InputSystem
         /// Enumerate all pressed buttons in the given event.
         /// </summary>
         /// <param name="eventPtr">An event. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
-        /// <param name="magnitude"></param>
-        /// <param name="buttonControlsOnly"></param>
+        /// <param name="magnitude">The threshold value that a button must be actuated by to be considered pressed.</param>
+        /// <param name="buttonControlsOnly">Whether the method should only consider button controls.</param>
         /// <returns>An enumerable collection containing all buttons that were pressed in the given event.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is a <c>null</c> pointer.</exception>
-        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> -or-
-        /// the <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <exception cref="ArgumentException">The <see cref="InputDevice"/> referenced by the <see cref="InputEvent.deviceId"/> in the event cannot be found.</exception>
+        /// <remarks>Returns an empty enumerable if the <paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</remarks>
         /// <seealso cref="EnumerateChangedControls"/>
         /// <seealso cref="ButtonControl.isPressed"/>
         public static IEnumerable<InputControl> GetAllButtonPresses(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
         {
+            if (eventPtr.type != StateEvent.Type && eventPtr.type != DeltaStateEvent.Type)
+                yield break;
+
             if (magnitude < 0)
                 magnitude = InputSystem.settings.defaultButtonPressPoint;
 

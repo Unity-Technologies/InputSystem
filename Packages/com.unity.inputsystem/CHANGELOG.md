@@ -12,27 +12,84 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- `Button` type `InputAction`s now go to `started` when a button goes from a press to below the release threshold but not yet to 0 ([case ]
+  ```CSharp
+  // Before:
+  Set(Gamepad.current.rightTrigger, 0.7f); // Performed (pressed)
+  Set(Gamepad.current.rightTrigger, 0.2f); // Canceled (released)
+  Set(Gamepad.current.rightTrigger, 0.1f); // Started!!
+  Set(Gamepad.current.rightTrigger, 0f);   // Canceled
+
+  // Now:
+  Set(Gamepad.current.rightTrigger, 0.7f); // Performed (pressed)
+  Set(Gamepad.current.rightTrigger, 0.2f); // Started (released but not fully)
+  Set(Gamepad.current.rightTrigger, 0.1f); // <Nothing>
+  Set(Gamepad.current.rightTrigger, 0f);   // Canceled
+  ```
+  * This also applies to `PressInteraction` when set to `Press` behavior.
+  * In effect, it means that a button will be in `started` or `performed` phase for as long as its value is not 0 and will only go to `canceled` once dropping to 0.
+
+### Fixed
+
+- Fixed an issue where a layout-override registered via `InputSystem.RegisterLayoutOverride(...)` would cause the editor to malfunction or crash if the layout override had a name already used by an existing layout (case 1377685).
+- Fixed an issue where attempting to replace an existing layout-override by using an existing layout-override name didn't work as expected and would instead aggregate overrides instead of replacing them when an override with the given name already exists.
+- Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).
+- Fixed `InvalidCastException: Specified cast is not valid.` being thrown when clicking on menu separators in the control picker ([case 1388049](https://issuetracker.unity3d.com/issues/invalidcastexception-is-thrown-when-selecting-the-header-of-an-advanceddropdown)).
+- Fixed DualShock 4 controller not allowing input from other devices due to noisy input from its unmapped sensors ([case 1365891](https://issuetracker.unity3d.com/issues/input-from-the-keyboard-is-not-working-when-the-dualshock-4-controller-is-connected)).
+- Fixed `InputSystem.onAnyButtonPress` so that it doesn't throw exceptions when trying to process non state or delta events ([case 1376034](https://issuetracker.unity3d.com/product/unity/issues/guid/1376034/)).
+- Fixed `InputControlPath.Matches` incorrectly reporting matches when only a prefix was matching.
+  * This would, for example, cause `Keyboard.eKey` to be matched by `<Keyboard>/escape`.
+  * Fix contributed by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1485](https://github.com/Unity-Technologies/InputSystem/pull/1485).
+- Fixed dropdown for "Supported Devices" in settings not showing all device layouts.
+
+#### Actions
+
+- Fixed `InputAction.GetTimeoutCompletionPercentage` jumping to 100% completion early ([case 1377009](https://issuetracker.unity3d.com/issues/gettimeoutcompletionpercentage-returns-1-after-0-dot-1s-when-hold-action-was-started-even-though-it-is-not-performed-yet)).
+- Fixed d-pad inputs sometimes being ignored on actions that were binding to multiple controls ([case 1389858](https://unity.slack.com/archives/G01RVV1SPU4/p1642501574002300)).
+- Fixed `IndexOutOfRangeException` when having multiple interactions on an action and/or binding in an action map other than the first of an asset ([case 1392559](https://issuetracker.unity3d.com/issues/map-index-on-trigger-and-indexoutofrangeexception-are-thrown-when-using-interaction-on-both-binding-and-its-parent-action)).
+  * Fix contributed by [Russell Quinn](https://github.com/russellquinn) in [#1483](https://github.com/Unity-Technologies/InputSystem/pull/1483).
+- Fixed `AxisComposite` not respecting processors applied to `positive` and `negative` bindings (case 1398942).
+  * This was a regression introduced in [1.0.0-pre.6](#axiscomposite-min-max-value-fix).
+
+### Added
+
+- Added support for "Hori Co HORIPAD for Nintendo Switch", "PowerA NSW Fusion Wired FightPad", "PDP Wired Fight Pad Pro: Mario".
+
+## [1.3.0] - 2021-12-10
+
+### Changed
+
 - The artificial `ctrl`, `shift`, and `alt` controls (which combine the left and right controls into one) on the keyboard can now be written to and no longer throw `NotSupportedException` when trying to do so ([case 1340793](https://issuetracker.unity3d.com/issues/on-screen-button-errors-on-mouse-down-slash-up-when-its-control-path-is-set-to-control-keyboard)).
 - All devices are now re-synced/reset in next update after entering play mode, this is needed to read current state of devices before any intentional input is provided ([case 1231907](https://issuetracker.unity3d.com/issues/mouse-coordinates-reported-as-00-until-the-first-move)).
 - Replaced `UnityLinkerBuildPipelineData.inputDirectory` with hardcoded `Temp` folder because `inputDirectory` is deprecated.
 - Deprecated `InputSettings.filterNoiseOnCurrent`. Now noise filtering is always enabled. Device only will become `.current` if any non-noise control have changed state.
 - A device reset (such as when focus is lost) on `Touchscreen` will now result in all ongoing touches getting cancelled instead of all touches being simply reset to default state.
+- Calling `InputTestFixture.Press`, `InputTestFixture.Set`, etc. from within a `[UnityTest]` will no longer immediately process input. Instead, input will be processed like it normally would as part of the Unity player loop.
 
 ### Fixed
 
 - Fixed writing values into the half-axis controls of sticks (such as `Gamepad.leftStick.left`) producing incorrect values on the stick ([case 1336240](https://issuetracker.unity3d.com/issues/inputtestfixture-tests-return-inverted-values-when-pressing-gamepads-left-or-down-joystick-buttons)).
 - Fixed setting size of event trace in input debugger always growing back to largest size set before.
+- Fixed successive clicks not getting triggered with `TouchSimulation` on when not moving the mouse in-between clicks ([case 1330014](https://issuetracker.unity3d.com/issues/onclick-isnt-triggered-on-the-second-click-when-the-mouse-isnt-moved-and-simulate-touch-input-from-mouse-or-pen-is-enabled)).
+- Fixed `InputSystemUIInputModule` stopping to listen for input when swapping `InputActionAsset` instances while input was disabled ([case 1371332](https://issuetracker.unity3d.com/issues/ui-navigation-stops-working-after-adding-two-input-devices-to-a-scene)).
 - Fixed `InputSystemUIInputModule` showing incorrect bindings after pressing the 'Fix UI Input Module' button in PlayerInput component([case 1319968](https://issuetracker.unity3d.com/product/unity/issues/guid/1319968/)).
 - Fixed an issue where UI button clicks could be ignored by `InputSystemUIInputModule` if modifying on-screen devices from Update() callbacks ([case 1365070](https://issuetracker.unity3d.com/product/unity/issues/guid/1365070)).
 - Fixed an issue with `InputSystemUIInputModule` that would cause UI to stop responding during play mode after changing a script file while Recompile and Continue mode is active, or by forcing a script recompile using `RequestScriptCompilation`([case 1324215](https://issuetracker.unity3d.com/product/unity/issues/guid/1324215/)).
 - Fixed `InputSystemUIInputModule` inspector showing all action bindings as "None" when assigned a runtime created actions asset ([case 1304943](https://issuetracker.unity3d.com/issues/input-system-ui-input-module-loses-prefab-action-mapping-in-local-co-op)).
 - Fixed a problem with UI Toolkit buttons remaining active when multiple fingers are used on a touchscreen, using `InputSystemUIInputModule` with pointerBehavior set to `UIPointerBehavior.SingleUnifiedPointer`. UI Toolkit will now always receive the same pointerId when that option is in use, regardless of the hardware component that produced the pointer event. ([case 1369081](https://issuetracker.unity3d.com/issues/transitions-get-stuck-when-pointer-behavior-is-set-to-single-unified-pointer-and-multiple-touches-are-made)).
+- Fixed a problem with `InputUser` where devices would be removed and not added again after layout overrides preventing certain devices, e.g. gamepads to not work correctly when associated with action map bindings tied to `PlayerInput` ([case 1347320](https://issuetracker.unity3d.com/product/unity/issues/guid/1347320)).
 - Fixed DualSense on iOS not inheriting from `DualShockGamepad` ([case 1378308](https://issuetracker.unity3d.com/issues/input-dualsense-detection-ios)).
 - Fixed a device becoming `.current` (e.g. `Gamepad.current`, etc) when sending a new state event that contains no control changes (case 1377952).
 - Fixed calling `IsPressed` on an entire device returning `true` ([case 1374024](https://issuetracker.unity3d.com/issues/inputcontrol-dot-ispressed-always-returns-true-when-using-new-input-system)).
+- Fixed HIDs having blackslashes in their vendor or product names leading to binding paths generated by interactive rebinding that failed to resolve to controls and thus lead to no input being received ([case 1335465](https://issuetracker.unity3d.com/product/unity/issues/guid/1335465/)).
 - Fixed `InputSystem.RegisterLayoutOverride` resulting in the layout that overrides are being applied to losing the connection to its base layout ([case 1377719](https://fogbugz.unity3d.com/f/cases/1377719/)).
 - Fixed `Touch.activeTouches` still registering touches after the app loses focus ([case 1364017](https://issuetracker.unity3d.com/issues/input-system-new-input-system-registering-active-touches-when-app-loses-focus)).
-- Fixed dropdown for "Supported Devices" in settings not showing all device layouts.
+- Fixed `MultiplayerEventSystem` not preventing keyboard and gamepad/joystick navigation from one player's UI moving to another player's UI ([case 1306361](https://issuetracker.unity3d.com/issues/input-system-ui-input-module-lets-the-player-navigate-across-other-canvases)).
+  * This fix relies on a `CanvasGroup` being injected into each `playerRoot` and the `interactable` property of the group being toggled back and forth depending on which part of the UI is being updated.
+- Fixed `InputTestFixture` incorrectly running input updates out of sync with the player loop ([case 1341740](https://issuetracker.unity3d.com/issues/buttoncontrol-dot-waspressedthisframe-is-false-when-using-inputtestfixture-dot-press)).
+  * This had effects such as `InputAction.WasPressedThisFrame()` returning false expectedly.
+- Fixed broken code example for state structs in `Devices.md` documentation (fix contributed by [jeffreylanters](https://github.com/jeffreylanters)).
+- Fixed `TrackedDeviceRaycaster` not picking closest hit in scene (fix originally contributed by [alexboost222](https://github.com/alexboost222)).
 
 #### Actions
 
@@ -50,6 +107,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed control schemes of bindings not getting updates when being pasted from one `.inputactions` asset into another ([case 1276106](https://issuetracker.unity3d.com/issues/input-system-control-schemes-are-not-resolved-when-copying-bindings-between-inputactionassets)).
   * For example, if you copied a binding from an asset that had a "Gamepad" control scheme into an asset that had none, the resulting binding would be unusable.
   * All associations with control schemes that do not exist in the target asset are now removed from bindings upon pasting.
+- Fixed `InputActionSetupExtensions.AddCompositeBinding` not setting name of composite.
 
 ## [1.2.0] - 2021-10-22
 
@@ -154,7 +212,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `MultiTapInteraction` not respecting `InputSettings.multiTapDelayTime` ([case 1292754](https://issuetracker.unity3d.com/issues/multitapdelaytime-does-not-influence-maxtapspacing-in-input-action-assets)).
 - Fixed changing values in `Input System Package` project settings not affecting default values displayed in `.inputactions` editor window ([case 1292754](https://issuetracker.unity3d.com/issues/multitapdelaytime-does-not-influence-maxtapspacing-in-input-action-assets)).
 - Fixed rebinding a part of a composite with `RebindingOperation.WithTargetBinding` not also changing the type of control being looked for ([case 1272563](https://issuetracker.unity3d.com/issues/input-system-performinteractiverebinding-method-doesnt-detect-button-input-when-rebinding-part-of-a-2d-vector-composite)).
-- Fixed `AxisComposite` not respecting `minValue` and `maxValue` properties ([case 1335838](https://issuetracker.unity3d.com/issues/inputsystem-1d-axis-composite-binding-will-return-a-incorrect-value-if-minvalue-and-maxvalue-is-not-1-and-1)).
+- <a name="axiscomposite-min-max-value-fix"></a> Fixed `AxisComposite` not respecting `minValue` and `maxValue` properties ([case 1335838](https://issuetracker.unity3d.com/issues/inputsystem-1d-axis-composite-binding-will-return-a-incorrect-value-if-minvalue-and-maxvalue-is-not-1-and-1)).
 - Fixed `ArgumentOutOfRangeException` caused by `IsPointerOverGameObject` ([case 1337354](https://issuetracker.unity3d.com/issues/mobile-argumentoutofrangeexception-is-thrown-when-calling-ispointerovergameobject)).
 - `PlayerInput` no longer logs an error message when it is set to `Invoke UnityEvents` and can't find  an action in the given `.inputactions` asset ([case 1259577](https://issuetracker.unity3d.com/issues/an-error-is-thrown-when-deleting-an-input-action-and-entering-play-mode)).
 - Fixed `HoldInteraction` getting stuck when hold and release happens in same event ([case 1346786](https://issuetracker.unity3d.com/issues/input-system-the-canceled-event-is-not-fired-when-clicking-a-button-for-a-precise-amount-of-time)).

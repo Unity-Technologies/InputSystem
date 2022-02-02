@@ -476,6 +476,9 @@ class APIVerificationTests
     [Test]
     [Category("API")]
     [Ignore("Still needs a lot of documentation work to happen")]
+    #if UNITY_EDITOR_OSX
+    [Explicit]     // Fails due to file system permissions on yamato, but works locally.
+    #endif
     #if !HAVE_DOCTOOLS_INSTALLED
     //[Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
     #endif
@@ -567,6 +570,9 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    #if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+    #endif
     public void API_MonoBehavioursHaveHelpUrls()
     {
         // We exclude abstract MonoBehaviours as these can't show up in the Unity inspector.
@@ -771,6 +777,10 @@ class APIVerificationTests
     // filterNoiseOnCurrent is Obsolete since 1.3.0
     [Property("Exclusions", @"1.0.0
         public bool filterNoiseOnCurrent { get; set; }
+    ")]
+    // SwitchProControllerHID inherited from IInputStateCallbackReceiver and IEventPreProcessor, both are internal interfaces
+    [Property("Exclusions", @"1.0.0
+        public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {

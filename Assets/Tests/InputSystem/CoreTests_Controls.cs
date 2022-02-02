@@ -641,7 +641,7 @@ partial class CoreTests
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        runtime.currentTimeForFixedUpdate = 1;
+        runtime.currentTimeForFixedUpdate = runtime.currentTime + 1;
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
     }
@@ -1242,6 +1242,18 @@ partial class CoreTests
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/*", gamepad.leftStick), Is.True);
         Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPath_DoesNotMatchPrefixOnly()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.eKey), Is.True);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.eKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.escapeKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.escapeKey), Is.True);
     }
 
     [Test]
