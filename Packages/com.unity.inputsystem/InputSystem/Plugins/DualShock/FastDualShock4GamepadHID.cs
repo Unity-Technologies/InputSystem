@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithChildren(0, 19)
                 .WithLayout(new InternedString("DualShock4GamepadHID"))
                 .WithStateBlock(new InputStateBlock { format = new FourCC(1212761120), sizeInBits = 80 });
+            builder.IsNoisy(true);
 
             var kStickLayout = new InternedString("Stick");
             var kDpadLayout = new InternedString("Dpad");

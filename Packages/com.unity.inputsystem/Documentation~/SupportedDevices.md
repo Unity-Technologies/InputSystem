@@ -28,9 +28,9 @@ Support for the following Devices doesn't require specialized support of particu
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
-|PS3/PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
+|PS3/PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 8)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
 |PS5|Yes (10)|Yes (10)|No (10)|Yes (10)|Yes (10)|No (10)|No (10)|No|Yes|No|Sometimes (2)|
-|Switch|Yes (8)|Yes (8)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
+|Switch|Yes (9)|Yes (9)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
 |MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 
 >__Notes__:
@@ -43,7 +43,7 @@ On UWP only USB connection is supported, motor rumble and lightbar are not worki
 >6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 >8. Unity officially supports PS4 controllers only on [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
->9. Switch Joy-Cons are not currently supported on Windows and Mac. Also, Switch Pro controllers are supported only when connected via Bluetooth but not when connected via wired USB.
+>9. Switch Joy-Cons are not currently supported on Windows and Mac. Some of official accessories are supported on Windows and Mac: "Hori Co HORIPAD for Nintendo Switch", "PowerA NSW Fusion Wired FightPad", "PDP Wired Fight Pad Pro: Mario".
 >10. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
 On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
 On Android it's expected to be working from Android 12.

@@ -349,7 +349,10 @@ namespace UnityEngine.InputSystem
                     // Making a control noisy makes all its children noisy.
                     var list = children;
                     for (var i = 0; i < list.Count; ++i)
-                        list[i].noisy = true;
+                    {
+                        if (null != list[i])
+                            list[i].noisy = true;
+                    }
                 }
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;

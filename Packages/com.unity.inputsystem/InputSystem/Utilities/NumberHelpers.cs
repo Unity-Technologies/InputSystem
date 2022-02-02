@@ -83,5 +83,15 @@ namespace UnityEngine.InputSystem.Utilities
                 return uintMaxValue;
             return (uint)(value * ((double)uintMaxValue - uintMinValue) + uintMinValue);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint RemapUIntBitsToNormalizeFloatToUIntBits(uint value, uint inBitSize, uint outBitSize)
+        {
+            var inMaxValue = (uint)((1UL << (int)inBitSize) - 1);
+            var outMaxValue = (uint)((1UL << (int)outBitSize) - 1);
+
+            var normFloat = UIntToNormalizedFloat(value, 0, inMaxValue);
+            return NormalizedFloatToUInt(normFloat, 0, outMaxValue);
+        }
     }
 }
