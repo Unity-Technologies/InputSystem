@@ -5490,10 +5490,12 @@ partial class CoreTests
 
         InputSystem.onEvent += (InputEventPtr eventPtr, InputDevice device) =>
         {
-            eventPtr.HasButtonPress();
+            Assert.That(() => eventPtr.HasButtonPress(), Throws.Nothing);
         };
 
-        for (var i = 0; i < TouchscreenState.MaxTouches + 5; ++i)
-            BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
+        Assert.That(() => {
+            for (var i = 0; i < TouchscreenState.MaxTouches + 5; ++i)
+                BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
+        }, Throws.Nothing);
     }
 }
