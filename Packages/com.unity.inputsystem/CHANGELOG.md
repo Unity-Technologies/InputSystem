@@ -12,7 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ## Changed
 
-* `Button` type `InputAction`s now go to `started` when a button goes from a press to below the release threshold but not yet to 0 ([case ]
+- `Button` type `InputAction`s now go to `started` when a button goes from a press to below the release threshold but not yet to 0 ([case ]
   ```CSharp
   // Before:
   Set(Gamepad.current.rightTrigger, 0.7f); // Performed (pressed)
@@ -26,17 +26,20 @@ however, it has to be formatted properly to pass verification tests.
   Set(Gamepad.current.rightTrigger, 0.1f); // <Nothing>
   Set(Gamepad.current.rightTrigger, 0f);   // Canceled
   ```
-  - This also applies to `PressInteraction` when set to `Press` behavior.
-  - In effect, it means that a button will be in `started` or `performed` phase for as long as its value is not 0 and will only go to `canceled` once dropping to 0.
+  * This also applies to `PressInteraction` when set to `Press` behavior.
+  * In effect, it means that a button will be in `started` or `performed` phase for as long as its value is not 0 and will only go to `canceled` once dropping to 0.
 
 ### Fixed
-* Fixed an issue where a layout-override registered via `InputSystem.RegisterLayoutOverride(...)` would cause the editor to malfunction or crash if the layout override had a name already used by an existing layout. (case 1377685).
-* Fixed an issue where attempting to replace an existing layout-override by using an existing layout-override name didn't work as expected and would instead aggregate overrides instead of replacing them when an override with the given name already exists.
 
+- Fixed an issue where a layout-override registered via `InputSystem.RegisterLayoutOverride(...)` would cause the editor to malfunction or crash if the layout override had a name already used by an existing layout. (case 1377685).
+- Fixed an issue where attempting to replace an existing layout-override by using an existing layout-override name didn't work as expected and would instead aggregate overrides instead of replacing them when an override with the given name already exists.
 - Fixed Switch Pro controller not working correctly in different scenarios ([case 1369091](https://issuetracker.unity3d.com/issues/nintendo-switch-pro-controller-output-garbage), [case 1190216](https://issuetracker.unity3d.com/issues/inputsystem-windows-switch-pro-controller-only-works-when-connected-via-bluetooth-but-not-via-usb), case 1314869).
 - Fixed `InvalidCastException: Specified cast is not valid.` being thrown when clicking on menu separators in the control picker ([case 1388049](https://issuetracker.unity3d.com/issues/invalidcastexception-is-thrown-when-selecting-the-header-of-an-advanceddropdown)).
 - Fixed DualShock 4 controller not allowing input from other devices due to noisy input from its unmapped sensors ([case 1365891](https://issuetracker.unity3d.com/issues/input-from-the-keyboard-is-not-working-when-the-dualshock-4-controller-is-connected)).
 - Fixed `InputSystem.onAnyButtonPress` so that it doesn't throw exceptions when trying to process non state or delta events ([case 1376034](https://issuetracker.unity3d.com/product/unity/issues/guid/1376034/)).
+- Fixed `InputControlPath.Matches` incorrectly reporting matches when only a prefix was matching.
+  * This would, for example, cause `Keyboard.eKey` to be matched by `<Keyboard>/escape`.
+  * Fix contributed by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1485](https://github.com/Unity-Technologies/InputSystem/pull/1485).
 
 #### Actions
 
