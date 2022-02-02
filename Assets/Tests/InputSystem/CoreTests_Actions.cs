@@ -6636,14 +6636,8 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.345f});
             InputSystem.Update();
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
-            Assert.That(actions[0].control, Is.EqualTo(gamepad.leftTrigger));
-            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(-0.345).Within(0.00001));
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[1].control, Is.EqualTo(gamepad.leftTrigger));
-            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(-0.345).Within(0.00001));
+            Assert.That(trace, Started(action, control: gamepad.leftTrigger, value: -0.345f)
+                .AndThen(Performed(action, control: gamepad.leftTrigger, value: -0.345f)));
 
             trace.Clear();
 
@@ -6651,14 +6645,10 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
             InputSystem.Update();
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
             // Bit of an odd case. leftTrigger and rightTrigger have both changed state here so
             // in a way, it's up to the system which one to pick. Might be useful if it was deliberately
             // picking the control with the highest magnitude but not sure it's worth the effort.
-            Assert.That(actions[0].control, Is.EqualTo(gamepad.leftTrigger));
-            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(0.456).Within(0.00001));
+            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.456f));
 
             trace.Clear();
 
@@ -6666,11 +6656,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.Update();
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
-            Assert.That(actions[0].control, Is.EqualTo(gamepad.rightTrigger));
-            Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
+            Assert.That(trace, Canceled(action, control: gamepad.rightTrigger, value: 0f));
         }
     }
 
@@ -6798,6 +6784,28 @@ partial class CoreTests
         Set(gamepad.rightTrigger, 1f);
 
         Assert.That(action.ReadValue<float>(), Is.EqualTo(2).Within(0.00001));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1398942/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateAxisComposite_AndApplyProcessorsToPartBindings()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("1DAxis(minValue=0,maxValue=10)")
+            .With("Positive", "<Mouse>/scroll/y", processors: "clamp(min=0,max=1)")
+            .With("Negative", "<Mouse>/scroll/y", processors: "invert,clamp(min=0,max=1)");
+        action.Enable();
+
+        Set(mouse.scroll.y, 2f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(10));
+
+        Set(mouse.scroll.y, -2f);
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
     }
 
     [Test]
