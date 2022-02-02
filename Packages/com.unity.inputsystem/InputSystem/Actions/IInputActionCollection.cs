@@ -18,6 +18,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// If this is not null, only bindings that match the mask will be used.
+        ///
+        /// Modifying this property while any of the actions in the collection are enabled will
+        /// lead to the actions getting disabled temporarily and then re-enabled.
         /// </remarks>
         InputBinding? bindingMask { get; set; }
 
@@ -31,6 +34,13 @@ namespace UnityEngine.InputSystem
         /// only one gamepad is listed here, then a "&lt;Gamepad&gt;/leftStick" binding will
         /// only bind to the gamepad in the list and not to the one that is only available
         /// globally.
+        ///
+        /// Modifying this property after bindings in the collection have already been resolved,
+        /// will lead to <see cref="InputAction.controls"/> getting refreshed. If any of the actions
+        /// in the collection are currently in progress (see <see cref="InputAction.phase"/>),
+        /// the actions will remain unaffected and in progress except if the controls currently
+        /// driving them (see <see cref="InputAction.activeControl"/>) are no longer part of any
+        /// of the selected devices. In that case, the action is <see cref="InputAction.canceled"/>.
         /// </remarks>
         ReadOnlyArray<InputDevice>? devices { get; set; }
 

@@ -65,6 +65,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
+            if (table == null)
+                throw new InvalidOperationException("Input System not yet initialized");
+
             var internedName = new InternedString(name);
             if (table.TryGetValue(internedName, out var type))
                 return type;
