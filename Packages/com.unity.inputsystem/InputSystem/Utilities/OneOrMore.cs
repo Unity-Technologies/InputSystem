@@ -72,9 +72,9 @@ namespace UnityEngine.InputSystem.Utilities
 
             public bool MoveNext()
             {
+                ++m_Index;
                 if (m_Index >= m_List.Count)
                     return false;
-                ++m_Index;
                 return true;
             }
 

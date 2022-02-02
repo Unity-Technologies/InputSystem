@@ -32,6 +32,10 @@ however, it has to be formatted properly to pass verification tests.
   * `UnityEngine.InputSystem.Android.LowLevel.AndroidAxis`
   * `UnityEngine.InputSystem.Android.LowLevel.AndroidGameControllerState`
   * `UnityEngine.InputSystem.Android.LowLevel.AndroidKeyCode`
+- Adding or removing a device no longer leads to affected actions being temporarily disabled ([case 1379932](https://issuetracker.unity3d.com/issues/inputactionreferences-reading-resets-when-inputactionmap-has-an-action-for-the-other-hand-and-that-hand-starts-slash-stops-tracking)).
+  * If, for example, an action was bound to `<Gamepad>/buttonSouth` and was enabled, adding a second `Gamepad` would lead to the action being temporarily disabled, then updated, and finally re-enabled.
+  * This was especially noticeable if the action was currently in progress as it would get cancelled and then subsequently resumed.
+  * Now, an in-progress action will get cancelled if the device of its active control is removed. If its active control is not affected, however, the action will keep going regardless of whether controls are added or removed from its `InputAction.controls` list.
 
 ### Fixed
 
