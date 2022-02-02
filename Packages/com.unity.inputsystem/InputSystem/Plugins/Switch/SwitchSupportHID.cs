@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Switch
             InputSystem.RegisterLayout<SwitchProControllerHID>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("HID")
-                    .WithCapability("vendorId", 0x57e) // Nintendo
+                    .WithCapability("vendorId", 0x057e) // Nintendo
                     .WithCapability("productId", 0x2009)); // Pro Controller.
             InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
                 new InputDeviceMatcher()
