@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem
 
                 m_BindingMask = value;
 
-                ReResolveIfNecessary();
+                ReResolveIfNecessary(fullResolve: true);
             }
         }
 
@@ -240,7 +240,7 @@ namespace UnityEngine.InputSystem
             set
             {
                 if (m_Devices.Set(value))
-                    ReResolveIfNecessary();
+                    ReResolveIfNecessary(fullResolve: false);
             }
         }
 
@@ -866,7 +866,23 @@ namespace UnityEngine.InputSystem
 #endif
         }
 
-        private void ReResolveIfNecessary()
+        internal void OnWantToChangeSetup()
+        {
+            if (m_ActionMaps.LengthSafe() > 0)
+                m_ActionMaps[0].OnWantToChangeSetup();
+        }
+
+        internal void OnSetupChanged()
+        {
+            MarkAsDirty();
+
+            if (m_ActionMaps.LengthSafe() > 0)
+                m_ActionMaps[0].OnSetupChanged();
+            else
+                m_SharedStateForAllMaps = null;
+        }
+
+        private void ReResolveIfNecessary(bool fullResolve)
         {
             if (m_SharedStateForAllMaps == null)
                 return;
@@ -874,7 +890,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
             // State is share between all action maps in the asset. Resolving bindings for the
             // first map will resolve them for all maps.
-            m_ActionMaps[0].LazyResolveBindings();
+            m_ActionMaps[0].LazyResolveBindings(fullResolve);
         }
 
         private void OnDestroy()

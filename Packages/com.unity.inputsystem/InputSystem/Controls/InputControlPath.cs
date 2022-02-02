@@ -928,11 +928,13 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
+            // NOTE: m_UsagesForEachControl includes usages for the device. m_UsageToControl does not.
+
             var usages = device.m_UsagesForEachControl;
             if (usages == null)
                 return null;
 
-            var usageCount = device.m_UsageToControl.Length;
+            var usageCount = device.m_UsageToControl.LengthSafe();
             var startIndex = indexInPath + 1;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
             var pathLength = path.Length;
@@ -1404,22 +1406,21 @@ namespace UnityEngine.InputSystem
                 var pathElementLength = pathElement.length;
                 var elementLength = element.Length;
 
-                // `element` is expected to not include escape sequence. `pathElement` may.
-                // So if `element` is longer than `pathElement`, the two can't be a match.
-                if (elementLength > pathElementLength)
-                    return false;
-
-                for (var i = 0; i < pathElementLength && i < elementLength; ++i)
+                for (int i = 0, j = 0;; i++, j++)
                 {
+                    var pathElementDone = i == pathElementLength;
+                    var elementDone     = j == elementLength;
+
+                    if (pathElementDone || elementDone)
+                        return pathElementDone == elementDone;
+
                     var ch = pathElement[i];
                     if (ch == '\\' && i + 1 < pathElementLength)
                         ch = pathElement[++i];
 
-                    if (char.ToLowerInvariant(ch) != char.ToLowerInvariant(element[i]))
+                    if (char.ToLowerInvariant(ch) != char.ToLowerInvariant(element[j]))
                         return false;
                 }
-
-                return true;
             }
         }
 
