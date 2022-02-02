@@ -40,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `InputControlPath.Matches` incorrectly reporting matches when only a prefix was matching.
   * This would, for example, cause `Keyboard.eKey` to be matched by `<Keyboard>/escape`.
   * Fix contributed by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1485](https://github.com/Unity-Technologies/InputSystem/pull/1485).
+- Fixed "STAT event with state format TOUC cannot be used with device 'Touchscreen:/Touchscreen'" when more than max supported amount of fingers, currently 10, are present on the screen at a same time (case 1395648).
 
 #### Actions
 
