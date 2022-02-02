@@ -181,6 +181,37 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_OnAnyButtonPressed_FiltersOutNonStateEvents()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .CallOnce(_ => { ++callCount; });
+
+        InputSystem.QueueTextEvent(keyboard, ' ');
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_GetAllButtonPressesInEvent_ReturnsEmptyEnumerableForNonStateOrDeltaStateEvents()
+    {
+        var inputEvent = TextEvent.Create(InputSystem.AddDevice<Keyboard>().deviceId, ' ');
+
+        IEnumerable<InputControl> controls = null;
+        Assert.That(() =>
+        {
+            controls = InputControlExtensions.GetAllButtonPresses((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
+        }, Throws.Nothing);
+        Assert.That(controls, Is.Empty);
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanGetAllButtonPressesInEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

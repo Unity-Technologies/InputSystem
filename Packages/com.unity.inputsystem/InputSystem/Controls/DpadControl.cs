@@ -99,7 +99,15 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            throw new NotImplementedException();
+            var upIsPressed = up.IsValueConsideredPressed(value.y);
+            var downIsPressed = down.IsValueConsideredPressed(value.y * -1f);
+            var leftIsPressed = left.IsValueConsideredPressed(value.x * -1f);
+            var rightIsPressed = right.IsValueConsideredPressed(value.x);
+
+            up.WriteValueIntoState(upIsPressed && !downIsPressed ? value.y : 0f, statePtr);
+            down.WriteValueIntoState(downIsPressed && !upIsPressed ? value.y * -1f : 0f, statePtr);
+            left.WriteValueIntoState(leftIsPressed && !rightIsPressed ? value.x * -1f : 0f, statePtr);
+            right.WriteValueIntoState(rightIsPressed && !leftIsPressed ? value.x : 0f, statePtr);
         }
 
         /// <summary>

@@ -2401,7 +2401,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="ButtonControl.isPressed"/>
         /// <seealso cref="onEvent"/>
         public static IObservable<InputControl> onAnyButtonPress =>
-            onEvent.Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
+            onEvent
+                .Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
 
         /// <summary>
         /// Add an event to the internal event queue.
