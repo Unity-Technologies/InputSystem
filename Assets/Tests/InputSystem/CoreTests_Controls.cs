@@ -1246,6 +1246,18 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_MatchingPath_DoesNotMatchPrefixOnly()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.eKey), Is.True);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.eKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.escapeKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.escapeKey), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanKeepListsOfControls_WithoutAllocatingGCMemory()
     {
         InputSystem.AddDevice<Mouse>(); // Noise.

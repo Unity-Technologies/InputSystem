@@ -22,7 +22,7 @@
   * [Binding resolution](#binding-resolution)
     * [Binding resolution while Actions are enabled](#binding-resolution-while-actions-are-enabled)
     * [Choosing which Devices to use](#choosing-which-devices-to-use)
-  * [Disambiguation](#disambiguation)
+  * [Conflict resolution](#conflict-resolution)
   * [Initial state check](#initial-state-check)
 
 An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). An Action can have an arbitrary number of Bindings pointed at it. Multiple Bindings can reference the same Control.
@@ -693,15 +693,40 @@ You can override this behavior by restricting [`InputActionAssets`](../api/Unity
     actionMap.devices = new[] { Gamepad.all[0] };
 ```
 
-### Disambiguation
+### Conflict Resolution
 
-If multiple Controls are bound to an Action, the Input System monitors input from each bound Control to feed the Action. The Input System must also define which of the bound controls to use for the value of the action. For example, if you have a Binding to `<Gamepad>/leftStick`, and you have multiple connected gamepads, the Input System must determine which gamepad's stick provides the input value for the Action.
+If multiple Controls are bound to an Action, conflicting inputs may arise. For example, if an Action is bound to both the left and the right trigger on a gamepad, then if the player presses *both* triggers at the same time, then which of the triggers needs to be released for the Action to be considered stopped?
 
-This Control is the "driving" Control; the Control which is driving the Action. Unity decides which Control is currently driving the Action in a process called disambiguation.
+To resolve this, the Input System uses a "rule of maximum actuation". Simply put, at any point, the Control with the highest level of [actuation](Controls.md#control-actuation) is chosen to "drive" the action and thus determine its value.
 
-During the disambiguation process, the Input System looks at the value of each Control bound to an Action. If the [magnitude](Controls.md#control-actuation) of the input from any Control is higher then the magnitude of the Control currently driving the Action, then the Control with the higher magnitude becomes the new Control driving the Action. In the above example of `<Gamepad>/leftStick` binding to multiple gamepads, the Control driving the Action is the left stick which is actuated the furthest of all the gamepads. You can query which Control is currently driving the Action by checking the [`InputAction.CallbackContext.control`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_control) property in an [Action callback](Actions.md#action-callbacks).
+In the scenario with the two triggers, releasing one of the triggers would not cause the Action to stop as the other trigger is still held. Only once both triggers are fully released will the Action be stopped.
 
-If you don't want your Action to perform disambiguation, you can set your Action type to [Pass-Through](Actions.md#pass-through). Pass-Through Actions skip disambiguation, and changes to any bound Control trigger them. The value of a Pass-Through Action is the value of whichever bound Control changed most recently.
+This rule can lead to outcomes that may not appear intuitive at first. Consider the following sequence of events:
+
+1. Left  trigger is fully pressed (value=1).
+2. Right trigger is partially pressed (value=0.6).
+3. Left trigger is released.
+4. Right trigger is released.
+
+Applying the "rule of maximum actuation", this leads to the following sequence of changes on the Action:
+
+1. Action is `started` and then `performed`. Value is 1, Control is left trigger.
+2. Nothing happens. The right trigger is not actuated enough for it to override the input on the left trigger.
+3. Action is `performed`. Value is 0.6, Control is right trigger. This is because now the left trigger has fallen below the level of the right trigger and thus the latter is chosen to now "drive" the action.
+4. Action is `canceled` as no more active inputs are feeding into the Action.
+
+Note that when a Control is part of a Composite, the "rule of maximum actuation" is applied to the Composite as a whole, not to the individual Controls bound as part of it. So, a WASD keyboard binding, for example, has a single value of actuation corresponding to the magnitude of the resulting vector.
+
+#### Disabling Conflict Resolution
+
+Conflict resolution is always applied to [Button](Actions.md#button) and [Value](Actions.md#value) type Actions. However, it can be undesirable in situations when an Action is simply used to gather any and all inputs from bound Controls. For example, the following Action would monitor the A button of all available gamepads:
+
+```CSharp
+var action = new InputAction(type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
+action.Enable();
+```
+
+By using the [Pass-Through](Actions.md#pass-through) Action type, conflict resolution is bypassed and thus, pressing the A button on one gamepad will not result in a press on a different gamepad being ignored.
 
 ### Initial state check
 

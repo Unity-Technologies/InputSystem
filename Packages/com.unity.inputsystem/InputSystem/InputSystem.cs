@@ -3176,6 +3176,13 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+        // Initialization is triggered by accessing InputSystem. Some parts (like InputActions)
+        // do not rely on InputSystem and thus can be accessed without tapping InputSystem.
+        // This method will explicitly make sure we trigger initialization.
+        internal static void EnsureInitialized()
+        {
+        }
+
 #if UNITY_EDITOR
         internal static InputSystemObject s_SystemObject;
 
