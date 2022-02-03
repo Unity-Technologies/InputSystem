@@ -928,11 +928,13 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
+            // NOTE: m_UsagesForEachControl includes usages for the device. m_UsageToControl does not.
+
             var usages = device.m_UsagesForEachControl;
             if (usages == null)
                 return null;
 
-            var usageCount = device.m_UsageToControl.Length;
+            var usageCount = device.m_UsageToControl.LengthSafe();
             var startIndex = indexInPath + 1;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
             var pathLength = path.Length;

@@ -29,6 +29,14 @@ however, it has to be formatted properly to pass verification tests.
   * This also applies to `PressInteraction` when set to `Press` behavior.
   * In effect, it means that a button will be in `started` or `performed` phase for as long as its value is not 0 and will only go to `canceled` once dropping to 0.
 - Processors are now always applied when reading action values through `InputAction.ReadValue<>` or `CallbackContext.ReadValue<>`. Previously, if no bound control was actuated, ReadValue calls would return the default value for the action type but not run the value through the processors.([case 1293728](https://issuetracker.unity3d.com/product/unity/issues/guid/1293728/)).
+- Made the following internal types public. These types can be useful when deconstructing raw events captured via `InputEventTrace`.
+  * `UnityEngine.InputSystem.Android.LowLevel.AndroidAxis`
+  * `UnityEngine.InputSystem.Android.LowLevel.AndroidGameControllerState`
+  * `UnityEngine.InputSystem.Android.LowLevel.AndroidKeyCode`
+- Adding or removing a device no longer leads to affected actions being temporarily disabled ([case 1379932](https://issuetracker.unity3d.com/issues/inputactionreferences-reading-resets-when-inputactionmap-has-an-action-for-the-other-hand-and-that-hand-starts-slash-stops-tracking)).
+  * If, for example, an action was bound to `<Gamepad>/buttonSouth` and was enabled, adding a second `Gamepad` would lead to the action being temporarily disabled, then updated, and finally re-enabled.
+  * This was especially noticeable if the action was currently in progress as it would get cancelled and then subsequently resumed.
+  * Now, an in-progress action will get cancelled if the device of its active control is removed. If its active control is not affected, however, the action will keep going regardless of whether controls are added or removed from its `InputAction.controls` list.
 
 ### Fixed
 
@@ -41,6 +49,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `InputControlPath.Matches` incorrectly reporting matches when only a prefix was matching.
   * This would, for example, cause `Keyboard.eKey` to be matched by `<Keyboard>/escape`.
   * Fix contributed by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1485](https://github.com/Unity-Technologies/InputSystem/pull/1485).
+- Fixed accessing `InputAction`s directly during `RuntimeInitializeOnLoad` not initializing the input system as a whole and leading to exceptions ([case 1378614](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-error-is-thrown-when-using-input-actions-in-builds)).
+- Fixed `OnScreenButton` triggering `NullReferenceException` in combination with custom devices ([case 1380790 ](https://issuetracker.unity3d.com/issues/nullreferenceexception-error-when-setting-on-screen-button-to-a-custom-device)).
 
 #### Actions
 

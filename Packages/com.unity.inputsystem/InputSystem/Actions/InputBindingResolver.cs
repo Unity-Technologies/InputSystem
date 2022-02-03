@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputBinding? bindingMask;
 
-        private List<NameAndParameters> m_Parameters;
+        private bool m_IsControlOnlyResolve;
 
         /// <summary>
         /// Release native memory held by the resolver.
@@ -68,14 +68,17 @@ namespace UnityEngine.InputSystem
         /// Steal the already allocated arrays from the given state.
         /// </summary>
         /// <param name="state">Action map state that was previously created.</param>
-        /// <remarks>
-        /// This is useful to avoid allocating new arrays from scratch when re-resolving bindings.
-        /// </remarks>
-        public void StartWithArraysFrom(InputActionState state)
+        /// <param name="isFullResolve">If false, the only thing that is allowed to change in the re-resolution
+        /// is the list of controls. In other words, devices may have been added or removed but otherwise the configuration
+        /// is exactly the same as in the last resolve. If true, anything may have changed and the resolver will only reuse
+        /// allocations but not contents.</param>
+        public void StartWithPreviousResolve(InputActionState state, bool isFullResolve)
         {
             Debug.Assert(state != null, "Received null state");
             Debug.Assert(!state.isProcessingControlStateChange,
                 "Cannot re-resolve bindings for an InputActionState that is currently executing an action callback; binding resolution must be deferred to until after the callback has completed");
+
+            m_IsControlOnlyResolve = !isFullResolve;
 
             maps = state.maps;
             interactions = state.interactions;
@@ -84,15 +87,18 @@ namespace UnityEngine.InputSystem
             controls = state.controls;
 
             // Clear the arrays so that we don't leave references around.
-            if (maps != null)
-                Array.Clear(maps, 0, state.totalMapCount);
-            if (interactions != null)
-                Array.Clear(interactions, 0, state.totalInteractionCount);
-            if (processors != null)
-                Array.Clear(processors, 0, state.totalProcessorCount);
-            if (composites != null)
-                Array.Clear(composites, 0, state.totalCompositeCount);
-            if (controls != null)
+            if (isFullResolve)
+            {
+                if (maps != null)
+                    Array.Clear(maps, 0, state.totalMapCount);
+                if (interactions != null)
+                    Array.Clear(interactions, 0, state.totalInteractionCount);
+                if (processors != null)
+                    Array.Clear(processors, 0, state.totalProcessorCount);
+                if (composites != null)
+                    Array.Clear(composites, 0, state.totalCompositeCount);
+            }
+            if (controls != null) // Always clear this one as every resolve will change it.
                 Array.Clear(controls, 0, state.totalControlCount);
 
             // Null out the arrays on the state so that there is no strange bugs with
@@ -116,6 +122,8 @@ namespace UnityEngine.InputSystem
         public unsafe void AddActionMap(InputActionMap map)
         {
             Debug.Assert(map != null, "Received null map");
+
+            InputSystem.EnsureInitialized();
 
             var actionsInThisMap = map.m_Actions;
             var bindingsInThisMap = map.m_Bindings;
@@ -280,30 +288,27 @@ namespace UnityEngine.InputSystem
                                 // Search globally.
                                 numControls = InputSystem.FindControls(path, ref resolvedControls);
                             }
-
-                            // Disable binding if it doesn't resolve to any controls.
-                            // NOTE: This also happens to bindings that got all their resolved controls removed because other bindings from the same
-                            //       action already grabbed them.
-                            if (numControls == 0)
-                                bindingIsDisabled = true;
                         }
 
                         // If the binding isn't disabled, resolve its controls, processors, and interactions.
                         if (!bindingIsDisabled)
                         {
+                            // NOTE: When isFullResolve==false, it is *imperative* that we do count processor and interaction
+                            //       counts here come out exactly the same as in the previous full resolve.
+
                             // Instantiate processors.
                             var processorString = unresolvedBinding.effectiveProcessors;
                             if (!string.IsNullOrEmpty(processorString))
                             {
                                 // Add processors from binding.
-                                firstProcessorIndex = ResolveProcessors(processorString);
+                                firstProcessorIndex = InstantiateWithParameters(InputProcessor.s_Processors, processorString, ref processors, ref totalProcessorCount);
                                 if (firstProcessorIndex != InputActionState.kInvalidIndex)
                                     numProcessors = totalProcessorCount - firstProcessorIndex;
                             }
                             if (!string.IsNullOrEmpty(action.m_Processors))
                             {
                                 // Add processors from action.
-                                var index = ResolveProcessors(action.m_Processors);
+                                var index = InstantiateWithParameters(InputProcessor.s_Processors, action.m_Processors, ref processors, ref totalProcessorCount);
                                 if (index != InputActionState.kInvalidIndex)
                                 {
                                     if (firstProcessorIndex == InputActionState.kInvalidIndex)
@@ -317,14 +322,14 @@ namespace UnityEngine.InputSystem
                             if (!string.IsNullOrEmpty(interactionString))
                             {
                                 // Add interactions from binding.
-                                firstInteractionIndex = ResolveInteractions(interactionString);
+                                firstInteractionIndex = InstantiateWithParameters(InputInteraction.s_Interactions, interactionString, ref interactions, ref totalInteractionCount);
                                 if (firstInteractionIndex != InputActionState.kInvalidIndex)
                                     numInteractions = totalInteractionCount - firstInteractionIndex;
                             }
                             if (!string.IsNullOrEmpty(action.m_Interactions))
                             {
                                 // Add interactions from action.
-                                var index = ResolveInteractions(action.m_Interactions);
+                                var index = InstantiateWithParameters(InputInteraction.s_Interactions, action.m_Interactions, ref interactions, ref totalInteractionCount);
                                 if (index != InputActionState.kInvalidIndex)
                                 {
                                     if (firstInteractionIndex == InputActionState.kInvalidIndex)
@@ -333,8 +338,7 @@ namespace UnityEngine.InputSystem
                                 }
                             }
 
-                            // If it's the start of a composite chain, create the composite. Otherwise, go and
-                            // resolve controls for the binding.
+                            // If it's the start of a composite chain, create the composite.
                             if (isComposite)
                             {
                                 // The composite binding entry itself does not resolve to any controls.
@@ -465,7 +469,11 @@ namespace UnityEngine.InputSystem
 
                 // Initialize initial interaction states.
                 for (var i = memory.interactionCount; i < newMemory.interactionCount; ++i)
-                    newMemory.interactionStates[i].phase = InputActionPhase.Waiting;
+                {
+                    ref var interactionState = ref newMemory.interactionStates[i];
+                    interactionState.phase = InputActionPhase.Waiting;
+                    interactionState.triggerControlIndex = InputActionState.kInvalidIndex;
+                }
 
                 // Initialize action data.
                 var runningIndexInBindingIndices = memory.bindingCount;
@@ -585,65 +593,42 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private int ResolveInteractions(string interactionString)
+        private List<NameAndParameters> m_Parameters; // We retain this to reuse the allocation.
+        private int InstantiateWithParameters<TType>(TypeTable registrations, string namesAndParameters, ref TType[] array, ref int count)
         {
-            ////REVIEW: We're piggybacking off the processor parsing here as the two syntaxes are identical. Might consider
-            ////        moving the logic to a shared place.
-            ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
-
-            if (!NameAndParameters.ParseMultiple(interactionString, ref m_Parameters))
+            if (!NameAndParameters.ParseMultiple(namesAndParameters, ref m_Parameters))
                 return InputActionState.kInvalidIndex;
 
-            var firstInteractionIndex = totalInteractionCount;
+            var firstIndex = count;
             for (var i = 0; i < m_Parameters.Count; ++i)
             {
-                // Look up interaction.
-                var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
+                // Look up type.
+                var type = registrations.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new InvalidOperationException(
-                        $"No interaction with name '{m_Parameters[i].name}' (mentioned in '{interactionString}') has been registered");
+                        $"No {typeof(TType).Name} with name '{m_Parameters[i].name}' (mentioned in '{namesAndParameters}') has been registered");
 
-                // Instantiate it.
-                if (!(Activator.CreateInstance(type) is IInputInteraction interaction))
-                    throw new InvalidOperationException($"Interaction '{m_Parameters[i].name}' (mentioned in '{interactionString}') is not an IInputInteraction");
+                if (!m_IsControlOnlyResolve)
+                {
+                    // Instantiate it.
+                    if (!(Activator.CreateInstance(type) is TType instance))
+                        throw new InvalidOperationException(
+                            $"Type '{type.Name}' registered '{m_Parameters[i].name}' (mentioned in '{namesAndParameters}') is not an {typeof(TType).Name}");
 
-                // Pass parameters to it.
-                NamedValue.ApplyAllToObject(interaction, m_Parameters[i].parameters);
+                    // Pass parameters to it.
+                    NamedValue.ApplyAllToObject(instance, m_Parameters[i].parameters);
 
-                // Add to list.
-                ArrayHelpers.AppendWithCapacity(ref interactions, ref totalInteractionCount, interaction);
+                    // Add to list.
+                    ArrayHelpers.AppendWithCapacity(ref array, ref count, instance);
+                }
+                else
+                {
+                    Debug.Assert(type.IsInstanceOfType(array[count]), "Type of instance in array does not match expected type");
+                    ++count;
+                }
             }
 
-            return firstInteractionIndex;
-        }
-
-        private int ResolveProcessors(string processorString)
-        {
-            if (!NameAndParameters.ParseMultiple(processorString, ref m_Parameters))
-                return InputActionState.kInvalidIndex;
-
-            var firstProcessorIndex = totalProcessorCount;
-            for (var i = 0; i < m_Parameters.Count; ++i)
-            {
-                // Look up processor.
-                var type = InputProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
-                if (type == null)
-                    throw new InvalidOperationException(
-                        $"No processor with name '{m_Parameters[i].name}' (mentioned in '{processorString}') has been registered");
-
-                // Instantiate it.
-                if (!(Activator.CreateInstance(type) is InputProcessor processor))
-                    throw new InvalidOperationException(
-                        $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' (mentioned in '{processorString}') is not an InputProcessor");
-
-                // Pass parameters to it.
-                NamedValue.ApplyAllToObject(processor, m_Parameters[i].parameters);
-
-                // Add to list.
-                ArrayHelpers.AppendWithCapacity(ref processors, ref totalProcessorCount, processor);
-            }
-
-            return firstProcessorIndex;
+            return firstIndex;
         }
 
         private static InputBindingComposite InstantiateBindingComposite(string nameAndParameters)
