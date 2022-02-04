@@ -2,18 +2,14 @@ using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
-    /// A single axis value computed from a "negative" and a "positive" button.
+    /// A single axis value computed from one axis that pulls in the <see cref="negative"/> direction (<see cref="minValue"/>) and one
+    /// axis that pulls in the <see cref="positive"/> direction (<see cref="maxValue"/>).
     /// </summary>
     /// <remarks>
-    /// This composite allows to arrange any arbitrary two buttons from a device in an
-    /// axis configuration such that one button pushes in one direction and the other
-    /// pushes in the opposite direction.
-    ///
     /// The limits of the axis are determined by <see cref="minValue"/> and <see cref="maxValue"/>.
     /// By default, they are set to <c>[-1..1]</c>. The values can be set as parameters.
     ///
@@ -26,7 +22,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </code>
     /// </example>
     ///
-    /// If both buttons are pressed at the same time, the behavior depends on <see cref="whichSideWins"/>.
+    /// If both axes are actuated at the same time, the behavior depends on <see cref="whichSideWins"/>.
     /// By default, neither side will win (<see cref="WhichSideWins.Neither"/>) and the result
     /// will be 0 (or, more precisely, the midpoint between <see cref="minValue"/> and <see cref="maxValue"/>).
     /// This can be customized to make the positive side win (<see cref="WhichSideWins.Positive"/>)
@@ -37,33 +33,36 @@ namespace UnityEngine.InputSystem.Composites
     /// acceleration control(s), and setting <see cref="whichSideWins"/> to <see cref="WhichSideWins.Negative"/>,
     /// if the break button is pressed, it will always cause the acceleration button to be ignored.
     ///
-    /// The values returned are the actual actuation values of the buttons, unaltered for <see cref="positive"/>
-    /// and inverted for <see cref="negative"/>. This means that if the buttons are actual axes (e.g.
-    /// the triggers on gamepads), then the values correspond to how much the axis is actuated.
+    /// The actual <em>absolute</em> values of <see cref="negative"/> and <see cref="positive"/> are used
+    /// to scale <see cref="minValue"/> and <see cref="maxValue"/> respectively. So if, for example, <see cref="positive"/>
+    /// is bound to <see cref="Gamepad.rightTrigger"/> and the trigger is at a value of 0.5, then the resulting
+    /// value is <c>maxValue * 0.5</c> (the actual formula is <c>midPoint + (maxValue - midPoint) * positive</c>).
     /// </remarks>
     [DisplayStringFormat("{negative}/{positive}")]
     [DisplayName("Positive/Negative Binding")]
     public class AxisComposite : InputBindingComposite<float>
     {
         /// <summary>
-        /// Binding for the button that controls the positive direction of the axis.
+        /// Binding for the axis input that controls the negative [<see cref="minValue"/>..0] direction of the
+        /// combined axis.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int negative = 0;
+        [InputControl(layout = "Axis")] public int negative = 0;
 
         /// <summary>
-        /// Binding for the button that controls the negative direction of the axis.
+        /// Binding for the axis input that controls the positive [0..<see cref="maxValue"/>] direction of the
+        /// combined axis.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int positive = 0;
+        [InputControl(layout = "Axis")] public int positive = 0;
 
         /// <summary>
         /// The lower bound that the axis is limited to. -1 by default.
@@ -131,22 +130,22 @@ namespace UnityEngine.InputSystem.Composites
         /// <inheritdoc />
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            var negativeMagnitude = context.EvaluateMagnitude(negative);
-            var positiveMagnitude = context.EvaluateMagnitude(positive);
+            var negativeValue = Mathf.Abs(context.ReadValue<float>(negative));
+            var positiveValue = Mathf.Abs(context.ReadValue<float>(positive));
 
-            var negativeIsPressed = negativeMagnitude > 0;
-            var positiveIsPressed = positiveMagnitude > 0;
+            var negativeIsActuated = negativeValue > Mathf.Epsilon;
+            var positiveIsActuated = positiveValue > Mathf.Epsilon;
 
-            if (negativeIsPressed == positiveIsPressed)
+            if (negativeIsActuated == positiveIsActuated)
             {
                 switch (whichSideWins)
                 {
                     case WhichSideWins.Negative:
-                        positiveIsPressed = false;
+                        positiveIsActuated = false;
                         break;
 
                     case WhichSideWins.Positive:
-                        negativeIsPressed = false;
+                        negativeIsActuated = false;
                         break;
 
                     case WhichSideWins.Neither:
@@ -156,10 +155,10 @@ namespace UnityEngine.InputSystem.Composites
 
             var mid = midPoint;
 
-            if (negativeIsPressed)
-                return mid - (mid - minValue) * negativeMagnitude;
+            if (negativeIsActuated)
+                return mid - (mid - minValue) * negativeValue;
 
-            return mid + (maxValue - mid) * positiveMagnitude;
+            return mid + (maxValue - mid) * positiveValue;
         }
 
         /// <inheritdoc />
