@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
   ```
   * This also applies to `PressInteraction` when set to `Press` behavior.
   * In effect, it means that a button will be in `started` or `performed` phase for as long as its value is not 0 and will only go to `canceled` once dropping to 0.
+- Processors are now always applied when reading action values through `InputAction.ReadValue<>` or `CallbackContext.ReadValue<>`. Previously, if no bound control was actuated, ReadValue calls would return the default value for the action type but not run the value through the processors.([case 1293728](https://issuetracker.unity3d.com/product/unity/issues/guid/1293728/)).
 - Made the following internal types public. These types can be useful when deconstructing raw events captured via `InputEventTrace`.
   * `UnityEngine.InputSystem.Android.LowLevel.AndroidAxis`
   * `UnityEngine.InputSystem.Android.LowLevel.AndroidGameControllerState`

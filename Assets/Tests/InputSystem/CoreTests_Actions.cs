@@ -30,7 +30,41 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
-    #if UNITY_EDITOR
+    [Test]
+    [Category("Actions")]
+    public void Actions_ReadingValueRightAfterEnabling_AppliesProcessorsFromFirstBinding()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap("map");
+        map.AddAction("action2", binding: "<Gamepad>/buttonNorth");
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/leftStick/x", processors: "normalize(min=-1,max=1,zero=-1)");
+        action1.AddBinding("<Gamepad>/rightStick/x", processors: "normalize(min=0,max=1)");
+
+        map.Enable();
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ReadingValueRightAfterResetting_AppliesProcessorsFromFirstBinding()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap("map");
+        map.AddAction("action2", binding: "<Gamepad>/buttonNorth");
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/leftStick/x", processors: "normalize(min=-1,max=1,zero=-1)");
+        action1.AddBinding("<Gamepad>/rightStick/x", processors: "normalize(min=0,max=1)");
+
+        map.Enable();
+
+        action1.Reset();
+
+        Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f));
+    }
+
+#if UNITY_EDITOR
     [Test]
     [Category("Actions")]
     public void Actions_DoNotGetTriggeredByEditorUpdates()
