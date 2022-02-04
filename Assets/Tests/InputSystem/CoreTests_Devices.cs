@@ -265,6 +265,26 @@ partial class CoreTests
         Assert.That(device.usages, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1380790/
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanSetUsagesOnDevice_WithoutAnyControlWithUsages()
+    {
+        var device = InputSystem.AddDevice<DeviceWithNoControlUsages>();
+
+        InputSystem.AddDeviceUsage(device, "Usage");
+
+        Assert.That(device.usages, Has.Count.EqualTo(1));
+        Assert.That(device.usages[0], Is.EqualTo(new InternedString("Usage")));
+        Assert.That(InputControlPath.TryFindControl(device, "*/{Foo}"), Is.Null);
+    }
+
+    private class DeviceWithNoControlUsages : InputDevice
+    {
+        [InputControl]
+        public ButtonControl button;
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanFindDeviceByMultipleUsages()
