@@ -1853,6 +1853,7 @@ namespace UnityEngine.InputSystem
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
+            RegisterControlLayout("RacingWheel", typeof(RacingWheel));
             RegisterControlLayout("Keyboard", typeof(Keyboard));
             RegisterControlLayout("Pointer", typeof(Pointer));
             RegisterControlLayout("Mouse", typeof(Mouse));
