@@ -3393,8 +3393,6 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
-
-            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
