@@ -957,7 +957,7 @@ partial class CoreTests
 
         Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
 
-        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftStick, mouse.delta}));
+        Assert.That(action.controls, Is.EquivalentTo(new InputControl[] {gamepad.leftStick, mouse.delta}));
     }
 
     [Test]
