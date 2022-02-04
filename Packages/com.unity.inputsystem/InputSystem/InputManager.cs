@@ -1832,6 +1832,8 @@ namespace UnityEngine.InputSystem
             m_PollingFrequency = 60;
 
             // Register layouts.
+            // NOTE: Base layouts must be registered before their derived layouts
+            //       for the detection of base layouts to work.
             RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
             RegisterControlLayout("Button", typeof(ButtonControl));
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
@@ -1842,6 +1844,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Double", typeof(DoubleControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
+            RegisterControlLayout("Delta", typeof(DeltaControl));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
