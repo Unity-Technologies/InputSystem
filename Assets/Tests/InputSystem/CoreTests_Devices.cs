@@ -5577,4 +5577,22 @@ partial class CoreTests
         Assert.That(device.value1.ReadValue(), Is.EqualTo(expectedValue1));
         Assert.That(device.value2.ReadValue(), Is.EqualTo(expectedValue2));
     }
+
+    // https://fogbugz.unity3d.com/f/cases/1395648/
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_DoesntErrorOutOnMaxTouchCount()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.onEvent += (InputEventPtr eventPtr, InputDevice device) =>
+        {
+            Assert.That(() => eventPtr.HasButtonPress(), Throws.Nothing);
+        };
+
+        Assert.That(() => {
+            for (var i = 0; i < TouchscreenState.MaxTouches + 5; ++i)
+                BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
+        }, Throws.Nothing);
+    }
 }
