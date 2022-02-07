@@ -3094,6 +3094,58 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_CanLoadLegacyInputAxisSettings()
+    {
+        var result = LegacyInputManagerMigration.ConvertInputAxisSettings();
+
+        Assert.That(result.Select(a => a.name),
+            Is.EquivalentTo(new[]
+            {
+                "Vertical", "Horizontal", "Fire1", "Fire2", "Fire3", "Mouse X", "Mouse Y", "Mouse ScrollWheel", "Jump", "Submit", "Cancel"
+            }));
+
+        Assert.That(result.SelectMany(a => a.bindings.Select(b => (a.name, b.path))),
+            Is.EquivalentTo(new[]
+            {
+                ("Horizontal", "1DAxis"),
+                ("Horizontal", "<Keyboard>/a"),
+                ("Horizontal", "<Keyboard>/d"),
+
+                ("Vertical", "1DAxis"),
+                ("Vertical", "<Keyboard>/w"),
+                ("Vertical", "<Keyboard>/s"),
+
+                ("Jump", "<Keyboard>/space"),
+                ("Submit", "<Keyboard>/enter"),
+                ("Submit", "<Keyboard>/space"),
+                ("Cancel", "<Keyboard>/escape"),
+            }));
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var joystick1 = InputSystem.AddDevice<Joystick>();
+        var joystick2 = InputSystem.AddDevice<Joystick>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        result.Enable();
+
+        Press(keyboard.aKey);
+
+        Assert.That(result["Horizontal"].ReadValue<float>(), Is.EqualTo(-1));
+
+        Press(keyboard.dKey);
+
+        Assert.That(result["Horizontal"].ReadValue<float>(), Is.EqualTo(0));
+
+        Release(keyboard.aKey);
+
+        Assert.That(result["Horizontal"].ReadValue<float>(), Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_CanRestartEditorThroughReflection()
     {
         EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);

@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
-        public const string kSettingsPath = "Project/Input System Package";
+        public const string kSettingsPath = "Project/Input";
 
         public static void Open()
         {
@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         private InputSettingsProvider(string path, SettingsScope scopes)
             : base(path, scopes)
         {
-            label = "Input System Package";
+            label = "Input";
             s_Instance = this;
         }
 

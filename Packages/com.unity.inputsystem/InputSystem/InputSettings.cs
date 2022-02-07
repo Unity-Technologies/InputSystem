@@ -44,6 +44,11 @@ namespace UnityEngine.InputSystem
     public partial class InputSettings : ScriptableObject
     {
         /// <summary>
+        /// Asset path to where we store the project-wide input settings.
+        /// </summary>
+        internal const string kProjectSettings = "ProjectSettings/InputManager.asset";
+
+        /// <summary>
         /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
         /// <value>When to run input updates.</value>
@@ -582,6 +587,27 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// The global set of actions.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        /// <seealso cref="InputSystem.actions"/>
+        public InputActionAsset actions
+        {
+            get => m_Actions;
+            set
+            {
+                ////TODO: most of the actual logic here (enabling, etc)
+
+                // also allow overriding this temporarily without modifying the *serialized* reference; we need this for scene-global actions
+
+                m_Actions?.Disable();
+                m_Actions = value;
+            }
+        }
+
+        /// <summary>
         /// Disables merging of redundant input events (at the moment, only mouse events).
         /// Disable it if you want to get all events.
         /// </summary>
@@ -661,6 +687,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+        [SerializeField] private InputActionAsset m_Actions;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 

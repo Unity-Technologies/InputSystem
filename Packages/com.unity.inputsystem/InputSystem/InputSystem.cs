@@ -2865,6 +2865,19 @@ namespace UnityEngine.InputSystem
         #region Actions
 
         /// <summary>
+        /// The set of globally active input actions.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        /// <seealso cref="InputSettings.actions"/>
+        public static InputActionAsset actions
+        {
+            get => settings.actions;
+            set => settings.actions = value;
+        }
+
+        /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
         /// </summary>
@@ -3192,7 +3205,7 @@ namespace UnityEngine.InputSystem
             Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
-            if (existingSystemObjects != null && existingSystemObjects.Length > 0)
+            if (existingSystemObjects.LengthSafe() > 0)
             {
                 ////FIXME: does not preserve action map state
 
@@ -3226,13 +3239,21 @@ namespace UnityEngine.InputSystem
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
+                // NOTE: This is a legacy path for the case where there's an explicit .inputsettings asset in the project.
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
                     out InputSettings settingsAsset))
                 {
-                    if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                        ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
-                    s_Manager.m_Settings = settingsAsset;
-                    s_Manager.ApplySettings();
+                    SwitchToSettings(settingsAsset);
+                }
+                // See if we have an InputSettings object in ProjectSettings/InputManager.asset.
+                else
+                {
+                    var settings = AssetDatabase.LoadAssetAtPath<InputSettings>(InputSettings.kProjectSettings);
+                    if (settings == null)
+                    {
+                        settings = LegacyInputManagerMigration.MigrateLegacyInputManager();
+                        SwitchToSettings(settings);
+                    }
                 }
 
                 InputEditorUserSettings.Load();
@@ -3271,6 +3292,14 @@ namespace UnityEngine.InputSystem
             Profiler.EndSample();
         }
 
+        private static void SwitchToSettings(InputSettings settings)
+        {
+            if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
+            s_Manager.m_Settings = settings;
+            s_Manager.ApplySettings();
+        }
+
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             ////REVIEW: should we pause haptics when play mode is paused and stop haptics when play mode is exited?
@@ -3286,6 +3315,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
+                    settings.actions?.Enable();
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:

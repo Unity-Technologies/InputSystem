@@ -93,6 +93,10 @@ namespace UnityEngine.InputSystem
                 // Push current input system state on stack.
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
 
+                // Put DefaultInputActions in place as global input actions.
+                InputSystem.settings.actions = new DefaultInputActions().asset;
+                InputSystem.settings.actions.Enable();
+
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
                 #if UNITY_EDITOR
