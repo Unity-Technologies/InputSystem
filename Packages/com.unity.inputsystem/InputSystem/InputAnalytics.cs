@@ -55,11 +55,6 @@ namespace UnityEngine.InputSystem
 
             data.unrecognized_devices = deviceList.ToArray();
 
-            #if UNITY_EDITOR
-            data.new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
-            data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
-            #endif
-
             manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
@@ -97,12 +92,6 @@ namespace UnityEngine.InputSystem
             public string version;
             public DeviceInfo[] devices;
             public DeviceInfo[] unrecognized_devices;
-
-            ////REVIEW: ATM we have no way of retrieving these in the player
-            #if UNITY_EDITOR
-            public bool new_enabled;
-            public bool old_enabled;
-            #endif
 
             [Serializable]
             public struct DeviceInfo

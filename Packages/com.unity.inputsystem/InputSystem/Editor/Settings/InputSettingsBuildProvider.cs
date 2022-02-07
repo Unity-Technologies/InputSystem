@@ -15,6 +15,10 @@ namespace UnityEngine.InputSystem.Editor
 
         public void OnPreprocessBuild(BuildReport report)
         {
+            // Our package is present so in the player, we force Active Input Handling to the new backends.
+            // If our package disappears, the editor will automatically revert that to the old backends.
+            EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+
             if (InputSystem.settings == null)
                 return;
 

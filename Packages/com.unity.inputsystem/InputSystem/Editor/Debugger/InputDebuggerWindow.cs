@@ -181,16 +181,6 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            // If the new backends aren't enabled, show a warning in the debugger.
-            if (!EditorPlayerSettingHelpers.newSystemBackendsEnabled)
-            {
-                EditorGUILayout.HelpBox(
-                    "Platform backends for the new input system are not enabled. " +
-                    "No devices and input from hardware will come through in the new input system APIs.\n\n" +
-                    "To enable the backends, set 'Active Input Handling' in the player settings to either 'Input System (Preview)' " +
-                    "or 'Both' and restart the editor.", MessageType.Warning);
-            }
-
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
             {

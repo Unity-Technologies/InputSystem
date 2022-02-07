@@ -108,44 +108,6 @@ partial class CoreTests
         Assert.That(numReceivedCalls, Is.EqualTo(1));
     }
 
-    #if UNITY_EDITOR
-    [Test]
-    [Category("Analytics")]
-    public void Analytics_InEditor_StartupEventTransmitsBackendEnabledStatus()
-    {
-        // Save current player settings so we can restore them.
-        var oldEnabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
-        var newEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
-
-        try
-        {
-            // Enable new and disable old.
-            EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-            EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
-
-            object receivedData = null;
-            runtime.onSendAnalyticsEvent =
-                (name, data) =>
-            {
-                Assert.That(receivedData, Is.Null);
-                receivedData = data;
-            };
-
-            InputSystem.Update();
-            var startupData = (InputAnalytics.StartupEventData)receivedData;
-
-            Assert.That(startupData.new_enabled, Is.True);
-            Assert.That(startupData.old_enabled, Is.False);
-        }
-        finally
-        {
-            EditorPlayerSettingHelpers.oldSystemBackendsEnabled = oldEnabled;
-            EditorPlayerSettingHelpers.newSystemBackendsEnabled = newEnabled;
-        }
-    }
-
-    #endif
-
     ////FIXME: these don't seem to actually make it out and to the analytics server
     [Test]
     [Category("Analytics")]

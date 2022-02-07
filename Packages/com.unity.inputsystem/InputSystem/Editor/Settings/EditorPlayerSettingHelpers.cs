@@ -3,6 +3,10 @@ using System;
 using System.Linq;
 using UnityEditor;
 
+// NOTE: This goes to the actual serialized data in PlayerSettings. As such, it circumvents (as it should) the trickery
+//       that we perform in the editor where we pretend both the old and the new backends are always enabled (so as to
+//       be able to switch between them without restarting).
+
 namespace UnityEngine.InputSystem.Editor
 {
     internal static class EditorPlayerSettingHelpers
@@ -15,21 +19,17 @@ namespace UnityEngine.InputSystem.Editor
         {
             get
             {
-#if UNITY_2020_2_OR_NEWER
                 var property = GetPropertyOrNull(kActiveInputHandler);
                 return property == null || ActiveInputHandlerToTuple(property.intValue).newSystemEnabled;
-#else
-                var property = GetPropertyOrNull(kEnableNewSystemProperty);
-                return property == null || property.boolValue;
-#endif
             }
             set
             {
-#if UNITY_2020_2_OR_NEWER
                 var property = GetPropertyOrNull(kActiveInputHandler);
                 if (property != null)
                 {
                     var tuple = ActiveInputHandlerToTuple(property.intValue);
+                    if (tuple.newSystemEnabled == value)
+                        return;
                     tuple.newSystemEnabled = value;
                     property.intValue = TupleToActiveInputHandler(tuple);
                     property.serializedObject.ApplyModifiedProperties();
@@ -38,18 +38,6 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Debug.LogError($"Cannot find '{kActiveInputHandler}' in player settings");
                 }
-#else
-                var property = GetPropertyOrNull(kEnableNewSystemProperty);
-                if (property != null)
-                {
-                    property.boolValue = value;
-                    property.serializedObject.ApplyModifiedProperties();
-                }
-                else
-                {
-                    Debug.LogError($"Cannot find '{kEnableNewSystemProperty}' in player settings");
-                }
-#endif
             }
         }
 
@@ -61,21 +49,17 @@ namespace UnityEngine.InputSystem.Editor
         {
             get
             {
-#if UNITY_2020_2_OR_NEWER
                 var property = GetPropertyOrNull(kActiveInputHandler);
                 return property == null || ActiveInputHandlerToTuple(property.intValue).oldSystemEnabled;
-#else
-                var property = GetPropertyOrNull(kDisableOldSystemProperty);
-                return property == null || !property.boolValue;
-#endif
             }
             set
             {
-#if UNITY_2020_2_OR_NEWER
                 var property = GetPropertyOrNull(kActiveInputHandler);
                 if (property != null)
                 {
                     var tuple = ActiveInputHandlerToTuple(property.intValue);
+                    if (tuple.oldSystemEnabled == value)
+                        return;
                     tuple.oldSystemEnabled = value;
                     property.intValue = TupleToActiveInputHandler(tuple);
                     property.serializedObject.ApplyModifiedProperties();
@@ -84,23 +68,9 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     Debug.LogError($"Cannot find '{kActiveInputHandler}' in player settings");
                 }
-#else
-                var property = GetPropertyOrNull(kDisableOldSystemProperty);
-                if (property != null)
-                {
-                    property.boolValue = !value;
-                    property.serializedObject.ApplyModifiedProperties();
-                }
-                else
-                {
-                    Debug.LogError($"Cannot find '{kDisableOldSystemProperty}' in player settings");
-                }
-#endif
             }
         }
 
-
-#if UNITY_2020_2_OR_NEWER
         private const string kActiveInputHandler = "activeInputHandler";
 
         private enum InputHandler
@@ -146,11 +116,6 @@ namespace UnityEngine.InputSystem.Editor
                     return (int)InputHandler.OldInputManager;
             }
         }
-
-#else
-        private const string kEnableNewSystemProperty = "enableNativePlatformBackendsForNewInputSystem";
-        private const string kDisableOldSystemProperty = "disableOldInputManagerSupport";
-#endif
 
         private static SerializedProperty GetPropertyOrNull(string name)
         {

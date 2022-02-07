@@ -18,24 +18,20 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnCreate()
         {
-            m_InputSystemEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
-            if (m_InputSystemEnabled)
+            m_DisabledDevices = new List<InputDevice>();
+
+            // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
+            if (deviceSimulator != null)
+                deviceSimulator.touchScreenInput += OnTouchEvent;
+            InputSystem.onDeviceChange += OnDeviceChange;
+
+            // UGUI elements like a button don't get pressed when multiple pointers for example mouse and touchscreen are sending data at the same time
+            foreach (var device in InputSystem.devices)
             {
-                m_DisabledDevices = new List<InputDevice>();
-
-                // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
-                if (deviceSimulator != null)
-                    deviceSimulator.touchScreenInput += OnTouchEvent;
-                InputSystem.onDeviceChange += OnDeviceChange;
-
-                // UGUI elements like a button don't get pressed when multiple pointers for example mouse and touchscreen are sending data at the same time
-                foreach (var device in InputSystem.devices)
-                {
-                    DisableConflictingDevice(device);
-                }
-
-                SimulatorTouchscreen = InputSystem.AddDevice<Touchscreen>("Device Simulator Touchscreen");
+                DisableConflictingDevice(device);
             }
+
+            SimulatorTouchscreen = InputSystem.AddDevice<Touchscreen>("Device Simulator Touchscreen");
         }
 
         internal void OnTouchEvent(TouchEvent touchEvent)
