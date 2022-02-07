@@ -36,6 +36,11 @@ namespace UnityEngine.InputSystem.Switch
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x0e6f) // PDP Wired Fight Pad Pro: Mario
                     .WithCapability("productId", 0x0185));
+			InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0f0d ) // Hori Co., Ltd
+                    .WithCapability("productId", 0x0092)); // Pokken Tournament DX Pro Pad
         #endif
         }
     }
