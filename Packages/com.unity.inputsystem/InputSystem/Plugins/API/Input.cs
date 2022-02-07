@@ -6,8 +6,6 @@ using UnityEngine.InputSystem;
 // GOAL: Show how you can load an existing Unity project using legacy input, install com.unity.inputsystem, and play it as is while actually not using the old input system at all
 // More specifically: Can play *unmodified* 2D Rogue project through input system with zero popups by simply adding the package. Likewise, removing the package simply reverts the project to the old system.
 
-////TODO: rename to just Input as soon as we have Modules/InputLegacy under control
-
 // Notable legacy InputManager behaviors:
 //  - Querying an axis that does not exist throws ArgumentException
 //  - Horizontal and Vertical are *movement*
@@ -219,6 +217,8 @@ namespace UnityEngine
     /// </summary>
     public static partial class Input
     {
+        public static bool mousePresent => Mouse.current != null;
+
         private static InputActionAsset actions => InputSystem.InputSystem.settings.actions;
 
         [DoesNotReturn]
@@ -284,6 +284,26 @@ namespace UnityEngine
 
         #region Unimplemented
 
+        public static float GetAxisRaw(string axisName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool GetMouseButton(int button)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool GetMouseButtonUp(int button)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool GetMouseButtonDown(int button)
+        {
+            throw new NotImplementedException();
+        }
+
         public static bool GetKey(string key)
         {
             throw new NotImplementedException();
@@ -314,11 +334,18 @@ namespace UnityEngine
             throw new NotImplementedException();
         }
 
+        public static Touch GetTouch(int index)
+        {
+            throw new NotImplementedException();
+        }
+
         public static Compass compass => throw new NotImplementedException();
         public static Gyroscope gyro => throw new NotImplementedException();
         public static Vector3 acceleration => throw new NotImplementedException();
         public static Vector2 mousePosition => throw new NotImplementedException();
+        public static Vector2 mouseScrollDelta => throw new NotImplementedException();
         public static int touchCount => throw new NotImplementedException();
+        public static Touch[] touches => new Touch[0];
         public static bool touchSupported => throw new NotImplementedException();
         public static bool multiTouchEnabled => throw new NotImplementedException();
         public static string compositionString => throw new NotImplementedException();
@@ -331,9 +358,10 @@ namespace UnityEngine
         }
         public static IMECompositionMode imeCompositionMode
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => m_IMECompositionMode;
+            set => m_IMECompositionMode = value;
         }
+        private static IMECompositionMode m_IMECompositionMode = IMECompositionMode.Off;
 
         #endregion
     }
