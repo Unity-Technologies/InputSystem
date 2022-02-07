@@ -45,7 +45,10 @@ internal class XRTests : CoreTestsFixture
         var generatedLayout = InputSystem.LoadLayout(
             $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
+        if (baseLayoutName == null)
+            Assert.That(generatedLayout.baseLayouts, Is.Empty);
+        else
+            Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
 
     [Test]

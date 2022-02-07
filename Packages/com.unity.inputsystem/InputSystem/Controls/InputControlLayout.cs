@@ -935,7 +935,7 @@ namespace UnityEngine.InputSystem.Layouts
                     m_DisplayName = displayName,
                     m_StateFormat = stateFormat,
                     m_StateSizeInBytes = stateSizeInBytes,
-                    m_BaseLayouts = new InlinedArray<InternedString>(new InternedString(extendsLayout)),
+                    m_BaseLayouts = !string.IsNullOrEmpty(extendsLayout) ? new InlinedArray<InternedString>(new InternedString(extendsLayout)) : default,
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender
                 };

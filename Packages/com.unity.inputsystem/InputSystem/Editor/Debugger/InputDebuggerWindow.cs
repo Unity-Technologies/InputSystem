@@ -755,7 +755,7 @@ namespace UnityEngine.InputSystem.Editor
                 parent.AddChild(item);
 
                 // Header.
-                AddChild(item, "Type: " + layout.type.Name, ref id);
+                AddChild(item, "Type: " + layout.type?.Name, ref id);
                 if (!string.IsNullOrEmpty(layout.m_DisplayName))
                     AddChild(item, "Display Name: " + layout.m_DisplayName, ref id);
                 if (!string.IsNullOrEmpty(layout.name))
