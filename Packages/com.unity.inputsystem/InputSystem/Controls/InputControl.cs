@@ -974,11 +974,11 @@ namespace UnityEngine.InputSystem
 
         #endif
 
-	    public event Action<InputControl, double> OnValueChanged;
+	    private event Action<InputControl, double> m_ValueChanged;
 
 	    public virtual void NotifyStateChanged(double time)
 	    {
-		    OnValueChanged?.Invoke(this, time);
+		    m_ValueChanged?.Invoke(this, time);
 	    }
     }
 
@@ -991,15 +991,35 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
-	    public new event Action<InputControl<TValue>, TValue, double> OnValueChanged;
+	    private event Action<InputControl<TValue>, TValue, double> m_ValueChanged;
+	    private object m_lock = new object();
 
         public override Type valueType => typeof(TValue);
 
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
+        public event Action<InputControl<TValue>, TValue, double> ValueChanged
+        {
+	        add
+	        {
+                lock(m_lock)
+					m_ValueChanged += value;
+				InputSystem.s_Manager.AddStateChangeMonitor(this, null, 0);
+	        }
+	        remove
+	        {
+                lock(m_lock)
+					m_ValueChanged -= value;
+
+                // TODO: this doesn't actually work at the moment because the IInputStateChangeMonitor
+                // is used for equality and we don't pass one of those
+                InputSystem.s_Manager.RemoveStateChangeMonitor(this, null, 0);
+	        }
+        }
+
         public override void NotifyStateChanged(double time)
         {
-	        OnValueChanged?.Invoke(this, ReadValue(), time);
+	        m_ValueChanged?.Invoke(this, ReadValue(), time);
         }
 
         /// <summary>

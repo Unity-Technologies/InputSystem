@@ -1657,15 +1657,6 @@ namespace UnityEngine.InputSystem
             m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
         }
 
-        public void AddStateChangeMonitor<TValue>(InputControl control, Action<InputControl<TValue>, TValue> handler) where TValue : struct
-        {
-	        Debug.Assert(m_DevicesCount > 0);
-
-	        var device = control.device;
-	        var deviceIndex = device.m_DeviceIndex;
-	        Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
-        }
-
         private void RemoveStateChangeMonitors(InputDevice device)
         {
             if (m_StateChangeMonitors == null)

@@ -98,24 +98,29 @@ namespace UnityEngine.InputSystem
 
             // Check magnitude of actuation.
             var magnitude = control.EvaluateMagnitude();
-            if (magnitude < 0)
-            {
-                // We know the control is not in default state but we also know it doesn't support
-                // magnitude. So, all we can say is that it is actuated. Not how much it is actuated.
-                //
-                // If we're looking for a specific threshold here, consider the control to always
-                // be under. But if not, consider it actuated "by virtue of not being in default state".
-                if (Mathf.Approximately(threshold, 0))
-                    return true;
-                return false;
-            }
-
-            if (Mathf.Approximately(threshold, 0))
-                return magnitude > 0;
-
-            return magnitude >= threshold;
+            return control.IsActuated(magnitude, threshold);
         }
 
+        public static bool IsActuated(this InputControl control, float magnitude, float threshold = 0)
+        {
+	        if (magnitude < 0)
+	        {
+		        // We know the control is not in default state but we also know it doesn't support
+		        // magnitude. So, all we can say is that it is actuated. Not how much it is actuated.
+		        //
+		        // If we're looking for a specific threshold here, consider the control to always
+		        // be under. But if not, consider it actuated "by virtue of not being in default state".
+		        if (Mathf.Approximately(threshold, 0))
+			        return true;
+		        return false;
+	        }
+
+	        if (Mathf.Approximately(threshold, 0))
+		        return magnitude > 0;
+
+	        return magnitude >= threshold;
+        }
+        
         /// <summary>
         /// Read the current value of the control and return it as an object.
         /// </summary>
