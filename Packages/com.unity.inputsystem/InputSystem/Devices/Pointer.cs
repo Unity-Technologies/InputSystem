@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
+        [InputControl(layout = "Delta", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
         [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f)]
@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem
         /// not <c>(2,2)</c> even though that's the value received from the event.
         /// </remarks>
         /// <seealso cref="InputControlExtensions.AccumulateValueInEvent"/>
-        public Vector2Control delta { get; protected set; }
+        public DeltaControl delta { get; protected set; }
 
         ////REVIEW: move this down to only TouchScreen?
         /// <summary>
@@ -206,7 +206,7 @@ namespace UnityEngine.InputSystem
         protected override void FinishSetup()
         {
             position = GetChildControl<Vector2Control>("position");
-            delta = GetChildControl<Vector2Control>("delta");
+            delta = GetChildControl<DeltaControl>("delta");
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
             press = GetChildControl<ButtonControl>("press");

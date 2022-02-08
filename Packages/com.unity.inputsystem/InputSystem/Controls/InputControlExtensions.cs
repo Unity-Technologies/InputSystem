@@ -1511,8 +1511,18 @@ namespace UnityEngine.InputSystem
                             m_NoiseMask += stateOffset;
                     }
                     else
-                        throw new InvalidOperationException(
-                            $"{eventType} event with state format {stateFormat} cannot be used with device '{m_Device}'");
+                    {
+                        // https://fogbugz.unity3d.com/f/cases/1395648/
+                        if (m_Device is Touchscreen && m_EventPtr.IsA<StateEvent>() &&
+                            StateEvent.FromUnchecked(m_EventPtr)->stateFormat == TouchState.Format)
+                        {
+                            // if GetStateOffsetForEvent(null, ...) return false on touchscreen it means that
+                            // we don't have a free slot for incoming touch, so ignore it for now
+                        }
+                        else
+                            throw new InvalidOperationException(
+                                $"{eventType} event with state format {stateFormat} cannot be used with device '{m_Device}'");
+                    }
                 }
 
                 // NOTE: We *could* run a CheckDefault() or even CheckCurrent() over the entire event here to rule

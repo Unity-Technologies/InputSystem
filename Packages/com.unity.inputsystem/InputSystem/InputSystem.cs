@@ -3160,7 +3160,7 @@ namespace UnityEngine.InputSystem
 
         ////FIXME: Unity is not calling this method if it's inside an #if block that is not
         ////       visible to the editor; that shouldn't be the case
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RunInitializeInPlayer()
         {
             // We're using this method just to make sure the class constructor is called
@@ -3393,12 +3393,11 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
-
-            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake

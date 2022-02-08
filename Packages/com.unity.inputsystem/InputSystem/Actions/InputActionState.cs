@@ -782,7 +782,7 @@ namespace UnityEngine.InputSystem
             // Wipe state.
             actionState->phase = toPhase;
             actionState->controlIndex = kInvalidIndex;
-            actionState->bindingIndex = 0;
+            actionState->bindingIndex = memory.actionBindingIndices[memory.actionBindingIndicesAndCounts[actionIndex]];
             actionState->interactionIndex = kInvalidIndex;
             actionState->startTime = 0;
             actionState->time = 0;
@@ -2639,7 +2639,6 @@ namespace UnityEngine.InputSystem
             where TValue : struct
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index is out of range");
 
             var value = default(TValue);
 
@@ -2685,18 +2684,27 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-                var control = controls[controlIndex];
-                Debug.Assert(control != null, "Control is null");
+                if (controlIndex != kInvalidIndex)
+                {
+                    var control = controls[controlIndex];
+                    Debug.Assert(control != null, "Control is null");
 
-                controlOfType = control as InputControl<TValue>;
-                if (controlOfType == null)
-                    throw new InvalidOperationException(
-                        $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
+                    controlOfType = control as InputControl<TValue>;
+                    if (controlOfType == null)
+                        throw new InvalidOperationException(
+                            $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
 
-                value = controlOfType.ReadValue();
+                    value = controlOfType.ReadValue();
+                }
             }
 
             // Run value through processors, if any.
+            return ApplyProcessors(bindingIndex, value, controlOfType);
+        }
+
+        internal TValue ApplyProcessors<TValue>(int bindingIndex, TValue value, InputControl<TValue> controlOfType = null)
+            where TValue : struct
+        {
             var processorCount = bindingStates[bindingIndex].processorCount;
             if (processorCount > 0)
             {
@@ -2918,10 +2926,9 @@ namespace UnityEngine.InputSystem
         internal object ReadValueAsObject(int bindingIndex, int controlIndex, bool ignoreComposites = false)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index is out of range");
 
             InputControl control = null;
-            object value;
+            object value = null;
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
@@ -2946,18 +2953,24 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-                control = controls[controlIndex];
-                Debug.Assert(control != null, "Control is null");
-                value = control.ReadValueAsObject();
+                if (controlIndex != kInvalidIndex)
+                {
+                    control = controls[controlIndex];
+                    Debug.Assert(control != null, "Control is null");
+                    value = control.ReadValueAsObject();
+                }
             }
 
-            // Run value through processors, if any.
-            var processorCount = bindingStates[bindingIndex].processorCount;
-            if (processorCount > 0)
+            if (value != null)
             {
-                var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
-                for (var i = 0; i < processorCount; ++i)
-                    value = processors[processorStartIndex + i].ProcessAsObject(value, control);
+                // Run value through processors, if any.
+                var processorCount = bindingStates[bindingIndex].processorCount;
+                if (processorCount > 0)
+                {
+                    var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
+                    for (var i = 0; i < processorCount; ++i)
+                        value = processors[processorStartIndex + i].ProcessAsObject(value, control);
+                }
             }
 
             return value;
