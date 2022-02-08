@@ -71,6 +71,9 @@ however, it has to be formatted properly to pass verification tests.
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
 
+### Added
+- Added support for SteelSeries Nimbus+ gamepad on Mac (Addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
+
 ## [1.3.0] - 2021-12-10
 
 ### Changed
