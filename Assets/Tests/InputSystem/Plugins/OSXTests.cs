@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.OSX;
 using UnityEngine.InputSystem.OSX.LowLevel;
 using UnityEngine.TestTools.Utils;
 
-internal class OSXTests
+internal class OSXTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]
