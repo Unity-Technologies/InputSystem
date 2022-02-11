@@ -85,7 +85,17 @@ namespace UnityEngine.InputSystem.Switch
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x20d6) // PowerA
-                    .WithCapability("productId", 0xa715)); // Fusion Wireless Arcade Stick							
+                    .WithCapability("productId", 0xa715)); // Fusion Wireless Arcade Stick	
+			InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x20d6) // PowerA
+                    .WithCapability("productId", 0xa714)); // NSW Spectra Wired Controller	
+			InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0f0d ) // Hori Co., Ltd
+                    .WithCapability("productId", 0x00aa)); // Real Arcade Pro
         #endif
         }
     }
