@@ -93,15 +93,15 @@ internal class SwitchTests : CoreTestsFixture
     [TestCase(0x0e6f, 0x0187)]
     [TestCase(0x20d6, 0xa712)]
     [TestCase(0x20d6, 0xa716)]
-    
+
     //these currently break Mac editor and standalone
     #if !(UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX)
-        [TestCase(0x0e6f, 0x0184)]
-        [TestCase(0x0e6f, 0x0188)]
-        [TestCase(0x20d6, 0xa714)]
-        [TestCase(0x20d6, 0xa715)]
+    [TestCase(0x0e6f, 0x0184)]
+    [TestCase(0x0e6f, 0x0188)]
+    [TestCase(0x20d6, 0xa714)]
+    [TestCase(0x20d6, 0xa715)]
     #endif
-    
+
     public void Devices_SupportsSwitchLikeControllers(int vendorId, int productId)
     {
         var hidDescriptor = new HID.HIDDeviceDescriptor
