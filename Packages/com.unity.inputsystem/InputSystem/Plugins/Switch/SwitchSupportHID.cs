@@ -25,17 +25,81 @@ namespace UnityEngine.InputSystem.Switch
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x0f0d) // Hori Co., Ltd
+                    .WithCapability("productId", 0x0092)); // Pokken Tournament DX Pro Pad
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0f0d) // Hori Co., Ltd
+                    .WithCapability("productId", 0x00aa)); // Real Arcade Pro
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0f0d) // Hori Co., Ltd
                     .WithCapability("productId", 0x00c1)); // HORIPAD for Nintendo Switch
             InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
                 new InputDeviceMatcher()
                     .WithInterface("HID")
-                    .WithCapability("vendorId", 0x20d6) // PowerA NSW Fusion Wired FightPad
-                    .WithCapability("productId", 0xa712));
+                    .WithCapability("vendorId", 0x0f0d) // Hori Co., Ltd
+                    .WithCapability("productId", 0x00dc)); // Fighting Commander
             InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
                 new InputDeviceMatcher()
                     .WithInterface("HID")
-                    .WithCapability("vendorId", 0x0e6f) // PDP Wired Fight Pad Pro: Mario
-                    .WithCapability("productId", 0x0185));
+                    .WithCapability("vendorId", 0x0f0d) // Hori Co., Ltd
+                    .WithCapability("productId", 0x00f6)); // HORI Wireless Switch Pad
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f) // PDP
+                    .WithCapability("productId", 0x0180)); // Faceoff Wired Pro Controller for Nintendo Switch
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f) // PDP
+                    .WithCapability("productId", 0x0185)); // Wired Fight Pad Pro
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f) // PDP
+                    .WithCapability("productId", 0x0186)); //  Afterglow Wireless Switch Controller - "Nintento Wireless Gamepad"
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f) // PDP
+                    .WithCapability("productId", 0x0187)); // Rock Candy Wired Controller for Nintendo Switch
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x20d6) // PowerA
+                    .WithCapability("productId", 0xa712)); // NSW Fusion Wired FightPad
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x20d6) // PowerA
+                    .WithCapability("productId", 0xa716)); // NSW Fusion Pro Controller
+
+            // gamepads below currently break Mac Editor and Standalone
+            #if !(UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX)
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f)     // PDP
+                    .WithCapability("productId", 0x0184));     // Faceoff Premiere Wired Pro Controller for Nintendo Switch
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f)     // PDP
+                    .WithCapability("productId", 0x0188));     // Afterglow Deluxe+ Audio Wired Controller
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x20d6)     // PowerA
+                    .WithCapability("productId", 0xa714));     // NSW Spectra Wired Controller
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x20d6)     // PowerA
+                    .WithCapability("productId", 0xa715));     // Fusion Wireless Arcade Stick
+            #endif
         #endif
         }
     }
