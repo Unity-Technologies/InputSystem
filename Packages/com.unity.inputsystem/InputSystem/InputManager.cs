@@ -3239,11 +3239,18 @@ namespace UnityEngine.InputSystem
                         //       new buffering scheme for input events working in the native runtime.
 
                         var nextEvent = m_InputEventStream.Peek();
-                        if (nextEvent != null && currentEventReadPtr->deviceId == nextEvent->deviceId)
+                        // If there is next event after current one.
+                        if ((nextEvent != null)
+                            // And if next event is for the same device.
+                            && (currentEventReadPtr->deviceId == nextEvent->deviceId)
+                            // And if next event is in the same timeslicing slot.
+                            && (timesliceEvents ? (nextEvent->internalTime < currentTime) : true)
+                        )
                         {
+                            // Then try to merge current event into next event.
                             if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                             {
-                                // Event was merged into next event, skipping.
+                                // And if succeeded, skip current event, as it was merged into next event.
                                 m_InputEventStream.Advance(false);
                                 continue;
                             }
