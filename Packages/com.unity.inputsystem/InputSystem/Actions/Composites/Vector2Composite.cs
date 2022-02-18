@@ -8,6 +8,7 @@ using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 ////TODO: add support for ramp up/down
@@ -200,6 +201,22 @@ namespace UnityEngine.InputSystem.Composites
         public override void OnGUI()
         {
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+        }
+
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+	        var modeField = new EnumField("Mode", target.mode)
+	        {
+		        tooltip = m_ModeLabel.text
+	        };
+
+	        modeField.RegisterValueChangedCallback(evt =>
+	        {
+		        target.mode = (Vector2Composite.Mode)evt.newValue;
+		        onChangedCallback();
+	        });
+
+	        root.Add(modeField);
         }
     }
     #endif
