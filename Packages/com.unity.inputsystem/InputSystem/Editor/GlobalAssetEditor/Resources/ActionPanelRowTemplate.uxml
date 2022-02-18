@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement name="item-row" style="flex-direction: column; flex-grow: 1; justify-content: center; margin-left: 16px;">
+        <ui:VisualElement name="row" style="flex-direction: row;">
+            <ui:VisualElement name="icon" style="justify-content: center; background-image: url(&apos;project://database/Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Gamepad.png?fileID=2800000&amp;guid=76dc61ff6c2d84b24b0a2ce01dc2842d&amp;type=3#d_Gamepad&apos;); width: 16px; height: 16px;" />
+            <ui:Label display-tooltip-when-elided="true" name="name" style="flex-grow: 1; justify-content: center; align-items: stretch; margin-left: 4px; -unity-font-style: bold;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
