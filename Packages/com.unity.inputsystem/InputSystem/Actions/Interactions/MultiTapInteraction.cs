@@ -1,8 +1,10 @@
+using System;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 ////TODO: add ability to respond to any of the taps in the sequence (e.g. one response for single tap, another for double tap)
@@ -197,6 +199,21 @@ namespace UnityEngine.InputSystem.Interactions
             m_TapDelaySetting.OnGUI();
             m_TapTimeSetting.OnGUI();
             m_PressPointSetting.OnGUI();
+        }
+
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+	        var tapCountField = new IntegerField(m_TapCountLabel.text) { value = target.tapCount };
+	        tapCountField.RegisterValueChangedCallback(evt =>
+	        {
+		        target.tapCount = evt.newValue;
+                onChangedCallback?.Invoke();
+	        });
+            root.Add(tapCountField);
+
+            m_TapDelaySetting.OnDrawVisualElements(root, onChangedCallback);
+            m_TapTimeSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
         private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");

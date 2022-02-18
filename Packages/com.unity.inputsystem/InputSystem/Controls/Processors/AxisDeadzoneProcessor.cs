@@ -1,7 +1,9 @@
+using System;
 using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 namespace UnityEngine.InputSystem.Processors
@@ -93,6 +95,12 @@ namespace UnityEngine.InputSystem.Processors
         {
             m_MinSetting.OnGUI();
             m_MaxSetting.OnGUI();
+        }
+
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
         private CustomOrDefaultSetting m_MinSetting;
