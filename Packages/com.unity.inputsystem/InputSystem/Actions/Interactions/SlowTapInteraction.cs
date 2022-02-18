@@ -1,8 +1,10 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 ////REVIEW: this is confusing when considered next to HoldInteraction; also it's confusingly named
@@ -88,6 +90,12 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_DurationSetting.OnGUI();
             m_PressPointSetting.OnGUI();
+        }
+
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+	        m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
+	        m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
         private CustomOrDefaultSetting m_DurationSetting;
