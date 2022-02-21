@@ -1,7 +1,8 @@
 {
-    "name": "Unity.InputSystem",
+    "name": "UnityEngine.Input",
+    "rootNamespace": "",
     "references": [
-        "Unity.ugui"
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -10,8 +11,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [     
-         {
+    "versionDefines": [
+        {
             "name": "com.unity.xr.oculus",
             "expression": "1.0.3",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"

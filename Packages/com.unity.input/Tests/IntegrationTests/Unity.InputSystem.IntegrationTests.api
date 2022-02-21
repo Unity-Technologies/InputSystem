@@ -1,0 +1,12 @@
+// This file is generated. Do not modify by hand.
+// XML documentation file not found. To check if public methods have XML comments,
+// make sure the XML doc file is present and located next to the scraped dll
+public class IntegrationTests
+{
+    public IntegrationTests() {}
+    [NUnit.Framework.Category(@"Integration")] [NUnit.Framework.Test] public void Integration_CanChangeInputBackendPlayerSettingInEditor();
+    [NUnit.Framework.Category(@"Integration")] [NUnit.Framework.Test] public void Integration_CanSendAndReceiveEvents();
+    [UnityEngine.Scripting.Preserve] public static void PreserveMethods();
+    [NUnit.Framework.Category(@"Integration")] [NUnit.Framework.Ignore(@"Unstable due to 1252825")] [System.Runtime.CompilerServices.IteratorStateMachine(typeof(IntegrationTests.<WindowsInput_MouseMovements_AreDetected>d__4))] [UnityEngine.TestTools.UnityTest] public System.Collections.IEnumerator WindowsInput_MouseMovements_AreDetected();
+    [NUnit.Framework.Category(@"Integration")] [NUnit.Framework.Ignore(@"Unstable due to 1252825")] [System.Runtime.CompilerServices.IteratorStateMachine(typeof(IntegrationTests.<WindowsInput_RemoteDesktopMouseMovements_AreDetected>d__3))] [UnityEngine.TestTools.UnityTest] public System.Collections.IEnumerator WindowsInput_RemoteDesktopMouseMovements_AreDetected();
+}

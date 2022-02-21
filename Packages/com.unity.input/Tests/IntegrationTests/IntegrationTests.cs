@@ -93,31 +93,11 @@ public class IntegrationTests
     [Category("Integration")]
     public void Integration_CanChangeInputBackendPlayerSettingInEditor()
     {
-        // Save current player settings so we can restore them.
-        var oldEnabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
-        var newEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
+        EditorPlayerSettingHelpers.activeInputHandler = EditorPlayerSettingHelpers.InputHandler.OldInputManager;
+        Assert.That(EditorPlayerSettingHelpers.activeInputHandler, Is.EqualTo(EditorPlayerSettingHelpers.InputHandler.OldInputManager));
 
-        // Enable new and disable old.
-        EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
-        Assert.That(EditorPlayerSettingHelpers.newSystemBackendsEnabled, Is.True);
-        Assert.That(EditorPlayerSettingHelpers.oldSystemBackendsEnabled, Is.False);
-
-        // Enable old and disable new.
-        EditorPlayerSettingHelpers.newSystemBackendsEnabled = false;
-        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = true;
-        Assert.That(EditorPlayerSettingHelpers.newSystemBackendsEnabled, Is.False);
-        Assert.That(EditorPlayerSettingHelpers.oldSystemBackendsEnabled, Is.True);
-
-        // Enable both.
-        EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = true;
-        Assert.That(EditorPlayerSettingHelpers.newSystemBackendsEnabled, Is.True);
-        Assert.That(EditorPlayerSettingHelpers.oldSystemBackendsEnabled, Is.True);
-
-        // Restore previous settings.
-        EditorPlayerSettingHelpers.oldSystemBackendsEnabled = oldEnabled;
-        EditorPlayerSettingHelpers.newSystemBackendsEnabled = newEnabled;
+        EditorPlayerSettingHelpers.activeInputHandler = EditorPlayerSettingHelpers.InputHandler.NewInputSystem;
+        Assert.That(EditorPlayerSettingHelpers.activeInputHandler, Is.EqualTo(EditorPlayerSettingHelpers.InputHandler.NewInputSystem));
     }
 
 #endif

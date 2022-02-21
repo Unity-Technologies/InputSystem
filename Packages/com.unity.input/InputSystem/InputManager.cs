@@ -2615,6 +2615,7 @@ namespace UnityEngine.InputSystem
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             InputUpdate.OnBeforeUpdate(updateType);
+            Input.NextFrame();
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.

@@ -97,6 +97,10 @@ namespace UnityEngine.InputSystem
                 InputSystem.settings.actions = new DefaultInputActions().asset;
                 InputSystem.settings.actions.Enable();
 
+                // Put UnityEngine.Input API into default state.
+                Input.Reset();
+                Input.OnEnteringPlayMode();
+
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
                 #if UNITY_EDITOR

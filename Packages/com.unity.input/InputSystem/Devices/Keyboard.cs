@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -40,6 +41,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         private const int kSizeInBits = Keyboard.KeyCount;
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;
+        internal const int kSizeInInts = (kSizeInBytes + 3) / 4;
 
         [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", sizeInBits = kSizeInBits - 1, synthetic = true)] // Exclude IMESelected.
         [InputControl(name = "escape", displayName = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
@@ -156,7 +158,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
         [InputControl(name = "IMESelected", layout = "Button", bit = (int)Key.IMESelected, synthetic = true)]
-        public fixed byte keys[kSizeInBytes];
+        public fixed byte keys[kSizeInInts * 4];
 
         public KeyboardState(params Key[] pressedKeys)
         {
@@ -174,7 +176,9 @@ namespace UnityEngine.InputSystem.LowLevel
         public void Set(Key key, bool state)
         {
             fixed(byte* keysPtr = keys)
-            MemoryHelpers.WriteSingleBit(keysPtr, (uint)key, state);
+            {
+                MemoryHelpers.WriteSingleBit(keysPtr, (uint)key, state);
+            }
         }
 
         public void Press(Key key)

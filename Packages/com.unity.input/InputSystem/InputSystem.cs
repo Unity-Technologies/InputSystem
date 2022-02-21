@@ -3267,6 +3267,13 @@ namespace UnityEngine.InputSystem
                 "InputSettings has lost its native object");
             #endif
 
+            // A really bad refactor in Player Settings "improved" the code by turning what used to be two individual
+            // bools for the backends into one single enum. So now we cannot affect one without also affecting the
+            // other.
+            #if UNITY_EDITOR
+            EditorPlayerSettingHelpers.activeInputHandler = EditorPlayerSettingHelpers.InputHandler.NewInputSystem;
+            #endif
+
             RunInitialUpdate();
 
             Profiler.EndSample();
@@ -3296,9 +3303,11 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     settings.actions?.Enable();
+                    Input.OnEnteringPlayMode();
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
+                    Input.Reset();
                     s_Manager.LeavePlayMode();
                     break;
 
