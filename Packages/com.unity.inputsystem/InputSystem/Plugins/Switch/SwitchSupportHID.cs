@@ -55,6 +55,11 @@ namespace UnityEngine.InputSystem.Switch
                 new InputDeviceMatcher()
                     .WithInterface("HID")
                     .WithCapability("vendorId", 0x0e6f) // PDP
+                    .WithCapability("productId", 0x0181)); // Faceoff Deluxe Wired Pro Controller for Nintendo Switch
+            InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
+                new InputDeviceMatcher()
+                    .WithInterface("HID")
+                    .WithCapability("vendorId", 0x0e6f) // PDP
                     .WithCapability("productId", 0x0185)); // Wired Fight Pad Pro
             InputSystem.RegisterLayoutMatcher<SwitchProControllerHID>(
                 new InputDeviceMatcher()

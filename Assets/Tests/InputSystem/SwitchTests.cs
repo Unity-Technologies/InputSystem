@@ -88,6 +88,7 @@ internal class SwitchTests : CoreTestsFixture
     [TestCase(0x0f0d, 0x00dc)]
     [TestCase(0x0f0d, 0x00f6)]
     [TestCase(0x0e6f, 0x0180)]
+    [TestCase(0x0e6f, 0x0181)]
     [TestCase(0x0e6f, 0x0185)]
     [TestCase(0x0e6f, 0x0186)]
     [TestCase(0x0e6f, 0x0187)]
