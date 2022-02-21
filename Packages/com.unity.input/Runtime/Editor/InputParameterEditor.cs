@@ -37,7 +37,6 @@ namespace UnityEngine.InputSystem.Editor
         /// changes value.</param>
         public virtual void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-
         }
 
         internal abstract void SetTarget(object target);
@@ -212,73 +211,73 @@ namespace UnityEngine.InputSystem.Editor
 
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
             {
-	            var value = m_GetValue();
+                var value = m_GetValue();
 
-	            if (m_UseDefaultValue)
-		            value = m_GetDefaultValue();
+                if (m_UseDefaultValue)
+                    value = m_GetDefaultValue();
 
-	            // If previous value was an epsilon away from default value, it most likely means that value was set by our own code down in this method.
-	            // Revert it back to default to show a nice readable value in UI.
-	            // ReSharper disable once CompareOfFloatsByEqualityOperator
-	            if ((value - float.Epsilon) == m_DefaultInitializedValue)
-		            value = m_DefaultInitializedValue;
+                // If previous value was an epsilon away from default value, it most likely means that value was set by our own code down in this method.
+                // Revert it back to default to show a nice readable value in UI.
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if ((value - float.Epsilon) == m_DefaultInitializedValue)
+                    value = m_DefaultInitializedValue;
 
-	            var container = new VisualElement();
-	            var settingsContainer = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                var container = new VisualElement();
+                var settingsContainer = new VisualElement { style = { flexDirection = FlexDirection.Row } };
 
 
-	            m_FloatField = new FloatField(m_ValueLabel.text) { value = value };
-	            m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
+                m_FloatField = new FloatField(m_ValueLabel.text) { value = value };
+                m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
                 m_FloatField.SetEnabled(!m_UseDefaultValue);
 
                 m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
 
-	            m_DefaultToggle = new Toggle("Default") { value = m_UseDefaultValue };
-	            m_DefaultToggle.RegisterValueChangedCallback(ToggleUseDefaultValue);
+                m_DefaultToggle = new Toggle("Default") { value = m_UseDefaultValue };
+                m_DefaultToggle.RegisterValueChangedCallback(ToggleUseDefaultValue);
 
 
-	            var buttonContainer = new VisualElement
-	            {
-		            style =
-		            {
-			            flexDirection = FlexDirection.RowReverse
-		            }
-	            };
-	            m_OpenInputSettingsButton = new Button(InputSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
+                var buttonContainer = new VisualElement
+                {
+                    style =
+                    {
+                        flexDirection = FlexDirection.RowReverse
+                    }
+                };
+                m_OpenInputSettingsButton = new Button(InputAdvancedSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
                 m_OpenInputSettingsButton.AddToClassList("open-settings-button");
                 buttonContainer.Add(m_OpenInputSettingsButton);
 
-	            settingsContainer.Add(m_FloatField);
-	            settingsContainer.Add(m_DefaultToggle);
+                settingsContainer.Add(m_FloatField);
+                settingsContainer.Add(m_DefaultToggle);
                 container.Add(settingsContainer);
                 container.Add(m_HelpBox);
                 container.Add(buttonContainer);
-                
+
                 root.Add(container);
             }
 
             private void ChangeSettingValue(ChangeEvent<float> evt)
             {
-	            if (m_UseDefaultValue) return;
+                if (m_UseDefaultValue) return;
 
-	            // ReSharper disable once CompareOfFloatsByEqualityOperator
-	            if (evt.newValue == m_DefaultInitializedValue)
-		            // If user sets a value that is equal to default initialized, change value slightly so it doesn't pass potential default checks.
-		            ////TODO: refactor all of this to use tri-state values instead, there is no obvious float value that we can use as default (well maybe NaN),
-		            ////so instead it would be better to have a separate bool to show if value is present or not.
-		            m_SetValue(evt.newValue + float.Epsilon);
-	            else
-		            m_SetValue(evt.newValue);
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (evt.newValue == m_DefaultInitializedValue)
+                    // If user sets a value that is equal to default initialized, change value slightly so it doesn't pass potential default checks.
+                    ////TODO: refactor all of this to use tri-state values instead, there is no obvious float value that we can use as default (well maybe NaN),
+                    ////so instead it would be better to have a separate bool to show if value is present or not.
+                    m_SetValue(evt.newValue + float.Epsilon);
+                else
+                    m_SetValue(evt.newValue);
             }
 
             private void ToggleUseDefaultValue(ChangeEvent<bool> evt)
             {
-	            if (evt.newValue != m_UseDefaultValue)
-	            {
-		            m_SetValue(!evt.newValue ? m_GetDefaultValue() : m_DefaultInitializedValue);
-	            }
+                if (evt.newValue != m_UseDefaultValue)
+                {
+                    m_SetValue(!evt.newValue ? m_GetDefaultValue() : m_DefaultInitializedValue);
+                }
 
-	            m_UseDefaultValue = evt.newValue;
+                m_UseDefaultValue = evt.newValue;
 
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
                 m_HelpBox.visible = m_UseDefaultValue;
@@ -337,7 +336,7 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button(m_OpenInputSettingsLabel, EditorStyles.miniButton))
-                        InputSettingsProvider.Open();
+                        InputAdvancedSettingsProvider.Open();
                     EditorGUILayout.EndHorizontal();
                 }
             }

@@ -115,11 +115,11 @@
 }
 
 .name-and-parameters-list-view .up {
-    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
+    background-image: resource('Packages/com.unity.input/Runtime/Editor/Icons/ChevronUp.png');
 }
 
 .name-and-parameters-list-view .down {
-    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronDown.png');
+    background-image: resource('Packages/com.unity.input/Runtime/Editor/Icons/ChevronDown.png');
 }
 
 .name-and-parameters-list-view .delete {

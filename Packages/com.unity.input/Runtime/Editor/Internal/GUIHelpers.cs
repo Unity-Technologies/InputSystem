@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
             public static readonly GUIStyle lineSeparator = new GUIStyle().WithFixedHeight(1).WithMargin(new RectOffset(0, 0, 2, 2));
         }
 
-        private const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+        private const string kIconPath = "Packages/com.unity.input/Runtime/Editor/Icons/";
 
         public static void DrawLineSeparator(string label = null)
         {

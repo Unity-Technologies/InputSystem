@@ -6,15 +6,15 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class BindingsPanelView : UIToolkitView
     {
-	    private const float TreeItemIndentPerLevel = 15;
+        private const float TreeItemIndentPerLevel = 15;
 
-	    private readonly VisualElement m_Root;
+        private readonly VisualElement m_Root;
 
-	    public BindingsPanelView(VisualElement root, StateContainer stateContainer)
-	        : base(stateContainer)
+        public BindingsPanelView(VisualElement root, StateContainer stateContainer)
+            : base(stateContainer)
         {
-	        m_Root = root;
-	        var bindingItemRowTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+            m_Root = root;
+            var bindingItemRowTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 GlobalInputActionsConstants.PackagePath +
                 GlobalInputActionsConstants.ResourcesPath +
                 GlobalInputActionsConstants.BindingsPanelRowTemplate);
@@ -30,9 +30,9 @@ namespace UnityEngine.InputSystem.Editor
                 var name = string.Empty;
                 if (binding.isPartOfComposite)
                     name = $"{ObjectNames.NicifyVariableName(binding.name)}: " +
-                           $"{InputControlPath.ToHumanReadableString(binding.path)}";
+                        $"{InputControlPath.ToHumanReadableString(binding.path)}";
                 else if (binding.isComposite)
-	                name = binding.name;
+                    name = binding.name;
                 else
                     name = InputControlPath.ToHumanReadableString(binding.path);
 
@@ -67,17 +67,17 @@ namespace UnityEngine.InputSystem.Editor
             };
             bindingsListView.onSelectionChange += _ =>
             {
-	            var viewState = (Selectors.BindingViewState)bindingsListView.selectedItem;
-	            stateContainer.Dispatch(Commands.SelectBinding(viewState.binding));
+                var viewState = (Selectors.BindingViewState)bindingsListView.selectedItem;
+                stateContainer.Dispatch(Commands.SelectBinding(viewState.binding));
             };
         }
 
         public override void CreateUI(GlobalInputActionsEditorState state)
         {
-	        var bindingsListView = m_Root.Q<ListView>("bindings-list-view");
-	        bindingsListView.itemsSource?.Clear();
-	        bindingsListView.itemsSource = Selectors.GetVisibleBindingsForSelectedAction(state).ToList();
-	        bindingsListView.Rebuild();
+            var bindingsListView = m_Root.Q<ListView>("bindings-list-view");
+            bindingsListView.itemsSource?.Clear();
+            bindingsListView.itemsSource = Selectors.GetVisibleBindingsForSelectedAction(state).ToList();
+            bindingsListView.Rebuild();
         }
     }
 }

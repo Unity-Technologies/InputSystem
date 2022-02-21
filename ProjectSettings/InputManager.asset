@@ -1,5 +1,39 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-4332531029497775728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46f07b5ed07e4e92aa78254188d3d10, type: 3}
+  m_Name: InputManager
+  m_EditorClassIdentifier: 
+  m_SupportedDevices: []
+  m_UpdateMode: 1
+  m_MaxEventBytesPerUpdate: 5242880
+  m_MaxQueuedEventsPerUpdate: 1000
+  m_CompensateForScreenOrientation: 1
+  m_BackgroundBehavior: 0
+  m_EditorInputBehaviorInPlayMode: 0
+  m_DefaultDeadzoneMin: 0.125
+  m_DefaultDeadzoneMax: 0.925
+  m_DefaultButtonPressPoint: 0.5
+  m_ButtonReleaseThreshold: 0.75
+  m_DefaultTapTime: 0.2
+  m_DefaultSlowTapTime: 0.5
+  m_DefaultHoldTime: 0.4
+  m_TapRadius: 5
+  m_MultiTapDelayTime: 0.75
+  m_DisableRedundantEventsMerging: 0
+  m_Actions: {fileID: 0}
+  m_iOSSettings:
+    m_MotionUsage:
+      m_Enabled: 0
+      m_Description: 
 --- !u!13 &1
 InputManager:
   m_ObjectHideFlags: 0
@@ -293,3 +327,191 @@ InputManager:
     type: 0
     axis: 0
     joyNum: 0
+  m_UsePhysicalKeys: 0
+--- !u!114 &4311115907849030464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39fa3d8997a24136984ca6e2c99902bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ActionMaps:
+  - m_Name: Player
+    m_Id: 6490ecbf-a3b5-4c4e-972f-95f42fa489d0
+    m_Asset: {fileID: 4311115907849030464}
+    m_Actions:
+    - m_Name: Horizontal
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: 435b669e-61be-4138-a876-5a347c1effde
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Vertical
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: 1291f370-2733-4c05-9813-925f8e06d4f7
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Fire1
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: 31374de3-a2df-4dfc-a742-596e646919e3
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Fire2
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: 10bfa082-1090-41da-acfe-9166f9764118
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Fire3
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: f16b16b6-1a74-47bf-9f18-6ccbb7bb9134
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Jump
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: dc32bb1c-1bb9-4af8-b477-fd3d5e52e31f
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Mouse X
+      m_Type: 0
+      m_ExpectedControlType: Axis
+      m_Id: 1dc193c7-4418-45fb-92c6-08a5c53b1d10
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Mouse Y
+      m_Type: 0
+      m_ExpectedControlType: Axis
+      m_Id: 0f24e3c5-56ee-4dea-b729-cb90bfc91bd5
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Mouse ScrollWheel
+      m_Type: 0
+      m_ExpectedControlType: Axis
+      m_Id: 40cd28a0-dacb-4420-bc05-8cbb8b229ddb
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Submit
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: 8327d147-f430-43cf-9638-bfc61ca66bdf
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    - m_Name: Cancel
+      m_Type: 1
+      m_ExpectedControlType: Button
+      m_Id: 79e8875f-c36b-49d8-a644-8bc279824f0a
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Bindings:
+    - m_Name: 1DAxis
+      m_Id: 9bbbb016-a17e-4a42-92d2-65ad00a71b91
+      m_Path: 1DAxis
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Horizontal
+      m_Flags: 4
+    - m_Name: Positive
+      m_Id: a787f507-abe2-4021-bb4b-bc5d2813d4ec
+      m_Path: <Keyboard>/d
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Horizontal
+      m_Flags: 8
+    - m_Name: Negative
+      m_Id: 0661be3d-9bdb-4406-b268-6157da4fa2af
+      m_Path: <Keyboard>/a
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Horizontal
+      m_Flags: 8
+    - m_Name: 1DAxis
+      m_Id: 4155ab1f-8bce-4c8b-90b9-c519e88ab228
+      m_Path: 1DAxis
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Vertical
+      m_Flags: 4
+    - m_Name: Positive
+      m_Id: 47de40cf-f623-4652-87a7-872acbf2a1c7
+      m_Path: <Keyboard>/w
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Vertical
+      m_Flags: 8
+    - m_Name: Negative
+      m_Id: 9dd556a3-6dba-4a20-89ba-9d06e92c69ba
+      m_Path: <Keyboard>/s
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Vertical
+      m_Flags: 8
+    - m_Name: 
+      m_Id: fa7d2329-dd19-4620-8b0c-09845cdf6a61
+      m_Path: <Keyboard>/space
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Jump
+      m_Flags: 0
+    - m_Name: 
+      m_Id: 7996a6e4-fcfd-4f73-9850-d2e6bba8e9bd
+      m_Path: <Keyboard>/enter
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Submit
+      m_Flags: 0
+    - m_Name: 
+      m_Id: 3f33696d-5129-4a14-8950-a3f02cf0bc07
+      m_Path: <Keyboard>/space
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Submit
+      m_Flags: 0
+    - m_Name: 
+      m_Id: 4395d905-caf3-49ee-b6f3-df2e32d0e48c
+      m_Path: <Keyboard>/escape
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Cancel
+      m_Flags: 0
+  m_ControlSchemes: []

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -61,37 +61,37 @@ namespace UnityEngine.InputSystem.Editor
 
         public bool Equals(SerializedInputBinding other)
         {
-	        return name == other.name 
-	               && path == other.path
-	               && interactions == other.interactions
-	               && processors == other.processors
-	               && action == other.action
-	               && flags == other.flags
-	               && indexOfBinding == other.indexOfBinding
-	               && isComposite == other.isComposite
-	               && isPartOfComposite == other.isPartOfComposite
-	               && compositePath == other.compositePath;
+            return name == other.name
+                && path == other.path
+                && interactions == other.interactions
+                && processors == other.processors
+                && action == other.action
+                && flags == other.flags
+                && indexOfBinding == other.indexOfBinding
+                && isComposite == other.isComposite
+                && isPartOfComposite == other.isPartOfComposite
+                && compositePath == other.compositePath;
         }
 
         public override bool Equals(object obj)
         {
-	        return obj is SerializedInputBinding other && Equals(other);
+            return obj is SerializedInputBinding other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-	        var hashCode = new HashCode();
-	        hashCode.Add(name);
-	        hashCode.Add(path);
-	        hashCode.Add(interactions);
-	        hashCode.Add(processors);
-	        hashCode.Add(action);
-	        hashCode.Add((int)flags);
-	        hashCode.Add(indexOfBinding);
-	        hashCode.Add(isComposite);
-	        hashCode.Add(isPartOfComposite);
-	        hashCode.Add(compositePath);
-	        return hashCode.ToHashCode();
+            var hashCode = new HashCode();
+            hashCode.Add(name);
+            hashCode.Add(path);
+            hashCode.Add(interactions);
+            hashCode.Add(processors);
+            hashCode.Add(action);
+            hashCode.Add((int)flags);
+            hashCode.Add(indexOfBinding);
+            hashCode.Add(isComposite);
+            hashCode.Add(isPartOfComposite);
+            hashCode.Add(compositePath);
+            return hashCode.ToHashCode();
         }
     }
 }

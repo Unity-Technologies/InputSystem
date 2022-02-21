@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -14,8 +14,8 @@ namespace UnityEngine.InputSystem.Editor
         public static IEnumerable<string> GetActionMapNames(GlobalInputActionsEditorState state)
         {
             return state.serializedObject
-               ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-               ?.Select(m => m.FindPropertyRelative(nameof(InputActionMap.m_Name))?.stringValue)
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                ?.Select(m => m.FindPropertyRelative(nameof(InputActionMap.m_Name))?.stringValue)
                 ?? Enumerable.Empty<string>();
         }
 
@@ -38,23 +38,23 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedInputActionMap GetSelectedActionMap(GlobalInputActionsEditorState state)
         {
-	        return new SerializedInputActionMap(state.serializedObject
-		        ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-		        ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value));
+            return new SerializedInputActionMap(state.serializedObject
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value));
         }
 
         public struct BindingViewState
         {
-	        public SerializedInputBinding binding { get; }
-	        public bool isExpanded { get; }
+            public SerializedInputBinding binding { get; }
+            public bool isExpanded { get; }
 
-	        public BindingViewState(SerializedInputBinding binding, bool isExpanded)
-	        {
-		        this.binding = binding;
-		        this.isExpanded = isExpanded;
-	        }
+            public BindingViewState(SerializedInputBinding binding, bool isExpanded)
+            {
+                this.binding = binding;
+                this.isExpanded = isExpanded;
+            }
         }
-        
+
         /// <summary>
         /// Return a collection of the bindings that should be rendered in the view based on the selected action map, selected action,
         /// and expanded state.
@@ -63,50 +63,50 @@ namespace UnityEngine.InputSystem.Editor
         /// <returns></returns>
         public static IEnumerable<BindingViewState> GetVisibleBindingsForSelectedAction(GlobalInputActionsEditorState state)
         {
-	        var actionMap = state.serializedObject
-		        .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-		        .GetArrayElementAtIndex(state.selectedActionMapIndex.value);
-	        var selectedAction = new SerializedInputAction(
-		        actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-					.GetArrayElementAtIndex(state.selectedActionIndex.value));
-            
-	        var bindings = actionMap
-		        .FindPropertyRelative(nameof(InputActionMap.m_Bindings))
-		        .Select(sp => new SerializedInputBinding(sp))
-		        .Where(sp => sp.action == selectedAction.name);
+            var actionMap = state.serializedObject
+                .FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                .GetArrayElementAtIndex(state.selectedActionMapIndex.value);
+            var selectedAction = new SerializedInputAction(
+                actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                    .GetArrayElementAtIndex(state.selectedActionIndex.value));
 
-	        var expandedStates = state.GetOrCreateExpandedState();
-	        var indexOfPreviousComposite = -1;
+            var bindings = actionMap
+                .FindPropertyRelative(nameof(InputActionMap.m_Bindings))
+                .Select(sp => new SerializedInputBinding(sp))
+                .Where(sp => sp.action == selectedAction.name);
+
+            var expandedStates = state.GetOrCreateExpandedState();
+            var indexOfPreviousComposite = -1;
             foreach (var binding in bindings)
-	        {
-		        if (binding.isComposite)
-		        {
-			        indexOfPreviousComposite = binding.indexOfBinding;
-			        yield return new BindingViewState(binding, expandedStates.Contains(indexOfPreviousComposite));
-		        }
-		        else
-		        {
-			        if (binding.isPartOfComposite)
-			        {
-				        if (expandedStates.Contains(indexOfPreviousComposite) == false)
-						   continue;
+            {
+                if (binding.isComposite)
+                {
+                    indexOfPreviousComposite = binding.indexOfBinding;
+                    yield return new BindingViewState(binding, expandedStates.Contains(indexOfPreviousComposite));
+                }
+                else
+                {
+                    if (binding.isPartOfComposite)
+                    {
+                        if (expandedStates.Contains(indexOfPreviousComposite) == false)
+                            continue;
 
-				        yield return new BindingViewState(binding, false);
-			        }
-			        else
-			        {
-				        yield return new BindingViewState(binding, false);
-			        }
-		        }
-	        }
+                        yield return new BindingViewState(binding, false);
+                    }
+                    else
+                    {
+                        yield return new BindingViewState(binding, false);
+                    }
+                }
+            }
         }
 
         public static SerializedProperty GetSelectedBindingPath(GlobalInputActionsEditorState state)
         {
-	        var actionMapSO = state.serializedObject
+            var actionMapSO = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
                 ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value);
-            
+
             return actionMapSO?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
                 ?.GetArrayElementAtIndex(state.selectedBindingIndex.value)
                 ?.FindPropertyRelative("m_Path");
@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem.Editor
             var selectedCompositeIndex = -1;
             var currentIndex = 0;
             foreach (var composite in InputBindingComposite.s_Composites.internedNames.Where(x =>
-                         !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
+                !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
                 if (!string.IsNullOrEmpty(expectedControlLayout))
                 {
@@ -175,11 +175,11 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedInputAction GetSelectedAction(GlobalInputActionsEditorState state)
         {
-	        return new SerializedInputAction(state.serializedObject
-	            ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-	            ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value)
-	            ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-	            ?.GetArrayElementAtIndex(state.selectedActionIndex.value));
+            return new SerializedInputAction(state.serializedObject
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value)
+                ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                ?.GetArrayElementAtIndex(state.selectedActionIndex.value));
         }
 
         public static IEnumerable<string> BuildSortedControlList(InputActionType selectedActionType)
@@ -260,7 +260,7 @@ namespace UnityEngine.InputSystem.Editor
                 .Select(p => (interaction: p, rowType: typeLookup(p.name)))
                 .Select(t =>
                 {
-                    var (parameter, rowType) = t;
+                    var(parameter, rowType) = t;
 
                     var parameterListView = new ParameterListView();
                     parameterListView.Initialize(rowType, parameter.parameters);

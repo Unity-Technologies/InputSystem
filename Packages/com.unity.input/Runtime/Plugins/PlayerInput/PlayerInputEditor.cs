@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class PlayerInputEditor : UnityEditor.Editor
     {
         public const string kDefaultInputActionsAssetPath =
-            "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+            "Packages/com.unity.input/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions";
 
         public void OnEnable()
         {
@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.BeginHorizontal();
 
             if (GUILayout.Button(m_OpenSettingsText, EditorStyles.miniButton))
-                InputSettingsProvider.Open();
+                InputAdvancedSettingsProvider.Open();
 
             if (GUILayout.Button(m_OpenDebuggerText, EditorStyles.miniButton))
                 InputDebuggerWindow.CreateOrShow();

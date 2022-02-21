@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Packages/com.unity.inputsystem/InputSystem/Editor/GlobalAssetEditor/Resources/GlobalInputActionsEditorStyles.uss?fileID=7433441132597879392&amp;guid=7dac9c49a90bca4499371d0adc9b617b&amp;type=3#GlobalInputActionsEditorStyles" />
+    <Style src="project://database/Packages/com.unity.input/Runtime/Editor/GlobalAssetEditor/Resources/GlobalInputActionsEditorStyles.uss?fileID=7433441132597879392&amp;guid=7dac9c49a90bca4499371d0adc9b617b&amp;type=3#GlobalInputActionsEditorStyles" />
     <ui:VisualElement name="header" class="header">
-        <ui:Label text="Global Input Actions" display-tooltip-when-elided="true" name="title-label" class="header-label" style="width: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
+        <ui:Label text="Input Actions" display-tooltip-when-elided="true" name="title-label" class="header-label" style="width: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
         <uie:ToolbarSearchField focusable="true" name="search-actions-text-field" class="search-field" />
     </ui:VisualElement>
     <ui:VisualElement name="body" style="flex-direction: column; flex-grow: 1;">

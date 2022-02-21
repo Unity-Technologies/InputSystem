@@ -203,12 +203,12 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-	        var tapCountField = new IntegerField(m_TapCountLabel.text) { value = target.tapCount };
-	        tapCountField.RegisterValueChangedCallback(evt =>
-	        {
-		        target.tapCount = evt.newValue;
+            var tapCountField = new IntegerField(m_TapCountLabel.text) { value = target.tapCount };
+            tapCountField.RegisterValueChangedCallback(evt =>
+            {
+                target.tapCount = evt.newValue;
                 onChangedCallback?.Invoke();
-	        });
+            });
             root.Add(tapCountField);
 
             m_TapDelaySetting.OnDrawVisualElements(root, onChangedCallback);

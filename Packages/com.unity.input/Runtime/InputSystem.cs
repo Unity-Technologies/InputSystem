@@ -2839,7 +2839,7 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
                 {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                    EditorBuildSettings.AddConfigObject(InputAdvancedSettingsProvider.kEditorBuildSettingsConfigKey,
                         value, true);
                 }
                 #endif
@@ -3240,7 +3240,7 @@ namespace UnityEngine.InputSystem
 
                 // See if we have a remembered settings object.
                 // NOTE: This is a legacy path for the case where there's an explicit .inputsettings asset in the project.
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
+                if (EditorBuildSettings.TryGetConfigObject(InputAdvancedSettingsProvider.kEditorBuildSettingsConfigKey,
                     out InputSettings settingsAsset))
                 {
                     SwitchToSettings(settingsAsset);
@@ -3355,7 +3355,7 @@ namespace UnityEngine.InputSystem
             ////TODO: use dirty count to find whether settings have actually changed
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
-            InputSettingsProvider.ForceReload();
+            InputAdvancedSettingsProvider.ForceReload();
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.

@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal struct GlobalInputActionsEditorState
+    internal struct GlobalInputActionsEditorState
     {
         private Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
 
@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public SerializedObject serializedObject { get; private set; }
         public SerializedProperty actionMaps { get; private set; }
-        
+
 
         public GlobalInputActionsEditorState(SerializedObject inputActionAsset)
         {
@@ -36,9 +36,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public SerializedProperty GetActionMapByName(string actionMapName)
         {
-	        return serializedObject
-		        .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-		        .FirstOrDefault(p => p.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue == actionMapName);
+            return serializedObject
+                .FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                .FirstOrDefault(p => p.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue == actionMapName);
         }
 
         public void ExpandCompositeBinding(SerializedInputBinding binding)
@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void CollapseCompositeBinding(SerializedInputBinding binding)
         {
-	        var key = GetSelectedActionMapAndActionKey();
+            var key = GetSelectedActionMapAndActionKey();
 
             if (m_ExpandedCompositeBindings.ContainsKey(key) == false)
                 throw new InvalidOperationException("Trying to collapse a composite binding tree that was never expanded.");
@@ -59,25 +59,25 @@ namespace UnityEngine.InputSystem.Editor
 
         public void SelectAction(string actionName)
         {
-	        var actionMap = GetSelectedActionMap();
-	        var actions = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            var actionMap = GetSelectedActionMap();
+            var actions = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
 
-	        for (var i = 0; i < actions.arraySize; i++)
-	        {
-		        if (actions.GetArrayElementAtIndex(i).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue !=
-		            actionName) continue;
+            for (var i = 0; i < actions.arraySize; i++)
+            {
+                if (actions.GetArrayElementAtIndex(i).FindPropertyRelative(nameof(InputAction.m_Name)).stringValue !=
+                    actionName) continue;
 
-		        selectedActionIndex.value = i;
-		        selectionType.value = SelectionType.Action;
-		        break;
-	        }
+                selectedActionIndex.value = i;
+                selectionType.value = SelectionType.Action;
+                break;
+            }
         }
 
         public HashSet<int> GetOrCreateExpandedState()
         {
-	        var key = GetSelectedActionMapAndActionKey();
+            var key = GetSelectedActionMapAndActionKey();
 
-	        if (m_ExpandedCompositeBindings.TryGetValue(key, out var expandedStates))
+            if (m_ExpandedCompositeBindings.TryGetValue(key, out var expandedStates))
                 return expandedStates;
 
             expandedStates = new HashSet<int>();
@@ -87,37 +87,37 @@ namespace UnityEngine.InputSystem.Editor
 
         public void SelectActionMap(string actionMapName)
         {
-	        var actionMap = GetActionMapByName(actionMapName);
-	        selectedBindingIndex.SetValueWithoutChangeNotification(0);
-	        selectedActionMapIndex.value = actionMap.GetIndexOfArrayElement();
+            var actionMap = GetActionMapByName(actionMapName);
+            selectedBindingIndex.SetValueWithoutChangeNotification(0);
+            selectedActionMapIndex.value = actionMap.GetIndexOfArrayElement();
         }
 
         private (string, string) GetSelectedActionMapAndActionKey()
         {
-	        var selectedActionMap = GetSelectedActionMap();
+            var selectedActionMap = GetSelectedActionMap();
 
-	        var selectedAction = selectedActionMap
-		        .FindPropertyRelative(nameof(InputActionMap.m_Actions))
-		        .GetArrayElementAtIndex(selectedActionIndex.value);
+            var selectedAction = selectedActionMap
+                .FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                .GetArrayElementAtIndex(selectedActionIndex.value);
 
-	        var key = (
-		        selectedActionMap.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue,
-		        selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue
-	        );
-	        return key;
+            var key = (
+                selectedActionMap.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue,
+                selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue
+            );
+            return key;
         }
 
         private SerializedProperty GetSelectedActionMap()
         {
-	        return serializedObject
-		        .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-		        .GetArrayElementAtIndex(selectedActionMapIndex.value);
+            return serializedObject
+                .FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                .GetArrayElementAtIndex(selectedActionMapIndex.value);
         }
     }
 
     internal enum SelectionType
     {
-	    Action,
-	    Binding
+        Action,
+        Binding
     }
 }
