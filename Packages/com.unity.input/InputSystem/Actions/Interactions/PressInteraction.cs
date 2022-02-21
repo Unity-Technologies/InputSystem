@@ -1,9 +1,11 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 ////TODO: protect against the control *hovering* around the press point; this should not fire the press repeatedly; probably need a zone around the press point
@@ -213,6 +215,21 @@ namespace UnityEngine.InputSystem.Interactions
             EditorGUILayout.HelpBox(s_HelpBoxText);
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
             m_PressPointSetting.OnGUI();
+        }
+
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            root.Add(new HelpBox(s_HelpBoxText.text, HelpBoxMessageType.None));
+
+            var behaviourDropdown = new EnumField(s_PressBehaviorLabel.text, target.behavior);
+            behaviourDropdown.RegisterValueChangedCallback(evt =>
+            {
+	            target.behavior = (PressBehavior)evt.newValue;
+                onChangedCallback?.Invoke();
+            });
+            root.Add(behaviourDropdown);
+
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
         private CustomOrDefaultSetting m_PressPointSetting;
