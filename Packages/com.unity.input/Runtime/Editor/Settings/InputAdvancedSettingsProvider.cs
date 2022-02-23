@@ -1,10 +1,8 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
@@ -15,8 +13,9 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputAdvancedSettingsProvider : SettingsProvider, IDisposable
     {
-        public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
         public const string kSettingsPath = "Project/Input/Advanced";
+        // Refers to legacy path.
+        public const string kEditorBuildSettingsConfigKey = "com.unity.inputsystem.settings";
 
         public static void Open()
         {
@@ -55,143 +54,73 @@ namespace UnityEngine.InputSystem.Editor
             m_SettingsObject?.Dispose();
         }
 
-        public override void OnTitleBarGUI()
-        {
-            if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
-            {
-                var menu = new GenericMenu();
-                menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
-                menu.AddSeparator("");
-                for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
-                    menu.AddItem(new GUIContent(m_AvailableSettingsAssetsOptions[i]), m_CurrentSelectedInputSettingsAsset == i, (path) => {
-                        InputSystem.settings = AssetDatabase.LoadAssetAtPath<InputSettings>((string)path);
-                    }, m_AvailableInputSettingsAssets[i]);
-                menu.AddSeparator("");
-                menu.AddItem(new GUIContent("New Settings Asset…"), false, CreateNewSettingsAsset);
-                menu.ShowAsContext();
-                Event.current.Use();
-            }
-        }
-
         public override void OnGUI(string searchContext)
         {
             InitializeWithCurrentSettingsIfNecessary();
 
-            if (m_AvailableInputSettingsAssets.Length == 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
-                    MessageType.Info);
-                if (GUILayout.Button("Create settings asset", GUILayout.Height(30)))
-                    CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
-                GUILayout.Space(20);
-            }
+            EditorGUILayout.Space();
+            EditorGUILayout.Separator();
+            EditorGUILayout.Space();
 
-            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
-            {
-                EditorGUILayout.Space();
-                EditorGUILayout.Separator();
-                EditorGUILayout.Space();
+            Debug.Assert(m_Settings != null);
 
-                Debug.Assert(m_Settings != null);
+            EditorGUI.BeginChangeCheck();
 
-                EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+            var runInBackground = Application.runInBackground;
+            using (new EditorGUI.DisabledScope(!runInBackground))
+                EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
+            if (!runInBackground)
+                EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
 
-                EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
-                var runInBackground = Application.runInBackground;
-                using (new EditorGUI.DisabledScope(!runInBackground))
-                    EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
-                if (!runInBackground)
-                    EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
 
-                EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
+            // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
+            //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
+            //       development players.
 
-                // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
-                //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
-                //       development players.
+            EditorGUILayout.Space();
+            EditorGUILayout.Separator();
+            EditorGUILayout.Space();
 
-                EditorGUILayout.Space();
-                EditorGUILayout.Separator();
-                EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
+            EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
+            EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
+            EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
+            EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
+            EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
+            EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
+            EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
+            EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
 
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
-                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
-                EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
-                EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
-                EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
-                EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
-                EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
-                EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
+            EditorGUILayout.Space();
+            EditorGUILayout.Separator();
+            EditorGUILayout.Space();
 
-                EditorGUILayout.Space();
-                EditorGUILayout.Separator();
-                EditorGUILayout.Space();
+            EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
+                + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
+                + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
+                + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
-                EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
-                    + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                    + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
-                    + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
+            m_SupportedDevices.DoLayoutList();
 
-                m_SupportedDevices.DoLayoutList();
+            EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
+            EditorGUILayout.Space();
+            m_iOSProvider.OnGUI();
 
-                EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
-                EditorGUILayout.Space();
-                m_iOSProvider.OnGUI();
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
 
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
-                EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
-
-                if (EditorGUI.EndChangeCheck())
-                    Apply();
-            }
+            if (EditorGUI.EndChangeCheck())
+                Apply();
         }
 
         private static void ShowPlatformSettings()
         {
             // Would be nice to get BuildTargetDiscovery.GetBuildTargetInfoList since that contains information about icons etc
-        }
-
-        private static void CreateNewSettingsAsset(string relativePath)
-        {
-            // Create settings file.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            AssetDatabase.CreateAsset(settings, relativePath);
-            EditorGUIUtility.PingObject(settings);
-            // Install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
-            // will cause us to re-initialize.
-            InputSystem.settings = settings;
-        }
-
-        private static void CreateNewSettingsAsset()
-        {
-            // Query for file name.
-            var projectName = PlayerSettings.productName;
-            var path = EditorUtility.SaveFilePanel("Create Input Settings File", "Assets",
-                projectName + ".inputsettings", "asset");
-            if (string.IsNullOrEmpty(path))
-                return;
-
-            // Make sure the path is in the Assets/ folder.
-            path = path.Replace("\\", "/"); // Make sure we only get '/' separators.
-            var dataPath = Application.dataPath + "/";
-            if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
-            {
-                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
-                return;
-            }
-
-            // Make sure it ends with .asset.
-            var extension = Path.GetExtension(path);
-            if (string.Compare(extension, ".asset", StringComparison.InvariantCultureIgnoreCase) != 0)
-                path += ".asset";
-
-            // Create settings file.
-            var relativePath = "Assets/" + path.Substring(dataPath.Length);
-            CreateNewSettingsAsset(relativePath);
         }
 
         private void InitializeWithCurrentSettingsIfNecessary()
@@ -207,51 +136,9 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         private void InitializeWithCurrentSettings()
         {
-            // Find the set of available assets in the project.
-            m_AvailableInputSettingsAssets = FindInputSettingsInProject();
-
             // See which is the active one.
             m_Settings = InputSystem.settings;
             m_SettingsDirtyCount = EditorUtility.GetDirtyCount(m_Settings);
-            var currentSettingsPath = AssetDatabase.GetAssetPath(m_Settings);
-            if (string.IsNullOrEmpty(currentSettingsPath))
-            {
-                if (m_AvailableInputSettingsAssets.Length != 0)
-                {
-                    m_CurrentSelectedInputSettingsAsset = 0;
-                    m_Settings = AssetDatabase.LoadAssetAtPath<InputSettings>(m_AvailableInputSettingsAssets[0]);
-                    InputSystem.settings = m_Settings;
-                }
-            }
-            else
-            {
-                m_CurrentSelectedInputSettingsAsset = ArrayHelpers.IndexOf(m_AvailableInputSettingsAssets, currentSettingsPath);
-                if (m_CurrentSelectedInputSettingsAsset == -1)
-                {
-                    // This is odd and shouldn't happen. Solve by just adding the path to the list.
-                    m_CurrentSelectedInputSettingsAsset =
-                        ArrayHelpers.Append(ref m_AvailableInputSettingsAssets, currentSettingsPath);
-                }
-
-                ////REVIEW: should we store this by platform?
-                EditorBuildSettings.AddConfigObject(kEditorBuildSettingsConfigKey, m_Settings, true);
-            }
-
-            // Refresh the list of assets we display in the UI.
-            m_AvailableSettingsAssetsOptions = new GUIContent[m_AvailableInputSettingsAssets.Length];
-            for (var i = 0; i < m_AvailableInputSettingsAssets.Length; ++i)
-            {
-                var name = m_AvailableInputSettingsAssets[i];
-                if (name.StartsWith("Assets/"))
-                    name = name.Substring("Assets/".Length);
-                if (name.EndsWith(".asset"))
-                    name = name.Substring(0, name.Length - ".asset".Length);
-                if (name.EndsWith(".inputsettings"))
-                    name = name.Substring(0, name.Length - ".inputsettings".Length);
-
-                // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
-                m_AvailableSettingsAssetsOptions[i] = new GUIContent(name.Replace("/", "\u29f8"));
-            }
 
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
@@ -376,16 +263,6 @@ namespace UnityEngine.InputSystem.Editor
             Repaint();
         }
 
-        /// <summary>
-        /// Find all <see cref="InputSettings"/> stored in assets in the current project.
-        /// </summary>
-        /// <returns>List of input settings in project.</returns>
-        private static string[] FindInputSettingsInProject()
-        {
-            var guids = AssetDatabase.FindAssets("t:InputSettings");
-            return guids.Select(guid => AssetDatabase.GUIDToAssetPath(guid)).ToArray();
-        }
-
         [SerializeField] private InputSettings m_Settings;
         [SerializeField] private bool m_SettingsIsNotAnAsset;
 
@@ -411,7 +288,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private int m_CurrentSelectedInputSettingsAsset;
 
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
-        [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
         private GUIContent m_CompensateForScreenOrientationContent;

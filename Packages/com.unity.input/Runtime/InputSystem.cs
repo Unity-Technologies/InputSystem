@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -2837,7 +2838,8 @@ namespace UnityEngine.InputSystem
 
                 // In the editor, we keep track of the settings asset through EditorBuildSettings.
                 #if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                var assetPath = AssetDatabase.GetAssetPath(value);
+                if (!string.IsNullOrEmpty(assetPath) && assetPath != InputSettings.kProjectSettings)
                 {
                     EditorBuildSettings.AddConfigObject(InputAdvancedSettingsProvider.kEditorBuildSettingsConfigKey,
                         value, true);
@@ -3251,7 +3253,31 @@ namespace UnityEngine.InputSystem
                     var settings = AssetDatabase.LoadAssetAtPath<InputSettings>(InputSettings.kProjectSettings);
                     if (settings == null)
                     {
-                        settings = LegacyInputManagerMigration.MigrateLegacyInputManager();
+                        // This is a crude check to determine whether we are looking at a blank project or an ongoing project.
+                        // In the first case, we want to *not* migrate InputManager.asset contents from the legacy system
+                        // but instead use DefaultInputActions to populate global actions.
+                        // In the second case, we want to migrate the existing InputAxis setup found in the InputManager
+                        // object in InputManager.asset.
+                        // NOTE: We do this only once the first time we encounter a project that hasn't seen us installing
+                        //       input system stuff in InputManager.asset.
+                        var csAssets = AssetDatabase.FindAssets("*.cs");
+                        // Unity will filter out .cs files from packages but won't catch anything like *.cs.cs or *.cs.bak.
+                        // Unfortunately, com.unity.visualscripting has a .cs.cs file in it. Work around this here by simply
+                        // filtering out anything that might be slipping through from packages.
+                        if (csAssets.Length > 0 && !csAssets.All(c => AssetDatabase.GUIDToAssetPath(c).StartsWith("Packages/")))
+                        {
+                            settings = LegacyInputManagerMigration.MigrateLegacyInputManager();
+                        }
+                        else
+                        {
+                            settings = ScriptableObject.CreateInstance<InputSettings>();
+                            settings.actions = new DefaultInputActions().asset;
+
+                            AssetDatabase.AddObjectToAsset(settings.actions, InputSettings.kProjectSettings);
+                            AssetDatabase.AddObjectToAsset(settings, InputSettings.kProjectSettings);
+                            AssetDatabase.SaveAssets();
+                        }
+
                         SwitchToSettings(settings);
                     }
                 }
@@ -3302,7 +3328,6 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-                    settings.actions?.Enable();
                     Input.OnEnteringPlayMode();
                     break;
 

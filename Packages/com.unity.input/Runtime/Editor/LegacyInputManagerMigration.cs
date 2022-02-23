@@ -16,6 +16,12 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class LegacyInputManagerMigration
     {
+        [MenuItem("Tests/Convert Legacy Input Stuff")]
+        public static void ConvertLegacyInputStuff()
+        {
+            InputSystem.settings = MigrateLegacyInputManager();
+        }
+
         /// <summary>
         /// Loads the <c>InputManager</c> object at <c>ProjectSettings/InputManager.asset</c> and
         /// creates and <see cref="InputSettings"/> object from it complete with a newly created
@@ -140,7 +146,8 @@ namespace UnityEngine.InputSystem.Editor
         // SerializedProperty to work around that.
         private static string LegacyInputManagerToJson()
         {
-            var legacyInputManager = AssetDatabase.LoadMainAssetAtPath(InputSettings.kProjectSettings);
+            var objects = AssetDatabase.LoadAllAssetsAtPath(InputSettings.kProjectSettings);
+            var legacyInputManager = objects.First(o => o.name == "InputManager");
             var obj = new SerializedObject(legacyInputManager);
 
             var buffer = new StringBuilder();

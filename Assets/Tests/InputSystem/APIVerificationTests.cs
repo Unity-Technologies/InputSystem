@@ -556,7 +556,7 @@ class APIVerificationTests
     [TestCase("DualShock4GamepadHID", "Plugins/DualShock/FastDualShock4GamepadHID.cs")]
     public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
     {
-        var fullPath = "Packages/com.unity.inputsystem/InputSystem/" + filePath;
+        var fullPath = "Packages/com.unity.input/Runtime/" + filePath;
         var existingCode = File.ReadAllText(fullPath);
 
         // May be a git checkout with CRLF auto-conversion on. Strip all '\r' characters.
@@ -951,8 +951,8 @@ class APIVerificationTests
     [Category("API")]
     public void API_DocumentationManualDoesNotHaveMissingOrUnusedImages()
     {
-        const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";
-        const string imagesPath = "Packages/com.unity.inputsystem/Documentation~/images/";
+        const string docsPath = "Packages/com.unity.input/Documentation~/";
+        const string imagesPath = "Packages/com.unity.input/Documentation~/images/";
         var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
 
         // Add files here if you want to ignore them being unreferenced.
@@ -1037,7 +1037,7 @@ class APIVerificationTests
     [Category("API")]
     public void API_DefaultInputActionsClassIsUpToDate()
     {
-        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        const string assetFile = "Packages/com.unity.input/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions";
         Assert.That(File.Exists(assetFile), Is.True);
 
         var actions = new DefaultInputActions();

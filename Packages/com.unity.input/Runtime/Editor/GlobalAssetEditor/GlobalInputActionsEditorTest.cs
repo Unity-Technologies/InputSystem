@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.Editor
 
         void OnEnable()
         {
-            var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>("ProjectSettings/InputManager.asset");
+            var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputSettings.kProjectSettings);
             var serializedAsset = new SerializedObject(asset);
             var stateContainer = new StateContainer(rootVisualElement, new GlobalInputActionsEditorState(serializedAsset));
 

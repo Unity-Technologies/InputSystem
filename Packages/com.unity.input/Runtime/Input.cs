@@ -136,7 +136,7 @@ namespace UnityEngine
     {
         public static bool mousePresent => Mouse.current != null;
 
-        private static InputActionAsset actions => InputSystem.InputSystem.settings.actions;
+        public static InputActionAsset actions => InputSystem.InputSystem.settings.actions;
         private static InputActionMap s_ButtonActions;
         private static InputAction s_LeftMouseButtonAction;
         private static InputAction s_RightMouseButtonAction;
@@ -314,6 +314,7 @@ namespace UnityEngine
             };
 
             s_ButtonActions.Enable();
+            actions?.Enable();
         }
 
         internal static void NextFrame()
@@ -363,8 +364,8 @@ namespace UnityEngine
                 // We didn't find the action. See if the user is looking for "Vertical" and "Horizontal".
                 // If so, we alternatively look for a "Move" actions and take its X or Y value if found.
 
-                var isVertical = string.Equals(axisName, "Vertical", StringComparison.InvariantCultureIgnoreCase);
-                var isHorizontal = !isVertical && string.Equals(axisName, "Horizontal", StringComparison.InvariantCultureIgnoreCase);
+                var isVertical = string.Equals(axisName, "Vertical", StringComparison.OrdinalIgnoreCase);
+                var isHorizontal = !isVertical && string.Equals(axisName, "Horizontal", StringComparison.OrdinalIgnoreCase);
 
                 if (isVertical || isHorizontal)
                 {
@@ -376,6 +377,22 @@ namespace UnityEngine
                         return moveAction.ReadValue<Vector2>().x;
                     }
                 }
+                else
+                {
+                    var isMouseX = string.Equals(axisName, "Mouse X", StringComparison.OrdinalIgnoreCase);
+                    var isMouseY = !isMouseX && string.Equals(axisName, "Mouse Y", StringComparison.OrdinalIgnoreCase);
+
+                    if (isMouseX || isMouseY)
+                    {
+                        var lookAction = actions.FindAction("Look");
+                        if (lookAction != null)
+                        {
+                            if (isMouseY)
+                                return lookAction.ReadValue<Vector2>().y;
+                            return lookAction.ReadValue<Vector2>().x;
+                        }
+                    }
+                }
 
                 AxisNotFound(axisName);
             }
@@ -383,31 +400,34 @@ namespace UnityEngine
             return action.ReadValue<float>();
         }
 
-        public static bool GetButton(string buttonName)
+        private static InputAction GetButtonAction(string buttonName)
         {
             var action = buttonName != null ? actions.FindAction(buttonName) : null;
             if (action == null)
-                AxisNotFound(buttonName);
+            {
+                if (buttonName == "Fire1")
+                    action = actions.FindAction("Fire");
 
-            return action.IsPressed();
+                if (action == null)
+                    AxisNotFound(buttonName);
+            }
+
+            return action;
+        }
+
+        public static bool GetButton(string buttonName)
+        {
+            return GetButtonAction(buttonName).IsPressed();
         }
 
         public static bool GetButtonUp(string buttonName)
         {
-            var action = buttonName != null ? actions.FindAction(buttonName) : null;
-            if (action == null)
-                AxisNotFound(buttonName);
-
-            return action.WasReleasedThisFrame();
+            return GetButtonAction(buttonName).WasReleasedThisFrame();
         }
 
         public static bool GetButtonDown(string buttonName)
         {
-            var action = buttonName != null ? actions.FindAction(buttonName) : null;
-            if (action == null)
-                AxisNotFound(buttonName);
-
-            return action.WasPressedThisFrame();
+            return GetButtonAction(buttonName).WasPressedThisFrame();
         }
 
         // We actually only support 5 ATM but keeping this at 7 for compatibility with legacy implementation.

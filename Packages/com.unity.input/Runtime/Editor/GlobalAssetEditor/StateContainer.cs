@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class StateContainer
+    internal class StateContainer : IDisposable
     {
         public event Action<GlobalInputActionsEditorState> StateChanged;
 
@@ -79,6 +79,11 @@ namespace UnityEngine.InputSystem.Editor
 
             m_RootVisualElement.TrackPropertyValue(serializedProperty, serializedPropertyChangedCallback);
             return serializedPropertyGetter;
+        }
+
+        public void Dispose()
+        {
+            m_RootVisualElement.Unbind();
         }
     }
 }
