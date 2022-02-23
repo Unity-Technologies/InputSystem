@@ -3260,7 +3260,7 @@ namespace UnityEngine.InputSystem
                         // object in InputManager.asset.
                         // NOTE: We do this only once the first time we encounter a project that hasn't seen us installing
                         //       input system stuff in InputManager.asset.
-                        var csAssets = AssetDatabase.FindAssets("*.cs");
+                        var csAssets = AssetDatabase.FindAssets("t:script a:assets");
                         // Unity will filter out .cs files from packages but won't catch anything like *.cs.cs or *.cs.bak.
                         // Unfortunately, com.unity.visualscripting has a .cs.cs file in it. Work around this here by simply
                         // filtering out anything that might be slipping through from packages.
