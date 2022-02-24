@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
 				m_ParentFoldout.text = "Binding";
 
 				var controlPathEditor = new InputControlPathEditor(Selectors.GetSelectedBindingPath(state), new InputControlPickerState(),
-					() => { /* the InputControlPathEditor already updates the serialized object internally, so we have nothing to do here */ });
+					() => { Dispatch(Commands.ApplyModifiedProperties()); });
 
 				var inputAction = Selectors.GetSelectedAction(state);
 				controlPathEditor.SetExpectedControlLayout(inputAction.expectedControlType ?? "");
