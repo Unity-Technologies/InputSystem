@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // TODO: Persist control picker state
             var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
-                () => { /* the InputControlPathEditor already updates the serialized object internally, so we have nothing to do here */ });
+                () => { Dispatch(Commands.ApplyModifiedProperties()); });
 
             controlPathEditor.SetExpectedControlLayout(viewState.expectedControlLayoutName);
 
