@@ -1,9 +1,10 @@
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class ActionMapsView : UIToolkitView
+	internal class ActionMapsView : UIToolkitView<(SerializedInputActionMap, IEnumerable<string>)>
 	{
 		private readonly VisualElement m_Root;
 
@@ -11,34 +12,30 @@ namespace UnityEngine.InputSystem.Editor
 			: base(stateContainer)
 		{
 			m_Root = root;
+
+			CreateSelector(Selectors.GetActionMapNames,
+				(actionMapNames, state) => (Selectors.GetSelectedActionMap(state), actionMapNames));
 		}
 
 		private DropdownField actionMapsDropdown => m_Root?.Q<DropdownField>("selected-action-map-dropdown");
 		private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
 
-		public override void CreateUI(GlobalInputActionsEditorState state)
+		public override void RedrawUI((SerializedInputActionMap, IEnumerable<string>) viewState)
 		{
-			if (actionMapsDropdown == null)
-				throw new ArgumentNullException("Expected the root visual element to contain an element called " +
-				                                "'selected-action-map-dropdown'.");
-
-			if (addActionMapButton == null)
-				throw new ArgumentNullException("Expected the root visual element to contain an element called " +
-				                                "'add-new-action-map-button'.");
-
-			var actionMap = Selectors.GetSelectedActionMap(state);
+			var actionMap = viewState.Item1;
 			actionMapsDropdown.choices.Clear();
-			actionMapsDropdown.choices.AddRange(Selectors.GetActionMapNames(state));
-			actionMapsDropdown.index = actionMapsDropdown.choices.FindIndex(x => x == actionMap.name);
+			actionMapsDropdown.choices.AddRange(viewState.Item2);
+			actionMapsDropdown.SetValueWithoutNotify(actionMap.name);
 
 			actionMapsDropdown.RegisterCallback<ChangeEvent<string>>(SelectActionMap);
 
 			addActionMapButton.clicked += ShowAddActionMapWindow;
 		}
-
-		public override void ClearUI()
+		
+		public override void DestroyView()
 		{
-			actionMapsDropdown.UnregisterValueChangedCallback(SelectActionMap);
+			actionMapsDropdown.UnregisterCallback<ChangeEvent<string>>(SelectActionMap);
+			addActionMapButton.clicked -= ShowAddActionMapWindow;
 		}
 
 		private void SelectActionMap(ChangeEvent<string> evt)
