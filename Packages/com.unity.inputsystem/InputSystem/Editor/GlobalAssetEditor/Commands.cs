@@ -119,5 +119,17 @@ namespace UnityEngine.InputSystem.Editor
 				state.serializedObject.ApplyModifiedProperties();
 			};
 		}
+
+		/// <summary>
+		/// Exists to integrate with some existing UI stuff, like InputControlPathEditor
+		/// </summary>
+		/// <returns></returns>
+		public static Command ApplyModifiedProperties()
+		{
+			return (ref GlobalInputActionsEditorState state) =>
+			{
+				state.serializedObject.ApplyModifiedProperties();
+			};
+		}
 	}
 }
