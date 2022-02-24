@@ -1,33 +1,34 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class ActionPropertiesView : UIToolkitView
+    internal class ActionPropertiesView : UIToolkitView<(SerializedInputAction, List<string>)>
     {
         private readonly VisualElement m_Root;
-        private SerializedInputAction m_LastState;
 
         public ActionPropertiesView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
             m_Root = root;
+
+            // TODO: Consider IEquatable<T> and how to compare selector data
+            CreateSelector(Selectors.GetSelectedAction,
+                (inputAction, _) => (inputAction, Selectors.BuildSortedControlList(inputAction.type).ToList()));
         }
 
-        public override void CreateUI(GlobalInputActionsEditorState state)
+        public override void RedrawUI((SerializedInputAction, List<string>) viewState)
         {
-            var inputAction = Selectors.GetSelectedAction(state);
-
-            if (inputAction.Equals(m_LastState))
-                return;
-
-            m_LastState = inputAction;
+            var inputAction = viewState.Item1;
 
             m_Root.Clear();
 
-            var actionType = new EnumField("Action Type", inputAction.type);
-            actionType.tooltip = inputAction.actionTypeTooltip;
+            var actionType = new EnumField("Action Type", inputAction.type)
+            {
+                tooltip = inputAction.actionTypeTooltip
+            };
             actionType.RegisterValueChangedCallback(evt =>
             {
                 Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
@@ -36,11 +37,18 @@ namespace UnityEngine.InputSystem.Editor
 
             if (inputAction.type != InputActionType.Button)
             {
-                var controlTypes = Selectors.BuildSortedControlList(inputAction.type).ToList();
-                var controlType = new DropdownField("Control Type",
-                    controlTypes.Select(ObjectNames.NicifyVariableName).ToList(),
-                    controlTypes.FindIndex(s => s == inputAction.expectedControlType));
+                var controlTypes = viewState.Item2;
+                var controlType = new DropdownField("Control Type");
+                controlType.choices.Clear();
+                controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
+                var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
+                controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
                 controlType.tooltip = inputAction.expectedControlTypeTooltip;
+
+                controlType.RegisterValueChangedCallback(evt =>
+                {
+                    Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
+                });
                 m_Root.Add(controlType);
             }
 

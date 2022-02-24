@@ -5,10 +5,12 @@ namespace UnityEngine.InputSystem.Editor
         public const string PackagePath = "Packages/com.unity.input";
         public const string ResourcesPath = "/Runtime/Editor/GlobalAssetEditor/Resources";
 
-        public const string MainEditorViewName = "/GlobalInputActionsEditor.uxml";
-        public const string ActionsPanelViewName = "/ActionPanelRowTemplate.uxml";
-        public const string BindingsPanelRowTemplate = "/BindingPanelRowTemplate.uxml";
-        public const string NameAndParametersListViewItem = "/NameAndParameterListViewItemTemplate.uxml";
+        public const string MainEditorViewNameUxml = "/GlobalInputActionsEditor.uxml";
+        public const string ActionsPanelViewNameUxml = "/ActionPanelRowTemplate.uxml";
+        public const string BindingsPanelRowTemplateUxml = "/BindingPanelRowTemplate.uxml";
+        public const string NameAndParametersListViewItemUxml = "/NameAndParameterListViewItemTemplate.uxml";
+        public const string CompositeBindingPropertiesViewUxml = "/CompositeBindingPropertiesEditor.uxml";
+        public const string CompositePartBindingPropertiesViewUxml = "/CompositePartBindingPropertiesEditor.uxml";
 
         public const string CompositePartAssignmentTooltip =
             "The named part of the composite that the binding is assigned to. Multiple bindings may be assigned the same part. All controls from "

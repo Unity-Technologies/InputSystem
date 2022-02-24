@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEngine.InputSystem.Editor.Lists;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
@@ -61,10 +64,16 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command SetCompositeBindingType(SerializedInputBinding bindingProperty, NameAndParameters nameAndParameters)
+        public static Command SetCompositeBindingType(SerializedInputBinding bindingProperty, IEnumerable<string> compositeTypes,
+            ParameterListView parameterListView, int selectedCompositeTypeIndex)
         {
             return (ref GlobalInputActionsEditorState state) =>
             {
+                var nameAndParameters = new NameAndParameters
+                {
+                    name = compositeTypes.ElementAt(selectedCompositeTypeIndex),
+                    parameters = parameterListView.GetParameters()
+                };
                 InputActionSerializationHelpers.ChangeCompositeBindingType(bindingProperty.wrappedProperty, nameAndParameters);
                 state.serializedObject.ApplyModifiedProperties();
             };
@@ -97,6 +106,16 @@ namespace UnityEngine.InputSystem.Editor
                     property.intValue |= (int)InputAction.ActionFlags.WantsInitialStateCheck;
                 else
                     property.intValue &= ~(int)InputAction.ActionFlags.WantsInitialStateCheck;
+                state.serializedObject.ApplyModifiedProperties();
+            };
+        }
+
+        public static Command ChangeActionControlType(SerializedInputAction inputAction, int controlTypeIndex)
+        {
+            return (ref GlobalInputActionsEditorState state) =>
+            {
+                var controlTypes = Selectors.BuildSortedControlList(inputAction.type).ToList();
+                inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlTypes[controlTypeIndex];
                 state.serializedObject.ApplyModifiedProperties();
             };
         }
