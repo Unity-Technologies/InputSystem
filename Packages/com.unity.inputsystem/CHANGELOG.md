@@ -64,6 +64,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `AxisComposite` not respecting processors applied to `positive` and `negative` bindings (case 1398942).
   * This was a regression introduced in [1.0.0-pre.6](#axiscomposite-min-max-value-fix).
 - Fixed mouse events not being timesliced when input system is switched to process input in fixed updates (case 1386738).
+- Fixed calling `action.AddCompositeBinding(...).With(...)` while action is enabled not correctly updating controls for part bindings of the composite.
 
 ### Added
 

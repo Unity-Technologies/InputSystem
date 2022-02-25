@@ -3624,6 +3624,38 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanAddCompositeBindingsToActions_AfterActionHasAlreadyResolvedControls()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/leftCtrl")
+            .With("Binding", "<Keyboard>/space");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.spaceKey, keyboard.leftCtrlKey }));
+
+        action.Enable();
+
+        // Replace the composite binding wholesale.
+        action.ChangeBinding(0).Erase();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/rightCtrl")
+            .With("Binding", "<Keyboard>/a");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey, keyboard.rightCtrlKey }));
+
+        Press(keyboard.rightCtrlKey);
+
+        Assert.That(!action.WasPerformedThisFrame());
+
+        Press(keyboard.aKey);
+
+        Assert.That(action.WasPerformedThisFrame());
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_BindingsHaveUniqueIDs()
     {
         var action = new InputAction();
