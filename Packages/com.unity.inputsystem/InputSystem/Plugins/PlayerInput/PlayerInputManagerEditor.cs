@@ -116,6 +116,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Max player count.
             var maxPlayerCountProperty = serializedObject.FindProperty("m_MaxPlayerCount");
+            if (m_EnableMaxPlayerCountLabel == null)
+                m_EnableMaxPlayerCountLabel = EditorGUIUtility.TrTextContent("Limit Number of Players", maxPlayerCountProperty.GetTooltip());
             if (maxPlayerCountProperty.intValue > 0)
                 m_MaxPlayerCountEnabled = true;
             m_MaxPlayerCountEnabled = EditorGUILayout.Toggle(m_EnableMaxPlayerCountLabel, m_MaxPlayerCountEnabled);
@@ -184,6 +186,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Fixed-number toggle.
             var fixedNumberProperty = serializedObject.FindProperty("m_FixedNumberOfSplitScreens");
+            if (m_EnableFixedNumberOfSplitScreensLabel == null)
+                m_EnableFixedNumberOfSplitScreensLabel = EditorGUIUtility.TrTextContent("Set Fixed Number", fixedNumberProperty.GetTooltip());
             if (fixedNumberProperty.intValue > 0)
                 m_FixedNumberOfSplitScreensEnabled = true;
             m_FixedNumberOfSplitScreensEnabled = EditorGUILayout.Toggle(m_EnableFixedNumberOfSplitScreensLabel,
@@ -252,10 +256,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent m_MaintainAspectRatioLabel;
         [NonSerialized] private GUIContent m_SplitScreenAreaLabel;
         [NonSerialized] private GUIContent m_FixedNumberOfSplitScreensLabel;
-        [NonSerialized] private readonly GUIContent m_EnableMaxPlayerCountLabel =
-            EditorGUIUtility.TrTextContent("Limit Number of Players", "TODO");
-        [NonSerialized] private readonly GUIContent m_EnableFixedNumberOfSplitScreensLabel =
-            EditorGUIUtility.TrTextContent("Set Fixed Number", "TODO");
+        [NonSerialized] private GUIContent m_EnableMaxPlayerCountLabel;
+        [NonSerialized] private GUIContent m_EnableFixedNumberOfSplitScreensLabel;
     }
 }
 #endif // UNITY_EDITOR
