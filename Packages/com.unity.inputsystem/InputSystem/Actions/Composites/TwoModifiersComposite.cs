@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Composites
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
         // ReSharper disable once UnassignedField.Global
-        [InputControl(layout = "Button")] public int binding;
+        [InputControl] public int binding;
 
         /// <summary>
         /// Type of values read from controls bound to <see cref="binding"/>.
