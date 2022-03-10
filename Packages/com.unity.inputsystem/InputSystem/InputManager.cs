@@ -291,7 +291,7 @@ namespace UnityEngine.InputSystem
                     nameof(type));
 
             var internedName = new InternedString(name);
-            var isReplacement = DoesLayoutExist(internedName);
+            var isReplacement = m_Layouts.HasLayout(internedName);
 
             // All we do is enter the type into a map. We don't construct an InputControlLayout
             // from it until we actually need it in an InputDeviceBuilder to create a device.
@@ -354,7 +354,22 @@ namespace UnityEngine.InputSystem
             }
 
             // Add it to our records.
-            var isReplacement = DoesLayoutExist(internedLayoutName);
+            var isReplacement = m_Layouts.HasLayout(internedLayoutName);
+            if (isReplacement && isOverride)
+            {   // Do not allow a layout override to replace a "base layout" by name, but allow layout overrides
+                // to replace an existing layout override.
+                // This is required to guarantee that its a hierarchy (directed graph) rather
+                // than a cyclic graph.
+
+                var isReplacingOverride = m_Layouts.layoutOverrideNames.Contains(internedLayoutName);
+                if (!isReplacingOverride)
+                {
+                    throw new ArgumentException($"Failed to register layout override '{internedLayoutName}'" +
+                        $"since a layout named '{internedLayoutName}' already exist. Layout overrides must " +
+                        $"have unique names with respect to existing layouts.");
+                }
+            }
+
             m_Layouts.layoutStrings[internedLayoutName] = json;
             if (isOverride)
             {
@@ -363,7 +378,10 @@ namespace UnityEngine.InputSystem
                 {
                     var baseLayoutName = baseLayouts[i];
                     m_Layouts.layoutOverrides.TryGetValue(baseLayoutName, out var overrideList);
-                    ArrayHelpers.Append(ref overrideList, internedLayoutName);
+                    if (!isReplacement)
+                        ArrayHelpers.Append(ref overrideList, internedLayoutName);
+
+
                     m_Layouts.layoutOverrides[baseLayoutName] = overrideList;
                 }
             }
@@ -386,7 +404,7 @@ namespace UnityEngine.InputSystem
 
             var internedLayoutName = new InternedString(name);
             var internedBaseLayoutName = new InternedString(baseLayout);
-            var isReplacement = DoesLayoutExist(internedLayoutName);
+            var isReplacement = m_Layouts.HasLayout(internedLayoutName);
 
             m_Layouts.layoutBuilders[internedLayoutName] = method;
 
@@ -887,13 +905,6 @@ namespace UnityEngine.InputSystem
             }
 
             return false;
-        }
-
-        private bool DoesLayoutExist(InternedString name)
-        {
-            return m_Layouts.layoutTypes.ContainsKey(name) ||
-                m_Layouts.layoutStrings.ContainsKey(name) ||
-                m_Layouts.layoutBuilders.ContainsKey(name);
         }
 
         public IEnumerable<string> ListControlLayouts(string basedOn = null)
@@ -1821,6 +1832,8 @@ namespace UnityEngine.InputSystem
             m_PollingFrequency = 60;
 
             // Register layouts.
+            // NOTE: Base layouts must be registered before their derived layouts
+            //       for the detection of base layouts to work.
             RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
             RegisterControlLayout("Button", typeof(ButtonControl));
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
@@ -1831,6 +1844,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Double", typeof(DoubleControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
+            RegisterControlLayout("Delta", typeof(DeltaControl));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
@@ -3225,11 +3239,18 @@ namespace UnityEngine.InputSystem
                         //       new buffering scheme for input events working in the native runtime.
 
                         var nextEvent = m_InputEventStream.Peek();
-                        if (nextEvent != null && currentEventReadPtr->deviceId == nextEvent->deviceId)
+                        // If there is next event after current one.
+                        if ((nextEvent != null)
+                            // And if next event is for the same device.
+                            && (currentEventReadPtr->deviceId == nextEvent->deviceId)
+                            // And if next event is in the same timeslicing slot.
+                            && (timesliceEvents ? (nextEvent->internalTime < currentTime) : true)
+                        )
                         {
+                            // Then try to merge current event into next event.
                             if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                             {
-                                // Event was merged into next event, skipping.
+                                // And if succeeded, skip current event, as it was merged into next event.
                                 m_InputEventStream.Advance(false);
                                 continue;
                             }

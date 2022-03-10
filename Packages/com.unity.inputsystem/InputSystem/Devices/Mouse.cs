@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Mouse movement.</value>
         /// <seealso cref="Pointer.delta"/>
-        [InputControl(usage = "Secondary2DMotion")]
+        [InputControl(usage = "Secondary2DMotion", layout = "Delta")]
         [FieldOffset(8)]
         public Vector2 delta;
 
@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Scroll wheel delta.</value>
         /// <seealso cref="Mouse.scroll"/>
-        [InputControl(displayName = "Scroll")]
+        [InputControl(displayName = "Scroll", layout = "Delta")]
         [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Left/Right")]
         [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem
         /// <c>y</c> component to the vertical scroll wheel. Most mice do not have
         /// horizontal scroll wheels and will thus only see activity on <c>y</c>.
         /// </remarks>
-        public Vector2Control scroll { get; protected set; }
+        public DeltaControl scroll { get; protected set; }
 
         /// <summary>
         /// The left mouse button.
@@ -280,7 +280,7 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc />
         protected override void FinishSetup()
         {
-            scroll = GetChildControl<Vector2Control>("scroll");
+            scroll = GetChildControl<DeltaControl>("scroll");
             leftButton = GetChildControl<ButtonControl>("leftButton");
             middleButton = GetChildControl<ButtonControl>("middleButton");
             rightButton = GetChildControl<ButtonControl>("rightButton");
