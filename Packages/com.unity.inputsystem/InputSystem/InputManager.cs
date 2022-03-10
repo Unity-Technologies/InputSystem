@@ -291,7 +291,7 @@ namespace UnityEngine.InputSystem
                     nameof(type));
 
             var internedName = new InternedString(name);
-            var isReplacement = DoesLayoutExist(internedName);
+            var isReplacement = m_Layouts.HasLayout(internedName);
 
             // All we do is enter the type into a map. We don't construct an InputControlLayout
             // from it until we actually need it in an InputDeviceBuilder to create a device.
@@ -354,7 +354,22 @@ namespace UnityEngine.InputSystem
             }
 
             // Add it to our records.
-            var isReplacement = DoesLayoutExist(internedLayoutName);
+            var isReplacement = m_Layouts.HasLayout(internedLayoutName);
+            if (isReplacement && isOverride)
+            {   // Do not allow a layout override to replace a "base layout" by name, but allow layout overrides
+                // to replace an existing layout override.
+                // This is required to guarantee that its a hierarchy (directed graph) rather
+                // than a cyclic graph.
+
+                var isReplacingOverride = m_Layouts.layoutOverrideNames.Contains(internedLayoutName);
+                if (!isReplacingOverride)
+                {
+                    throw new ArgumentException($"Failed to register layout override '{internedLayoutName}'" +
+                        $"since a layout named '{internedLayoutName}' already exist. Layout overrides must " +
+                        $"have unique names with respect to existing layouts.");
+                }
+            }
+
             m_Layouts.layoutStrings[internedLayoutName] = json;
             if (isOverride)
             {
@@ -363,7 +378,10 @@ namespace UnityEngine.InputSystem
                 {
                     var baseLayoutName = baseLayouts[i];
                     m_Layouts.layoutOverrides.TryGetValue(baseLayoutName, out var overrideList);
-                    ArrayHelpers.Append(ref overrideList, internedLayoutName);
+                    if (!isReplacement)
+                        ArrayHelpers.Append(ref overrideList, internedLayoutName);
+
+
                     m_Layouts.layoutOverrides[baseLayoutName] = overrideList;
                 }
             }
@@ -386,7 +404,7 @@ namespace UnityEngine.InputSystem
 
             var internedLayoutName = new InternedString(name);
             var internedBaseLayoutName = new InternedString(baseLayout);
-            var isReplacement = DoesLayoutExist(internedLayoutName);
+            var isReplacement = m_Layouts.HasLayout(internedLayoutName);
 
             m_Layouts.layoutBuilders[internedLayoutName] = method;
 
@@ -889,13 +907,6 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        private bool DoesLayoutExist(InternedString name)
-        {
-            return m_Layouts.layoutTypes.ContainsKey(name) ||
-                m_Layouts.layoutStrings.ContainsKey(name) ||
-                m_Layouts.layoutBuilders.ContainsKey(name);
-        }
-
         public IEnumerable<string> ListControlLayouts(string basedOn = null)
         {
             ////FIXME: this may add a name twice
@@ -1162,8 +1173,9 @@ namespace UnityEngine.InputSystem
             ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
             ////        it current, no?
             // Make the device current.
-            if (device.enabled)
-                device.MakeCurrent();
+            // BEWARE: if this will not happen for whatever reason, you will break Android sensors,
+            // as they rely on .current for enabling native backend, see https://fogbugz.unity3d.com/f/cases/1371204/
+            device.MakeCurrent();
 
             // Notify listeners.
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "InputSystem.onDeviceChange");
@@ -1343,87 +1355,95 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, change);
             DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, change, "onDeviceChange");
 
-            var defaultStatePtr = device.defaultStatePtr;
-            var deviceStateBlockSize = device.stateBlock.alignedSizeInBytes;
-
-            // Allocate temp memory to hold one state event.
-            ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
-            ////        to tell synthetic input (or input sources in general) apart
-            // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
-            //       like any other input. If we don't do that but rather just call UpdateState() with a null event
-            //       pointer, the change will be considered an internal state change and will get ignored by some
-            //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
-            //       by ignoring any change that is not coming from an input event).
-            using (var tempBuffer =
-                       new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + (int)deviceStateBlockSize, Allocator.Temp))
+            // If the device implements its own reset, let it handle it.
+            if (!alsoResetDontResetControls && device is ICustomDeviceReset customReset)
             {
-                var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
-                var statePtr = stateEventPtr->state;
-                var currentTime = m_Runtime.currentTime;
-
-                // Set up the state event.
-                ref var stateBlock = ref device.m_StateBlock;
-                stateEventPtr->baseEvent.type = StateEvent.Type;
-                stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
-                stateEventPtr->baseEvent.time = currentTime;
-                stateEventPtr->baseEvent.deviceId = device.deviceId;
-                stateEventPtr->baseEvent.eventId = -1;
-                stateEventPtr->stateFormat = device.m_StateBlock.format;
-
-                // Decide whether we perform a soft reset or a hard reset.
-                if (isHardReset)
-                {
-                    // Perform a hard reset where we wipe the entire device and set a full
-                    // reset request to the backend.
-                    UnsafeUtility.MemCpy(statePtr,
-                        (byte*)defaultStatePtr + stateBlock.byteOffset,
-                        deviceStateBlockSize);
-                }
-                else
-                {
-                    // Perform a soft reset where we exclude any dontReset control (which is automatically
-                    // toggled on for noisy controls) and do *NOT* send a reset request to the backend.
-
-                    var currentStatePtr = device.currentStatePtr;
-                    var resetMaskPtr = m_StateBuffers.resetMaskBuffer;
-
-                    // To preserve values from dontReset controls, we need to first copy their current values.
-                    UnsafeUtility.MemCpy(statePtr,
-                        (byte*)currentStatePtr + stateBlock.byteOffset,
-                        deviceStateBlockSize);
-
-                    // And then we copy over default values masked by dontReset bits.
-                    MemoryHelpers.MemCpyMasked(statePtr,
-                        (byte*)defaultStatePtr + stateBlock.byteOffset,
-                        (int)deviceStateBlockSize,
-                        (byte*)resetMaskPtr + stateBlock.byteOffset);
-                }
-
-                UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
-                    new InputEventPtr((InputEvent*)stateEventPtr));
-
-                // In the editor, we don't want to issue RequestResetCommand to devices based on focus of the game view
-                // as this would also reset device state for the editor. And we don't need the reset commands in this case
-                // as -- unlike in the player --, Unity keeps running and we will keep seeing OS messages for these devices.
-                // So, in the editor, we generally suppress reset commands.
-                //
-                // The only exception is when the editor itself loses focus. We issue sync requests to all devices when
-                // coming back into focus. But for any device that doesn't support syncs, we actually do want to have a
-                // reset command reach the background.
-                //
-                // Finally, in the player, we also avoid reset commands when disabling a device as these are pointless.
-                // We sync/reset when enabling a device in the backend.
-                var doIssueResetCommand = isHardReset;
-                if (issueResetCommand != null)
-                    doIssueResetCommand = issueResetCommand.Value;
-                #if UNITY_EDITOR
-                else if (m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
-                    doIssueResetCommand = false;
-                #endif
-
-                if (doIssueResetCommand)
-                    device.RequestReset();
+                customReset.Reset();
             }
+            else
+            {
+                var defaultStatePtr = device.defaultStatePtr;
+                var deviceStateBlockSize = device.stateBlock.alignedSizeInBytes;
+
+                // Allocate temp memory to hold one state event.
+                ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
+                ////        to tell synthetic input (or input sources in general) apart
+                // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
+                //       like any other input. If we don't do that but rather just call UpdateState() with a null event
+                //       pointer, the change will be considered an internal state change and will get ignored by some
+                //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
+                //       by ignoring any change that is not coming from an input event).
+                using (var tempBuffer =
+                           new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + (int)deviceStateBlockSize, Allocator.Temp))
+                {
+                    var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
+                    var statePtr = stateEventPtr->state;
+                    var currentTime = m_Runtime.currentTime;
+
+                    // Set up the state event.
+                    ref var stateBlock = ref device.m_StateBlock;
+                    stateEventPtr->baseEvent.type = StateEvent.Type;
+                    stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
+                    stateEventPtr->baseEvent.time = currentTime;
+                    stateEventPtr->baseEvent.deviceId = device.deviceId;
+                    stateEventPtr->baseEvent.eventId = -1;
+                    stateEventPtr->stateFormat = device.m_StateBlock.format;
+
+                    // Decide whether we perform a soft reset or a hard reset.
+                    if (isHardReset)
+                    {
+                        // Perform a hard reset where we wipe the entire device and set a full
+                        // reset request to the backend.
+                        UnsafeUtility.MemCpy(statePtr,
+                            (byte*)defaultStatePtr + stateBlock.byteOffset,
+                            deviceStateBlockSize);
+                    }
+                    else
+                    {
+                        // Perform a soft reset where we exclude any dontReset control (which is automatically
+                        // toggled on for noisy controls) and do *NOT* send a reset request to the backend.
+
+                        var currentStatePtr = device.currentStatePtr;
+                        var resetMaskPtr = m_StateBuffers.resetMaskBuffer;
+
+                        // To preserve values from dontReset controls, we need to first copy their current values.
+                        UnsafeUtility.MemCpy(statePtr,
+                            (byte*)currentStatePtr + stateBlock.byteOffset,
+                            deviceStateBlockSize);
+
+                        // And then we copy over default values masked by dontReset bits.
+                        MemoryHelpers.MemCpyMasked(statePtr,
+                            (byte*)defaultStatePtr + stateBlock.byteOffset,
+                            (int)deviceStateBlockSize,
+                            (byte*)resetMaskPtr + stateBlock.byteOffset);
+                    }
+
+                    UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
+                        new InputEventPtr((InputEvent*)stateEventPtr));
+                }
+            }
+
+            // In the editor, we don't want to issue RequestResetCommand to devices based on focus of the game view
+            // as this would also reset device state for the editor. And we don't need the reset commands in this case
+            // as -- unlike in the player --, Unity keeps running and we will keep seeing OS messages for these devices.
+            // So, in the editor, we generally suppress reset commands.
+            //
+            // The only exception is when the editor itself loses focus. We issue sync requests to all devices when
+            // coming back into focus. But for any device that doesn't support syncs, we actually do want to have a
+            // reset command reach the background.
+            //
+            // Finally, in the player, we also avoid reset commands when disabling a device as these are pointless.
+            // We sync/reset when enabling a device in the backend.
+            var doIssueResetCommand = isHardReset;
+            if (issueResetCommand != null)
+                doIssueResetCommand = issueResetCommand.Value;
+            #if UNITY_EDITOR
+            else if (m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
+                doIssueResetCommand = false;
+            #endif
+
+            if (doIssueResetCommand)
+                device.RequestReset();
         }
 
         public InputDevice TryGetDevice(string nameOrLayout)
@@ -1640,6 +1660,10 @@ namespace UnityEngine.InputSystem
             else if (m_StateChangeMonitors.Length <= deviceIndex)
                 Array.Resize(ref m_StateChangeMonitors, m_DevicesCount);
 
+            // If we have removed monitors
+            if (!isProcessingEvents && m_StateChangeMonitors[deviceIndex].needToCompactArrays)
+                m_StateChangeMonitors[deviceIndex].CompactArrays();
+
             // Add record.
             m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex, groupIndex);
         }
@@ -1679,7 +1703,7 @@ namespace UnityEngine.InputSystem
             if (deviceIndex >= m_StateChangeMonitors.Length)
                 return;
 
-            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex, isProcessingEvents);
 
             // Remove pending timeouts on the monitor.
             for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
@@ -1808,6 +1832,8 @@ namespace UnityEngine.InputSystem
             m_PollingFrequency = 60;
 
             // Register layouts.
+            // NOTE: Base layouts must be registered before their derived layouts
+            //       for the detection of base layouts to work.
             RegisterControlLayout("Axis", typeof(AxisControl)); // Controls.
             RegisterControlLayout("Button", typeof(ButtonControl));
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
@@ -1818,6 +1844,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Double", typeof(DoubleControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
+            RegisterControlLayout("Delta", typeof(DeltaControl));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
@@ -2083,6 +2110,7 @@ namespace UnityEngine.InputSystem
             public StateChangeMonitorListener[] listeners;
             public DynamicBitfield signalled;
             public bool needToUpdateOrderingOfMonitors;
+            public bool needToCompactArrays;
 
             public int count => signalled.length;
 
@@ -2109,21 +2137,25 @@ namespace UnityEngine.InputSystem
                 needToUpdateOrderingOfMonitors = true;
             }
 
-            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
+            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex, bool deferRemoval)
             {
-                // NOTE: This must *not* actually destroy the record for the monitor as we may currently be traversing the
-                //       arrays in FireStateChangeNotifications. Instead, we only invalidate entries here and leave it to
-                //       ProcessStateChangeMonitors to compact arrays.
-
                 if (listeners == null)
                     return;
 
                 for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        listeners[i] = default;
-                        memoryRegions[i] = default;
-                        signalled.ClearBit(i);
+                        if (deferRemoval)
+                        {
+                            listeners[i] = default;
+                            memoryRegions[i] = default;
+                            signalled.ClearBit(i);
+                            needToCompactArrays = true;
+                        }
+                        else
+                        {
+                            RemoveAt(i);
+                        }
                         break;
                     }
             }
@@ -2134,6 +2166,30 @@ namespace UnityEngine.InputSystem
                 // our count to zero.
                 listeners.Clear(count);
                 signalled.SetLength(0);
+
+                needToCompactArrays = false;
+            }
+
+            public void CompactArrays()
+            {
+                for (var i = count - 1; i >= 0; --i)
+                {
+                    var memoryRegion = memoryRegions[i];
+                    if (memoryRegion.sizeInBits != 0)
+                        continue;
+
+                    RemoveAt(i);
+                }
+                needToCompactArrays = false;
+            }
+
+            private void RemoveAt(int i)
+            {
+                var numListeners = count;
+                var numMemoryRegions = count;
+                listeners.EraseAtWithCapacity(ref numListeners, i);
+                memoryRegions.EraseAtWithCapacity(ref numMemoryRegions, i);
+                signalled.SetLength(count - 1);
             }
 
             public void SortMonitorsByIndex()
@@ -2513,27 +2569,40 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+#if UNITY_EDITOR
         private void SyncAllDevicesWhenEditorIsActivated()
         {
-            #if UNITY_EDITOR
             var isActive = m_Runtime.isEditorActive;
             if (isActive == m_EditorIsActive)
                 return;
 
             m_EditorIsActive = isActive;
             if (m_EditorIsActive)
-            {
-                for (var i = 0; i < m_DevicesCount; ++i)
-                {
-                    // When the editor comes back into focus, we actually do want resets to happen
-                    // for devices that don't support syncs as they will likely have missed input while
-                    // we were in the background.
-                    if (!m_Devices[i].RequestSync())
-                        ResetDevice(m_Devices[i], issueResetCommand: true);
-                }
-            }
-            #endif
+                SyncAllDevices();
         }
+
+        private void SyncAllDevices()
+        {
+            for (var i = 0; i < m_DevicesCount; ++i)
+            {
+                // When the editor comes back into focus, we actually do want resets to happen
+                // for devices that don't support syncs as they will likely have missed input while
+                // we were in the background.
+                if (!m_Devices[i].RequestSync())
+                    ResetDevice(m_Devices[i], issueResetCommand: true);
+            }
+        }
+
+        internal void SyncAllDevicesAfterEnteringPlayMode()
+        {
+            // Because we ignore all events between exiting edit mode and entering play mode,
+            // that includes any potential device resets/syncs/etc,
+            // we need to resync all devices after we're in play mode proper.
+            ////TODO: this is a hacky workaround, implement a proper solution where events from sync/resets are not ignored.
+            SyncAllDevices();
+        }
+
+#endif
 
         private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
         {
@@ -2930,7 +2999,9 @@ namespace UnityEngine.InputSystem
             RestoreDevicesAfterDomainReloadIfNecessary();
 
             // In the editor, we issue a sync on all devices when the editor comes back to the foreground.
+            #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
+            #endif
 
             if ((updateType & m_UpdateMask) == 0)
             {
@@ -3189,11 +3260,18 @@ namespace UnityEngine.InputSystem
                         //       new buffering scheme for input events working in the native runtime.
 
                         var nextEvent = m_InputEventStream.Peek();
-                        if (nextEvent != null && currentEventReadPtr->deviceId == nextEvent->deviceId)
+                        // If there is next event after current one.
+                        if ((nextEvent != null)
+                            // And if next event is for the same device.
+                            && (currentEventReadPtr->deviceId == nextEvent->deviceId)
+                            // And if next event is in the same timeslicing slot.
+                            && (timesliceEvents ? (nextEvent->internalTime < currentTime) : true)
+                        )
                         {
+                            // Then try to merge current event into next event.
                             if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
                             {
-                                // Event was merged into next event, skipping.
+                                // And if succeeded, skip current event, as it was merged into next event.
                                 m_InputEventStream.Advance(false);
                                 continue;
                             }
@@ -3511,6 +3589,8 @@ namespace UnityEngine.InputSystem
             if (haveChangedSignalsBitfield)
                 m_StateChangeMonitors[deviceIndex].signalled = signals;
 
+            m_StateChangeMonitors[deviceIndex].needToCompactArrays = false;
+
             return signalled;
         }
 
@@ -3710,18 +3790,13 @@ namespace UnityEngine.InputSystem
             ////REVIEW: Should we do this only for events but not for InputState.Change()?
             // If noise filtering on .current is turned on and the device may have noise,
             // determine if the event carries signal or not.
-            var makeDeviceCurrent = true;
-            if (device.noisy && m_Settings.filterNoiseOnCurrent)
-            {
-                // Compare the current state of the device to the newly received state but overlay
-                // the comparison by the noise mask.
-
-                var noiseMask = (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset;
-
-                makeDeviceCurrent =
-                    !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
-                        0, stateSize * 8, mask: noiseMask);
-            }
+            var noiseMask = device.noisy
+                ? (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset
+                : null;
+            // Compare the current state of the device to the newly received state but overlay
+            // the comparison by the noise mask.
+            var makeDeviceCurrent = !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                0, stateSize * 8, mask: noiseMask);
 
             // Buffer flip.
             var flipped = FlipBuffersForDeviceIfNecessary(device, updateType);

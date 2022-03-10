@@ -463,12 +463,9 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         GoToChild();
                     }
-                    else
+                    else if (!selectedChild.IsSeparator())
                     {
-                        if (!selectedChild.IsSeparator() && selectionChanged != null)
-                        {
-                            selectionChanged(selectedChild);
-                        }
+                        selectionChanged?.Invoke(selectedChild);
                         if (closeOnSelection)
                         {
                             CloseWindow();

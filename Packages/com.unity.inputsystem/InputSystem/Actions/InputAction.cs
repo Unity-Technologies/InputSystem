@@ -389,7 +389,7 @@ namespace UnityEngine.InputSystem
 
                 var map = GetOrCreateActionMap();
                 if (map.m_State != null)
-                    map.LazyResolveBindings();
+                    map.LazyResolveBindings(fullResolve: true);
             }
         }
 
@@ -925,11 +925,11 @@ namespace UnityEngine.InputSystem
         ////TODO: ReadValue(void*, int)
 
         /// <summary>
-        /// Read the current value of the action. This is the last value received on <see cref="started"/>,
-        /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
+        /// Read the current value of the control that is driving this action. If no bound control is actuated, returns
+        /// default(TValue), but note that binding processors are always applied.
         /// </summary>
         /// <typeparam name="TValue">Value type to read. Must match the value type of the binding/control that triggered.</typeparam>
-        /// <returns>The current value of the action or <c>default(TValue)</c> if the action is not currently in-progress.</returns>
+        /// <returns>The current value of the control/binding that is driving this action with all binding processors applied.</returns>
         /// <remarks>
         /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
         /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
@@ -980,21 +980,13 @@ namespace UnityEngine.InputSystem
         public unsafe TValue ReadValue<TValue>()
             where TValue : struct
         {
-            var result = default(TValue);
-
             var state = GetOrCreateActionMap().m_State;
-            if (state != null)
-            {
-                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                if (actionStatePtr->phase.IsInProgress())
-                {
-                    var controlIndex = actionStatePtr->controlIndex;
-                    if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
-                }
-            }
+            if (state == null) return default(TValue);
 
-            return result;
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            return actionStatePtr->phase.IsInProgress()
+                ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
+                : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
         }
 
         /// <summary>
@@ -1091,6 +1083,22 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->isPressed;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Whether the action has been <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>.
+        /// </summary>
+        /// <returns>True if the action is currently triggering.</returns>
+        /// <seealso cref="phase"/>
+        public unsafe bool IsInProgress()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->phase.IsInProgress();
             }
             return false;
         }
@@ -1372,7 +1380,7 @@ namespace UnityEngine.InputSystem
                         var duration = interactionState.timerDuration;
                         var startTime = interactionState.timerStartTime;
                         var endTime = startTime + duration;
-                        var remainingTime = endTime - InputRuntime.s_Instance.currentTime;
+                        var remainingTime = endTime - InputState.currentTime;
                         if (remainingTime <= 0)
                             timerCompletion = 1;
                         else
@@ -1479,8 +1487,8 @@ namespace UnityEngine.InputSystem
             {
                 if (m_ActionIndexInState == InputActionState.kInvalidIndex)
                     return new InputActionState.TriggerState();
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
+                Debug.Assert(m_ActionMap != null, "Action must have associated action map");
+                Debug.Assert(m_ActionMap.m_State != null, "Action map must have state at this point");
                 return m_ActionMap.m_State.FetchActionState(this);
             }
         }
@@ -1512,6 +1520,40 @@ namespace UnityEngine.InputSystem
                 m_SingletonAction = this,
                 m_Bindings = m_SingletonActionBindings
             };
+        }
+
+        internal void RequestInitialStateCheckOnEnabledAction()
+        {
+            Debug.Assert(enabled, "This should only be called on actions that are enabled");
+
+            var map = GetOrCreateActionMap();
+            var state = map.m_State;
+            state.SetInitialStateCheckPending(m_ActionIndexInState);
+        }
+
+        // NOTE: This does *NOT* check whether the control is valid according to the binding it
+        //       resolved from and/or the current binding mask. If, for example, the binding is
+        //       "<Keyboard>/#(ä)" and the keyboard switches from a DE layout to a US layout, the
+        //       key would still be considered valid even if the path in the binding would actually
+        //       no longer resolve to it.
+        internal bool ActiveControlIsValid(InputControl control)
+        {
+            if (control == null)
+                return false;
+
+            // Device must still be added.
+            var device = control.device;
+            if (!device.added)
+                return false;
+
+            // If we have a device list in the map or asset, device
+            // must be in list.
+            var map = GetOrCreateActionMap();
+            var deviceList = map.devices;
+            if (deviceList != null && !deviceList.Value.ContainsReference(device))
+                return false;
+
+            return true;
         }
 
         internal InputBinding? FindEffectiveBindingMask()
@@ -1891,8 +1933,13 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
             {
                 var value = default(TValue);
-                if (m_State != null && phase.IsInProgress())
-                    value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
+                if (m_State != null)
+                {
+                    value = phase.IsInProgress() ?
+                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
+                        m_State.ApplyProcessors(bindingIndex, value);
+                }
+
                 return value;
             }
 

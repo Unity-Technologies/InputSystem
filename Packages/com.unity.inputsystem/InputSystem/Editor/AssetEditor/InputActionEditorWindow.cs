@@ -377,6 +377,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 onSelectionChanged = OnActionTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
+                onBindingAdded = p => InputActionSerializationHelpers.RemoveUnusedBindingGroups(p, m_Toolbar.controlSchemes),
                 drawMinusButton = false,
                 title = ("Actions", "A list of InputActions in the InputActionMap selected in the left pane. Also, for each InputAction, the list "
                     + "of bindings that determine the controls that can trigger the action.\n\nThe name of each action must be unique within its InputActionMap."),

@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space motion delta.</value>
         /// <seealso cref="Pointer.delta"/>
-        [InputControl(usage = "Secondary2DMotion")]
+        [InputControl(usage = "Secondary2DMotion", layout = "Delta")]
         [FieldOffset(8)]
         public Vector2 delta;
 

@@ -591,9 +591,19 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
+            var enabled = action.enabled;
+            if (enabled)
+                action.Disable();
+
             bindingOverride.action = action.name;
             var actionMap = action.GetOrCreateActionMap();
             ApplyBindingOverride(actionMap, bindingOverride);
+
+            if (enabled)
+            {
+                action.Enable();
+                action.RequestInitialStateCheckOnEnabledAction();
+            }
         }
 
         /// <summary>
@@ -705,10 +715,7 @@ namespace UnityEngine.InputSystem
             }
 
             if (matchCount > 0)
-            {
-                actionMap.ClearPerActionCachedBindingData();
-                actionMap.LazyResolveBindings();
-            }
+                actionMap.OnBindingModified();
 
             return matchCount;
         }
@@ -740,8 +747,7 @@ namespace UnityEngine.InputSystem
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
 
-            actionMap.ClearPerActionCachedBindingData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         /// <summary>
@@ -835,8 +841,7 @@ namespace UnityEngine.InputSystem
                         binding.RemoveOverrides();
                     }
 
-                    actionMap.ClearPerActionCachedBindingData();
-                    actionMap.LazyResolveBindings();
+                    actionMap.OnBindingModified();
                 }
             }
         }
@@ -874,8 +879,7 @@ namespace UnityEngine.InputSystem
                 bindings[i].overrideProcessors = null;
             }
 
-            actionMap.ClearPerActionCachedBindingData();
-            actionMap.LazyResolveBindings();
+            actionMap.OnBindingModified();
         }
 
         ////REVIEW: are the IEnumerable variations worth having?
@@ -2095,7 +2099,7 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException(
                         "Must either have an action (call WithAction()) to apply binding to or have a custom callback to apply the binding (call OnApplyBinding())");
 
-                m_StartTime = InputRuntime.s_Instance.currentTime;
+                m_StartTime = InputState.currentTime;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -2390,7 +2394,7 @@ namespace UnityEngine.InputSystem
                             m_Scores[candidateIndex] = score;
 
                             if (m_WaitSecondsAfterMatch > 0)
-                                m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                                m_LastMatchTime = InputState.currentTime;
                         }
                     }
                     else
@@ -2404,7 +2408,7 @@ namespace UnityEngine.InputSystem
                         haveChangedCandidates = true;
 
                         if (m_WaitSecondsAfterMatch > 0)
-                            m_LastMatchTime = InputRuntime.s_Instance.currentTime;
+                            m_LastMatchTime = InputState.currentTime;
                     }
                 }
 
@@ -2490,7 +2494,7 @@ namespace UnityEngine.InputSystem
                 // If we don't have a match yet but we have a timeout and have expired it,
                 // cancel the operation.
                 if (m_LastMatchTime < 0 && m_Timeout > 0 &&
-                    InputRuntime.s_Instance.currentTime - m_StartTime > m_Timeout)
+                    InputState.currentTime - m_StartTime > m_Timeout)
                 {
                     Cancel();
                     return;
@@ -2505,7 +2509,7 @@ namespace UnityEngine.InputSystem
                     return;
 
                 // Complete if timeout has expired.
-                if (InputRuntime.s_Instance.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
+                if (InputState.currentTime >= m_LastMatchTime + m_WaitSecondsAfterMatch)
                     Complete();
             }
 

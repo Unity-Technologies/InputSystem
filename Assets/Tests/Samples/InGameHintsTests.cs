@@ -58,17 +58,20 @@ public class InGameHintsTests : CoreTestsFixture
 
         // Switch to PS4 controller.
         Press(ps4Controller.startButton);
+        yield return null;
 
         Assert.That(text.text, Does.StartWith("Press Cross "));
 
         // Switch to Xbox controller.
         Press(xboxController.startButton);
+        yield return null;
 
         Assert.That(text.text, Does.StartWith("Press A "));
 
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
         // Switch to Switch controller.
         Press(switchController.startButton);
+        yield return null;
 
         Assert.That(text.text, Does.StartWith("Press B "));
 #endif
