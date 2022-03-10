@@ -52,6 +52,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed no devices being available in `Start` and `Awake` methods if, in the player, any `InputSystem` API was accessed during the `SubsystemRegistration` phase ([case 1392358](https://issuetracker.unity3d.com/issues/inputsystem-does-not-initialize-properly-in-a-build-when-accessed-early)).
 - Fixed dropdown for "Supported Devices" in settings not showing all device layouts.
 - Fixed "STAT event with state format TOUC cannot be used with device 'Touchscreen:/Touchscreen'" when more than max supported amount of fingers, currently 10, are present on the screen at a same time (case 1395648).
+- Xbox One reporting invalid controls before first actuation of any control (case TBA).
 
 #### Actions
 

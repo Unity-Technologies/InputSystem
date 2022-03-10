@@ -206,8 +206,20 @@ namespace UnityEngine.InputSystem.XInput
     /// to work.
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerOSXState), hideInUI = true)]
-    public class XboxGamepadMacOS : XInputController
+    public class XboxGamepadMacOS : XInputController, IEventPreProcessor
     {
+        unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr eventPtr)
+        {
+            if (eventPtr.type != StateEvent.Type)
+                return true;
+
+            var stateEvent = StateEvent.FromUnchecked(eventPtr);
+            var binaryData = (byte*)stateEvent->state;
+
+            // magic, don't ask
+            // only pass known data packets, ignore the rest
+            return (stateEvent->stateSizeInBytes == 0) || ((stateEvent->stateSizeInBytes > 0) && (binaryData[0] == 0x01 || binaryData[0] == 0x20));
+        }
     }
 
     /// <summary>
@@ -220,8 +232,20 @@ namespace UnityEngine.InputSystem.XInput
     /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
-    public class XboxOneGampadMacOSWireless : XInputController
+    public class XboxOneGampadMacOSWireless : XInputController, IEventPreProcessor
     {
+        unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr eventPtr)
+        {
+            if (eventPtr.type != StateEvent.Type)
+                return true;
+
+            var stateEvent = StateEvent.FromUnchecked(eventPtr);
+            var binaryData = (byte*)stateEvent->state;
+
+            // magic, don't ask
+            // only pass known data packets, ignore the rest
+            return (stateEvent->stateSizeInBytes == 0) || ((stateEvent->stateSizeInBytes > 0) && (binaryData[0] == 0x01 || binaryData[0] == 0x20));
+        }
     }
 }
 #endif // UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
