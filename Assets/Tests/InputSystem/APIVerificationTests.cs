@@ -782,6 +782,10 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
     ")]
+    // AddChangeMonitor has a new, optional groupIndex argument.
+    [Property("Exclusions", @"1.0.0
+        public static void AddChangeMonitor(UnityEngine.InputSystem.InputControl control, UnityEngine.InputSystem.LowLevel.IInputStateChangeMonitor monitor, long monitorIndex = -1);
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

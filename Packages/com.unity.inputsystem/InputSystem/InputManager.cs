@@ -1645,7 +1645,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: support combining monitors for bitfields
-        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, int groupIndex)
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
         {
             Debug.Assert(m_DevicesCount > 0);
 
@@ -2102,7 +2102,7 @@ namespace UnityEngine.InputSystem
             public InputControl control;
             public IInputStateChangeMonitor monitor;
             public long monitorIndex;
-            public int groupIndex;
+            public uint groupIndex;
         }
         internal struct StateChangeMonitorsForDevice
         {
@@ -2114,7 +2114,7 @@ namespace UnityEngine.InputSystem
 
             public int count => signalled.length;
 
-            public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, int groupIndex)
+            public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
             {
                 // NOTE: This method must only *append* to arrays. This way we can safely add data while traversing
                 //       the arrays in FireStateChangeNotifications. Note that appending *may* mean that the arrays
@@ -2195,7 +2195,7 @@ namespace UnityEngine.InputSystem
             public void SortMonitorsByIndex()
             {
                 // Insertion sort.
-                for (var i = 1; i < listeners.Length; ++i)
+                for (var i = 1; i < signalled.length; ++i)
                 {
                     for (var j = i; j > 0 && listeners[j - 1].monitorIndex < listeners[j].monitorIndex; --j)
                     {
@@ -3607,6 +3607,12 @@ namespace UnityEngine.InputSystem
             ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
             var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
+            // If we don't have an event, gives us as dummy, invalid instance.
+            // What matters is that InputEventPtr.valid is false for these.
+            var tempEvent = default(InputEvent);
+            if (eventPtr == null)
+                eventPtr = (InputEvent*)UnsafeUtility.AddressOf(ref tempEvent);
+
             // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
             // signalled state.
             eventPtr->handled = false;
@@ -3636,7 +3642,15 @@ namespace UnityEngine.InputSystem
                     var groupIndex = listeners[i].groupIndex;
                     for (var n = i + 1; n < signals.length; ++n)
                     {
-                        if (listeners[n].groupIndex == groupIndex)
+                        // NOTE: We restrict the preemption logic here to a single monitor. Otherwise,
+                        //       we will have to require that group indices are stable *between*
+                        //       monitors. Two separate InputActionStates, for example, would have to
+                        //       agree on group indices that valid *between* the two states or we end
+                        //       up preempting unrelated inputs.
+                        //
+                        //       Note that this implies there there is *NO* preemption between singleton
+                        //       InputActions. This isn't intuitive.
+                        if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
                             signals.ClearBit(n);
                     }
 

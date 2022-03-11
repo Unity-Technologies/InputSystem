@@ -111,6 +111,7 @@ namespace UnityEngine.InputSystem
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
         public ushort* controlGroupingAndComplexity => memory.controlGroupingAndComplexity;
+        public float* controlMagnitudes => memory.controlMagnitudes;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
         public bool isProcessingControlStateChange => m_InProcessControlStateChange;
@@ -137,7 +138,7 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
-            var currentGroup = 1;
+            var currentGroup = 1u;
             for (var i = 0; i < totalControlCount; ++i)
             {
                 var control = controls[i];
@@ -562,6 +563,9 @@ namespace UnityEngine.InputSystem
                     // Bindings that are part of composites get enabled through the composite itself.
                     continue;
                 }
+
+                //bring compositeMagnitudes along
+                //make absolutely sure we carry controlMagnitudes over!
 
                 var actionIndex = newBindingState.actionIndex;
                 if (actionIndex == kInvalidIndex)
@@ -1262,6 +1266,8 @@ namespace UnityEngine.InputSystem
                     if (IsActiveControl(bindingIndex, controlIndex))
                         continue;
 
+                    //fixme.......... this now bypasses the preemption logic as it is tied to state monitors...
+
                     if (!control.CheckStateIsAtDefault())
                     {
                         // For composites, the binding index we have at this point is for the composite binding, not for the part
@@ -1394,6 +1400,19 @@ namespace UnityEngine.InputSystem
                     if (m_OnBeforeUpdateHooked)
                         bindingStatePtr->initialStateCheckPending = false;
 
+                    // Store magnitude. We do this once and then only read it from here.
+                    var control = controls[controlIndex];
+                    trigger.magnitude = control.CheckStateIsAtDefault() ? 0f : control.EvaluateMagnitude();
+                    controlMagnitudes[controlIndex] = trigger.magnitude;
+
+                    // Update press times.
+                    if (control.IsValueConsideredPressed(trigger.magnitude))
+                    {
+                        // ReSharper disable once CompareOfFloatsByEqualityOperator
+                        if (bindingStatePtr->pressTime == default || bindingStatePtr->pressTime > trigger.time)
+                            bindingStatePtr->pressTime = trigger.time;
+                    }
+
                     // If the binding is part of a composite, check for interactions on the composite
                     // itself and give them a first shot at processing the value change.
                     var haveInteractionsOnComposite = false;
@@ -1409,6 +1428,16 @@ namespace UnityEngine.InputSystem
                         //          want to perform the action only once.
                         if (ShouldIgnoreInputOnCompositeBinding(compositeBindingPtr, eventPtr))
                             return;
+
+                        // Update magnitude for composite.
+                        var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                        var compositeContext = new InputBindingCompositeContext
+                        {
+                            m_State = this,
+                            m_BindingIndex = compositeBindingIndex
+                        };
+                        trigger.magnitude = composites[compositeIndex].EvaluateMagnitude(ref compositeContext);
+                        memory.compositeMagnitudes[compositeIndex] = trigger.magnitude;
 
                         // Run through interactions on composite.
                         var interactionCountOnComposite = compositeBindingPtr->interactionCount;
@@ -1429,27 +1458,9 @@ namespace UnityEngine.InputSystem
                     var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
                     bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
-                    // Check actuation level.
+                    // Process button presses/releases.
                     if (!isConflictingInput)
-                    {
-                        var actuation = ComputeMagnitude(ref trigger);
-                        var actionState = &actionStates[actionIndex];
-                        var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
-                        if (!actionState->isPressed && actuation >= pressPoint)
-                        {
-                            actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
-                            actionState->isPressed = true;
-                        }
-                        else if (actionState->isPressed)
-                        {
-                            var releasePoint = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
-                            if (actuation <= releasePoint)
-                            {
-                                actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
-                                actionState->isPressed = false;
-                            }
-                        }
-                    }
+                        ProcessButtonState(ref trigger, actionIndex, bindingStatePtr);
 
                     // If we have interactions, let them do all the processing. The presence of an interaction
                     // essentially bypasses the default phase progression logic of an action.
@@ -1467,6 +1478,41 @@ namespace UnityEngine.InputSystem
                 {
                     m_InProcessControlStateChange = default;
                     m_CurrentlyProcessingThisEvent = default;
+                }
+            }
+        }
+
+        private void ProcessButtonState(ref TriggerState trigger, int actionIndex, BindingState* bindingStatePtr)
+        {
+            var control = controls[trigger.controlIndex];
+            var pressPoint = control.isButton
+                ? ((ButtonControl)control).pressPointOrDefault
+                : ButtonControl.s_GlobalDefaultButtonPressPoint;
+
+            // NOTE: This method relies on conflict resolution happening *first*. Otherwise, we may inadvertently
+            //       detect a "release" from a control that is not actually driving the action.
+
+            // Record release time on the binding.
+            // NOTE: Explicitly look up control magnitude here instead of using trigger.magnitude
+            //       as for part bindings, the trigger will have the magnitude of the whole composite.
+            var controlActuation = controlMagnitudes[trigger.controlIndex];
+            if (controlActuation <= pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold)
+                bindingStatePtr->pressTime = 0d;
+
+            var actuation = trigger.magnitude;
+            var actionState = &actionStates[actionIndex];
+            if (!actionState->isPressed && actuation >= pressPoint)
+            {
+                actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
+                actionState->isPressed = true;
+            }
+            else if (actionState->isPressed)
+            {
+                var releasePoint = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
+                if (actuation <= releasePoint)
+                {
+                    actionState->releasedInUpdate = InputUpdate.s_UpdateStepCount;
+                    actionState->isPressed = false;
                 }
             }
         }
@@ -1546,42 +1592,21 @@ namespace UnityEngine.InputSystem
 
             Profiler.BeginSample("InputActionResolveConflict");
 
-            // Compute magnitude, if necessary.
-            // NOTE: This will automatically take composites into account.
-            if (!trigger.haveMagnitude)
-                trigger.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
-
             // We take a local copy of this value, so we can change it to use the starting control of composites
             // for simpler conflict resolution (so composites always use the same value), but still report the actually
             // actuated control to the user.
             var triggerControlIndex = trigger.controlIndex;
-
-            // Update magnitude stored in state.
             if (bindingStates[trigger.bindingIndex].isPartOfComposite)
             {
-                // Control is part of a composite. Store magnitude in compositeMagnitudes.
-                // NOTE: This path here implies that we never store magnitudes individually for controls
-                //       that are part of composites.
-                var compositeBindingIndex = bindingStates[trigger.bindingIndex].compositeOrCompositeBindingIndex;
-                var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
-                memory.compositeMagnitudes[compositeIndex] = trigger.magnitude;
-
                 // For actions that need conflict resolution, we force TriggerState.controlIndex to the
                 // first control in a composite. Otherwise it becomes much harder to tell if the we have
                 // multiple concurrent actuations or not.
                 // Since composites always evaluate as a whole instead of as single controls, having
                 // triggerControlIndex differ from the state monitor that fired should be fine.
+                var compositeBindingIndex = bindingStates[trigger.bindingIndex].compositeOrCompositeBindingIndex;
                 triggerControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
                 Debug.Assert(triggerControlIndex >= 0 && triggerControlIndex < totalControlCount,
                     "Control start index on composite binding out of range");
-            }
-            else
-            {
-                Debug.Assert(!bindingStates[trigger.bindingIndex].isComposite,
-                    "Composite should not trigger directly from a control");
-
-                // "Normal" control. Store magnitude in controlMagnitudes.
-                memory.controlMagnitudes[triggerControlIndex] = trigger.magnitude;
             }
 
             // Determine which control to consider the one currently associated with the action.
@@ -1840,7 +1865,7 @@ namespace UnityEngine.InputSystem
                     // Button actions need to cross the button-press threshold.
                     if (trigger.isButton)
                     {
-                        var actuation = ComputeMagnitude(ref trigger);
+                        var actuation = trigger.magnitude;
                         if (actuation > 0)
                             ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
                         var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
@@ -1872,7 +1897,7 @@ namespace UnityEngine.InputSystem
                 {
                     if (actionState->isButton)
                     {
-                        var actuation = ComputeMagnitude(ref trigger);
+                        var actuation = trigger.magnitude;
                         var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                         if (actuation >= threshold)
                         {
@@ -1908,7 +1933,7 @@ namespace UnityEngine.InputSystem
                 {
                     if (actionState->isButton)
                     {
-                        var actuation = ComputeMagnitude(ref trigger);
+                        var actuation = trigger.magnitude;
                         var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                         if (Mathf.Approximately(0f, actuation))
                         {
@@ -2322,9 +2347,7 @@ namespace UnityEngine.InputSystem
             // is handled correctly (case 1239551).
             newState.flags = actionState->flags; // Preserve flags.
             if (newPhase != InputActionPhase.Canceled)
-                newState.magnitude = trigger.haveMagnitude
-                    ? trigger.magnitude
-                    : ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+                newState.magnitude = trigger.magnitude;
             else
                 newState.magnitude = 0;
 
@@ -2337,7 +2360,7 @@ namespace UnityEngine.InputSystem
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group.
                 // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1)
+                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1 && m_CurrentlyProcessingThisEvent.valid)
                     m_CurrentlyProcessingThisEvent.handled = true;
             }
             else if (newPhase == InputActionPhase.Canceled)
@@ -2608,53 +2631,14 @@ namespace UnityEngine.InputSystem
             return control.valueType;
         }
 
-        internal bool IsActuated(ref TriggerState trigger, float threshold = 0)
+        internal static bool IsActuated(ref TriggerState trigger, float threshold = 0)
         {
-            var magnitude = ComputeMagnitude(ref trigger);
+            var magnitude = trigger.magnitude;
             if (magnitude < 0)
                 return true;
             if (Mathf.Approximately(threshold, 0))
                 return magnitude > 0;
             return magnitude >= threshold;
-        }
-
-        internal float ComputeMagnitude(ref TriggerState trigger)
-        {
-            if (!trigger.haveMagnitude)
-                trigger.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
-            return trigger.magnitude;
-        }
-
-        private float ComputeMagnitude(int bindingIndex, int controlIndex)
-        {
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index is out of range");
-
-            // If the control is part of a composite, it's the InputBindingComposite
-            // object that computes a magnitude for the whole composite.
-            if (bindingStates[bindingIndex].isPartOfComposite)
-            {
-                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
-                var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
-                var compositeObject = composites[compositeIndex];
-
-                var context = new InputBindingCompositeContext
-                {
-                    m_State = this,
-                    m_BindingIndex = compositeBindingIndex
-                };
-
-                return compositeObject.EvaluateMagnitude(ref context);
-            }
-
-            var control = controls[controlIndex];
-            if (control.CheckStateIsAtDefault())
-            {
-                // Avoid magnitude computation if control state is at default.
-                return 0;
-            }
-
-            return control.EvaluateMagnitude();
         }
 
         ////REVIEW: we can unify the reading paths once we have blittable type constraints
@@ -2806,6 +2790,32 @@ namespace UnityEngine.InputSystem
             }
 
             return currentMagnitude;
+        }
+
+        internal double GetCompositePartPressTime(int bindingIndex, int partNumber)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
+
+            var firstChildBindingIndex = bindingIndex + 1;
+            var pressTime = double.MaxValue;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                ref var bindingState = ref bindingStates[index];
+
+                if (bindingState.partIndex != partNumber)
+                    continue;
+
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (bindingState.pressTime != default && bindingState.pressTime < pressTime)
+                    pressTime = bindingState.pressTime;
+            }
+
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (pressTime == double.MaxValue)
+                return -1d;
+
+            return pressTime;
         }
 
         /// <summary>
@@ -3175,7 +3185,7 @@ namespace UnityEngine.InputSystem
         /// Correlated to the <see cref="InputBinding"/> it corresponds to by the index in the binding
         /// array.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 20)]
+        [StructLayout(LayoutKind.Explicit, Size = 32)]
         internal struct BindingState
         {
             [FieldOffset(0)] private byte m_ControlCount;
@@ -3189,7 +3199,9 @@ namespace UnityEngine.InputSystem
             [FieldOffset(10)] private ushort m_ProcessorStartIndex;
             [FieldOffset(12)] private ushort m_InteractionStartIndex;
             [FieldOffset(14)] private ushort m_ControlStartIndex;
-            [FieldOffset(16)] private int m_TriggerEventIdForComposite;
+            [FieldOffset(16)] private double m_PressTime;
+            [FieldOffset(24)] private int m_TriggerEventIdForComposite;
+            [FieldOffset(28)] private int __padding; // m_PressTime double must be aligned
 
             [Flags]
             public enum Flags
@@ -3386,6 +3398,13 @@ namespace UnityEngine.InputSystem
                 set => m_TriggerEventIdForComposite = value;
             }
 
+            // For now, we only record this for part bindings!
+            public double pressTime
+            {
+                get => m_PressTime;
+                set => m_PressTime = value;
+            }
+
             public Flags flags
             {
                 get => (Flags)m_Flags;
@@ -3499,11 +3518,11 @@ namespace UnityEngine.InputSystem
             [FieldOffset(1)] private byte m_Flags;
             [FieldOffset(2)] private byte m_MapIndex;
             // One byte available here.
-            ////REVIEW: can we condense these to floats? would save us a whopping 8 bytes
-            [FieldOffset(4)] private double m_Time;
-            [FieldOffset(12)] private double m_StartTime;
-            [FieldOffset(20)] private ushort m_ControlIndex;
+            [FieldOffset(4)] private ushort m_ControlIndex;
             // Two bytes available here.
+            ////REVIEW: can we condense these to floats? would save us a whopping 8 bytes
+            [FieldOffset(8)] private double m_Time;
+            [FieldOffset(16)] private double m_StartTime;
             [FieldOffset(24)] private ushort m_BindingIndex;
             [FieldOffset(26)] private ushort m_InteractionIndex;
             [FieldOffset(28)] private float m_Magnitude;
@@ -3941,7 +3960,7 @@ namespace UnityEngine.InputSystem
             public InteractionState* interactionStates;
 
             /// <summary>
-            ///
+            /// Current remembered level of actuation of each of the controls in <see cref="controls"/>.
             /// </summary>
             /// <remarks>
             /// This array is NOT kept strictly up to date. In fact, we only use it for conflict resolution
@@ -3996,17 +4015,18 @@ namespace UnityEngine.InputSystem
                 this.compositeCount = compositeCount;
 
                 var numBytes = sizeInBytes;
-                var ptr = (byte*)UnsafeUtility.Malloc(numBytes, 4, Allocator.Persistent);
+                var ptr = (byte*)UnsafeUtility.Malloc(numBytes, 8, Allocator.Persistent);
                 UnsafeUtility.MemClear(ptr, numBytes);
 
                 basePtr = ptr;
 
                 // NOTE: This depends on the individual structs being sufficiently aligned in order to not
-                //       cause any misalignment here.
-                mapIndices = (ActionMapIndices*)ptr; ptr += mapCount * sizeof(ActionMapIndices);
+                //       cause any misalignment here. TriggerState, InteractionState, and BindingState all
+                //       contain doubles so put them first in memory to make sure they get proper alignment.
                 actionStates = (TriggerState*)ptr; ptr += actionCount * sizeof(TriggerState);
                 interactionStates = (InteractionState*)ptr; ptr += interactionCount * sizeof(InteractionState);
                 bindingStates = (BindingState*)ptr; ptr += bindingCount * sizeof(BindingState);
+                mapIndices = (ActionMapIndices*)ptr; ptr += mapCount * sizeof(ActionMapIndices);
                 controlMagnitudes = (float*)ptr; ptr += controlCount * sizeof(float);
                 compositeMagnitudes = (float*)ptr; ptr += compositeCount * sizeof(float);
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);

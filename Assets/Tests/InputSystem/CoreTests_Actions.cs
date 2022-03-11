@@ -26,6 +26,10 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 #pragma warning disable CS0649
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 
+//problems to solve:
+// - complexity numbers are treated as global values yet depend entirely on the individual data in each state
+// - shortcuts currently trigger from A+CTRL instead of only from CTRL+A
+
 // As should be obvious from the number of tests in here, the action system rivals the entire combined rest of the system
 // in terms of complexity.
 partial class CoreTests
@@ -112,14 +116,13 @@ partial class CoreTests
         Assert.That(!action2.WasPerformedThisFrame());
         Assert.That(!action3.WasPerformedThisFrame());
 
-        ////TODO: this should *NOT* trigger action2 based on the order of the keypresses
         Press(keyboard.leftShiftKey);
 
         Assert.That(!action1.WasPerformedThisFrame());
         Assert.That(!action4.WasPerformedThisFrame());
         Assert.That(!action5.WasPerformedThisFrame());
 
-        Assert.That(action2.WasPerformedThisFrame());
+        Assert.That(!action2.WasPerformedThisFrame());
         Assert.That(!action3.WasPerformedThisFrame());
     }
 
@@ -185,41 +188,6 @@ partial class CoreTests
     [Category("Actions")]
     [TestCase("leftShift", null, "space")]
     [TestCase("leftShift", "leftAlt", "space")]
-    [Ignore("TODO - will add logic for this in separate PR after #1405")]
-    public void Actions_CanListenForStartOfShortcutSequence(string modifier1, string modifier2, string binding)
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        var action = new InputAction();
-        if (!string.IsNullOrEmpty(modifier2))
-        {
-            action.AddCompositeBinding("TwoModifiers")
-                .With("Modifier1", "<Keyboard>/" + modifier1)
-                .With("Modifier2", "<Keyboard>/" + modifier2)
-                .With("Binding", "<Keyboard>/" + binding);
-        }
-        else
-        {
-            action.AddCompositeBinding("OneModifier")
-                .With("Modifier", "<Keyboard>/" + modifier1)
-                .With("Binding", "<Keyboard>/" + binding);
-        }
-
-        action.Enable();
-
-        var wasStarted = false;
-        action.started += _ => wasStarted = true;
-
-        Press((ButtonControl)keyboard[modifier1]);
-
-        Assert.That(wasStarted, Is.True);
-    }
-
-    [Test]
-    [Category("Actions")]
-    [TestCase("leftShift", null, "space")]
-    [TestCase("leftShift", "leftAlt", "space")]
-    [Ignore("TODO - will add logic for this in separate PR after #1405")]
     public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1964,10 +1932,10 @@ partial class CoreTests
                     .AndThen(Performed(action4,
                         value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
                         control: gamepad.leftStick, time: startTime + 0.234))
-                    // map2/action3 should have been started.
-                    .AndThen(Started<TapInteraction>(action3, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map3/action5 should have been started.
                     .AndThen(Started<TapInteraction>(action5, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
+                    // map2/action3 should have been started.
+                    .AndThen(Started<TapInteraction>(action3, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map3/action4 should have been performed as the stick has been moved
                     // beyond where it had already moved.
                     .AndThen(Performed(action4,
@@ -2939,11 +2907,7 @@ partial class CoreTests
             action2.Disable();
             Set(gamepad.leftTrigger, 0.234f);
 
-            var actions = trace.ToArray();
-
-            Assert.That(actions, Has.Length.EqualTo(2));
-            Assert.That(actions[0].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
-            Assert.That(actions[1].ReadValueAsObject(), Is.EqualTo(-0.123).Within(0.00001));
+            Assert.That(trace, Performed(action2, value: -0.123f).AndThen(Performed(action1, value: 0.123f)));
         }
     }
 
@@ -7322,10 +7286,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
             InputSystem.Update();
 
-            // Bit of an odd case. leftTrigger and rightTrigger have both changed state here so
-            // in a way, it's up to the system which one to pick. Might be useful if it was deliberately
-            // picking the control with the highest magnitude but not sure it's worth the effort.
-            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.456f));
+            Assert.That(trace, Performed(action, control: gamepad.rightTrigger, value: 0.456f));
 
             trace.Clear();
 
@@ -7909,7 +7870,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WithMultipleCompositesCancelsIfCompositeIsReleased()
+    public void Actions_WithMultipleComposites_CancelsIfCompositeIsReleased()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();

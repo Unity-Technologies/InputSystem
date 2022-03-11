@@ -35,11 +35,20 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Whether the pointer is not <c>null</c>.
         /// </summary>
         /// <value>True if the struct refers to an event.</value>
-        public bool valid => m_EventPtr != null;
+        public bool valid => m_EventPtr != null && m_EventPtr->type != default;
 
         /// <summary>
-        ///
+        /// Whether the event is considered "handled" and should not be processed further.
         /// </summary>
+        /// <remarks>
+        /// This is used in two ways. Setting it from inside <see cref="InputSystem.onEvent"/> will
+        /// cause the event to not be processed further. If it is a <see cref="StateEvent"/> or
+        /// <see cref="DeltaStateEvent"/>, the <see cref="InputDevice"/> targeted by the event will
+        /// not receive the state change.
+        ///
+        /// Setting this flag from inside a state change monitor (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>)
+        /// will prevent other monitors on the same <see cref="IInputStateChangeMonitor"/> not receiving the state change.
+        /// </remarks>
         /// <exception cref="InvalidOperationException"></exception>
         public bool handled
         {
