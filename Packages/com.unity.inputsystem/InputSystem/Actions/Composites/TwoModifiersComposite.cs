@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem.Composites
         /// Default value is <c>false</c>.
         /// </summary>
         /// <remarks>
-        /// By default, ff <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+        /// By default, if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
         /// both <see cref="modifier1"/> and <see cref="modifier2"/> to be pressed <em>before</em> pressing <see cref="binding"/>.
         /// This means that binding to, for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed
         /// before pressing the <c>B</c> key. This is the behavior usually expected with keyboard shortcuts.

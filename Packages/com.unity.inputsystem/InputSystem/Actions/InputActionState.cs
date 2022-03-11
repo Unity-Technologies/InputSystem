@@ -2785,6 +2785,10 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < controlCount; ++i)
                 {
                     var control = controls[controlStartIndex + i];
+                    
+                    // NOTE: We do *NOT* go to controlMagnitudes here. The reason is we may not yet have received the ProcessControlStateChange
+                    //       call for a specific control that is part of the composite and thus controlMagnitudes may not yet have been updated
+                    //       for a specific control.
                     currentMagnitude = Mathf.Max(control.EvaluateMagnitude(), currentMagnitude);
                 }
             }
