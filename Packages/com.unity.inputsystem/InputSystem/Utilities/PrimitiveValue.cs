@@ -848,6 +848,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a bool.
         /// </summary>
         /// <param name="value">A boolean value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(bool value)
         {
             return new PrimitiveValue(value);
@@ -857,6 +858,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a character.
         /// </summary>
         /// <param name="value">A character.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(char value)
         {
             return new PrimitiveValue(value);
@@ -866,6 +868,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a byte.
         /// </summary>
         /// <param name="value">A byte value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(byte value)
         {
             return new PrimitiveValue(value);
@@ -875,6 +878,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a signed byte.
         /// </summary>
         /// <param name="value">A signed byte value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(sbyte value)
         {
             return new PrimitiveValue(value);
@@ -884,6 +888,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a short.
         /// </summary>
         /// <param name="value">A short value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(short value)
         {
             return new PrimitiveValue(value);
@@ -893,6 +898,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding an unsigned short.
         /// </summary>
         /// <param name="value">An unsigned short value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(ushort value)
         {
             return new PrimitiveValue(value);
@@ -902,6 +908,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding an int.
         /// </summary>
         /// <param name="value">An int value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(int value)
         {
             return new PrimitiveValue(value);
@@ -911,6 +918,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding an unsigned int.
         /// </summary>
         /// <param name="value">An unsigned int value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(uint value)
         {
             return new PrimitiveValue(value);
@@ -920,6 +928,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a long.
         /// </summary>
         /// <param name="value">A long value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(long value)
         {
             return new PrimitiveValue(value);
@@ -929,6 +938,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a ulong.
         /// </summary>
         /// <param name="value">An unsigned long value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(ulong value)
         {
             return new PrimitiveValue(value);
@@ -938,6 +948,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a float.
         /// </summary>
         /// <param name="value">A float value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(float value)
         {
             return new PrimitiveValue(value);
@@ -947,6 +958,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a double.
         /// </summary>
         /// <param name="value">A double value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(double value)
         {
             return new PrimitiveValue(value);
