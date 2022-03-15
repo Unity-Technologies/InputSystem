@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem
         /// Spatial position control.
         /// </summary>
         /// <remarks>
-        /// Example: User head position using a head tracking system.
+        /// Example: User head position in tracking-space using e.g. a head-tracking system. This could for example be a VR tracking system or another user-facing tracking sensor.
         /// </remarks>
         public static readonly InternedString Position = new InternedString("Position");
 
@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem
         /// Spatial orientation control.
         /// </summary>
         /// <remarks>
-        /// Example: User head orientation using a head-tracking system.
+        /// Example: User head-orientation in tracking-space using e.g. a head-tracking system. This could for example be a VR tracking system or another user-facing tracking sensor.
         /// </remarks>
         public static readonly InternedString Orientation = new InternedString("Orientation");
 
