@@ -553,8 +553,15 @@ namespace UnityEngine.InputSystem.Utilities
             /// </remarks>
             public double time => m_Ptr->baseEvent.time;
 
+            /// <summary>
+            /// Gets the timestamp for when the <see cref="phase"/> transitioned into <see cref="InputActionPhase.Started"/>.
+            /// </summary>
             public double startTime => m_Ptr->startTime;
 
+            /// <summary>
+            /// Gets the duration (in seconds) that has elapsed between when this event was generated and when the
+            /// action <see cref="phase"/> transitioned to <see cref="InputActionPhase.Started"/> and has remained active.
+            /// </summary>
             public double duration => time - startTime;
 
             /// <summary>
