@@ -53,8 +53,8 @@ namespace UnityEngine.InputSystem
         /// Check if a <see cref="Key"/> enum value represents a modifier key.
         /// </summary>
         /// <param name="key">The key enum value you want to check.</param>
+        /// <returns><c>true</c> if <paramref name="key"/> represents a modifier key, else <c>false</c>.</returns>
         /// <remarks>
-        /// Returns true if this key is a modifier key, false otherwise.
         /// Modifier keys are any keys you can hold down to modify the output of other keys pressed simultaneously,
         /// such as the "shift" or "control" keys.
         /// </remarks>
@@ -80,6 +80,7 @@ namespace UnityEngine.InputSystem
         /// Check if a <see cref="Key"/> enum value represents key generating text input.
         /// </summary>
         /// <param name="key">The key enum value you want to check.</param>
+        /// <returns><c>true</c> if <paramref name="key"/> represents a key generating text input, else <c>false</c>.</returns>
         /// <remarks>
         /// Returns true if this key is a key generating non-whitespace character input, false otherwise.
         /// </remarks>

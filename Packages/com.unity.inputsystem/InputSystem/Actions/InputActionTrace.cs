@@ -98,12 +98,32 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         public InputEventBuffer buffer => m_EventBuffer;
 
+        /// <summary>
+        /// Returns the number of events in the associated event buffer.
+        /// </summary>
         public int count => m_EventBuffer.eventCount;
 
+        /// <summary>
+        /// Constructs a new default initialized <c>InputActionTrace</c>.
+        /// </summary>
+        /// <remarks>
+        /// When using this constructor no action(s) are being recorded.
+        /// Traced actions needs to be explicitly setup after object creation to record actions.
+        /// </remarks>
+        /// <seealso cref="SubscribeTo(InputAction)"/>
+        /// <seealso cref="SubscribeTo(InputActionMap)"/>
+        /// <seealso cref="SubscribeToAll"/>
         public InputActionTrace()
         {
         }
 
+        /// <summary>
+        /// Constructs a new <c>InputActionTrace</c> that records <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">The action to be recorded.</param>
+        /// <remarks>
+        /// Throws <c>System.ArgumentNullException</c> if <paramref name="action"/> is <c>null</c>.
+        /// </remarks>
         public InputActionTrace(InputAction action)
         {
             if (action == null)
@@ -111,6 +131,13 @@ namespace UnityEngine.InputSystem.Utilities
             SubscribeTo(action);
         }
 
+        /// <summary>
+        /// Constructs a new <c>InputActionTrace</c> that records all actions in <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">The action-map containing actions to be recorded.</param>
+        /// <remarks>
+        /// Throws <c>System.ArgumentNullException</c> if <paramref name="actionMap"/> is <c>null</c>.
+        /// </remarks>
         public InputActionTrace(InputActionMap actionMap)
         {
             if (actionMap == null)
@@ -126,6 +153,8 @@ namespace UnityEngine.InputSystem.Utilities
         /// Instead, the trace will listen to <see cref="InputSystem.onActionChange"/> and automatically record
         /// every triggered action.
         /// </remarks>
+        /// <seealso cref="SubscribeTo(InputAction)"/>
+        /// <seealso cref="SubscribeTo(InputActionMap)"/>
         public void SubscribeToAll()
         {
             if (m_SubscribedToAll)
@@ -141,6 +170,11 @@ namespace UnityEngine.InputSystem.Utilities
                 UnsubscribeFrom(m_SubscribedActionMaps[m_SubscribedActionMaps.length - 1]);
         }
 
+        /// <summary>
+        /// Unsubscribes from all actions currently being recorded.
+        /// </summary>
+        /// <seealso cref="UnsubscribeFrom(InputAction)"/>
+        /// <seealso cref="UnsubscribeFrom(InputActionMap)"/>
         public void UnsubscribeFromAll()
         {
             // Only unhook from OnActionChange if we don't have any recorded actions. If we do have
@@ -156,6 +190,17 @@ namespace UnityEngine.InputSystem.Utilities
                 UnsubscribeFrom(m_SubscribedActionMaps[m_SubscribedActionMaps.length - 1]);
         }
 
+        /// <summary>
+        /// Subscribe to <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">The action to be recorded.</param>
+        /// <remarks>
+        /// Note that there is no guard that prevents subscribing to the same action multiple times.
+        /// This needs to be handled by the user.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">If <paramref name="action"/> is null.</exception>
+        /// <seealso cref="SubscribeTo(InputActionMap)"/>
+        /// <seealso cref="SubscribeToAll"/>
         public void SubscribeTo(InputAction action)
         {
             if (action == null)
@@ -171,6 +216,17 @@ namespace UnityEngine.InputSystem.Utilities
             m_SubscribedActions.AppendWithCapacity(action);
         }
 
+        /// <summary>
+        /// Subscribe to a all actions part of <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">The action-map containing all actions to be recorded.</param>
+        /// <remarks>
+        /// Note that there is no guard that prevents subscribing to the same action multiple times.
+        /// This needs to be handled by the user.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="actionMap"/> is null.</exception>
+        /// <seealso cref="SubscribeTo(InputAction)"/>
+        /// <seealso cref="SubscribeToAll"/>
         public void SubscribeTo(InputActionMap actionMap)
         {
             if (actionMap == null)
@@ -184,6 +240,16 @@ namespace UnityEngine.InputSystem.Utilities
             m_SubscribedActionMaps.AppendWithCapacity(actionMap);
         }
 
+        /// <summary>
+        /// Unsubscribes from an action previously subscribed to.
+        /// </summary>
+        /// <param name="action">The action to unsubscribe from.</param>
+        /// <remarks>
+        /// Note that this method has no side-effects if the action has not previously been subscribed to by this instance.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="action"/> is null.</exception>
+        /// <seealso cref="UnsubscribeFrom(InputActionMap)"/>
+        /// <seealso cref="UnsubscribeFromAll"/>
         public void UnsubscribeFrom(InputAction action)
         {
             if (action == null)
@@ -201,6 +267,13 @@ namespace UnityEngine.InputSystem.Utilities
                 m_SubscribedActions.RemoveAtWithCapacity(index);
         }
 
+        /// <summary>
+        /// Unsubscribes from all actions included in <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">The action-map containing actions to be recorded.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="actionMap"/> is null.</exception>
+        /// <seealso cref="UnsubscribeFrom(InputAction)"/>
+        /// <seealso cref="UnsubscribeFromAll"/>
         public void UnsubscribeFrom(InputActionMap actionMap)
         {
             if (actionMap == null)
@@ -258,6 +331,12 @@ namespace UnityEngine.InputSystem.Utilities
             context.ReadValue(valueBuffer, valueSizeInBytes);
         }
 
+        /// <summary>
+        /// Clears all recorded data.
+        /// </summary>
+        /// <remarks>
+        /// Note that this doesn't affect currently monitored actions being recorded.
+        /// </remarks>
         public void Clear()
         {
             m_EventBuffer.Reset();
@@ -269,6 +348,7 @@ namespace UnityEngine.InputSystem.Utilities
             DisposeInternal();
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             if (count == 0)
@@ -288,6 +368,7 @@ namespace UnityEngine.InputSystem.Utilities
             return str.ToString();
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             UnsubscribeFromAll();
@@ -311,6 +392,11 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        /// <summary>
+        /// Returns an enumerator that enumerates all action events recorded for this instance.
+        /// </summary>
+        /// <returns>Enumerator instance, never <c>null</c>.</returns>
+        /// <seealso cref="ActionEventPtr"/>
         public IEnumerator<ActionEventPtr> GetEnumerator()
         {
             return new Enumerator(this);
