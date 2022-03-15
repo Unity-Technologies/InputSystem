@@ -192,6 +192,13 @@ namespace UnityEngine.InputSystem.Utilities
     /// </summary>
     public static class ReadOnlyArrayExtensions
     {
+        /// <summary>
+        /// Evaluates whether <paramref name="array"/> contains an element that compares equal to <paramref name="value"/>.
+        /// </summary>
+        /// <typeparam name="TValue">The array element type.</typeparam>
+        /// <param name="array">Reference to the read-only array to be searched.</param>
+        /// <param name="value">The value to be searched for in <paramref name="array"/>.</param>
+        /// <returns><c>true</c> if <paramref name="array"/> contains <paramref name="value"/>, else <c>false</c>.</returns>
         public static bool Contains<TValue>(this ReadOnlyArray<TValue> array, TValue value)
             where TValue : IComparable<TValue>
         {
@@ -201,12 +208,26 @@ namespace UnityEngine.InputSystem.Utilities
             return false;
         }
 
+        /// <summary>
+        /// Evaluates whether <paramref name="array"/> contains a reference to <paramref name="value"/>.
+        /// </summary>
+        /// <typeparam name="TValue">The array element type.</typeparam>
+        /// <param name="array">Reference to the read-only array to be searched.</param>
+        /// <param name="value">The reference to be searched for in <paramref name="array"/>.</param>
+        /// <returns><c>true</c> if <paramref name="array"/> contains a reference to <paramref name="value"/>, else <c>false</c>.</returns>
         public static bool ContainsReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
             where TValue : class
         {
             return IndexOfReference(array, value) != -1;
         }
 
+        /// <summary>
+        /// Retrieves the index of <paramref name="value"/> in <paramref name="array"/>.
+        /// </summary>
+        /// <typeparam name="TValue">The array element type.</typeparam>
+        /// <param name="array">Reference to the read-only array to be searched.</param>
+        /// <param name="value">The reference to be searched for in <paramref name="array"/>.</param>
+        /// <returns>The zero-based index of element <paramref name="value"/> in <paramref name="array"/> if such a reference could be found and -1 if it do not exist.</returns>
         public static int IndexOfReference<TValue>(this ReadOnlyArray<TValue> array, TValue value)
             where TValue : class
         {
@@ -216,6 +237,14 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
+        /// <summary>
+        /// Evaluates whether whether <paramref name="array1"/> and <paramref name="array2"/> contain the same sequence of references.
+        /// </summary>
+        /// <typeparam name="TValue">The array element type.</typeparam>
+        /// <param name="array1">The first array to be evaluated.</param>
+        /// <param name="array2">The second array to be evaluated.</param>
+        /// <param name="count">The maximum number of elements to be compared.</param>
+        /// <returns><c>true</c> if the <paramref name="count"/> first elements of <paramref name="array1"/> and <paramref name="array2"/> contain the same references, else false.</returns>
         internal static bool HaveEqualReferences<TValue>(this ReadOnlyArray<TValue> array1, IReadOnlyList<TValue> array2, int count = int.MaxValue)
         {
             var length1 = Math.Min(array1.Count, count);
