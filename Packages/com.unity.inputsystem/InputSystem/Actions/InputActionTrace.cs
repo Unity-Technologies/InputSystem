@@ -514,12 +514,24 @@ namespace UnityEngine.InputSystem.Utilities
             internal InputActionState m_State;
             internal ActionEvent* m_Ptr;
 
+            /// <summary>
+            /// Gets the <see cref="InputAction"/> associated with this action event.
+            /// </summary>
             public InputAction action => m_State.GetActionOrNull(m_Ptr->bindingIndex);
 
+            /// <summary>
+            /// Gets the <see cref="InputActionPhase"/> associated with this action event.
+            /// </summary>
             public InputActionPhase phase => m_Ptr->phase;
 
+            /// <summary>
+            /// Gets the <see cref="InputControl"/> instance associated with this action event.
+            /// </summary>
             public InputControl control => m_State.controls[m_Ptr->controlIndex];
 
+            /// <summary>
+            /// Gets the <see cref="IInputInteraction"/> instance associated with this action event if applicable, or <c>null</c> if the action event is not associated with an input interaction.
+            /// </summary>
             public IInputInteraction interaction
             {
                 get
@@ -532,14 +544,30 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
 
+            /// <summary>
+            /// Gets a timestamp corresponding to the time at wich the event was generated at.
+            /// </summary>
+            /// <remarks>
+            /// Times are in seconds and progress linearly in real-time. The timeline is the
+            /// same as for <see cref="Time.realtimeSinceStartup"/>.
+            /// </remarks>
             public double time => m_Ptr->baseEvent.time;
 
             public double startTime => m_Ptr->startTime;
 
             public double duration => time - startTime;
 
+            /// <summary>
+            /// Gets the size in bytes of the value associated with this action event.
+            /// </summary>
             public int valueSizeInBytes => m_Ptr->valueSizeInBytes;
 
+            /// <summary>
+            /// Reads the value associated with this event as an <c>object</c>.
+            /// </summary>
+            /// <returns><c>object</c> representing the value of this action event.</returns>
+            /// <seealso cref="ReadOnlyArray{TValue}"/>
+            /// <seealso cref="ReadValue(void*, int)"/>
             public object ReadValueAsObject()
             {
                 if (m_Ptr == null)
@@ -574,6 +602,15 @@ namespace UnityEngine.InputSystem.Utilities
                 return control.ReadValueFromBufferAsObject(valuePtr, valueSizeInBytes);
             }
 
+            /// <summary>
+            /// Reads the value associated with this event into the contiguous memory buffer defined by <c>[buffer, buffer + bufferSize)</c>.
+            /// </summary>
+            /// <param name="buffer">Pointer to the contiguous memory buffer to write value data to.</param>
+            /// <param name="bufferSize">The size in bytes of the contiguous buffer pointed to by <paramref name="buffer"/>.</param>
+            /// <exception cref="NullReferenceException">If <paramref name="buffer"/> is <c>null</c>.</exception>
+            /// <exception cref="ArgumentException">If the given <paramref name="bufferSize"/> is less than the number of bytes required to write the event value to <paramref name="buffer"/>.</exception>
+            /// <seealso cref="ReadValueAsObject"/>
+            /// <seealso cref="ReadValue{TValue}"/>
             public void ReadValue(void* buffer, int bufferSize)
             {
                 var valueSizeInBytes = m_Ptr->valueSizeInBytes;
@@ -587,6 +624,12 @@ namespace UnityEngine.InputSystem.Utilities
                 UnsafeUtility.MemCpy(buffer, m_Ptr->valueData, valueSizeInBytes);
             }
 
+            /// <summary>
+            /// Reads the value associated with this event as an object of type <typeparamref name="TValue"/>.
+            /// </summary>
+            /// <typeparam name="TValue">The event value type to be used.</typeparam>
+            /// <returns>Object of type <typeparamref name="TValue"/>.</returns>
+            /// <exception cref="InvalidOperationException">In case the size of <typeparamref name="TValue"/> do not match the size of the value associated with this event.</exception>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
@@ -604,6 +647,7 @@ namespace UnityEngine.InputSystem.Utilities
                 return result;
             }
 
+            /// <inheritdoc/>
             public override string ToString()
             {
                 if (m_Ptr == null)
