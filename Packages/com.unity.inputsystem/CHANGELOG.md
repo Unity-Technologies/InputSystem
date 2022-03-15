@@ -69,11 +69,32 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added support for "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
+- Added support for SteelSeries Nimbus+ gamepad on Mac (Addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
 
-### Added
-- Added support for SteelSeries Nimbus+ gamepad on Mac (Addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
+#### Actions
+
+- Added new APIs for getting and setting parameter values on interactions, processors, and composites.
+  ```CSharp
+  // Get parameter.
+  action.GetParameterValue("duration");     // Any "duration" value on any binding.
+  action.GetParameterValue("tap:duration"); // "duration" on "tap" interaction on any binding.
+  action.GetParameterValue("tap:duration",  // "duration" on "tap" on binding in "Gamepad" group.
+      InputBinding.MaskByGroup("Gamepad"));
+
+  // Set parameter.
+  action.ApplyParameterOverride("duration", 0.4f);
+  action.ApplyParameterOverride("tap:duration", 0.4f);
+  action.ApplyParameterOverride("tap:duration", 0.4f,
+      InputBinding.MaskByGroup("Gamepad"));
+
+  // Can also apply parameter overrides at the level of
+  // InputActionMaps and InputActionAssets with an effect
+  // on all the bindings contained therein.
+  asset.ApplyParameterOverride("scaleVector2:x", 0.25f,
+      new InputBinding("<Mouse>/delta"));
+  ```
 
 ## [1.3.0] - 2021-12-10
 

@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Utilities
         public Type LookupTypeRegistration(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
+                return null;
 
             if (table == null)
                 throw new InvalidOperationException("Input System not yet initialized");

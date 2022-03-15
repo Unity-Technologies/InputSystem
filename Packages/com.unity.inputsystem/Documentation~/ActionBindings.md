@@ -13,6 +13,7 @@
     * [Applying overrides](#applying-overrides)
     * [Erasing Bindings](#erasing-bindings)
     * [Adding Bindings](#adding-bindings)
+    * [Setting parameters](#setting-parameters)
   * [Interactive rebinding](#interactive-rebinding)
   * [Saving and loading rebinds](#saving-and-loading-rebinds)
   * [Restoring original Bindings](#restoring-original-bindings)
@@ -512,6 +513,101 @@ playerInput.actions["move"]
         .With("Down", "<Keyboard>/s")
         .With("Right", "<Keyboard>/d");
 ```
+
+### Setting parameters
+
+A Binding may, either through itself or through its associated Action, lead to [processor](Processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](ActionAssets.md#editing-bindings) of the Action editor or through the API. This configuration will give parameters their default value.
+
+```CSharp
+// Create an action with a "Hold" interaction on it.
+// Set the "duration" parameter to 4 seconds.
+var action = new InputAction(interactions: "hold(duration=4)");
+```
+
+You can query the current value of any such parameter using the [`GetParameterValue`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_GetParameterValue_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_InputBinding) API.
+
+```CSharp
+// This returns a PrimitiveValue?. It will be null if the
+// parameter is not found. Otherwise, it is a PrimitiveValue
+// which can be converted to a number or boolean.
+var p = action.GetParameterValue("duration");
+Debug.Log("'duration' is set to: " + p.Value);
+```
+
+The above looks for the parameter on any object found on any of the bindings on the action. You can restrict either or both to a more narrow set.
+
+```CSharp
+// Retrieve the value of the "duration" parameter specifically of a
+// "Hold" interaction and only look on bindings in the "Gamepad" group.
+action.GetParameterValue("hold:duration", InputBinding.MaskByGroup("Gamepad"));
+```
+
+To alter the current value of a parameter, you can use what is referred to as a "parameter override". You can apply these at the level of an individual [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html), or at the level of an entire [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html), or even at the level of an entire [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). Such overrides are stored internally and applied automatically even on bindings added later.
+
+To add an override, use the [`ApplyParameterOverride`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_ApplyParameterOverride_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_Utilities_PrimitiveValue_UnityEngine_InputSystem_InputBinding) API or any of its overloads.
+
+```CSharp
+// Set the "duration" parameter on all bindings of the action to 4.
+action.ApplyParameterOverride("duration", 4f);
+
+// Set the "duration" parameter specifically for "tap" interactions only.
+action.ApplyParameterOverride("tap:duration", 0.5f);
+
+// Set the "duration" parameter on tap interactions but only for bindings
+// in the "Gamepad" group.
+action.ApplyParameterOverride("tap:duration", 0.5f, InputBinding.MaskByGroup("Gamepad");
+
+// Set tap duration for all bindings in an action map.
+map.ApplyParameterOverride("tap:duration", 0.5f);
+
+// Set tap duration for all bindings in an entire asset.
+asset.ApplyParameterOverride("tap:duration", 0.5f);
+```
+
+The new value will be applied immediately and affect all composites, processors, and interactions already in use and targeted by the override.
+
+Note that if multiple parameter overrides are applied &ndash; especially when applying some directly to actions and some to maps or assets &ndash;, there may be conflicts between which override to apply. In this case, an attempt is made to chose the "most specific" override to apply.
+
+```CSharp
+// Let's say you have an InputAction `action` that is part of an InputActionAsset asset.
+var map = action.actionMap;
+var asset = map.asset;
+
+// And you apply a "tap:duration" override to the action.
+action.ApplyParameterOverride("tap:duration", 0.6f);
+
+// But also apply a "tap:duration" override to the action specifically
+// for bindings in the "Gamepad" group.
+action.ApplyParameterOverride("tap:duration", 1f, InputBinding.MaskByGroup("Gamepad"));
+
+// And finally also apply a "tap:duration" override to the entire asset.
+asset.ApplyParameterOverride("tap:duration", 0.3f);
+
+// Now, bindings on `action` in the "Gamepad" group will use a value of 1 for tap durations,
+// other bindings on `action` will use 0.6, and every other binding in the asset will use 0.3.
+```
+
+You can use parameter overrides, for example, to scale mouse delta values on a "Look" action.
+
+```CSharp
+// Set up an example "Look" action.
+var look = new InputAction("look", type: InputActionType.Value);
+look.AddBinding("<Mouse>/delta", groups: "KeyboardMouse", processors: "scaleVector2");
+look.AddBinding("<Gamepad>/rightStick", groups: "Gamepad", processors: "scaleVector2");
+
+// Now you can adjust stick sensitivity separately from mouse sensitivity.
+look.ApplyParameterOverride("scaleVector2:x", 0.5f, InputBinding.MaskByGroup("KeyboardMouse"));
+look.ApplyParameterOverride("scaleVector2:y", 0.5f, InputBinding.MaskByGroup("KeyboardMouse"));
+
+look.ApplyParameterOverride("scaleVector2:x", 2f, InputBinding.MaskByGroup("Gamepad"));
+look.ApplyParameterOverride("scaleVector2:y", 2f, InputBinding.MaskByGroup("Gamepad"));
+
+// Alternative to using groups, you can also apply overrides directly to specific binding paths.
+look.ApplyParameterOverride("scaleVector2:x", 0.5f, new InputBinding("<Mouse>/delta"));
+look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/delta"));
+```
+
+>NOTE: Parameter overrides are *not* persisted along with an asset.
 
 ## Interactive rebinding
 

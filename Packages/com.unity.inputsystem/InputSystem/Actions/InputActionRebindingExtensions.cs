@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputActionSetupExtensions"/>
     /// <seealso cref="InputBinding"/>
     /// <seealso cref="InputAction.bindings"/>
-    public static class InputActionRebindingExtensions
+    public static partial class InputActionRebindingExtensions
     {
         /// <summary>
         /// Get the index of the first binding in <see cref="InputAction.bindings"/> on <paramref name="action"/>

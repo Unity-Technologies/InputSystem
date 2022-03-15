@@ -15,6 +15,8 @@ namespace UnityEngine.InputSystem.Editor
     /// <remarks>
     /// When implementing a custom parameter editor, use <see cref="InputParameterEditor{TObject}"/> instead.
     /// </remarks>
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
     public abstract class InputParameterEditor
     {
         /// <summary>

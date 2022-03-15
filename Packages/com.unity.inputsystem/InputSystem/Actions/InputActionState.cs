@@ -1217,7 +1217,7 @@ namespace UnityEngine.InputSystem
                         ProcessControlStateChange(mapIndex, controlIndex, bindingIndexForControl, time, default);
 
                         // For composites, any one actuated control will lead to the composite being
-                        // processed as a whole so we can stop here. This also ensure that we are
+                        // processed as a whole so we can stop here. This also ensures that we are
                         // not triggering the composite repeatedly if there are multiple actuated
                         // controls bound to its parts.
                         if (isComposite)
@@ -2435,18 +2435,25 @@ namespace UnityEngine.InputSystem
         }
 
         // Iterators may not use unsafe code so do the detour here.
-        internal BindingState GetBindingState(int bindingIndex)
+        internal ref BindingState GetBindingState(int bindingIndex)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
-            return bindingStates[bindingIndex];
+            return ref bindingStates[bindingIndex];
         }
 
-        internal InputBinding GetBinding(int bindingIndex)
+        internal ref InputBinding GetBinding(int bindingIndex)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
             var mapIndex = bindingStates[bindingIndex].mapIndex;
             var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
-            return maps[mapIndex].m_Bindings[bindingIndex - bindingStartIndex];
+            return ref maps[mapIndex].m_Bindings[bindingIndex - bindingStartIndex];
+        }
+
+        internal InputActionMap GetActionMap(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
+            var mapIndex = bindingStates[bindingIndex].mapIndex;
+            return maps[mapIndex];
         }
 
         private void ResetInteractionStateAndCancelIfNecessary(int mapIndex, int bindingIndex, int interactionIndex)
