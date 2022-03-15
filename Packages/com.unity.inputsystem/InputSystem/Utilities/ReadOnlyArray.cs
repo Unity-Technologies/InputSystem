@@ -69,6 +69,12 @@ namespace UnityEngine.InputSystem.Utilities
             return result;
         }
 
+        /// <summary>
+        /// Returns the index of the first element for which the given <paramref name="predicate"/> is true (if any).
+        /// </summary>
+        /// <param name="predicate">The unary predicate to be evaluated for each element.</param>
+        /// <returns>Index of the first element for which <paramref name="predicate"/> is true or -1 if no such element exists.</returns>
+        /// <exception cref="ArgumentNullException">If predicate is <c>null</c>.</exception>
         public int IndexOf(Predicate<TValue> predicate)
         {
             if (predicate == null)
@@ -93,16 +99,22 @@ namespace UnityEngine.InputSystem.Utilities
             return new Enumerator(m_Array, m_StartIndex, m_Length);
         }
 
+        /// <inheritdoc/>
         IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Constructs a read-only array containing elements <paramref name="array"/>.
+        /// </summary>
+        /// <param name="array">An existing array containing elements to be wrapped as a read-only array.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2225:OperatorOverloadsHaveNamedAlternates", Justification = "`ToXXX` message only really makes sense as static, which is not recommended for generic types.")]
         public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
         {
