@@ -138,6 +138,8 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
+            var disableControlGrouping = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
+
             var currentGroup = 1u;
             for (var i = 0; i < totalControlCount; ++i)
             {
@@ -164,15 +166,18 @@ namespace UnityEngine.InputSystem
                 controlGroupingAndComplexity[i * 2 + 1] = (ushort)complexity;
 
                 // Compute grouping. If already set, skip.
-                if (controlGroupingAndComplexity[i * 2] != 0)
+                if (controlGroupingAndComplexity[i * 2] == 0)
                 {
-                    for (var n = 0; n < totalControlCount; ++n)
+                    if (!disableControlGrouping)
                     {
-                        var otherControl = controls[n];
-                        if (control != otherControl)
-                            continue;
+                        for (var n = 0; n < totalControlCount; ++n)
+                        {
+                            var otherControl = controls[n];
+                            if (control != otherControl)
+                                continue;
 
-                        controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
+                            controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
+                        }
                     }
 
                     controlGroupingAndComplexity[i * 2] = (ushort)currentGroup;
