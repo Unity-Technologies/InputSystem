@@ -83,6 +83,24 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
+        /// Where to position the pointer when the cursor is locked.
+        /// </summary>
+        /// <remarks>
+        /// By default, the pointer is positioned at -1, -1 in screen space when the cursor is locked. This has implications
+        /// for using ray casters like <see cref="PhysicsRaycaster"/> because the raycasts will be sent from the pointer
+        /// position. By setting the value of <see cref="cursorLockBehavior"/> to <see cref="CursorLockBehavior.ScreenCenter"/>,
+        /// the raycasts will be sent from the center of the screen. This is useful when trying to interact with world space UI
+        /// using the <see cref="IPointerEnterHandler"/> and <see cref="IPointerExitHandler"/> interfaces when the cursor
+        /// is locked.
+        /// </remarks>
+        /// <see cref="Cursor.lockState"/>
+        public CursorLockBehavior cursorLockBehavior
+        {
+            get => m_CursorLockBehavior;
+            set => m_CursorLockBehavior = value;
+        }
+
+        /// <summary>
         /// Called by <c>EventSystem</c> when the input module is made current.
         /// </summary>
         public override void ActivateModule()
@@ -249,7 +267,9 @@ namespace UnityEngine.InputSystem.UI
             var pointerType = eventData.pointerType;
             if (pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
             {
-                eventData.position = new Vector2(-1, -1);
+                eventData.position = m_CursorLockBehavior == CursorLockBehavior.OutsideScreen ?
+                    new Vector2(-1, -1) :
+                    new Vector2(Screen.width / 2f, Screen.height / 2f);
                 ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode seems wrong
                 eventData.delta = default;
             }
@@ -341,8 +361,7 @@ namespace UnityEngine.InputSystem.UI
             var currentPointerTarget =
                 // If the pointer is a touch that was released the *previous* frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame) ||
-                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+                eventData.pointerType == UIPointerType.Touch && !pointer.leftButton.isPressed && !pointer.leftButton.wasReleasedThisFrame
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
 
@@ -2193,6 +2212,7 @@ namespace UnityEngine.InputSystem.UI
 
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+        [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
 
         private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
 
@@ -2225,6 +2245,26 @@ namespace UnityEngine.InputSystem.UI
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;
+
+        /// <summary>
+        /// Controls the origin point of raycasts when the cursor is locked.
+        /// </summary>
+        public enum CursorLockBehavior
+        {
+            /// <summary>
+            /// The internal pointer position will be set to -1, -1. This short-circuits the raycasting
+            /// logic so no objects will be intersected. This is the default setting.
+            /// </summary>
+            OutsideScreen,
+
+            /// <summary>
+            /// Raycasts will originate from the center of the screen. This mode can be useful for
+            /// example to check in pointer-driven FPS games if the player is looking at some world-space
+            /// object that implements the <see cref="IPointerEnterHandler"/> and <see cref="IPointerExitHandler"/>
+            /// interfaces.
+            /// </summary>
+            ScreenCenter
+        }
     }
 }
 #endif

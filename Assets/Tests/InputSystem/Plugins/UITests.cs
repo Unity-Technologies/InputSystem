@@ -3667,6 +3667,38 @@ internal class UITests : CoreTestsFixture
         Assert.That(clicked, Is.EqualTo(canRunInBackground));
     }
 
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenCursorIsLockedToScreenCenter_PointerEnterAndExitEventsFire()
+    {
+        var eventSystem = new GameObject("EventSystem", typeof(TestEventSystem), typeof(InputSystemUIInputModule));
+        var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+        inputModule.m_CursorLockBehavior = InputSystemUIInputModule.CursorLockBehavior.ScreenCenter;
+        inputModule.actionsAsset.Enable();
+
+        new GameObject("Raycaster", typeof(PhysicsRaycaster))
+        {
+            transform = { position = new Vector3(0, 0, -1) }
+        };
+        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var callbackReceiver = cube.AddComponent<UICallbackReceiver>();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // first yield is to enable the input system ui input module
+        yield return null;
+        Press(mouse.leftButton);
+
+        // second yield is to actually process events in the module
+        yield return null;
+        Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerEnter), Is.True);
+
+        cube.transform.position = new Vector3(1000, 0, 0);
+        yield return null;
+        Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerExit), Is.True);
+    }
+
     public class MyButton : UnityEngine.UI.Button
     {
         public bool receivedPointerDown;
