@@ -26,10 +26,6 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 #pragma warning disable CS0649
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 
-//problems to solve:
-// - complexity numbers are treated as global values yet depend entirely on the individual data in each state
-// - shortcuts currently trigger from A+CTRL instead of only from CTRL+A
-
 // As should be obvious from the number of tests in here, the action system rivals the entire combined rest of the system
 // in terms of complexity.
 partial class CoreTests
@@ -126,6 +122,34 @@ partial class CoreTests
         Assert.That(!action3.WasPerformedThisFrame());
     }
 
+    // For now, maintain a kill switch for the new behavior for users to have an out where the
+    // the behavior is simply breaking their project.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableShortcutSupport()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/ctrl")
+            .With("Binding", "<Keyboard>/space");
+
+        map.Enable();
+
+        Press(keyboard.leftCtrlKey, queueEventOnly: true);
+        Press(keyboard.spaceKey);
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanBindShortcutsInvolvingMultipleDevices()
@@ -219,6 +243,35 @@ partial class CoreTests
             Press((ButtonControl)keyboard[modifier2]);
 
         Assert.That(wasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/space");
+
+        action1.wantsInitialStateCheck = true;
+        action2.wantsInitialStateCheck = true;
+
+        // Order is wrong but the ordering is lost when relying on initial state checks.
+        Press(keyboard.spaceKey);
+        Press(keyboard.leftShiftKey);
+
+        map.Enable();
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
     }
 
     [Test]

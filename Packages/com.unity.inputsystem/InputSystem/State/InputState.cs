@@ -165,6 +165,40 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Monitors are invoked <em>after</em> a state change has been written to the device. If, for example, a <see cref="StateEvent"/> is
         /// received that sets <see cref="Gamepad.leftTrigger"/> to <c>0.5</c>, the value is first applied to the control and then any state
         /// monitors that may be listening to the change are invoked (thus getting <c>0.5</c> if calling <see cref="Controls.AxisControl.ReadValue()"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// class InputMonitor : IInputStateChangeMonitor
+        /// {
+        ///     public InputMonitor()
+        ///     {
+        ///         // Watch the left and right mouse button.
+        ///         // By supplying monitor indices here, we not only receive the indices in NotifyControlStateChanged,
+        ///         // we also create an ordering between the two monitors. The one on RMB will fire *before* the one
+        ///         // on LMB in case there is a single event that changes both buttons.
+        ///         InputState.AddChangeMonitor(Mouse.current.leftButton, this, monitorIndex: 1);
+        ///         InputState.AddChangeMonitor(Mouse.current.rightButton, this, monitorIndex: 2);
+        ///     }
+        ///
+        ///     public void NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
+        ///     {
+        ///         Debug.Log($"{control} changed");
+        ///
+        ///         // We can add a monitor timeout that will trigger in case the state of the
+        ///         // given control is not changed within the given time. Let's watch the control
+        ///         // for 2 seconds. If nothing happens, we will get a call to NotifyTimerExpired.
+        ///         // If, however, there is a state change, the timeout is automatically removed
+        ///         // and we will see a call to NotifyControlStateChanged instead.
+        ///         InputState.AddChangeMonitorTimeout(control, this, 2);
+        ///     }
+        ///
+        ///     public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+        ///     {
+        ///         Debug.Log($"{control} was not changed within 2 seconds");
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
         public static void AddChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1, uint groupIndex = default)
         {

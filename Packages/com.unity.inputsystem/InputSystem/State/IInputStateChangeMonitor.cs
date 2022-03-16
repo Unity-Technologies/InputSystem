@@ -36,10 +36,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Called when a timeout set on a state change monitor has expired.
         /// </summary>
-        /// <param name="control"></param>
-        /// <param name="time"></param>
-        /// <param name="monitorIndex"></param>
-        /// <param name="timerIndex"></param>
+        /// <param name="control">Control on which the timeout expired.</param>
+        /// <param name="time">Input time at which the timer expired. This is the time at which an <see cref="InputSystem.Update"/> is being
+        /// run whose <see cref="InputState.currentTime"/> is past the time of expiration.</param>
+        /// <param name="monitorIndex">Index of the monitor as given to <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>.</param>
+        /// <param name="timerIndex">Index of the timer as given to <see cref="InputState.AddChangeMonitorTimeout"/>.</param>
         /// <seealso cref="InputState.AddChangeMonitorTimeout"/>
         void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex);
     }
