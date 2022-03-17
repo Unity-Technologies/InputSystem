@@ -553,7 +553,6 @@ class APIVerificationTests
     [TestCase("Keyboard", "Devices/Precompiled/FastKeyboard.cs")]
     [TestCase("Mouse", "Devices/Precompiled/FastMouse.cs")]
     [TestCase("Touchscreen", "Devices/Precompiled/FastTouchscreen.cs")]
-    [TestCase("DualShock4GamepadHID", "Plugins/DualShock/FastDualShock4GamepadHID.cs")]
     public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
     {
         var fullPath = "Packages/com.unity.inputsystem/InputSystem/" + filePath;

@@ -9,6 +9,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.HID;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 
 #if UNITY_WSA
@@ -75,27 +76,33 @@ internal class DualShockTests : CoreTestsFixture
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
     }
 
+    internal struct DualShock4HIDInputReportRaw : IInputStateTypeInfo
+    {
+        public byte commandId;
+        public DualShock4GamepadHID.DualShock4HIDGenericInputReport report;
+
+        public FourCC format => DualShock4GamepadHID.DualShock4HIDGenericInputReport.Format;
+    }
+
     [Test]
     [Category("Devices")]
-    [TestCase(true)]
-    [TestCase(false)]
-    public void Devices_SupportsDualShock4AsHID(bool precompiled)
+    public void Devices_SupportsDualShock4AsHID()
     {
-        if (!precompiled)
-            InputControlLayout.s_Layouts.precompiledLayouts.Clear();
-
-        var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReport>(
-            new DualShock4HIDInputReport
-            {
-                leftStickX = 32,
-                leftStickY = 64,
-                rightStickX = 128,
-                rightStickY = 255,
-                leftTrigger = 20,
-                rightTrigger = 40,
-                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
-                buttons2 = 0xff,
-                buttons3 = 0xff
+        var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReportRaw>(
+            new DualShock4HIDInputReportRaw{
+                commandId = 0x01,
+                report = new DualShock4GamepadHID.DualShock4HIDGenericInputReport
+                {
+                    leftStickX = 32,
+                    leftStickY = 64,
+                    rightStickX = 128,
+                    rightStickY = 255,
+                    leftTrigger = 20,
+                    rightTrigger = 40,
+                    buttons0 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
+                    buttons1 = 0xff,
+                    buttons2 = 0xff
+                }
             }
         );
 
