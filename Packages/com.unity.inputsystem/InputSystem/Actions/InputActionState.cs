@@ -571,8 +571,12 @@ namespace UnityEngine.InputSystem
                     continue;
                 }
 
-                //bring compositeMagnitudes along
-                //make absolutely sure we carry controlMagnitudes over!
+                // For composites, bring magnitudes along.
+                if (newBindingState.isComposite)
+                {
+                    var compositeIndex = newBindingState.compositeOrCompositeBindingIndex;
+                    memory.compositeMagnitudes[compositeIndex] = oldState.compositeMagnitudes[compositeIndex];
+                }
 
                 var actionIndex = newBindingState.actionIndex;
                 if (actionIndex == kInvalidIndex)
@@ -586,13 +590,12 @@ namespace UnityEngine.InputSystem
                 if (newActionState.isDisabled)
                     continue;
 
-                ///////////NOOOOOOOOOO!!!!!!! Don't force this on like this!
                 // For all bindings to actions that are enabled, we flip on initial state checks to make sure
                 // we're checking the action's current state against the most up-to-date actuation state of controls.
                 // NOTE: We're only restore execution state for currently active controls. So, if there were multiple
                 //       concurrent actuations on an action that was in progress, we let initial state checks restore
                 //       relevant state.
-                newBindingState.initialStateCheckPending = true;
+                newBindingState.initialStateCheckPending = newBindingState.wantsInitialStateCheck;
 
                 // Enable all controls on the binding.
                 EnableControls(newBindingState.mapIndex, newBindingState.controlStartIndex,
