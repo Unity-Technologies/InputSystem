@@ -44,6 +44,11 @@
             "name": "Unity",
             "expression": "[2022.1,2022.2)",
             "define": "TEMP_DISABLE_UITOOLKIT_TEST"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.2.0a1,2022.2.0a10)",
+            "define": "TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST"
         }
     ],
     "noEngineReferences": false

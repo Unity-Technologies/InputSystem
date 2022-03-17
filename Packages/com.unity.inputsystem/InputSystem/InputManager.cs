@@ -2511,6 +2511,13 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
+
+                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
+                {
+                    var command = UseWindowsGamingInputCommand.Create(true);
+                    if (ExecuteGlobalCommand(ref command) < 0)
+                        Debug.LogError($"Could not enable Windows.Gaming.Input");
+                }
             }
 
             // Cache some values.
@@ -2524,6 +2531,14 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
+        }
+
+        internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
+            where TCommand : struct, IInputDeviceCommandInfo
+        {
+            var ptr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+            // device id is irrelevant as we route it based on fourcc internally
+            return InputRuntime.s_Instance.DeviceCommand(0, ptr);
         }
 
         internal void AddAvailableDevicesThatAreNowRecognized()

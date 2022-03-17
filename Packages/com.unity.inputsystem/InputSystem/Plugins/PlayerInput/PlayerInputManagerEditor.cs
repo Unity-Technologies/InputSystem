@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DoNotificationSectionUI()
         {
-            var notificationBehaviorProperty = serializedObject.FindProperty("m_NotificationBehavior");
+            var notificationBehaviorProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_NotificationBehavior));
             EditorGUILayout.PropertyField(notificationBehaviorProperty);
             switch ((PlayerNotifications)notificationBehaviorProperty.intValue)
             {
@@ -70,8 +70,8 @@ namespace UnityEngine.InputSystem.Editor
                     m_EventsExpanded = EditorGUILayout.Foldout(m_EventsExpanded, m_EventsLabel, toggleOnLabelClick: true);
                     if (m_EventsExpanded)
                     {
-                        var playerJoinedEventProperty = serializedObject.FindProperty("m_PlayerJoinedEvent");
-                        var playerLeftEventProperty = serializedObject.FindProperty("m_PlayerLeftEvent");
+                        var playerJoinedEventProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_PlayerJoinedEvent));
+                        var playerLeftEventProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_PlayerLeftEvent));
 
                         EditorGUILayout.PropertyField(playerJoinedEventProperty);
                         EditorGUILayout.PropertyField(playerLeftEventProperty);
@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.LabelField(m_JoiningGroupLabel, EditorStyles.boldLabel);
 
             // Join behavior
-            var joinBehaviorProperty = serializedObject.FindProperty("m_JoinBehavior");
+            var joinBehaviorProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_JoinBehavior));
             EditorGUILayout.PropertyField(joinBehaviorProperty);
             if ((PlayerJoinBehavior)joinBehaviorProperty.intValue != PlayerJoinBehavior.JoinPlayersManually)
             {
@@ -95,12 +95,12 @@ namespace UnityEngine.InputSystem.Editor
                 if ((PlayerJoinBehavior)joinBehaviorProperty.intValue ==
                     PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered)
                 {
-                    var joinActionProperty = serializedObject.FindProperty("m_JoinAction");
+                    var joinActionProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_JoinAction));
                     EditorGUILayout.PropertyField(joinActionProperty);
                 }
 
                 // Player prefab.
-                var playerPrefabProperty = serializedObject.FindProperty("m_PlayerPrefab");
+                var playerPrefabProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_PlayerPrefab));
                 EditorGUILayout.PropertyField(playerPrefabProperty);
 
                 ValidatePlayerPrefab(joinBehaviorProperty, playerPrefabProperty);
@@ -109,13 +109,15 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Enabled-by-default.
-            var allowJoiningProperty = serializedObject.FindProperty("m_AllowJoining");
+            var allowJoiningProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_AllowJoining));
             if (m_AllowingJoiningLabel == null)
                 m_AllowingJoiningLabel = new GUIContent("Joining Enabled By Default", allowJoiningProperty.GetTooltip());
             EditorGUILayout.PropertyField(allowJoiningProperty, m_AllowingJoiningLabel);
 
             // Max player count.
-            var maxPlayerCountProperty = serializedObject.FindProperty("m_MaxPlayerCount");
+            var maxPlayerCountProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_MaxPlayerCount));
+            if (m_EnableMaxPlayerCountLabel == null)
+                m_EnableMaxPlayerCountLabel = EditorGUIUtility.TrTextContent("Limit Number of Players", maxPlayerCountProperty.GetTooltip());
             if (maxPlayerCountProperty.intValue > 0)
                 m_MaxPlayerCountEnabled = true;
             m_MaxPlayerCountEnabled = EditorGUILayout.Toggle(m_EnableMaxPlayerCountLabel, m_MaxPlayerCountEnabled);
@@ -166,7 +168,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.LabelField(m_SplitScreenGroupLabel, EditorStyles.boldLabel);
 
             // Split-screen toggle.
-            var splitScreenProperty = serializedObject.FindProperty("m_SplitScreen");
+            var splitScreenProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_SplitScreen));
             if (m_SplitScreenLabel == null)
                 m_SplitScreenLabel = new GUIContent("Enable Split-Screen", splitScreenProperty.GetTooltip());
             EditorGUILayout.PropertyField(splitScreenProperty, m_SplitScreenLabel);
@@ -176,14 +178,16 @@ namespace UnityEngine.InputSystem.Editor
             ++EditorGUI.indentLevel;
 
             // Maintain-aspect-ratio toggle.
-            var maintainAspectRatioProperty = serializedObject.FindProperty("m_MaintainAspectRatioInSplitScreen");
+            var maintainAspectRatioProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_MaintainAspectRatioInSplitScreen));
             if (m_MaintainAspectRatioLabel == null)
                 m_MaintainAspectRatioLabel =
                     new GUIContent("Maintain Aspect Ratio", maintainAspectRatioProperty.GetTooltip());
             EditorGUILayout.PropertyField(maintainAspectRatioProperty, m_MaintainAspectRatioLabel);
 
             // Fixed-number toggle.
-            var fixedNumberProperty = serializedObject.FindProperty("m_FixedNumberOfSplitScreens");
+            var fixedNumberProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_FixedNumberOfSplitScreens));
+            if (m_EnableFixedNumberOfSplitScreensLabel == null)
+                m_EnableFixedNumberOfSplitScreensLabel = EditorGUIUtility.TrTextContent("Set Fixed Number", fixedNumberProperty.GetTooltip());
             if (fixedNumberProperty.intValue > 0)
                 m_FixedNumberOfSplitScreensEnabled = true;
             m_FixedNumberOfSplitScreensEnabled = EditorGUILayout.Toggle(m_EnableFixedNumberOfSplitScreensLabel,
@@ -205,7 +209,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Split-screen area.
-            var splitScreenAreaProperty = serializedObject.FindProperty("m_SplitScreenRect");
+            var splitScreenAreaProperty = serializedObject.FindProperty(nameof(PlayerInputManager.m_SplitScreenRect));
             if (m_SplitScreenAreaLabel == null)
                 m_SplitScreenAreaLabel = new GUIContent("Screen Rectangle", splitScreenAreaProperty.GetTooltip());
             EditorGUILayout.PropertyField(splitScreenAreaProperty, m_SplitScreenAreaLabel);
@@ -252,10 +256,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent m_MaintainAspectRatioLabel;
         [NonSerialized] private GUIContent m_SplitScreenAreaLabel;
         [NonSerialized] private GUIContent m_FixedNumberOfSplitScreensLabel;
-        [NonSerialized] private readonly GUIContent m_EnableMaxPlayerCountLabel =
-            EditorGUIUtility.TrTextContent("Limit Number of Players", "TODO");
-        [NonSerialized] private readonly GUIContent m_EnableFixedNumberOfSplitScreensLabel =
-            EditorGUIUtility.TrTextContent("Set Fixed Number", "TODO");
+        [NonSerialized] private GUIContent m_EnableMaxPlayerCountLabel;
+        [NonSerialized] private GUIContent m_EnableFixedNumberOfSplitScreensLabel;
     }
 }
 #endif // UNITY_EDITOR
