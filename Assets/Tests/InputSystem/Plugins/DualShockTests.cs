@@ -89,7 +89,8 @@ internal class DualShockTests : CoreTestsFixture
     public void Devices_SupportsDualShock4AsHID()
     {
         var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReportRaw>(
-            new DualShock4HIDInputReportRaw{
+            new DualShock4HIDInputReportRaw
+            {
                 commandId = 0x01,
                 report = new DualShock4GamepadHID.DualShock4HIDGenericInputReport
                 {

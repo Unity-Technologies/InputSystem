@@ -781,6 +781,10 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
     ")]
+    // DualShock4GamepadHID from IEventPreProcessor, which is an internal interface
+    [Property("Exclusions", @"1.0.0
+        public class DualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShockGamepad
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

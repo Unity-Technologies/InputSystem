@@ -151,7 +151,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     {
         public static FourCC Format = new FourCC('D', '4', 'V', 'S'); // DualShock4 Virtual State
         public FourCC format => Format;
-    
+
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
         [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
@@ -837,7 +837,7 @@ namespace UnityEngine.InputSystem.DualShock
                     return false; // skip unrecognized reportId
             }
         }
-        
+
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualShock4HIDGenericInputReport
         {
@@ -852,7 +852,7 @@ namespace UnityEngine.InputSystem.DualShock
             [FieldOffset(6)] public byte buttons2;
             [FieldOffset(7)] public byte leftTrigger;
             [FieldOffset(8)] public byte rightTrigger;
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DualShock4HIDInputReport ToHIDInputReport()
             {
