@@ -138,6 +138,8 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
+            // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
+            // in their own group.
             var disableControlGrouping = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
 
             var currentGroup = 1u;
@@ -151,7 +153,7 @@ namespace UnityEngine.InputSystem
 
                 // Compute complexity.
                 var complexity = 1;
-                if (binding.isPartOfComposite)
+                if (binding.isPartOfComposite && !disableControlGrouping)
                 {
                     var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
 

@@ -34,7 +34,9 @@ partial class CoreTests
     //          actions should result in the input system figuring out which *one* action gets to act on the input.
     [Test]
     [Category("Actions")]
-    public void Actions_CanConsumeInput()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_CanConsumeInput(bool legacyComposites)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -63,10 +65,10 @@ partial class CoreTests
         //   action5 complexity=1
 
         action1.AddBinding("<Keyboard>/space");
-        action2.AddCompositeBinding("OneModifier")
+        action2.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
             .With("Modifier", "<Keyboard>/shift")
             .With("Binding", "<Keyboard>/space");
-        action3.AddCompositeBinding("TwoModifiers")
+        action3.AddCompositeBinding(legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers")
             .With("Modifier1", "<Keyboard>/ctrl")
             .With("Modifier2", "<Keyboard>/shift")
             .With("Binding", "<Keyboard>/space");
@@ -210,25 +212,27 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [TestCase("leftShift", null, "space")]
-    [TestCase("leftShift", "leftAlt", "space")]
-    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding)
+    [TestCase("leftShift", null, "space", true)]
+    [TestCase("leftShift", "leftAlt", "space", true)]
+    [TestCase("leftShift", null, "space", false)]
+    [TestCase("leftShift", "leftAlt", "space", false)]
+    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
         if (!string.IsNullOrEmpty(modifier2))
         {
-            action.AddCompositeBinding("TwoModifiers")
+            action.AddCompositeBinding(legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers")
                 .With("Modifier1", "<Keyboard>/" + modifier1)
                 .With("Modifier2", "<Keyboard>/" + modifier2)
-                .With("Binding", "<Keyboard>/" + binding);
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
         else
         {
-            action.AddCompositeBinding("OneModifier")
+            action.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
                 .With("Modifier", "<Keyboard>/" + modifier1)
-                .With("Binding", "<Keyboard>/" + binding);
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
 
         action.Enable();
@@ -247,6 +251,47 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [TestCase("leftShift", null, "space", true)]
+    [TestCase("leftShift", "leftAlt", "space", true)]
+    [TestCase("leftShift", null, "space", false)]
+    [TestCase("leftShift", "leftAlt", "space", false)]
+    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding,
+        bool legacyComposites)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(overrideModifiersNeedToBePressedFirst)")
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        // Press binding first, then modifiers.
+        Press((ButtonControl)keyboard[binding]);
+        Assert.That(action.WasPerformedThisFrame(), Is.False);
+        Press((ButtonControl)keyboard[modifier1]);
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            Assert.That(action.WasPerformedThisFrame(), Is.False);
+            Press((ButtonControl)keyboard[modifier2]);
+        }
+
+        Assert.That(action.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -257,6 +302,45 @@ partial class CoreTests
         action1.AddBinding("<Keyboard>/space");
         action2.AddCompositeBinding("OneModifier")
             .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/space");
+
+        action1.wantsInitialStateCheck = true;
+        action2.wantsInitialStateCheck = true;
+
+        // Order is wrong but the ordering is lost when relying on initial state checks.
+        Press(keyboard.spaceKey);
+        Press(keyboard.leftShiftKey);
+
+        map.Enable();
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    // So, right now we don't support interactions on part bindings. Which makes sense because interactions
+    // talk to the action directly, they don't participate in the value chain.
+    //
+    // For shortcuts, this means you can't use "hold X" as a modifier. Which would be very cool (Elden Ring,
+    // for example, does that with the Y button on the gamepad).
+    //
+    // When we redesign interactions as part of the gesture feature, we should make sure we can handle
+    // such a scenario. With interactions being able to directly drive values, there should be no reason
+    // why you couldn't have "hold Y" as a modifier.
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanUseInteractionsOnShortcutModifiers()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift") //
             .With("Binding", "<Keyboard>/space");
 
         action1.wantsInitialStateCheck = true;
