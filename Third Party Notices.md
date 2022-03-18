@@ -2,9 +2,9 @@
 
 ---
 
-Component Name: Assets/Samples/RebindingUI/Icons/*.png (Rebinding UI Sample Icon assets)
+Component Name: Assets/Samples/RebindingUI/Icons/*.png (Rebinding UI Sample Icon Assets)
 
-Creative Commons CC0
+Creative Commons CC0, https://creativecommons.org/publicdomain/zero/1.0/
 
 <pre>
 Creative Commons Legal Code
