@@ -2814,6 +2814,12 @@ namespace UnityEngine.InputSystem
 
         internal void OnFocusChanged(bool focus)
         {
+            if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
+            {
+                // NOTE: m_HasFocus is untouched here as we want the OnUpdate() function to continue unaffected by focus changes as well
+                return;
+            }
+
             #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
 
@@ -2840,13 +2846,6 @@ namespace UnityEngine.InputSystem
                 #else
                 m_Runtime.runInBackground;
                 #endif
-
-            var backgroundBehavior = m_Settings.backgroundBehavior;
-            if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
-            {
-                m_HasFocus = focus;
-                return;
-            }
 
             #if UNITY_EDITOR
             // Set the current update type while we process the focus changes to make sure we

@@ -4669,7 +4669,7 @@ partial class CoreTests
 
         // If we're set up to process input even when in the background, make sure
         // this is intact.
-        if (appRunInBackground || kIsEditor)
+        if (appRunInBackground || kIsEditor || backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
         {
             // Queue a change on each device.
             Set(mouse.position, new Vector2(333, 444), queueEventOnly: true);
@@ -4744,53 +4744,15 @@ partial class CoreTests
 
                 case InputSettings.BackgroundBehavior.IgnoreFocus:
 
-                    if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
-                    {
-                        if (appRunInBackground)
-                        {
-                            // All devices should have been affected.
-                            Assert.That(eventCount, Is.EqualTo(5));
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
-                            Assert.That(keyboard.aKey.isPressed, Is.True);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
-                            Assert.That(joystick.stick.ReadValue(),
-                                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
-                        }
-                        else
-                        {
-                            // All devices should be unaffected.
-                            Assert.That(eventCount, Is.Zero);
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-                            Assert.That(keyboard.aKey.isPressed, Is.False);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
-                            Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
-                        }
-                    }
-
-                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
-                    {
-                        // All devices should be unaffected.
-                        Assert.That(eventCount, Is.Zero);
-                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-                        Assert.That(keyboard.aKey.isPressed, Is.False);
-                        Assert.That(gamepad.buttonNorth.isPressed, Is.False);
-                        Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
-                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
-                    }
-
-                    if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
-                    {
-                        // All devices except for mouse and keyboard should be affected.
-                        Assert.That(eventCount, Is.EqualTo(3));
-                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-                        Assert.That(keyboard.aKey.isPressed, Is.False);
-                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
-                        Assert.That(joystick.stick.ReadValue(),
-                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
-                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
-                    }
+                    // IgnoreFocus takes precedence so the result should be the same here regardless of the other settings
+                    // All devices should have been affected.
+                    Assert.That(eventCount, Is.EqualTo(5));
+                    Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                    Assert.That(keyboard.aKey.isPressed, Is.True);
+                    Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                    Assert.That(joystick.stick.ReadValue(),
+                        Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                    Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
 
                     break;
             }
@@ -4810,22 +4772,40 @@ partial class CoreTests
 
                 Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
 
-                switch (editorInputBehaviorInPlayMode)
+                if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
                 {
-                    case InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus:
-                        if (backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices ||
-                            backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
-                        {
-                            // Pointer and mouse input should have gone to editor.
-                            Assert.That(eventCount, Is.EqualTo(2));
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
-                            Assert.That(keyboard.aKey.isPressed, Is.True);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
-                            Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(Vector3.zero));
-                        }
-                        else
-                        {
+                    // IgnoreFocus takes precedence so in all cases no input should have been deferred.
+                    Assert.That(eventCount, Is.Zero);
+                }
+                else
+                {
+                    switch (editorInputBehaviorInPlayMode)
+                    {
+                        case InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus:
+                            if (backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)
+                            {
+                                // Pointer and mouse input should have gone to editor.
+                                Assert.That(eventCount, Is.EqualTo(2));
+                                Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                                Assert.That(keyboard.aKey.isPressed, Is.True);
+                                Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+                                Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                                Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(Vector3.zero));
+                            }
+                            else
+                            {
+                                // All input should have gone to editor.
+                                Assert.That(eventCount, Is.EqualTo(5));
+                                Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                                Assert.That(keyboard.aKey.isPressed, Is.True);
+                                Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                                Assert.That(joystick.stick.ReadValue(),
+                                    Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                                Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
+                            }
+                            break;
+
+                        case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
                             // All input should have gone to editor.
                             Assert.That(eventCount, Is.EqualTo(5));
                             Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
@@ -4834,24 +4814,13 @@ partial class CoreTests
                             Assert.That(joystick.stick.ReadValue(),
                                 Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
                             Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
-                        }
-                        break;
+                            break;
 
-                    case InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus:
-                        // All input should have gone to editor.
-                        Assert.That(eventCount, Is.EqualTo(5));
-                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
-                        Assert.That(keyboard.aKey.isPressed, Is.True);
-                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
-                        Assert.That(joystick.stick.ReadValue(),
-                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
-                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
-                        break;
-
-                    case InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView:
-                        // No input should have been deferred.
-                        Assert.That(eventCount, Is.Zero);
-                        break;
+                        case InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView:
+                            // No input should have been deferred.
+                            Assert.That(eventCount, Is.Zero);
+                            break;
+                    }
                 }
             }
 
@@ -4937,7 +4906,9 @@ partial class CoreTests
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
 
-        if (!appRunInBackground && (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
+        // We were not processing input in the background
+        if (!appRunInBackground && backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus &&
+            (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
         {
             // No change on focus gain.
 
