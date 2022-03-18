@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>
     public interface IInputStateChangeMonitor
     {
+        ////REVIEW: For v2, consider changing the signature of this to put the "was consumed" signal *outside* the eventPtr
         /// <summary>
         /// Called when the state monitored by a state change monitor has been modified.
         /// </summary>
@@ -20,8 +21,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// memory changed.</param>
         /// <param name="time">Time on the <see cref="InputEvent.time"/> timeline at which the control state change was received.</param>
         /// <param name="eventPtr">If the state change was initiated by a state event (either a <see cref="StateEvent"/>
-        /// or <see cref="DeltaStateEvent"/>), this is the pointer to the event. Otherwise it is an invalid event pointer
-        /// (see <see cref="InputEventPtr.valid"/>).</param>
+        /// or <see cref="DeltaStateEvent"/>), this is the pointer to that event. Otherwise it is pointer that is still
+        /// <see cref="InputEventPtr.valid"/>, but refers a "dummy" event that is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
         /// <param name="monitorIndex">Index of the monitor as passed to <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>.
         /// </param>
         /// <remarks>

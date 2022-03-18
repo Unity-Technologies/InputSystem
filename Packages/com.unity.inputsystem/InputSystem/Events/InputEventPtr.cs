@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Whether the pointer is not <c>null</c>.
         /// </summary>
         /// <value>True if the struct refers to an event.</value>
-        public bool valid => m_EventPtr != null && m_EventPtr->type != default;
+        public bool valid => m_EventPtr != null;
 
         /// <summary>
         /// Whether the event is considered "handled" and should not be processed further.
@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Setting this flag from inside a state change monitor (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>)
         /// will prevent other monitors on the same <see cref="IInputStateChangeMonitor"/> not receiving the state change.
         /// </remarks>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidOperationException">The event pointer instance is not <see cref="valid"/>.</exception>
         public bool handled
         {
             get

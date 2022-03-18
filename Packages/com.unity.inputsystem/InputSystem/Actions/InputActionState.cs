@@ -174,6 +174,11 @@ namespace UnityEngine.InputSystem
                     {
                         for (var n = 0; n < totalControlCount; ++n)
                         {
+                            // NOTE: We could compute group numbers based on device index + control offsets
+                            //       and thus make them work globally in a stable way. But we'd need a mechanism
+                            //       to then determine ordering of actions globally such that it is clear which
+                            //       action gets a first shot at an input.
+
                             var otherControl = controls[n];
                             if (control != otherControl)
                                 continue;
@@ -1268,6 +1273,7 @@ namespace UnityEngine.InputSystem
                 var controlCount = bindingState.controlCount;
 
                 var isComposite = bindingState.isComposite;
+                var didFindControlToSignal = false;
                 for (var n = 0; n < controlCount; ++n)
                 {
                     var controlIndex = controlStartIndex + n;
@@ -1291,10 +1297,11 @@ namespace UnityEngine.InputSystem
                         // processed as a whole so we can stop here. This also ensures that we are
                         // not triggering the composite repeatedly if there are multiple actuated
                         // controls bound to its parts.
-                        if (isComposite && n > 0)
-                            break;
+                        if (isComposite && didFindControlToSignal)
+                            continue;
 
                         manager.SignalStateChangeMonitor(control, this);
+                        didFindControlToSignal = true;
                     }
                 }
             }
@@ -2372,8 +2379,8 @@ namespace UnityEngine.InputSystem
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group.
                 // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1 && m_CurrentlyProcessingThisEvent != default)
-                    m_CurrentlyProcessingThisEvent.ToPointer()->handled = true;
+                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1)
+                    m_CurrentlyProcessingThisEvent.handled = true;
             }
             else if (newPhase == InputActionPhase.Canceled)
             {

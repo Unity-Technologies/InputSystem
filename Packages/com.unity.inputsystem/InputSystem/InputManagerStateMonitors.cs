@@ -355,7 +355,7 @@ namespace UnityEngine.InputSystem
 
             // If we don't have an event, gives us as dummy, invalid instance.
             // What matters is that InputEventPtr.valid is false for these.
-            var tempEvent = default(InputEvent);
+            var tempEvent = new InputEvent(new FourCC('F', 'A', 'K', 'E'), InputEvent.kBaseEventSize, -1, internalTime);
             if (eventPtr == null)
                 eventPtr = (InputEvent*)UnsafeUtility.AddressOf(ref tempEvent);
 

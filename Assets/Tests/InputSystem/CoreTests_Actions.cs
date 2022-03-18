@@ -67,11 +67,11 @@ partial class CoreTests
         action1.AddBinding("<Keyboard>/space");
         action2.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
             .With("Modifier", "<Keyboard>/shift")
-            .With("Binding", "<Keyboard>/space");
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/space");
         action3.AddCompositeBinding(legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers")
             .With("Modifier1", "<Keyboard>/ctrl")
             .With("Modifier2", "<Keyboard>/shift")
-            .With("Binding", "<Keyboard>/space");
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/space");
         action4.AddBinding("<Keyboard>/space");
 
         // This one is a clear conflict. Binds SPC exactly the same way as action1.
@@ -318,6 +318,14 @@ partial class CoreTests
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
     }
+
+    //--------------BUT: can use press times to detect holds!!
+
+    // elden ring:
+    // - "hold Y" is implicit in it being used as a modifier (has to be held)
+    // - "tap" can be put on Y action to make sure it doesn't trigger when you press and hold and then change your mind
+
+    // imagine opposite case; can't use modifier composite to model the "modifier+button" input
 
     // So, right now we don't support interactions on part bindings. Which makes sense because interactions
     // talk to the action directly, they don't participate in the value chain.
@@ -8065,10 +8073,18 @@ partial class CoreTests
         Assert.That(value, Is.EqualTo(Vector2.up));
         performedControl = null;
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.Update();
 
         Assert.That(canceledControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(performedControl, Is.Null);
+        Assert.That(value, Is.EqualTo(Vector2.zero));
+        canceledControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
         Assert.That(performedControl, Is.EqualTo(keyboard.rightArrowKey));
         Assert.That(value, Is.EqualTo(Vector2.right));
         performedControl = null;
@@ -8129,16 +8145,19 @@ partial class CoreTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
         InputSystem.Update();
 
-        Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
 
         LogAssert.NoUnexpectedReceived();
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1183314
     [Test]
     [Category("Actions")]
-    // Test for case 1183314
     public void Actions_CompositesInDifferentMapsTiedToSameControlsWork()
     {
+        // This test relies on the same single input getting picked up by two different composites.
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
