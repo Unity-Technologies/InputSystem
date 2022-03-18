@@ -6,54 +6,39 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal delegate void Command(ref GlobalInputActionsEditorState state);
+	internal delegate GlobalInputActionsEditorState Command(in GlobalInputActionsEditorState state);
 
 	internal static class Commands
 	{
 		public static Command SelectAction(string actionName)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
-			{
-				state.SelectAction(actionName);
-			};
+			return (in GlobalInputActionsEditorState state) => state.SelectAction(actionName);
 		}
 
 		public static Command SelectActionMap(string actionMapName)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
-			{
-				state.SelectActionMap(actionMapName);
-			};
+			return (in GlobalInputActionsEditorState state) => state.SelectActionMap(actionMapName);
 		}
 
 		public static Command ExpandCompositeBinding(SerializedInputBinding binding)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
-			{
-				state.ExpandCompositeBinding(binding);
-			};
+			return (in GlobalInputActionsEditorState state) => state.ExpandCompositeBinding(binding);
 		}
 
 		public static Command CollapseCompositeBinding(SerializedInputBinding binding)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
-			{
-				state.CollapseCompositeBinding(binding);
-			};
+			return (in GlobalInputActionsEditorState state) => state.CollapseCompositeBinding(binding);
 		}
 
 		public static Command SelectBinding(SerializedInputBinding binding)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
-			{
-				state.selectedBindingIndex.value = binding.indexOfBinding;
-				state.selectionType.value = SelectionType.Binding;
-			};
+			return (in GlobalInputActionsEditorState state) => 
+				state.With(selectedBindingIndex: binding.indexOfBinding, selectionType: SelectionType.Binding);
 		}
 
 		public static Command UpdatePathNameAndValues(NamedValue[] parameters, SerializedProperty pathProperty)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				var path = pathProperty.stringValue;
 				var nameAndParameters = NameAndParameters.Parse(path);
@@ -61,13 +46,14 @@ namespace UnityEngine.InputSystem.Editor
 
 				pathProperty.stringValue = nameAndParameters.ToString();
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 
 		public static Command SetCompositeBindingType(SerializedInputBinding bindingProperty, IEnumerable<string> compositeTypes,
 			ParameterListView parameterListView, int selectedCompositeTypeIndex)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				var nameAndParameters = new NameAndParameters
 				{
@@ -76,30 +62,33 @@ namespace UnityEngine.InputSystem.Editor
 				};
 				InputActionSerializationHelpers.ChangeCompositeBindingType(bindingProperty.wrappedProperty, nameAndParameters);
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 		
 		public static Command SetCompositeBindingPartName(SerializedInputBinding bindingProperty, string partName)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				InputActionSerializationHelpers.ChangeBinding(bindingProperty.wrappedProperty, partName);
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 
 		public static Command ChangeActionType(SerializedInputAction inputAction, InputActionType newValue)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue = (int)newValue;
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 
 		public static Command ChangeInitialStateCheck(SerializedInputAction inputAction, bool value)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				var property = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Flags));
 				if (value)
@@ -107,16 +96,18 @@ namespace UnityEngine.InputSystem.Editor
 				else
 					property.intValue &= ~(int)InputAction.ActionFlags.WantsInitialStateCheck;
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 
 		public static Command ChangeActionControlType(SerializedInputAction inputAction, int controlTypeIndex)
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				var controlTypes = Selectors.BuildSortedControlList(inputAction.type).ToList();
 				inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlTypes[controlTypeIndex];
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 
@@ -126,9 +117,10 @@ namespace UnityEngine.InputSystem.Editor
 		/// <returns></returns>
 		public static Command ApplyModifiedProperties()
 		{
-			return (ref GlobalInputActionsEditorState state) =>
+			return (in GlobalInputActionsEditorState state) =>
 			{
 				state.serializedObject.ApplyModifiedProperties();
+				return state;
 			};
 		}
 	}
