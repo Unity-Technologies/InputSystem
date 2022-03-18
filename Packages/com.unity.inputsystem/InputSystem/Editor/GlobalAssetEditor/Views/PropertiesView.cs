@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
 	        CreateSelector(
 		        Selectors.GetSelectedBinding,
 		        Selectors.GetSelectedAction,
-		        state => state.selectionType.value,
+		        state => state.selectionType,
 		        (_, _, selectionType, _) => selectionType);
         }
 

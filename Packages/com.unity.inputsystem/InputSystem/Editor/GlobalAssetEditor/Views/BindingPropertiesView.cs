@@ -15,13 +15,13 @@ namespace UnityEngine.InputSystem.Editor
 			m_Root = root;
 			m_ParentFoldout = foldout;
 
-			CreateSelector(state => state.selectedBindingIndex.value,
+			CreateSelector(state => state.selectedBindingIndex,
 				(_, state) => state);
 		}
 
 		public override void RedrawUI(GlobalInputActionsEditorState state)
 		{
-			var selectedBinding = state.selectedBindingIndex.value;
+			var selectedBinding = state.selectedBindingIndex;
 			if (selectedBinding == -1)
 				return;
 

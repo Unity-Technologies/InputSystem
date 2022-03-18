@@ -27,7 +27,10 @@ namespace UnityEngine.InputSystem.Editor
 
 		public void Dispatch(Command command)
 		{
-			command?.Invoke(ref m_State);
+			if (command == null)
+				throw new ArgumentNullException(nameof(command));
+
+			m_State = command(m_State);
 			StateChanged?.Invoke(m_State);
 		}
 
