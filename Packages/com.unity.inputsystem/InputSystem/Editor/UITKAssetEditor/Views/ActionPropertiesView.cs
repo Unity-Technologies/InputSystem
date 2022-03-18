@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem.Editor
 			{
 				var initialStateCheck = new Toggle("Initial State Check")
 				{
-					tooltip = GlobalInputActionsConstants.InitialStateCheckTooltip
+					tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
 				};
 				initialStateCheck.RegisterValueChangedCallback(evt =>
 				{

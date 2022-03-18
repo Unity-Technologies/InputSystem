@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
 {
 	internal static partial class Selectors
     {
-        public static IEnumerable<string> GetActionMapNames(GlobalInputActionsEditorState state)
+        public static IEnumerable<string> GetActionMapNames(InputActionsEditorState state)
         {
             return state.serializedObject
                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
                 ?? Enumerable.Empty<string>();
         }
 
-        public static IEnumerable<SerializedInputAction> GetActionsForSelectedActionMap(GlobalInputActionsEditorState state)
+        public static IEnumerable<SerializedInputAction> GetActionsForSelectedActionMap(InputActionsEditorState state)
         {
             var actionMapIndex = state.selectedActionMapIndex;
             var actionMaps = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
@@ -36,14 +36,14 @@ namespace UnityEngine.InputSystem.Editor
                 .Select(serializedProperty => new SerializedInputAction(serializedProperty));
         }
 
-        public static SerializedInputActionMap GetSelectedActionMap(GlobalInputActionsEditorState state)
+        public static SerializedInputActionMap GetSelectedActionMap(InputActionsEditorState state)
         {
 	        return new SerializedInputActionMap(state.serializedObject
 		        ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
 		        ?.GetArrayElementAtIndex(state.selectedActionMapIndex));
         }
 
-        public static SerializedProperty GetSelectedBindingPath(GlobalInputActionsEditorState state)
+        public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
         {
 	        var actionMapSO = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Editor
                 ?.FindPropertyRelative("m_Path");
         }
 
-        public static SerializedInputBinding GetSelectedBinding(GlobalInputActionsEditorState state)
+        public static SerializedInputBinding GetSelectedBinding(InputActionsEditorState state)
         {
             var actionMapSO = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
                 yield return bindingName;
         }
 
-        public static SerializedInputAction GetSelectedAction(GlobalInputActionsEditorState state)
+        public static SerializedInputAction GetSelectedAction(InputActionsEditorState state)
         {
 	        return new SerializedInputAction(state.serializedObject
 	            ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
@@ -152,7 +152,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(GlobalInputActionsEditorState state)
+        public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(InputActionsEditorState state)
         {
             var inputAction = GetSelectedAction(state);
 
@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputInteraction.GetValueType);
         }
 
-        public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(GlobalInputActionsEditorState state)
+        public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(InputActionsEditorState state)
         {
             var processors = string.Empty;
             Type expectedValueType = null;

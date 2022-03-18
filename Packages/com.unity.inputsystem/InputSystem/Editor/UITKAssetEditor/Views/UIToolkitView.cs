@@ -5,13 +5,13 @@ namespace UnityEngine.InputSystem.Editor
 {
 	internal interface IViewStateSelector<out TViewState>
 	{
-		bool HasStateChanged(GlobalInputActionsEditorState state);
-		TViewState GetViewState(GlobalInputActionsEditorState state);
+		bool HasStateChanged(InputActionsEditorState state);
+		TViewState GetViewState(InputActionsEditorState state);
 	}
 
 	internal interface IUIToolkitView
 	{
-		void UpdateView(GlobalInputActionsEditorState state);
+		void UpdateView(InputActionsEditorState state);
 		void DestroyView();
 	}
 
@@ -28,12 +28,12 @@ namespace UnityEngine.InputSystem.Editor
 			m_ChildViews = new List<IUIToolkitView>();
 		}
 
-		protected void OnStateChanged(GlobalInputActionsEditorState state)
+		protected void OnStateChanged(InputActionsEditorState state)
 		{
 			UpdateView(state);
 		}
 
-		public void UpdateView(GlobalInputActionsEditorState state)
+		public void UpdateView(InputActionsEditorState state)
 		{
 			if (m_ViewStateSelector == null)
 			{
@@ -86,31 +86,31 @@ namespace UnityEngine.InputSystem.Editor
 
 		}
 
-		protected void CreateSelector(Func<GlobalInputActionsEditorState, TViewState> selector)
+		protected void CreateSelector(Func<InputActionsEditorState, TViewState> selector)
 		{
 			m_ViewStateSelector = new ViewStateSelector<TViewState>(selector);
 		}
 
 		protected void CreateSelector<T1>(
-			Func<GlobalInputActionsEditorState, T1> func1,
-			Func<T1, GlobalInputActionsEditorState, TViewState> selector)
+			Func<InputActionsEditorState, T1> func1,
+			Func<T1, InputActionsEditorState, TViewState> selector)
 		{
 			m_ViewStateSelector = new ViewStateSelector<T1, TViewState>(func1, selector);
 		}
 
 		protected void CreateSelector<T1, T2>(
-			Func<GlobalInputActionsEditorState, T1> func1, 
-			Func<GlobalInputActionsEditorState, T2> func2, 
-			Func<T1, T2, GlobalInputActionsEditorState, TViewState> selector)
+			Func<InputActionsEditorState, T1> func1, 
+			Func<InputActionsEditorState, T2> func2, 
+			Func<T1, T2, InputActionsEditorState, TViewState> selector)
 		{
 			m_ViewStateSelector = new ViewStateSelector<T1, T2, TViewState>(func1, func2, selector);
 		}
 
 		protected void CreateSelector<T1, T2, T3>(
-			Func<GlobalInputActionsEditorState, T1> func1, 
-			Func<GlobalInputActionsEditorState, T2> func2, 
-			Func<GlobalInputActionsEditorState, T3> func3, 
-			Func<T1, T2, T3, GlobalInputActionsEditorState, TViewState> selector)
+			Func<InputActionsEditorState, T1> func1, 
+			Func<InputActionsEditorState, T2> func2, 
+			Func<InputActionsEditorState, T3> func3, 
+			Func<T1, T2, T3, InputActionsEditorState, TViewState> selector)
 		{
 			m_ViewStateSelector = new ViewStateSelector<T1, T2, T3, TViewState>(func1, func2, func3, selector);
 		}
@@ -118,19 +118,19 @@ namespace UnityEngine.InputSystem.Editor
 
 	internal class ViewStateSelector<TReturn> : IViewStateSelector<TReturn>
 	{
-		private readonly Func<GlobalInputActionsEditorState, TReturn> m_Selector;
+		private readonly Func<InputActionsEditorState, TReturn> m_Selector;
 
-		public ViewStateSelector(Func<GlobalInputActionsEditorState, TReturn> selector)
+		public ViewStateSelector(Func<InputActionsEditorState, TReturn> selector)
 		{
 			m_Selector = selector;
 		}
 
-		public bool HasStateChanged(GlobalInputActionsEditorState state)
+		public bool HasStateChanged(InputActionsEditorState state)
 		{
 			return true;
 		}
 		
-		public TReturn GetViewState(GlobalInputActionsEditorState state)
+		public TReturn GetViewState(InputActionsEditorState state)
 		{
 			return m_Selector(state);
 		}
@@ -139,19 +139,19 @@ namespace UnityEngine.InputSystem.Editor
 	// TODO: Make all args to view state selectors IEquatable<T>?
 	internal class ViewStateSelector<T1, TReturn> : IViewStateSelector<TReturn>
 	{
-		private readonly Func<GlobalInputActionsEditorState, T1> m_Func1;
-		private readonly Func<T1, GlobalInputActionsEditorState, TReturn> m_Selector;
+		private readonly Func<InputActionsEditorState, T1> m_Func1;
+		private readonly Func<T1, InputActionsEditorState, TReturn> m_Selector;
 
 		private T1 m_PreviousT1;
 
-		public ViewStateSelector(Func<GlobalInputActionsEditorState, T1> func1, 
-			Func<T1, GlobalInputActionsEditorState, TReturn> selector)
+		public ViewStateSelector(Func<InputActionsEditorState, T1> func1, 
+			Func<T1, InputActionsEditorState, TReturn> selector)
 		{
 			m_Func1 = func1;
 			m_Selector = selector;
 		}
 
-		public bool HasStateChanged(GlobalInputActionsEditorState state)
+		public bool HasStateChanged(InputActionsEditorState state)
 		{
 			var valueOne = m_Func1(state);
 
@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.Editor
 			return true;
 		}
 		
-		public TReturn GetViewState(GlobalInputActionsEditorState state)
+		public TReturn GetViewState(InputActionsEditorState state)
 		{
 			return m_Selector(m_PreviousT1, state);
 		}
@@ -177,23 +177,23 @@ namespace UnityEngine.InputSystem.Editor
 
 	internal class ViewStateSelector<T1, T2, TReturn> : IViewStateSelector<TReturn>
 	{
-		private readonly Func<GlobalInputActionsEditorState, T1> m_Func1;
-		private readonly Func<GlobalInputActionsEditorState, T2> m_Func2;
-		private readonly Func<T1, T2, GlobalInputActionsEditorState, TReturn> m_Selector;
+		private readonly Func<InputActionsEditorState, T1> m_Func1;
+		private readonly Func<InputActionsEditorState, T2> m_Func2;
+		private readonly Func<T1, T2, InputActionsEditorState, TReturn> m_Selector;
 
 		private T1 m_PreviousT1;
 		private T2 m_PreviousT2;
 
-		public ViewStateSelector(Func<GlobalInputActionsEditorState, T1> func1, 
-			Func<GlobalInputActionsEditorState, T2> func2, 
-			Func<T1, T2, GlobalInputActionsEditorState, TReturn> selector)
+		public ViewStateSelector(Func<InputActionsEditorState, T1> func1, 
+			Func<InputActionsEditorState, T2> func2, 
+			Func<T1, T2, InputActionsEditorState, TReturn> selector)
 		{
 			m_Func1 = func1;
 			m_Func2 = func2;
 			m_Selector = selector;
 		}
 
-		public bool HasStateChanged(GlobalInputActionsEditorState state)
+		public bool HasStateChanged(InputActionsEditorState state)
 		{
 			var valueOne = m_Func1(state);
 			var valueTwo = m_Func2(state);
@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem.Editor
 			return true;
 		}
 
-		public TReturn GetViewState(GlobalInputActionsEditorState state)
+		public TReturn GetViewState(InputActionsEditorState state)
 		{
 			return m_Selector(m_PreviousT1, m_PreviousT2, state);
 		}
@@ -225,19 +225,19 @@ namespace UnityEngine.InputSystem.Editor
 	
 	internal class ViewStateSelector<T1, T2, T3, TReturn> : IViewStateSelector<TReturn>
 	{
-		private readonly Func<GlobalInputActionsEditorState, T1> m_Func1;
-		private readonly Func<GlobalInputActionsEditorState, T2> m_Func2;
-		private readonly Func<GlobalInputActionsEditorState, T3> m_Func3;
-		private readonly Func<T1, T2, T3, GlobalInputActionsEditorState, TReturn> m_Selector;
+		private readonly Func<InputActionsEditorState, T1> m_Func1;
+		private readonly Func<InputActionsEditorState, T2> m_Func2;
+		private readonly Func<InputActionsEditorState, T3> m_Func3;
+		private readonly Func<T1, T2, T3, InputActionsEditorState, TReturn> m_Selector;
 
 		private T1 m_PreviousT1;
 		private T2 m_PreviousT2;
 		private T3 m_PreviousT3;
 
-		public ViewStateSelector(Func<GlobalInputActionsEditorState, T1> func1, 
-			Func<GlobalInputActionsEditorState, T2> func2, 
-			Func<GlobalInputActionsEditorState, T3> func3, 
-			Func<T1, T2, T3, GlobalInputActionsEditorState, TReturn> selector)
+		public ViewStateSelector(Func<InputActionsEditorState, T1> func1, 
+			Func<InputActionsEditorState, T2> func2, 
+			Func<InputActionsEditorState, T3> func3, 
+			Func<T1, T2, T3, InputActionsEditorState, TReturn> selector)
 		{
 			m_Func1 = func1;
 			m_Func2 = func2;
@@ -245,7 +245,7 @@ namespace UnityEngine.InputSystem.Editor
 			m_Selector = selector;
 		}
 
-		public bool HasStateChanged(GlobalInputActionsEditorState state)
+		public bool HasStateChanged(InputActionsEditorState state)
 		{
 			var valueOne = m_Func1(state);
 			var valueTwo = m_Func2(state);
@@ -276,7 +276,7 @@ namespace UnityEngine.InputSystem.Editor
 			return true;
 		}
 
-		public TReturn GetViewState(GlobalInputActionsEditorState state)
+		public TReturn GetViewState(InputActionsEditorState state)
 		{
 			return m_Selector(m_PreviousT1, m_PreviousT2, m_PreviousT3, state);
 		}

@@ -3,17 +3,17 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class GlobalInputActionsEditorView : UIToolkitView<GlobalInputActionsEditorState>
+	internal class InputActionsEditorView : UIToolkitView<InputActionsEditorState>
 	{
 		private VisualTreeAsset m_MainEditorAsset;
 
-		public GlobalInputActionsEditorView(VisualElement root, StateContainer stateContainer)
+		public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
 			: base(stateContainer)
 		{
 			m_MainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-				GlobalInputActionsConstants.PackagePath + 
-				GlobalInputActionsConstants.ResourcesPath + 
-				GlobalInputActionsConstants.MainEditorViewNameUxml);
+				InputActionsEditorConstants.PackagePath + 
+				InputActionsEditorConstants.ResourcesPath + 
+				InputActionsEditorConstants.MainEditorViewNameUxml);
 
 			m_MainEditorAsset.CloneTree(root);
 			CreateChildView(new ActionMapsView(root, stateContainer));
