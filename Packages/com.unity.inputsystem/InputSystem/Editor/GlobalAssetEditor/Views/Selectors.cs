@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static IEnumerable<SerializedInputAction> GetActionsForSelectedActionMap(GlobalInputActionsEditorState state)
         {
-            var actionMapIndex = state.selectedActionMapIndex.value;
+            var actionMapIndex = state.selectedActionMapIndex;
             var actionMaps = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
 
             var actionMap = actionMapIndex == -1 ?
@@ -40,17 +40,17 @@ namespace UnityEngine.InputSystem.Editor
         {
 	        return new SerializedInputActionMap(state.serializedObject
 		        ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-		        ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value));
+		        ?.GetArrayElementAtIndex(state.selectedActionMapIndex));
         }
 
         public static SerializedProperty GetSelectedBindingPath(GlobalInputActionsEditorState state)
         {
 	        var actionMapSO = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-                ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value);
+                ?.GetArrayElementAtIndex(state.selectedActionMapIndex);
             
             return actionMapSO?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
-                ?.GetArrayElementAtIndex(state.selectedBindingIndex.value)
+                ?.GetArrayElementAtIndex(state.selectedBindingIndex)
                 ?.FindPropertyRelative("m_Path");
         }
 
@@ -58,9 +58,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             var actionMapSO = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-                ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value);
+                ?.GetArrayElementAtIndex(state.selectedActionMapIndex);
             return new SerializedInputBinding(actionMapSO?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
-                ?.GetArrayElementAtIndex(state.selectedBindingIndex.value));
+                ?.GetArrayElementAtIndex(state.selectedBindingIndex));
         }
 
         public static IEnumerable<string> GetCompositeTypes(string path, string expectedControlLayout)
@@ -119,9 +119,9 @@ namespace UnityEngine.InputSystem.Editor
         {
 	        return new SerializedInputAction(state.serializedObject
 	            ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-	            ?.GetArrayElementAtIndex(state.selectedActionMapIndex.value)
+	            ?.GetArrayElementAtIndex(state.selectedActionMapIndex)
 	            ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-	            ?.GetArrayElementAtIndex(state.selectedActionIndex.value));
+	            ?.GetArrayElementAtIndex(state.selectedActionIndex));
         }
 
         public static IEnumerable<string> BuildSortedControlList(InputActionType selectedActionType)
@@ -161,9 +161,9 @@ namespace UnityEngine.InputSystem.Editor
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.expectedControlType);
 
             var interactions = string.Empty;
-            if (state.selectionType.value == SelectionType.Action)
+            if (state.selectionType == SelectionType.Action)
                 interactions = inputAction.interactions;
-            else if (state.selectionType.value == SelectionType.Binding)
+            else if (state.selectionType == SelectionType.Binding)
                 interactions = GetSelectedBinding(state).interactions;
 
             return CreateParameterListViews(
@@ -183,9 +183,9 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(inputAction.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.expectedControlType);
 
-            if (state.selectionType.value == SelectionType.Action)
+            if (state.selectionType == SelectionType.Action)
                 processors = inputAction.processors;
-            else if (state.selectionType.value == SelectionType.Binding)
+            else if (state.selectionType == SelectionType.Binding)
                 processors = GetSelectedBinding(state).processors;
 
             return CreateParameterListViews(
