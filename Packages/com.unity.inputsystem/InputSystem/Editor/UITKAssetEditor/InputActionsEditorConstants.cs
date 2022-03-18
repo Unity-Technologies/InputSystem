@@ -1,11 +1,11 @@
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class GlobalInputActionsConstants
+	internal class InputActionsEditorConstants
 	{
 		public const string PackagePath = "Packages/com.unity.inputsystem";
-		public const string ResourcesPath = "/InputSystem/Editor/GlobalAssetEditor/Resources";
+		public const string ResourcesPath = "/InputSystem/Editor/UITKAssetEditor/Resources";
 
-		public const string MainEditorViewNameUxml = "/GlobalInputActionsEditor.uxml";
+		public const string MainEditorViewNameUxml = "/InputActionsEditor.uxml";
 		public const string ActionsPanelViewNameUxml = "/ActionPanelRowTemplate.uxml";
 		public const string BindingsPanelRowTemplateUxml = "/BindingPanelRowTemplate.uxml";
 		public const string NameAndParametersListViewItemUxml = "/NameAndParameterListViewItemTemplate.uxml";

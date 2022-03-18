@@ -14,9 +14,9 @@ namespace UnityEngine.InputSystem.Editor
 		private readonly DropdownField m_CompositeTypeField;
 		private EventCallback<ChangeEvent<string>> m_CompositeTypeFieldChangedHandler;
 
-		private const string UxmlName = GlobalInputActionsConstants.PackagePath +
-		                                GlobalInputActionsConstants.ResourcesPath +
-		                                GlobalInputActionsConstants.CompositeBindingPropertiesViewUxml;
+		private const string UxmlName = InputActionsEditorConstants.PackagePath +
+		                                InputActionsEditorConstants.ResourcesPath +
+		                                InputActionsEditorConstants.CompositeBindingPropertiesViewUxml;
 
 		public CompositeBindingPropertiesView(VisualElement root, StateContainer stateContainer)
 			: base(stateContainer)
@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
 
 	internal static partial class Selectors
 	{
-		public static CompositeBindingPropertiesView.ViewState GetCompositeBindingViewState(in GlobalInputActionsEditorState state,
+		public static CompositeBindingPropertiesView.ViewState GetCompositeBindingViewState(in InputActionsEditorState state,
 			SerializedInputBinding binding)
 		{
 			var inputAction = GetSelectedAction(state);
