@@ -32,19 +32,19 @@ namespace UnityEngine.InputSystem.Editor
             InputUser.onChange += OnUserChange;
 
             // Look up properties.
-            m_ActionsProperty = serializedObject.FindProperty("m_Actions");
-            m_DefaultControlSchemeProperty = serializedObject.FindProperty("m_DefaultControlScheme");
-            m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty("m_NeverAutoSwitchControlSchemes");
-            m_DefaultActionMapProperty = serializedObject.FindProperty("m_DefaultActionMap");
-            m_NotificationBehaviorProperty = serializedObject.FindProperty("m_NotificationBehavior");
-            m_CameraProperty = serializedObject.FindProperty("m_Camera");
-            m_ActionEventsProperty = serializedObject.FindProperty("m_ActionEvents");
-            m_DeviceLostEventProperty = serializedObject.FindProperty("m_DeviceLostEvent");
-            m_DeviceRegainedEventProperty = serializedObject.FindProperty("m_DeviceRegainedEvent");
-            m_ControlsChangedEventProperty = serializedObject.FindProperty("m_ControlsChangedEvent");
+            m_ActionsProperty = serializedObject.FindProperty(nameof(PlayerInput.m_Actions));
+            m_DefaultControlSchemeProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DefaultControlScheme));
+            m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty(nameof(PlayerInput.m_NeverAutoSwitchControlSchemes));
+            m_DefaultActionMapProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DefaultActionMap));
+            m_NotificationBehaviorProperty = serializedObject.FindProperty(nameof(PlayerInput.m_NotificationBehavior));
+            m_CameraProperty = serializedObject.FindProperty(nameof(PlayerInput.m_Camera));
+            m_ActionEventsProperty = serializedObject.FindProperty(nameof(PlayerInput.m_ActionEvents));
+            m_DeviceLostEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DeviceLostEvent));
+            m_DeviceRegainedEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DeviceRegainedEvent));
+            m_ControlsChangedEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_ControlsChangedEvent));
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
-            m_UIInputModuleProperty = serializedObject.FindProperty("m_UIInputModule");
+            m_UIInputModuleProperty = serializedObject.FindProperty(nameof(PlayerInput.m_UIInputModule));
             #endif
         }
 
