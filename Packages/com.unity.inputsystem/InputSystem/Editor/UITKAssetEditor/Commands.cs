@@ -6,39 +6,39 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal delegate GlobalInputActionsEditorState Command(in GlobalInputActionsEditorState state);
+	internal delegate InputActionsEditorState Command(in InputActionsEditorState state);
 
 	internal static class Commands
 	{
 		public static Command SelectAction(string actionName)
 		{
-			return (in GlobalInputActionsEditorState state) => state.SelectAction(actionName);
+			return (in InputActionsEditorState state) => state.SelectAction(actionName);
 		}
 
 		public static Command SelectActionMap(string actionMapName)
 		{
-			return (in GlobalInputActionsEditorState state) => state.SelectActionMap(actionMapName);
+			return (in InputActionsEditorState state) => state.SelectActionMap(actionMapName);
 		}
 
 		public static Command ExpandCompositeBinding(SerializedInputBinding binding)
 		{
-			return (in GlobalInputActionsEditorState state) => state.ExpandCompositeBinding(binding);
+			return (in InputActionsEditorState state) => state.ExpandCompositeBinding(binding);
 		}
 
 		public static Command CollapseCompositeBinding(SerializedInputBinding binding)
 		{
-			return (in GlobalInputActionsEditorState state) => state.CollapseCompositeBinding(binding);
+			return (in InputActionsEditorState state) => state.CollapseCompositeBinding(binding);
 		}
 
 		public static Command SelectBinding(SerializedInputBinding binding)
 		{
-			return (in GlobalInputActionsEditorState state) => 
+			return (in InputActionsEditorState state) => 
 				state.With(selectedBindingIndex: binding.indexOfBinding, selectionType: SelectionType.Binding);
 		}
 
 		public static Command UpdatePathNameAndValues(NamedValue[] parameters, SerializedProperty pathProperty)
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				var path = pathProperty.stringValue;
 				var nameAndParameters = NameAndParameters.Parse(path);
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
 		public static Command SetCompositeBindingType(SerializedInputBinding bindingProperty, IEnumerable<string> compositeTypes,
 			ParameterListView parameterListView, int selectedCompositeTypeIndex)
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				var nameAndParameters = new NameAndParameters
 				{
@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.Editor
 		
 		public static Command SetCompositeBindingPartName(SerializedInputBinding bindingProperty, string partName)
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				InputActionSerializationHelpers.ChangeBinding(bindingProperty.wrappedProperty, partName);
 				state.serializedObject.ApplyModifiedProperties();
@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Editor
 
 		public static Command ChangeActionType(SerializedInputAction inputAction, InputActionType newValue)
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue = (int)newValue;
 				state.serializedObject.ApplyModifiedProperties();
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Editor
 
 		public static Command ChangeInitialStateCheck(SerializedInputAction inputAction, bool value)
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				var property = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Flags));
 				if (value)
@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
 
 		public static Command ChangeActionControlType(SerializedInputAction inputAction, int controlTypeIndex)
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				var controlTypes = Selectors.BuildSortedControlList(inputAction.type).ToList();
 				inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlTypes[controlTypeIndex];
@@ -117,7 +117,7 @@ namespace UnityEngine.InputSystem.Editor
 		/// <returns></returns>
 		public static Command ApplyModifiedProperties()
 		{
-			return (in GlobalInputActionsEditorState state) =>
+			return (in InputActionsEditorState state) =>
 			{
 				state.serializedObject.ApplyModifiedProperties();
 				return state;

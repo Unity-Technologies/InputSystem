@@ -12,9 +12,9 @@ namespace UnityEngine.InputSystem.Editor
 		private readonly DropdownField m_CompositePartField;
 		private readonly IMGUIContainer m_PathEditorContainer;
 
-		private const string UxmlName = GlobalInputActionsConstants.PackagePath +
-		                                GlobalInputActionsConstants.ResourcesPath +
-		                                GlobalInputActionsConstants.CompositePartBindingPropertiesViewUxml;
+		private const string UxmlName = InputActionsEditorConstants.PackagePath +
+		                                InputActionsEditorConstants.ResourcesPath +
+		                                InputActionsEditorConstants.CompositePartBindingPropertiesViewUxml;
 
 		public CompositePartBindingPropertiesView(VisualElement root, StateContainer stateContainer)
 			: base(stateContainer)
@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem.Editor
 	internal static partial class Selectors
 	{
 		public static CompositePartBindingPropertiesView.ViewState GetCompositePartBindingViewState(SerializedInputBinding binding,
-			GlobalInputActionsEditorState state)
+			InputActionsEditorState state)
 		{
 			var compositeParts = GetCompositePartOptions(binding.name, binding.compositePath).ToList();
 			var selectedCompositePartName = ObjectNames.NicifyVariableName(

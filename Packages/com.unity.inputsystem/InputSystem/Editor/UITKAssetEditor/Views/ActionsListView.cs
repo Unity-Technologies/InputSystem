@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.Editor
 		{
 			m_Root = root;
 			m_ActionItemRowTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-				GlobalInputActionsConstants.PackagePath + 
-				GlobalInputActionsConstants.ResourcesPath + 
-				GlobalInputActionsConstants.ActionsPanelViewNameUxml);
+				InputActionsEditorConstants.PackagePath + 
+				InputActionsEditorConstants.ResourcesPath + 
+				InputActionsEditorConstants.ActionsPanelViewNameUxml);
 
 			m_ActionsListView = m_Root.Q<ListView>("actions-list-view");
 			m_ActionsListView.selectionType = UIElements.SelectionType.Single;
