@@ -7,14 +7,14 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class NameAndParametersListView : UIToolkitView<GlobalInputActionsEditorState>
+	internal class NameAndParametersListView : UIToolkitView<InputActionsEditorState>
 	{
 		private readonly VisualElement m_Root;
-		private readonly Func<GlobalInputActionsEditorState, IEnumerable<ParameterListView>> m_ParameterListViewSelector;
+		private readonly Func<InputActionsEditorState, IEnumerable<ParameterListView>> m_ParameterListViewSelector;
 		private VisualElement m_ContentContainer;
 
 		public NameAndParametersListView(VisualElement root, StateContainer stateContainer, 
-			Func<GlobalInputActionsEditorState, IEnumerable<ParameterListView>> parameterListViewSelector)
+			Func<InputActionsEditorState, IEnumerable<ParameterListView>> parameterListViewSelector)
 			: base(stateContainer)
 		{
 			m_Root = root;
@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
 			CreateSelector(state => state);
 		}
 
-		public override void RedrawUI(GlobalInputActionsEditorState state)
+		public override void RedrawUI(InputActionsEditorState state)
 		{
 			if (m_ContentContainer != null)
 				m_Root.Remove(m_ContentContainer);
@@ -61,9 +61,9 @@ namespace UnityEngine.InputSystem.Editor
 		public NameAndParametersListViewItem(VisualElement root, ParameterListView parameterListView)
 		{
 			var itemTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-				GlobalInputActionsConstants.PackagePath + 
-				GlobalInputActionsConstants.ResourcesPath + 
-				GlobalInputActionsConstants.NameAndParametersListViewItemUxml);
+				InputActionsEditorConstants.PackagePath + 
+				InputActionsEditorConstants.ResourcesPath + 
+				InputActionsEditorConstants.NameAndParametersListViewItemUxml);
 
 			var container = itemTemplate.CloneTree();
 			root.Add(container);

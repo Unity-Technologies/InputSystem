@@ -2,7 +2,7 @@
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class BindingPropertiesView : UIToolkitView<GlobalInputActionsEditorState>
+	internal class BindingPropertiesView : UIToolkitView<InputActionsEditorState>
 	{
 		private readonly VisualElement m_Root;
 		private readonly Foldout m_ParentFoldout;
@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
 				(_, state) => state);
 		}
 
-		public override void RedrawUI(GlobalInputActionsEditorState state)
+		public override void RedrawUI(InputActionsEditorState state)
 		{
 			var selectedBinding = state.selectedBindingIndex;
 			if (selectedBinding == -1)

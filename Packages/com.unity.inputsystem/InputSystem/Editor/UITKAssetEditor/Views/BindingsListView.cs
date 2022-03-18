@@ -11,9 +11,9 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class BindingsListView : UIToolkitView<List<BindingsListView.ViewState>>
     {
-	    private const string RowTemplateUxml = GlobalInputActionsConstants.PackagePath +
-	                                           GlobalInputActionsConstants.ResourcesPath +
-	                                           GlobalInputActionsConstants.BindingsPanelRowTemplateUxml;
+	    private const string RowTemplateUxml = InputActionsEditorConstants.PackagePath +
+	                                           InputActionsEditorConstants.ResourcesPath +
+	                                           InputActionsEditorConstants.BindingsPanelRowTemplateUxml;
 
 	    private const float TreeItemIndentPerLevel = 15;
 
@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem.Editor
 	    /// </summary>
 	    /// <param name="state"></param>
 	    /// <returns></returns>
-	    public static IEnumerable<BindingsListView.ViewState> GetVisibleBindingsForSelectedAction(GlobalInputActionsEditorState state)
+	    public static IEnumerable<BindingsListView.ViewState> GetVisibleBindingsForSelectedAction(InputActionsEditorState state)
 	    {
 		    var actionMap = state.serializedObject
 			    .FindProperty(nameof(InputActionAsset.m_ActionMaps))

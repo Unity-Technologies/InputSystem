@@ -6,7 +6,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal readonly struct GlobalInputActionsEditorState
+	internal readonly struct InputActionsEditorState
     {
         private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
 
@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Editor
         public SerializedObject serializedObject { get; }
         
 
-        public GlobalInputActionsEditorState(
+        public InputActionsEditorState(
 	        SerializedObject inputActionAsset, 
 	        int selectedActionMapIndex = 0, 
 	        int selectedActionIndex = 0, 
@@ -38,14 +38,14 @@ namespace UnityEngine.InputSystem.Editor
                 new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
         }
 
-        public GlobalInputActionsEditorState With(
+        public InputActionsEditorState With(
 	        int? selectedActionMapIndex = null, 
 	        int? selectedActionIndex = null, 
 	        int? selectedBindingIndex = null,
 	        SelectionType? selectionType = null,
 	        Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
         {
-            return new GlobalInputActionsEditorState(
+            return new InputActionsEditorState(
                 serializedObject,
 	            selectedActionMapIndex ?? this.selectedActionMapIndex,
 	            selectedActionIndex ?? this.selectedActionIndex,
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Editor
 		        .FirstOrDefault(p => p.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue == actionMapName);
         }
 
-        public GlobalInputActionsEditorState ExpandCompositeBinding(SerializedInputBinding binding)
+        public InputActionsEditorState ExpandCompositeBinding(SerializedInputBinding binding)
         {
 	        var key = GetSelectedActionMapAndActionKey();
 
@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
             return With(expandedBindingIndices: expandedCompositeBindings);
         }
 
-        public GlobalInputActionsEditorState CollapseCompositeBinding(SerializedInputBinding binding)
+        public InputActionsEditorState CollapseCompositeBinding(SerializedInputBinding binding)
         {
 	        var key = GetSelectedActionMapAndActionKey();
 
@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Editor
             return With(expandedBindingIndices: expandedCompositeBindings);
         }
 
-        public GlobalInputActionsEditorState SelectAction(string actionName)
+        public InputActionsEditorState SelectAction(string actionName)
         {
 	        var actionMap = GetSelectedActionMap();
 	        var actions = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions));
@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem.Editor
 	        throw new InvalidOperationException($"Couldn't find an action map with name '{actionName}'.");
         }
 
-        public GlobalInputActionsEditorState SelectActionMap(string actionMapName)
+        public InputActionsEditorState SelectActionMap(string actionMapName)
         {
 	        var actionMap = GetActionMapByName(actionMapName);
 	        return With(selectedBindingIndex: 0, selectedActionMapIndex: actionMap.GetIndexOfArrayElement());
