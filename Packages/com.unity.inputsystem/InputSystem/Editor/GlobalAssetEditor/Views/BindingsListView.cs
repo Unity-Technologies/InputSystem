@@ -82,7 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             CreateSelector(
-                state => state.selectedActionIndex.value,
+                state => state.selectedActionIndex,
 	            state => new ViewStateCollection<ViewState>(
 		            Selectors.GetVisibleBindingsForSelectedAction(state), ViewState.comparer),
 	            (_, bindings, _) => bindings.ToList());
@@ -138,10 +138,10 @@ namespace UnityEngine.InputSystem.Editor
 	    {
 		    var actionMap = state.serializedObject
 			    .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-			    .GetArrayElementAtIndex(state.selectedActionMapIndex.value);
+			    .GetArrayElementAtIndex(state.selectedActionMapIndex);
 		    var selectedAction = new SerializedInputAction(
 			    actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-				    .GetArrayElementAtIndex(state.selectedActionIndex.value));
+				    .GetArrayElementAtIndex(state.selectedActionIndex));
             
 		    var bindings = actionMap
 			    .FindPropertyRelative(nameof(InputActionMap.m_Bindings))

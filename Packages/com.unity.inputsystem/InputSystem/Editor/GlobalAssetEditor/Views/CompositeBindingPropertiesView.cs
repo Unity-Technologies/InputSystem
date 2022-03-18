@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
 
 	internal static partial class Selectors
 	{
-		public static CompositeBindingPropertiesView.ViewState GetCompositeBindingViewState(GlobalInputActionsEditorState state,
+		public static CompositeBindingPropertiesView.ViewState GetCompositeBindingViewState(in GlobalInputActionsEditorState state,
 			SerializedInputBinding binding)
 		{
 			var inputAction = GetSelectedAction(state);

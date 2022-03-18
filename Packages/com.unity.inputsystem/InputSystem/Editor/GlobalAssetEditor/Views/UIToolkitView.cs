@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
 		{
 			if (m_ViewStateSelector == null)
 			{
-				Debug.LogWarning($"View '{GetType().Name}' has no selector and will not render. Create a selector for the" +
+				Debug.LogWarning($"View '{GetType().Name}' has no selector and will not render. Create a selector for the " +
 				                 $"view using the CreateSelector method.");
 				return;
 			}
