@@ -32,6 +32,8 @@ Packages/com.unity.inputsystem/.npmrc
 Packages/com.unity.inputsystem/**/*.api
 Packages/com.unity.inputsystem/**/*.api.meta
 
+Packages/com.unity.inputsystem/InputSystem/Runtime.Cpp/_build~/*
+
 Packages/com.unity.package-manager-ui/
 Packages/com.unity.package-manager-doctools/
 

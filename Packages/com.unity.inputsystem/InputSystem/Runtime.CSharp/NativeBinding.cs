@@ -366,12 +366,12 @@ namespace Unity.InputSystem.Runtime
         }
     }
 
-    public partial struct InputFramebufferRef
+    public unsafe partial struct InputFramebufferRef
     {
         [NativeTypeName("uint32_t")]
         public uint transparent;
 
-        public unsafe bool Equals([NativeTypeName("const InputFramebufferRef &")] InputFramebufferRef* o)
+        public bool Equals([NativeTypeName("const InputFramebufferRef &")] InputFramebufferRef* o)
         {
             return transparent == o->transparent;
         }
