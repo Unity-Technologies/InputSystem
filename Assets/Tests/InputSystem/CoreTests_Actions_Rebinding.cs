@@ -1779,4 +1779,50 @@ internal partial class CoreTests
         Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f * 0.5f).Within(0.0001));
         Assert.That(action2.ReadValue<float>(), Is.EqualTo(0.5f * 0.2f).Within(0.0001));
     }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyParameterOverrides_UsingExpressionSyntax()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action = map.AddAction("action");
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.123)");
+        action.AddBinding("<Mouse>/leftButton", interactions: "hold(duration=0.234)");
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.123).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.234).Within(0.0001));
+
+        asset.ApplyParameterOverride((TapInteraction x) => x.duration, 0.345f);
+        asset.ApplyParameterOverride((HoldInteraction x) => x.duration, 0.456); // Note the slight type mismatch here (float and double).
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.345).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.456).Within(0.0001));
+
+        map.ApplyParameterOverride((TapInteraction x) => x.duration, 0.567f);
+        map.ApplyParameterOverride((HoldInteraction x) => x.duration, 0.678); // Note the slight type mismatch here (float and double).
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.567).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.678).Within(0.0001));
+
+        action.ApplyParameterOverride((TapInteraction x) => x.duration, 0.789f);
+        action.ApplyParameterOverride((HoldInteraction x) => x.duration, 0.987); // Note the slight type mismatch here (float and double).
+
+        Assert.That(action.GetParameterValue((TapInteraction x) => x.duration), Is.EqualTo(0.789).Within(0.0001));
+        Assert.That(action.GetParameterValue((HoldInteraction x) => x.duration), Is.EqualTo(0.987).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetParameterValue_ByBindingIndex()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.234)");
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "tap(duration=0.345)");
+
+        Assert.That(action.GetParameterValue("duration", bindingIndex: 0), Is.EqualTo(new PrimitiveValue(0.123f)));
+        Assert.That(action.GetParameterValue("duration", bindingIndex: 1), Is.EqualTo(new PrimitiveValue(0.234f)));
+        Assert.That(action.GetParameterValue("duration", bindingIndex: 2), Is.EqualTo(new PrimitiveValue(0.345f)));
+    }
 }

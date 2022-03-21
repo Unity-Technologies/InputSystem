@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.InputSystem.Utilities;
 
@@ -78,11 +79,15 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
-            bindingMask.action = action.name;
+            return action.GetParameterValue(new ParameterOverride(name, bindingMask));
+        }
+
+        private static PrimitiveValue? GetParameterValue(this InputAction action, ParameterOverride parameterOverride)
+        {
+            parameterOverride.bindingMask.action = action.name;
 
             var actionMap = action.GetOrCreateActionMap();
             actionMap.ResolveBindingsIfNecessary();
-            var parameterOverride = new ParameterOverride(name, bindingMask);
             foreach (var parameter in new ParameterEnumerable(actionMap.m_State, parameterOverride, actionMap.m_MapIndexInState))
             {
                 var value = parameter.field.GetValue(parameter.instance);
@@ -105,7 +110,7 @@ namespace UnityEngine.InputSystem
         /// to look for processors, interactions, and composites on.</param>
         /// <returns>The current value of the given parameter or <c>null</c> if the parameter could be found.</returns>
         /// <remarks>
-        /// This method is a variation of <see cref="ApplyParameterOverride(UnityEngine.InputSystem.InputActionMap,string,UnityEngine.InputSystem.Utilities.PrimitiveValue,UnityEngine.InputSystem.InputBinding)"/>
+        /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// to specifically target a single binding by index. Otherwise, the method is identical in functionality.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <exception cref="name"> is <c>null</c></exception></exception>
@@ -122,6 +127,225 @@ namespace UnityEngine.InputSystem
             var bindingMask = new InputBinding { id = action.GetOrCreateActionMap().bindings[indexOnMap].id };
 
             return action.GetParameterValue(name, bindingMask);
+        }
+
+        /// <summary>
+        /// Return the current value of the given parameter as found on the processors, interactions, or composites
+        /// of the action's current bindings.
+        /// </summary>
+        /// <param name="action">Action on whose bindings to look for the value of the given parameter.</param>
+        /// <param name="expr">An expression such as <c>(TapInteraction x) => x.duration</c> that determines the
+        /// name and type of the parameter being looked for.</param>
+        /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
+        /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will be taken into account.</param>
+        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could be found.</returns>
+        /// <remarks>
+        /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
+        /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
+        /// type-safe and does not involve strings.
+        ///
+        /// <example>
+        /// <code>
+        /// // Get the "duration" parameter from a TapInteraction.
+        /// // This is equivalent to calling GetParameterValue("tap:duration")
+        /// // but will return a float? instead of a PrimitiveValue?.
+        /// action.GetParameterValue((TapInteraction x) => x.duration)
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <exception cref="expr"> is <c>null</c></exception></exception>
+        /// <seealso cref="ApplyParameterOverride{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},TValue,InputBinding)"/>
+        public static TValue? GetParameterValue<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, InputBinding bindingMask = default)
+            where TValue : unmanaged
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            if (expr == null)
+                throw new ArgumentNullException(nameof(expr));
+
+            var parameterOverride = ExtractParameterOverride(expr, bindingMask);
+            var value = action.GetParameterValue(parameterOverride);
+
+            if (value == null)
+                return null;
+
+            return (TValue)Convert.ChangeType(value.Value.ToObject(), typeof(TValue));
+        }
+
+        /// <summary>
+        /// Set the value of the given parameter on the <see cref="InputBindingComposite"/>, <see cref="IInputInteraction"/>,
+        /// and <see cref="InputProcessor"/> objects found on the <see cref="InputAction.bindings"/> of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">An action on whose <see cref="InputAction.bindings"/> to look for objects to set
+        /// the parameter value on.</param>
+        /// <param name="expr">An expression such as <c>(TapInteraction x) => x.duration</c> that determines the
+        /// name and type of the parameter whose value to set.</param>
+        /// <param name="value">New value to assign to the parameter.</param>
+        /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
+        /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will have the override applied to them.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c>
+        /// or empty.</exception>
+        /// <remarks>
+        /// This method is a variation of <see cref="ApplyParameterOverride(InputAction,string,PrimitiveValue,InputBinding)"/>
+        /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
+        /// type-safe and does not involve strings.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the "duration" parameter from a TapInteraction.
+        /// // This is equivalent to calling ApplyParameterOverride("tap:duration", 0.4f).
+        /// action.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue},InputBinding)"/>
+        public static void ApplyParameterOverride<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, TValue value,
+            InputBinding bindingMask = default)
+            where TValue : unmanaged
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            if (expr == null)
+                throw new ArgumentNullException(nameof(expr));
+
+            var actionMap = action.GetOrCreateActionMap();
+            actionMap.ResolveBindingsIfNecessary();
+            bindingMask.action = action.name;
+
+            var parameterOverride = ExtractParameterOverride(expr, bindingMask, PrimitiveValue.From(value));
+
+            ApplyParameterOverride(actionMap.m_State, actionMap.m_MapIndexInState,
+                ref actionMap.m_ParameterOverrides, ref actionMap.m_ParameterOverridesCount,
+                parameterOverride);
+        }
+
+        /// <summary>
+        /// Set the value of the given parameter on the <see cref="InputBindingComposite"/>, <see cref="IInputInteraction"/>,
+        /// and <see cref="InputProcessor"/> objects found on the <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">An action on whose <see cref="InputActionMap.bindings"/> to look for objects to set
+        /// the parameter value on.</param>
+        /// <param name="expr">An expression such as <c>(TapInteraction x) => x.duration</c> that determines the
+        /// name and type of the parameter whose value to set.</param>
+        /// <param name="value">New value to assign to the parameter.</param>
+        /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
+        /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will have the override applied to them.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c>
+        /// or empty.</exception>
+        /// <remarks>
+        /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
+        /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
+        /// type-safe and does not involve strings.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the "duration" parameter from a TapInteraction.
+        /// // This is equivalent to calling mApplyParameterOverride("tap:duration", 0.4f).
+        /// actionMap.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue},InputBinding)"/>
+        public static void ApplyParameterOverride<TObject, TValue>(this InputActionMap actionMap, Expression<Func<TObject, TValue>> expr, TValue value,
+            InputBinding bindingMask = default)
+            where TValue : unmanaged
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException(nameof(actionMap));
+            if (expr == null)
+                throw new ArgumentNullException(nameof(expr));
+
+            actionMap.ResolveBindingsIfNecessary();
+
+            var parameterOverride = ExtractParameterOverride(expr, bindingMask, PrimitiveValue.From(value));
+
+            ApplyParameterOverride(actionMap.m_State, actionMap.m_MapIndexInState,
+                ref actionMap.m_ParameterOverrides, ref actionMap.m_ParameterOverridesCount,
+                parameterOverride);
+        }
+
+        /// <summary>
+        /// Set the value of the given parameter on the <see cref="InputBindingComposite"/>, <see cref="IInputInteraction"/>,
+        /// and <see cref="InputProcessor"/> objects found on the <see cref="InputActionMap.bindings"/> of the <see cref="InputActionAsset.actionMaps"/>
+        /// in <paramref name="asset"/>.
+        /// </summary>
+        /// <param name="asset">An asset on whose <see cref="InputActionMap.bindings"/> to look for objects to set
+        /// the parameter value on.</param>
+        /// <param name="expr">An expression such as <c>(TapInteraction x) => x.duration</c> that determines the
+        /// name and type of the parameter whose value to set.</param>
+        /// <param name="value">New value to assign to the parameter.</param>
+        /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
+        /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will have the override applied to them.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c>
+        /// or empty.</exception>
+        /// <remarks>
+        /// This method is a variation of <see cref="ApplyParameterOverride(InputActionAsset,string,PrimitiveValue,InputBinding)"/>
+        /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
+        /// type-safe and does not involve strings.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the "duration" parameter from a TapInteraction.
+        /// // This is equivalent to calling mApplyParameterOverride("tap:duration", 0.4f).
+        /// asset.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue},InputBinding)"/>
+        public static void ApplyParameterOverride<TObject, TValue>(this InputActionAsset asset, Expression<Func<TObject, TValue>> expr, TValue value,
+            InputBinding bindingMask = default)
+            where TValue : unmanaged
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (expr == null)
+                throw new ArgumentNullException(nameof(expr));
+
+            asset.ResolveBindingsIfNecessary();
+
+            var parameterOverride = ExtractParameterOverride(expr, bindingMask, PrimitiveValue.From(value));
+
+            ApplyParameterOverride(asset.m_SharedStateForAllMaps, -1,
+                ref asset.m_ParameterOverrides, ref asset.m_ParameterOverridesCount,
+                parameterOverride);
+        }
+
+        private static ParameterOverride ExtractParameterOverride<TObject, TValue>(Expression<Func<TObject, TValue>> expr,
+            InputBinding bindingMask = default, PrimitiveValue value = default)
+        {
+            if (!(expr is LambdaExpression lambda))
+                throw new ArgumentException($"Expression must be a LambdaExpression but was a {expr.GetType().Name} instead", nameof(expr));
+
+            if (!(lambda.Body is MemberExpression body))
+            {
+                // If the field type in the lambda doesn't match the TValue type being used,
+                // but there is a coercion, the compiler will automatically insert a Convert(x.name, TValue)
+                // expression.
+                if (lambda.Body is UnaryExpression unary && unary.NodeType == ExpressionType.Convert && unary.Operand is MemberExpression b)
+                {
+                    body = b;
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"Body in LambdaExpression must be a MemberExpression (x.name) but was a {expr.GetType().Name} instead",
+                        nameof(expr));
+                }
+            }
+
+            string objectRegistrationName;
+            if (typeof(InputProcessor).IsAssignableFrom(typeof(TObject)))
+                objectRegistrationName = InputProcessor.s_Processors.FindNameForType(typeof(TObject));
+            else if (typeof(IInputInteraction).IsAssignableFrom(typeof(TObject)))
+                objectRegistrationName = InputInteraction.s_Interactions.FindNameForType(typeof(TObject));
+            else if (typeof(InputBindingComposite).IsAssignableFrom(typeof(TObject)))
+                objectRegistrationName = InputBindingComposite.s_Composites.FindNameForType(typeof(TObject));
+            else
+                throw new ArgumentException(
+                    $"Given type must be an InputProcessor, IInputInteraction, or InputBindingComposite (was {typeof(TObject).Name})",
+                    nameof(TObject));
+
+            return new ParameterOverride(objectRegistrationName, body.Member.Name, bindingMask, value);
         }
 
         /// <summary>
@@ -209,7 +433,7 @@ namespace UnityEngine.InputSystem
 
             ApplyParameterOverride(actionMap.m_State, actionMap.m_MapIndexInState,
                 ref actionMap.m_ParameterOverrides, ref actionMap.m_ParameterOverridesCount,
-                name, value, bindingMask);
+                new ParameterOverride(name, bindingMask, value));
         }
 
         /// <summary>
@@ -299,7 +523,7 @@ namespace UnityEngine.InputSystem
 
             ApplyParameterOverride(asset.m_SharedStateForAllMaps, -1,
                 ref asset.m_ParameterOverrides, ref asset.m_ParameterOverridesCount,
-                name, value, bindingMask);
+                new ParameterOverride(name, bindingMask, value));
         }
 
         /// <summary>
@@ -389,7 +613,7 @@ namespace UnityEngine.InputSystem
 
             ApplyParameterOverride(actionMap.m_State, actionMap.m_MapIndexInState,
                 ref actionMap.m_ParameterOverrides, ref actionMap.m_ParameterOverridesCount,
-                name, value, bindingMask);
+                new ParameterOverride(name, bindingMask, value));
         }
 
         /// <summary>
@@ -429,12 +653,10 @@ namespace UnityEngine.InputSystem
         }
 
         private static void ApplyParameterOverride(InputActionState state, int mapIndex,
-            ref ParameterOverride[] parameterOverrides, ref int parameterOverridesCount, string name, PrimitiveValue value,
-            InputBinding bindingMask)
+            ref ParameterOverride[] parameterOverrides, ref int parameterOverridesCount, ParameterOverride parameterOverride)
         {
             // Update the parameter overrides on the map or asset.
             var haveExistingOverride = false;
-            var parameterOverride = new ParameterOverride(name, bindingMask, value);
             if (parameterOverrides != null)
             {
                 // Try to find existing override.
@@ -443,7 +665,7 @@ namespace UnityEngine.InputSystem
                     ref var p = ref parameterOverrides[i];
                     if (string.Equals(p.objectRegistrationName, parameterOverride.objectRegistrationName, StringComparison.OrdinalIgnoreCase) &&
                         string.Equals(p.parameter, parameterOverride.parameter, StringComparison.OrdinalIgnoreCase) &&
-                        p.bindingMask == bindingMask)
+                        p.bindingMask == parameterOverride.bindingMask)
                     {
                         haveExistingOverride = true;
                         // Update value on existing override.
@@ -719,6 +941,14 @@ namespace UnityEngine.InputSystem
                     objectRegistrationName = parameterName.Substring(0, colonIndex);
                     parameter = parameterName.Substring(colonIndex + 1);
                 }
+                this.bindingMask = bindingMask;
+                this.value = value;
+            }
+
+            public ParameterOverride(string objectRegistrationName, string parameterName, InputBinding bindingMask, PrimitiveValue value = default)
+            {
+                this.objectRegistrationName = objectRegistrationName;
+                this.parameter = parameterName;
                 this.bindingMask = bindingMask;
                 this.value = value;
             }

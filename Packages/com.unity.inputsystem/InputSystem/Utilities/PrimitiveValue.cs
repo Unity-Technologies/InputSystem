@@ -32,6 +32,8 @@ namespace UnityEngine.InputSystem.Utilities
         [FieldOffset(4)] private float m_FloatValue;
         [FieldOffset(4)] private double m_DoubleValue;
 
+        internal unsafe byte* valuePtr => (byte*)UnsafeUtility.AddressOf(ref this) + 4;
+
         /// <summary>
         /// Type of value stored in the struct. <see cref="TypeCode.Empty"/>
         /// if the struct does not hold a value (i.e. has been default-initialized).
@@ -752,7 +754,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <exception cref="ArgumentException">No conversion exists from the given <typeparamref name="TValue"/>
         /// type.</exception>
         public static PrimitiveValue From<TValue>(TValue value)
-            where TValue : struct
+            where TValue : unmanaged
         {
             var type = typeof(TValue);
             if (type.IsEnum)

@@ -542,6 +542,15 @@ The above looks for the parameter on any object found on any of the bindings on 
 action.GetParameterValue("hold:duration", InputBinding.MaskByGroup("Gamepad"));
 ```
 
+Alternatively, you can use an expression parameter to encapsulate both the type and the name of the parameter you want to get the value of. This has the advantage of not needing a string parameter but rather references both the type and the name of the parameter in a typesafe way.
+
+```CSharp
+// Retrieve the value of the "duration" parameter of TapInteraction.
+// This version returns a float? instead of a PrimitiveValue? as it
+// sees the type of "duration" at compile-time.
+action.GetParameterValue((TapInteraction x) => x.duration);
+```
+
 To alter the current value of a parameter, you can use what is referred to as a "parameter override". You can apply these at the level of an individual [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html), or at the level of an entire [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html), or even at the level of an entire [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). Such overrides are stored internally and applied automatically even on bindings added later.
 
 To add an override, use the [`ApplyParameterOverride`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_ApplyParameterOverride_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_Utilities_PrimitiveValue_UnityEngine_InputSystem_InputBinding) API or any of its overloads.
@@ -562,6 +571,12 @@ map.ApplyParameterOverride("tap:duration", 0.5f);
 
 // Set tap duration for all bindings in an entire asset.
 asset.ApplyParameterOverride("tap:duration", 0.5f);
+
+// Like for GetParameterValue, overloads are available that take
+// an expression instead.
+action.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+map.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+asset.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
 ```
 
 The new value will be applied immediately and affect all composites, processors, and interactions already in use and targeted by the override.
