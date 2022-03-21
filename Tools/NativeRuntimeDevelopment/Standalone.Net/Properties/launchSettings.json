@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Standalone.Net": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
