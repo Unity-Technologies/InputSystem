@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             // If it's a device, perform some extra work specific to the control
             // hierarchy root.
-            if (control is InputDevice controlAsDevice)
+            if (control is InputDevice controlAsDevice && ((parent?.layout != null && parent.layout != "RuntimeNextDevice") || parent?.layout == null)) 
             {
                 if (parent != null)
                     throw new InvalidOperationException(

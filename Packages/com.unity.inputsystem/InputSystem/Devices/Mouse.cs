@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="Mouse.rightButton"/>
         /// <seealso cref="Mouse.forwardButton"/>
         /// <seealso cref="Mouse.backButton"/>
-        [InputControl(name = "press", useStateFrom = "leftButton", synthetic = true, usages = new string[0])]
+        [InputControl(name = "press", useStateFrom = "leftButton", synthetic = true, usages = new string[0], layout = "Button")]
         [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usage = "PrimaryAction", displayName = "Left Button", shortDisplayName = "LMB")]
         [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usage = "SecondaryAction", displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]

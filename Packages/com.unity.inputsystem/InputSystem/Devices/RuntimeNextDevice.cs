@@ -6,11 +6,26 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct TestState : IInputStateTypeInfo
+    public struct RuntimeNextDeviceState : IInputStateTypeInfo
     {
         public static FourCC Format => new FourCC('R', 'N', 'D', 'V');
 
         [InputControl(layout = "Mouse")]
+        // [InputControl(name = "mouse/position")]
+        // [InputControl(name = "mouse/delta")]
+        // [InputControl(name = "mouse/scroll")]
+        // [InputControl(name = "mouse/scroll/x")]
+        // [InputControl(name = "mouse/scroll/y")]
+        // [InputControl(name = "mouse/press", layout = "Button")]
+        // [InputControl(name = "mouse/leftButton")]
+        // [InputControl(name = "mouse/rightButton")]
+        // [InputControl(name = "mouse/middleButton")]
+        // [InputControl(name = "mouse/forwardButton")]
+        // [InputControl(name = "mouse/backButton")]
+        // [InputControl(name = "mouse/pressure")]
+        // [InputControl(name = "mouse/radius")]
+        // [InputControl(name = "mouse/pointerId")]
+        // [InputControl(name = "mouse/clickCount")]
         public MouseState mouse;
 
         [InputControl(layout = "Keyboard")]
@@ -22,7 +37,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
 namespace UnityEngine.InputSystem
 {
-    [InputControlLayout(stateType = typeof(TestState))]
+    [InputControlLayout(stateType = typeof(RuntimeNextDeviceState))]
     public class RuntimeNextDevice : InputDevice
     {
         public Mouse mouse { get; protected set; }

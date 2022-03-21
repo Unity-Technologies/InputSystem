@@ -38,9 +38,9 @@ public class DevelopmentTests : CoreTestsFixture
     public void RuntimeNext_PokingAtDeviceComposition()
     {
         var device = InputSystem.AddDevice<RuntimeNextDevice>();
-        // device.mouse.leftButton.QueueValueChange(1.0f);
-        // InputSystem.Update();
-        // Assert.That(device.mouse.leftButton.isPressed, Is.True);
+        device.mouse.leftButton.QueueValueChange(1.0f);
+        InputSystem.Update();
+        Assert.That(device.mouse.leftButton.isPressed, Is.True);
     }
 
 }
