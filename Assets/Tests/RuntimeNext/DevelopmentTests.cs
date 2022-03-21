@@ -4,9 +4,10 @@ using NUnit.Framework;
 using Unity.InputSystem;
 using Unity.InputSystem.Runtime;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using static Unity.InputSystem.Runtime.Native;
 
-public class DevelopmentTests
+public class DevelopmentTests : CoreTestsFixture
 {
     [Test]
     [Category("RuntimeNext")]
@@ -31,4 +32,15 @@ public class DevelopmentTests
         
         InputRuntimeDeinit();
     }
+
+    [Test]
+    [Category("RuntimeNext")]
+    public void RuntimeNext_PokingAtDeviceComposition()
+    {
+        var device = InputSystem.AddDevice<RuntimeNextDevice>();
+        // device.mouse.leftButton.QueueValueChange(1.0f);
+        // InputSystem.Update();
+        // Assert.That(device.mouse.leftButton.isPressed, Is.True);
+    }
+
 }
