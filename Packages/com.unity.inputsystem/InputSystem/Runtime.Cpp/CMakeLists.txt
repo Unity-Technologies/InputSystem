@@ -53,10 +53,10 @@ endif ()
 # ---------------------------------------------------------------------------------------------------------------------
 
 set(NativeBindingOutput
-    ${R}/Runtime.CSharp/NativeBinding.cs
+    ${R}/../Runtime.CSharp/NativeBinding.cs
 )
 file(GLOB_RECURSE NativeBindingInputs
-    ${R}/Runtime.Cpp/*.h
+    ${R}/*.h
 )
 set(NativeBindingInputsAsArgs)
 foreach(NativeBindingInput ${NativeBindingInputs})
@@ -88,34 +88,34 @@ add_custom_target(InputNative_Bindings DEPENDS ${NativeBindingOutput})
 # Input Native Device Database
 # ---------------------------------------------------------------------------------------------------------------------
 
-set(NativeSourceGeneratorExe "${R}/DeviceDatabaseGenerator~/InputNativeSourceGenerator/bin/Release/net6.0/NativeSourceGenerator.dll")
+# set(NativeSourceGeneratorExe "${R}/../../DeviceDatabaseGenerator~/InputNativeSourceGenerator/bin/Release/net6.0/NativeSourceGenerator.dll")
 
-set(NativeDeviceDatabaseOutput
-    ${R}/Runtime.Cpp/_BuiltInDeviceDatabase.h
-)
-add_custom_command(
-    OUTPUT ${NativeDeviceDatabaseOutput}
-    COMMAND "dotnet"
-    ${NativeSourceGeneratorExe}
-    -o ${NativeDeviceDatabaseOutput}
-    DEPENDS ${NativeSourceGeneratorExe}
-    VERBATIM
-)
-add_custom_target(InputNative_NativeDeviceDatabase DEPENDS ${NativeDeviceDatabaseOutput})
+# set(NativeDeviceDatabaseOutput
+#     ${R}/Runtime.Cpp/_BuiltInDeviceDatabase.h
+# )
+# add_custom_command(
+#     OUTPUT ${NativeDeviceDatabaseOutput}
+#     COMMAND "dotnet"
+#     ${NativeSourceGeneratorExe}
+#     -o ${NativeDeviceDatabaseOutput}
+#     DEPENDS ${NativeSourceGeneratorExe}
+#     VERBATIM
+# )
+# add_custom_target(InputNative_NativeDeviceDatabase DEPENDS ${NativeDeviceDatabaseOutput})
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Input Runtime Native library
 # ---------------------------------------------------------------------------------------------------------------------
 
 file(GLOB_RECURSE InputNative_Src
-    ${R}/Runtime.Cpp/*.cpp
-    ${R}/Runtime.Cpp/*.h
+    ${R}/*.cpp
+    ${R}/*.h
 )
 
 if(INCLUDE_NATIVE_TESTS)
     file(GLOB_RECURSE InputNative_TestsSrc
-        ${R}/Development/Catch2/*.cpp
-        ${R}/Development/Catch2/*.h
+        ${R}/Catch2/*.cpp
+        ${R}/Catch2/*.h
     )
 else()
     set(InputNative_TestsSrc)
@@ -123,11 +123,14 @@ endif()
 
 add_library(InputNative SHARED ${InputNative_Src} ${InputNative_TestsSrc} ${NativeDeviceDatabaseOutput})
 
-add_dependencies(InputNative InputNative_Bindings InputNative_NativeDeviceDatabase)
+add_dependencies(InputNative
+    InputNative_Bindings
+    # InputNative_NativeDeviceDatabase
+)
 
 target_include_directories(InputNative PUBLIC
-    ${R}/Runtime.Cpp
-    ${R}/Development/Catch2
+    ${R}
+    ${R}/Catch2
 )
 
 target_compile_definitions(InputNative PRIVATE
@@ -175,12 +178,12 @@ set(Target.Platform "Windows")
 endif()
 
 file(GLOB_RECURSE StandaloneNative_Src
-    ${R}/Development/Standalone.Common/*.cpp
-    ${R}/Development/Standalone.Common/*.h
-    ${R}/Development/Standalone.${Target.Platform}/*.cpp
-    ${R}/Development/Standalone.${Target.Platform}/*.mm
-    ${R}/Development/Standalone.${Target.Platform}/*.m
-    ${R}/Development/Standalone.${Target.Platform}/*.h
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.Common/*.cpp
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.Common/*.h
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.${Target.Platform}/*.cpp
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.${Target.Platform}/*.mm
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.${Target.Platform}/*.m
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.${Target.Platform}/*.h
     )
 
 add_executable(StandaloneNative ${StandaloneNative_Src})
@@ -190,8 +193,8 @@ target_link_libraries(StandaloneNative
 )
 
 target_include_directories(StandaloneNative PRIVATE
-    ${R}/Development/Standalone.Core
-    ${R}/Development/Standalone.${Target.Platform}
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.Core
+    ${R}/../../../NativeRuntimeDevelopment/Standalone.${Target.Platform}
 )
 
 #add_custom_command(TARGET StandaloneDevelopment.Input.Native POST_BUILD # this needs some massaging
