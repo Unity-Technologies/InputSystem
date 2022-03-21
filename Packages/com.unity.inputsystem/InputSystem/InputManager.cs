@@ -256,9 +256,9 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || m_HasFocus;
+            m_RunPlayerUpdatesInEditMode || m_HasFocus || gameShouldGetInputRegardlessOfFocus;
 #else
-            m_HasFocus;
+            m_HasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
 
         private bool gameShouldGetInputRegardlessOfFocus =>
@@ -1128,7 +1128,7 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             isPlaying = m_Runtime.isInPlayMode;
             #endif
-            if (isPlaying && !m_HasFocus
+            if (isPlaying && !gameHasFocus
                 && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus
                 && m_Runtime.runInBackground
                 && device.QueryEnabledStateFromRuntime()
@@ -2630,6 +2630,8 @@ namespace UnityEngine.InputSystem
             var backgroundBehavior = m_Settings.backgroundBehavior;
             if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
             {
+                // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
+                // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
                 m_HasFocus = focus;
                 return;
             }
@@ -2841,7 +2843,7 @@ namespace UnityEngine.InputSystem
                     (!m_Runtime.runInBackground ||
                         m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
 #else
-                || (!m_HasFocus && !m_Runtime.runInBackground)
+                || (!gameHasFocus && !m_Runtime.runInBackground)
 #endif
             ;
             var canEarlyOut =
