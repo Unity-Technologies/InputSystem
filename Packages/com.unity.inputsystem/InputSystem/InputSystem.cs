@@ -1,4 +1,3 @@
-// Grouping up the XR defines since it's a pretty heavy sequence
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -3447,7 +3446,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF) && ENABLE_VR
+            #if UNITY_INPUT_SYSTEM_ENABLE_XR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && ENABLE_VR
             XR.XRSupport.Initialize();
             #endif
 
