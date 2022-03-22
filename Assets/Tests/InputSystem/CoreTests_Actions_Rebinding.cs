@@ -1467,13 +1467,13 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [TestCase(null, "hold(duration=0.123)", new[] {"duration"}, new object[] { 0.123f }, new object[] { 0.234f })]
-    [TestCase(null, "tap(duration=0.123);hold(duration=0.123)", new[] {"duration"}, new object[] { 0.123f }, new object[] { 0.234f })]
-    [TestCase(null, "tap(duration=0.234);hold(duration=0.123)", new[] {"hold:duration"}, new object[] { 0.123f }, new object[] { 0.234f })]
-    [TestCase("scale(factor=0.123)", null, new[] {"factor"}, new object[] { 0.123f }, new object[] { 0.234f })]
-    [TestCase("normalize(min=0.123,max=1),clamp(min=0.123,max=1)", null, new[] {"min"}, new object[] { 0.123f }, new object[] { 0.234f })]
-    [TestCase("normalize(min=0.234,max=1),clamp(min=0.123,max=1)", null, new[] {"clamp:min"}, new object[] { 0.123f }, new object[] { 0.234f })]
-    public void Actions_CanApplyParameterOverrides(string processors, string interactions, string[] parameters, object[] defaults, object[] values)
+    [TestCase(null, "hold(duration=0.123)", "duration",  0.123f,  0.234f)]
+    [TestCase(null, "tap(duration=0.123);hold(duration=0.123)", "duration", 0.123f, 0.234f)]
+    [TestCase(null, "tap(duration=0.234);hold(duration=0.123)", "hold:duration", 0.123f, 0.234f)]
+    [TestCase("scale(factor=0.123)", null, "factor", 0.123f, 0.234f)]
+    [TestCase("normalize(min=0.123,max=1),clamp(min=0.123,max=1)", null, "min", 0.123f, 0.234f)]
+    [TestCase("normalize(min=0.234,max=1),clamp(min=0.123,max=1)", null, "clamp:min", 0.123f, 0.234f)]
+    public void Actions_CanApplyParameterOverrides(string processors, string interactions, string parameter, object defaultValue, object newValue)
     {
         var singleAction = new InputAction(processors: processors, interactions: interactions);
         singleAction.AddBinding("<Gamepad>/buttonSouth");
@@ -1501,46 +1501,34 @@ internal partial class CoreTests
             "Expecting getting non-existent parameter on action in asset to return null");
 
         // Parameters should be at default values.
-        foreach (var(name, value) in parameters.Zip(defaults, (a, b) => (a, b)))
-        {
-            Assert.That(singleAction.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have default value '{value}' on single action (got '{singleAction.GetParameterValue(name)}' instead)");
-            Assert.That(actionInMap.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have default value '{value}' on action in map (got '{actionInMap.GetParameterValue(name)}' instead)");
-            Assert.That(actionInAsset.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have default value '{value}' on action in asset (got '{actionInAsset.GetParameterValue(name)}' instead)");
-        }
+        Assert.That(singleAction.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(defaultValue)),
+            () => $"Expecting parameter '{parameter}' to have default value '{defaultValue}' on single action (got '{singleAction.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInMap.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(defaultValue)),
+            () => $"Expecting parameter '{parameter}' to have default value '{defaultValue}' on action in map (got '{actionInMap.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInAsset.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(defaultValue)),
+            () => $"Expecting parameter '{parameter}' to have default value '{defaultValue}' on action in asset (got '{actionInAsset.GetParameterValue(parameter)}' instead)");
 
         // Apply parameter overrides.
-        foreach (var(name, value) in parameters.Zip(values, (a, b) => (a, b)))
-        {
-            singleAction.ApplyParameterOverride(name, PrimitiveValue.FromObject(value));
-            actionInMap.ApplyParameterOverride(name, PrimitiveValue.FromObject(value));
-            actionInAsset.ApplyParameterOverride(name, PrimitiveValue.FromObject(value));
-        }
+        singleAction.ApplyParameterOverride(parameter, PrimitiveValue.FromObject(newValue));
+        actionInMap.ApplyParameterOverride(parameter, PrimitiveValue.FromObject(newValue));
+        actionInAsset.ApplyParameterOverride(parameter, PrimitiveValue.FromObject(newValue));
 
         // Parameters should be at new values.
-        foreach (var(name, value) in parameters.Zip(values, (a, b) => (a, b)))
-        {
-            Assert.That(singleAction.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have value '{value}' on single action (got '{singleAction.GetParameterValue(name)}' instead)");
-            Assert.That(actionInMap.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have value '{value}' on action in map (got '{actionInMap.GetParameterValue(name)}' instead)");
-            Assert.That(actionInAsset.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have value '{value}' on action in asset (got '{actionInAsset.GetParameterValue(name)}' instead)");
-        }
+        Assert.That(singleAction.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on single action (got '{singleAction.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInMap.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in map (got '{actionInMap.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInAsset.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in asset (got '{actionInAsset.GetParameterValue(parameter)}' instead)");
 
         // Adding a device should not lead to any of the applied parameter values getting lost.
         InputSystem.AddDevice<Gamepad>();
-        foreach (var(name, value) in parameters.Zip(values, (a, b) => (a, b)))
-        {
-            Assert.That(singleAction.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have value '{value}' on single action (got '{singleAction.GetParameterValue(name)}' instead)");
-            Assert.That(actionInMap.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have value '{value}' on action in map (got '{actionInMap.GetParameterValue(name)}' instead)");
-            Assert.That(actionInAsset.GetParameterValue(name), Is.EqualTo(PrimitiveValue.FromObject(value)),
-                () => $"Expecting parameter '{name}' to have value '{value}' on action in asset (got '{actionInAsset.GetParameterValue(name)}' instead)");
-        }
+        Assert.That(singleAction.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on single action (got '{singleAction.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInMap.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in map (got '{actionInMap.GetParameterValue(parameter)}' instead)");
+        Assert.That(actionInAsset.GetParameterValue(parameter), Is.EqualTo(PrimitiveValue.FromObject(newValue)),
+            () => $"Expecting parameter '{parameter}' to have value '{newValue}' on action in asset (got '{actionInAsset.GetParameterValue(parameter)}' instead)");
     }
 
     [Test]
