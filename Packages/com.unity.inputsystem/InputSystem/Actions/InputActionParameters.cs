@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem
         /// parameter from the object registered as <c>"tap"</c> (which will usually be <see cref="Interactions.TapInteraction"/>).</param>
         /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
         /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will be taken into account.</param>
-        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could be found.</returns>
+        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could not be found.</returns>
         /// <remarks>
         /// Parameters are found on interactions (<see cref="IInputInteraction"/>), processors (<see cref="InputProcessor"/>), and
         /// composites (see <see cref="InputBindingComposite"/>) that are applied to bindings. For example, the following binding
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem
         /// parameter from the object registered as <c>"tap"</c> (which will usually be <see cref="Interactions.TapInteraction"/>).</param>
         /// <param name="bindingIndex">Index of the binding in <paramref name="action"/>'s <see cref="InputAction.bindings"/>
         /// to look for processors, interactions, and composites on.</param>
-        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could be found.</returns>
+        /// <returns>The current value of the given parameter or <c>null</c> if the parameter not could be found.</returns>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// to specifically target a single binding by index. Otherwise, the method is identical in functionality.
@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem
         /// name and type of the parameter being looked for.</param>
         /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
         /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will be taken into account.</param>
-        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could be found.</returns>
+        /// <returns>The current value of the given parameter or <c>null</c> if the parameter not could be found.</returns>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
@@ -380,6 +380,9 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method both directly applies the new value and also stores the override internally.
         ///
+        /// If an override for the same parameter <paramref name="name"/> and with the same <paramref name="bindingMask"/> already exists,
+        /// its value is simply updated. No new override will be created.
+        ///
         /// You can use this method to set parameters (public fields) on composites, interactions, and processors that are created
         /// from bindings.
         ///
@@ -426,10 +429,13 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
-        /// If there are multiple overrides that could be applied to a specific parameter, the most specific override
-        /// is chosen. For example, if both an override for "duration" and an override for "duration" specifically on bindings
-        /// to the "look" action exists, then the latter is used for all bindings to the "look" action and the former is used
-        /// for all other bindings. For parameter overrides of equal specificity, the behavior is undecided.
+        /// If multiple overrides exist for the same parameter, an attempt is made to choose the override that is most specific.
+        /// Say, that you apply an override for <c>"duration"</c> on an entire <see cref="InputActionAsset"/> using
+        /// <see cref="ApplyParameterOverride(InputActionAsset,String,PrimitiveValue,InputBinding)"/>. But then you also apply
+        /// an override to just an individual <see cref="InputAction"/> inside the asset. In this case, the <c>"duration"</c>
+        /// override for just that action will be applied to bindings of that action and the override inside the asset will
+        /// be applied to bindings of all other actions. Note that if multiple overrides exist that could all be considered
+        /// equally valid, the behavior is undecided.
         ///
         /// Note that parameter overrides stay in place on the map. Like binding overrides, however, they are not
         /// automatically persisted and thus need to be reapplied when actions are loaded from assets. This will, however, be applied
@@ -468,6 +474,9 @@ namespace UnityEngine.InputSystem
         /// to apply the override to. By default this is empty which leads to the override to be applied to all bindings in the asset.</param>
         /// <remarks>
         /// This method both directly applies the new value and also stores the override internally.
+        ///
+        /// If an override for the same parameter <paramref name="name"/> and with the same <paramref name="bindingMask"/> already exists,
+        /// its value is simply updated. No new override will be created.
         ///
         /// You can use this method to set parameters (public fields) on composites, interactions, and processors that are created
         /// from bindings.
@@ -516,10 +525,13 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
-        /// If there are multiple overrides that could be applied to a specific parameter, the most specific override
-        /// is chosen. For example, if both an override for "duration" and an override for "duration" specifically on bindings
-        /// to the "look" action exists, then the latter is used for all bindings to the "look" action and the former is used
-        /// for all other bindings. For parameter overrides of equal specificity, the behavior is undecided.
+        /// If multiple overrides exist for the same parameter, an attempt is made to choose the override that is most specific.
+        /// Say, that you apply an override for <c>"duration"</c> on an entire <see cref="InputActionAsset"/> using
+        /// <see cref="ApplyParameterOverride(InputActionAsset,String,PrimitiveValue,InputBinding)"/>. But then you also apply
+        /// an override to just an individual <see cref="InputAction"/> inside the asset. In this case, the <c>"duration"</c>
+        /// override for just that action will be applied to bindings of that action and the override inside the asset will
+        /// be applied to bindings of all other actions. Note that if multiple overrides exist that could all be considered
+        /// equally valid, the behavior is undecided.
         ///
         /// Note that parameter overrides stay in place on the map. Like binding overrides, however, they are not
         /// automatically persisted and thus need to be reapplied when actions are loaded from assets. This will, however, be applied
@@ -557,6 +569,9 @@ namespace UnityEngine.InputSystem
         /// to apply the override to. By default this is empty which leads to the override to be applied to all bindings of the action.</param>
         /// <remarks>
         /// This method both directly applies the new value and also stores the override internally.
+        ///
+        /// If an override for the same parameter <paramref name="name"/> on the same <paramref name="action"/> and with the same
+        /// <paramref name="bindingMask"/> already exists, its value is simply updated. No new override will be created.
         ///
         /// You can use this method to set parameters (public fields) on composites, interactions, and processors that are created
         /// from bindings.
