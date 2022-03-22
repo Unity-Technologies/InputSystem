@@ -2,11 +2,14 @@
 
 ---
 
-Component Name: Assets/Samples/RebindingUI/Icons/*.png (Rebinding UI Sample Icon Assets)
-
-Creative Commons CC0, https://creativecommons.org/publicdomain/zero/1.0/
-
 <pre>
+Component Name: Assets/Samples/RebindingUI/Icons/*.png (RebindingUI sample icon assets)
+Source URL:     https://opengameart.org/content/free-keyboard-and-controllers-prompts-pack
+Version:        4.0
+License:        Creative Commons CC0
+License URL:    https://creativecommons.org/publicdomain/zero/1.0/
+
+
 Creative Commons Legal Code
 
 CC0 1.0 Universal
