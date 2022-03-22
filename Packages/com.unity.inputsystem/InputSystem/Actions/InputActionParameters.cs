@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
@@ -155,7 +156,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <exception cref="expr"> is <c>null</c></exception></exception>
         /// <seealso cref="ApplyParameterOverride{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},TValue,InputBinding)"/>
-        public static TValue? GetParameterValue<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, InputBinding bindingMask = default)
+        public static unsafe TValue? GetParameterValue<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, InputBinding bindingMask = default)
             where TValue : unmanaged
         {
             if (action == null)
@@ -169,6 +170,21 @@ namespace UnityEngine.InputSystem
             if (value == null)
                 return null;
 
+            // Type is guaranteed to match but just in case,
+            // make extra sure with a check here.
+            if (Type.GetTypeCode(typeof(TValue)) == value.Value.type)
+            {
+                // Can't just cast here so use UnsafeUtility to work around that.
+                var v = value.Value;
+                var result = default(TValue);
+                UnsafeUtility.MemCpy(UnsafeUtility.AddressOf(ref result),
+                    v.valuePtr,
+                    UnsafeUtility.SizeOf<TValue>());
+                return result;
+            }
+
+            // Shouldn't get here but just in case, do a conversion using C#'s Convert
+            // machinery as a fallback.
             return (TValue)Convert.ChangeType(value.Value.ToObject(), typeof(TValue));
         }
 
