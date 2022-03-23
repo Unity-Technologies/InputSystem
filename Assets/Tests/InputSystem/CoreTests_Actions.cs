@@ -8296,7 +8296,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(type: InputActionType.Button);
-        action.AddCompositeBinding("ButtonWithOneModifier")
+        action.AddCompositeBinding("ButtonWithOneModifier(overrideModifiersNeedToBePressedFirst)")
             .With("Modifier", "<Gamepad>/leftTrigger")
             .With("Modifier", "<Gamepad>/dpad/up")
             .With("Button", "<Gamepad>/rightTrigger");
@@ -8353,7 +8353,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction();
-        action.AddCompositeBinding("ButtonWithTwoModifiers")
+        action.AddCompositeBinding("ButtonWithTwoModifiers(overrideModifiersNeedToBePressedFirst)")
             .With("Modifier1", "<Gamepad>/leftTrigger")
             .With("Modifier1", "<Gamepad>/dpad/up")
             .With("Modifier2", "<Gamepad>/rightTrigger")
