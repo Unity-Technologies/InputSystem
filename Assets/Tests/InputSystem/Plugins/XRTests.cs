@@ -1,4 +1,4 @@
-// ENABLE_VR is not defined on GameCore but the assembly is available with limited features when the XR module is enabled.
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
 #if ENABLE_VR || UNITY_GAMECORE
 using System;
 using System.Collections.Generic;
