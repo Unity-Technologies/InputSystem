@@ -35,7 +35,7 @@ All released versions of the Input System package are available via the Unity Pa
 
 To test out the latest (unreleased) changes:
 
-1. Clone [develop](https://github.com/Unity-Technologies/InputSystem/tree/develop). The intention is always to keep the `develop` branch in a releasable state, but it reflects current development and may contain bugs or unexpected behavior not part of the last released version.
+1. Clone [develop](https://github.com/Unity-Technologies/InputSystem/tree/develop). The intention is to always keep the `develop` branch in a releasable state, but it reflects current development and may contain bugs or unexpected behavior that was not present in the latest released version.
 2. Add the local package to your project by following the steps described in [Unity Manual - Installing a package from a local folder](https://docs.unity3d.com/Manual/upm-ui-local.html) and select `Packages/com.unity.inputsystem/package.json`.
 
 ## Recommended way of developing the Input System 
