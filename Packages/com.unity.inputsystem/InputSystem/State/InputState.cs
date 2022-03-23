@@ -164,7 +164,7 @@ namespace UnityEngine.InputSystem.LowLevel
         ///
         /// Monitors are invoked <em>after</em> a state change has been written to the device. If, for example, a <see cref="StateEvent"/> is
         /// received that sets <see cref="Gamepad.leftTrigger"/> to <c>0.5</c>, the value is first applied to the control and then any state
-        /// monitors that may be listening to the change are invoked (thus getting <c>0.5</c> if calling <see cref="Controls.AxisControl.ReadValue()"/>).
+        /// monitors that may be listening to the change are invoked (thus getting <c>0.5</c> if calling <see cref="InputControl{TValue}.ReadValue()"/>).
         ///
         /// <example>
         /// <code>
