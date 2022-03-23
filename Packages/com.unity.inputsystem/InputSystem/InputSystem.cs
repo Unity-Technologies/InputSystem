@@ -3446,7 +3446,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if UNITY_INPUT_SYSTEM_ENABLE_XR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && ENABLE_VR
+            #if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();
             #endif
 

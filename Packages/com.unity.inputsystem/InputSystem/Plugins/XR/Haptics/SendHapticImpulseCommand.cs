@@ -1,14 +1,15 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR || PACKAGE_DOCS_GENERATION && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+// ENABLE_VR is not defined on GameCore but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.XR.Haptics
 {
     /// <summary>
     /// A device command sent to a device to set it's motor rumble amplitude for a set duration.
     /// </summary>
-    /// <remarks>This is directly used by the SimpleXRRumble class.  For clearer details of using this command, see that class.</remarks>
+    /// <remarks>This is directly used by the <see cref="XRControllerWithRumble"/> class. For clearer details of using this command, see that class.</remarks>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SendHapticImpulseCommand : IInputDeviceCommandInfo
     {
@@ -36,7 +37,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
         /// <param name="motorChannel">The desired motor you want to rumble</param>
         /// <param name="motorAmplitude">The desired motor amplitude that should be within a [0-1] range.</param>
         /// <param name="motorDuration">The desired duration of the impulse in seconds.</param>
-        /// <returns>The command that should be sent to the device via InputDevice.ExecuteCommand(InputDeviceCommand).  See XRHaptics for more details.</returns>
+        /// <returns>The command that should be sent to the device via <c>InputDevice.ExecuteCommand</c>.</returns>
         public static SendHapticImpulseCommand Create(int motorChannel, float motorAmplitude, float motorDuration)
         {
             return new SendHapticImpulseCommand

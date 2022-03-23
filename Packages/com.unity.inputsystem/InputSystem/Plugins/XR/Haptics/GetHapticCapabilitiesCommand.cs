@@ -1,7 +1,8 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR || PACKAGE_DOCS_GENERATION
+// ENABLE_VR is not defined on GameCore but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.XR.Haptics
 {

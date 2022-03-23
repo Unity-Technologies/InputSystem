@@ -1,8 +1,7 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && ENABLE_VR || PACKAGE_DOCS_GENERATION
+// ENABLE_VR is not defined on GameCore but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
