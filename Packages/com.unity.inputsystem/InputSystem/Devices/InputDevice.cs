@@ -630,20 +630,6 @@ namespace UnityEngine.InputSystem
 
             CanRunInBackground = 1 << 11,
             CanRunInBackgroundHasBeenQueried = 1 << 12,
-            
-            RuntimeNext = 1 << 13, // Device is backed by RuntimeNext device and trait 
-        }
-        
-        internal bool isRuntimeNext
-        {
-            get => (m_DeviceFlags & DeviceFlags.RuntimeNext) != 0;
-            set
-            {
-                if (value)
-                    m_DeviceFlags |= DeviceFlags.RuntimeNext;
-                else
-                    m_DeviceFlags &= ~DeviceFlags.RuntimeNext;
-            }
         }
 
         internal bool disabledInFrontend
@@ -687,9 +673,6 @@ namespace UnityEngine.InputSystem
         internal int m_ParticipantId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
-
-        internal InputDeviceRef m_RuntimeNextDeviceRef;
-        internal InputDeviceTraitRef m_RuntimeNextTraitRef;
 
         /// <summary>
         /// Timestamp of last event we received.

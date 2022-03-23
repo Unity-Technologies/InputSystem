@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.InputSystem;
+using Unity.InputSystem.Runtime;
 using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: should EvaluateMagnitude() be called EvaluateActuation() or something similar?
@@ -467,6 +469,21 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal virtual object RuntimeNextReadLatestSampleAsObject()
+        {
+            throw new NotImplementedException($"Not implemented");
+        }
+
+        internal virtual object[] RuntimeNextReadAllRecordedSamplesAsObjects()
+        {
+            throw new NotImplementedException($"Not implemented");
+        }
+
+        internal virtual object RuntimeNextQueueSamplesAsObject(object obj)
+        {
+            throw new NotImplementedException($"Not implemented");
+        }
+
         ////REVIEW: The -1 behavior seems bad; probably better to just return 1 for controls that do not support finer levels of actuation
         /// <summary>
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
@@ -848,6 +865,11 @@ namespace UnityEngine.InputSystem
         internal int m_ChildStartIndex;
         internal ControlFlags m_ControlFlags;
 
+        internal InputDeviceRef      m_RuntimeNext_DeviceRef;      // only valid if isRuntimeNext
+        internal InputDeviceTraitRef m_RuntimeNext_TraitRef;       // only valid if isRuntimeNext and current object is InputDevice
+        internal InputControlUsage   m_RuntimeNext_Usage;          // only valid if isRuntimeNext and current object is not InputDevice
+        internal InputControlTypeRef m_RuntimeNext_ControlTypeRef; // only valid if isRuntimeNext and current object is not InputDevice
+
         ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValue m_DefaultState;
         internal PrimitiveValue m_MinValue;
@@ -863,6 +885,19 @@ namespace UnityEngine.InputSystem
             DontReset = 1 << 4,
             SetupFinished = 1 << 5, // Can't be modified once this is set.
             UsesStateFromOtherControl = 1 << 6,
+            IsRuntimeNext = 1 << 7
+        }
+        
+        internal bool isRuntimeNext
+        {
+            get => (m_ControlFlags & ControlFlags.IsRuntimeNext) == ControlFlags.IsRuntimeNext;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsRuntimeNext;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsRuntimeNext;
+            }
         }
 
         internal bool isSetupFinished
@@ -1010,6 +1045,9 @@ namespace UnityEngine.InputSystem
         /// <returns>The control's value in the previous frame.</returns>
         public TValue ReadValueFromPreviousFrame()
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+
             unsafe
             {
                 return ReadValueFromState(previousFrameStatePtr);
@@ -1035,6 +1073,8 @@ namespace UnityEngine.InputSystem
 
         public unsafe TValue ReadValueFromState(void* statePtr)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
             if (statePtr == null)
                 throw new ArgumentNullException(nameof(statePtr));
             return ProcessValue(ReadUnprocessedValueFromState(statePtr));
@@ -1053,12 +1093,18 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc />
         public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+
             return ReadValueFromState(statePtr);
         }
 
         /// <inheritdoc />
         public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+
             if (statePtr == null)
                 throw new ArgumentNullException(nameof(statePtr));
             if (bufferPtr == null)
@@ -1077,6 +1123,9 @@ namespace UnityEngine.InputSystem
 
         public override unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+
             if (bufferPtr == null)
                 throw new ArgumentNullException(nameof(bufferPtr));
             if (statePtr == null)
@@ -1099,6 +1148,9 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc />
         public override unsafe void WriteValueFromObjectIntoState(object value, void* statePtr)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+
             if (statePtr == null)
                 throw new ArgumentNullException(nameof(statePtr));
             if (value == null)
@@ -1123,6 +1175,9 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc />
         public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
@@ -1141,6 +1196,9 @@ namespace UnityEngine.InputSystem
 
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
+            if (isRuntimeNext)
+                throw new InvalidOperationException("Not supported for RuntimeNext controls");
+            
             ////REVIEW: should we first compare state here? if there's no change in state, there can be no change in value and we can skip the rest
 
             var firstValue = ReadValueFromState(firstStatePtr);

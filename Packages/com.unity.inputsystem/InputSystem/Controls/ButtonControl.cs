@@ -1,3 +1,5 @@
+using System;
+using Unity.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 
@@ -66,6 +68,31 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatBit;
             m_MinValue = 0f;
             m_MaxValue = 1f;
+        }
+        
+        
+        internal InputButtonControl AsRuntimeNextButton()
+        {
+            if (!isRuntimeNext)
+                throw new InvalidOperationException("Expected RuntimeNext control");
+            if (m_RuntimeNext_ControlTypeRef.NotEquals(InputButtonControl.ControlTypeRef))
+                throw new InvalidOperationException("Expected button control type ref");
+            return InputButtonControl.Setup(m_RuntimeNext_Usage, m_RuntimeNext_DeviceRef);
+        }
+        
+        internal override object RuntimeNextReadLatestSampleAsObject()
+        {
+            return AsRuntimeNextButton().value;
+        }
+
+        internal override object[] RuntimeNextReadAllRecordedSamplesAsObjects()
+        {
+            return null;
+        }
+
+        internal override object RuntimeNextQueueSamplesAsObject(object obj)
+        {
+            return null;
         }
 
         /// <summary>
