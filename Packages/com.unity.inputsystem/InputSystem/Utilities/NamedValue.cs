@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         public static NamedValue From<TValue>(string name, TValue value)
-            where TValue : unmanaged
+            where TValue : struct
         {
             return new NamedValue
             {

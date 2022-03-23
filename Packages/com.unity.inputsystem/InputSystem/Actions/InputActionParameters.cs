@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem
         /// The names used here to identify the object holding the parameter are the same used by <see cref="InputSystem.RegisterInteraction"/>,
         /// <see cref="InputSystem.RegisterBindingComposite"/>, and <see cref="InputSystem.RegisterProcessor"/>.
         /// </remarks>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <exception cref="name"> is <c>null</c></exception></exception>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="name"/> is <c>null</c></exception>
         /// <seealso cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// <seealso cref="ApplyBindingOverride(InputAction,string,string,string)"/>
         /// <seealso cref="Editor.InputParameterEditor"/>
@@ -114,7 +114,7 @@ namespace UnityEngine.InputSystem
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// to specifically target a single binding by index. Otherwise, the method is identical in functionality.
         /// </remarks>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <exception cref="name"> is <c>null</c></exception></exception>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="name"/> is <c>null</c></exception>
         public static PrimitiveValue? GetParameterValue(this InputAction action, string name, int bindingIndex)
         {
             if (action == null)
@@ -154,10 +154,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <exception cref="expr"> is <c>null</c></exception></exception>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c></exception>
         /// <seealso cref="ApplyParameterOverride{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},TValue,InputBinding)"/>
         public static unsafe TValue? GetParameterValue<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, InputBinding bindingMask = default)
-            where TValue : unmanaged
+            where TValue : struct
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -214,10 +214,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue},InputBinding)"/>
+        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},InputBinding)"/>
         public static void ApplyParameterOverride<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, TValue value,
             InputBinding bindingMask = default)
-            where TValue : unmanaged
+            where TValue : struct
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -261,10 +261,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue},InputBinding)"/>
+        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},InputBinding)"/>
         public static void ApplyParameterOverride<TObject, TValue>(this InputActionMap actionMap, Expression<Func<TObject, TValue>> expr, TValue value,
             InputBinding bindingMask = default)
-            where TValue : unmanaged
+            where TValue : struct
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
@@ -307,10 +307,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue},InputBinding)"/>
+        /// <seealso cref="GetParameterValue{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},InputBinding)"/>
         public static void ApplyParameterOverride<TObject, TValue>(this InputActionAsset asset, Expression<Func<TObject, TValue>> expr, TValue value,
             InputBinding bindingMask = default)
-            where TValue : unmanaged
+            where TValue : struct
         {
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));

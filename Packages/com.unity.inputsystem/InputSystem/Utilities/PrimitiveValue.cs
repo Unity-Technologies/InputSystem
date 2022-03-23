@@ -754,7 +754,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <exception cref="ArgumentException">No conversion exists from the given <typeparamref name="TValue"/>
         /// type.</exception>
         public static PrimitiveValue From<TValue>(TValue value)
-            where TValue : unmanaged
+            where TValue : struct
         {
             var type = typeof(TValue);
             if (type.IsEnum)
