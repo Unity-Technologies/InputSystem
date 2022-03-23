@@ -1,4 +1,4 @@
-#if ENABLE_VR || ENABLE_AR
+#if ENABLE_VR || UNITY_GAMECORE
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
