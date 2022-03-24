@@ -136,7 +136,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         private static void SetUpState()
         {
-            Touch.s_GlobalState.playerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual;
+            Touch.s_GlobalState.playerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual | InputUpdateType.Fixed;
             #if UNITY_EDITOR
             Touch.s_GlobalState.editorState.updateMask = InputUpdateType.Editor;
             #endif

@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <returns>True if <paramref name="value"/> crosses the threshold to be considered pressed.</returns>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        public bool IsValueConsideredPressed(float value)
+        public new bool IsValueConsideredPressed(float value)
         {
             return value >= pressPointOrDefault;
         }

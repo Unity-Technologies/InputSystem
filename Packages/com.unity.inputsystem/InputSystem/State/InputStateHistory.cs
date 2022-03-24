@@ -405,18 +405,8 @@ namespace UnityEngine.InputSystem.LowLevel
             // Ignore state change if it's in an input update we're not interested in.
             var currentUpdateType = InputState.currentUpdateType;
             var updateTypeMask = updateMask;
-            if ((currentUpdateType & updateTypeMask) == 0 &&
-                // EXCEPTION: When we're recording fixed and/or dynamic updates, do NOT ignore the state change
-                //            if it is from an event. The reason is that the input system concurrently records
-                //            state changes from events into both fixed and dynamic update buffers if both updates
-                //            are enabled concurrently. This means that we will see input data going into
-                //            *dynamic* update state buffers during *fixed* update and vice versa.
-                !((currentUpdateType & (InputUpdateType.Dynamic | InputUpdateType.Fixed)) != 0 &&
-                  (updateTypeMask & (InputUpdateType.Dynamic | InputUpdateType.Fixed)) != 0 &&
-                  eventPtr.valid))
-            {
+            if ((currentUpdateType & updateTypeMask) == 0)
                 return;
-            }
 
             // Ignore state change if we have a filter and the state change doesn't pass the check.
             if (onShouldRecordStateChange != null && !onShouldRecordStateChange(control, time, eventPtr))

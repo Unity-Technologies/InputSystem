@@ -67,7 +67,7 @@ fireAction.canceled +=
 
 ### Multiple Controls on an Action
 
-If you have multiple Controls bound to a Binding or an Action which has an Interaction, then the Input System first applies the [conflict resolution](ActionBindings.md#conflict-resolution) logic to get a single value for the Action, which it then feeds to the Interaction logic. Any of the bound Controls can perform the Interaction.
+If you have multiple Controls bound to a Binding or an Action which has an Interaction, then the Input System first applies the [Control conflict resolution](ActionBindings.md#conflicting-inputs) logic to get a single value for the Action, which it then feeds to the Interaction logic. Any of the bound Controls can perform the Interaction.
 
 ### Multiple Interactions on a Binding
 
