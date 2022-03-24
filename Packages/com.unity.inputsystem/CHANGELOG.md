@@ -87,6 +87,26 @@ however, it has to be formatted properly to pass verification tests.
     ```CSharp
     InputSystem.settings.SetInternalFeatureFlag("DISABLE_SHORTCUT_SUPPORT", true);
     ```
+- Added new APIs for getting and setting parameter values on interactions, processors, and composites.
+  ```CSharp
+  // Get parameter.
+  action.GetParameterValue("duration");     // Any "duration" value on any binding.
+  action.GetParameterValue("tap:duration"); // "duration" on "tap" interaction on any binding.
+  action.GetParameterValue("tap:duration",  // "duration" on "tap" on binding in "Gamepad" group.
+      InputBinding.MaskByGroup("Gamepad"));
+
+  // Set parameter.
+  action.ApplyParameterOverride("duration", 0.4f);
+  action.ApplyParameterOverride("tap:duration", 0.4f);
+  action.ApplyParameterOverride("tap:duration", 0.4f,
+      InputBinding.MaskByGroup("Gamepad"));
+
+  // Can also apply parameter overrides at the level of
+  // InputActionMaps and InputActionAssets with an effect
+  // on all the bindings contained therein.
+  asset.ApplyParameterOverride("scaleVector2:x", 0.25f,
+      new InputBinding("<Mouse>/delta"));
+  ```
 
 ## [1.3.0] - 2021-12-10
 

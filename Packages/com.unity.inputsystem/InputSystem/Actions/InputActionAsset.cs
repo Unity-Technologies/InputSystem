@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -893,6 +894,14 @@ namespace UnityEngine.InputSystem
             m_ActionMaps[0].LazyResolveBindings(fullResolve);
         }
 
+        internal void ResolveBindingsIfNecessary()
+        {
+            if (m_ActionMaps.LengthSafe() > 0)
+                foreach (var map in m_ActionMaps)
+                    if (map.ResolveBindingsIfNecessary())
+                        break;
+        }
+
         private void OnDestroy()
         {
             Disable();
@@ -914,6 +923,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
+        [NonSerialized] internal int m_ParameterOverridesCount;
+        [NonSerialized] internal InputActionRebindingExtensions.ParameterOverride[] m_ParameterOverrides;
 
         [NonSerialized] internal InputActionMap.DeviceArray m_Devices;
 

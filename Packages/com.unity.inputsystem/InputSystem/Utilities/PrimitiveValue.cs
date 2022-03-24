@@ -32,6 +32,8 @@ namespace UnityEngine.InputSystem.Utilities
         [FieldOffset(4)] private float m_FloatValue;
         [FieldOffset(4)] private double m_DoubleValue;
 
+        internal unsafe byte* valuePtr => (byte*)UnsafeUtility.AddressOf(ref this) + 4;
+
         /// <summary>
         /// Type of value stored in the struct. <see cref="TypeCode.Empty"/>
         /// if the struct does not hold a value (i.e. has been default-initialized).
