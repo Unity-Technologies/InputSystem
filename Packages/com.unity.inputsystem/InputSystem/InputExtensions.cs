@@ -80,10 +80,7 @@ namespace UnityEngine.InputSystem
         /// Check if a <see cref="Key"/> enum value represents key generating text input.
         /// </summary>
         /// <param name="key">The key enum value you want to check.</param>
-        /// <returns><c>true</c> if <paramref name="key"/> represents a key generating text input, else <c>false</c>.</returns>
-        /// <remarks>
-        /// Returns true if this key is a key generating non-whitespace character input, false otherwise.
-        /// </remarks>
+        /// <returns><c>true</c> if <paramref name="key"/> represents a key generating non-whitespace text input, else <c>false</c>.</returns>
         public static bool IsTextInputKey(this Key key)
         {
             switch (key)

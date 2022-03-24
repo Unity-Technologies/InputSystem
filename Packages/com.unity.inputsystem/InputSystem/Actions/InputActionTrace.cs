@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         /// <summary>
-        /// Subscribe to a all actions part of <paramref name="actionMap"/>.
+        /// Subscribe to all actions contained within <paramref name="actionMap"/>.
         /// </summary>
         /// <param name="actionMap">The action-map containing all actions to be recorded.</param>
         /// <remarks>
@@ -335,7 +335,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Clears all recorded data.
         /// </summary>
         /// <remarks>
-        /// Note that this doesn't affect currently monitored actions being recorded.
+        /// Note that this doesn't affect which actions are currently subscribed for monitoring
         /// </remarks>
         public void Clear()
         {
@@ -545,7 +545,7 @@ namespace UnityEngine.InputSystem.Utilities
             }
 
             /// <summary>
-            /// Gets a timestamp corresponding to the time at wich the event was generated at.
+            /// Gets a timestamp corresponding to the time at which the event was generated.
             /// </summary>
             /// <remarks>
             /// Times are in seconds and progress linearly in real-time. The timeline is the

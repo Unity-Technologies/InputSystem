@@ -391,7 +391,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a hold-interaction.</value>
         /// <remarks>
-        /// A slow-tap-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// A hold-interaction is considered as a press-and-release sequence on a button-like input control.
         /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
         /// If the delay between press and release is less than this duration, the input does not qualify as a hold-interaction.
         ///

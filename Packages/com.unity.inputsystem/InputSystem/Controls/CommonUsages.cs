@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Example: Primary mouse button (left button on right-handed configuration, right button on left-handed configuration),
-        /// south-button on a a gamepad.
+        /// south-button on a gamepad.
         /// </remarks>
         public static readonly InternedString PrimaryAction = new InternedString("PrimaryAction");
 
@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Example: Secondary mouse button (right button on right-handed configuration, left button on left-handed configuration),
-        /// east-button on a a gamepad.
+        /// east-button on a gamepad.
         /// </remarks>
         public static readonly InternedString SecondaryAction = new InternedString("SecondaryAction");
 
