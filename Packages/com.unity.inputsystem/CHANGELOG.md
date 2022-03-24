@@ -70,11 +70,23 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added support for "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
+- Added support for SteelSeries Nimbus+ gamepad on Mac (addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
 
-### Added
-- Added support for SteelSeries Nimbus+ gamepad on Mac (Addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
+#### Actions
+
+- Added support for keyboard shortcuts and mutually exclusive use of modifiers.
+  * In short, this means that a "Shift+B" binding can now prevent a "B" binding from triggering.
+  * `OneModifierComposite`, `TwoModifiersComposite`, as well as the legacy `ButtonWithOneModifierComposite` and `ButtonWithTwoModifiersComposite` now require their modifiers to be pressed __before__ (or at least simultaneously with) pressing the target button.
+    * This check is performed only if the target is a button. For a binding such as `"CTRL+MouseDelta"` the check is bypassed. It can also be manually bypassed via the `overrideModifiersNeedToBePressedFirst`.
+  * State change monitors on a device (`IInputStateChangeMonitor`) are now sorted by their `monitorIndex` and will trigger in that order.
+  * Actions are now automatically arranging their bindings to trigger in the order of decreasing "complexity". This metric is derived automatically. The more complex a composite a binding is part of, the higher its complexity. So, `"Shift+B"` has a higher "complexity" than just `"B"`.
+  * If an binding of higher complexity "consumes" a given input, all bindings waiting to consume the same input will automatically get skipped. So, if a `"Shift+B"` binding composite consumes a `"B"` key press, a binding to `"B"` that is waiting in line will get skipped and not see the key press.
+  * If your project is broken by these changes, you can disable the new behaviors via a feature toggle in code:
+    ```CSharp
+    InputSystem.settings.SetInternalFeatureFlag("DISABLE_SHORTCUT_SUPPORT", true);
+    ```
 
 ## [1.3.0] - 2021-12-10
 

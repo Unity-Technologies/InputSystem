@@ -2293,7 +2293,7 @@ namespace UnityEngine.InputSystem
         /// interest and an alternative to directly hooking into this event.
         ///
         /// If you are looking to monitor changes to specific input controls, state change monitors
-        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
+        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>
         /// are usually a more efficient and convenient way to set this up.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
