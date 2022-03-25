@@ -522,6 +522,8 @@ namespace UnityEngine.InputSystem.Utilities
             /// <summary>
             /// Gets the <see cref="InputActionPhase"/> associated with this action event.
             /// </summary>
+            /// <seealso cref="InputAction.phase"/>
+            /// <seealso cref="InputAction.CallbackContext.phase"/>
             public InputActionPhase phase => m_Ptr->phase;
 
             /// <summary>
