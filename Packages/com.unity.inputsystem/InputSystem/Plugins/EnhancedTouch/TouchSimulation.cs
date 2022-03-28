@@ -111,8 +111,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             // Remove from list.
             var numPointers = m_NumPointers;
-            ArrayHelpers.EraseAtWithCapacity(m_Pointers, ref m_NumPointers, pointerIndex);
-            ArrayHelpers.EraseAtWithCapacity(m_CurrentPositions, ref numPointers, pointerIndex);
+            m_Pointers.EraseAtWithCapacity(ref m_NumPointers, pointerIndex);
+            m_CurrentPositions.EraseAtWithCapacity(ref numPointers, pointerIndex);
 
             // Re-enable the device (only in case it's still added to the system).
             if (pointer.added)
@@ -181,9 +181,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 {
                     // No, so add it.
                     touchIndex = m_Touches.IndexOfReference((ButtonControl)null);
-                    m_Touches[touchIndex] = (ButtonControl)control;
                     if (touchIndex >= 0) // If negative, we're at max touch count and can't add more.
+                    {
+                        m_Touches[touchIndex] = (ButtonControl)control;
                         UpdateTouch(touchIndex, pointerIndex, TouchPhase.Began, eventPtr);
+                    }
                 }
                 else
                 {

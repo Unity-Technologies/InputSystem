@@ -123,18 +123,10 @@ namespace UnityEngine.InputSystem.Editor
             // Create subasset for each action.
             foreach (var map in maps)
             {
-                var haveSetName = !string.IsNullOrEmpty(map.name);
-
                 foreach (var action in map.actions)
                 {
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
                     actionReference.Set(action);
-
-                    var objectName = action.name;
-                    if (haveSetName)
-                        objectName = $"{map.name}/{action.name}";
-
-                    actionReference.name = objectName;
                     ctx.AddObjectToAsset(action.m_Id, actionReference, actionIcon);
 
                     // Backwards-compatibility (added for 1.0.0-preview.7).
@@ -149,9 +141,9 @@ namespace UnityEngine.InputSystem.Editor
                     //
                     // Case: https://fogbugz.unity3d.com/f/cases/1229145/
                     var backcompatActionReference = Instantiate(actionReference);
-                    backcompatActionReference.name = objectName; // Get rid of the (Clone) suffix.
+                    backcompatActionReference.name = actionReference.name; // Get rid of the (Clone) suffix.
                     backcompatActionReference.hideFlags = HideFlags.HideInHierarchy;
-                    ctx.AddObjectToAsset(objectName, backcompatActionReference, actionIcon);
+                    ctx.AddObjectToAsset(actionReference.name, backcompatActionReference, actionIcon);
                 }
             }
 

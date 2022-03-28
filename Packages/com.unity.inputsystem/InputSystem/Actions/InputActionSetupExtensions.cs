@@ -51,7 +51,8 @@ namespace UnityEngine.InputSystem
         /// <param name="map">A named action map.</param>
         /// <exception cref="ArgumentNullException"><paramref name="map"/> or <paramref name="asset"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> has no name or asset already contains a
-        /// map with the same name.</exception>
+        /// map with the same name -or- <paramref name="map"/> is currently enabled -or- <paramref name="map"/> is part of
+        /// an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s that are enabled.</exception>
         /// <seealso cref="InputActionAsset.actionMaps"/>
         public static void AddActionMap(this InputActionAsset asset, InputActionMap map)
         {
@@ -69,9 +70,12 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     $"An action map called '{map.name}' already exists in the asset");
 
+            map.OnWantToChangeSetup();
+            asset.OnWantToChangeSetup();
+
             ArrayHelpers.Append(ref asset.m_ActionMaps, map);
-            asset.MarkAsDirty();
             map.m_Asset = asset;
+            asset.OnSetupChanged();
         }
 
         /// <summary>
@@ -82,7 +86,8 @@ namespace UnityEngine.InputSystem
         /// does nothing.</param>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="map"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
-        /// cref="InputActionMap.enabled"/>).</exception>
+        /// cref="InputActionMap.enabled"/>) or is part of an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s
+        /// that are currently enabled.</exception>
         /// <seealso cref="RemoveActionMap(InputActionAsset,string)"/>
         /// <seealso cref="InputActionAsset.actionMaps"/>
         public static void RemoveActionMap(this InputActionAsset asset, InputActionMap map)
@@ -91,16 +96,17 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(asset));
             if (map == null)
                 throw new ArgumentNullException(nameof(map));
-            if (map.enabled)
-                throw new InvalidOperationException("Cannot remove an action map from the asset while it is enabled");
+
+            map.OnWantToChangeSetup();
+            asset.OnWantToChangeSetup();
 
             // Ignore if not part of this asset.
             if (map.m_Asset != asset)
                 return;
 
             ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
-            asset.MarkAsDirty();
             map.m_Asset = null;
+            asset.OnSetupChanged();
         }
 
         /// <summary>
@@ -151,8 +157,8 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentNullException"><paramref name="map"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="name"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is enabled (see <see cref="InputActionMap.enabled"/>)
+        /// or is part of an <see cref="InputActionAsset"/> that has <see cref="InputActionMap"/>s that are <see cref="InputActionMap.enabled"/>
         /// -or- <paramref name="map"/> already contains an action called <paramref name="name"/> (case-insensitive).</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="map"/> parent InputActionAsset has one or more maps enabled (see <see cref="InputActionAsset.enabled"/>).</exception>
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
@@ -160,14 +166,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(map));
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Action must have name", nameof(name));
-            if (map.enabled)
-                throw new InvalidOperationException(
-                    $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
-            if (map.asset != null)
-                foreach (var assetMap in map.asset.actionMaps)
-                    if (assetMap.enabled)
-                        throw new InvalidOperationException(
-                            $"Cannot add action '{name}' to map '{map}' while any of the maps in the parent input asset are enabled, found '{assetMap}' currently enabled.");
+            map.OnWantToChangeSetup();
             if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
@@ -184,6 +183,7 @@ namespace UnityEngine.InputSystem
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
             {
+                // Will trigger OnSetupChanged.
                 action.AddBinding(binding, interactions: interactions, processors: processors, groups: groups);
             }
             else
@@ -196,13 +196,9 @@ namespace UnityEngine.InputSystem
                 // If no binding has been supplied but there are interactions and processors, they go on the action itself.
                 action.m_Interactions = interactions;
                 action.m_Processors = processors;
+
+                map.OnSetupChanged();
             }
-
-            if (map.asset != null)
-                map.asset.MarkAsDirty();
-
-            map.ClearPerActionCachedBindingData();
-            map.LazyResolveBindings();
 
             return action;
         }
@@ -212,9 +208,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="action">An input action that is part of an <see cref="InputActionMap"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException"><paramref name="action"/> is part of an <see cref="InputActionMap"/>
-        /// that has at least one enabled action -or- <paramref name="action"/> is a standalone action
+        /// <exception cref="ArgumentException"><paramref name="action"/> is a standalone action
         /// that is not part of an <see cref="InputActionMap"/> and thus cannot be removed from anything.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="action"/> is part of an <see cref="InputActionMap"/>
+        /// or <see cref="InputActionAsset"/> that has at least one enabled action.</exception>
         /// <remarks>
         /// After removal, the action's <see cref="InputAction.actionMap"/> will be set to <c>null</c>
         /// and the action will effectively become a standalone action that is not associated with
@@ -231,27 +228,23 @@ namespace UnityEngine.InputSystem
             if (actionMap == null)
                 throw new ArgumentException(
                     $"Action '{action}' does not belong to an action map; nowhere to remove from", nameof(action));
-            if (actionMap.enabled)
-                throw new ArgumentException($"Cannot remove action '{action}' while its action map is enabled");
+            actionMap.OnWantToChangeSetup();
 
             var bindingsForAction = action.bindings.ToArray();
 
-            var index = ArrayHelpers.IndexOfReference(actionMap.m_Actions, action);
+            var index = actionMap.m_Actions.IndexOfReference(action);
             Debug.Assert(index != -1, "Could not find action in map");
             ArrayHelpers.EraseAt(ref actionMap.m_Actions, index);
 
             action.m_ActionMap = null;
             action.m_SingletonActionBindings = bindingsForAction;
 
-            if (actionMap.asset != null)
-                actionMap.asset.MarkAsDirty();
-
-            actionMap.ClearPerActionCachedBindingData();
-
             // Remove bindings to action from map.
             var newActionMapBindingCount = actionMap.m_Bindings.Length - bindingsForAction.Length;
             if (newActionMapBindingCount == 0)
+            {
                 actionMap.m_Bindings = null;
+            }
             else
             {
                 var newActionMapBindings = new InputBinding[newActionMapBindingCount];
@@ -265,6 +258,8 @@ namespace UnityEngine.InputSystem
                 }
                 actionMap.m_Bindings = newActionMapBindings;
             }
+
+            actionMap.OnSetupChanged();
         }
 
         /// <summary>
@@ -479,8 +474,16 @@ namespace UnityEngine.InputSystem
 
             var actionMap = action.GetOrCreateActionMap();
 
-            ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, processors = processors, isComposite = true, action = action.name};
+            var binding = new InputBinding
+            {
+                name = NameAndParameters.ParseName(composite),
+                path = composite,
+                interactions = interactions,
+                processors = processors,
+                isComposite = true,
+                action = action.name
+            };
+
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }
@@ -506,17 +509,15 @@ namespace UnityEngine.InputSystem
             if (map.asset != null)
                 map.asset.MarkAsDirty();
 
-            // Invalidate per-action binding sets so that this gets refreshed if
-            // anyone queries it.
-            map.ClearPerActionCachedBindingData();
-
-            // Make sure bindings get re-resolved.
-            map.LazyResolveBindings();
-
             // If we're looking at a singleton action, make sure m_Bindings is up to date just
             // in case the action gets serialized.
             if (map.m_SingletonAction != null)
                 map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
+
+            // NOTE: We treat this as a mere binding modification, even though we have added something.
+            //       InputAction.RestoreActionStatesAfterReResolvingBindings() can deal with bindings
+            //       having been removed or added.
+            map.OnBindingModified();
 
             return bindingIndex;
         }
@@ -836,6 +837,7 @@ namespace UnityEngine.InputSystem
 
             var oldName = action.m_Name;
             action.m_Name = newName;
+            actionMap?.ClearActionLookupTable();
 
             if (actionMap?.asset != null)
                 actionMap?.asset.MarkAsDirty();
@@ -1058,8 +1060,7 @@ namespace UnityEngine.InputSystem
                 if (!valid)
                     throw new InvalidOperationException("Accessor is not valid");
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].name = name;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
                 return this;
             }
 
@@ -1075,8 +1076,7 @@ namespace UnityEngine.InputSystem
                 if (!valid)
                     throw new InvalidOperationException("Accessor is not valid");
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].path = path;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
                 return this;
             }
 
@@ -1114,8 +1114,7 @@ namespace UnityEngine.InputSystem
 
                 // Set groups on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].groups = groups;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
@@ -1147,8 +1146,7 @@ namespace UnityEngine.InputSystem
 
                 // Set interactions on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].interactions = interactions;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
@@ -1193,8 +1191,7 @@ namespace UnityEngine.InputSystem
 
                 // Set processors on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].processors = processors;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
@@ -1221,8 +1218,7 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException(
                         $"Cannot change the action a binding triggers on singleton action '{action}'", nameof(action));
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].action = action.name;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
                 return this;
             }
 
@@ -1242,12 +1238,12 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException("Accessor is not valid");
 
                 m_ActionMap.m_Bindings[m_BindingIndexInMap] = binding;
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
 
                 // If it's a singleton action, we force the binding to stay with the action.
                 if (m_ActionMap.m_SingletonAction != null)
                     m_ActionMap.m_Bindings[m_BindingIndexInMap].action = m_ActionMap.m_SingletonAction.name;
+
+                m_ActionMap.OnBindingModified();
 
                 return this;
             }
@@ -1464,8 +1460,7 @@ namespace UnityEngine.InputSystem
                         ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndexInMap);
                 }
 
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                m_ActionMap.OnBindingModified();
 
                 // We have switched to a different binding array. For singleton actions, we need to
                 // sync up the reference that the action itself has.
@@ -1540,16 +1535,19 @@ namespace UnityEngine.InputSystem
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
-                int bindingIndex;
-                if (m_Action != null)
-                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
-                        .m_BindingIndexInMap;
-                else
-                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
-                        .m_BindingIndexInMap;
+                using (InputActionRebindingExtensions.DeferBindingResolution())
+                {
+                    int bindingIndex;
+                    if (m_Action != null)
+                        bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
+                            .m_BindingIndexInMap;
+                    else
+                        bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
+                            .m_BindingIndexInMap;
 
-                m_ActionMap.m_Bindings[bindingIndex].name = name;
-                m_ActionMap.m_Bindings[bindingIndex].isPartOfComposite = true;
+                    m_ActionMap.m_Bindings[bindingIndex].name = name;
+                    m_ActionMap.m_Bindings[bindingIndex].isPartOfComposite = true;
+                }
 
                 return this;
             }

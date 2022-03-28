@@ -2293,7 +2293,7 @@ namespace UnityEngine.InputSystem
         /// interest and an alternative to directly hooking into this event.
         ///
         /// If you are looking to monitor changes to specific input controls, state change monitors
-        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
+        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>
         /// are usually a more efficient and convenient way to set this up.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
@@ -2401,7 +2401,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="ButtonControl.isPressed"/>
         /// <seealso cref="onEvent"/>
         public static IObservable<InputControl> onAnyButtonPress =>
-            onEvent.Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
+            onEvent
+                .Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
 
         /// <summary>
         /// Add an event to the internal event queue.
@@ -3159,7 +3160,7 @@ namespace UnityEngine.InputSystem
 
         ////FIXME: Unity is not calling this method if it's inside an #if block that is not
         ////       visible to the editor; that shouldn't be the case
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RunInitializeInPlayer()
         {
             // We're using this method just to make sure the class constructor is called
@@ -3173,6 +3174,13 @@ namespace UnityEngine.InputSystem
             if (s_Manager == null)
                 InitializeInPlayer();
             #endif
+        }
+
+        // Initialization is triggered by accessing InputSystem. Some parts (like InputActions)
+        // do not rely on InputSystem and thus can be accessed without tapping InputSystem.
+        // This method will explicitly make sure we trigger initialization.
+        internal static void EnsureInitialized()
+        {
         }
 
 #if UNITY_EDITOR
@@ -3277,6 +3285,7 @@ namespace UnityEngine.InputSystem
 
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3384,12 +3393,11 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
-
-            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake
@@ -3427,6 +3435,10 @@ namespace UnityEngine.InputSystem
             iOS.iOSSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX
+            OSX.OSXSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_WEBGL
             WebGL.WebGLSupport.Initialize();
             #endif
@@ -3449,6 +3461,10 @@ namespace UnityEngine.InputSystem
 
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             Steam.SteamSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR
+            UnityRemoteSupport.Initialize();
             #endif
         }
 

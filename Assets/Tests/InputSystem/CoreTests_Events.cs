@@ -181,6 +181,37 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_OnAnyButtonPressed_FiltersOutNonStateEvents()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .CallOnce(_ => { ++callCount; });
+
+        InputSystem.QueueTextEvent(keyboard, ' ');
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_GetAllButtonPressesInEvent_ReturnsEmptyEnumerableForNonStateOrDeltaStateEvents()
+    {
+        var inputEvent = TextEvent.Create(InputSystem.AddDevice<Keyboard>().deviceId, ' ');
+
+        IEnumerable<InputControl> controls = null;
+        Assert.That(() =>
+        {
+            controls = InputControlExtensions.GetAllButtonPresses((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
+        }, Throws.Nothing);
+        Assert.That(controls, Is.Empty);
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanGetAllButtonPressesInEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -416,6 +447,8 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanSwitchToProcessingInFixedUpdates()
     {
+        ResetTime();
+
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var receivedOnChange = true;
@@ -468,6 +501,7 @@ partial class CoreTests
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
         runtime.currentTimeForFixedUpdate = 1;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 0;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -490,7 +524,7 @@ partial class CoreTests
         Assert.That(receivedEvents[2].time, Is.EqualTo(2.9).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.3456).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
+        Assert.That(runtime.eventCount, Is.Zero);
 
         receivedEvents.Clear();
 
@@ -509,7 +543,7 @@ partial class CoreTests
         Assert.That(receivedEvents[1].time, Is.EqualTo(3 + 0.002).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.2345).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.EqualTo(2));
+        Assert.That(runtime.eventCount, Is.EqualTo(2));
 
         receivedEvents.Clear();
 
@@ -521,7 +555,7 @@ partial class CoreTests
         Assert.That(receivedEvents[0].time, Is.EqualTo(3 + 1.0 / 60 + 0.001).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.3456).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.EqualTo(1));
+        Assert.That(runtime.eventCount, Is.EqualTo(1));
 
         receivedEvents.Clear();
 
@@ -533,7 +567,7 @@ partial class CoreTests
         Assert.That(receivedEvents[0].time, Is.EqualTo(3 + 2 * (1.0 / 60) + 0.001).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
+        Assert.That(runtime.eventCount, Is.Zero);
 
         receivedEvents.Clear();
 
@@ -544,7 +578,7 @@ partial class CoreTests
         Assert.That(receivedEvents, Has.Count.Zero);
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.4567).Within(0.00001));
 
-        Assert.That(InputUpdate.s_LastUpdateRetainedEventCount, Is.Zero);
+        Assert.That(runtime.eventCount, Is.Zero);
     }
 
     [Test]
@@ -555,7 +589,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         runtime.advanceTimeEachDynamicUpdate = 0;
-        runtime.currentTime = 10;
+        currentTime = 10;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A), 6);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)}, 1);
@@ -590,8 +624,8 @@ partial class CoreTests
             var stateEventPtr = StateEvent.From(eventPtr);
 
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.deviceId));
-            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
-            Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
+            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(InputState.currentTime));
+            Assert.That(stateEventPtr->baseEvent.sizeInBytes.AlignToMultipleOf(4), Is.EqualTo(buffer.Length));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes,
                 Is.EqualTo(InputEvent.kBaseEventSize + sizeof(FourCC) + mouse.stateBlock.alignedSizeInBytes));
             Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));

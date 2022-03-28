@@ -2,12 +2,6 @@
 
 The following is a list of known limitations that the Input System currently has.
 
-## Actions
-
-* Actions cannot currently "pre-empt" each other's input. Meaning that it is currently not possible to "consume" input from one action to prevent it from triggering input on another action.
-  - A common scenario is having, for example, a binding for "A" on one action and a binding for "SHIFT+A" on another action. Currently, pressing "SHIFT+A" will trigger both actions.
-  - This also includes Actions that used by the [UI](UISupport.md) for input. Clicking a button in the UI does not by itself prevent an in-game Action that responds to pointer clicks from being triggered. See ["UI and game input"](UISupport.md#ui-and-game-input) for details.
-
 ## Compatibility with other Unity features
 
 * Input processing in the background is tied to `Application.runInBackground` (i.e. the "Run In Background" setting in "Player Preferences") which, however, Unity always forces to `true` in __development__ players. This means that in development players, input will always be processed, even if the app is in the background. Of course, this only pertains to platforms where the player can actually run in the background (iOS and Android are thus unaffected).
@@ -20,6 +14,7 @@ The following is a list of known limitations that the Input System currently has
 
 * After enabling, the UI will not react to a pointer's position until the position is changed.
 * The new input system cannot yet feed text input into uGUI and TextMesh Pro input field components. This means that text input ATM is still picked up directly and internally from the Unity native runtime.
+* The UI will not consume input such that it will not also trigger in-game actions.
 
 ## Device support
 

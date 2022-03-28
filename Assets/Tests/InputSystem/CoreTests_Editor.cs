@@ -7,6 +7,7 @@ using System.Linq;
 using System.CodeDom.Compiler;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.Scripting;
@@ -350,7 +351,6 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
@@ -359,13 +359,50 @@ partial class CoreTests
         // started with.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Editor);
-
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
 
         // So running a player update now should make the input come through in player state.
         InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
+    }
 
+    [Test]
+    [Category("Editor")]
+    // Case 1368559
+    // Case 1367556
+    // Case 1372830
+    public void Editor_WhenPlaying_ItsPossibleToQueryPlayerStateAfterEditorUpdate()
+    {
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // ----------------- Engine frame 1
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero.Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // ----------------- Engine frame 2
+
+        // Simulate early player loop callback
+        runtime.onPlayerLoopInitialization();
+
+        // This code might be running in EarlyUpdate or FixedUpdate, _before_ Dynamic update is invoked.
+        // We should read values from last player update, meaning we report values from last frame.
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero.Within(0.000001));
+
+        // Running a player update now should make the input come through in player state.
+        InputSystem.Update(InputUpdateType.Dynamic);
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));
     }
@@ -1225,6 +1262,87 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteBinding_IntoDifferentAsset()
+    {
+        var asset1 = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset1.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+        asset1.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+
+        var map1 = asset1.AddActionMap("map");
+        var action1 = map1.AddAction("actionOnlyInFirstAsset");
+        var action2 = map1.AddAction("actionInBothAssets");
+        action1.AddBinding("<Gamepad>/leftStick", groups: "Gamepad");
+        action1.AddBinding("<Keyboard>/a", groups: "Keyboard");
+        action2.AddBinding("*/{Back}", groups: "Gamepad;Keyboard");
+
+        var asset2 = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset2.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+        asset2.AddControlScheme("Mouse").WithRequiredDevice<Mouse>();
+
+        var map2 = asset2.AddActionMap("map");
+        map2.AddAction("actionOnlyInSecondAsset");
+        map2.AddAction("actionInBothAssets");
+
+        var serializedObject1 = new SerializedObject(asset1);
+        var tree1 = new InputActionTreeView(serializedObject1)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject1),
+        };
+        tree1.Reload();
+
+        var serializedObject2 = new SerializedObject(asset2);
+        var tree2 = new InputActionTreeView(serializedObject2)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(serializedObject2),
+            onBindingAdded = prop => InputActionSerializationHelpers.RemoveUnusedBindingGroups(prop, asset2.controlSchemes)
+        };
+        tree2.Reload();
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            // Copy <Gamepad>/leftStick binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionOnlyInSecondAsset.
+            tree2.SelectItem("map/actionOnlyInSecondAsset");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children, Has.Count.EqualTo(1));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+
+            // Copy <Keyboard>/a binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionOnlyInSecondAsset in second asset.
+            tree2.SelectItem("map/actionOnlyInSecondAsset");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children, Has.Count.EqualTo(2));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
+            Assert.That(tree2["map/actionOnlyInSecondAsset"].children[1].As<BindingTreeItem>().groups, Is.EqualTo(""));
+
+            // Copy */{Back} binging from first asset.
+            tree1.SelectItem(tree1.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"));
+            tree1.CopySelectedItemsToClipboard();
+
+            // Paste it onto actionInBothAssets in second asset.
+            // NOTE: Apparently, we don't currently support just pasting it straight onto the map.
+            tree2.SelectItem("map/actionInBothAssets");
+            tree2.PasteDataFromClipboard();
+
+            Assert.That(tree2["map/actionInBothAssets"].children, Has.Count.EqualTo(1));
+            Assert.That(tree2["map/actionInBothAssets"].children[0].As<BindingTreeItem>().path, Is.EqualTo("*/{Back}"));
+            Assert.That(tree2["map/actionInBothAssets"].children[0].As<BindingTreeItem>().groups, Is.EqualTo("Gamepad"));
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_ActionTree_CannotCopyPasteBinding_IntoActionMap()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2050,6 +2168,9 @@ partial class CoreTests
             .With("Negative", "<Keyboard>/a")
             .With("Positive", "<Keyboard>/b");
 
+        // Wipe name that AddCompositeBinding assigned.
+        action.ChangeBinding(0).WithName(null);
+
         var so = new SerializedObject(asset);
         var tree = new InputActionTreeView(so)
         {
@@ -2062,6 +2183,7 @@ partial class CoreTests
 
     #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
                          // still affected by the current platform.
+#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
     [Test]
     [Category("Editor")]
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
@@ -2101,7 +2223,8 @@ partial class CoreTests
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
-    #endif
+#endif
+#endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
@@ -2567,7 +2690,7 @@ partial class CoreTests
 
         Assert.That(updates, Is.EqualTo(new[] { InputUpdateType.Editor }));
 
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         updates.Clear();
 
@@ -2582,7 +2705,7 @@ partial class CoreTests
     public void Editor_WhenRunUpdatesInEditModeIsEnabled_InputActionsTriggerInEditMode()
     {
         runtime.isInPlayMode = false;
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kFeatureRunPlayerUpdatesInEditMode, true);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "<Gamepad>/leftTrigger");
@@ -2758,6 +2881,7 @@ partial class CoreTests
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.
+#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -2765,7 +2889,6 @@ partial class CoreTests
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Touchscreen", typeof(Touchscreen))]
-    [TestCase("DualShock4GamepadHID", typeof(DualShock4GamepadHID))]
     public void Editor_CanGenerateCodeForInputDeviceLayout(string layoutName, Type deviceType)
     {
         var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST", @namespace: "TestNamespace");
@@ -2935,19 +3058,37 @@ partial class CoreTests
     internal static Type Compile(string code, string typeName, string options = null)
     {
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
-        var cp = new CompilerParameters();
-        cp.CompilerOptions = options;
+        var cp = new CompilerParameters { CompilerOptions = options };
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
         var cr = codeProvider.CompileAssemblyFromSource(cp, code);
-        Assert.That(cr.Errors, Is.Empty);
+
         var assembly = cr.CompiledAssembly;
+
+        // on some machines/environments, mono/mcs (which the codedom compiler uses) outputs a byte order mark after a successful compile, which
+        // codedom interprets as an error. Check for that here and just load the assembly manually in that case
+        if (cr.Errors.HasErrors)
+        {
+            if (!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
+                Assert.Fail($"Compilation failed: {cr.Errors}");
+
+            foreach (var tempFile in cr.TempFiles)
+            {
+                if (tempFile is string tempFileStr && tempFileStr.EndsWith("dll"))
+                {
+                    assembly = Assembly.Load(new AssemblyName { CodeBase = tempFileStr });
+                    break;
+                }
+            }
+        }
+
         Assert.That(assembly, Is.Not.Null);
         var type = assembly.GetType(typeName);
         Assert.That(type, Is.Not.Null);
         return type;
     }
 
+#endif
 #endif
 
     [Test]
@@ -2995,6 +3136,7 @@ partial class CoreTests
         {
         }
 
+        #pragma warning disable CS0114
         public UnityEngine.InputSystem.Editor.AdvancedDropdownItem BuildRoot()
         {
             return base.BuildRoot();

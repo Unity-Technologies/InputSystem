@@ -595,7 +595,6 @@ namespace UnityEngine.InputSystem.Editor
                 settingsItem = AddChild(root, settingsLabel, ref id);
                 AddValueItem(settingsItem, "Update Mode", settings.updateMode, ref id);
                 AddValueItem(settingsItem, "Compensate For Screen Orientation", settings.compensateForScreenOrientation, ref id);
-                AddValueItem(settingsItem, "Filter Noise On .current", settings.filterNoiseOnCurrent, ref id);
                 AddValueItem(settingsItem, "Default Button Press Point", settings.defaultButtonPressPoint, ref id);
                 AddValueItem(settingsItem, "Default Deadzone Min", settings.defaultDeadzoneMin, ref id);
                 AddValueItem(settingsItem, "Default Deadzone Max", settings.defaultDeadzoneMax, ref id);
@@ -756,7 +755,7 @@ namespace UnityEngine.InputSystem.Editor
                 parent.AddChild(item);
 
                 // Header.
-                AddChild(item, "Type: " + layout.type.Name, ref id);
+                AddChild(item, "Type: " + layout.type?.Name, ref id);
                 if (!string.IsNullOrEmpty(layout.m_DisplayName))
                     AddChild(item, "Display Name: " + layout.m_DisplayName, ref id);
                 if (!string.IsNullOrEmpty(layout.name))

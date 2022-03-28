@@ -112,14 +112,12 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
+        /// Currently: Option is deprecated and has no influence on the system. Filtering on noise is always enabled.
+        /// Previously: Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
         /// when there is only noise in the input.
         /// </summary>
-        /// <value>Whether to check input on devices for noise.</value>
         /// <remarks>
-        /// This is <em>disabled by default</em>.
-        ///
-        /// When toggled on, this property adds extra processing every time input is
+        /// We add extra processing every time input is
         /// received on a device that is considered noisy. These devices are those that
         /// have at least one control that is marked as <see cref="InputControl.noisy"/>.
         /// A good example is the PS4 controller which has a gyroscope sensor built into
@@ -141,15 +139,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="InputControl.noisy"/>
+        [Obsolete("filterNoiseOnCurrent is deprecated, filtering of noise is always enabled now.", false)]
         public bool filterNoiseOnCurrent
         {
-            get => m_FilterNoiseOnCurrent;
+            get => false;
             set
             {
-                if (m_FilterNoiseOnCurrent == value)
-                    return;
-                m_FilterNoiseOnCurrent = value;
-                OnChange();
+                /* no op */
             }
         }
 
@@ -649,7 +645,6 @@ namespace UnityEngine.InputSystem
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
-        [SerializeField] private bool m_FilterNoiseOnCurrent = false;
         [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
         [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
@@ -668,6 +663,11 @@ namespace UnityEngine.InputSystem
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
+
+        internal bool IsFeatureEnabled(string featureName)
+        {
+            return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
+        }
 
         internal void OnChange()
         {
