@@ -113,20 +113,20 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Resolve and add all bindings and actions from the given map.
         /// </summary>
-        /// <param name="map"></param>
+        /// <param name="actionMap"></param>
         /// <remarks>
         /// This is where all binding resolution happens for actions. The method walks through the binding array
-        /// in <paramref name="map"/> and adds any controls, interactions, processors, and composites as it goes.
+        /// in <paramref name="actionMap"/> and adds any controls, interactions, processors, and composites as it goes.
         /// </remarks>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
-        public unsafe void AddActionMap(InputActionMap map)
+        public unsafe void AddActionMap(InputActionMap actionMap)
         {
-            Debug.Assert(map != null, "Received null map");
+            Debug.Assert(actionMap != null, "Received null map");
 
             InputSystem.EnsureInitialized();
 
-            var actionsInThisMap = map.m_Actions;
-            var bindingsInThisMap = map.m_Bindings;
+            var actionsInThisMap = actionMap.m_Actions;
+            var bindingsInThisMap = actionMap.m_Bindings;
             var bindingCountInThisMap = bindingsInThisMap?.Length ?? 0;
             var actionCountInThisMap = actionsInThisMap?.Length ?? 0;
             var mapIndex = totalMapCount;
@@ -161,9 +161,9 @@ namespace UnityEngine.InputSystem
             var currentCompositePartCount = 0;
             var currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
             InputAction currentCompositeAction = null;
-            var bindingMaskOnThisMap = map.m_BindingMask;
-            var devicesForThisMap = map.devices;
-            var isSingletonAction = map.m_SingletonAction != null;
+            var bindingMaskOnThisMap = actionMap.m_BindingMask;
+            var devicesForThisMap = actionMap.devices;
+            var isSingletonAction = actionMap.m_SingletonAction != null;
 
             // Can't use `using` as we need to use it with `ref`.
             var resolvedControls = new InputControlList<InputControl>(Allocator.Temp);
@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem
                             else if (!string.IsNullOrEmpty(actionName))
                             {
                                 ////REVIEW: should we fail here if we don't manage to find the action
-                                actionIndexInMap = map.FindActionIndex(actionName);
+                                actionIndexInMap = actionMap.FindActionIndex(actionName);
                             }
 
                             if (actionIndexInMap != InputActionState.kInvalidIndex)
@@ -301,14 +301,16 @@ namespace UnityEngine.InputSystem
                             if (!string.IsNullOrEmpty(processorString))
                             {
                                 // Add processors from binding.
-                                firstProcessorIndex = InstantiateWithParameters(InputProcessor.s_Processors, processorString, ref processors, ref totalProcessorCount);
+                                firstProcessorIndex = InstantiateWithParameters(InputProcessor.s_Processors, processorString,
+                                    ref processors, ref totalProcessorCount, actionMap, ref unresolvedBinding);
                                 if (firstProcessorIndex != InputActionState.kInvalidIndex)
                                     numProcessors = totalProcessorCount - firstProcessorIndex;
                             }
                             if (!string.IsNullOrEmpty(action.m_Processors))
                             {
                                 // Add processors from action.
-                                var index = InstantiateWithParameters(InputProcessor.s_Processors, action.m_Processors, ref processors, ref totalProcessorCount);
+                                var index = InstantiateWithParameters(InputProcessor.s_Processors, action.m_Processors, ref processors,
+                                    ref totalProcessorCount, actionMap, ref unresolvedBinding);
                                 if (index != InputActionState.kInvalidIndex)
                                 {
                                     if (firstProcessorIndex == InputActionState.kInvalidIndex)
@@ -322,14 +324,16 @@ namespace UnityEngine.InputSystem
                             if (!string.IsNullOrEmpty(interactionString))
                             {
                                 // Add interactions from binding.
-                                firstInteractionIndex = InstantiateWithParameters(InputInteraction.s_Interactions, interactionString, ref interactions, ref totalInteractionCount);
+                                firstInteractionIndex = InstantiateWithParameters(InputInteraction.s_Interactions, interactionString,
+                                    ref interactions, ref totalInteractionCount, actionMap, ref unresolvedBinding);
                                 if (firstInteractionIndex != InputActionState.kInvalidIndex)
                                     numInteractions = totalInteractionCount - firstInteractionIndex;
                             }
                             if (!string.IsNullOrEmpty(action.m_Interactions))
                             {
                                 // Add interactions from action.
-                                var index = InstantiateWithParameters(InputInteraction.s_Interactions, action.m_Interactions, ref interactions, ref totalInteractionCount);
+                                var index = InstantiateWithParameters(InputInteraction.s_Interactions, action.m_Interactions,
+                                    ref interactions, ref totalInteractionCount, actionMap, ref unresolvedBinding);
                                 if (index != InputActionState.kInvalidIndex)
                                 {
                                     if (firstInteractionIndex == InputActionState.kInvalidIndex)
@@ -346,7 +350,7 @@ namespace UnityEngine.InputSystem
                                 // subsequent bindings.
 
                                 // Instantiate. For composites, the path is the name of the composite.
-                                var composite = InstantiateBindingComposite(unresolvedBinding.path);
+                                var composite = InstantiateBindingComposite(ref unresolvedBinding, actionMap);
                                 currentCompositeIndex =
                                     ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
 
@@ -416,7 +420,7 @@ namespace UnityEngine.InputSystem
                     catch (Exception exception)
                     {
                         Debug.LogError(
-                            $"{exception.GetType().Name} while resolving binding '{unresolvedBinding}' in action map '{map}'");
+                            $"{exception.GetType().Name} while resolving binding '{unresolvedBinding}' in action map '{actionMap}'");
                         Debug.LogException(exception);
 
                         // Don't swallow exceptions that indicate something is wrong in the code rather than
@@ -571,9 +575,9 @@ namespace UnityEngine.InputSystem
                     compositeStartIndex = compositeStartIndex,
                     compositeCount = totalCompositeCount - compositeStartIndex,
                 };
-                map.m_MapIndexInState = mapIndex;
+                actionMap.m_MapIndexInState = mapIndex;
                 var finalActionMapCount = memory.mapCount;
-                ArrayHelpers.AppendWithCapacity(ref maps, ref finalActionMapCount, map, capacityIncrement: 4);
+                ArrayHelpers.AppendWithCapacity(ref maps, ref finalActionMapCount, actionMap, capacityIncrement: 4);
                 Debug.Assert(finalActionMapCount == newMemory.mapCount,
                     "Final action map count should match old action map count plus one");
 
@@ -594,7 +598,7 @@ namespace UnityEngine.InputSystem
         }
 
         private List<NameAndParameters> m_Parameters; // We retain this to reuse the allocation.
-        private int InstantiateWithParameters<TType>(TypeTable registrations, string namesAndParameters, ref TType[] array, ref int count)
+        private int InstantiateWithParameters<TType>(TypeTable registrations, string namesAndParameters, ref TType[] array, ref int count, InputActionMap actionMap, ref InputBinding binding)
         {
             if (!NameAndParameters.ParseMultiple(namesAndParameters, ref m_Parameters))
                 return InputActionState.kInvalidIndex;
@@ -603,20 +607,28 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < m_Parameters.Count; ++i)
             {
                 // Look up type.
-                var type = registrations.LookupTypeRegistration(m_Parameters[i].name);
+                var objectRegistrationName = m_Parameters[i].name;
+                var type = registrations.LookupTypeRegistration(objectRegistrationName);
                 if (type == null)
-                    throw new InvalidOperationException(
-                        $"No {typeof(TType).Name} with name '{m_Parameters[i].name}' (mentioned in '{namesAndParameters}') has been registered");
+                {
+                    Debug.LogError(
+                        $"No {typeof(TType).Name} with name '{objectRegistrationName}' (mentioned in '{namesAndParameters}') has been registered");
+                    continue;
+                }
 
                 if (!m_IsControlOnlyResolve)
                 {
                     // Instantiate it.
                     if (!(Activator.CreateInstance(type) is TType instance))
-                        throw new InvalidOperationException(
-                            $"Type '{type.Name}' registered '{m_Parameters[i].name}' (mentioned in '{namesAndParameters}') is not an {typeof(TType).Name}");
+                    {
+                        Debug.LogError(
+                            $"Type '{type.Name}' registered as '{objectRegistrationName}' (mentioned in '{namesAndParameters}') is not an {typeof(TType).Name}");
+                        continue;
+                    }
 
                     // Pass parameters to it.
-                    NamedValue.ApplyAllToObject(instance, m_Parameters[i].parameters);
+                    ApplyParameters(m_Parameters[i].parameters, instance, actionMap, ref binding, objectRegistrationName,
+                        namesAndParameters);
 
                     // Add to list.
                     ArrayHelpers.AppendWithCapacity(ref array, ref count, instance);
@@ -631,9 +643,9 @@ namespace UnityEngine.InputSystem
             return firstIndex;
         }
 
-        private static InputBindingComposite InstantiateBindingComposite(string nameAndParameters)
+        private static InputBindingComposite InstantiateBindingComposite(ref InputBinding binding, InputActionMap actionMap)
         {
-            var nameAndParametersParsed = NameAndParameters.Parse(nameAndParameters);
+            var nameAndParametersParsed = NameAndParameters.Parse(binding.effectivePath);
 
             // Look up.
             var type = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParametersParsed.name);
@@ -647,9 +659,36 @@ namespace UnityEngine.InputSystem
                     $"Registered type '{type.Name}' used for '{nameAndParametersParsed.name}' is not an InputBindingComposite");
 
             // Set parameters.
-            NamedValue.ApplyAllToObject(instance, nameAndParametersParsed.parameters);
+            ApplyParameters(nameAndParametersParsed.parameters, instance, actionMap, ref binding, nameAndParametersParsed.name,
+                binding.effectivePath);
 
             return instance;
+        }
+
+        private static void ApplyParameters(ReadOnlyArray<NamedValue> parameters, object instance, InputActionMap actionMap, ref InputBinding binding, string objectRegistrationName, string namesAndParameters)
+        {
+            foreach (var parameter in parameters)
+            {
+                // Find field.
+                var field = instance.GetType().GetField(parameter.name,
+                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (field == null)
+                {
+                    Debug.LogError(
+                        $"Type '{instance.GetType().Name}' registered as '{objectRegistrationName}' (mentioned in '{namesAndParameters}') has no public field called '{parameter.name}'");
+                    continue;
+                }
+                var fieldTypeCode = Type.GetTypeCode(field.FieldType);
+
+                // See if we have a parameter override.
+                var parameterOverride =
+                    InputActionRebindingExtensions.ParameterOverride.Find(actionMap, ref binding, parameter.name, objectRegistrationName);
+                var value = parameterOverride != null
+                    ? parameterOverride.Value.value
+                    : parameter.value;
+
+                field.SetValue(instance, value.ConvertTo(fieldTypeCode).ToObject());
+            }
         }
 
         private static int AssignCompositePartIndex(object composite, string name, ref int currentCompositePartCount)
@@ -674,7 +713,7 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     $"Field '{name}' used as a parameter of binding composite '{composite}' must be of type 'int' but is of type '{type.Name}' instead");
 
-            ////REVIEW: this create garbage; need a better solution to get to zero garbage during re-resolving
+            ////REVIEW: this creates garbage; need a better solution to get to zero garbage during re-resolving
             // See if we've already assigned a part index. This can happen if there are multiple bindings
             // for the same named slot on the composite (e.g. multiple "Negative" bindings on an axis composite).
             var partIndex = (int)field.GetValue(composite);

@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         public float ComputeMagnitude()
         {
-            return m_State.ComputeMagnitude(ref m_TriggerState);
+            return m_TriggerState.magnitude;
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="ComputeMagnitude"/>
         public bool ControlIsActuated(float threshold = 0)
         {
-            return m_State.IsActuated(ref m_TriggerState, threshold);
+            return InputActionState.IsActuated(ref m_TriggerState, threshold);
         }
 
         /// <summary>

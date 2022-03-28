@@ -135,7 +135,7 @@ This setting is stored as a user setting (that is, other users who open the same
 ![iOSSettings](Images/iOSSettings.png)
 
 * __Motion Usage__<br>
-  Governs access to the [pedometer](Sensors.md# on the device. If enabled, the __Description__ string supplied in the settings will be added to the application's Info.plist
+  Governs access to the [pedometer](Sensors.md#stepcounter) on the device. If enabled, the __Description__ string supplied in the settings will be added to the application's Info.plist
 
 ### Editor
 

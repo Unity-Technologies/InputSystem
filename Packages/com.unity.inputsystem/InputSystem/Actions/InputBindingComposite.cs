@@ -26,6 +26,9 @@ namespace UnityEngine.InputSystem
     /// for more details about composites and for how to define custom composites.
     /// </remarks>
     /// <seealso cref="InputSystem.RegisterBindingComposite{T}"/>
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
+    /// <seealso cref="InputBinding.isComposite"/>
     public abstract class InputBindingComposite
     {
         /// <summary>
