@@ -53,6 +53,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed dropdown for "Supported Devices" in settings not showing all device layouts.
 - Fixed "STAT event with state format TOUC cannot be used with device 'Touchscreen:/Touchscreen'" when more than max supported amount of fingers, currently 10, are present on the screen at a same time (case 1395648).
 - Fixed mouse events not being timesliced when input system is switched to process input in fixed updates (case 1386738).
+- Fixed missing tooltips in PlayerInputManagerEditor for the Player Limit and Fixed Splitscreen sizes labels ([case 1396945](https://issuetracker.unity3d.com/issues/player-input-manager-pops-up-placeholder-text-when-hovering-over-it)).
+- Fixed DualShock 4 controllers not working in some scenarios by adding support for extended mode HID reports ([case 1281633](https://issuetracker.unity3d.com/issues/input-system-dualshock4-controller-returns-random-input-values-when-connected-via-bluetooth-while-steam-is-running), case 1409867).
+- Fixed `BackgroundBehavior.IgnoreFocus` having no effect when `Application.runInBackground` was false ([case 1400456](https://issuetracker.unity3d.com/issues/xr-head-tracking-lost-when-lost-focus-with-action-based-trackedposedriver-on-android)).
 
 #### Actions
 
@@ -72,6 +75,40 @@ however, it has to be formatted properly to pass verification tests.
 - Added support for SteelSeries Nimbus+ gamepad on Mac (Addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
+
+#### Actions
+
+- Added support for keyboard shortcuts and mutually exclusive use of modifiers.
+  * In short, this means that a "Shift+B" binding can now prevent a "B" binding from triggering.
+  * `OneModifierComposite`, `TwoModifiersComposite`, as well as the legacy `ButtonWithOneModifierComposite` and `ButtonWithTwoModifiersComposite` now require their modifiers to be pressed __before__ (or at least simultaneously with) pressing the target button.
+    * This check is performed only if the target is a button. For a binding such as `"CTRL+MouseDelta"` the check is bypassed. It can also be manually bypassed via the `overrideModifiersNeedToBePressedFirst`.
+  * State change monitors on a device (`IInputStateChangeMonitor`) are now sorted by their `monitorIndex` and will trigger in that order.
+  * Actions are now automatically arranging their bindings to trigger in the order of decreasing "complexity". This metric is derived automatically. The more complex a composite a binding is part of, the higher its complexity. So, `"Shift+B"` has a higher "complexity" than just `"B"`.
+  * If an binding of higher complexity "consumes" a given input, all bindings waiting to consume the same input will automatically get skipped. So, if a `"Shift+B"` binding composite consumes a `"B"` key press, a binding to `"B"` that is waiting in line will get skipped and not see the key press.
+  * If your project is broken by these changes, you can disable the new behaviors via a feature toggle in code:
+    ```CSharp
+    InputSystem.settings.SetInternalFeatureFlag("DISABLE_SHORTCUT_SUPPORT", true);
+    ```
+- Added new APIs for getting and setting parameter values on interactions, processors, and composites.
+  ```CSharp
+  // Get parameter.
+  action.GetParameterValue("duration");     // Any "duration" value on any binding.
+  action.GetParameterValue("tap:duration"); // "duration" on "tap" interaction on any binding.
+  action.GetParameterValue("tap:duration",  // "duration" on "tap" on binding in "Gamepad" group.
+      InputBinding.MaskByGroup("Gamepad"));
+
+  // Set parameter.
+  action.ApplyParameterOverride("duration", 0.4f);
+  action.ApplyParameterOverride("tap:duration", 0.4f);
+  action.ApplyParameterOverride("tap:duration", 0.4f,
+      InputBinding.MaskByGroup("Gamepad"));
+
+  // Can also apply parameter overrides at the level of
+  // InputActionMaps and InputActionAssets with an effect
+  // on all the bindings contained therein.
+  asset.ApplyParameterOverride("scaleVector2:x", 0.25f,
+      new InputBinding("<Mouse>/delta"));
+  ```
 
 ## [1.3.0] - 2021-12-10
 
