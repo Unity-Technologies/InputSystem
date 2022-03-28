@@ -67,6 +67,7 @@ however, it has to be formatted properly to pass verification tests.
   * Fix contributed by [Russell Quinn](https://github.com/russellquinn) in [#1483](https://github.com/Unity-Technologies/InputSystem/pull/1483).
 - Fixed `AxisComposite` not respecting processors applied to `positive` and `negative` bindings (case 1398942).
   * This was a regression introduced in [1.0.0-pre.6](#axiscomposite-min-max-value-fix).
+- Fixed calling `action.AddCompositeBinding(...).With(...)` while action is enabled not correctly updating controls for part bindings of the composite.
 - Fixed `TwoModifiersComposite` inadvertently not allowing controls other than `ButtonControl`s being bound to its `binding` part.
 
 ### Added
