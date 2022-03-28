@@ -90,6 +90,21 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int button;
 
         /// <summary>
+        /// If set to <c>true</c>, <see cref="modifier1"/> and/or <see cref="modifier2"/> can be pressed after <see cref="button"/>
+        /// and the composite will still trigger. Default is false.
+        /// </summary>
+        /// <remarks>
+        /// By default, <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
+        /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
+        /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> <c>shift</c> keys have to be pressed before pressing the <c>B</c> key.
+        /// This is the behavior usually expected with keyboard shortcuts.
+        ///
+        /// This parameter can be used to bypass this behavior and allow any timing between <see cref="modifier1"/>, <see cref="modifier2"/>,
+        /// and <see cref="button"/>. The only requirement is for all of them to concurrently be in pressed state.
+        /// </remarks>
+        public bool overrideModifiersNeedToBePressedFirst;
+
+        /// <summary>
         /// Return the value of the <see cref="button"/> part while both <see cref="modifier1"/> and <see cref="modifier2"/>
         /// are pressed. Otherwise return 0.
         /// </summary>
@@ -97,10 +112,26 @@ namespace UnityEngine.InputSystem.Composites
         /// <returns>The current value of the composite.</returns>
         public override float ReadValue(ref InputBindingCompositeContext context)
         {
-            if (context.ReadValueAsButton(modifier1) && context.ReadValueAsButton(modifier2))
+            if (ModifiersArePressed(ref context))
                 return context.ReadValue<float>(button);
 
             return default;
+        }
+
+        private bool ModifiersArePressed(ref InputBindingCompositeContext context)
+        {
+            var modifiersDown = context.ReadValueAsButton(modifier1) && context.ReadValueAsButton(modifier2);
+
+            if (modifiersDown && !overrideModifiersNeedToBePressedFirst)
+            {
+                var timestamp = context.GetPressTime(button);
+                var timestamp1 = context.GetPressTime(modifier1);
+                var timestamp2 = context.GetPressTime(modifier2);
+
+                return timestamp1 <= timestamp && timestamp2 <= timestamp;
+            }
+
+            return modifiersDown;
         }
 
         /// <summary>
@@ -111,6 +142,13 @@ namespace UnityEngine.InputSystem.Composites
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
             return ReadValue(ref context);
+        }
+
+        protected override void FinishSetup(ref InputBindingCompositeContext context)
+        {
+            if (!overrideModifiersNeedToBePressedFirst)
+                overrideModifiersNeedToBePressedFirst =
+                    InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
         }
     }
 }

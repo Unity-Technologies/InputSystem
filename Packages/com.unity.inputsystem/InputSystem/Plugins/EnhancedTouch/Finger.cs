@@ -136,6 +136,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             // changes that Touchscreen itself generates. This includes the resetting of deltas.
             if (!eventPtr.valid)
                 return false;
+            var eventType = eventPtr.type;
+            if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
+                return false;
 
             // Direct memory access for speed.
             var currentTouchState = (TouchState*)((byte*)control.currentStatePtr + control.stateBlock.byteOffset);
