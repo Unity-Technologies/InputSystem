@@ -76,6 +76,8 @@ however, it has to be formatted properly to pass verification tests.
 - Added support for SteelSeries Nimbus+ gamepad on Mac (addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
+- Added support for using the Unity Remote app with the input system.
+  * Requires Unity 2021.2.18 or later.
 
 #### Actions
 
@@ -191,6 +193,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Added support for PS5 DualSense controllers on Mac and Windows.
 - Improved the user experience when creating single vs multi-touch touchscreen bindings in the Input Action Asset editor by making both options visible in the input action dropdown menu. Now it's not neccessary to be aware of the touch\*/press path binding syntax ([case 1357664](https://issuetracker.unity3d.com/issues/inputsystem-touchscreens-multi-touch-doesnt-work-when-using-a-custom-inputactionasset)).
+- Added support for the Unity Remote app.
+  * __NOTE__: This unfortunately requires a change in the Unity native runtime. We are in the process of rolling out the change to Unity versions. A public build that receives the change will automatically enable the functionality in the Input System package.
 
 ## [1.1.1] - 2021-09-03
 
