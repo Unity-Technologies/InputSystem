@@ -1,5 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 partial class CoreTests
 {
@@ -7,6 +9,14 @@ partial class CoreTests
     [Category("API")]
     public void API_CanReadGyroThroughGyroscopeAPI()
     {
+        var gyro = InputSystem.AddDevice<Gyroscope>();
+        var accel = InputSystem.AddDevice<LinearAccelerationSensor>();
+        var gravity = InputSystem.AddDevice<GravitySensor>();
+        var attitude = InputSystem.AddDevice<AttitudeSensor>();
+
+        Assert.That(Input.isGyroAvailable, Is.True);
+
+        ////TODO
     }
 
     [Test]

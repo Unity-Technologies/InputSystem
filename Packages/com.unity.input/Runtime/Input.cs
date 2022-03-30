@@ -16,6 +16,13 @@ using UnityEngine.InputSystem.Utilities;
 //  - How to implement touch polling given that EnhancedTouch has overhead and is disabled by default
 //  - How to do per-control wasPressed/wasReleased and what to do about the underlying broken mechanism
 
+// As a 2022.2 user, I want to be able to
+// - run my existing project using com.unity.inputsystem@1.4 without any noticeable behavioral regressions
+// - run my existing project using legacy input without any noticeable behavioral regressions
+// - create a new project (using default legacy input) and have it work as expected out of the box
+// - migrate an existing project using legacy input to input v2 with reasonable close behavior
+// - switch a new project from default legacy input to input v2
+
 namespace UnityEngine
 {
     public enum DeviceOrientation
@@ -82,20 +89,118 @@ namespace UnityEngine
 
     public class Gyroscope
     {
-        public Vector3 rotationRate => throw new NotImplementedException();
-        public Vector3 rotationRateUnbiased => throw new NotImplementedException();
-        public Vector3 gravity => throw new NotImplementedException();
-        public Vector3 userAcceleration => throw new NotImplementedException();
-        public Quaternion attitude => throw new NotImplementedException();
+        public Vector3 rotationRate => gyroscopeSensor?.angularVelocity.ReadValue() ?? default;
+        // So apparently, iOS is the only platform where rotationRateUnbiased is a thing. Other platforms seem to just
+        // return rotationRate here. In the current Sensor API of InputSystem, we are not surfacing this information.
+        // For now, go and just return rotationRate on all platforms.
+        public Vector3 rotationRateUnbiased => rotationRate;
+        public Vector3 gravity => gravitySensor?.gravity.ReadValue() ?? default;
+        public Vector3 userAcceleration => accelerationSensor?.acceleration.ReadValue() ?? default;
+        public Quaternion attitude => attitudeSensor?.attitude.ReadValue() ?? default;
         public bool enabled
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            ////REVIEW: Should this return true if *any* is enabled? Right now, failing to turn on any one single sensor seems makes it seem like the entire gyro failed to turn on.
+            get => IsEnabled(gyroscopeSensor) && IsEnabled(accelerationSensor) && IsEnabled(gravitySensor) && IsEnabled(attitudeSensor);
+            set
+            {
+                SetEnabled(gyroscopeSensor, value);
+                SetEnabled(accelerationSensor, value);
+                SetEnabled(gravitySensor, value);
+                SetEnabled(attitudeSensor, value);
+            }
         }
         public float updateInterval
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            ////REVIEW: Not clear which to pick here; current code goes for min frequency of any of the actual sensors.
+            get => Mathf.Min(GetFrequency(gyroscopeSensor),
+                Mathf.Min(GetFrequency(accelerationSensor), Mathf.Min(GetFrequency(gravitySensor), GetFrequency(attitudeSensor))));
+            set
+            {
+                SetFrequency(gyroscopeSensor, value);
+                SetFrequency(accelerationSensor, value);
+                SetFrequency(gravitySensor, value);
+                SetFrequency(attitudeSensor, value);
+            }
+        }
+
+        // The UnityEngine.Input gyroscope is actually an aggregation
+        // of multiple sensor types. So, we hold on to multiple devices
+        // here.
+        private InputSystem.Gyroscope m_Gyro;
+        private LinearAccelerationSensor m_Accel;
+        private GravitySensor m_Gravity;
+        private AttitudeSensor m_Attitude;
+
+        private InputSystem.Gyroscope gyroscopeSensor
+        {
+            get
+            {
+                if (m_Gyro == null || !m_Gyro.added)
+                    m_Gyro = InputSystem.Gyroscope.current;
+                return m_Gyro;
+            }
+        }
+
+        private LinearAccelerationSensor accelerationSensor
+        {
+            get
+            {
+                if (m_Accel == null || !m_Accel.added)
+                    m_Accel = LinearAccelerationSensor.current;
+                return m_Accel;
+            }
+        }
+
+        private GravitySensor gravitySensor
+        {
+            get
+            {
+                if (m_Gravity == null || !m_Gravity.added)
+                    m_Gravity = GravitySensor.current;
+                return m_Gravity;
+            }
+        }
+
+        private AttitudeSensor attitudeSensor
+        {
+            get
+            {
+                if (m_Attitude == null || !m_Attitude.added)
+                    m_Attitude = AttitudeSensor.current;
+                return m_Attitude;
+            }
+        }
+
+        private bool IsEnabled(InputDevice device)
+        {
+            return device != null && device.enabled;
+        }
+
+        private void SetEnabled(InputDevice device, bool enabled)
+        {
+            if (device == null)
+                return;
+
+            if (enabled)
+                InputSystem.InputSystem.EnableDevice(device);
+            else
+                InputSystem.InputSystem.DisableDevice(device);
+        }
+
+        private float GetFrequency(Sensor device)
+        {
+            if (device == null)
+                return default;
+
+            return device.samplingFrequency;
+        }
+
+        private void SetFrequency(Sensor device, float frequency)
+        {
+            if (device == null)
+                return;
+
+            device.samplingFrequency = frequency;
         }
     }
 
@@ -535,6 +640,12 @@ namespace UnityEngine
             return s_ThisFrameReleasedKeys.Contains(keyId.Value);
         }
 
+        private static Gyroscope s_Gyro = new Gyroscope();
+
+        public static Gyroscope gyro => s_Gyro;
+
+        public static bool isGyroAvailable => InputSystem.Gyroscope.current != null;
+
         #region Unimplemented
 
         public static float GetAxisRaw(string axisName)
@@ -549,8 +660,6 @@ namespace UnityEngine
         }
 
         public static Compass compass => null;
-        public static Gyroscope gyro => null;
-        public static bool isGyroAvailable => false;
         public static Vector3 acceleration => default;
         public static Vector2 mousePosition => default;
         public static Vector2 mouseScrollDelta => default;
