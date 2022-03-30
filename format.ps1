@@ -1,2 +1,2 @@
-perl "${Home}/unity-meta/Tools/Format/format.pl" Assets Packages
+perl "${Home}/unity-meta/Tools/Format/format.pl" --force Assets Packages
 
