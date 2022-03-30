@@ -550,6 +550,7 @@ namespace UnityEngine
 
         public static Compass compass => null;
         public static Gyroscope gyro => null;
+        public static bool isGyroAvailable => false;
         public static Vector3 acceleration => default;
         public static Vector2 mousePosition => default;
         public static Vector2 mouseScrollDelta => default;
