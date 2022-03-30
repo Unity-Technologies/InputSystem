@@ -322,6 +322,24 @@ namespace UnityEngine.InputSystem
             return m_State.ReadCompositePartValueAsObject(m_BindingIndex, partNumber);
         }
 
+        /// <summary>
+        /// Return the timestamp (see <see cref="LowLevel.InputEvent.time"/>) for when the given
+        /// binding part crossed the button press threshold (see <see cref="Controls.ButtonControl.pressPoint"/>).
+        /// </summary>
+        /// <param name="partNumber">Number of the part to read. This is assigned
+        /// automatically by the input system and should be treated as an opaque
+        /// identifier.</param>
+        /// <returns>Returns the time at which the given part binding moved into "press" state or 0 if there's
+        /// current no press.</returns>
+        /// <remarks>
+        /// If the given part has more than a single binding and/or more than a single bound control, the <em>earliest</em>
+        /// press time is returned.
+        /// </remarks>
+        public double GetPressTime(int partNumber)
+        {
+            return m_State.GetCompositePartPressTime(m_BindingIndex, partNumber);
+        }
+
         internal InputActionState m_State;
         internal int m_BindingIndex;
 

@@ -83,12 +83,33 @@ namespace UnityEngine.InputSystem.Composites
         /// </summary>
         public override int valueSizeInBytes => m_ValueSizeInBytes;
 
+        /// <summary>
+        /// If set to <c>true</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.
+        /// Default value is <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// By default, if <see cref="binding"/> is bound to only <see cref="Controls.ButtonControl"/>s, then the composite requires
+        /// <see cref="modifier"/> to be pressed <em>before</em> pressing <see cref="binding"/>. This means that binding to, for example,
+        /// <c>Ctrl+B</c>, the <c>ctrl</c> keys have to be pressed before pressing the <c>B</c> key. This is the behavior usually expected
+        /// with keyboard shortcuts.
+        ///
+        /// However, when binding, for example, <c>Ctrl+MouseDelta</c>, it should be possible to press <c>ctrl</c> at any time. The default
+        /// logic will automatically detect the difference between this binding and the button binding in the example above and behave
+        /// accordingly.
+        ///
+        /// This field allows you to explicitly override this default inference and make it so that regardless of what <see cref="binding"/>
+        /// is bound to, any press sequence is acceptable. For the example binding to <c>Ctrl+B</c>, it would mean that pressing <c>B</c> and
+        /// only then pressing <c>Ctrl</c> will still trigger the binding.
+        /// </remarks>
+        public bool overrideModifiersNeedToBePressedFirst;
+
         private int m_ValueSizeInBytes;
         private Type m_ValueType;
+        private bool m_BindingIsButton;
 
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
-            if (context.ReadValueAsButton(modifier))
+            if (ModifierIsPressed(ref context))
                 return context.EvaluateMagnitude(binding);
             return default;
         }
@@ -96,16 +117,36 @@ namespace UnityEngine.InputSystem.Composites
         /// <inheritdoc/>
         public override unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize)
         {
-            if (context.ReadValueAsButton(modifier))
+            if (ModifierIsPressed(ref context))
                 context.ReadValue(binding, buffer, bufferSize);
             else
                 UnsafeUtility.MemClear(buffer, m_ValueSizeInBytes);
         }
 
+        private bool ModifierIsPressed(ref InputBindingCompositeContext context)
+        {
+            var modifierDown = context.ReadValueAsButton(modifier);
+
+            // When the modifiers are gating a button, we require the modifiers to be pressed *first*.
+            if (modifierDown && m_BindingIsButton && !overrideModifiersNeedToBePressedFirst)
+            {
+                var timestamp = context.GetPressTime(binding);
+                var timestamp1 = context.GetPressTime(modifier);
+
+                return timestamp1 <= timestamp;
+            }
+
+            return modifierDown;
+        }
+
         /// <inheritdoc/>
         protected override void FinishSetup(ref InputBindingCompositeContext context)
         {
-            DetermineValueTypeAndSize(ref context, binding, out m_ValueType, out m_ValueSizeInBytes);
+            DetermineValueTypeAndSize(ref context, binding, out m_ValueType, out m_ValueSizeInBytes, out m_BindingIsButton);
+
+            if (!overrideModifiersNeedToBePressedFirst)
+                overrideModifiersNeedToBePressedFirst =
+                    InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
         }
 
         public override object ReadValueAsObject(ref InputBindingCompositeContext context)
@@ -115,9 +156,10 @@ namespace UnityEngine.InputSystem.Composites
             return null;
         }
 
-        internal static void DetermineValueTypeAndSize(ref InputBindingCompositeContext context, int part, out Type valueType, out int valueSizeInBytes)
+        internal static void DetermineValueTypeAndSize(ref InputBindingCompositeContext context, int part, out Type valueType, out int valueSizeInBytes, out bool isButton)
         {
             valueSizeInBytes = 0;
+            isButton = true;
 
             Type type = null;
             foreach (var control in context.controls)
@@ -132,6 +174,9 @@ namespace UnityEngine.InputSystem.Composites
                     type = typeof(Object);
 
                 valueSizeInBytes = Math.Max(control.control.valueSizeInBytes, valueSizeInBytes);
+
+                // *All* bound controls need to be buttons for us to classify this part as a "Button" part.
+                isButton &= control.control.isButton;
             }
 
             valueType = type;

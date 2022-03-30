@@ -4668,8 +4668,8 @@ partial class CoreTests
         InputDevice trackedDevice2 = null;
 
         // If we're set up to process input even when in the background, make sure
-        // this is intact.
-        if (appRunInBackground || kIsEditor)
+        // this is intact. (IgnoreFocus will always allow for running in the background)
+        if (appRunInBackground || kIsEditor || backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
         {
             // Queue a change on each device.
             Set(mouse.position, new Vector2(333, 444), queueEventOnly: true);
@@ -4746,27 +4746,14 @@ partial class CoreTests
 
                     if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                     {
-                        if (appRunInBackground)
-                        {
-                            // All devices should have been affected.
-                            Assert.That(eventCount, Is.EqualTo(5));
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
-                            Assert.That(keyboard.aKey.isPressed, Is.True);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
-                            Assert.That(joystick.stick.ReadValue(),
-                                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
-                        }
-                        else
-                        {
-                            // All devices should be unaffected.
-                            Assert.That(eventCount, Is.Zero);
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-                            Assert.That(keyboard.aKey.isPressed, Is.False);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
-                            Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
-                        }
+                        // All devices should have been affected.
+                        Assert.That(eventCount, Is.EqualTo(5));
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                        Assert.That(keyboard.aKey.isPressed, Is.True);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                        Assert.That(joystick.stick.ReadValue(),
+                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
                     }
 
                     if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
@@ -4937,7 +4924,9 @@ partial class CoreTests
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
 
-        if (!appRunInBackground && (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
+        // We were not processing input in the background
+        if (!appRunInBackground && backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus &&
+            (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
         {
             // No change on focus gain.
 
@@ -5123,9 +5112,29 @@ partial class CoreTests
                     break;
 
                 case InputSettings.BackgroundBehavior.IgnoreFocus:
-                    Assert.That(changes, Is.Empty);
-                    Assert.That(commands, Is.Empty);
-                    break;
+                    if (appRunInBackground)
+                    {
+                        Assert.That(changes, Is.Empty);
+                        Assert.That(commands, Is.Empty);
+                        break;
+                    }
+                    else
+                    {
+                        // All enabled devices should have received sync requests.
+                        Assert.That(commands, Is.EquivalentTo(new[]
+                        {
+                            "Sync Gamepad", "Sync Joystick",
+                            "Sync TrackedDevice", "Sync TrackedDevice2",
+                            "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
+                            "Sync Keyboard", "Reset Joystick"
+                        }));
+                        // Enabled devices that don't support syncs get reset.
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick", "SoftReset TrackedDevice2"
+                        }));
+                        break;
+                    }
             }
         }
 

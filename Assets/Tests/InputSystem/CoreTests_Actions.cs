@@ -30,6 +30,342 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    // Premise: Binding the same control multiple times in different ways from multiple concurrently active
+    //          actions should result in the input system figuring out which *one* action gets to act on the input.
+    [Test]
+    [Category("Actions")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_CanConsumeInput(bool legacyComposites)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1", type: InputActionType.Button);
+        var action2 = map.AddAction("action2", type: InputActionType.Button);
+        var action3 = map.AddAction("action3", type: InputActionType.Button);
+        var action4 = map.AddAction("action4", type: InputActionType.Value);
+        var action5 = map.AddAction("action5", type: InputActionType.Button);
+        var action6 = map.AddAction("action6", type: InputActionType.Button);
+        var action7 = map.AddAction("action7", type: InputActionType.Button);
+        var action8 = map.AddAction("action8", type: InputActionType.Button);
+
+        // Enable some actions individually to make sure the code that deals
+        // with re-resolution of already enabled bindings handles the enabling
+        // of just individual actions out of the whole set correctlyuk.
+        action1.Enable();
+        action2.Enable();
+
+        // State monitors on the space key (all end up in the same group):
+        //   action3 complexity=3
+        //   action2 complexity=2
+        //   action1 complexity=1
+        //   action4 complexity=1
+        //   action5 complexity=1
+
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/space");
+        action3.AddCompositeBinding(legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers")
+            .With("Modifier1", "<Keyboard>/ctrl")
+            .With("Modifier2", "<Keyboard>/shift")
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/space");
+        action4.AddBinding("<Keyboard>/space");
+
+        // This one is a clear conflict. Binds SPC exactly the same way as action1.
+        action5.AddBinding("<Keyboard>/space");
+
+        map.Enable();
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(action4.WasPerformedThisFrame());
+        Assert.That(action5.WasPerformedThisFrame());
+
+        Assert.That(!action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
+
+        Release(keyboard.spaceKey);
+
+        ////REVIEW: Pressing LSHIFT does *not* lead to the OneModifier and TwoModifiers actions
+        ////        going to Started phase because actuation remains at 0; intuitively, I would expect the actions to start
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.spaceKey);
+
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(!action4.WasPerformedThisFrame());
+        Assert.That(!action5.WasPerformedThisFrame());
+
+        Assert.That(action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
+
+        Release(keyboard.leftShiftKey);
+        Release(keyboard.spaceKey);
+
+        Press(keyboard.spaceKey);
+
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(action4.WasPerformedThisFrame());
+        Assert.That(action5.WasPerformedThisFrame());
+
+        Assert.That(!action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
+
+        Press(keyboard.leftShiftKey);
+
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(!action4.WasPerformedThisFrame());
+        Assert.That(!action5.WasPerformedThisFrame());
+
+        Assert.That(!action2.WasPerformedThisFrame());
+        Assert.That(!action3.WasPerformedThisFrame());
+    }
+
+    // For now, maintain a kill switch for the new behavior for users to have an out where the
+    // the behavior is simply breaking their project.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableShortcutSupport()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/ctrl")
+            .With("Binding", "<Keyboard>/space");
+
+        map.Enable();
+
+        Press(keyboard.leftCtrlKey, queueEventOnly: true);
+        Press(keyboard.spaceKey);
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanBindShortcutsInvolvingMultipleDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Mouse>/position");
+
+        action.Enable();
+
+        Press(keyboard.leftShiftKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(default(Vector2)));
+
+        Set(mouse.position, new Vector2(123, 234));
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanBindMultipleShortcutSequencesBasedOnSameModifiers()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/a");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/b");
+
+        map.Enable();
+
+        Press(keyboard.leftShiftKey);
+
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(!action2.WasPerformedThisFrame());
+
+        Press(keyboard.aKey);
+
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(!action2.WasPerformedThisFrame());
+
+        Press(keyboard.bKey);
+
+        Assert.That(!action1.WasPerformedThisFrame());
+        Assert.That(action2.WasPerformedThisFrame());
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("leftShift", null, "space", true)]
+    [TestCase("leftShift", "leftAlt", "space", true)]
+    [TestCase("leftShift", null, "space", false)]
+    [TestCase("leftShift", "leftAlt", "space", false)]
+    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding(legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers")
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed += _ => wasPerformed = true;
+
+        // Press binding first, then modifiers.
+        Press((ButtonControl)keyboard[binding]);
+        Press((ButtonControl)keyboard[modifier1]);
+        if (!string.IsNullOrEmpty(modifier2))
+            Press((ButtonControl)keyboard[modifier2]);
+
+        Assert.That(wasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("leftShift", null, "space", true)]
+    [TestCase("leftShift", "leftAlt", "space", true)]
+    [TestCase("leftShift", null, "space", false)]
+    [TestCase("leftShift", "leftAlt", "space", false)]
+    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding,
+        bool legacyComposites)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(overrideModifiersNeedToBePressedFirst)")
+                .With("Modifier1", "<Keyboard>/" + modifier1)
+                .With("Modifier2", "<Keyboard>/" + modifier2)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+        else
+        {
+            action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+                .With("Modifier", "<Keyboard>/" + modifier1)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
+        }
+
+        action.Enable();
+
+        // Press binding first, then modifiers.
+        Press((ButtonControl)keyboard[binding]);
+        Assert.That(action.WasPerformedThisFrame(), Is.False);
+        Press((ButtonControl)keyboard[modifier1]);
+        if (!string.IsNullOrEmpty(modifier2))
+        {
+            Assert.That(action.WasPerformedThisFrame(), Is.False);
+            Press((ButtonControl)keyboard[modifier2]);
+        }
+
+        Assert.That(action.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Binding", "<Keyboard>/space");
+
+        action1.wantsInitialStateCheck = true;
+        action2.wantsInitialStateCheck = true;
+
+        // Order is wrong but the ordering is lost when relying on initial state checks.
+        Press(keyboard.spaceKey);
+        Press(keyboard.leftShiftKey);
+
+        map.Enable();
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    //--------------BUT: can use press times to detect holds!!
+
+    // elden ring:
+    // - "hold Y" is implicit in it being used as a modifier (has to be held)
+    // - "tap" can be put on Y action to make sure it doesn't trigger when you press and hold and then change your mind
+
+    // imagine opposite case; can't use modifier composite to model the "modifier+button" input
+
+    // So, right now we don't support interactions on part bindings. Which makes sense because interactions
+    // talk to the action directly, they don't participate in the value chain.
+    //
+    // For shortcuts, this means you can't use "hold X" as a modifier. Which would be very cool (Elden Ring,
+    // for example, does that with the Y button on the gamepad).
+    //
+    // When we redesign interactions as part of the gesture feature, we should make sure we can handle
+    // such a scenario. With interactions being able to directly drive values, there should be no reason
+    // why you couldn't have "hold Y" as a modifier.
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanUseInteractionsOnShortcutModifiers()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        action1.AddBinding("<Keyboard>/space");
+        action2.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift") //
+            .With("Binding", "<Keyboard>/space");
+
+        action1.wantsInitialStateCheck = true;
+        action2.wantsInitialStateCheck = true;
+
+        // Order is wrong but the ordering is lost when relying on initial state checks.
+        Press(keyboard.spaceKey);
+        Press(keyboard.leftShiftKey);
+
+        map.Enable();
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ReadingValueRightAfterEnabling_AppliesProcessorsFromFirstBinding()
@@ -46,8 +382,6 @@ partial class CoreTests
         Assert.That(action1.ReadValue<float>(), Is.EqualTo(0.5f));
     }
 
-    [Test]
-    [Category("Actions")]
     public void Actions_ReadingValueRightAfterResetting_AppliesProcessorsFromFirstBinding()
     {
         InputSystem.AddDevice<Gamepad>();
@@ -126,7 +460,7 @@ partial class CoreTests
         }
     }
 
-    #endif
+#endif // UNITY_EDITOR
 
     [Test]
     [Category("Actions")]
@@ -1743,10 +2077,10 @@ partial class CoreTests
                     .AndThen(Performed(action4,
                         value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
                         control: gamepad.leftStick, time: startTime + 0.234))
-                    // map2/action3 should have been started.
-                    .AndThen(Started<TapInteraction>(action3, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map3/action5 should have been started.
                     .AndThen(Started<TapInteraction>(action5, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
+                    // map2/action3 should have been started.
+                    .AndThen(Started<TapInteraction>(action3, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map3/action4 should have been performed as the stick has been moved
                     // beyond where it had already moved.
                     .AndThen(Performed(action4,
@@ -2718,11 +3052,7 @@ partial class CoreTests
             action2.Disable();
             Set(gamepad.leftTrigger, 0.234f);
 
-            var actions = trace.ToArray();
-
-            Assert.That(actions, Has.Length.EqualTo(2));
-            Assert.That(actions[0].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
-            Assert.That(actions[1].ReadValueAsObject(), Is.EqualTo(-0.123).Within(0.00001));
+            Assert.That(trace, Performed(action2, value: -0.123f).AndThen(Performed(action1, value: 0.123f)));
         }
     }
 
@@ -3620,6 +3950,38 @@ partial class CoreTests
         Assert.That(action.bindings, Has.Count.EqualTo(2));
         Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
         Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddCompositeBindingsToActions_AfterActionHasAlreadyResolvedControls()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/leftCtrl")
+            .With("Binding", "<Keyboard>/space");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.spaceKey, keyboard.leftCtrlKey }));
+
+        action.Enable();
+
+        // Replace the composite binding wholesale.
+        action.ChangeBinding(0).Erase();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/rightCtrl")
+            .With("Binding", "<Keyboard>/a");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey, keyboard.rightCtrlKey }));
+
+        Press(keyboard.rightCtrlKey);
+
+        Assert.That(!action.WasPerformedThisFrame());
+
+        Press(keyboard.aKey);
+
+        Assert.That(action.WasPerformedThisFrame());
     }
 
     [Test]
@@ -7101,10 +7463,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
             InputSystem.Update();
 
-            // Bit of an odd case. leftTrigger and rightTrigger have both changed state here so
-            // in a way, it's up to the system which one to pick. Might be useful if it was deliberately
-            // picking the control with the highest magnitude but not sure it's worth the effort.
-            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.456f));
+            Assert.That(trace, Performed(action, control: gamepad.rightTrigger, value: 0.456f));
 
             trace.Clear();
 
@@ -7688,7 +8047,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WithMultipleCompositesCancelsIfCompositeIsReleased()
+    public void Actions_WithMultipleComposites_CancelsIfCompositeIsReleased()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -7746,10 +8105,18 @@ partial class CoreTests
         Assert.That(value, Is.EqualTo(Vector2.up));
         performedControl = null;
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.Update();
 
         Assert.That(canceledControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(performedControl, Is.Null);
+        Assert.That(value, Is.EqualTo(Vector2.zero));
+        canceledControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
         Assert.That(performedControl, Is.EqualTo(keyboard.rightArrowKey));
         Assert.That(value, Is.EqualTo(Vector2.right));
         performedControl = null;
@@ -7810,16 +8177,19 @@ partial class CoreTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
         InputSystem.Update();
 
-        Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
 
         LogAssert.NoUnexpectedReceived();
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1183314
     [Test]
     [Category("Actions")]
-    // Test for case 1183314
     public void Actions_CompositesInDifferentMapsTiedToSameControlsWork()
     {
+        // This test relies on the same single input getting picked up by two different composites.
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -7958,7 +8328,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(type: InputActionType.Button);
-        action.AddCompositeBinding("ButtonWithOneModifier")
+        action.AddCompositeBinding("ButtonWithOneModifier(overrideModifiersNeedToBePressedFirst)")
             .With("Modifier", "<Gamepad>/leftTrigger")
             .With("Modifier", "<Gamepad>/dpad/up")
             .With("Button", "<Gamepad>/rightTrigger");
@@ -8015,7 +8385,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction();
-        action.AddCompositeBinding("ButtonWithTwoModifiers")
+        action.AddCompositeBinding("ButtonWithTwoModifiers(overrideModifiersNeedToBePressedFirst)")
             .With("Modifier1", "<Gamepad>/leftTrigger")
             .With("Modifier1", "<Gamepad>/dpad/up")
             .With("Modifier2", "<Gamepad>/rightTrigger")
@@ -8456,6 +8826,57 @@ partial class CoreTests
         Release(keyboard.aKey);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(wasCanceled, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_ControlWithHighestActuationIsTrackedAsActiveControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var buttonAction = new InputAction(type: InputActionType.Button,
+            binding: "<Gamepad>/*Trigger");
+        var passThroughAction = new InputAction(type: InputActionType.PassThrough,
+            binding: "<Gamepad>/*Trigger");
+
+        buttonAction.Enable();
+        passThroughAction.Enable();
+
+        Set(gamepad.leftTrigger, 1f);
+
+        Assert.That(buttonAction.WasPerformedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+
+        Set(gamepad.rightTrigger, 0.5f);
+
+        Assert.That(!buttonAction.WasPerformedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+
+        Set(gamepad.leftTrigger,  0f);
+
+        Assert.That(!buttonAction.WasPerformedThisFrame());
+        Assert.That(!buttonAction.WasReleasedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.leftTrigger));
+
+        Set(gamepad.rightTrigger, 0.6f);
+
+        Assert.That(!buttonAction.WasPerformedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
+
+        Set(gamepad.rightTrigger, 0f);
+
+        Assert.That(buttonAction.WasReleasedThisFrame());
+        Assert.That(buttonAction.activeControl, Is.Null);
+        Assert.That(passThroughAction.WasPerformedThisFrame());
+        Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
     }
 
     // https://fogbugz.unity3d.com/f/cases/1267805/
