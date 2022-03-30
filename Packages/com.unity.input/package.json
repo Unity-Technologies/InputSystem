@@ -1,20 +1,24 @@
 {
 	"name": "com.unity.input",
-	"displayName": "Unity Input",
+	"displayName": "Input",
 	"version": "2.0.0",
 	"unity": "2022.2",
-	"description": "Essential input functionality for Unity applications.",
+	"description": "Essential input functionality for Unity applications.\n\nThis package replaces what formerly was the Input System and combines it into a single package that provides support for both UnityEngine.Input and UnityEngine.InputSystem.",
 	"keywords": [
 		"input",
+		"devices",
 		"events",
 		"keyboard",
 		"mouse",
+		"pen",
 		"gamepad",
+		"joystick",
 		"touch",
 		"vr",
 		"xr"
 	],
 	"dependencies" : {
-		"com.unity.modules.uielements": "1.0.0"
+		"com.unity.modules.uielements": "1.0.0",
+		"com.unity.inputsystem": "2.0.0"
 	}
 }
