@@ -179,6 +179,7 @@ all_tests:
       - targets:
           only:
             - "develop"
+            - "develop-v2"
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:
