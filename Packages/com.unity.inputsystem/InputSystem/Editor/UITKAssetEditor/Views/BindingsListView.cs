@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Editor
     /// <summary>
     /// Lists all of the bindings for the selected action.
     /// </summary>
-    internal class BindingsListView : UIToolkitView<List<BindingsListView.ViewState>>
+    internal class BindingsListView : ViewBase<List<BindingsListView.ViewState>>
     {
 	    private const string RowTemplateUxml = InputActionsEditorConstants.PackagePath +
 	                                           InputActionsEditorConstants.ResourcesPath +

@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class PropertiesView : UIToolkitView<SelectionType>
+	internal class PropertiesView : ViewBase<SelectionType>
     {
 	    private readonly VisualElement m_Root;
 	    private ActionPropertiesView m_ActionPropertyView;
