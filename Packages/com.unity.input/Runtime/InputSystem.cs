@@ -3277,9 +3277,8 @@ namespace UnityEngine.InputSystem
                             AssetDatabase.AddObjectToAsset(settings, InputSettings.kProjectSettings);
                             AssetDatabase.SaveAssets();
                         }
-
-                        SwitchToSettings(settings);
                     }
+                    SwitchToSettings(settings);
                 }
 
                 InputEditorUserSettings.Load();
