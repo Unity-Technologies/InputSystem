@@ -442,6 +442,7 @@ namespace UnityEngine
             s_PressedKeysBefore = default;
             s_ThisFramePressedKeys = default;
             s_ThisFrameReleasedKeys = default;
+            s_Gyro = new Gyroscope();
         }
 
         // We throw the same exceptions as the current native code.
