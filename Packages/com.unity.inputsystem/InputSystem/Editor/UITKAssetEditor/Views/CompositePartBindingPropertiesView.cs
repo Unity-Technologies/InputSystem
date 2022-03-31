@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class CompositePartBindingPropertiesView : UIToolkitView<CompositePartBindingPropertiesView.ViewState>
+	internal class CompositePartBindingPropertiesView : ViewBase<CompositePartBindingPropertiesView.ViewState>
 	{
 		private readonly VisualElement m_Root;
 		private readonly DropdownField m_CompositePartField;

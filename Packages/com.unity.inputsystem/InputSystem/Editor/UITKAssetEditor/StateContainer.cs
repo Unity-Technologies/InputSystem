@@ -38,7 +38,20 @@ namespace UnityEngine.InputSystem.Editor
 		{
 			StateChanged?.Invoke(m_State);
 		}
-		
+
+		/// <summary>
+		/// Return a copy of the state.
+		/// </summary>
+		/// <remarks>
+		/// It can sometimes be necessary to get access to the state outside of a state change event, like for example
+		/// when creating views in response to UI click events. This method is for those times.
+		/// </remarks>
+		/// <returns></returns>
+		public InputActionsEditorState GetState()
+		{
+			return m_State;
+		}
+
 		public void Bind<TValue>(Expression<Func<InputActionsEditorState, ReactiveProperty<TValue>>> expr,
 			Action<InputActionsEditorState> propertyChangedCallback)
 		{
