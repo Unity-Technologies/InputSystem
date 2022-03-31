@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem
         ////TODO: add method to add an existing InputAction to a map
 
         /// <summary>
-        /// Ad a new <see cref="InputAction"/> to the given <paramref name="map"/>.
+        /// Add a new <see cref="InputAction"/> to the given <paramref name="map"/>.
         /// </summary>
         /// <param name="map">Action map to add the action to. The action will be appended to
         /// <see cref="InputActionMap.actions"/> of the map. The map must be disabled (see
