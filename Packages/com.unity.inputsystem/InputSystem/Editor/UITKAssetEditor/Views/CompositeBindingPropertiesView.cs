@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class CompositeBindingPropertiesView : UIToolkitView<CompositeBindingPropertiesView.ViewState>
+	internal class CompositeBindingPropertiesView : ViewBase<CompositeBindingPropertiesView.ViewState>
 	{
 		private readonly VisualElement m_Root;
 		private readonly DropdownField m_CompositeTypeField;

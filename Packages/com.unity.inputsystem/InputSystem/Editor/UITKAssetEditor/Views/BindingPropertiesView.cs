@@ -2,7 +2,7 @@
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class BindingPropertiesView : UIToolkitView<InputActionsEditorState>
+	internal class BindingPropertiesView : ViewBase<InputActionsEditorState>
 	{
 		private readonly VisualElement m_Root;
 		private readonly Foldout m_ParentFoldout;
