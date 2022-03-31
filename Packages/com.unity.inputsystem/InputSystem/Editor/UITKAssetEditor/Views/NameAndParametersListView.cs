@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class NameAndParametersListView : UIToolkitView<InputActionsEditorState>
+	internal class NameAndParametersListView : ViewBase<InputActionsEditorState>
 	{
 		private readonly VisualElement m_Root;
 		private readonly Func<InputActionsEditorState, IEnumerable<ParameterListView>> m_ParameterListViewSelector;

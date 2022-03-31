@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class ActionsListView : UIToolkitView<IEnumerable<SerializedInputAction>>
+	internal class ActionsListView : ViewBase<IEnumerable<SerializedInputAction>>
 	{
 		private readonly VisualElement m_Root;
 		private readonly VisualTreeAsset m_ActionItemRowTemplate;

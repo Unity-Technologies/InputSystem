@@ -23,20 +23,12 @@ namespace UnityEngine.InputSystem.Editor
 
 		public bool SequenceEqual(IViewStateCollection other)
 		{
-			return other is ViewStateCollection<T> otherCollection && m_Collection.SequenceEqual(otherCollection, m_Comparer);
+			return other is ViewStateCollection<T> otherCollection && this.SequenceEqual(otherCollection, m_Comparer);
 		}
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			if (m_CachedCollection != null)
-			{
-				using (var enumerator = m_CachedCollection.GetEnumerator())
-				{
-					while (enumerator.MoveNext())
-						yield return enumerator.Current;
-				}
-			}
-			else
+			if (m_CachedCollection == null)
 			{
 				m_CachedCollection = new List<T>();
 				using(var enumerator = m_Collection.GetEnumerator())
@@ -44,9 +36,14 @@ namespace UnityEngine.InputSystem.Editor
 					while (enumerator.MoveNext())
 					{
 						m_CachedCollection.Add(enumerator.Current);
-						yield return enumerator.Current;
 					}
 				}
+			}
+
+			using (var enumerator = m_CachedCollection.GetEnumerator())
+			{
+				while (enumerator.MoveNext())
+					yield return enumerator.Current;
 			}
 		}
 
