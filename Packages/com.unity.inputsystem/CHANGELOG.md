@@ -37,6 +37,7 @@ however, it has to be formatted properly to pass verification tests.
   * If, for example, an action was bound to `<Gamepad>/buttonSouth` and was enabled, adding a second `Gamepad` would lead to the action being temporarily disabled, then updated, and finally re-enabled.
   * This was especially noticeable if the action was currently in progress as it would get cancelled and then subsequently resumed.
   * Now, an in-progress action will get cancelled if the device of its active control is removed. If its active control is not affected, however, the action will keep going regardless of whether controls are added or removed from its `InputAction.controls` list.
+- Added the 'Cursor Lock Behavior' setting to InputSystemUIInputModule to control the origin point of UI raycasts when the cursor is locked. This enables the use of PhysicsRaycaster when the cursor is locked to the center of the screen ([case 1395281](https://issuetracker.unity3d.com/product/unity/issues/guid/1395281/)).
 
 ### Fixed
 
