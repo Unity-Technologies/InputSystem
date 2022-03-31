@@ -9,23 +9,20 @@ namespace UnityEngine.InputSystem.Editor
 		TViewState GetViewState(InputActionsEditorState state);
 	}
 
-	internal interface IUIToolkitView
+	internal interface IView
 	{
 		void UpdateView(InputActionsEditorState state);
 		void DestroyView();
 	}
 
-	internal abstract class UIToolkitView<TViewState> : IUIToolkitView
+	internal abstract class ViewBase<TViewState> : IView
 	{
-		protected readonly StateContainer stateContainer;
-		private IViewStateSelector<TViewState> m_ViewStateSelector;
-		private IList<IUIToolkitView> m_ChildViews;
-		private bool m_IsFirstUpdate = true;
+		public event Action<ViewBase<TViewState>> OnClosing;
 
-		protected UIToolkitView(StateContainer stateContainer)
+		protected ViewBase(StateContainer stateContainer)
 		{
 			this.stateContainer = stateContainer;
-			m_ChildViews = new List<IUIToolkitView>();
+			m_ChildViews = new List<IView>();
 		}
 
 		protected void OnStateChanged(InputActionsEditorState state)
@@ -52,13 +49,18 @@ namespace UnityEngine.InputSystem.Editor
 			}
 		}
 
-		public TView CreateChildView<TView>(TView view) where TView:IUIToolkitView
+		public TView CreateChildView<TView>(TView view) where TView:IView
 		{
 			m_ChildViews.Add(view);
 			return view;
 		}
 
-		public void DestroyView<TView>(TView view) where TView : IUIToolkitView
+		public void Close()
+		{
+			OnClosing?.Invoke(this);
+		}
+
+		public void DestroyView<TView>(TView view) where TView : IView
 		{
 			if (view == null)
 				return;
@@ -114,6 +116,11 @@ namespace UnityEngine.InputSystem.Editor
 		{
 			m_ViewStateSelector = new ViewStateSelector<T1, T2, T3, TViewState>(func1, func2, func3, selector);
 		}
+
+		protected readonly StateContainer stateContainer;
+		private IViewStateSelector<TViewState> m_ViewStateSelector;
+		private IList<IView> m_ChildViews;
+		private bool m_IsFirstUpdate = true;
 	}
 
 	internal class ViewStateSelector<TReturn> : IViewStateSelector<TReturn>
@@ -204,7 +211,7 @@ namespace UnityEngine.InputSystem.Editor
 			if (valueOne is IViewStateCollection collection && !collection.SequenceEqual((IViewStateCollection)m_PreviousT1) ||
 			    !valueOne.Equals(m_PreviousT1))
 				valueOneHasChanged = true;
-			
+
 			if (valueTwo is IViewStateCollection collection2 && !collection2.SequenceEqual((IViewStateCollection)m_PreviousT2) ||
 			    !valueTwo.Equals(m_PreviousT2))
 				valueTwoHasChanged = true;

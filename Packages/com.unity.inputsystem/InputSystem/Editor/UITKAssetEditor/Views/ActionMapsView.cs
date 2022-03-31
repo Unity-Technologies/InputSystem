@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class ActionMapsView : UIToolkitView<(SerializedInputActionMap, IEnumerable<string>)>
+	internal class ActionMapsView : ViewBase<(SerializedInputActionMap, IEnumerable<string>)>
 	{
 		private readonly VisualElement m_Root;
 

@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal static class SerializedPropertyExtensions
+	internal static class SerializedPropertyLinqExtensions
     {
         public static IEnumerable<T> Select<T>(this SerializedProperty property, Func<SerializedProperty, T> selector)
         {

@@ -8,15 +8,17 @@ namespace UnityEngine.InputSystem.Editor
 {
 	internal readonly struct InputActionsEditorState
     {
-        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
-
         public int selectedActionMapIndex { get; }
         public int selectedActionIndex { get; }
         public int selectedBindingIndex { get; }
         public SelectionType selectionType { get; }
-
         public SerializedObject serializedObject { get; }
         
+        // Control schemes
+        public int selectedControlSchemeIndex { get; }
+        public int selectedDeviceRequirementIndex { get; }
+        public InputControlScheme selectedControlScheme => m_ControlScheme;
+
 
         public InputActionsEditorState(
 	        SerializedObject inputActionAsset, 
@@ -24,7 +26,10 @@ namespace UnityEngine.InputSystem.Editor
 	        int selectedActionIndex = 0, 
 	        int selectedBindingIndex = 0,
 	        SelectionType selectionType = SelectionType.Action,
-	        Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
+	        Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null,
+	        InputControlScheme selectedControlScheme = default,
+	        int selectedControlSchemeIndex = -1,
+	        int selectedDeviceRequirementIndex = -1)
         {
             serializedObject = inputActionAsset;
 
@@ -32,7 +37,10 @@ namespace UnityEngine.InputSystem.Editor
             this.selectedActionIndex = selectedActionIndex;
             this.selectedBindingIndex = selectedBindingIndex;
             this.selectionType = selectionType;
-
+            m_ControlScheme = selectedControlScheme;
+            this.selectedControlSchemeIndex = selectedControlSchemeIndex;
+            this.selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
+            
             m_ExpandedCompositeBindings = expandedBindingIndices == null ? 
 	            new Dictionary<(string, string), HashSet<int>>() :
                 new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
@@ -43,6 +51,9 @@ namespace UnityEngine.InputSystem.Editor
 	        int? selectedActionIndex = null, 
 	        int? selectedBindingIndex = null,
 	        SelectionType? selectionType = null,
+            InputControlScheme? selectedControlScheme = null,
+            int? selectedControlSchemeIndex = null,
+            int? selectedDeviceRequirementIndex = null,
 	        Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
         {
             return new InputActionsEditorState(
@@ -51,7 +62,12 @@ namespace UnityEngine.InputSystem.Editor
 	            selectedActionIndex ?? this.selectedActionIndex,
 	            selectedBindingIndex ?? this.selectedBindingIndex,
 	            selectionType ?? this.selectionType,
-                expandedBindingIndices ?? m_ExpandedCompositeBindings);
+                expandedBindingIndices ?? m_ExpandedCompositeBindings,
+                
+                // Control schemes
+                selectedControlScheme ?? this.selectedControlScheme,
+                selectedControlSchemeIndex ?? this.selectedControlSchemeIndex,
+                selectedDeviceRequirementIndex ?? this.selectedDeviceRequirementIndex);
         }
         
         public SerializedProperty GetActionMapByName(string actionMapName)
@@ -154,6 +170,9 @@ namespace UnityEngine.InputSystem.Editor
 		        .FindProperty(nameof(InputActionAsset.m_ActionMaps))
 		        .GetArrayElementAtIndex(selectedActionMapIndex);
         }
+
+        private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
+        private readonly InputControlScheme m_ControlScheme;
     }
 
     internal enum SelectionType
