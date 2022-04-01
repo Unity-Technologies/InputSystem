@@ -37,6 +37,7 @@ however, it has to be formatted properly to pass verification tests.
   * If, for example, an action was bound to `<Gamepad>/buttonSouth` and was enabled, adding a second `Gamepad` would lead to the action being temporarily disabled, then updated, and finally re-enabled.
   * This was especially noticeable if the action was currently in progress as it would get cancelled and then subsequently resumed.
   * Now, an in-progress action will get cancelled if the device of its active control is removed. If its active control is not affected, however, the action will keep going regardless of whether controls are added or removed from its `InputAction.controls` list.
+- Added the 'Cursor Lock Behavior' setting to InputSystemUIInputModule to control the origin point of UI raycasts when the cursor is locked. This enables the use of PhysicsRaycaster when the cursor is locked to the center of the screen ([case 1395281](https://issuetracker.unity3d.com/product/unity/issues/guid/1395281/)).
 
 ### Fixed
 
@@ -52,6 +53,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed no devices being available in `Start` and `Awake` methods if, in the player, any `InputSystem` API was accessed during the `SubsystemRegistration` phase ([case 1392358](https://issuetracker.unity3d.com/issues/inputsystem-does-not-initialize-properly-in-a-build-when-accessed-early)).
 - Fixed dropdown for "Supported Devices" in settings not showing all device layouts.
 - Fixed "STAT event with state format TOUC cannot be used with device 'Touchscreen:/Touchscreen'" when more than max supported amount of fingers, currently 10, are present on the screen at a same time (case 1395648).
+- Fixed mouse events not being timesliced when input system is switched to process input in fixed updates (case 1386738).
 - Fixed missing tooltips in PlayerInputManagerEditor for the Player Limit and Fixed Splitscreen sizes labels ([case 1396945](https://issuetracker.unity3d.com/issues/player-input-manager-pops-up-placeholder-text-when-hovering-over-it)).
 - Fixed DualShock 4 controllers not working in some scenarios by adding support for extended mode HID reports ([case 1281633](https://issuetracker.unity3d.com/issues/input-system-dualshock4-controller-returns-random-input-values-when-connected-via-bluetooth-while-steam-is-running), case 1409867).
 - Fixed `BackgroundBehavior.IgnoreFocus` having no effect when `Application.runInBackground` was false ([case 1400456](https://issuetracker.unity3d.com/issues/xr-head-tracking-lost-when-lost-focus-with-action-based-trackedposedriver-on-android)).
@@ -66,14 +68,18 @@ however, it has to be formatted properly to pass verification tests.
   * Fix contributed by [Russell Quinn](https://github.com/russellquinn) in [#1483](https://github.com/Unity-Technologies/InputSystem/pull/1483).
 - Fixed `AxisComposite` not respecting processors applied to `positive` and `negative` bindings (case 1398942).
   * This was a regression introduced in [1.0.0-pre.6](#axiscomposite-min-max-value-fix).
-- Fixed mouse events not being timesliced when input system is switched to process input in fixed updates (case 1386738).
+- Fixed calling `action.AddCompositeBinding(...).With(...)` while action is enabled not correctly updating controls for part bindings of the composite.
+- Fixed `TwoModifiersComposite` inadvertently not allowing controls other than `ButtonControl`s being bound to its `binding` part.
 
 ### Added
 
 - Added support for "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
 - Added support for SteelSeries Nimbus+ gamepad on Mac (addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
+- Added support for Game Core platforms to XR layouts, devices, and input controls. These classes were previously only enabled on platforms where `ENABLE_VR` is defined.
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
+- Added support for using the Unity Remote app with the input system.
+  * Requires Unity 2021.2.18 or later.
 
 #### Actions
 
@@ -176,7 +182,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed a problem where explicitly switching to the already active control scheme and device set for PlayerInput would cancel event callbacks for no reason when the control scheme switch would have no practical effect. This fix detects and skips device unpairing and re-pairing if the switch is detected to not be a change to scheme or devices. (case 1342297)
 - Any unhandled exception in `InputManager.OnUpdate` failing latter updates with `InvalidOperationException: Already have an event buffer set! Was OnUpdate() called recursively?`. Instead the system will try to handle the exception and recover into a working state.
 - Fixed an issue that broke the `VirtualMouseInput` component in the editor ([case 1367553](https://issuetracker.unity3d.com/issues/vitrualmouseinput-stickaction-doesnt-work)).
-- Fixed a problem where only using runtimes that are not XR supported causes a compile error.This fix adds back in ENABLE_VR checks to prevent this case (case 1368300)
+- Fixed a problem where only using runtimes that are not XR supported causes a compile error. This fix adds back in `ENABLE_VR` checks to prevent this case (case 1368300)
 - Fixed input action for Android gamepad's right stick will be correctly invoked when only y axis is changing ([case 1308637](https://issuetracker.unity3d.com/issues/android-input-system-right-analog-stick-tracking-is-erratic-when-using-a-gamepad-connected-to-an-android-device)).
 - Generic gamepad short display button names were incorrectly mapped on Switch (`A` instead of `B`, etc).
 - Fixed an issue where resetting an action via `InputAction.Reset()` while being in disabled state would prevent the action from being enabled again. ([case 1370732](https://issuetracker.unity3d.com/product/unity/issues/guid/1370732/)).
@@ -189,6 +195,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Added support for PS5 DualSense controllers on Mac and Windows.
 - Improved the user experience when creating single vs multi-touch touchscreen bindings in the Input Action Asset editor by making both options visible in the input action dropdown menu. Now it's not neccessary to be aware of the touch\*/press path binding syntax ([case 1357664](https://issuetracker.unity3d.com/issues/inputsystem-touchscreens-multi-touch-doesnt-work-when-using-a-custom-inputactionasset)).
+- Added support for the Unity Remote app.
+  * __NOTE__: This unfortunately requires a change in the Unity native runtime. We are in the process of rolling out the change to Unity versions. A public build that receives the change will automatically enable the functionality in the Input System package.
 
 ## [1.1.1] - 2021-09-03
 
