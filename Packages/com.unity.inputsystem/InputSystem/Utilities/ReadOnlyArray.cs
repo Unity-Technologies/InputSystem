@@ -70,11 +70,18 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         /// <summary>
-        /// Returns the index of the first element for which the given <paramref name="predicate"/> is true (if any).
+        /// Searches for the first element in the array for which the given <paramref name="predicate"/> is <c>true</c> and returns the index of that element.
         /// </summary>
-        /// <param name="predicate">The unary predicate to be evaluated for each element.</param>
-        /// <returns>Index of the first element for which <paramref name="predicate"/> is true or -1 if no such element exists.</returns>
+        /// <param name="predicate">The predicate to be evaluated for each element which defines the condition for the search.</param>
+        /// <returns>Index of the first element for which <paramref name="predicate"/> is <c>true</c>x or -1 if no such element exists.</returns>
         /// <exception cref="ArgumentNullException">If predicate is <c>null</c>.</exception>
+        /// <example>
+        /// <code>
+        /// // Searches the first element in an integer array that is greater or equal to 5.
+        /// var haystack = new ReadOnlyArray<int>(new[] { 1, 2, 3, 4, 5, 6, 7 });
+        /// var index = haystack.IndexOf((value) => value >= 5); // index == 4
+        /// </code>
+        /// </example>
         public int IndexOf(Predicate<TValue> predicate)
         {
             if (predicate == null)

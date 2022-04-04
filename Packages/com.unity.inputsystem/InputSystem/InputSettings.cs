@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem
     public partial class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determines how the input system handle updates, i.e. how pending input events are processed.
+        /// Allows you to control how the input system handles updates. In other words, how and when pending input events are processed.
         /// </summary>
         /// <value>When to run input updates.</value>
         /// <remarks>
@@ -362,7 +362,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Default minimum duration required of a press-and-release interaction to evaluate to a slow-tap-interaction.
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a slow-tap-interaction.
         /// </summary>
         /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a slow-tap-interaction.</value>
         /// <remarks>
@@ -387,7 +387,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Default minimum duration required of a press-and-release interaction to evaluate to a hold-interaction.
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a hold-interaction.
         /// </summary>
         /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a hold-interaction.</value>
         /// <remarks>
@@ -412,7 +412,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Default maximum radius that a touch contact may be moved from its origin to evaluate to a tap-interaction.
+        /// Allows you to specify the default maximum radius that a touch contact may be moved from its origin to evaluate to a tap-interaction.
         /// </summary>
         /// <value>The default maximum radius (in pixels) that a touch contact may be moved from its origin to evaluate to a tap-interaction.</value>
         /// <remarks>
@@ -439,7 +439,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Default maximum duration that may pass between taps in order to evaluate to a multi-tap-interaction.
+        /// Allows you to specify the maximum duration that may pass between taps in order to evaluate to a multi-tap-interaction.
         /// </summary>
         /// <value>The default maximum duration (in seconds) that may pass between taps in order to evaluate to a multi-tap-interaction.</value>
         /// <remarks>

@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString Secondary2DMotion = new InternedString("Secondary2DMotion");
 
         /// <summary>
-        /// Primary action control.
+        /// The primary action control on any input device, such as a gamepad, mouse, or keyboard.
         /// </summary>
         /// <remarks>
         /// Example: Primary mouse button (left button on right-handed configuration, right button on left-handed configuration),
@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString PrimaryAction = new InternedString("PrimaryAction");
 
         /// <summary>
-        /// Secondary action control.
+        /// Secondary action control on any input device, such as a gamepad, mouse, or keyboard.
         /// </summary>
         /// <remarks>
         /// Example: Secondary mouse button (right button on right-handed configuration, left button on left-handed configuration),
@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString SecondaryAction = new InternedString("SecondaryAction");
 
         /// <summary>
-        /// Primary trigger control.
+        /// The primary trigger control on input devices with triggers.
         /// </summary>
         /// <remarks>
         /// Example: Right trigger-button on a gamepad.
@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString PrimaryTrigger = new InternedString("PrimaryTrigger");
 
         /// <summary>
-        /// Secondary trigger control.
+        /// The secondary trigger control on input devices with triggers.
         /// </summary>
         /// <remarks>
         /// Example: Left trigger-button on a gamepad.
@@ -66,7 +66,7 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString Modifier = new InternedString("Modifier");
 
         /// <summary>
-        /// Spatial position control.
+        /// The spatial position control on input devices with spatial tracking.
         /// </summary>
         /// <remarks>
         /// Example: User head position in tracking-space using e.g. a head-tracking system. This could for example be a VR tracking system or another user-facing tracking sensor.
@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString Position = new InternedString("Position");
 
         /// <summary>
-        /// Spatial orientation control.
+        /// The spatial orientation control on input devices with spatial tracking.
         /// </summary>
         /// <remarks>
         /// Example: User head-orientation in tracking-space using e.g. a head-tracking system. This could for example be a VR tracking system or another user-facing tracking sensor.
@@ -82,10 +82,10 @@ namespace UnityEngine.InputSystem
         public static readonly InternedString Orientation = new InternedString("Orientation");
 
         /// <summary>
-        /// A hat-switch control
+        /// The primary hat-switch control on input devices with hat-switches such as joysticks or gamepads.
         /// </summary>
         /// <remarks>
-        /// Example: Joytstick or gamepad hat-switch.
+        /// Example: Joystick or gamepad hat-switch.
         /// </remarks>
         public static readonly InternedString Hatswitch = new InternedString("Hatswitch");
 
