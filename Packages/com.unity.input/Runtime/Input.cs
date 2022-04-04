@@ -74,15 +74,15 @@ namespace UnityEngine
 
     public class Compass
     {
-        public float magneticHeading => throw new NotImplementedException();
-        public float trueHeading => throw new NotImplementedException();
-        public float headingAccuracy => throw new NotImplementedException();
-        public Vector3 rawVector => throw new NotImplementedException();
-        public double timestamp => throw new NotImplementedException();
+        public float magneticHeading => InputRuntime.s_Instance.lastHeading.magneticHeading;
+        public float trueHeading => InputRuntime.s_Instance.lastHeading.trueHeading;
+        public float headingAccuracy => InputRuntime.s_Instance.lastHeading.headingAccuracy;
+        public Vector3 rawVector => InputRuntime.s_Instance.lastHeading.raw;
+        public double timestamp => InputRuntime.s_Instance.lastHeading.timestamp;
         public bool enabled
         {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
+            get => InputRuntime.s_Instance.headingUpdatesEnabled;
+            set => InputRuntime.s_Instance.headingUpdatesEnabled = value;
         }
 
         internal struct Heading
@@ -264,6 +264,7 @@ namespace UnityEngine
         private static Dictionary<string, KeyCode> s_KeyCodeMapping;
         private static LocationService s_Location = new LocationService();
         private static Gyroscope s_Gyro = new Gyroscope();
+        private static Compass s_Compass = new Compass();
 
         private struct KeySet
         {
@@ -452,7 +453,12 @@ namespace UnityEngine
             s_PressedKeysBefore = default;
             s_ThisFramePressedKeys = default;
             s_ThisFrameReleasedKeys = default;
+
+            // Not all of these hold state but for more predictable behavior,
+            // wipe them all.
             s_Gyro = new Gyroscope();
+            s_Location = new LocationService();
+            s_Compass = new Compass();
         }
 
         // We throw the same exceptions as the current native code.
@@ -652,10 +658,9 @@ namespace UnityEngine
         }
 
         public static Gyroscope gyro => s_Gyro;
-
         public static bool isGyroAvailable => InputSystem.Gyroscope.current != null;
-
         public static LocationService location => s_Location;
+        public static Compass compass => s_Compass;
 
         #region Unimplemented
 
@@ -670,7 +675,6 @@ namespace UnityEngine
             return default;
         }
 
-        public static Compass compass => null;
         public static Vector3 acceleration => default;
         public static Vector2 mousePosition => default;
         public static Vector2 mouseScrollDelta => default;

@@ -290,6 +290,11 @@ namespace UnityEngine.InputSystem.LowLevel
                 };
             }
         }
+        public bool headingUpdatesEnabled
+        {
+            get => LegacyInputNative.IsHeadingUpdatesEnabled();
+            set => LegacyInputNative.SetHeadingUpdatesEnabled(value);
+        }
         public bool isLocationServiceEnabledByUser => LegacyInputNative.IsLocationServiceEnabledByUser();
         public LocationServiceStatus locationServiceStatus => (LocationServiceStatus)(int)LegacyInputNative.GetLocationServiceStatus();
         public LocationInfo lastLocation

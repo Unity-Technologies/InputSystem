@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 partial class CoreTests
@@ -183,6 +184,7 @@ partial class CoreTests
     [Category("API")]
     public IEnumerator API_CanReadLocationThroughLocationServiceAPI()
     {
+        Assert.That(Input.location, Is.Not.Null);
         Assert.That(Input.location.isEnabledByUser, Is.True);
         Assert.That(Input.location.status, Is.EqualTo(LocationServiceStatus.Stopped));
 
@@ -221,5 +223,37 @@ partial class CoreTests
         Input.location.Stop();
 
         Assert.That(Input.location.status, Is.EqualTo(LocationServiceStatus.Stopped));
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_CanReadHeadingThroughCompassAPI()
+    {
+        Assert.That(Input.compass, Is.Not.Null);
+        Assert.That(Input.compass.enabled, Is.False);
+        Assert.That(Input.compass.timestamp, Is.EqualTo(default(double)));
+        Assert.That(Input.compass.magneticHeading, Is.EqualTo(default(float)));
+        Assert.That(Input.compass.trueHeading, Is.EqualTo(default(float)));
+        Assert.That(Input.compass.headingAccuracy, Is.EqualTo(default(float)));
+        Assert.That(Input.compass.rawVector, Is.EqualTo(default(Vector3)));
+
+        Input.compass.enabled = true;
+
+        Assert.That(Input.compass.enabled, Is.True);
+
+        runtime.lastHeading = new Compass.Heading
+        {
+            magneticHeading = 0.123f,
+            trueHeading = 0.234f,
+            headingAccuracy = 0.345f,
+            raw = new Vector3(0.456f, 0.567f, 0.678f),
+            timestamp = 0.789
+        };
+
+        Assert.That(Input.compass.timestamp, Is.EqualTo(0.789).Within(0.0001));
+        Assert.That(Input.compass.magneticHeading, Is.EqualTo(0.123f).Within(0.0001));
+        Assert.That(Input.compass.trueHeading, Is.EqualTo(0.234f).Within(0.0001));
+        Assert.That(Input.compass.headingAccuracy, Is.EqualTo(0.345f).Within(0.0001));
+        Assert.That(Input.compass.rawVector, Is.EqualTo(new Vector3(0.456f, 0.567f, 0.678f)).Using(Vector3EqualityComparer.Instance));
     }
 }

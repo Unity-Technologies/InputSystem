@@ -379,6 +379,7 @@ namespace UnityEngine.InputSystem
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public Compass.Heading lastHeading { get; set; }
+        public bool headingUpdatesEnabled { get; set; }
         public bool isLocationServiceEnabledByUser => true; // Pretend we always have user permission.
         public LocationServiceStatus locationServiceStatus { get; set; } = LocationServiceStatus.Stopped;
         public LocationInfo lastLocation { get; set; }

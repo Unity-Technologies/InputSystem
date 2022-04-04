@@ -177,6 +177,7 @@ namespace UnityEngine.InputSystem.LowLevel
         ScreenOrientation screenOrientation { get; }
 
         Compass.Heading lastHeading { get; }
+        bool headingUpdatesEnabled { get; set; }
         bool isLocationServiceEnabledByUser { get; }
         LocationServiceStatus locationServiceStatus { get; }
         LocationInfo lastLocation { get; }
