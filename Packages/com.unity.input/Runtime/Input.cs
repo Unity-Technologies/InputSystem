@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngineInternal;
 
 // GOAL: Show how you can load an existing Unity project using legacy input, install com.unity.inputsystem, and play it as is while actually not using the old input system at all
 // More specifically: Can play *unmodified* 2D Rogue project through input system with zero popups by simply adding the package. Likewise, removing the package simply reverts the project to the old system.
@@ -45,7 +47,6 @@ namespace UnityEngine
         public float deltaTime => m_TimeDelta;
     }
 
-
     public struct LocationInfo
     {
         internal double m_Timestamp;
@@ -71,8 +72,6 @@ namespace UnityEngine
         Failed = 3
     }
 
-    #region Unimplemented
-
     public class Compass
     {
         public float magneticHeading => throw new NotImplementedException();
@@ -84,6 +83,15 @@ namespace UnityEngine
         {
             get => throw new NotImplementedException();
             set => throw new NotImplementedException();
+        }
+
+        internal struct Heading
+        {
+            public float magneticHeading;
+            public float trueHeading;
+            public float headingAccuracy;
+            public Vector3 raw;
+            public double timestamp;
         }
     }
 
@@ -206,12 +214,13 @@ namespace UnityEngine
 
     public class LocationService
     {
-        public bool isEnabledByUser => throw new NotImplementedException();
-        public LocationServiceStatus status => throw new NotImplementedException();
-        public LocationInfo lastData => throw new NotImplementedException();
+        public bool isEnabledByUser => InputRuntime.s_Instance.isLocationServiceEnabledByUser;
+        public LocationServiceStatus status => InputRuntime.s_Instance.locationServiceStatus;
+        public LocationInfo lastData => InputRuntime.s_Instance.lastLocation;
 
         public void Start(float desiredAccuracyInMeters, float updateDistanceInMeters)
         {
+            InputRuntime.s_Instance.StartUpdatingLocation(desiredAccuracyInMeters, updateDistanceInMeters);
         }
 
         public void Start(float desiredAccuracyInMeters)
@@ -226,10 +235,9 @@ namespace UnityEngine
 
         public void Stop()
         {
+            InputRuntime.s_Instance.StopUpdatingLocation();
         }
     }
-
-    #endregion
 
     /// <summary>
     /// Interface for accessing and managing input.
@@ -254,6 +262,8 @@ namespace UnityEngine
         private static KeySet s_ThisFramePressedKeys;
         private static KeySet s_ThisFrameReleasedKeys;
         private static Dictionary<string, KeyCode> s_KeyCodeMapping;
+        private static LocationService s_Location = new LocationService();
+        private static Gyroscope s_Gyro = new Gyroscope();
 
         private struct KeySet
         {
@@ -641,11 +651,11 @@ namespace UnityEngine
             return s_ThisFrameReleasedKeys.Contains(keyId.Value);
         }
 
-        private static Gyroscope s_Gyro = new Gyroscope();
-
         public static Gyroscope gyro => s_Gyro;
 
         public static bool isGyroAvailable => InputSystem.Gyroscope.current != null;
+
+        public static LocationService location => s_Location;
 
         #region Unimplemented
 
@@ -668,6 +678,11 @@ namespace UnityEngine
         public static Touch[] touches => new Touch[0];
         public static bool touchSupported => false;
         public static bool multiTouchEnabled => false;
+        public static bool simulateMouseWithTouches
+        {
+            get => false;
+            set {}
+        }
         public static string compositionString => string.Empty;
         public static string inputString => string.Empty;
         public static bool imeIsSelected => false;

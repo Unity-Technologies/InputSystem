@@ -1,7 +1,9 @@
+using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.TestTools;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 partial class CoreTests
@@ -175,5 +177,49 @@ partial class CoreTests
         Assert.That(Input.gyro.enabled, Is.False);
         Assert.That(() => Input.gyro.updateInterval = 0.123f, Throws.Nothing);
         Assert.That(Input.gyro.updateInterval, Is.EqualTo(default(float)));
+    }
+
+    [UnityTest]
+    [Category("API")]
+    public IEnumerator API_CanReadLocationThroughLocationServiceAPI()
+    {
+        Assert.That(Input.location.isEnabledByUser, Is.True);
+        Assert.That(Input.location.status, Is.EqualTo(LocationServiceStatus.Stopped));
+
+        Input.location.Start(123f, 234f);
+
+        Assert.That(Input.location.status, Is.EqualTo(LocationServiceStatus.Initializing));
+        Assert.That(runtime.desiredLocationAccuracy, Is.EqualTo(123f));
+        Assert.That(runtime.locationDistanceFilter, Is.EqualTo(234f));
+
+        var maxWait = 20;
+        while (maxWait > 0 && Input.location.status == LocationServiceStatus.Initializing)
+        {
+            --maxWait;
+            yield return null;
+        }
+
+        Assert.That(Input.location.status, Is.EqualTo(LocationServiceStatus.Running));
+
+        runtime.lastLocation = new LocationInfo
+        {
+            m_Latitude = 0.123f,
+            m_Longitude = 0.234f,
+            m_Altitude = 0.345f,
+            m_HorizontalAccuracy = 0.456f,
+            m_VerticalAccuracy = 0.567f,
+            m_Timestamp = 0.678f,
+        };
+
+        Assert.That(Input.location.lastData.latitude, Is.EqualTo(0.123f));
+        Assert.That(Input.location.lastData.longitude, Is.EqualTo(0.234f));
+        Assert.That(Input.location.lastData.altitude, Is.EqualTo(0.345f));
+        Assert.That(Input.location.lastData.horizontalAccuracy, Is.EqualTo(0.456f));
+        Assert.That(Input.location.lastData.verticalAccuracy, Is.EqualTo(0.567f));
+        Assert.That(Input.location.lastData.timestamp, Is.EqualTo(0.678f));
+
+        Input.location.Stop();
+
+        Assert.That(Input.location.status, Is.EqualTo(LocationServiceStatus.Stopped));
     }
 }

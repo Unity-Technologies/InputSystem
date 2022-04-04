@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngineInternal;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
@@ -270,6 +271,54 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
+
+        // The following set of APIs goes to legacy input system code. We don't yet
+        // have corresponding functionality outside of it. When cutting the old backends,
+        // this code can probably just be preserved mostly as is and just moved.
+        public Compass.Heading lastHeading
+        {
+            get
+            {
+                var heading = LegacyInputNative.GetLastHeading();
+                return new Compass.Heading
+                {
+                    magneticHeading = heading.magneticHeading,
+                    trueHeading = heading.trueHeading,
+                    headingAccuracy = heading.headingAccuracy,
+                    raw = heading.raw,
+                    timestamp = heading.timestamp
+                };
+            }
+        }
+        public bool isLocationServiceEnabledByUser => LegacyInputNative.IsLocationServiceEnabledByUser();
+        public LocationServiceStatus locationServiceStatus => (LocationServiceStatus)(int)LegacyInputNative.GetLocationServiceStatus();
+        public LocationInfo lastLocation
+        {
+            get
+            {
+                var location = LegacyInputNative.GetLastLocation();
+                return new LocationInfo
+                {
+                    m_Latitude = location.latitude,
+                    m_Longitude = location.longitude,
+                    m_Altitude = location.altitude,
+                    m_HorizontalAccuracy = location.horizontalAccuracy,
+                    m_VerticalAccuracy = location.verticalAccuracy,
+                    m_Timestamp = location.timestamp
+                };
+            }
+        }
+        public void StartUpdatingLocation(float desiredAccuracyInMeters, float updateDistanceInMeters)
+        {
+            LegacyInputNative.SetDesiredLocationAccuracy(desiredAccuracyInMeters);
+            LegacyInputNative.SetLocationDistanceFilter(updateDistanceInMeters);
+            LegacyInputNative.StartUpdatingLocation();
+        }
+
+        public void StopUpdatingLocation()
+        {
+            LegacyInputNative.StopUpdatingLocation();
+        }
 
         public bool isInBatchMode => Application.isBatchMode;
 

@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngineInternal;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -104,6 +105,11 @@ namespace UnityEngine.InputSystem
                     m_EventWritePosition = 0;
                 }
             }
+
+            // Pretend that after the first update, the location service
+            // has finished initialization.
+            if (locationServiceStatus == LocationServiceStatus.Initializing)
+                locationServiceStatus = LocationServiceStatus.Running;
         }
 
         public unsafe void QueueEvent(InputEvent* eventPtr)
@@ -371,6 +377,25 @@ namespace UnityEngine.InputSystem
 
         public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+
+        public Compass.Heading lastHeading { get; set; }
+        public bool isLocationServiceEnabledByUser => true; // Pretend we always have user permission.
+        public LocationServiceStatus locationServiceStatus { get; set; } = LocationServiceStatus.Stopped;
+        public LocationInfo lastLocation { get; set; }
+        public float desiredLocationAccuracy { get; private set; }
+        public float locationDistanceFilter { get; private set; }
+        public void StartUpdatingLocation(float desiredAccuracyInMeters, float updateDistanceInMeters)
+        {
+            desiredLocationAccuracy = desiredAccuracyInMeters;
+            locationDistanceFilter = updateDistanceInMeters;
+            // Update() will set this to Running.
+            locationServiceStatus = LocationServiceStatus.Initializing;
+        }
+
+        public void StopUpdatingLocation()
+        {
+            locationServiceStatus = LocationServiceStatus.Stopped;
+        }
 
         public List<PairedUser> userAccountPairings
         {
