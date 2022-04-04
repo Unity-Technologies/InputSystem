@@ -37,7 +37,9 @@ however, it has to be formatted properly to pass verification tests.
   * If, for example, an action was bound to `<Gamepad>/buttonSouth` and was enabled, adding a second `Gamepad` would lead to the action being temporarily disabled, then updated, and finally re-enabled.
   * This was especially noticeable if the action was currently in progress as it would get cancelled and then subsequently resumed.
   * Now, an in-progress action will get cancelled if the device of its active control is removed. If its active control is not affected, however, the action will keep going regardless of whether controls are added or removed from its `InputAction.controls` list.
-- Added the 'Cursor Lock Behavior' setting to InputSystemUIInputModule to control the origin point of UI raycasts when the cursor is locked. This enables the use of PhysicsRaycaster when the cursor is locked to the center of the screen ([case 1395281](https://issuetracker.unity3d.com/product/unity/issues/guid/1395281/)).
+- Installing the package for the first time will now set `"Active Input Handling"` to `"Both"` rather than `"Input System Package"`.
+  * This means, that by default, both the old and the new input system will run side by side where supported.
+  * This can be manually switched by going to `Edit >> Project Settings >> Player >> Active Input Handling`.
 
 ### Fixed
 
@@ -78,6 +80,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added support for Game Core platforms to XR layouts, devices, and input controls. These classes were previously only enabled on platforms where `ENABLE_VR` is defined.
 - Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
   * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
+- Added the 'Cursor Lock Behavior' setting to InputSystemUIInputModule to control the origin point of UI raycasts when the cursor is locked. This enables the use of PhysicsRaycaster when the cursor is locked to the center of the screen ([case 1395281](https://issuetracker.unity3d.com/product/unity/issues/guid/1395281/)).
 - Added support for using the Unity Remote app with the input system.
   * Requires Unity 2021.2.18 or later.
 
