@@ -38,13 +38,39 @@ namespace UnityEngine
         FaceDown = 6
     }
 
-    public struct AccelerationEvent
+    public struct AccelerationEvent : IEquatable<AccelerationEvent>
     {
         internal float x, y, z;
         internal float m_TimeDelta;
 
         public Vector3 acceleration => new Vector3(x, y, z);
         public float deltaTime => m_TimeDelta;
+
+        public bool Equals(AccelerationEvent other)
+        {
+            return Mathf.Approximately(x, other.x) && Mathf.Approximately(y, other.y) && Mathf.Approximately(z, other.z) &&
+                Mathf.Approximately(deltaTime, other.deltaTime);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is AccelerationEvent other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(x, y, z, m_TimeDelta);
+        }
+
+        public static bool operator==(AccelerationEvent left, AccelerationEvent right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator!=(AccelerationEvent left, AccelerationEvent right)
+        {
+            return !left.Equals(right);
+        }
     }
 
     public struct LocationInfo
@@ -661,6 +687,26 @@ namespace UnityEngine
         public static bool isGyroAvailable => InputSystem.Gyroscope.current != null;
         public static LocationService location => s_Location;
         public static Compass compass => s_Compass;
+        public static Vector3 acceleration => InputRuntime.s_Instance.acceleration;
+
+        public static AccelerationEvent GetAccelerationEvent(int index)
+        {
+            return InputRuntime.s_Instance.GetAccelerationEvent(index);
+        }
+
+        public static int accelerationEventCount => InputRuntime.s_Instance.accelerationEventCount;
+
+        public static AccelerationEvent[] accelerationEvents
+        {
+            get
+            {
+                var count = accelerationEventCount;
+                var result = new AccelerationEvent[count];
+                for (var i = 0; i < count; ++i)
+                    result[i] = GetAccelerationEvent(i);
+                return result;
+            }
+        }
 
         #region Unimplemented
 
@@ -675,7 +721,6 @@ namespace UnityEngine
             return default;
         }
 
-        public static Vector3 acceleration => default;
         public static Vector2 mousePosition => default;
         public static Vector2 mouseScrollDelta => default;
         public static int touchCount => default;

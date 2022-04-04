@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
@@ -255,5 +256,37 @@ partial class CoreTests
         Assert.That(Input.compass.trueHeading, Is.EqualTo(0.234f).Within(0.0001));
         Assert.That(Input.compass.headingAccuracy, Is.EqualTo(0.345f).Within(0.0001));
         Assert.That(Input.compass.rawVector, Is.EqualTo(new Vector3(0.456f, 0.567f, 0.678f)).Using(Vector3EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_CanGetCurrentAccelerationThroughAccelerationAPI()
+    {
+        Assert.That(Input.acceleration, Is.EqualTo(default(Vector3)));
+
+        runtime.acceleration = new Vector3(0.123f, 0.234f, 0.345f);
+
+        Assert.That(Input.acceleration, Is.EqualTo(new Vector3(0.123f, 0.234f, 0.345f)).Using(Vector3EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_CanGetAccelerationEventsThroughAccelerationAPI()
+    {
+        Assert.That(Input.accelerationEventCount, Is.Zero);
+        Assert.That(() => Input.GetAccelerationEvent(0), Throws.InstanceOf<ArgumentOutOfRangeException>());
+
+        var events = new[]
+        {
+            new AccelerationEvent { x = 0.123f, y = 0.234f, z = 0.345f, m_TimeDelta = 0.456f },
+            new AccelerationEvent { x = 0.987f, y = 0.876f, z = 0.765f, m_TimeDelta = 0.654f },
+        };
+        runtime.accelerationEvents = events;
+
+        Assert.That(Input.accelerationEventCount, Is.EqualTo(2));
+        Assert.That(Input.GetAccelerationEvent(0), Is.EqualTo(events[0]));
+        Assert.That(Input.GetAccelerationEvent(1), Is.EqualTo(events[1]));
+        Assert.That(() => Input.GetAccelerationEvent(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
+        Assert.That(Input.accelerationEvents, Is.EqualTo(events));
     }
 }

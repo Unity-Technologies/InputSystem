@@ -9,7 +9,6 @@ using UnityEngineInternal.Input;
 using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -275,6 +274,24 @@ namespace UnityEngine.InputSystem.LowLevel
         // The following set of APIs goes to legacy input system code. We don't yet
         // have corresponding functionality outside of it. When cutting the old backends,
         // this code can probably just be preserved mostly as is and just moved.
+        //
+        // NOTE: This *must* go to LegacyInputNative and *not* InputNative. The latter
+        //       redirects to our Input API implementation whereas the former is the one
+        //       that contains the actual implementation of the old input system API.
+        public Vector3 acceleration => LegacyInputNative.GetAcceleration();
+        public int accelerationEventCount => LegacyInputNative.GetAccelerationCount();
+        public AccelerationEvent GetAccelerationEvent(int index)
+        {
+            var nativeEvent = LegacyInputNative.GetAccelerationEvent(index);
+            return new AccelerationEvent
+            {
+                x = nativeEvent.x,
+                y = nativeEvent.y,
+                z = nativeEvent.z,
+                m_TimeDelta = nativeEvent.deltaTime
+            };
+        }
+
         public Compass.Heading lastHeading
         {
             get

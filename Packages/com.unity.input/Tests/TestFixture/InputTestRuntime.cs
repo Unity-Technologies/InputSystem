@@ -377,6 +377,15 @@ namespace UnityEngine.InputSystem
 
         public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+        public Vector3 acceleration { get; set; }
+        public AccelerationEvent[] accelerationEvents { get; set; }
+        public int accelerationEventCount => accelerationEvents.LengthSafe();
+        public AccelerationEvent GetAccelerationEvent(int index)
+        {
+            if (index < 0 || index >= accelerationEventCount)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            return accelerationEvents[index];
+        }
 
         public Compass.Heading lastHeading { get; set; }
         public bool headingUpdatesEnabled { get; set; }

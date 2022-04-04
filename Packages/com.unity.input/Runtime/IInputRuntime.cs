@@ -176,6 +176,9 @@ namespace UnityEngine.InputSystem.LowLevel
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
 
+        Vector3 acceleration { get; }
+        int accelerationEventCount { get; }
+        AccelerationEvent GetAccelerationEvent(int index);
         Compass.Heading lastHeading { get; }
         bool headingUpdatesEnabled { get; set; }
         bool isLocationServiceEnabledByUser { get; }
