@@ -291,6 +291,10 @@ namespace UnityEngine
         private static LocationService s_Location = new LocationService();
         private static Gyroscope s_Gyro = new Gyroscope();
         private static Compass s_Compass = new Compass();
+        private static int s_JoystickCount;
+        private static string[] s_JoystickNames;
+        private static InputDevice[] s_Joysticks;
+        private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
 
         private struct KeySet
         {
@@ -459,6 +463,80 @@ namespace UnityEngine
             actions?.Enable();
 
             InputNative.redirect = new Impl();
+
+            if (s_OnDeviceChangeDelegate == null)
+                s_OnDeviceChangeDelegate = OnDeviceChange;
+            InputSystem.InputSystem.onDeviceChange += s_OnDeviceChangeDelegate;
+            foreach (var device in InputSystem.InputSystem.devices)
+                OnDeviceChange(device, InputDeviceChange.Added);
+        }
+
+        private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            switch (change)
+            {
+                case InputDeviceChange.Added:
+                case InputDeviceChange.Removed:
+                case InputDeviceChange.Disconnected:
+                case InputDeviceChange.Reconnected:
+                {
+                    var isJoystick = device is Joystick;
+                    var isGamepad = !isJoystick && device is Gamepad;
+
+                    if (isJoystick || isGamepad)
+                    {
+                        // This branch demonstrates why GetJoystickNames() and the approach of talking
+                        // to joysticks by their index is broken. If the joystick at index #1 is unplugged
+                        // and we just blindly remove it, joystick #2 suddenly becomes joystick #1. So if
+                        // we were trying to pick up the input from two local players concurrently, player #1
+                        // now suddenly gets the device from player #2 when in fact player #1 simply lost their
+                        // device.
+                        //
+                        // So, a better approach is to not remove entries but rather null them out. And when
+                        // a device is plugged in, to see if it came back
+
+                        if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
+                        {
+                            // Try to find the device in our s_Joysticks list.
+                            var index = s_Joysticks.IndexOfReference(device, s_JoystickCount);
+                            if (index == -1)
+                            {
+                                // Not found. See if there is an empty slot in the joystick list.
+                                for (index = 0; index < s_JoystickCount; ++index)
+                                {
+                                    if (s_JoystickNames[index] == string.Empty)
+                                        break;
+                                }
+                            }
+
+                            if (index < 0 || index >= s_JoystickCount)
+                            {
+                                // No available entry. Append new joystick to end of array.
+                                var count = s_JoystickCount;
+                                ArrayHelpers.AppendWithCapacity(ref s_Joysticks, ref count, device);
+                                ArrayHelpers.AppendWithCapacity(ref s_JoystickNames, ref s_JoystickCount, device.displayName);
+                            }
+                            else
+                            {
+                                // Take over existing slot. Maybe a reconnect or a switch to a
+                                // different joystick/gamepad.
+                                s_Joysticks[index] = device;
+                                s_JoystickNames[index] = device.displayName;
+                            }
+                        }
+                        else
+                        {
+                            var index = s_Joysticks.IndexOfReference(device, s_JoystickCount);
+                            if (index != -1)
+                            {
+                                // Mark joystick as disconnected.
+                                s_JoystickNames[index] = string.Empty;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
         }
 
         internal static void NextFrame()
@@ -481,12 +559,17 @@ namespace UnityEngine
             s_PressedKeysBefore = default;
             s_ThisFramePressedKeys = default;
             s_ThisFrameReleasedKeys = default;
+            s_Joysticks = default;
+            s_JoystickNames = default;
+            s_JoystickCount = default;
 
             // Not all of these hold state but for more predictable behavior,
             // wipe them all.
             s_Gyro = new Gyroscope();
             s_Location = new LocationService();
             s_Compass = new Compass();
+
+            InputSystem.InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
         }
 
         // We throw the same exceptions as the current native code.
@@ -731,22 +814,37 @@ namespace UnityEngine
         {
         }
 
-        private static string[] GetJoystickNames()
+        public static string[] GetJoystickNames()
         {
-            return new string[0];
+            var result = new string[s_JoystickCount];
+            if (s_JoystickCount > 0)
+                Array.Copy(s_JoystickNames, result, s_JoystickCount);
+            return result;
         }
 
-        private static bool IsJoystickPreconfigured(string joystickName)
+        /*
+        public static int GetJoystickCount()
+        {
+            return m_JoystickNameCount;
+        }
+
+        public static string GetJoystickName(int index)
+        {
+            //...
+        }
+        */
+
+        public static bool IsJoystickPreconfigured(string joystickName)
         {
             return false;
         }
 
-        private static PenData GetPenEvent(int index)
+        public static PenData GetPenEvent(int index)
         {
             return default;
         }
 
-        private static void ResetPenEvents()
+        public static void ResetPenEvents()
         {
         }
 
@@ -755,7 +853,7 @@ namespace UnityEngine
             return default;
         }
 
-        private static void ClearLastPenContactEvent()
+        public static void ClearLastPenContactEvent()
         {
         }
 
