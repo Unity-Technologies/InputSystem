@@ -1,6 +1,7 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngineInternal;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -174,6 +175,13 @@ namespace UnityEngine.InputSystem.LowLevel
 
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
+
+        Compass.Heading lastHeading { get; }
+        bool isLocationServiceEnabledByUser { get; }
+        LocationServiceStatus locationServiceStatus { get; }
+        LocationInfo lastLocation { get; }
+        void StartUpdatingLocation(float desiredAccuracyInMeters, float updateDistanceInMeters);
+        void StopUpdatingLocation();
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.

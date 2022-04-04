@@ -3,10 +3,10 @@ using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem;
 
 [assembly: AssemblyVersion(InputSystem.kAssemblyVersion)]
-[assembly: InternalsVisibleTo("Unity.InputSystem.TestFramework")]
-[assembly: InternalsVisibleTo("Unity.InputSystem.Tests.Editor")]
-[assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
-[assembly: InternalsVisibleTo("Unity.InputSystem.IntegrationTests")]
+[assembly: InternalsVisibleTo("UnityEngine.Input.TestFramework")]
+[assembly: InternalsVisibleTo("UnityEngine.Input.Tests.Editor")]
+[assembly: InternalsVisibleTo("UnityEngine.Input.Tests")]
+[assembly: InternalsVisibleTo("UnityEngine.Input.IntegrationTests")]
 
 namespace UnityEngine.InputSystem
 {

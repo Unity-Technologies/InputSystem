@@ -1,15 +1,13 @@
 {
-    "name": "Unity.InputSystem.Tests",
+    "name": "UnityEngine.Input.Tests",
     "rootNamespace": "",
     "references": [
-        "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework",
-        "Unity.ugui",
-        "Unity.PackageManagerDocTools.Editor",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "Unity.PerformanceTesting",
-        "Unity.Coding.Editor"
+        "GUID:07a2c9846866948ff92fa7e2e6b9d760",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:c0dd0d10738d4ad4a9de57c559d0ca1b",
+        "GUID:28c5ace675d0e9c49be788eafb64c635",
+        "GUID:dc04f38471c3a459fb4d31124ee9127d"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
