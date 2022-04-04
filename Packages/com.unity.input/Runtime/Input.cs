@@ -457,6 +457,8 @@ namespace UnityEngine
 
             s_ButtonActions.Enable();
             actions?.Enable();
+
+            InputNative.redirect = new Impl();
         }
 
         internal static void NextFrame()
@@ -716,9 +718,45 @@ namespace UnityEngine
             return GetAxis(axisName);
         }
 
+        private static void ResetInputAxes()
+        {
+        }
+
         public static Touch GetTouch(int index)
         {
             return default;
+        }
+
+        private static void SimulateTouch(Touch touch)
+        {
+        }
+
+        private static string[] GetJoystickNames()
+        {
+            return new string[0];
+        }
+
+        private static bool IsJoystickPreconfigured(string joystickName)
+        {
+            return false;
+        }
+
+        private static PenData GetPenEvent(int index)
+        {
+            return default;
+        }
+
+        private static void ResetPenEvents()
+        {
+        }
+
+        private static PenData GetLastPenContactEvent()
+        {
+            return default;
+        }
+
+        private static void ClearLastPenContactEvent()
+        {
         }
 
         public static Vector2 mousePosition => default;
@@ -726,7 +764,7 @@ namespace UnityEngine
         public static int touchCount => default;
         public static Touch[] touches => new Touch[0];
         public static bool touchSupported => false;
-        public static bool multiTouchEnabled => false;
+        public static bool multiTouchEnabled { get; set; }
         public static bool simulateMouseWithTouches
         {
             get => false;
@@ -746,7 +784,334 @@ namespace UnityEngine
             set => m_IMECompositionMode = value;
         }
         private static IMECompositionMode m_IMECompositionMode = IMECompositionMode.Off;
+        private static bool gyroSupported { get; }
+        private static int mainGyro { get; }
+        public static DeviceOrientation deviceOrientation { get; }
+        public static bool compensateSensors { get; set; }
+        public static bool stylusTouchSupported { get; }
+        public static bool touchPressureSupported { get; }
+        public static int penEventCount { get; }
+        public static bool anyKey { get; }
+        public static bool anyKeyDown { get; }
+        public static bool eatKeyPressOnTextFieldFocus { get; set; }
+        public static bool backButtonLeavesApp { get; set; }
 
         #endregion
+
+        // ReSharper disable MemberHidesStaticFromOuterClass
+        // This is the redirect that we install in Modules/Input in order for us to get
+        // all calls that the Unity runtime itself makes into UnityEngine.Input.
+        // Note that right now, many of the methods are not actually called from native.
+        private class Impl : IInputNative
+        {
+            public float GetAxis(string axisName)
+            {
+                return Input.GetAxis(axisName);
+            }
+
+            public float GetAxisRaw(string axisName)
+            {
+                return Input.GetAxisRaw(axisName);
+            }
+
+            public bool GetButton(string buttonName)
+            {
+                return Input.GetButton(buttonName);
+            }
+
+            public bool GetButtonDown(string buttonName)
+            {
+                return Input.GetButtonDown(buttonName);
+            }
+
+            public bool GetButtonUp(string buttonName)
+            {
+                return Input.GetButtonUp(buttonName);
+            }
+
+            public void ResetInputAxes()
+            {
+                Input.ResetInputAxes();
+            }
+
+            public bool GetKey(KeyCode key)
+            {
+                return Input.GetKey(key);
+            }
+
+            public bool GetKey(string name)
+            {
+                return Input.GetKey(name);
+            }
+
+            public bool GetKeyUp(KeyCode key)
+            {
+                return Input.GetKeyUp(key);
+            }
+
+            public bool GetKeyUp(string name)
+            {
+                return Input.GetKeyUp(name);
+            }
+
+            public bool GetKeyDown(KeyCode key)
+            {
+                return Input.GetKeyDown(key);
+            }
+
+            public bool GetKeyDown(string name)
+            {
+                return Input.GetKeyDown(name);
+            }
+
+            public bool GetMouseButton(int button)
+            {
+                return Input.GetMouseButton(button);
+            }
+
+            public bool GetMouseButtonDown(int button)
+            {
+                return Input.GetMouseButtonDown(button);
+            }
+
+            public bool GetMouseButtonUp(int button)
+            {
+                return Input.GetMouseButtonUp(button);
+            }
+
+            public string[] GetJoystickNames()
+            {
+                return Input.GetJoystickNames();
+            }
+
+            public bool IsJoystickPreconfigured(string joystickName)
+            {
+                return Input.IsJoystickPreconfigured(joystickName);
+            }
+
+            public PenData GetPenEvent(int index)
+            {
+                return Input.GetPenEvent(index);
+            }
+
+            public void ResetPenEvents()
+            {
+                Input.ResetPenEvents();
+            }
+
+            public PenData GetLastPenContactEvent()
+            {
+                return Input.GetLastPenContactEvent();
+            }
+
+            public void ClearLastPenContactEvent()
+            {
+                Input.ClearLastPenContactEvent();
+            }
+
+            public Touch GetTouch(int index)
+            {
+                return Input.GetTouch(index);
+            }
+
+            public void SimulateTouch(Touch touch)
+            {
+                Input.SimulateTouch(touch);
+            }
+
+            public AccelerationEventNative GetAccelerationEvent(int index)
+            {
+                var e = Input.GetAccelerationEvent(index);
+                return new AccelerationEventNative
+                {
+                    x = e.x, y = e.y, z = e.z,
+                    m_TimeDelta = e.deltaTime
+                };
+            }
+
+            public Vector3 GetGyroRotationRate(int idx)
+            {
+                ////TODO: index
+                return gyro.rotationRate;
+            }
+
+            public Vector3 GetGyroRotationRateUnbiased(int idx)
+            {
+                ////TODO: index
+                return gyro.rotationRateUnbiased;
+            }
+
+            public Vector3 GetGravity(int idx)
+            {
+                ////TODO: index
+                return gyro.gravity;
+            }
+
+            public Vector3 GetUserAcceleration(int idx)
+            {
+                ////TODO: index
+                return gyro.userAcceleration;
+            }
+
+            public Quaternion GetAttitude(int idx)
+            {
+                ////TODO: index
+                return gyro.attitude;
+            }
+
+            public bool IsGyroEnabled(int idx)
+            {
+                ////TODO: index
+                return gyro.enabled;
+            }
+
+            public void SetGyroEnabled(int idx, bool enabled)
+            {
+                ////TODO: index
+                gyro.enabled = enabled;
+            }
+
+            public float GetGyroUpdateInterval(int idx)
+            {
+                ////TODO: index
+                return gyro.updateInterval;
+            }
+
+            public void SetGyroUpdateInterval(int idx, float interval)
+            {
+                ////TODO: index
+                gyro.updateInterval = interval;
+            }
+
+            public void StartUpdatingLocation()
+            {
+                location.Start();
+            }
+
+            public void StopUpdatingLocation()
+            {
+                location.Stop();
+            }
+
+            public bool backButtonLeavesApp
+            {
+                get => Input.backButtonLeavesApp;
+                set => Input.backButtonLeavesApp = value;
+            }
+
+            public string inputString => Input.inputString;
+
+            public IMECompositionMode imeCompositionMode
+            {
+                get => Input.imeCompositionMode;
+                set => Input.imeCompositionMode = value;
+            }
+
+            public string compositionString => Input.compositionString;
+            public bool imeIsSelected => Input.imeIsSelected;
+
+            public Vector2 compositionCursorPos
+            {
+                get => Input.compositionCursorPos;
+                set => Input.compositionCursorPos = value;
+            }
+
+            public bool eatKeyPressOnTextFieldFocus
+            {
+                get => Input.eatKeyPressOnTextFieldFocus;
+                set => Input.eatKeyPressOnTextFieldFocus = value;
+            }
+
+            public bool anyKey => Input.anyKey;
+            public bool anyKeyDown => Input.anyKeyDown;
+            public bool mousePresent => Input.mousePresent;
+            public Vector3 mousePosition => Input.mousePosition;
+            public Vector2 mouseScrollDelta => Input.mouseScrollDelta;
+
+            public bool simulateMouseWithTouches
+            {
+                get => Input.simulateMouseWithTouches;
+                set => Input.simulateMouseWithTouches = value;
+            }
+
+            public int penEventCount => Input.penEventCount;
+            public bool touchSupported => Input.touchSupported;
+            public bool touchPressureSupported => Input.touchPressureSupported;
+            public bool stylusTouchSupported => Input.stylusTouchSupported;
+
+            public bool multiTouchEnabled
+            {
+                get => Input.multiTouchEnabled;
+                set => Input.multiTouchEnabled = value;
+            }
+
+            public int touchCount => Input.touchCount;
+            public int accelerationEventCount => Input.accelerationEventCount;
+            public Vector3 acceleration => Input.acceleration;
+
+            public bool compensateSensors
+            {
+                get => Input.compensateSensors;
+                set => Input.compensateSensors = value;
+            }
+            public DeviceOrientationNative deviceOrientation => (DeviceOrientationNative)(int)Input.deviceOrientation;
+            public int mainGyro => Input.mainGyro;
+            public bool gyroSupported => Input.gyroSupported;
+            public bool isLocationServiceEnabledByUser => location.isEnabledByUser;
+            public LocationServiceStatusNative locationServiceStatus => (LocationServiceStatusNative)(int)location.status;
+
+            public LocationInfoNative lastLocation
+            {
+                get
+                {
+                    var l = location.lastData;
+                    return new LocationInfoNative
+                    {
+                        m_Latitude = l.latitude,
+                        m_Longitude = l.longitude,
+                        m_Altitude = l.altitude,
+                        m_HorizontalAccuracy = l.horizontalAccuracy,
+                        m_VerticalAccuracy = l.verticalAccuracy,
+                        m_Timestamp = l.timestamp,
+                    };
+                }
+            }
+
+            public HeadingInfoNative lastHeading
+            {
+                get
+                {
+                    var heading = InputRuntime.s_Instance.lastHeading;
+                    return new HeadingInfoNative
+                    {
+                        magneticHeading = heading.magneticHeading,
+                        trueHeading = heading.trueHeading,
+                        headingAccuracy = heading.headingAccuracy,
+                        raw = heading.raw,
+                        timestamp = heading.timestamp
+                    };
+                }
+            }
+
+            public bool headingUpdatesEnabled
+            {
+                get => compass.enabled;
+                set => compass.enabled = value;
+            }
+
+            // In the API, these are parameters to the start method. So we don't have these as separate
+            // settings. For now, just go directly to LegacyInputNative here. Nothing in native is actually
+            // calling this but even if, until we change where the location service sits, this will still
+            // do the right thing.
+            public float desiredLocationAccuracy
+            {
+                set => LegacyInputNative.SetDesiredLocationAccuracy(value);
+            }
+            public float locationDistanceFilter
+            {
+                set => LegacyInputNative.SetLocationDistanceFilter(value);
+            }
+        }
+        // ReSharper restore MemberHidesStaticFromOuterClass
     }
 }
