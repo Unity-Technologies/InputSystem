@@ -3,7 +3,6 @@ using System.ComponentModel;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -30,26 +29,16 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     ///
     /// However, this can also be used to "gate" other types of controls. For example, a "look"
-    /// action could be bound to mouse <see cref="Pointer.delta"/> such that the <see cref="Keyboard.altKey"/> and
+    /// action could be bound to mouse <see cref="Pointer.delta"/> such that the <see cref="Keyboard.ctrlKey"/> and
     /// <see cref="Keyboard.shiftKey"/> on the keyboard have to be pressed in order for the player to be able to
     /// look around.
     ///
     /// <example>
     /// <code>
-    /// lookAction.AddCompositeBinding("OneModifier")
-    ///     .With("Modifier1", "&lt;Keyboard&gt;/alt")
+    /// var action = new InputAction();
+    /// action.AddCompositeBinding("TwoModifiers")
+    ///     .With("Modifier1", "&lt;Keyboard&gt;/ctrl")
     ///     .With("Modifier2", "&lt;Keyboard&gt;/shift")
-    ///     .With("Binding", "&lt;Mouse&gt;/delta")
-    /// </code>
-    /// </example>
-    ///
-    /// <example>
-    /// <code>
-    /// // Create a button action that requires LMB on the mouse
-    /// // to be held for the mouse delta to come through.
-    /// var action = new InputAction(type: InputActionType.Button);
-    /// action.AddCompositeBinding("OneModifier")
-    ///     .With("Modifier", "&lt;Mouse&gt;/leftButton")
     ///     .With("Binding", "&lt;Mouse&gt;/delta");
     /// </code>
     /// </example>
@@ -94,7 +83,7 @@ namespace UnityEngine.InputSystem.Composites
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
         // ReSharper disable once UnassignedField.Global
-        [InputControl(layout = "Button")] public int binding;
+        [InputControl] public int binding;
 
         /// <summary>
         /// If set to <c>true</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.

@@ -1,4 +1,3 @@
-// Grouping up the XR defines since it's a pretty heavy sequence
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -3255,12 +3254,11 @@ namespace UnityEngine.InputSystem
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
-                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor and will *DISABLE* the old UnityEngine.Input APIs.";
+                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor.";
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
                 {
                     EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-                    EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
                     EditorHelpers.RestartEditorAndRecompileScripts();
                 }
             }
@@ -3447,7 +3445,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF) && ENABLE_VR
+            #if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();
             #endif
 
