@@ -185,6 +185,8 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.interactions"/>
     /// <seealso cref="InputAction.interactions"/>
     /// <seealso cref="Editor.InputParameterEditor"/>
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
     public interface IInputInteraction
     {
         /// <summary>

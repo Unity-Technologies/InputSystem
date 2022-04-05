@@ -1,10 +1,10 @@
-#if UNITY_XR_AVAILABLE && ENABLE_VR || PACKAGE_DOCS_GENERATION
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
-using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.Scripting;
+using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.XR
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
     /// <summary>
-    /// The type of data a <see cref="XRFeatureDescriptor>"/> exposes.
+    /// The type of data a <see cref="XRFeatureDescriptor"/> exposes.
     /// </summary>
     public enum FeatureType
     {
@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public FeatureType featureType;
         /// <summary>
-        /// The overall size of the feature.  This is only filled in when the <see cref="XRFeatureDescriptor.featureType"/> is <see cref="FeatureType.Custom"/>.
+        /// The overall size of the feature.  This is only filled in when the <see cref="featureType"/> is <see cref="FeatureType.Custom"/>.
         /// </summary>
         public uint customSize;
     }
@@ -305,7 +305,8 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<XRController>();
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
-#if ENABLE_VR
+
+            // Built-in layouts replaced by the com.unity.xr.windowsmr package.
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR
             InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.WMRHMD>(
                 matches: new InputDeviceMatcher()
@@ -324,6 +325,7 @@ namespace UnityEngine.InputSystem.XR
             );
 #endif
 
+            // Built-in layouts replaced by the com.unity.xr.oculus package.
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
             InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusHMD>(
                 matches: new InputDeviceMatcher()
@@ -353,6 +355,7 @@ namespace UnityEngine.InputSystem.XR
                     .WithProduct("^(Oculus Tracked Remote)"));
 #endif
 
+            // Built-in layouts replaced by the com.unity.xr.googlevr package.
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR
             InputSystem.RegisterLayout<Unity.XR.GoogleVr.DaydreamHMD>(
                 matches: new InputDeviceMatcher()
@@ -364,6 +367,7 @@ namespace UnityEngine.InputSystem.XR
                     .WithProduct("^(Daydream Controller)"));
 #endif
 
+            // Built-in layouts replaced by the com.unity.xr.openvr package.
 #if !DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRHMD>(
                 matches: new InputDeviceMatcher()
@@ -407,8 +411,7 @@ namespace UnityEngine.InputSystem.XR
             );
 #endif
 #endif
-#endif
         }
     }
 }
-#endif // UNITY_XR_AVAILABLE || PACKAGE_DOCS_GENERATION
+#endif

@@ -553,7 +553,6 @@ class APIVerificationTests
     [TestCase("Keyboard", "Devices/Precompiled/FastKeyboard.cs")]
     [TestCase("Mouse", "Devices/Precompiled/FastMouse.cs")]
     [TestCase("Touchscreen", "Devices/Precompiled/FastTouchscreen.cs")]
-    [TestCase("DualShock4GamepadHID", "Plugins/DualShock/FastDualShock4GamepadHID.cs")]
     public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
     {
         var fullPath = "Packages/com.unity.inputsystem/InputSystem/" + filePath;
@@ -781,6 +780,14 @@ class APIVerificationTests
     // SwitchProControllerHID inherited from IInputStateCallbackReceiver and IEventPreProcessor, both are internal interfaces
     [Property("Exclusions", @"1.0.0
         public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
+    ")]
+    // AddChangeMonitor has a new, optional groupIndex argument.
+    [Property("Exclusions", @"1.0.0
+        public static void AddChangeMonitor(UnityEngine.InputSystem.InputControl control, UnityEngine.InputSystem.LowLevel.IInputStateChangeMonitor monitor, long monitorIndex = -1);
+    ")]
+    // DualShock4GamepadHID from IEventPreProcessor, which is an internal interface
+    [Property("Exclusions", @"1.0.0
+        public class DualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShockGamepad
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {

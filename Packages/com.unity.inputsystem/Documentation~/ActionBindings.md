@@ -13,6 +13,7 @@
     * [Applying overrides](#applying-overrides)
     * [Erasing Bindings](#erasing-bindings)
     * [Adding Bindings](#adding-bindings)
+    * [Setting parameters](#setting-parameters)
   * [Interactive rebinding](#interactive-rebinding)
   * [Saving and loading rebinds](#saving-and-loading-rebinds)
   * [Restoring original Bindings](#restoring-original-bindings)
@@ -22,7 +23,7 @@
   * [Binding resolution](#binding-resolution)
     * [Binding resolution while Actions are enabled](#binding-resolution-while-actions-are-enabled)
     * [Choosing which Devices to use](#choosing-which-devices-to-use)
-  * [Conflict resolution](#conflict-resolution)
+  * [Conflicting inputs](#conflicting-inputs)
   * [Initial state check](#initial-state-check)
 
 An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). An Action can have an arbitrary number of Bindings pointed at it. Multiple Bindings can reference the same Control.
@@ -513,6 +514,116 @@ playerInput.actions["move"]
         .With("Right", "<Keyboard>/d");
 ```
 
+### Setting parameters
+
+A Binding may, either through itself or through its associated Action, lead to [processor](Processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](ActionAssets.md#editing-bindings) of the Action editor or through the API. This configuration will give parameters their default value.
+
+```CSharp
+// Create an action with a "Hold" interaction on it.
+// Set the "duration" parameter to 4 seconds.
+var action = new InputAction(interactions: "hold(duration=4)");
+```
+
+You can query the current value of any such parameter using the [`GetParameterValue`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_GetParameterValue_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_InputBinding_) API.
+
+```CSharp
+// This returns a PrimitiveValue?. It will be null if the
+// parameter is not found. Otherwise, it is a PrimitiveValue
+// which can be converted to a number or boolean.
+var p = action.GetParameterValue("duration");
+Debug.Log("'duration' is set to: " + p.Value);
+```
+
+The above looks for the parameter on any object found on any of the bindings on the action. You can restrict either or both to a more narrow set.
+
+```CSharp
+// Retrieve the value of the "duration" parameter specifically of a
+// "Hold" interaction and only look on bindings in the "Gamepad" group.
+action.GetParameterValue("hold:duration", InputBinding.MaskByGroup("Gamepad"));
+```
+
+Alternatively, you can use an expression parameter to encapsulate both the type and the name of the parameter you want to get the value of. This has the advantage of not needing a string parameter but rather references both the type and the name of the parameter in a typesafe way.
+
+```CSharp
+// Retrieve the value of the "duration" parameter of TapInteraction.
+// This version returns a float? instead of a PrimitiveValue? as it
+// sees the type of "duration" at compile-time.
+action.GetParameterValue((TapInteraction x) => x.duration);
+```
+
+To alter the current value of a parameter, you can use what is referred to as a "parameter override". You can apply these at the level of an individual [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html), or at the level of an entire [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html), or even at the level of an entire [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). Such overrides are stored internally and applied automatically even on bindings added later.
+
+To add an override, use the [`ApplyParameterOverride`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_ApplyParameterOverride_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_Utilities_PrimitiveValue_UnityEngine_InputSystem_InputBinding_) API or any of its overloads.
+
+```CSharp
+// Set the "duration" parameter on all bindings of the action to 4.
+action.ApplyParameterOverride("duration", 4f);
+
+// Set the "duration" parameter specifically for "tap" interactions only.
+action.ApplyParameterOverride("tap:duration", 0.5f);
+
+// Set the "duration" parameter on tap interactions but only for bindings
+// in the "Gamepad" group.
+action.ApplyParameterOverride("tap:duration", 0.5f, InputBinding.MaskByGroup("Gamepad");
+
+// Set tap duration for all bindings in an action map.
+map.ApplyParameterOverride("tap:duration", 0.5f);
+
+// Set tap duration for all bindings in an entire asset.
+asset.ApplyParameterOverride("tap:duration", 0.5f);
+
+// Like for GetParameterValue, overloads are available that take
+// an expression instead.
+action.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+map.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+asset.ApplyParameterOverride((TapInteraction x) => x.duration, 0.4f);
+```
+
+The new value will be applied immediately and affect all composites, processors, and interactions already in use and targeted by the override.
+
+Note that if multiple parameter overrides are applied &ndash; especially when applying some directly to actions and some to maps or assets &ndash;, there may be conflicts between which override to apply. In this case, an attempt is made to chose the "most specific" override to apply.
+
+```CSharp
+// Let's say you have an InputAction `action` that is part of an InputActionAsset asset.
+var map = action.actionMap;
+var asset = map.asset;
+
+// And you apply a "tap:duration" override to the action.
+action.ApplyParameterOverride("tap:duration", 0.6f);
+
+// But also apply a "tap:duration" override to the action specifically
+// for bindings in the "Gamepad" group.
+action.ApplyParameterOverride("tap:duration", 1f, InputBinding.MaskByGroup("Gamepad"));
+
+// And finally also apply a "tap:duration" override to the entire asset.
+asset.ApplyParameterOverride("tap:duration", 0.3f);
+
+// Now, bindings on `action` in the "Gamepad" group will use a value of 1 for tap durations,
+// other bindings on `action` will use 0.6, and every other binding in the asset will use 0.3.
+```
+
+You can use parameter overrides, for example, to scale mouse delta values on a "Look" action.
+
+```CSharp
+// Set up an example "Look" action.
+var look = new InputAction("look", type: InputActionType.Value);
+look.AddBinding("<Mouse>/delta", groups: "KeyboardMouse", processors: "scaleVector2");
+look.AddBinding("<Gamepad>/rightStick", groups: "Gamepad", processors: "scaleVector2");
+
+// Now you can adjust stick sensitivity separately from mouse sensitivity.
+look.ApplyParameterOverride("scaleVector2:x", 0.5f, InputBinding.MaskByGroup("KeyboardMouse"));
+look.ApplyParameterOverride("scaleVector2:y", 0.5f, InputBinding.MaskByGroup("KeyboardMouse"));
+
+look.ApplyParameterOverride("scaleVector2:x", 2f, InputBinding.MaskByGroup("Gamepad"));
+look.ApplyParameterOverride("scaleVector2:y", 2f, InputBinding.MaskByGroup("Gamepad"));
+
+// Alternative to using groups, you can also apply overrides directly to specific binding paths.
+look.ApplyParameterOverride("scaleVector2:x", 0.5f, new InputBinding("<Mouse>/delta"));
+look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/delta"));
+```
+
+>NOTE: Parameter overrides are *not* persisted along with an asset.
+
 ## Interactive rebinding
 
 >__Note:__ To download a sample project which demonstrates how to set up a rebinding user interface with Input System APIs, open the Package Manager, select the Input System Package, and choose the sample project "Rebinding UI" to download.
@@ -693,31 +804,70 @@ You can override this behavior by restricting [`InputActionAssets`](../api/Unity
     actionMap.devices = new[] { Gamepad.all[0] };
 ```
 
-### Conflict Resolution
+### Conflicting inputs
 
-If multiple Controls are bound to an Action, conflicting inputs may arise. For example, if an Action is bound to both the left and the right trigger on a gamepad, then if the player presses *both* triggers at the same time, then which of the triggers needs to be released for the Action to be considered stopped?
+There are two situations where a given input may lead to ambiguity:
 
-To resolve this, the Input System uses a "rule of maximum actuation". Simply put, at any point, the Control with the highest level of [actuation](Controls.md#control-actuation) is chosen to "drive" the action and thus determine its value.
+1. Several Controls are bound to the same Action and more than one is feeding input into the Action at the same time. Example: an Action that is bound to both the left and right trigger on a Gamepad and both triggers are pressed.
+2. The input is part of a sequence of inputs and there are several possible such sequences. Example: one Action is bound to the `B` key and another Action is bound to `Shift-B`.
 
-In the scenario with the two triggers, releasing one of the triggers would not cause the Action to stop as the other trigger is still held. Only once both triggers are fully released will the Action be stopped.
+#### Multiple, concurrently used Controls
 
-This rule can lead to outcomes that may not appear intuitive at first. Consider the following sequence of events:
+>__Note:__ This section does not apply to [`PassThrough`](Actions.md#pass-through) Actions as they are by design meant to allow multiple concurrent inputs.
 
-1. Left  trigger is fully pressed (value=1).
-2. Right trigger is partially pressed (value=0.6).
-3. Left trigger is released.
-4. Right trigger is released.
+For a [`Button`](Actions.md#button) or [`Value`](Actions.md#value) Action, there can only be one Control at any time that is "driving" the Action. This Control is considered the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl).
 
-Applying the "rule of maximum actuation", this leads to the following sequence of changes on the Action:
+When an Action is bound to multiple Controls, the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) at any point is the one with the greatest level of ["actuation"](Controls.md#control-actuation), that is, the largest value returned from [`EvaluateMagnitude`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude_). If a Control exceeds the actuation level of the current [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl), it will itself become the active Control.
 
-1. Action is `started` and then `performed`. Value is 1, Control is left trigger.
-2. Nothing happens. The right trigger is not actuated enough for it to override the input on the left trigger.
-3. Action is `performed`. Value is 0.6, Control is right trigger. This is because now the left trigger has fallen below the level of the right trigger and thus the latter is chosen to now "drive" the action.
-4. Action is `canceled` as no more active inputs are feeding into the Action.
+The following example demonstrates this mechanism with a [`Button`](Actions.md#button) Action and also demonstrates the difference to a [`PassThrough`](Actions.md#pass-through) Action.
 
-Note that when a Control is part of a Composite, the "rule of maximum actuation" is applied to the Composite as a whole, not to the individual Controls bound as part of it. So, a WASD keyboard binding, for example, has a single value of actuation corresponding to the magnitude of the resulting vector.
+```CSharp
+// Create a button and a pass-through action and bind each of them
+// to both triggers on the gamepad.
+var buttonAction = new InputAction(type: InputActionType.Button,
+    binding: "<Gamepad>/*Trigger");
+var passThroughAction = new InputAction(type: InputActionType.PassThrough,
+    binding: "<Gamepad>/*Trigger");
 
-#### Disabling Conflict Resolution
+buttonAction.performed += c => Debug.Log("${c.control.name} pressed (Button)");
+passThroughAction.performed += c => Debug.Log("${c.control.name} changed (Pass-Through)");
+
+buttonAction.Enable();
+passThroughAction.Enable();
+
+// Press the left trigger all the way down.
+// This will trigger both buttonAction and passThroughAction. Both will
+// see leftTrigger becoming the activeControl.
+Set(gamepad.leftTrigger, 1f);
+
+// Will log
+//   "leftTrigger pressed (Button)" and
+//   "leftTrigger changed (Pass-Through)"
+
+// Press the right trigger halfway down.
+// This will *not* trigger or otherwise change buttonAction as the right trigger
+// is actuated *less* than the left one that is already driving action.
+// However, passThrough action is not performing such tracking and will thus respond
+// directly to the value change. It will perform and make rightTrigger its activeControl.
+Set(gamepad.rightTrigger, 0.5f);
+
+// Will log
+//   "rightTrigger changed (Pass-Through)"
+
+// Release the left trigger.
+// For buttonAction, this will mean that now all controls feeding into the action have
+// been released and thus the button releases. activeControl will go back to null.
+// For passThrough action, this is just another value change. So, the action performs
+// and its active control changes to leftTrigger.
+Set(gamepad.leftTrigger,  0f);
+
+// Will log
+//   "leftTrigger changed (Pass-Through)"
+```
+
+For [composite bindings](#composite-bindings), magnitudes of the composite as a whole rather than for individual Controls are tracked. However, [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) will stick track individual Controls from the composite.
+
+##### Disabling Conflict Resolution
 
 Conflict resolution is always applied to [Button](Actions.md#button) and [Value](Actions.md#value) type Actions. However, it can be undesirable in situations when an Action is simply used to gather any and all inputs from bound Controls. For example, the following Action would monitor the A button of all available gamepads:
 
@@ -727,6 +877,55 @@ action.Enable();
 ```
 
 By using the [Pass-Through](Actions.md#pass-through) Action type, conflict resolution is bypassed and thus, pressing the A button on one gamepad will not result in a press on a different gamepad being ignored.
+
+#### Multiple input sequences (such as keyboard shortcuts)
+
+>__Note__: The mechanism described here only applies to Actions that are part of the same [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) or [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html).
+
+Inputs that are used in combinations with other inputs may also lead to ambiguities. If, for example, the `b` key on the Keyboard is bound both on its own as well as in combination with the `shift` key, then if you first press `shift` and then `b`, the latter key press would be a valid input for either of the Actions.
+
+The way this is handled is that Bindings will be processed in the order of decreasing "complexity". This metric is derived automatically from the Binding:
+
+* A binding that is *not* part of a [composite](#composite-bindings) is assigned a complexity of 1.
+* A binding that *is* part of a [composite](#composite-bindings) is assigned a complexity equal to the number of part bindings in the composite.
+
+In our example, this means that a [`OneModifier`](#one-modifier) composite Binding to `Shift+B` has a higher "complexity" than a Binding to `B` and thus is processed first.
+
+Additionally, the first Binding that results in the Action changing [phase](Actions.md#action-callbacks) will "consume" the input. This consuming will result in other Bindings to the same input not being processed. So in our example, when `Shift+B` "consumes" the `B` input, the Binding to `B` will be skipped.
+
+The following example illustrates how this works at the API level.
+
+```CSharp
+// Create two actions in the same map.
+var map = new InputActionMap();
+var bAction = map.AddAction("B");
+var shiftbAction = map.AddAction("ShiftB");
+
+// Bind one of the actions to 'B' and the other to 'SHIFT+B'.
+bAction.AddBinding("<Keyboard>/b");
+shiftbAction.AddCompositeBinding("OneModifier")
+    .With("Modifier", "<Keyboard>/shift")
+    .With("Binding", "<Keyboard>/b");
+
+// Print something to the console when the actions are triggered.
+bAction.performed += _ => Debug.Log("B action performed");
+shiftbAction.performed += _ => Debug.Log("SHIFT+B action performed");
+
+// Start listening to input.
+map.Enable();
+
+// Now, let's assume the left shift key on the keyboard is pressed (here, we manually
+// press it with the InputTestFixture API).
+Press(Keyboard.current.leftShiftKey);
+
+// And then the B is pressed. This is a valid input for both
+// bAction as well as shiftbAction.
+//
+// What will happen now is that shiftbAction will do its processing first. In response,
+// it will *perform* the action (i.e. we see the `performed` callback being invoked) and
+// thus "consume" the input. bAction will stay silent as it will in turn be skipped over.
+Press(keyboard.bKey);
+```
 
 ### Initial state check
 

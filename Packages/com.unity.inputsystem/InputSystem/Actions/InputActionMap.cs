@@ -728,6 +728,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionState m_State;
         [NonSerialized] internal InputBinding? m_BindingMask;
         [NonSerialized] private Flags m_Flags;
+        [NonSerialized] internal int m_ParameterOverridesCount;
+        [NonSerialized] internal InputActionRebindingExtensions.ParameterOverride[] m_ParameterOverrides;
 
         [NonSerialized] internal DeviceArray m_Devices;
 
@@ -1197,7 +1199,7 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-        internal void ResolveBindingsIfNecessary()
+        internal bool ResolveBindingsIfNecessary()
         {
             // NOTE: We only check locally for the current map here. When there are multiple maps
             //       in an asset, we may have maps that require re-resolution while others don't.
@@ -1209,11 +1211,14 @@ namespace UnityEngine.InputSystem
                 if (m_State != null && m_State.isProcessingControlStateChange)
                 {
                     Debug.Assert(s_DeferBindingResolution > 0, "While processing control state changes, binding resolution should be suppressed");
-                    return;
+                    return false;
                 }
 
                 ResolveBindings();
+                return true;
             }
+
+            return false;
         }
 
         // We have three different starting scenarios for binding resolution:

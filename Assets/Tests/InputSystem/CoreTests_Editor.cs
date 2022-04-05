@@ -2886,7 +2886,6 @@ partial class CoreTests
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Touchscreen", typeof(Touchscreen))]
-    [TestCase("DualShock4GamepadHID", typeof(DualShock4GamepadHID))]
     public void Editor_CanGenerateCodeForInputDeviceLayout(string layoutName, Type deviceType)
     {
         var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST", @namespace: "TestNamespace");

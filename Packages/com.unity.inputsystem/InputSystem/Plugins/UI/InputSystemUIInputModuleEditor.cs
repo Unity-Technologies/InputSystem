@@ -68,6 +68,7 @@ namespace UnityEngine.InputSystem.UI.Editor
         private SerializedProperty m_ActionsAsset;
         private InputActionReference[] m_AvailableActionReferencesInAssetDatabase;
         private string[] m_AvailableActionsInAssetNames;
+        private bool m_AdvancedFoldoutState;
 
         private string MakeActionReferenceNameUsableInGenericMenu(string name)
         {
@@ -166,6 +167,14 @@ namespace UnityEngine.InputSystem.UI.Editor
                 }
                 EditorGUI.EndDisabledGroup();
             }
+
+            m_AdvancedFoldoutState = EditorGUILayout.Foldout(m_AdvancedFoldoutState, new GUIContent("Advanced"), true);
+            if (m_AdvancedFoldoutState)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_CursorLockBehavior"),
+                    EditorGUIUtility.TrTextContent("Cursor Lock Behavior",
+                        $"Controls the origin point of UI raycasts when the cursor is locked. {InputSystemUIInputModule.CursorLockBehavior.OutsideScreen} " +
+                        $"is the default behavior and will force the raycast to miss all objects. {InputSystemUIInputModule.CursorLockBehavior.ScreenCenter} " +
+                        $"will cast the ray from the center of the screen."));
 
             if (GUI.changed)
                 serializedObject.ApplyModifiedProperties();
