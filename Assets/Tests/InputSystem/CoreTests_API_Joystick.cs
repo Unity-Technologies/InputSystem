@@ -225,14 +225,4 @@ partial class CoreTests
         Assert.That(Input.GetKeyUp(KeyCode.Joystick3Button0), Is.False);
         Assert.That(Input.GetKeyDown(KeyCode.Joystick3Button0), Is.False);
     }
-
-    [Test]
-    [Category("API")]
-    public void API_CanReadJoystickButtonsThroughGetButtonAPI()
-    {
-        var gamepad1 = InputSystem.AddDevice<Gamepad>();
-        var gamepad2 = InputSystem.AddDevice<Gamepad>();
-
-        Assert.Fail();
-    }
 }

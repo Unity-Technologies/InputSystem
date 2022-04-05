@@ -282,6 +282,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public int accelerationEventCount => LegacyInputNative.GetAccelerationCount();
         public AccelerationEvent GetAccelerationEvent(int index)
         {
+            ////FIXME: No, I don't think it's right to pick this up through LegacyInputNative! This sensor stuff should come through the new paths.
             var nativeEvent = LegacyInputNative.GetAccelerationEvent(index);
             return new AccelerationEvent
             {

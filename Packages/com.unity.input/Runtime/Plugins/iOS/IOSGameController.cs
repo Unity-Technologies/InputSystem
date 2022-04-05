@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         Select
 
         // Note: If you'll add an element here, be sure to update kMaxButtons const below
-    };
+    }
 
     internal enum iOSAxis
     {

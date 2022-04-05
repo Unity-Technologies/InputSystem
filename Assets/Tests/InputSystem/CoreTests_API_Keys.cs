@@ -168,14 +168,6 @@ partial class CoreTests
         }, Is.Not.AllocatingGCMemory());
     }
 
-    [UnityTest]
-    [Category("API")]
-    public IEnumerator API_CanReadJoystickButtonThroughGetKeyAPI([ValueSource(nameof(joystickButtons))] KeyCode keyCode)
-    {
-        yield return null;
-        Assert.Fail();
-    }
-
     // Test mapping between Key and KeyCode enums. We need to support the KeyCode enum because of the
     // legacy API we support and because IMGUI still uses it. However, going forward, we want to steer
     // away from it as it mixes codes for actual keys with those for mouse and joystick buttons.
