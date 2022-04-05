@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <example>
         /// <code>
         /// // Searches for the first element in an integer array that is greater or equal to 5.
-        /// var haystack = new ReadOnlyArray<int>(new[] { 1, 2, 3, 4, 5, 6, 7 });
+        /// var haystack = new ReadOnlyArray&lt;int&gt;(new[] { 1, 2, 3, 4, 5, 6, 7 });
         /// var index = haystack.IndexOf((value) => value >= 5); // index == 4
         /// </code>
         /// </example>
