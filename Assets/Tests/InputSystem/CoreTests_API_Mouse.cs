@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 
 partial class CoreTests
 {
@@ -86,5 +87,47 @@ partial class CoreTests
             Assert.That(Input.GetMouseButtonDown(i), Is.False);
             Assert.That(Input.GetMouseButtonUp(i), Is.False);
         }
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_CanDetectPresenceOfMouseThroughMouseAPI()
+    {
+        Assert.That(Input.mousePresent,  Is.False);
+
+        InputSystem.AddDevice<Pen>();
+        InputSystem.AddDevice<Touchscreen>();
+
+        Assert.That(Input.mousePresent,  Is.False);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(Input.mousePresent,  Is.True);
+
+        InputSystem.RemoveDevice(mouse);
+
+        Assert.That(Input.mousePresent,  Is.False);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_CanReadMousePositionThroughMouseAPI()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var pen = InputSystem.AddDevice<Pen>();
+
+        Set(mouse.position, new Vector2(123, 234));
+
+        Assert.That(Input.mousePosition, Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+
+        Set(pen.position, new Vector2(234, 345));
+
+        Assert.That(Input.mousePosition, Is.EqualTo(new Vector2(234, 345)).Using(Vector2EqualityComparer.Instance));
+
+        ////REVIEW: this probably will have to have some connection to simulateMouseWithTouches
+
+        BeginTouch(1, new Vector2(345, 456));
+
+        Assert.That(Input.mousePosition, Is.EqualTo(new Vector2(345, 456)).Using(Vector2EqualityComparer.Instance));
     }
 }

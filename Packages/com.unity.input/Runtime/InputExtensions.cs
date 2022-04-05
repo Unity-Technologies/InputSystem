@@ -1,6 +1,7 @@
-////REVIEW: move everything from InputControlExtensions here?
-
+using System;
 using System.Collections.Generic;
+
+////REVIEW: move everything from InputControlExtensions here?
 
 namespace UnityEngine.InputSystem
 {
@@ -153,6 +154,107 @@ namespace UnityEngine.InputSystem
             return code >= KeyCode.JoystickButton0;
         }
 
+        internal static KeyCode ForJoystick(this KeyCode code, int joystickNumber)
+        {
+            if (code < KeyCode.JoystickButton0 || code >= KeyCode.Joystick1Button0)
+                throw new ArgumentOutOfRangeException(nameof(code), "KeyCode must be between JoystickButton0 and JoystickButton19");
+
+            var buttonIndex = (int)code - (int)KeyCode.JoystickButton0;
+            var joystickButton0 = (int)KeyCode.JoystickButton0 + joystickNumber * Input.kMaxButtonsPerJoystickAsPerKeyCodeEnum;
+
+            return (KeyCode)(joystickButton0 + buttonIndex);
+        }
+
+        internal static int GetJoystickIndex(this KeyCode code)
+        {
+            if (!code.IsJoystickButton())
+                return -1;
+
+            return ((int)code - (int)KeyCode.JoystickButton0) / Input.kMaxButtonsPerJoystickAsPerKeyCodeEnum;
+        }
+
+        internal static int GetJoystickButtonIndex(this KeyCode code)
+        {
+            if (!code.IsJoystickButton())
+                return -1;
+
+            var joystickIndex = code.GetJoystickIndex();
+            return (int)code - (int)KeyCode.JoystickButton0.ForJoystick(joystickIndex);
+        }
+
+        internal static IEnumerable<string> JoystickButtonToBindingPath(this KeyCode code)
+        {
+            if (!code.IsJoystickButton())
+                yield break;
+
+            var joystickIndex = code.GetJoystickIndex();
+            var buttonIndex = code.GetJoystickButtonIndex();
+
+            var joystickSelector = joystickIndex >= 1 ? $"{{Joystick{joystickIndex}}}" : string.Empty;
+
+            switch (buttonIndex)
+            {
+                case 0:
+                    yield return $"<Joystick>{joystickSelector}/trigger";
+                    yield return $"<Gamepad>{joystickSelector}/buttonSouth";
+                    break;
+
+                case 1:
+                    yield return $"<Joystick>{joystickSelector}/button2";
+                    yield return $"<Gamepad>{joystickSelector}/buttonEast";
+                    break;
+
+                case 2:
+                    yield return $"<Joystick>{joystickSelector}/button3";
+                    yield return $"<Gamepad>{joystickSelector}/buttonWest";
+                    break;
+
+                case 3:
+                    yield return $"<Joystick>{joystickSelector}/button4";
+                    yield return $"<Gamepad>{joystickSelector}/buttonNorth";
+                    break;
+
+                case 4:
+                    yield return $"<Joystick>{joystickSelector}/button5";
+                    yield return $"<Gamepad>{joystickSelector}/leftShoulder";
+                    break;
+
+                case 5:
+                    yield return $"<Joystick>{joystickSelector}/button6";
+                    yield return $"<Gamepad>{joystickSelector}/rightShoulder";
+                    break;
+
+                case 6:
+                    yield return $"<Joystick>{joystickSelector}/button7";
+                    yield return $"<Gamepad>{joystickSelector}/select";
+                    break;
+
+                case 7:
+                    yield return $"<Joystick>{joystickSelector}/button8";
+                    yield return $"<Gamepad>{joystickSelector}/start";
+                    break;
+
+                case 8:
+                    yield return $"<Joystick>{joystickSelector}/button9";
+                    yield return $"<Gamepad>{joystickSelector}/rightStickPress";
+                    break;
+
+                case 9:
+                    yield return $"<Joystick>{joystickSelector}/button10";
+                    yield return $"<Gamepad>{joystickSelector}/leftStickPress";
+                    break;
+
+                default:
+                    yield return $"<Joystick>{joystickSelector}/button{buttonIndex + 1}";
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public static KeyCode? ToKeyCode(this Key key)
         {
             return null;

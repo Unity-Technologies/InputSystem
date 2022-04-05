@@ -672,14 +672,9 @@ namespace UnityEngine.InputSystem
                 current = null;
 
             // Remove from `all`.
-            var index = ArrayHelpers.IndexOfReference(s_Gamepads, this, s_GamepadCount);
+            var index = s_Gamepads.IndexOfReference(this, s_GamepadCount);
             if (index != -1)
-                ArrayHelpers.EraseAtWithCapacity(s_Gamepads, ref s_GamepadCount, index);
-            else
-            {
-                Debug.Assert(false,
-                    $"Gamepad {this} seems to not have been added but is being removed (gamepad list: {string.Join(", ", all)})"); // Put in else to not allocate on normal path.
-            }
+                s_Gamepads.EraseAtWithCapacity(ref s_GamepadCount, index);
         }
 
         /// <summary>

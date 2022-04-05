@@ -172,14 +172,9 @@ namespace UnityEngine.InputSystem
                 current = null;
 
             // Remove from `all`.
-            var index = ArrayHelpers.IndexOfReference(s_Joysticks, this, s_JoystickCount);
+            var index = s_Joysticks.IndexOfReference(this, s_JoystickCount);
             if (index != -1)
-                ArrayHelpers.EraseAtWithCapacity(s_Joysticks, ref s_JoystickCount, index);
-            else
-            {
-                Debug.Assert(false,
-                    $"Joystick {this} seems to not have been added but is being removed (joystick list: {string.Join(", ", all)})"); // Put in else to not allocate on normal path.
-            }
+                s_Joysticks.EraseAtWithCapacity(ref s_JoystickCount, index);
         }
 
         private static int s_JoystickCount;

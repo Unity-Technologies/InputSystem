@@ -274,8 +274,10 @@ namespace UnityEngine
     public static partial class Input // Partial to allow us to inject project-specific generated code into the API.
     {
         public static bool mousePresent => Mouse.current != null;
+        public static Vector2 mousePosition => Pointer.current?.position.ReadValue() ?? default;
 
         public static InputActionAsset actions => InputSystem.InputSystem.settings.actions;
+
         private static InputActionMap s_ButtonActions;
         private static InputAction s_LeftMouseButtonAction;
         private static InputAction s_RightMouseButtonAction;
@@ -292,9 +294,74 @@ namespace UnityEngine
         private static Gyroscope s_Gyro = new Gyroscope();
         private static Compass s_Compass = new Compass();
         private static int s_JoystickCount;
-        private static string[] s_JoystickNames;
-        private static InputDevice[] s_Joysticks;
+        private static Joystick[] s_Joysticks;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
+
+        private struct Joystick
+        {
+            public int index;
+            public string name;
+            public InputDevice device;
+            public InputActionMap map;
+
+            public bool connected => name != string.Empty;
+
+            public void Connect(int index, InputDevice device)
+            {
+                name = device.displayName;
+                this.device = device;
+                this.index = index;
+
+                // Tag the device such that bindings can bind to it by index.
+                // NOTE: Plus 1 here because joystick #0 is not an actual device but an aggregated
+                //       view of all joysticks.
+                InputSystem.InputSystem.AddDeviceUsage(device, "Joystick" + (index + 1));
+
+                if (map == null)
+                    map = CreateJoystickButtonMap();
+
+                map.devices = new[] { device };
+                map.Enable();
+            }
+
+            public void Disconnect()
+            {
+                name = string.Empty;
+                map.Disable();
+
+                // Remove tag.
+                InputSystem.InputSystem.RemoveDeviceUsage(device, "Joystick" + (index + 1));
+
+                // We keep the device around in case we reconnect.
+            }
+
+            public InputAction Button(int index)
+            {
+                return map.actions[index];
+            }
+
+            private static InputActionMap CreateJoystickButtonMap()
+            {
+                var map = new InputActionMap();
+                for (var i = 0; i < kMaxButtonsPerJoystickAsPerKeyCodeEnum; ++i)
+                {
+                    var code = KeyCode.JoystickButton0 + i;
+                    var action = map.AddAction("JoystickButton" + i, type: InputActionType.Button);
+                    foreach (var path in code.JoystickButtonToBindingPath())
+                        action.AddBinding(path);
+                }
+                return map;
+            }
+        }
+
+        // We actually only support 5 ATM but keeping this at 7 for compatibility with legacy implementation.
+        internal const int kMouseButtonCount = 7;
+
+        // We support arbitrary many joysticks but the KeyCode enum has a fixed upper limit on the number of joysticks.
+        internal const int kMaxJoysticksAsPerKeyCodeEnum = 17;
+
+        // Same for buttons. We don't limit them but the KeyCode enum has a fixed set per joystick.
+        internal const int kMaxButtonsPerJoystickAsPerKeyCodeEnum = 20;
 
         private struct KeySet
         {
@@ -498,13 +565,13 @@ namespace UnityEngine
                         if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
                         {
                             // Try to find the device in our s_Joysticks list.
-                            var index = s_Joysticks.IndexOfReference(device, s_JoystickCount);
+                            var index = GetJoystickIndex(device);
                             if (index == -1)
                             {
                                 // Not found. See if there is an empty slot in the joystick list.
                                 for (index = 0; index < s_JoystickCount; ++index)
                                 {
-                                    if (s_JoystickNames[index] == string.Empty)
+                                    if (!s_Joysticks[index].connected)
                                         break;
                                 }
                             }
@@ -512,31 +579,34 @@ namespace UnityEngine
                             if (index < 0 || index >= s_JoystickCount)
                             {
                                 // No available entry. Append new joystick to end of array.
-                                var count = s_JoystickCount;
-                                ArrayHelpers.AppendWithCapacity(ref s_Joysticks, ref count, device);
-                                ArrayHelpers.AppendWithCapacity(ref s_JoystickNames, ref s_JoystickCount, device.displayName);
+                                index = ArrayHelpers.AppendWithCapacity(ref s_Joysticks, ref s_JoystickCount, default);
                             }
-                            else
-                            {
-                                // Take over existing slot. Maybe a reconnect or a switch to a
-                                // different joystick/gamepad.
-                                s_Joysticks[index] = device;
-                                s_JoystickNames[index] = device.displayName;
-                            }
+
+                            // Switch slot to joystick. Maybe a new connect, a reconnect, or a switch
+                            // to a different joystick/gamepad.
+                            s_Joysticks[index].Connect(index, device);
                         }
                         else
                         {
-                            var index = s_Joysticks.IndexOfReference(device, s_JoystickCount);
+                            var index = GetJoystickIndex(device);
                             if (index != -1)
                             {
                                 // Mark joystick as disconnected.
-                                s_JoystickNames[index] = string.Empty;
+                                s_Joysticks[index].Disconnect();
                             }
                         }
                     }
                     break;
                 }
             }
+        }
+
+        private static int GetJoystickIndex(InputDevice device)
+        {
+            for (var i = 0; i < s_JoystickCount; ++i)
+                if (s_Joysticks[i].device == device)
+                    return i;
+            return -1;
         }
 
         internal static void NextFrame()
@@ -560,7 +630,6 @@ namespace UnityEngine
             s_ThisFramePressedKeys = default;
             s_ThisFrameReleasedKeys = default;
             s_Joysticks = default;
-            s_JoystickNames = default;
             s_JoystickCount = default;
 
             // Not all of these hold state but for more predictable behavior,
@@ -663,9 +732,6 @@ namespace UnityEngine
             return GetButtonAction(buttonName).WasPressedThisFrame();
         }
 
-        // We actually only support 5 ATM but keeping this at 7 for compatibility with legacy implementation.
-        internal const int kMouseButtonCount = 7;
-
         public static bool GetMouseButton(int button)
         {
             var action = GetActionForMouseButton(button);
@@ -708,7 +774,21 @@ namespace UnityEngine
 
             if (key.IsJoystickButton())
             {
-                throw new NotImplementedException();
+                var joystickIndex = key.GetJoystickIndex();
+                var buttonIndex = key.GetJoystickButtonIndex();
+
+                if (joystickIndex == 0)
+                {
+                    for (var i = 0; i < s_JoystickCount; ++i)
+                        if (s_Joysticks[i].Button(buttonIndex).IsPressed())
+                            return true;
+                    return false;
+                }
+
+                if (joystickIndex - 1 >= s_JoystickCount)
+                    return false;
+
+                return s_Joysticks[joystickIndex - 1].Button(buttonIndex).IsPressed();
             }
 
             var keyId = key.ToKey();
@@ -733,7 +813,30 @@ namespace UnityEngine
 
             if (key.IsJoystickButton())
             {
-                throw new NotImplementedException();
+                var joystickIndex = key.GetJoystickIndex();
+                var buttonIndex = key.GetJoystickButtonIndex();
+
+                if (joystickIndex == 0)
+                {
+                    var anyWasPressed = false;
+                    var noneWasAlreadyPressed = true;
+
+                    for (var i = 0; i < s_JoystickCount; ++i)
+                    {
+                        var button = s_Joysticks[i].Button(buttonIndex);
+                        var wasPressedThisFrame = button.WasPressedThisFrame();
+                        anyWasPressed |= wasPressedThisFrame;
+                        if (!wasPressedThisFrame)
+                            noneWasAlreadyPressed &= !button.IsPressed();
+                    }
+
+                    return anyWasPressed && noneWasAlreadyPressed;
+                }
+
+                if (joystickIndex - 1 >= s_JoystickCount)
+                    return false;
+
+                return s_Joysticks[joystickIndex - 1].Button(buttonIndex).WasPressedThisFrame();
             }
 
             var keyId = key.ToKey();
@@ -758,7 +861,30 @@ namespace UnityEngine
 
             if (key.IsJoystickButton())
             {
-                throw new NotImplementedException();
+                var joystickIndex = key.GetJoystickIndex();
+                var buttonIndex = key.GetJoystickButtonIndex();
+
+                if (joystickIndex == 0)
+                {
+                    var anyWasReleased = false;
+                    var noneIsPressed = true;
+
+                    for (var i = 0; i < s_JoystickCount; ++i)
+                    {
+                        var button = s_Joysticks[i].Button(buttonIndex);
+                        var wasReleasedThisFrame = button.WasReleasedThisFrame();
+                        anyWasReleased |= wasReleasedThisFrame;
+                        if (!wasReleasedThisFrame)
+                            noneIsPressed &= !button.IsPressed();
+                    }
+
+                    return anyWasReleased && noneIsPressed;
+                }
+
+                if (joystickIndex - 1 >= s_JoystickCount)
+                    return false;
+
+                return s_Joysticks[joystickIndex - 1].Button(buttonIndex).WasReleasedThisFrame();
             }
 
             var keyId = key.ToKey();
@@ -817,8 +943,8 @@ namespace UnityEngine
         public static string[] GetJoystickNames()
         {
             var result = new string[s_JoystickCount];
-            if (s_JoystickCount > 0)
-                Array.Copy(s_JoystickNames, result, s_JoystickCount);
+            for (var i = 0; i < s_JoystickCount; ++i)
+                result[i] = s_Joysticks[i].name;
             return result;
         }
 
@@ -829,6 +955,11 @@ namespace UnityEngine
         }
 
         public static string GetJoystickName(int index)
+        {
+            //...
+        }
+
+        public static InputDevice GetJoystick(int index)
         {
             //...
         }
@@ -857,7 +988,6 @@ namespace UnityEngine
         {
         }
 
-        public static Vector2 mousePosition => default;
         public static Vector2 mouseScrollDelta => default;
         public static int touchCount => default;
         public static Touch[] touches => new Touch[0];
