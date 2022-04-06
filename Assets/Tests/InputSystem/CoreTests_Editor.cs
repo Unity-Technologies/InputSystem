@@ -2181,9 +2181,9 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
-    #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
-                         // still affected by the current platform.
-#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
+#if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
+    // still affected by the current platform.
+#if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.
     [Test]
     [Category("Editor")]
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
@@ -2223,9 +2223,8 @@ partial class CoreTests
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
+#endif // !NET_STANDARD_2_0
 #endif
-#endif
-
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
     // all derived layouts).
@@ -2881,7 +2880,7 @@ partial class CoreTests
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.
-#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
+#if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -3061,6 +3060,12 @@ partial class CoreTests
         var cp = new CompilerParameters { CompilerOptions = options };
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+#if UNITY_2022
+        // Currently there is are cross-references to netstandard, e.g. System.IEquatable<UnityEngine.Vector2>, System.IFormattable
+        // causing compilation failure for 2022 versions. This is a workaround for running these tests.
+        var netstandard = Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
+        cp.ReferencedAssemblies.Add(netstandard.Location);
+#endif
         var cr = codeProvider.CompileAssemblyFromSource(cp, code);
 
         var assembly = cr.CompiledAssembly;
@@ -3070,7 +3075,12 @@ partial class CoreTests
         if (cr.Errors.HasErrors)
         {
             if (!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
-                Assert.Fail($"Compilation failed: {cr.Errors}");
+            {
+                var sb = new StringBuilder("Compilation of generated code failed:");
+                for (var i = 0; i < cr.Errors.Count; ++i)
+                    sb.Append("\n").Append(cr.Errors[i].ErrorText);
+                Assert.Fail(sb.ToString());
+            }
 
             foreach (var tempFile in cr.TempFiles)
             {
@@ -3088,8 +3098,8 @@ partial class CoreTests
         return type;
     }
 
-#endif
-#endif
+#endif // !NET_STANDARD_2_0
+#endif // UNITY_STANDALONE
 
     [Test]
     [Category("Editor")]
