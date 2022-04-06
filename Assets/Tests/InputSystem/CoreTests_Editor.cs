@@ -2183,7 +2183,6 @@ partial class CoreTests
 
     #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
                          // still affected by the current platform.
-#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
     [Test]
     [Category("Editor")]
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
@@ -2223,7 +2222,6 @@ partial class CoreTests
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
-#endif
 #endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
@@ -2881,7 +2879,6 @@ partial class CoreTests
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.
-#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -3088,7 +3085,6 @@ partial class CoreTests
         return type;
     }
 
-#endif
 #endif
 
     [Test]
