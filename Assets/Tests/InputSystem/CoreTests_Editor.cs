@@ -3070,7 +3070,15 @@ partial class CoreTests
         if (cr.Errors.HasErrors)
         {
             if (!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
-                Assert.Fail($"Compilation failed: {cr.Errors}");
+            {
+                var sb = new StringBuilder("Compilation of generated code failed:\n");
+                for (var i = 0; i < cr.Errors.Count; ++i)
+                {
+                    var error = cr.Errors[i];
+                    sb.Append("\n").Append(error.ErrorText).Append(" in ").Append(error.FileName).Append(':').Append(error.Line);
+                }
+                Assert.Fail(sb.ToString());
+            }
 
             foreach (var tempFile in cr.TempFiles)
             {
@@ -3088,8 +3096,8 @@ partial class CoreTests
         return type;
     }
 
-#endif
-#endif
+#endif // !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK
+#endif // UNITY_STANDALONE
 
     [Test]
     [Category("Editor")]
