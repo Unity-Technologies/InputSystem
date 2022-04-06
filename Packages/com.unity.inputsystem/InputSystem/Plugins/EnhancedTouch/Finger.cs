@@ -134,8 +134,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         {
             // We only want to record changes that come from events. We ignore internal state
             // changes that Touchscreen itself generates. This includes the resetting of deltas.
-            // NOTE: This means we are ignoring delta resets happening in Touchscreen.
             if (!eventPtr.valid)
+                return false;
+            var eventType = eventPtr.type;
+            if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                 return false;
 
             // Direct memory access for speed.

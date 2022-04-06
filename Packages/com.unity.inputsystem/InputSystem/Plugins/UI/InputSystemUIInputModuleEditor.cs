@@ -23,15 +23,17 @@ namespace UnityEngine.InputSystem.UI.Editor
             return null;
         }
 
-        private static InputActionReference[] GetAllActionsFromAsset(InputActionAsset actions)
+        private static InputActionReference[] GetAllAssetReferencesFromAssetDatabase(InputActionAsset actions)
         {
-            if (actions != null)
-            {
-                var path = AssetDatabase.GetAssetPath(actions);
-                var assets = AssetDatabase.LoadAllAssetsAtPath(path);
-                return assets.Where(asset => asset is InputActionReference).Cast<InputActionReference>().OrderBy(x => x.name).ToArray();
-            }
-            return null;
+            if (actions == null)
+                return null;
+
+            var path = AssetDatabase.GetAssetPath(actions);
+            var assets = AssetDatabase.LoadAllAssetsAtPath(path);
+            return assets.Where(asset => asset is InputActionReference)
+                .Cast<InputActionReference>()
+                .OrderBy(x => x.name)
+                .ToArray();
         }
 
         private static readonly string[] s_ActionNames =
@@ -64,8 +66,15 @@ namespace UnityEngine.InputSystem.UI.Editor
 
         private SerializedProperty[] m_ReferenceProperties;
         private SerializedProperty m_ActionsAsset;
-        private InputActionReference[] m_AvailableActionsInAsset;
+        private InputActionReference[] m_AvailableActionReferencesInAssetDatabase;
         private string[] m_AvailableActionsInAssetNames;
+        private bool m_AdvancedFoldoutState;
+
+        private string MakeActionReferenceNameUsableInGenericMenu(string name)
+        {
+            // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+            return name.Replace("/", "\uFF0F");
+        }
 
         public void OnEnable()
         {
@@ -75,15 +84,15 @@ namespace UnityEngine.InputSystem.UI.Editor
                 m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{s_ActionNames[i]}Action");
 
             m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
-            m_AvailableActionsInAsset = GetAllActionsFromAsset(m_ActionsAsset.objectReferenceValue as InputActionAsset);
-            // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
-            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\uFF0F")) ?? new string[0]).ToArray();
+            m_AvailableActionReferencesInAssetDatabase = GetAllAssetReferencesFromAssetDatabase(m_ActionsAsset.objectReferenceValue as InputActionAsset);
+            m_AvailableActionsInAssetNames = new[] { "None" }
+                .Concat(m_AvailableActionReferencesInAssetDatabase?.Select(x => MakeActionReferenceNameUsableInGenericMenu(x.name)) ?? new string[0]).ToArray();
         }
 
         public static void ReassignActions(InputSystemUIInputModule module, InputActionAsset action)
         {
             module.actionsAsset = action;
-            var assets = GetAllActionsFromAsset(action);
+            var assets = GetAllAssetReferencesFromAssetDatabase(action);
             if (assets != null)
             {
                 module.point = GetActionReferenceFromAssets(assets, module.point?.action?.name, "Point", "MousePosition", "Mouse Position");
@@ -122,23 +131,50 @@ namespace UnityEngine.InputSystem.UI.Editor
             }
 
             var numActions = s_ActionNames.Length;
-            for (var i = 0; i < numActions; i++)
+            if ((m_AvailableActionReferencesInAssetDatabase != null && m_AvailableActionReferencesInAssetDatabase.Length > 0) || m_ActionsAsset.objectReferenceValue == null)
             {
-                if (m_AvailableActionsInAsset == null)
-                    continue;
+                for (var i = 0; i < numActions; i++)
+                {
+                    // find the input action reference from the asset that matches the input action reference from the
+                    // InputSystemUIInputModule that is currently selected. Note we can't use reference equality of the
+                    // two InputActionReference objects here because in ReassignActions above, we create new instances
+                    // every time it runs.
+                    var index = IndexOfInputActionInAsset(
+                        ((InputActionReference)m_ReferenceProperties[i]?.objectReferenceValue)?.action);
 
-                // find the input action reference from the asset that matches the input action reference from the
-                // InputSystemUIInputModule that is currently selected. Note we can't use reference equality of the
-                // two InputActionReference objects here because in ReassignActions above, we create new instances
-                // every time it runs.
-                var index = IndexOfInputActionInAsset(((InputActionReference)m_ReferenceProperties[i]?.objectReferenceValue)?.action);
+                    EditorGUI.BeginChangeCheck();
+                    index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
 
-                EditorGUI.BeginChangeCheck();
-                index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
-
-                if (EditorGUI.EndChangeCheck())
-                    m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
+                    if (EditorGUI.EndChangeCheck())
+                        m_ReferenceProperties[i].objectReferenceValue =
+                            index > 0 ? m_AvailableActionReferencesInAssetDatabase[index - 1] : null;
+                }
             }
+            else
+            {
+                // Somehow we have an asset but no asset references from the database, pull out references manually and show them in read only UI
+                EditorGUILayout.HelpBox("Showing fields as read-only because current action asset seems to be created by a script and assigned programmatically.", MessageType.Info);
+
+                EditorGUI.BeginDisabledGroup(true);
+                for (var i = 0; i < numActions; i++)
+                {
+                    var retrievedName = "None";
+                    if (m_ReferenceProperties[i].objectReferenceValue != null &&
+                        (m_ReferenceProperties[i].objectReferenceValue is InputActionReference reference))
+                        retrievedName = MakeActionReferenceNameUsableInGenericMenu(reference.ToDisplayName());
+
+                    EditorGUILayout.Popup(s_ActionNiceNames[i], 0, new[] {retrievedName});
+                }
+                EditorGUI.EndDisabledGroup();
+            }
+
+            m_AdvancedFoldoutState = EditorGUILayout.Foldout(m_AdvancedFoldoutState, new GUIContent("Advanced"), true);
+            if (m_AdvancedFoldoutState)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("m_CursorLockBehavior"),
+                    EditorGUIUtility.TrTextContent("Cursor Lock Behavior",
+                        $"Controls the origin point of UI raycasts when the cursor is locked. {InputSystemUIInputModule.CursorLockBehavior.OutsideScreen} " +
+                        $"is the default behavior and will force the raycast to miss all objects. {InputSystemUIInputModule.CursorLockBehavior.ScreenCenter} " +
+                        $"will cast the ray from the center of the screen."));
 
             if (GUI.changed)
                 serializedObject.ApplyModifiedProperties();
@@ -151,10 +187,10 @@ namespace UnityEngine.InputSystem.UI.Editor
                 return 0;
 
             var index = 0;
-            for (var j = 0; j < m_AvailableActionsInAsset.Length; j++)
+            for (var j = 0; j < m_AvailableActionReferencesInAssetDatabase.Length; j++)
             {
-                if (m_AvailableActionsInAsset[j].action != null &&
-                    m_AvailableActionsInAsset[j].action == inputAction)
+                if (m_AvailableActionReferencesInAssetDatabase[j].action != null &&
+                    m_AvailableActionReferencesInAssetDatabase[j].action == inputAction)
                 {
                     index = j + 1;
                     break;

@@ -141,6 +141,8 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.selectButton);
     }
 
+// Temporary: Disables tests in standalone trunk builds (https://fogbugz.unity3d.com/f/cases/1410131/)
+#if !UNITY_STANDALONE_OSX || !TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
     [Test]
     [Category("Devices")]
     public void Devices_SupportXboxWirelessControllerOnOSX()
@@ -230,6 +232,8 @@ internal class XInputTests : CoreTestsFixture
         Assert.That(gamepad.leftTrigger.IsActuated(), Is.False);
         Assert.That(gamepad.leftTrigger.CheckStateIsAtDefault());
     }
+
+#endif // TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
 
 #endif
 

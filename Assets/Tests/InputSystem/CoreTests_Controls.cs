@@ -641,7 +641,7 @@ partial class CoreTests
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        runtime.currentTimeForFixedUpdate = 1;
+        runtime.currentTimeForFixedUpdate = runtime.currentTime + 1;
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
     }
@@ -1034,6 +1034,35 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanDetermineIfControlIsPressed()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.leftStick, Vector2.one);
+        Set(gamepad.leftTrigger, 0.6f);
+        Press(gamepad.buttonSouth);
+
+        //// https://jira.unity3d.com/browse/ISX-926
+        ////REVIEW: IsPressed() should probably be renamed. As is apparent from the calls here, it's not always
+        ////        readily apparent that the way it is defined ("actuation level at least at button press threshold")
+        ////        does not always connect to what it intuitively means for the specific control.
+
+        Assert.That(gamepad.leftTrigger.IsPressed(), Is.True);
+        Assert.That(gamepad.rightTrigger.IsPressed(), Is.False);
+        Assert.That(gamepad.buttonSouth.IsPressed(), Is.True);
+        Assert.That(gamepad.buttonNorth.IsPressed(), Is.False);
+        Assert.That(gamepad.leftStick.IsPressed(), Is.True); // Note how this diverges from the actual meaning of "is the left stick pressed?"
+        Assert.That(gamepad.rightStick.IsPressed(), Is.False);
+
+        // https://fogbugz.unity3d.com/f/cases/1374024/
+        // Calling it on the entire device should be false.
+        Assert.That(gamepad.IsPressed(), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanCustomizeDefaultButtonPressPoint()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1138,12 +1167,19 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Left Stick [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Left Stick/X [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XR Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"),
+#if ENABLE_VR || UNITY_GAMECORE
+            // The layout settings for the display name to change from XRController to XR Controller
+            // is defined on the XRController class in GenericXRDevice.cs, so must match the preprocessor guard here.
+            Is.EqualTo("position [LeftHand XR Controller]"));
+#else
+            Is.EqualTo("position [LeftHand XRController]"));
+#endif
 
         // OmitDevice.
         Assert.That(
@@ -1213,6 +1249,18 @@ partial class CoreTests
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/*", gamepad.leftStick), Is.True);
         Assert.That(InputControlPath.MatchesPrefix("<Keyboard>", gamepad.leftStick), Is.False);
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPath_DoesNotMatchPrefixOnly()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.eKey), Is.True);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.eKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/e", keyboard.escapeKey), Is.False);
+        Assert.That(InputControlPath.Matches("<Keyboard>/escape", keyboard.escapeKey), Is.True);
     }
 
     [Test]

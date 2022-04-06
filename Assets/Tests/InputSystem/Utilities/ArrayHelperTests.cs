@@ -117,4 +117,17 @@ internal class ArrayHelperTests
         Assert.AreEqual(1, arr.IndexOfReference(arr[1], 1, 3));
         Assert.AreEqual(2, arr.IndexOfReference(arr[2], 1, 3));
     }
+
+    [Test]
+    [Category("Utilities")]
+    public void Utilities_IndexOfPredicate__IsUsingPredicateForEqualityAndConstraintedByStartIndexAndCount()
+    {
+        var arr = new int[] { 0, 1, 2, 3, 4, 5 };
+
+        Assert.That(arr.IndexOf(x => x >= 3, 0, arr.Length), Is.EqualTo(3));
+        Assert.That(arr.IndexOf(x => x >= 3, 0, 3), Is.EqualTo(-1));
+        Assert.That(arr.IndexOf(x => x >= 3, 1, 3), Is.EqualTo(3));
+        Assert.That(arr.IndexOf(x => x >= 3, 4, 0), Is.EqualTo(-1));
+        Assert.That(arr.IndexOf(x => x < 0, 3, 3), Is.EqualTo(-1));
+    }
 }

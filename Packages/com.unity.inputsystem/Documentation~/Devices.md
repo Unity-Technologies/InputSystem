@@ -299,7 +299,7 @@ public struct MyDeviceState : IInputStateTypeInfo
     // You must tag every state with a FourCC code for type
     // checking. The characters can be anything. Choose something that allows
     // you to easily recognize memory that belongs to your own Device.
-    public FourCC format => return new FourCC('M', 'Y', 'D', 'V');
+    public FourCC format => new FourCC('M', 'Y', 'D', 'V');
 
     // InputControlAttributes on fields tell the Input System to create Controls
     // for the public fields found in the struct.

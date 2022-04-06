@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem
     public partial class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determine how the input system updates, i.e. processes pending input events.
+        /// Allows you to control how the input system handles updates. In other words, how and when pending input events are processed.
         /// </summary>
         /// <value>When to run input updates.</value>
         /// <remarks>
@@ -112,14 +112,12 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
+        /// Currently: Option is deprecated and has no influence on the system. Filtering on noise is always enabled.
+        /// Previously: Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
         /// when there is only noise in the input.
         /// </summary>
-        /// <value>Whether to check input on devices for noise.</value>
         /// <remarks>
-        /// This is <em>disabled by default</em>.
-        ///
-        /// When toggled on, this property adds extra processing every time input is
+        /// We add extra processing every time input is
         /// received on a device that is considered noisy. These devices are those that
         /// have at least one control that is marked as <see cref="InputControl.noisy"/>.
         /// A good example is the PS4 controller which has a gyroscope sensor built into
@@ -141,15 +139,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="InputControl.noisy"/>
+        [Obsolete("filterNoiseOnCurrent is deprecated, filtering of noise is always enabled now.", false)]
         public bool filterNoiseOnCurrent
         {
-            get => m_FilterNoiseOnCurrent;
+            get => false;
             set
             {
-                if (m_FilterNoiseOnCurrent == value)
-                    return;
-                m_FilterNoiseOnCurrent = value;
-                OnChange();
+                /* no op */
             }
         }
 
@@ -365,6 +361,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a slow-tap-interaction.
+        /// </summary>
+        /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a slow-tap-interaction.</value>
+        /// <remarks>
+        /// A slow-tap-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
+        /// If the delay between press and release is less than this duration, the input does not qualify as a slow-tap-interaction.
+        ///
+        /// The default slow-tap time is 0.5 seconds.
+        /// </remarks>
+        /// <seealso cref="Interactions.SlowTapInteraction"/>
         public float defaultSlowTapTime
         {
             get => m_DefaultSlowTapTime;
@@ -378,6 +386,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a hold-interaction.
+        /// </summary>
+        /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a hold-interaction.</value>
+        /// <remarks>
+        /// A hold-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
+        /// If the delay between press and release is less than this duration, the input does not qualify as a hold-interaction.
+        ///
+        /// The default hold time is 0.4 seconds.
+        /// </remarks>
+        /// <seealso cref="Interactions.HoldInteraction"/>
         public float defaultHoldTime
         {
             get => m_DefaultHoldTime;
@@ -391,6 +411,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default maximum radius that a touch contact may be moved from its origin to evaluate to a tap-interaction.
+        /// </summary>
+        /// <value>The default maximum radius (in pixels) that a touch contact may be moved from its origin to evaluate to a tap-interaction.</value>
+        /// <remarks>
+        /// A tap-interaction or slow-tap-interaction is considered as a press-and-release sequence.
+        /// If the associated touch contact is moved a distance equal or greater to the value of this setting,
+        /// the input sequence do not qualify as a tap-interaction.
+        ///
+        /// The default tap-radius is 5 pixels.
+        /// </remarks>
+        /// <seealso cref="Interactions.TapInteraction"/>
+        /// <seealso cref="Interactions.SlowTapInteraction"/>
+        /// <seealso cref="Interactions.MultiTapInteraction"/>
         public float tapRadius
         {
             get => m_TapRadius;
@@ -404,6 +438,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the maximum duration that may pass between taps in order to evaluate to a multi-tap-interaction.
+        /// </summary>
+        /// <value>The default maximum duration (in seconds) that may pass between taps in order to evaluate to a multi-tap-interaction.</value>
+        /// <remarks>
+        /// A multi-tap interaction is considered as multiple press-and-release sequences.
+        /// This property defines the maximum duration that may pass between these press-and-release sequences.
+        /// If consecutive taps (press-and-release sequences) occur with a inter-sequence duration exceeding
+        /// this property, the interaction do not qualify as a multi-tap-interaction.
+        ///
+        /// The default multi-tap delay time is 0.75 seconds.
+        /// </remarks>
+        /// <seealso cref="defaultTapTime"/>
         public float multiTapDelayTime
         {
             get => m_MultiTapDelayTime;
@@ -649,7 +696,6 @@ namespace UnityEngine.InputSystem
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
-        [SerializeField] private bool m_FilterNoiseOnCurrent = false;
         [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
         [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;

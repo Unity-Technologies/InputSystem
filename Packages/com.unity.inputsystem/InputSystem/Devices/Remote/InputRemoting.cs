@@ -586,6 +586,7 @@ namespace UnityEngine.InputSystem
                         $"Could not create remote device '{data.description}' with layout '{data.layout}' locally (exception: {exception})");
                     return;
                 }
+                ////FIXME: Setting this here like so means none of this is visible during onDeviceChange
                 device.m_Description = data.description;
                 device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
                 foreach (var usage in data.usages)
@@ -623,9 +624,7 @@ namespace UnityEngine.InputSystem
                 var totalSize = 0u;
                 var eventPtr = new InputEventPtr(events);
                 for (var i = 0; i < eventCount; ++i, eventPtr = eventPtr.Next())
-                {
-                    totalSize += eventPtr.sizeInBytes;
-                }
+                    totalSize = totalSize.AlignToMultipleOf(4) + eventPtr.sizeInBytes;
 
                 // Copy event data to buffer. Would be nice if we didn't have to do that
                 // but unfortunately we need a byte[] and can't just pass the 'events' IntPtr

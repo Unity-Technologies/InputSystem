@@ -96,9 +96,8 @@ namespace UnityEngine.InputSystem.UI
                 PerformRaycast(trackedEventData, resultAppendList);
         }
 
-        // Use this list on each raycast to avoid continually allocating.
-        [NonSerialized]
-        private List<RaycastHitData> m_RaycastResultsCache = new List<RaycastHitData>();
+        // Cached instances for raycasts hits to minimize GC.
+        [NonSerialized] private List<RaycastHitData> m_RaycastResultsCache = new List<RaycastHitData>();
 
         internal void PerformRaycast(ExtendedPointerEventData eventData, List<RaycastResult> resultAppendList)
         {
@@ -114,12 +113,8 @@ namespace UnityEngine.InputSystem.UI
             #if UNITY_INPUT_SYSTEM_ENABLE_PHYSICS
             if (m_CheckFor3DOcclusion)
             {
-                var hits = Physics.RaycastAll(ray, hitDistance, m_BlockingMask);
-
-                if (hits.Length > 0 && hits[0].distance < hitDistance)
-                {
-                    hitDistance = hits[0].distance;
-                }
+                if (Physics.Raycast(ray, out var hit, maxDistance: hitDistance, layerMask: m_BlockingMask))
+                    hitDistance = hit.distance;
             }
             #endif
 
@@ -127,12 +122,9 @@ namespace UnityEngine.InputSystem.UI
             if (m_CheckFor2DOcclusion)
             {
                 var raycastDistance = hitDistance;
-                var hits = Physics2D.GetRayIntersectionAll(ray, raycastDistance, m_BlockingMask);
-
-                if (hits.Length > 0 && hits[0].fraction * raycastDistance < hitDistance)
-                {
-                    hitDistance = hits[0].fraction * raycastDistance;
-                }
+                var hits = Physics2D.GetRayIntersection(ray, raycastDistance, m_BlockingMask);
+                if (hits.collider != null)
+                    hitDistance = hits.distance;
             }
             #endif
 
@@ -176,7 +168,7 @@ namespace UnityEngine.InputSystem.UI
 
         internal static InlinedArray<TrackedDeviceRaycaster> s_Instances;
 
-        static readonly List<RaycastHitData> s_SortedGraphics = new List<RaycastHitData>();
+        private static readonly List<RaycastHitData> s_SortedGraphics = new List<RaycastHitData>();
         private void SortedRaycastGraphics(Canvas canvas, Ray ray, List<RaycastHitData> results)
         {
             var graphics = GraphicRegistry.GetGraphicsForCanvas(canvas);

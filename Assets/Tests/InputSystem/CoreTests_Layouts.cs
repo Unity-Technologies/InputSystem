@@ -898,6 +898,71 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanReplaceExistingOverrideToExistingLayouts()
+    {
+        // Add a control to existing Mouse layout.
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ");
+
+        // Replace previous override in Mouse layout
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""anotherControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ");
+
+        var device = InputSystem.AddDevice<Mouse>();
+        Assert.That(device["anotherControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    private static class FaultyOverrideJson
+    {
+        // Name and extend set to same name
+        public const string CircularDependencyJson = @"
+            {
+                ""name"" : ""Mouse"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        // Should be combined with given explicit name "Mouse"
+        public const string SameExplicitNameJson = @"
+            {
+                ""name"" : ""IrrelevantGivenAsArgumentInsteadOfJson"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+    }
+
+    [Test] // Case 1377685 - according to use-case
+    [Category("Layouts")]
+    [TestCase(FaultyOverrideJson.CircularDependencyJson, null)]
+    [TestCase(FaultyOverrideJson.SameExplicitNameJson, "Mouse")]
+    public void Layouts_OverrideShouldFailWithException_IfAttemptingToReplaceExistingLayoutWithTheSameName(string overrideJson, string name)
+    {
+        Assert.That(() => InputSystem.RegisterLayoutOverride(overrideJson, name),
+            Throws.Exception.With.Message.Contain("Layout overrides must have unique names"));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanApplyOverridesToMultipleLayouts()
     {
         // Add a control to mice.
@@ -970,6 +1035,49 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(device["extraControl"].layout, Is.EqualTo("Axis"));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1377719/
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ApplyingOverride_DoesNotAlterExistingInheritanceHierarchy()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button1"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button2"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        const string derivedLayoutOverride = @"
+            {
+                ""name"" : ""DerivedLayoutOverride"",
+                ""extend"" : ""DerivedLayout"",
+                ""controls"" : [
+                    { ""name"" : ""button3"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
+        InputSystem.RegisterLayoutOverride(derivedLayoutOverride);
+
+        var layout = InputSystem.LoadLayout("DerivedLayout");
+        Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] { new InternedString("BaseLayout") }));
+
+        var device = InputSystem.AddDevice("DerivedLayout");
+        Assert.That(new[] { 1, 2, 3 }.Select(i => device["button" + i]), Is.All.TypeOf<ButtonControl>());
     }
 
     [Test]
@@ -2623,5 +2731,28 @@ partial class CoreTests
 
         InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Vertical);
         Assert.That(gamepad.usages, Is.Empty);
+    }
+
+    private struct TestNoisyDeviceWithNoExplicityNoisyControlsState : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Button")]
+        public bool control;
+
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
+    }
+
+    [InputControlLayout(stateType = typeof(TestNoisyDeviceWithNoExplicityNoisyControlsState), isNoisy = true)]
+    private class TestNoisyDeviceWithNoExplicityNoisyControls : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanMarkDeviceNoisy_WhenDeviceHasNoExplicitlyNoisyControls()
+    {
+        InputSystem.RegisterLayout<TestNoisyDeviceWithNoExplicityNoisyControls>("Test");
+        var device = InputDevice.Build<InputDevice>("Test");
+
+        Assert.That(device.noisy, Is.True);
     }
 }

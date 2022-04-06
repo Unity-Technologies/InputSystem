@@ -25,6 +25,8 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.processors"/>
     /// <seealso cref="InputControlLayout.ControlItem.processors"/>
     /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
+    /// <seealso cref="InputActionRebindingExtensions.GetParameterValue(InputAction,string,InputBinding)"/>
+    /// <seealso cref="InputActionRebindingExtensions.ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
     public abstract class InputProcessor
     {
         /// <summary>
@@ -41,6 +43,17 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public abstract object ProcessAsObject(object value, InputControl control);
 
+        /// <summary>
+        /// Process an input value stored in the given memory buffer.
+        /// </summary>
+        /// <param name="buffer">Memory buffer containing the input value. Must be at least large enough
+        /// to hold one full value as indicated by <paramref name="bufferSize"/>.</param>
+        /// <param name="bufferSize">Size (in bytes) of the value inside <paramref name="buffer"/>.</param>
+        /// <param name="control">Optional control that the value originated from. Must have the same value type
+        /// that the processor has.</param>
+        /// <remarks>
+        /// This method allows processing values of arbitrary size without allocating memory on the GC heap.
+        /// </remarks>
         public abstract unsafe void Process(void* buffer, int bufferSize, InputControl control);
 
         internal static TypeTable s_Processors;

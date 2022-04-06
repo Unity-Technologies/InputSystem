@@ -171,6 +171,7 @@ all_tests:
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
     {% endfor %}
+    - .yamato/upm-ci.yml#publish_dryrun
   triggers:
     cancel_old_ci: true
     pull_requests:
@@ -178,8 +179,9 @@ all_tests:
           only:
             - "develop"
 
-publish:
-  name: Publish to Internal Registry
+{% for run in (1..2) %}
+publish{% cycle "", "_dryrun" %}:
+  name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
@@ -192,8 +194,9 @@ publish:
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
-    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ {% cycle "", "--dry-run" %}
   artifacts:
     artifacts:
       paths:
         - "upm-ci~/packages/*.tgz"
+{% endfor %}
