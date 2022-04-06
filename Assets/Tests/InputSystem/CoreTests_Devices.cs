@@ -1503,6 +1503,49 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [TestCase(false)]
+    [TestCase(true)]
+    public unsafe void Devices_RespectFocusChangesWhileDisconnected(bool reconnectWhileInFocus)
+    {
+        var deviceDesc = new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+            product = "TestDevice",
+            serial = "1234"
+        };
+        var deviceId = runtime.ReportNewInputDevice(deviceDesc);
+        InputSystem.Update();
+
+        var device = InputSystem.GetDeviceById(deviceId);
+
+        // We need events to be processed even while out of focus
+        runtime.runInBackground = true;
+
+        // Set focus.
+        runtime.InvokePlayerFocusChanged(!reconnectWhileInFocus);
+        InputSystem.Update();
+        
+
+        var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        // Change focus.
+        runtime.InvokePlayerFocusChanged(reconnectWhileInFocus);
+        InputSystem.Update();
+
+        var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
+        InputSystem.Update();
+
+        Assert.That(device.added, Is.True);
+        Assert.That(device.enabled, Is.EqualTo(reconnectWhileInFocus));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
     {
         // Devices added directly via AddDevice() don't end up on the list of
