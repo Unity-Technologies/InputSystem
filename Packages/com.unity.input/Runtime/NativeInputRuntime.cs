@@ -278,21 +278,6 @@ namespace UnityEngine.InputSystem.LowLevel
         // NOTE: This *must* go to LegacyInputNative and *not* InputNative. The latter
         //       redirects to our Input API implementation whereas the former is the one
         //       that contains the actual implementation of the old input system API.
-        public Vector3 acceleration => LegacyInputNative.GetAcceleration();
-        public int accelerationEventCount => LegacyInputNative.GetAccelerationCount();
-        public AccelerationEvent GetAccelerationEvent(int index)
-        {
-            ////FIXME: No, I don't think it's right to pick this up through LegacyInputNative! This sensor stuff should come through the new paths.
-            var nativeEvent = LegacyInputNative.GetAccelerationEvent(index);
-            return new AccelerationEvent
-            {
-                x = nativeEvent.x,
-                y = nativeEvent.y,
-                z = nativeEvent.z,
-                m_TimeDelta = nativeEvent.deltaTime
-            };
-        }
-
         public Compass.Heading lastHeading
         {
             get

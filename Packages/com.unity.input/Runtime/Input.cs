@@ -128,19 +128,10 @@ namespace UnityEngine
                 {
                     var isJoystick = device is Joystick;
                     var isGamepad = !isJoystick && device is Gamepad;
+                    var isAccelerometer = !isJoystick && !isGyroAvailable && device is Accelerometer;
 
                     if (isJoystick || isGamepad)
                     {
-                        // This branch demonstrates why GetJoystickNames() and the approach of talking
-                        // to joysticks by their index is broken. If the joystick at index #1 is unplugged
-                        // and we just blindly remove it, joystick #2 suddenly becomes joystick #1. So if
-                        // we were trying to pick up the input from two local players concurrently, player #1
-                        // now suddenly gets the device from player #2 when in fact player #1 simply lost their
-                        // device.
-                        //
-                        // So, a better approach is to not remove entries but rather null them out. And when
-                        // a device is plugged in, to see if it came back
-
                         if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
                         {
                             AddJoystick(device);
@@ -149,6 +140,11 @@ namespace UnityEngine
                         {
                             RemoveJoystick(device);
                         }
+                    }
+                    else if (isAccelerometer)
+                    {
+                        if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
+                            AddAccelerometer((Accelerometer)device);
                     }
                     break;
                 }
@@ -159,6 +155,7 @@ namespace UnityEngine
         {
             s_ThisFramePressedKeys.Clear();
             s_ThisFrameReleasedKeys.Clear();
+            s_Accelerometer.NextFrame();
         }
 
         internal static void Reset()
@@ -183,6 +180,8 @@ namespace UnityEngine
             s_Gyro = new Gyroscope();
             s_Location = new LocationService();
             s_Compass = new Compass();
+
+            s_Accelerometer.Cleanup();
 
             InputSystem.InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
         }

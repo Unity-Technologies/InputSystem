@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine
 {
@@ -237,14 +238,16 @@ namespace UnityEngine
         public static bool isGyroAvailable => InputSystem.Gyroscope.current != null;
         public static LocationService location => s_Location;
         public static Compass compass => s_Compass;
-        public static Vector3 acceleration => InputRuntime.s_Instance.acceleration;
+        public static Vector3 acceleration => s_Accelerometer.acceleration;
 
         public static AccelerationEvent GetAccelerationEvent(int index)
         {
-            return InputRuntime.s_Instance.GetAccelerationEvent(index);
+            if (index < 0 || index >= s_Accelerometer.eventCount)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            return s_Accelerometer.events[index];
         }
 
-        public static int accelerationEventCount => InputRuntime.s_Instance.accelerationEventCount;
+        public static int accelerationEventCount => s_Accelerometer.eventCount;
 
         public static AccelerationEvent[] accelerationEvents
         {
@@ -256,6 +259,85 @@ namespace UnityEngine
                     result[i] = GetAccelerationEvent(i);
                 return result;
             }
+        }
+
+        private static AccelerometerData s_Accelerometer;
+
+        private struct AccelerometerData
+        {
+            public InputAction action;
+            public Vector3 acceleration;
+            public double timestamp;
+            public int eventCount;
+            public AccelerationEvent[] events;
+
+            public void NextFrame()
+            {
+                eventCount = 0;
+            }
+
+            public void Cleanup()
+            {
+                action?.Disable();
+                action?.Dispose();
+
+                action = default;
+                acceleration = default;
+                timestamp = default;
+                eventCount = default;
+                events = default;
+            }
+        }
+
+        private static void AddAccelerometer(Accelerometer device)
+        {
+            ////REVIEW: How should this behave if multiple Accelerometers are present. At the moment, treats them
+            ////        all the same and sources input from all of them concurrently.
+
+            // We use an action to gather data from accelerometers.
+            if (s_Accelerometer.action == null)
+            {
+                s_Accelerometer.action = new InputAction(
+                    name: "<UnityEngine.Input.acceleration>",
+                    type: InputActionType.PassThrough,
+                    binding: "<Accelerometer>/acceleration");
+                s_Accelerometer.action.Enable();
+
+                s_Accelerometer.action.performed +=
+                    ctx =>
+                {
+                    var value = ctx.ReadValue<Vector3>();
+                    var time = ctx.time;
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
+                    var delta = s_Accelerometer.timestamp == default ? 0 : time - s_Accelerometer.timestamp;
+
+                    // Store event.
+                    ArrayHelpers.AppendWithCapacity(ref s_Accelerometer.events, ref s_Accelerometer.eventCount, new AccelerationEvent
+                    {
+                        x = value.x,
+                        y = value.y,
+                        z = value.z,
+                        m_TimeDelta = (float)delta
+                    });
+
+                    // Store latest acceleration.
+                    s_Accelerometer.acceleration = value;
+                    s_Accelerometer.timestamp = time;
+                };
+
+                ////REVIEW: Or is it better to just leave the recorded data untouched?
+                s_Accelerometer.action.canceled +=
+                    ctx =>
+                {
+                    s_Accelerometer.acceleration = default;
+                    s_Accelerometer.timestamp = ctx.time;
+                    ////REVIEW: record event?
+                };
+            }
+
+            // If the accelerometer is not enabled, enable it now.
+            if (!device.enabled)
+                InputSystem.InputSystem.EnableDevice(device);
         }
     }
 }

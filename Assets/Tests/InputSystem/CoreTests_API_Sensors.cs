@@ -12,7 +12,7 @@ partial class CoreTests
 {
     [Test]
     [Category("API")]
-    public unsafe void API_CanReadGyroThroughGyroscopeAPI()
+    public void API_CanReadGyroThroughGyroscopeAPI()
     {
         var gyroId = runtime.ReportNewInputDevice<Gyroscope>();
         var accelId = runtime.ReportNewInputDevice<LinearAccelerationSensor>();
@@ -24,32 +24,11 @@ partial class CoreTests
         var gravityEnabled = false;
         var attitudeEnabled = false;
 
-        long EnableDisable(ref bool enabled, int id, InputDeviceCommand* commandPtr)
-        {
-            if (commandPtr->type == QueryEnabledStateCommand.Type)
-            {
-                ((QueryEnabledStateCommand*)commandPtr)->isEnabled = enabled;
-                return InputDeviceCommand.GenericSuccess;
-            }
-            if (commandPtr->type == EnableDeviceCommand.Type)
-            {
-                enabled = true;
-                return InputDeviceCommand.GenericSuccess;
-            }
-            if (commandPtr->type == DisableDeviceCommand.Type)
-            {
-                enabled = false;
-                return InputDeviceCommand.GenericSuccess;
-            }
-
-            return InputDeviceCommand.GenericFailure;
-        }
-
         // Need to have these in place before we add the devices.
-        runtime.SetDeviceCommandCallback(gyroId, (id, command) => EnableDisable(ref gyroEnabled, id, command));
-        runtime.SetDeviceCommandCallback(accelId, (id, command) => EnableDisable(ref accelEnabled, id, command));
-        runtime.SetDeviceCommandCallback(gravityId, (id, command) => EnableDisable(ref gravityEnabled, id, command));
-        runtime.SetDeviceCommandCallback(attitudeId, (id, command) => EnableDisable(ref attitudeEnabled, id, command));
+        runtime.SetDeviceEnableDisableCommands(gyroId, onChange: v => gyroEnabled = v);
+        runtime.SetDeviceEnableDisableCommands(accelId, onChange: v => accelEnabled = v);
+        runtime.SetDeviceEnableDisableCommands(gravityId, onChange: v => gravityEnabled = v);
+        runtime.SetDeviceEnableDisableCommands(attitudeId, onChange: v => attitudeEnabled = v);
 
         InputSystem.Update();
 
@@ -264,9 +243,28 @@ partial class CoreTests
     {
         Assert.That(Input.acceleration, Is.EqualTo(default(Vector3)));
 
-        runtime.acceleration = new Vector3(0.123f, 0.234f, 0.345f);
+        // Adding an accelerometer should automatically enable it.
+        var accelEnabled = false;
+        var accelId = runtime.ReportNewInputDevice<Accelerometer>();
+        runtime.SetDeviceEnableDisableCommands(accelId, onChange: v => accelEnabled = v);
+        InputSystem.Update();
+        Assert.That(Accelerometer.current, Is.Not.Null);
+        var accel = Accelerometer.current;
+
+        Assert.That(accelEnabled, Is.True);
+        Assert.That(accel.enabled, Is.True);
+
+        Assert.That(Input.acceleration, Is.EqualTo(default(Vector3)));
+
+        Set(accel.acceleration, new Vector3(0.123f, 0.234f, 0.345f));
 
         Assert.That(Input.acceleration, Is.EqualTo(new Vector3(0.123f, 0.234f, 0.345f)).Using(Vector3EqualityComparer.Instance));
+
+        InputSystem.RemoveDevice(accel);
+
+        ////REVIEW: How should we handle this? Legacy impl has no defined behavior for this case. Acceleration
+        ////        values seem to stick around for as long as they are not overwritten by newer values.
+        Assert.That(Input.acceleration, Is.EqualTo(default(Vector3)));
     }
 
     [Test]
@@ -275,18 +273,45 @@ partial class CoreTests
     {
         Assert.That(Input.accelerationEventCount, Is.Zero);
         Assert.That(() => Input.GetAccelerationEvent(0), Throws.InstanceOf<ArgumentOutOfRangeException>());
+        Assert.That(Input.accelerationEvents, Is.Not.Null);
+        Assert.That(Input.accelerationEvents, Has.Length.Zero);
 
-        var events = new[]
-        {
-            new AccelerationEvent { x = 0.123f, y = 0.234f, z = 0.345f, m_TimeDelta = 0.456f },
-            new AccelerationEvent { x = 0.987f, y = 0.876f, z = 0.765f, m_TimeDelta = 0.654f },
-        };
-        runtime.accelerationEvents = events;
+        var accelerometer = InputSystem.AddDevice<Accelerometer>();
+
+        currentTime = 0.123;
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.123f, 0.234f, 0.345f) });
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.234f, 0.345f, 0.456f) });
+        InputSystem.Update();
 
         Assert.That(Input.accelerationEventCount, Is.EqualTo(2));
-        Assert.That(Input.GetAccelerationEvent(0), Is.EqualTo(events[0]));
-        Assert.That(Input.GetAccelerationEvent(1), Is.EqualTo(events[1]));
+        Assert.That(Input.GetAccelerationEvent(0).acceleration, Is.EqualTo(new Vector3(0.123f, 0.234f, 0.345f)));
+        Assert.That(Input.GetAccelerationEvent(1).acceleration, Is.EqualTo(new Vector3(0.234f, 0.345f, 0.456f)));
+        Assert.That(Input.GetAccelerationEvent(0).deltaTime, Is.Zero); // No prior event.
+        Assert.That(Input.GetAccelerationEvent(1).deltaTime, Is.Zero); // No prior event.
         Assert.That(() => Input.GetAccelerationEvent(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
-        Assert.That(Input.accelerationEvents, Is.EqualTo(events));
+        Assert.That(Input.accelerationEvents, Has.Length.EqualTo(2));
+        Assert.That(Input.accelerationEvents[0].acceleration, Is.EqualTo(new Vector3(0.123f, 0.234f, 0.345f)));
+        Assert.That(Input.accelerationEvents[1].acceleration, Is.EqualTo(new Vector3(0.234f, 0.345f, 0.456f)));
+        Assert.That(Input.accelerationEvents[0].deltaTime, Is.Zero);
+        Assert.That(Input.accelerationEvents[1].deltaTime, Is.Zero);
+
+        InputSystem.Update();
+
+        Assert.That(Input.accelerationEventCount, Is.Zero);
+        Assert.That(() => Input.GetAccelerationEvent(0), Throws.InstanceOf<ArgumentOutOfRangeException>());
+        Assert.That(Input.accelerationEvents, Is.Not.Null);
+        Assert.That(Input.accelerationEvents, Has.Length.Zero);
+
+        currentTime = 0.234;
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.345f, 0.456f, 0.567f) });
+        InputSystem.Update();
+
+        Assert.That(Input.accelerationEventCount, Is.EqualTo(1));
+        Assert.That(Input.GetAccelerationEvent(0).acceleration, Is.EqualTo(new Vector3(0.345f, 0.456f, 0.567f)));
+        Assert.That(Input.GetAccelerationEvent(0).deltaTime, Is.EqualTo(0.234 - 0.123).Within(0.00001));
+        Assert.That(() => Input.GetAccelerationEvent(1), Throws.InstanceOf<ArgumentOutOfRangeException>());
+        Assert.That(Input.accelerationEvents, Has.Length.EqualTo(1));
+        Assert.That(Input.accelerationEvents[0].acceleration, Is.EqualTo(new Vector3(0.345f, 0.456f, 0.567f)));
+        Assert.That(Input.accelerationEvents[0].deltaTime, Is.EqualTo(0.234 - 0.123).Within(0.00001));
     }
 }

@@ -135,6 +135,9 @@ namespace UnityEngine
             {
                 // Mark joystick as disconnected.
                 s_Joysticks[index].Disconnect();
+
+                // We don't remove entries so that joystick indices remain stable. When a device
+                // comes online, we look for an unused slot and put the device in there (quasi-reconnect).
             }
         }
     }
