@@ -136,7 +136,7 @@ namespace UnityEngine.InputSystem.Apple.LowLevel
 
         private const uint kAxisOffset = sizeof(ulong) + sizeof(float) * MaxButtons;
         [InputControl(name = "leftStick", offset = kAxisOffset + sizeof(float) * (uint) Axis.LeftThumbstickX)]
-        [InputControl(name = "leftStick", offset = kAxisOffset + sizeof(float) * (uint) Axis.RightThumbstickX)]
+        [InputControl(name = "rightStick", offset = kAxisOffset + sizeof(float) * (uint) Axis.RightThumbstickX)]
         public fixed float axisValue[MaxAxes];
 
         private const uint kIntAxisOffset = sizeof(ulong) + sizeof(float) * MaxButtons + sizeof(float) * MaxAxes;
