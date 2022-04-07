@@ -187,19 +187,21 @@ namespace UnityEngine
             InputSystem.InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
         }
 
-        private static TouchPhase ToLegacy(InputSystem.TouchPhase phase) => phase switch
+        private static TouchPhase ToLegacy(InputSystem.TouchPhase phase)
         {
-            InputSystem.TouchPhase.Began => TouchPhase.Began,
-            InputSystem.TouchPhase.Moved => TouchPhase.Moved,
-            InputSystem.TouchPhase.Ended => TouchPhase.Ended,
-            InputSystem.TouchPhase.Canceled => TouchPhase.Canceled,
-            InputSystem.TouchPhase.Stationary => TouchPhase.Stationary,
-            //InputSystem.TouchPhase.None  // These are filtered out and shouldn't be seen
+            switch (phase)
+            {
+                case InputSystem.TouchPhase.Began: return TouchPhase.Began;
+                case InputSystem.TouchPhase.Moved: return TouchPhase.Moved;
+                case InputSystem.TouchPhase.Ended: return TouchPhase.Ended;
+                case InputSystem.TouchPhase.Canceled: return TouchPhase.Canceled;
+                case InputSystem.TouchPhase.Stationary: return TouchPhase.Stationary;
+                    //InputSystem.TouchPhase.None  // These are filtered out and shouldn't be seen
+            }
+            throw new ArgumentOutOfRangeException(nameof(phase), $"Not expected phase value: {phase}");
+        }
 
-            _ => throw new ArgumentOutOfRangeException(nameof(phase), $"Not expected phase value: {phase}"),
-        };
-
-        private static (float radius, float variance ) RadiusValues(Vector2 vRadius)
+        private static (float radius, float variance) RadiusValues(Vector2 vRadius)
         {
             var x = vRadius.x;
             var y = vRadius.y;
@@ -218,7 +220,7 @@ namespace UnityEngine
             return (altitudeAngle, azimuthAngle);
         }
 
-        public static Touch ToTouch(InputSystem.Controls.TouchControl control)
+        private static Touch ToTouch(InputSystem.Controls.TouchControl control)
         {
             Touch touch = new Touch();
             touch.fingerId = control.touchId.ReadValue();
@@ -234,7 +236,7 @@ namespace UnityEngine
             touch.altitudeAngle = 0;  // TODO: Not available in TouchControl
             touch.azimuthAngle = 0;   // TODO: Not available in TouchControl
 
-            var (radius, variance) = RadiusValues(control.radius.ReadValue());
+            var(radius, variance) = RadiusValues(control.radius.ReadValue());
             touch.radius = radius;
             touch.radiusVariance = variance;
 
@@ -274,8 +276,8 @@ namespace UnityEngine
                 if (Touchscreen.current != null)
                 {
                     var convertedTouches = from t in Touchscreen.current.touches
-                                           where t.phase.ReadValue() != InputSystem.TouchPhase.None
-                                           select ToTouch(t);
+                        where t.phase.ReadValue() != InputSystem.TouchPhase.None
+                        select ToTouch(t);
                     result.AddRange(convertedTouches);
                 }
                 return result.ToArray();

@@ -10,21 +10,21 @@ partial class CoreTests
     private static bool TouchesAreEqual(Touch first, Touch second)
     {
         return
-        first.fingerId == second.fingerId &&
-        first.position == second.position &&
-        first.rawPosition == second.rawPosition &&
-        first.deltaPosition == second.deltaPosition &&
-        first.deltaTime == second.deltaTime &&
-        first.tapCount == second.tapCount &&
-        first.phase == second.phase &&
+            first.fingerId == second.fingerId &&
+            first.position == second.position &&
+            first.rawPosition == second.rawPosition &&
+            first.deltaPosition == second.deltaPosition &&
+            first.deltaTime == second.deltaTime &&
+            first.tapCount == second.tapCount &&
+            first.phase == second.phase &&
 
-        first.pressure == second.pressure &&
-        first.maximumPossiblePressure == second.maximumPossiblePressure &&
-        first.type == second.type &&
-        first.altitudeAngle == second.altitudeAngle &&
-        first.azimuthAngle == second.azimuthAngle &&
-        first.radius == second.radius &&
-        first.radiusVariance == second.radius;
+            first.pressure == second.pressure &&
+            first.maximumPossiblePressure == second.maximumPossiblePressure &&
+            first.type == second.type &&
+            first.altitudeAngle == second.altitudeAngle &&
+            first.azimuthAngle == second.azimuthAngle &&
+            first.radius == second.radius &&
+            first.radiusVariance == second.radius;
     }
 
     [UnityTest]
