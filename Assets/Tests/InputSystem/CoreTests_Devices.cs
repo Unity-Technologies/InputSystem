@@ -1501,31 +1501,31 @@ partial class CoreTests
         Assert.That(InputSystem.disconnectedDevices, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1404320
     [Test]
     [Category("Devices")]
-    [TestCase(false)]
-    [TestCase(true)]
-    public unsafe void Devices_RespectFocusChangesWhileDisconnected(bool reconnectWhileInFocus)
+    public void Devices_CanReconnectDevice_WhenDisconnectedWhileAppIsOutOfFocus()
     {
+        runtime.runInBackground = true;
+
         var deviceDesc = new InputDeviceDescription
         {
             deviceClass = "Gamepad",
             product = "TestDevice",
             serial = "1234"
         };
+
         var deviceId = runtime.ReportNewInputDevice(deviceDesc);
         InputSystem.Update();
 
         var device = InputSystem.GetDeviceById(deviceId);
+        Assert.That(device, Is.Not.Null);
 
-        // We need events to be processed even while out of focus
-        runtime.runInBackground = true;
-
-        // Set focus.
-        runtime.InvokePlayerFocusChanged(!reconnectWhileInFocus);
+        // Loose focus.
+        runtime.PlayerFocusLost();
         InputSystem.Update();
-        
 
+        // Disconnect.
         var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
@@ -1533,15 +1533,18 @@ partial class CoreTests
         Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
         Assert.That(InputSystem.devices, Is.Empty);
 
-        // Change focus.
-        runtime.InvokePlayerFocusChanged(reconnectWhileInFocus);
+        // Regain focus.
+        runtime.PlayerFocusGained();
         InputSystem.Update();
 
         var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
         InputSystem.Update();
 
+        var newDevice = InputSystem.GetDeviceById(newDeviceId);
+        Assert.That(newDevice, Is.SameAs(device));
+
         Assert.That(device.added, Is.True);
-        Assert.That(device.enabled, Is.EqualTo(reconnectWhileInFocus));
+        Assert.That(device.enabled, Is.True);
     }
 
     [Test]
