@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_IOS || UNITY_TVOS
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -37,6 +37,7 @@ namespace UnityEngine.InputSystem.iOS
                     .WithDeviceClass("iOSGameController")
                     .WithProduct("DualSense Wireless Controller"));
 
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
             InputSystem.RegisterLayoutMatcher("GravitySensor",
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
@@ -49,6 +50,7 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
+#endif
 #if UNITY_EDITOR || UNITY_IOS
             InputSystem.RegisterLayout<iOSStepCounter>();
             // Don't add devices for InputTestRuntime

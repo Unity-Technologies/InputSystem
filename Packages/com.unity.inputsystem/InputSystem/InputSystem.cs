@@ -3428,8 +3428,10 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR || UNITY_ANDROID
             Android.AndroidSupport.Initialize();
             #endif
+            
+            Apple.AppleSupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_STANDALONE_OSX
             iOS.iOSSupport.Initialize();
             #endif
 
