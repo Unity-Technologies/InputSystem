@@ -962,6 +962,13 @@ namespace UnityEngine.InputSystem
             return deviceIndex;
         }
 
+        internal bool IsValueConsideredPressed(float value)
+        {
+            if (isButton)
+                return ((ButtonControl)this).IsValueConsideredPressed(value);
+            return value >= ButtonControl.s_GlobalDefaultButtonPressPoint;
+        }
+
         internal virtual void AddProcessor(object first)
         {
         }

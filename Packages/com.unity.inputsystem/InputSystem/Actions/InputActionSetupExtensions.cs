@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem
         ////TODO: add method to add an existing InputAction to a map
 
         /// <summary>
-        /// Ad a new <see cref="InputAction"/> to the given <paramref name="map"/>.
+        /// Add a new <see cref="InputAction"/> to the given <paramref name="map"/>.
         /// </summary>
         /// <param name="map">Action map to add the action to. The action will be appended to
         /// <see cref="InputActionMap.actions"/> of the map. The map must be disabled (see
@@ -1535,16 +1535,19 @@ namespace UnityEngine.InputSystem
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
-                int bindingIndex;
-                if (m_Action != null)
-                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
-                        .m_BindingIndexInMap;
-                else
-                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
-                        .m_BindingIndexInMap;
+                using (InputActionRebindingExtensions.DeferBindingResolution())
+                {
+                    int bindingIndex;
+                    if (m_Action != null)
+                        bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
+                            .m_BindingIndexInMap;
+                    else
+                        bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
+                            .m_BindingIndexInMap;
 
-                m_ActionMap.m_Bindings[bindingIndex].name = name;
-                m_ActionMap.m_Bindings[bindingIndex].isPartOfComposite = true;
+                    m_ActionMap.m_Bindings[bindingIndex].name = name;
+                    m_ActionMap.m_Bindings[bindingIndex].isPartOfComposite = true;
+                }
 
                 return this;
             }

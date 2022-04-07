@@ -781,6 +781,10 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
     ")]
+    // AddChangeMonitor has a new, optional groupIndex argument.
+    [Property("Exclusions", @"1.0.0
+        public static void AddChangeMonitor(UnityEngine.InputSystem.InputControl control, UnityEngine.InputSystem.LowLevel.IInputStateChangeMonitor monitor, long monitorIndex = -1);
+    ")]
     // DualShock4GamepadHID from IEventPreProcessor, which is an internal interface
     [Property("Exclusions", @"1.0.0
         public class DualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShockGamepad

@@ -1618,6 +1618,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: make current event available in some form
+        ////TODO: make source binding info available (binding index? binding instance?)
 
         /// <summary>
         /// Information provided to action callbacks about what triggered an action.

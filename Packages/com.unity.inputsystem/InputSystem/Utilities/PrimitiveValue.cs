@@ -32,6 +32,8 @@ namespace UnityEngine.InputSystem.Utilities
         [FieldOffset(4)] private float m_FloatValue;
         [FieldOffset(4)] private double m_DoubleValue;
 
+        internal unsafe byte* valuePtr => (byte*)UnsafeUtility.AddressOf(ref this) + 4;
+
         /// <summary>
         /// Type of value stored in the struct. <see cref="TypeCode.Empty"/>
         /// if the struct does not hold a value (i.e. has been default-initialized).
@@ -846,6 +848,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a bool.
         /// </summary>
         /// <param name="value">A boolean value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(bool value)
         {
             return new PrimitiveValue(value);
@@ -855,6 +858,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a character.
         /// </summary>
         /// <param name="value">A character.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(char value)
         {
             return new PrimitiveValue(value);
@@ -864,6 +868,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a byte.
         /// </summary>
         /// <param name="value">A byte value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(byte value)
         {
             return new PrimitiveValue(value);
@@ -873,6 +878,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a signed byte.
         /// </summary>
         /// <param name="value">A signed byte value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(sbyte value)
         {
             return new PrimitiveValue(value);
@@ -882,6 +888,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a short.
         /// </summary>
         /// <param name="value">A short value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(short value)
         {
             return new PrimitiveValue(value);
@@ -891,6 +898,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding an unsigned short.
         /// </summary>
         /// <param name="value">An unsigned short value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(ushort value)
         {
             return new PrimitiveValue(value);
@@ -900,6 +908,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding an int.
         /// </summary>
         /// <param name="value">An int value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(int value)
         {
             return new PrimitiveValue(value);
@@ -909,6 +918,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding an unsigned int.
         /// </summary>
         /// <param name="value">An unsigned int value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(uint value)
         {
             return new PrimitiveValue(value);
@@ -918,6 +928,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a long.
         /// </summary>
         /// <param name="value">A long value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(long value)
         {
             return new PrimitiveValue(value);
@@ -927,6 +938,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a ulong.
         /// </summary>
         /// <param name="value">An unsigned long value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(ulong value)
         {
             return new PrimitiveValue(value);
@@ -936,6 +948,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a float.
         /// </summary>
         /// <param name="value">A float value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(float value)
         {
             return new PrimitiveValue(value);
@@ -945,6 +958,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Create a PrimitiveValue holding a double.
         /// </summary>
         /// <param name="value">A double value.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static implicit operator PrimitiveValue(double value)
         {
             return new PrimitiveValue(value);
@@ -952,61 +966,121 @@ namespace UnityEngine.InputSystem.Utilities
 
         // The following methods exist only to make the annoying Microsoft code analyzer happy.
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromBoolean(bool value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromChar(char value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromByte(byte value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromSByte(sbyte value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromInt16(short value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromUInt16(ushort value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromInt32(int value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromUInt32(uint value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromInt64(long value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromUInt64(ulong value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromSingle(float value)
         {
             return new PrimitiveValue(value);
         }
 
+        /// <summary>
+        /// Constructs a <c>PrimitiveValue</c> from <paramref name="value"/>.
+        /// </summary>
+        /// <param name="value">The value to be stored in the returned <c>PrimitiveValue</c>.</param>
+        /// <returns>A <c>PrimitiveValue</c> set to <paramref name="value"/></returns>
         public static PrimitiveValue FromDouble(double value)
         {
             return new PrimitiveValue(value);

@@ -98,12 +98,31 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         public InputEventBuffer buffer => m_EventBuffer;
 
+        /// <summary>
+        /// Returns the number of events in the associated event buffer.
+        /// </summary>
         public int count => m_EventBuffer.eventCount;
 
+        /// <summary>
+        /// Constructs a new default initialized <c>InputActionTrace</c>.
+        /// </summary>
+        /// <remarks>
+        /// When you use this constructor, the new InputActionTrace object does not start recording any actions.
+        /// To record actions, you must explicitly set them up after creating the object.
+        /// Alternatively, you can use one of the other constructor overloads which begin recording actions immediately.
+        /// </remarks>
+        /// <seealso cref="SubscribeTo(InputAction)"/>
+        /// <seealso cref="SubscribeTo(InputActionMap)"/>
+        /// <seealso cref="SubscribeToAll"/>
         public InputActionTrace()
         {
         }
 
+        /// <summary>
+        /// Constructs a new <c>InputActionTrace</c> that records <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">The action to be recorded.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="action"/> is <c>null</c>.</exception>
         public InputActionTrace(InputAction action)
         {
             if (action == null)
@@ -111,6 +130,11 @@ namespace UnityEngine.InputSystem.Utilities
             SubscribeTo(action);
         }
 
+        /// <summary>
+        /// Constructs a new <c>InputActionTrace</c> that records all actions in <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">The action-map containing actions to be recorded.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="action"/> is <c>null</c>.</exception>
         public InputActionTrace(InputActionMap actionMap)
         {
             if (actionMap == null)
@@ -126,6 +150,8 @@ namespace UnityEngine.InputSystem.Utilities
         /// Instead, the trace will listen to <see cref="InputSystem.onActionChange"/> and automatically record
         /// every triggered action.
         /// </remarks>
+        /// <seealso cref="SubscribeTo(InputAction)"/>
+        /// <seealso cref="SubscribeTo(InputActionMap)"/>
         public void SubscribeToAll()
         {
             if (m_SubscribedToAll)
@@ -141,6 +167,11 @@ namespace UnityEngine.InputSystem.Utilities
                 UnsubscribeFrom(m_SubscribedActionMaps[m_SubscribedActionMaps.length - 1]);
         }
 
+        /// <summary>
+        /// Unsubscribes from all actions currently being recorded.
+        /// </summary>
+        /// <seealso cref="UnsubscribeFrom(InputAction)"/>
+        /// <seealso cref="UnsubscribeFrom(InputActionMap)"/>
         public void UnsubscribeFromAll()
         {
             // Only unhook from OnActionChange if we don't have any recorded actions. If we do have
@@ -156,6 +187,17 @@ namespace UnityEngine.InputSystem.Utilities
                 UnsubscribeFrom(m_SubscribedActionMaps[m_SubscribedActionMaps.length - 1]);
         }
 
+        /// <summary>
+        /// Subscribes to <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">The action to be recorded.</param>
+        /// <remarks>
+        /// **Note:** This method does not prevent you from subscribing to the same action multiple times.
+        /// If you subscribe to the same action multiple times, your event buffer will contain duplicate entries.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">If <paramref name="action"/> is <c>null</c>.</exception>
+        /// <seealso cref="SubscribeTo(InputActionMap)"/>
+        /// <seealso cref="SubscribeToAll"/>
         public void SubscribeTo(InputAction action)
         {
             if (action == null)
@@ -171,6 +213,17 @@ namespace UnityEngine.InputSystem.Utilities
             m_SubscribedActions.AppendWithCapacity(action);
         }
 
+        /// <summary>
+        /// Subscribes to all actions contained within <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">The action-map containing all actions to be recorded.</param>
+        /// <remarks>
+        /// **Note:** This method does not prevent you from subscribing to the same action multiple times.
+        /// If you subscribe to the same action multiple times, your event buffer will contain duplicate entries.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="actionMap"/> is null.</exception>
+        /// <seealso cref="SubscribeTo(InputAction)"/>
+        /// <seealso cref="SubscribeToAll"/>
         public void SubscribeTo(InputActionMap actionMap)
         {
             if (actionMap == null)
@@ -184,6 +237,16 @@ namespace UnityEngine.InputSystem.Utilities
             m_SubscribedActionMaps.AppendWithCapacity(actionMap);
         }
 
+        /// <summary>
+        /// Unsubscribes from an action, if that action was previously subscribed to.
+        /// </summary>
+        /// <param name="action">The action to unsubscribe from.</param>
+        /// <remarks>
+        /// **Note:** This method has no side effects if you attempt to unsubscribe from an action that you have not previously subscribed to.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="action"/> is <c>null</c>.</exception>
+        /// <seealso cref="UnsubscribeFrom(InputActionMap)"/>
+        /// <seealso cref="UnsubscribeFromAll"/>
         public void UnsubscribeFrom(InputAction action)
         {
             if (action == null)
@@ -201,6 +264,16 @@ namespace UnityEngine.InputSystem.Utilities
                 m_SubscribedActions.RemoveAtWithCapacity(index);
         }
 
+        /// <summary>
+        /// Unsubscribes from all actions included in <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">The action-map containing actions to unsubscribe from.</param>
+        /// <remarks>
+        /// **Note:** This method has no side effects if you attempt to unsubscribe from an action-map that you have not previously subscribed to.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <seealso cref="UnsubscribeFrom(InputAction)"/>
+        /// <seealso cref="UnsubscribeFromAll"/>
         public void UnsubscribeFrom(InputActionMap actionMap)
         {
             if (actionMap == null)
@@ -258,6 +331,12 @@ namespace UnityEngine.InputSystem.Utilities
             context.ReadValue(valueBuffer, valueSizeInBytes);
         }
 
+        /// <summary>
+        /// Clears all recorded data.
+        /// </summary>
+        /// <remarks>
+        /// **Note:** This method does not unsubscribe any actions that the instance is listening to, so after clearing the recorded data, new input on those subscribed actions will continue to be recorded.
+        /// </remarks>
         public void Clear()
         {
             m_EventBuffer.Reset();
@@ -269,6 +348,7 @@ namespace UnityEngine.InputSystem.Utilities
             DisposeInternal();
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             if (count == 0)
@@ -288,6 +368,7 @@ namespace UnityEngine.InputSystem.Utilities
             return str.ToString();
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             UnsubscribeFromAll();
@@ -311,6 +392,11 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        /// <summary>
+        /// Returns an enumerator that enumerates all action events recorded for this instance.
+        /// </summary>
+        /// <returns>Enumerator instance, never <c>null</c>.</returns>
+        /// <seealso cref="ActionEventPtr"/>
         public IEnumerator<ActionEventPtr> GetEnumerator()
         {
             return new Enumerator(this);
@@ -428,12 +514,26 @@ namespace UnityEngine.InputSystem.Utilities
             internal InputActionState m_State;
             internal ActionEvent* m_Ptr;
 
+            /// <summary>
+            /// The <see cref="InputAction"/> associated with this action event.
+            /// </summary>
             public InputAction action => m_State.GetActionOrNull(m_Ptr->bindingIndex);
 
+            /// <summary>
+            /// The <see cref="InputActionPhase"/> associated with this action event.
+            /// </summary>
+            /// <seealso cref="InputAction.phase"/>
+            /// <seealso cref="InputAction.CallbackContext.phase"/>
             public InputActionPhase phase => m_Ptr->phase;
 
+            /// <summary>
+            /// The <see cref="InputControl"/> instance associated with this action event.
+            /// </summary>
             public InputControl control => m_State.controls[m_Ptr->controlIndex];
 
+            /// <summary>
+            /// The <see cref="IInputInteraction"/> instance associated with this action event if applicable, or <c>null</c> if the action event is not associated with an input interaction.
+            /// </summary>
             public IInputInteraction interaction
             {
                 get
@@ -446,14 +546,36 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
 
+            /// <summary>
+            /// The time, in seconds since your game or app started, that the event occurred.
+            /// </summary>
+            /// <remarks>
+            /// Times are in seconds and progress linearly in real-time. The timeline is the same as for <see cref="Time.realtimeSinceStartup"/>.
+            /// </remarks>
             public double time => m_Ptr->baseEvent.time;
 
+            /// <summary>
+            /// The time, in seconds since your game or app started, that the <see cref="phase"/> transitioned into <see cref="InputActionPhase.Started"/>.
+            /// </summary>
             public double startTime => m_Ptr->startTime;
 
+            /// <summary>
+            /// The duration, in seconds, that has elapsed between when this event was generated and when the
+            /// action <see cref="phase"/> transitioned to <see cref="InputActionPhase.Started"/> and has remained active.
+            /// </summary>
             public double duration => time - startTime;
 
+            /// <summary>
+            /// The size, in bytes, of the value associated with this action event.
+            /// </summary>
             public int valueSizeInBytes => m_Ptr->valueSizeInBytes;
 
+            /// <summary>
+            /// Reads the value associated with this event as an <c>object</c>.
+            /// </summary>
+            /// <returns><c>object</c> representing the value of this action event.</returns>
+            /// <seealso cref="ReadOnlyArray{TValue}"/>
+            /// <seealso cref="ReadValue(void*, int)"/>
             public object ReadValueAsObject()
             {
                 if (m_Ptr == null)
@@ -488,6 +610,15 @@ namespace UnityEngine.InputSystem.Utilities
                 return control.ReadValueFromBufferAsObject(valuePtr, valueSizeInBytes);
             }
 
+            /// <summary>
+            /// Reads the value associated with this event into the contiguous memory buffer defined by <c>[buffer, buffer + bufferSize)</c>.
+            /// </summary>
+            /// <param name="buffer">Pointer to the contiguous memory buffer to write value data to.</param>
+            /// <param name="bufferSize">The size, in bytes, of the contiguous buffer pointed to by <paramref name="buffer"/>.</param>
+            /// <exception cref="NullReferenceException">If <paramref name="buffer"/> is <c>null</c>.</exception>
+            /// <exception cref="ArgumentException">If the given <paramref name="bufferSize"/> is less than the number of bytes required to write the event value to <paramref name="buffer"/>.</exception>
+            /// <seealso cref="ReadValueAsObject"/>
+            /// <seealso cref="ReadValue{TValue}"/>
             public void ReadValue(void* buffer, int bufferSize)
             {
                 var valueSizeInBytes = m_Ptr->valueSizeInBytes;
@@ -501,6 +632,12 @@ namespace UnityEngine.InputSystem.Utilities
                 UnsafeUtility.MemCpy(buffer, m_Ptr->valueData, valueSizeInBytes);
             }
 
+            /// <summary>
+            /// Reads the value associated with this event as an object of type <typeparamref name="TValue"/>.
+            /// </summary>
+            /// <typeparam name="TValue">The event value type to be used.</typeparam>
+            /// <returns>Object of type <typeparamref name="TValue"/>.</returns>
+            /// <exception cref="InvalidOperationException">In case the size of <typeparamref name="TValue"/> does not match the size of the value associated with this event.</exception>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {
@@ -518,6 +655,7 @@ namespace UnityEngine.InputSystem.Utilities
                 return result;
             }
 
+            /// <inheritdoc/>
             public override string ToString()
             {
                 if (m_Ptr == null)
