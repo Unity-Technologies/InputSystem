@@ -3419,7 +3419,7 @@ internal class UITests : CoreTestsFixture
     [Category("UI")]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1
-#if (TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN))
+#if TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN)
             // temporarily disable this test case on OSX player for 2021.2. It only intermittently works and I don't know why!
         , Ignore = "Currently fails on OSX IL2CPP player on Unity version 2021.2"
 #endif
