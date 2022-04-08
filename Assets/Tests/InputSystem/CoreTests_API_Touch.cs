@@ -1,10 +1,10 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using InputSystem = UnityEngine.InputSystem.InputSystem;
 using Touchscreen = UnityEngine.InputSystem.Touchscreen;
-using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch;
 
 partial class CoreTests
 {
@@ -70,8 +70,6 @@ partial class CoreTests
             Assert.That(first.type, Is.EqualTo(TouchType.Direct));
             Assert.That(first.altitudeAngle, Is.EqualTo(0));
             Assert.That(first.azimuthAngle, Is.EqualTo(0));
-            Assert.That(first.radius, Is.EqualTo(0));
-            Assert.That(first.radiusVariance, Is.EqualTo(0));
         }
         InputSystem.Update();
 
@@ -89,15 +87,7 @@ partial class CoreTests
             Assert.That(middle.rawPosition, Is.EqualTo(new Vector2(1.0f, 2.0f)));
             Assert.That(middle.deltaPosition, Is.EqualTo(new Vector2(14.0f, 23.0f)));
             Assert.That(middle.deltaTime, Is.EqualTo(0.1f).Within(float.Epsilon));
-            Assert.That(middle.tapCount, Is.EqualTo(0));
             Assert.That(middle.phase, Is.EqualTo(TouchPhase.Moved));
-            Assert.That(middle.pressure, Is.EqualTo(1.0f));
-            Assert.That(middle.maximumPossiblePressure, Is.EqualTo(1.0f));
-            Assert.That(middle.type, Is.EqualTo(TouchType.Direct));
-            Assert.That(middle.altitudeAngle, Is.EqualTo(0));
-            Assert.That(middle.azimuthAngle, Is.EqualTo(0));
-            Assert.That(middle.radius, Is.EqualTo(0));
-            Assert.That(middle.radiusVariance, Is.EqualTo(0));
         }
         InputSystem.Update();
 
@@ -115,15 +105,7 @@ partial class CoreTests
             Assert.That(last.rawPosition, Is.EqualTo(new Vector2(1.0f, 2.0f)));
             Assert.That(last.deltaPosition, Is.EqualTo(new Vector2(0.0f, 0.0f)));
             Assert.That(last.deltaTime, Is.EqualTo(0.15f).Within(float.Epsilon));
-            Assert.That(last.tapCount, Is.EqualTo(0));
             Assert.That(last.phase, Is.EqualTo(TouchPhase.Ended));
-            Assert.That(last.pressure, Is.EqualTo(1.0f));          // TODO
-            Assert.That(last.maximumPossiblePressure, Is.EqualTo(1.0f));
-            Assert.That(last.type, Is.EqualTo(TouchType.Direct));  // TODO: test for Indirect
-            Assert.That(last.altitudeAngle, Is.EqualTo(0));        // TODO
-            Assert.That(last.azimuthAngle, Is.EqualTo(0));         // TODO
-            Assert.That(last.radius, Is.EqualTo(0));               // TODO
-            Assert.That(last.radiusVariance, Is.EqualTo(0));       // TODO
         }
 
         InputSystem.Update();
@@ -162,6 +144,37 @@ partial class CoreTests
             var t = Input.GetTouch(0);
             Assert.That(t.deltaTime, Is.EqualTo(holdTime).Within(float.Epsilon));
             Assert.That(t.tapCount, Is.EqualTo(0));
+        }
+    }
+
+    [UnityTest]
+    [Category("API")]
+    public IEnumerator API_CanReadTouchPressureAndRadiusThroughTouchesAPI()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        {
+            InputSystem.QueueStateEvent(touch,
+                new TouchState
+                {
+                    touchId = 1,
+                    phase = UnityEngine.InputSystem.TouchPhase.Began,
+                    position = new Vector2(7.5f, 8.5f),
+                    radius = new Vector2(1.5f, 2.5f),
+                    pressure = 1.23f,
+                    isIndirectTouch = true
+                });
+            yield return null;
+
+            Assert.That(Input.touchCount, Is.EqualTo(1));
+            var t = Input.GetTouch(0);
+            Assert.That(t.radius, Is.EqualTo(2.0f).Within(float.Epsilon));
+            Assert.That(t.radiusVariance, Is.EqualTo(0.5f).Within(float.Epsilon));
+            Assert.That(t.pressure, Is.EqualTo(1.23f).Within(float.Epsilon));
+            Assert.That(t.maximumPossiblePressure, Is.EqualTo(1.0f).Within(float.Epsilon));
+
+            //Assert.That(t.type, Is.EqualTo(TouchType.Indirect)); // TODO: This actually Direct. Need to also test for Stylus case
+            Assert.That(t.altitudeAngle, Is.EqualTo(0));           // TODO: No way to set this
+            Assert.That(t.azimuthAngle, Is.EqualTo(0));            // TODO: No way to set this
         }
     }
 }
