@@ -77,11 +77,7 @@ namespace UnityEngine
 
         public static int touchCount
         {
-            get
-            {
-                EnhancedTouch.Touch.s_GlobalState.playerState.UpdateActiveTouches();
-                return EnhancedTouch.Touch.s_GlobalState.playerState.activeTouchCount;
-            }
+            get => EnhancedTouch.Touch.activeTouches.Count;
         }
         public static Touch[] touches
         {
