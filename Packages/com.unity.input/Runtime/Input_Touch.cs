@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.EnhancedTouch;
 using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch;
 
 namespace UnityEngine
@@ -66,9 +65,6 @@ namespace UnityEngine
 
         public static Touch GetTouch(int index)
         {
-            if (!EnhancedTouchSupport.enabled)
-                EnhancedTouchSupport.Enable();
-
             if (index >= touchCount)
                 throw new ArgumentOutOfRangeException(nameof(index), "Invalid touch index.");
 
@@ -83,9 +79,6 @@ namespace UnityEngine
         {
             get
             {
-                if (!EnhancedTouchSupport.enabled)
-                    EnhancedTouchSupport.Enable();
-
                 var convertedTouches = from t in EnhancedTouch.Touch.activeTouches
                     select ToTouch(t);
 

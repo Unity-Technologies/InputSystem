@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngineInternal;
 
 // GOAL: Show how you can load an existing Unity project using legacy input, install com.unity.inputsystem, and play it as is while actually not using the old input system at all
@@ -66,6 +67,9 @@ namespace UnityEngine
 
         internal static void OnEnteringPlayMode()
         {
+            // EnhancedTouch is required for the Touch API
+            EnhancedTouchSupport.Enable();
+
             // We use actions to monitor for button presses and releases.
             s_ButtonActions = new InputActionMap("ButtonActions");
 

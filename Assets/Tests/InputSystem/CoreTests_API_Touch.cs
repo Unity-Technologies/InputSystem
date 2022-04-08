@@ -32,8 +32,6 @@ partial class CoreTests
     [Category("API")]
     public IEnumerator API_CanReadTouchEventsThroughTouchesAPI()
     {
-        EnhancedTouch.EnhancedTouchSupport.Enable();
-
         // Check default values before device is enabled
         Assert.That(Input.touchSupported, Is.False);
         Assert.That(Input.multiTouchEnabled, Is.True);
