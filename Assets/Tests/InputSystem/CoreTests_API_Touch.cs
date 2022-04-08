@@ -134,24 +134,34 @@ partial class CoreTests
 
     [UnityTest]
     [Category("API")]
-    [Ignore("TODO: get taps working")]
     public IEnumerator API_CanReadTouchTapEventsThroughTouchesAPI()
     {
-        //var delay = InputSystem.settings.multiTapDelayTime;
         var touch = InputSystem.AddDevice<Touchscreen>();
+        {
+            // Perform tap
+            BeginTouch(1, new Vector2(1.5f, 2.5f), time: 0.3);
+            EndTouch(1, new Vector2(1.5f, 2.5f), time: 0.35, queueEventOnly: true);
+            yield return null;
 
-        // Perform short tap
-        BeginTouch(1, new Vector2(1.5f, 2.5f), time: 0.3);
-        EndTouch(1, new Vector2(1.5f, 2.5f), time: 0.35);
-        yield return null;
+            Assert.That(Input.touchCount, Is.EqualTo(1));
+            var t = Input.GetTouch(0);
+            Assert.That(t.deltaTime, Is.EqualTo(0.05f).Within(float.Epsilon));
+            Assert.That(t.tapCount, Is.EqualTo(1));
+        }
 
-        Assert.That(Input.touchCount, Is.EqualTo(1));
-        var first = Input.GetTouch(0);
-        Assert.That(first.fingerId, Is.EqualTo(1));
-        Assert.That(first.position, Is.EqualTo(new Vector2(1.5f, 2.5f)));
-        Assert.That(first.rawPosition, Is.EqualTo(new Vector2(1.5f, 2.5f)));
-        Assert.That(first.deltaPosition, Is.EqualTo(new Vector2(0.0f, 0.0f)));
-        Assert.That(first.deltaTime, Is.EqualTo(0));
-        Assert.That(first.tapCount, Is.EqualTo(1));  // TODO: This Fails
+        {
+            // Perform touch for longer than tap time
+            var beginTime = 0.6;
+            var holdTime = InputSystem.settings.multiTapDelayTime + 0.1f;
+
+            BeginTouch(1, new Vector2(1.5f, 2.5f), time: beginTime);
+            EndTouch(1, new Vector2(1.5f, 2.5f), time: beginTime + holdTime, queueEventOnly: true);
+            yield return null;
+
+            Assert.That(Input.touchCount, Is.EqualTo(1));
+            var t = Input.GetTouch(0);
+            Assert.That(t.deltaTime, Is.EqualTo(holdTime).Within(float.Epsilon));
+            Assert.That(t.tapCount, Is.EqualTo(0));
+        }
     }
 }
