@@ -59,6 +59,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed missing tooltips in PlayerInputManagerEditor for the Player Limit and Fixed Splitscreen sizes labels ([case 1396945](https://issuetracker.unity3d.com/issues/player-input-manager-pops-up-placeholder-text-when-hovering-over-it)).
 - Fixed DualShock 4 controllers not working in some scenarios by adding support for extended mode HID reports ([case 1281633](https://issuetracker.unity3d.com/issues/input-system-dualshock4-controller-returns-random-input-values-when-connected-via-bluetooth-while-steam-is-running), case 1409867).
 - Fixed `BackgroundBehavior.IgnoreFocus` having no effect when `Application.runInBackground` was false ([case 1400456](https://issuetracker.unity3d.com/issues/xr-head-tracking-lost-when-lost-focus-with-action-based-trackedposedriver-on-android)).
+- Fixed an issue where a device was left disabled when it was disconnected while an application was out-of-focus and then re-connected when in-focus (case 1404320).
 
 #### Actions
 
