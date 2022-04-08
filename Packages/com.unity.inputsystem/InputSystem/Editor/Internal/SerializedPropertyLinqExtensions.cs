@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal static class SerializedPropertyLinqExtensions
+    internal static class SerializedPropertyLinqExtensions
     {
         public static IEnumerable<T> Select<T>(this SerializedProperty property, Func<SerializedProperty, T> selector)
         {
@@ -24,36 +24,35 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         public static IEnumerable<SerializedProperty> Where(this SerializedProperty property,
-	        Func<SerializedProperty, bool> predicate)
+            Func<SerializedProperty, bool> predicate)
         {
-	        if (property == null)
-		        throw new ArgumentNullException(nameof(property));
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
 
-	        if (predicate == null)
-		        throw new ArgumentNullException(nameof(predicate));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
 
-	        if (property.isArray == false)
-		        yield break;
+            if (property.isArray == false)
+                yield break;
 
-	        for (var i = 0; i < property.arraySize; i++)
-	        {
-		        var element = property.GetArrayElementAtIndex(i);
-		        if (predicate(element))
-			        yield return element;
-	        }
+            for (var i = 0; i < property.arraySize; i++)
+            {
+                var element = property.GetArrayElementAtIndex(i);
+                if (predicate(element))
+                    yield return element;
+            }
         }
 
         public static SerializedProperty FirstOrDefault(this SerializedProperty property)
         {
-	        if (property == null)
-		        throw new ArgumentNullException(nameof(property));
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
 
-	        if (property.isArray == false || property.arraySize == 0)
-		        return null;
+            if (property.isArray == false || property.arraySize == 0)
+                return null;
 
-	        return property.GetArrayElementAtIndex(0);
+            return property.GetArrayElementAtIndex(0);
         }
-
 
         public static SerializedProperty FirstOrDefault(this SerializedProperty property,
             Func<SerializedProperty, bool> predicate)
@@ -92,13 +91,13 @@ namespace UnityEngine.InputSystem.Editor
 
         public static IEnumerable<SerializedProperty> Take(this SerializedProperty property, int count)
         {
-	        if (property == null)
-		        throw new ArgumentNullException(nameof(property));
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
 
-	        if (count < 0 || count > property.arraySize)
-		        throw new ArgumentOutOfRangeException(nameof(count));
+            if (count < 0 || count > property.arraySize)
+                throw new ArgumentOutOfRangeException(nameof(count));
 
-	        return TakeIterator(property, count);
+            return TakeIterator(property, count);
         }
 
         private static IEnumerable<SerializedProperty> SkipIterator(SerializedProperty source, int count)

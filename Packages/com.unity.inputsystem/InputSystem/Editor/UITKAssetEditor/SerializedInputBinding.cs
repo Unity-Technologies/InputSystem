@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -14,6 +14,8 @@ namespace UnityEngine.InputSystem.Editor
             interactions = serializedProperty.FindPropertyRelative("m_Interactions").stringValue;
             processors = serializedProperty.FindPropertyRelative("m_Processors").stringValue;
             action = serializedProperty.FindPropertyRelative("m_Action").stringValue;
+            var bindingGroups = serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Groups)).stringValue;
+            controlSchemes = bindingGroups != null ? bindingGroups.Split(InputBinding.kSeparatorString) : Array.Empty<string>();
             flags = (InputBinding.Flags)serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Flags)).intValue;
             indexOfBinding = serializedProperty.GetIndexOfArrayElement();
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
@@ -29,6 +31,7 @@ namespace UnityEngine.InputSystem.Editor
         public string interactions { get; }
         public string processors { get; }
         public string action { get; }
+        public string[] controlSchemes { get; }
         public InputBinding.Flags flags { get; }
 
         /// <summary>
@@ -61,37 +64,37 @@ namespace UnityEngine.InputSystem.Editor
 
         public bool Equals(SerializedInputBinding other)
         {
-	        return name == other.name 
-	               && path == other.path
-	               && interactions == other.interactions
-	               && processors == other.processors
-	               && action == other.action
-	               && flags == other.flags
-	               && indexOfBinding == other.indexOfBinding
-	               && isComposite == other.isComposite
-	               && isPartOfComposite == other.isPartOfComposite
-	               && compositePath == other.compositePath;
+            return name == other.name
+                && path == other.path
+                && interactions == other.interactions
+                && processors == other.processors
+                && action == other.action
+                && flags == other.flags
+                && indexOfBinding == other.indexOfBinding
+                && isComposite == other.isComposite
+                && isPartOfComposite == other.isPartOfComposite
+                && compositePath == other.compositePath;
         }
 
         public override bool Equals(object obj)
         {
-	        return obj is SerializedInputBinding other && Equals(other);
+            return obj is SerializedInputBinding other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-	        var hashCode = new HashCode();
-	        hashCode.Add(name);
-	        hashCode.Add(path);
-	        hashCode.Add(interactions);
-	        hashCode.Add(processors);
-	        hashCode.Add(action);
-	        hashCode.Add((int)flags);
-	        hashCode.Add(indexOfBinding);
-	        hashCode.Add(isComposite);
-	        hashCode.Add(isPartOfComposite);
-	        hashCode.Add(compositePath);
-	        return hashCode.ToHashCode();
+            var hashCode = new HashCode();
+            hashCode.Add(name);
+            hashCode.Add(path);
+            hashCode.Add(interactions);
+            hashCode.Add(processors);
+            hashCode.Add(action);
+            hashCode.Add((int)flags);
+            hashCode.Add(indexOfBinding);
+            hashCode.Add(isComposite);
+            hashCode.Add(isPartOfComposite);
+            hashCode.Add(compositePath);
+            return hashCode.ToHashCode();
         }
     }
 }

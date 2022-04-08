@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -9,13 +9,13 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal static partial class Selectors
+    internal static partial class Selectors
     {
         public static IEnumerable<string> GetActionMapNames(InputActionsEditorState state)
         {
             return state.serializedObject
-               ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-               ?.Select(m => m.FindPropertyRelative(nameof(InputActionMap.m_Name))?.stringValue)
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                ?.Select(m => m.FindPropertyRelative(nameof(InputActionMap.m_Name))?.stringValue)
                 ?? Enumerable.Empty<string>();
         }
 
@@ -38,17 +38,17 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedInputActionMap GetSelectedActionMap(InputActionsEditorState state)
         {
-	        return new SerializedInputActionMap(state.serializedObject
-		        ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-		        ?.GetArrayElementAtIndex(state.selectedActionMapIndex));
+            return new SerializedInputActionMap(state.serializedObject
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                ?.GetArrayElementAtIndex(state.selectedActionMapIndex));
         }
 
         public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
         {
-	        var actionMapSO = state.serializedObject
+            var actionMapSO = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
                 ?.GetArrayElementAtIndex(state.selectedActionMapIndex);
-            
+
             return actionMapSO?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
                 ?.GetArrayElementAtIndex(state.selectedBindingIndex)
                 ?.FindPropertyRelative("m_Path");
@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
             var selectedCompositeIndex = -1;
             var currentIndex = 0;
             foreach (var composite in InputBindingComposite.s_Composites.internedNames.Where(x =>
-                         !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
+                !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
                 if (!string.IsNullOrEmpty(expectedControlLayout))
                 {
@@ -117,11 +117,11 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedInputAction GetSelectedAction(InputActionsEditorState state)
         {
-	        return new SerializedInputAction(state.serializedObject
-	            ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-	            ?.GetArrayElementAtIndex(state.selectedActionMapIndex)
-	            ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-	            ?.GetArrayElementAtIndex(state.selectedActionIndex));
+            return new SerializedInputAction(state.serializedObject
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                ?.GetArrayElementAtIndex(state.selectedActionMapIndex)
+                ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                ?.GetArrayElementAtIndex(state.selectedActionIndex));
         }
 
         public static IEnumerable<string> BuildSortedControlList(InputActionType selectedActionType)
@@ -202,7 +202,7 @@ namespace UnityEngine.InputSystem.Editor
                 .Select(p => (interaction: p, rowType: typeLookup(p.name)))
                 .Select(t =>
                 {
-                    var (parameter, rowType) = t;
+                    var(parameter, rowType) = t;
 
                     var parameterListView = new ParameterListView();
                     parameterListView.Initialize(rowType, parameter.parameters);
