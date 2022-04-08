@@ -8,6 +8,12 @@ using Touchscreen = UnityEngine.InputSystem.Touchscreen;
 
 partial class CoreTests
 {
+    public override void TearDown()
+    {
+        UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Disable();
+        base.TearDown();
+    }
+
     private static bool TouchesAreEqual(Touch first, Touch second)
     {
         return

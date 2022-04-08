@@ -68,7 +68,8 @@ namespace UnityEngine
         internal static void OnEnteringPlayMode()
         {
             // EnhancedTouch is required for the Touch API
-            EnhancedTouchSupport.Enable();
+            if (!EnhancedTouchSupport.enabled)
+                EnhancedTouchSupport.Enable();
 
             // We use actions to monitor for button presses and releases.
             s_ButtonActions = new InputActionMap("ButtonActions");
