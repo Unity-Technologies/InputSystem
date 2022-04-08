@@ -1501,6 +1501,52 @@ partial class CoreTests
         Assert.That(InputSystem.disconnectedDevices, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1404320
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReconnectDevice_WhenDisconnectedWhileAppIsOutOfFocus()
+    {
+        runtime.runInBackground = true;
+
+        var deviceDesc = new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+            product = "TestDevice",
+            serial = "1234"
+        };
+
+        var deviceId = runtime.ReportNewInputDevice(deviceDesc);
+        InputSystem.Update();
+
+        var device = InputSystem.GetDeviceById(deviceId);
+        Assert.That(device, Is.Not.Null);
+
+        // Loose focus.
+        runtime.PlayerFocusLost();
+        InputSystem.Update();
+
+        // Disconnect.
+        var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        // Regain focus.
+        runtime.PlayerFocusGained();
+        InputSystem.Update();
+
+        var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
+        InputSystem.Update();
+
+        var newDevice = InputSystem.GetDeviceById(newDeviceId);
+        Assert.That(newDevice, Is.SameAs(device));
+
+        Assert.That(device.added, Is.True);
+        Assert.That(device.enabled, Is.True);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
