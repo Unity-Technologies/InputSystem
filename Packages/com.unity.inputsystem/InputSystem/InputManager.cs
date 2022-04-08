@@ -2248,6 +2248,7 @@ namespace UnityEngine.InputSystem
                     device.m_DeviceId = deviceId;
                     device.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
                     device.m_DeviceFlags &= ~InputDevice.DeviceFlags.DisabledInFrontend;
+                    device.m_DeviceFlags &= ~InputDevice.DeviceFlags.DisabledWhileInBackground;
                     device.m_DeviceFlags &= ~InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
 
                     AddDevice(device);
