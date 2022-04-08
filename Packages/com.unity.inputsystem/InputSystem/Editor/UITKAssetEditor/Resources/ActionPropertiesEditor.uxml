@@ -1,6 +1,9 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
     <ui:Foldout text="Action" name="action-foldout" class="properties-foldout">
         <ui:DropdownField label="Action Type" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="action-type-dropdown" />
         <ui:DropdownField label="Control Type" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="control-type-dropdown" />
     </ui:Foldout>
+    <ui:VisualElement name="control-schemes-container">
+        <ui:Label text="Use in Control Scheme" display-tooltip-when-elided="true" name="Label" />
+    </ui:VisualElement>
 </ui:UXML>

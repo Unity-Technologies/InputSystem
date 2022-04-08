@@ -1,8 +1,10 @@
-﻿using UnityEngine.UIElements;
+﻿using System.Linq;
+using UnityEditor;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-	internal class BindingPropertiesView : ViewBase<InputActionsEditorState>
+	internal class BindingPropertiesView : ViewBase<BindingPropertiesView.ViewState>
 	{
 		private readonly VisualElement m_Root;
 		private readonly Foldout m_ParentFoldout;
@@ -16,18 +18,26 @@ namespace UnityEngine.InputSystem.Editor
 			m_ParentFoldout = foldout;
 
 			CreateSelector(state => state.selectedBindingIndex,
-				(_, state) => state);
+				s => new ViewStateCollection<InputControlScheme>(Selectors.GetControlSchemes(s)),
+				(_, controlSchemes, s) => new ViewState
+				{
+					controlSchemes = controlSchemes,
+					selectedBinding = Selectors.GetSelectedBinding(s),
+					selectedBindingIndex = s.selectedBindingIndex,
+					selectedBindingPath = Selectors.GetSelectedBindingPath(s),
+					selectedInputAction = Selectors.GetSelectedAction(s)
+				});
 		}
 
-		public override void RedrawUI(InputActionsEditorState state)
+		public override void RedrawUI(ViewState viewState)
 		{
-			var selectedBinding = state.selectedBindingIndex;
-			if (selectedBinding == -1)
+			var selectedBindingIndex = viewState.selectedBindingIndex;
+			if (selectedBindingIndex == -1)
 				return;
 
 			m_Root.Clear();
 
-			var binding = Selectors.GetSelectedBinding(state);
+			var binding = viewState.selectedBinding;
 			if (binding.isComposite)
 			{
 				m_ParentFoldout.text = "Composite";
@@ -41,14 +51,29 @@ namespace UnityEngine.InputSystem.Editor
 			{
 				m_ParentFoldout.text = "Binding";
 
-				var controlPathEditor = new InputControlPathEditor(Selectors.GetSelectedBindingPath(state), new InputControlPickerState(),
+				var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
 					() => { Dispatch(Commands.ApplyModifiedProperties()); });
 
-				var inputAction = Selectors.GetSelectedAction(state);
+				var inputAction = viewState.selectedInputAction;
 				controlPathEditor.SetExpectedControlLayout(inputAction.expectedControlType ?? "");
 
 				var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
 				m_Root.Add(controlPathContainer);
+			}
+
+			var controlSchemesContainer = m_Root.Q<VisualElement>("control-schemes-container");
+			if (viewState.controlSchemes.Any() == false)
+			{
+				controlSchemesContainer.style.visibility = new StyleEnum<Visibility>(Visibility.Hidden);
+			}
+			else
+			{
+				foreach (var controlScheme in viewState.controlSchemes)
+				{
+					var checkbox = new Toggle(controlScheme.name);
+					Selectors.IsControlSchemeSelectedForBinding()
+					viewState.selectedBinding.controlSchemes.FirstOrDefault(controlScheme.name);
+				}
 			}
 		}
 
@@ -56,6 +81,19 @@ namespace UnityEngine.InputSystem.Editor
 		{
 			m_CompositeBindingPropertiesView?.DestroyView();
 			m_CompositePartBindingPropertiesView?.DestroyView();
+		}
+
+		internal class ViewState
+		{
+			public int selectedBindingIndex;
+			public SerializedInputBinding selectedBinding;
+			public ViewStateCollection<InputControlScheme> controlSchemes;
+			public SerializedProperty selectedBindingPath;
+			public SerializedInputAction selectedInputAction;
+		}
+
+		internal static partial class Selectors
+		{
 		}
 	}
 }

@@ -5,7 +5,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal readonly struct SerializedInputBinding
     {
-        public SerializedInputBinding(SerializedProperty serializedProperty)
+	    public SerializedInputBinding(SerializedProperty serializedProperty)
         {
             wrappedProperty = serializedProperty ?? throw new ArgumentNullException(nameof(serializedProperty));
 
@@ -14,6 +14,8 @@ namespace UnityEngine.InputSystem.Editor
             interactions = serializedProperty.FindPropertyRelative("m_Interactions").stringValue;
             processors = serializedProperty.FindPropertyRelative("m_Processors").stringValue;
             action = serializedProperty.FindPropertyRelative("m_Action").stringValue;
+            var bindingGroups = serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Groups)).stringValue;
+            controlSchemes = bindingGroups != null ? bindingGroups.Split(InputBinding.kSeparatorString) : Array.Empty<string>();
             flags = (InputBinding.Flags)serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Flags)).intValue;
             indexOfBinding = serializedProperty.GetIndexOfArrayElement();
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
@@ -29,6 +31,7 @@ namespace UnityEngine.InputSystem.Editor
         public string interactions { get; }
         public string processors { get; }
         public string action { get; }
+        public string[] controlSchemes { get; }
         public InputBinding.Flags flags { get; }
 
         /// <summary>
