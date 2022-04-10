@@ -8,11 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.4.0] - 2022-04-10
 
 ### Changed
 
-- `Button` type `InputAction`s now go to `started` when a button goes from a press to below the release threshold but not yet to 0 ([case ]
+- `Button` type `InputAction`s now go to `started` when a button goes from a press to below the release threshold but not yet to 0.
   ```CSharp
   // Before:
   Set(Gamepad.current.rightTrigger, 0.7f); // Performed (pressed)
@@ -73,20 +73,6 @@ however, it has to be formatted properly to pass verification tests.
   * This was a regression introduced in [1.0.0-pre.6](#axiscomposite-min-max-value-fix).
 - Fixed calling `action.AddCompositeBinding(...).With(...)` while action is enabled not correctly updating controls for part bindings of the composite.
 - Fixed `TwoModifiersComposite` inadvertently not allowing controls other than `ButtonControl`s being bound to its `binding` part.
-
-### Added
-
-- Added support for "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
-- Added support for SteelSeries Nimbus+ gamepad on Mac (addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
-- Added support for Game Core platforms to XR layouts, devices, and input controls. These classes were previously only enabled on platforms where `ENABLE_VR` is defined.
-- Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
-  * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
-- Added the 'Cursor Lock Behavior' setting to InputSystemUIInputModule to control the origin point of UI raycasts when the cursor is locked. This enables the use of PhysicsRaycaster when the cursor is locked to the center of the screen ([case 1395281](https://issuetracker.unity3d.com/product/unity/issues/guid/1395281/)).
-- Added support for using the Unity Remote app with the input system.
-  * Requires Unity 2021.2.18 or later.
-
-#### Actions
-
 - Added support for keyboard shortcuts and mutually exclusive use of modifiers.
   * In short, this means that a "Shift+B" binding can now prevent a "B" binding from triggering.
   * `OneModifierComposite`, `TwoModifiersComposite`, as well as the legacy `ButtonWithOneModifierComposite` and `ButtonWithTwoModifiersComposite` now require their modifiers to be pressed __before__ (or at least simultaneously with) pressing the target button.
@@ -118,6 +104,17 @@ however, it has to be formatted properly to pass verification tests.
   asset.ApplyParameterOverride("scaleVector2:x", 0.25f,
       new InputBinding("<Mouse>/delta"));
   ```
+
+### Added
+
+- Added support for "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
+- Added support for SteelSeries Nimbus+ gamepad on Mac (addition contributed by [Mollyjameson](https://github.com/MollyJameson)).
+- Added support for Game Core platforms to XR layouts, devices, and input controls. These classes were previously only enabled on platforms where `ENABLE_VR` is defined.
+- Added a new `DeltaControl` control type that is now used for delta-style controls such as `Mouse.delta` and `Mouse.scroll`.
+  * Like `StickControl`, this control has individual `up`, `down`, `left`, and `right` controls (as well as `x` and `y` that it inherits from `Vector2Control`). This means it is now possible to directly bind to individual scroll directions (such as `<Mouse>/scroll/up`).
+- Added the 'Cursor Lock Behavior' setting to InputSystemUIInputModule to control the origin point of UI raycasts when the cursor is locked. This enables the use of PhysicsRaycaster when the cursor is locked to the center of the screen ([case 1395281](https://issuetracker.unity3d.com/product/unity/issues/guid/1395281/)).
+- Added support for using the Unity Remote app with the Input System.
+  * Requires Unity 2021.2.18 or later.
 
 ## [1.3.0] - 2021-12-10
 
