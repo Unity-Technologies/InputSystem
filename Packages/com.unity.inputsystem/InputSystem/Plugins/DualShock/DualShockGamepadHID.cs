@@ -146,10 +146,11 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock 4 controllers.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 32)]
+    [StructLayout(LayoutKind.Explicit, Size = 9 /* !!! Beware !!! If you plan to increase this, think about how you gonna fit 10 byte state events because we can only shrink events in IEventPreProcessor */)]
     internal struct DualShock4HIDInputReport : IInputStateTypeInfo
     {
-        [FieldOffset(0)] public byte reportId;
+        public static FourCC Format = new FourCC('D', '4', 'V', 'S'); // DualShock4 Virtual State
+        public FourCC format => Format;
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
@@ -158,8 +159,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
         [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
         [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
-        [FieldOffset(1)] public byte leftStickX;
-        [FieldOffset(2)] public byte leftStickY;
+        [FieldOffset(0)] public byte leftStickX;
+        [FieldOffset(1)] public byte leftStickY;
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
@@ -168,8 +169,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
         [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
         [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
-        [FieldOffset(3)] public byte rightStickX;
-        [FieldOffset(4)] public byte rightStickY;
+        [FieldOffset(2)] public byte rightStickX;
+        [FieldOffset(3)] public byte rightStickY;
 
         [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
         [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
@@ -180,7 +181,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "buttonSouth", displayName = "Cross", bit = 5)]
         [InputControl(name = "buttonEast", displayName = "Circle", bit = 6)]
         [InputControl(name = "buttonNorth", displayName = "Triangle", bit = 7)]
-        [FieldOffset(5)] public byte buttons1;
+        [FieldOffset(4)] public byte buttons1;
         [InputControl(name = "leftShoulder", bit = 0)]
         [InputControl(name = "rightShoulder", bit = 1)]
         [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2, synthetic = true)]
@@ -189,21 +190,15 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "start", displayName = "Options", bit = 5)]
         [InputControl(name = "leftStickPress", bit = 6)]
         [InputControl(name = "rightStickPress", bit = 7)]
-        [FieldOffset(6)] public byte buttons2;
+        [FieldOffset(5)] public byte buttons2;
         [InputControl(name = "systemButton", layout = "Button", displayName = "System", bit = 0)]
         [InputControl(name = "touchpadButton", layout = "Button", displayName = "Touchpad Press", bit = 1)]
-        [FieldOffset(7)] public byte buttons3;
+        [FieldOffset(6)] public byte buttons3;
 
         [InputControl(name = "leftTrigger", format = "BYTE")]
-        [FieldOffset(8)] public byte leftTrigger;
+        [FieldOffset(7)] public byte leftTrigger;
         [InputControl(name = "rightTrigger", format = "BYTE")]
-        [FieldOffset(9)] public byte rightTrigger;
-
-        [FieldOffset(30)] public byte batteryLevel;
-
-        ////TODO: touchpad
-
-        public FourCC format => new FourCC('H', 'I', 'D');
+        [FieldOffset(8)] public byte rightTrigger;
     }
 
     /// <summary>
@@ -669,8 +664,8 @@ namespace UnityEngine.InputSystem.DualShock
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true)]
-    public class DualShock4GamepadHID : DualShockGamepad
+    [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true, isNoisy = true)]
+    public class DualShock4GamepadHID : DualShockGamepad, IEventPreProcessor
     {
         public ButtonControl leftTriggerButton { get; protected set; }
         public ButtonControl rightTriggerButton { get; protected set; }
@@ -789,6 +784,92 @@ namespace UnityEngine.InputSystem.DualShock
         private float? m_LowFrequencyMotorSpeed;
         private float? m_HighFrequenceyMotorSpeed;
         private Color? m_LightBarColor;
+
+        unsafe bool IEventPreProcessor.PreProcessEvent(InputEventPtr eventPtr)
+        {
+            if (eventPtr.type != StateEvent.Type)
+                return eventPtr.type != DeltaStateEvent.Type; // only skip delta state events
+
+            var stateEvent = StateEvent.FromUnchecked(eventPtr);
+            var size = stateEvent->stateSizeInBytes;
+
+            if (stateEvent->stateFormat != DualShock4HIDGenericInputReport.Format || size < sizeof(DualShock4HIDGenericInputReport))
+                return false; // skip unrecognized state events otherwise they will corrupt control states
+
+            var binaryData = (byte*)stateEvent->state;
+
+            switch (binaryData[0])
+            {
+                // normal USB or non-enhanced report
+                case 1:
+                {
+                    if (size < sizeof(DualShock4HIDGenericInputReport) + 1)
+                        return false;
+
+                    var data = ((DualShock4HIDGenericInputReport*)(binaryData + 1))->ToHIDInputReport();
+                    *((DualShock4HIDInputReport*)stateEvent->state) = data;
+                    stateEvent->stateFormat = DualShock4HIDInputReport.Format;
+                    return true;
+                }
+                // bluetooth or enhanced report
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                    if ((binaryData[1] & 0x80) != 0)
+                    {
+                        if (size < sizeof(DualShock4HIDGenericInputReport) + 3)
+                            return false;
+
+                        var data = ((DualShock4HIDGenericInputReport*)(binaryData + 3))->ToHIDInputReport();
+                        *((DualShock4HIDInputReport*)stateEvent->state) = data;
+                        stateEvent->stateFormat = DualShock4HIDInputReport.Format;
+                        return true;
+                    }
+                    else
+                        return false;
+                default:
+                    return false; // skip unrecognized reportId
+            }
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        internal struct DualShock4HIDGenericInputReport
+        {
+            public static FourCC Format => new FourCC('H', 'I', 'D');
+
+            [FieldOffset(0)] public byte leftStickX;
+            [FieldOffset(1)] public byte leftStickY;
+            [FieldOffset(2)] public byte rightStickX;
+            [FieldOffset(3)] public byte rightStickY;
+            [FieldOffset(4)] public byte buttons0;
+            [FieldOffset(5)] public byte buttons1;
+            [FieldOffset(6)] public byte buttons2;
+            [FieldOffset(7)] public byte leftTrigger;
+            [FieldOffset(8)] public byte rightTrigger;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public DualShock4HIDInputReport ToHIDInputReport()
+            {
+                return new DualShock4HIDInputReport
+                {
+                    leftStickX = leftStickX,
+                    leftStickY = leftStickY,
+                    rightStickX = rightStickX,
+                    rightStickY = rightStickY,
+                    leftTrigger = leftTrigger,
+                    rightTrigger = rightTrigger,
+                    buttons1 = buttons0,
+                    buttons2 = buttons1,
+                    buttons3 = buttons2
+                };
+            }
+        }
     }
 
     [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true, displayName = "PS3 Controller")]

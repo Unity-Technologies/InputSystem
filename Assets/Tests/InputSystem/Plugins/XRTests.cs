@@ -1,16 +1,16 @@
-#if ENABLE_VR || ENABLE_AR
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+#if ENABLE_VR || UNITY_GAMECORE
 using System;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.XR;
 
 using Usages = UnityEngine.InputSystem.CommonUsages;
@@ -45,7 +45,10 @@ internal class XRTests : CoreTestsFixture
         var generatedLayout = InputSystem.LoadLayout(
             $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
+        if (baseLayoutName == null)
+            Assert.That(generatedLayout.baseLayouts, Is.Empty);
+        else
+            Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
 
     [Test]
@@ -890,4 +893,4 @@ internal class XRTests : CoreTestsFixture
         Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
     }
 }
-#endif //ENABLE_VR || ENABLE_AR
+#endif

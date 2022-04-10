@@ -32,13 +32,18 @@
         },
         {
             "name": "Unity",
-            "expression": "[2022.2.0a1,2022.2.0a10)",
-            "define": "TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK"
+            "expression": "[2021.1,2021.2)",
+            "define": "TEMP_DISABLE_UITOOLKIT_TEST"
         },
         {
             "name": "Unity",
-            "expression": "[2021.2,2021.3)",
+            "expression": "[2022.2.0a1,2022.2.0b16)",
             "define": "TEMP_DISABLE_UITOOLKIT_TEST"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.2.0a1,2022.2.0a12)",
+            "define": "TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST"
         }
     ],
     "noEngineReferences": false

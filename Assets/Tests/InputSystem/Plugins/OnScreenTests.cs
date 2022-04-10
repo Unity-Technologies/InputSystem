@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.InputSystem.UI;
@@ -282,6 +283,50 @@ internal class OnScreenTests : CoreTestsFixture
         gameObject.SetActive(false);
 
         Assert.That(Keyboard.current, Is.EqualTo(systemKeyboard));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1380790/
+    // This test only indirectly triggers the problem in that report (the specific cause is
+    // covered by Devices_CanSetUsagesOnDevice_WithoutAnyControlWithUsages) but it is useful
+    // in that it covers quite a bit of ground and thus provides a general sanity check.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanUseOnScreenButtonWithCustomDevice()
+    {
+        InputSystem.RegisterLayout<CustomDevice>();
+
+        var gameObject = new GameObject();
+        var buttonObject = new GameObject();
+
+        gameObject.SetActive(false);
+        buttonObject.SetActive(false);
+
+        gameObject.AddComponent<Camera>();
+        var canvas = gameObject.AddComponent<Canvas>();
+        gameObject.AddComponent<EventSystem>();
+        gameObject.AddComponent<InputSystemUIInputModule>();
+        buttonObject.transform.SetParent(canvas.transform);
+
+        var button = buttonObject.AddComponent<OnScreenButton>();
+        button.controlPath = "<CustomDevice>/button";
+
+        gameObject.SetActive(true);
+        buttonObject.SetActive(true);
+
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    public class CustomDevice : InputDevice
+    {
+        [InputControl]
+        public ButtonControl button { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+
+            button = GetChildControl<ButtonControl>("button");
+        }
     }
 
     private class TestEventSystem : EventSystem

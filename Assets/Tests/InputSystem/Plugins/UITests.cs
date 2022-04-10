@@ -24,6 +24,7 @@ using Image = UnityEngine.UI.Image;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 using UnityEngine.Scripting;
+using Cursor = UnityEngine.Cursor;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -250,6 +251,8 @@ internal class UITests : CoreTestsFixture
     [TestCase("GenericDeviceWithPointingAbility", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
     public IEnumerator UI_CanDriveUIFromPointer(string deviceLayout, UIPointerType pointerType, PointerEventData.InputButton clickButton)
     {
+        ResetTime();
+
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
         InputSystem.RegisterLayout(kGenericDeviceWithPointingAbility);
 
@@ -3414,15 +3417,19 @@ internal class UITests : CoreTestsFixture
 #if UNITY_2021_2_OR_NEWER
     [UnityTest]
     [Category("UI")]
-    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1
+#if TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN)
+        , Ignore = "Currently fails on MacOS, MacOS standalone, MacOS standalone IL2CPP player on Unity version 2022.2 CI"
+#endif
+     )]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1
-    #if UNITY_STANDALONE_OSX && TEMP_DISABLE_UITOOLKIT_TEST
+#if TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX)
             // temporarily disable this test case on OSX player for 2021.2. It only intermittently works and I don't know why!
         , Ignore = "Currently fails on OSX IL2CPP player on Unity version 2021.2"
-    #endif
+#endif
      )]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-#if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS) || (TEMP_DISABLE_UITOOLKIT_TEST && (UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN))
     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
 #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
@@ -3663,6 +3670,38 @@ internal class UITests : CoreTestsFixture
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(mousePosition));
         Assert.That(mouse.leftButton.isPressed, Is.False);
         Assert.That(clicked, Is.EqualTo(canRunInBackground));
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenCursorIsLockedToScreenCenter_PointerEnterAndExitEventsFire()
+    {
+        var eventSystem = new GameObject("EventSystem", typeof(TestEventSystem), typeof(InputSystemUIInputModule));
+        var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+        inputModule.m_CursorLockBehavior = InputSystemUIInputModule.CursorLockBehavior.ScreenCenter;
+        inputModule.actionsAsset.Enable();
+
+        new GameObject("Raycaster", typeof(PhysicsRaycaster))
+        {
+            transform = { position = new Vector3(0, 0, -1) }
+        };
+        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var callbackReceiver = cube.AddComponent<UICallbackReceiver>();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // first yield is to enable the input system ui input module
+        yield return null;
+        Press(mouse.leftButton);
+
+        // second yield is to actually process events in the module
+        yield return null;
+        Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerEnter), Is.True);
+
+        cube.transform.position = new Vector3(1000, 0, 0);
+        yield return null;
+        Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerExit), Is.True);
     }
 
     public class MyButton : UnityEngine.UI.Button

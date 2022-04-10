@@ -174,14 +174,17 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Action_WithMultipleInteractions_DoesNotThrowWhenUsingMultipleMaps()
+    public void Actions_WithMultipleInteractions_DoNotThrowWhenUsingMultipleMaps()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var map1 = new InputActionMap("map1");
         var map2 = new InputActionMap("map2");
         map1.AddAction(name: "action1", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
-        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "press,hold(duration=0.4)");
+        // https://fogbugz.unity3d.com/f/cases/1392559
+        // Having `press` after `hold` ensures that we have an interaction waiting in performed state and
+        // thus also exercise that path in InputActionState.
+        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "hold(duration=0.4),press");
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
@@ -198,8 +201,10 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WhenTransitionFromOneInteractionToNext_GetCallbacks()
+    public void Actions_WhenTransitioningFromOneInteractionToNext_GetCallbacks()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction("test", InputActionType.Button, binding: "<Gamepad>/buttonSouth",
@@ -217,7 +222,7 @@ internal partial class CoreTests
 
             // Expire the tap. The system should transitioning from the tap to a slowtap.
             // Note the starting time of the slowTap will be 0 not 2.
-            runtime.currentTime = 2;
+            currentTime = 2;
             InputSystem.Update();
 
             Assert.That(trace,
@@ -230,6 +235,8 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformPressInteraction()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // We add a second input device (and bind to it), to test that the binding
@@ -252,7 +259,7 @@ internal partial class CoreTests
         using (var releaseOnly = new InputActionTrace(releaseOnlyAction))
         using (var pressAndRelease = new InputActionTrace(pressAndReleaseAction))
         {
-            runtime.currentTime = 1;
+            currentTime = 1;
             Press(gamepad.buttonSouth);
 
             Assert.That(pressOnly,
@@ -267,7 +274,7 @@ internal partial class CoreTests
             releaseOnly.Clear();
             pressAndRelease.Clear();
 
-            runtime.currentTime = 2;
+            currentTime = 2;
             Release(gamepad.buttonSouth);
 
             Assert.That(pressOnly, Canceled<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1));
@@ -282,7 +289,7 @@ internal partial class CoreTests
             releaseOnly.Clear();
             pressAndRelease.Clear();
 
-            runtime.currentTime = 5;
+            currentTime = 5;
             Press(gamepad.buttonSouth);
 
             Assert.That(pressOnly,
@@ -331,7 +338,7 @@ internal partial class CoreTests
 
             Set(gamepad.leftTrigger, 0.3f);
 
-            Assert.That(trace, Canceled(action, control: gamepad.leftTrigger, value: 0f));
+            Assert.That(trace, Started(action, control: gamepad.leftTrigger, value: 0.3f));
         }
     }
 
@@ -565,6 +572,8 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformTapInteraction()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
@@ -633,7 +642,7 @@ internal partial class CoreTests
             trace.SubscribeTo(action);
 
             // Press button.
-            runtime.currentTime = 1;
+            currentTime = 1;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 1);
             InputSystem.Update();
 
@@ -647,7 +656,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Release before tap time and make sure the double tap cancels.
-            runtime.currentTime = 12;
+            currentTime = 12;
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 1.75);
             InputSystem.Update();
 
@@ -662,7 +671,7 @@ internal partial class CoreTests
 
             // Press again and then release before tap time. Should see only the start from
             // the initial press.
-            runtime.currentTime = 2.5;
+            currentTime = 2.5;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 2);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2.25);
             InputSystem.Update();
@@ -678,7 +687,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Wait for longer than tapDelay and make sure we're seeing a cancellation.
-            runtime.currentTime = 4;
+            currentTime = 4;
             InputSystem.Update();
 
             actions = trace.ToArray();
@@ -693,7 +702,7 @@ internal partial class CoreTests
 
             // Now press and release within tap time. Then press again within delay time but release
             // only after tap time. Should we started and canceled.
-            runtime.currentTime = 6;
+            currentTime = 6;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 4.7);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 4.9);
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 5);
@@ -716,7 +725,7 @@ internal partial class CoreTests
             trace.Clear();
 
             // Finally perform a full, proper double tap cycle.
-            runtime.currentTime = 8;
+            currentTime = 8;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 7);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 7.25);
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 7.5);

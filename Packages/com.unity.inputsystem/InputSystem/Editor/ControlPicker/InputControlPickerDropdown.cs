@@ -155,7 +155,7 @@ namespace UnityEngine.InputSystem.Editor
             var otherGroup = new AdvancedDropdownItem("Other");
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
                      .Where(x => x.isDeviceLayout && !x.isOverride && !x.isGenericTypeOfDevice &&
-                         x.type.BaseType == typeof(InputDevice) &&
+                         (x.type.BaseType == typeof(InputDevice) || x.type == typeof(InputDevice)) &&
                          !x.hideInUI && !x.baseLayouts.Any()).OrderBy(a => a.displayName))
             {
                 AddDeviceTreeItemRecursive(deviceLayout, otherGroup);
@@ -180,7 +180,6 @@ namespace UnityEngine.InputSystem.Editor
 
             // Add toplevel item for device.
             var deviceItem = new DeviceDropdownItem(layout, searchable: searchable);
-            parent.AddChild(deviceItem);
 
             var defaultControlPickerLayout = new DefaultInputControlPickerLayout();
 
@@ -257,6 +256,9 @@ namespace UnityEngine.InputSystem.Editor
                 var item = new DeviceDropdownItem(layout);
                 deviceItem.m_Children.Insert(0, item);
             }
+
+            if (deviceItem.m_Children.Count > 0 || m_Mode == InputControlPicker.Mode.PickDevice)
+                parent.AddChild(deviceItem);
         }
 
         private void AddControlTreeItemsRecursive(IInputControlPickerLayout controlPickerLayout, InputControlLayout layout,

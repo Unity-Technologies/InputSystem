@@ -7,6 +7,7 @@ using System.Linq;
 using System.CodeDom.Compiler;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.Scripting;
@@ -2180,9 +2181,9 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
-    #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
-                         // still affected by the current platform.
-#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
+#if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
+    // still affected by the current platform.
+#if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.
     [Test]
     [Category("Editor")]
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
@@ -2222,9 +2223,8 @@ partial class CoreTests
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
+#endif // !NET_STANDARD_2_0
 #endif
-#endif
-
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on
     // all derived layouts).
@@ -2880,7 +2880,7 @@ partial class CoreTests
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.
-#if !TEMP_DISABLE_EDITOR_TESTS_ON_TRUNK // Temporary: Disables tests while net-profile passed from UTR to trunk is overridden to netstandard (missing CodeDom)
+#if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -2888,7 +2888,6 @@ partial class CoreTests
     [TestCase("Keyboard", typeof(Keyboard))]
     [TestCase("Gamepad", typeof(Gamepad))]
     [TestCase("Touchscreen", typeof(Touchscreen))]
-    [TestCase("DualShock4GamepadHID", typeof(DualShock4GamepadHID))]
     public void Editor_CanGenerateCodeForInputDeviceLayout(string layoutName, Type deviceType)
     {
         var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST", @namespace: "TestNamespace");
@@ -3058,21 +3057,49 @@ partial class CoreTests
     internal static Type Compile(string code, string typeName, string options = null)
     {
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
-        var cp = new CompilerParameters();
-        cp.CompilerOptions = options;
+        var cp = new CompilerParameters { CompilerOptions = options };
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
+#if UNITY_2022
+        // Currently there is are cross-references to netstandard, e.g. System.IEquatable<UnityEngine.Vector2>, System.IFormattable
+        // causing compilation failure for 2022 versions. This is a workaround for running these tests.
+        var netstandard = Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
+        cp.ReferencedAssemblies.Add(netstandard.Location);
+#endif
         var cr = codeProvider.CompileAssemblyFromSource(cp, code);
-        Assert.That(cr.Errors, Is.Empty);
+
         var assembly = cr.CompiledAssembly;
+
+        // on some machines/environments, mono/mcs (which the codedom compiler uses) outputs a byte order mark after a successful compile, which
+        // codedom interprets as an error. Check for that here and just load the assembly manually in that case
+        if (cr.Errors.HasErrors)
+        {
+            if (!Encoding.UTF8.GetBytes(cr.Errors[0].ErrorText).SequenceEqual(Encoding.UTF8.GetPreamble()))
+            {
+                var sb = new StringBuilder("Compilation of generated code failed:");
+                for (var i = 0; i < cr.Errors.Count; ++i)
+                    sb.Append("\n").Append(cr.Errors[i].ErrorText);
+                Assert.Fail(sb.ToString());
+            }
+
+            foreach (var tempFile in cr.TempFiles)
+            {
+                if (tempFile is string tempFileStr && tempFileStr.EndsWith("dll"))
+                {
+                    assembly = Assembly.Load(new AssemblyName { CodeBase = tempFileStr });
+                    break;
+                }
+            }
+        }
+
         Assert.That(assembly, Is.Not.Null);
         var type = assembly.GetType(typeName);
         Assert.That(type, Is.Not.Null);
         return type;
     }
 
-#endif
-#endif
+#endif // !NET_STANDARD_2_0
+#endif // UNITY_STANDALONE
 
     [Test]
     [Category("Editor")]

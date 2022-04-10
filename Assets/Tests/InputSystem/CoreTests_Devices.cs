@@ -265,6 +265,26 @@ partial class CoreTests
         Assert.That(device.usages, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1380790/
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanSetUsagesOnDevice_WithoutAnyControlWithUsages()
+    {
+        var device = InputSystem.AddDevice<DeviceWithNoControlUsages>();
+
+        InputSystem.AddDeviceUsage(device, "Usage");
+
+        Assert.That(device.usages, Has.Count.EqualTo(1));
+        Assert.That(device.usages[0], Is.EqualTo(new InternedString("Usage")));
+        Assert.That(InputControlPath.TryFindControl(device, "*/{Foo}"), Is.Null);
+    }
+
+    private class DeviceWithNoControlUsages : InputDevice
+    {
+        [InputControl]
+        public ButtonControl button;
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanFindDeviceByMultipleUsages()
@@ -1481,6 +1501,52 @@ partial class CoreTests
         Assert.That(InputSystem.disconnectedDevices, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1404320
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReconnectDevice_WhenDisconnectedWhileAppIsOutOfFocus()
+    {
+        runtime.runInBackground = true;
+
+        var deviceDesc = new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+            product = "TestDevice",
+            serial = "1234"
+        };
+
+        var deviceId = runtime.ReportNewInputDevice(deviceDesc);
+        InputSystem.Update();
+
+        var device = InputSystem.GetDeviceById(deviceId);
+        Assert.That(device, Is.Not.Null);
+
+        // Loose focus.
+        runtime.PlayerFocusLost();
+        InputSystem.Update();
+
+        // Disconnect.
+        var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        // Regain focus.
+        runtime.PlayerFocusGained();
+        InputSystem.Update();
+
+        var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
+        InputSystem.Update();
+
+        var newDevice = InputSystem.GetDeviceById(newDeviceId);
+        Assert.That(newDevice, Is.SameAs(device));
+
+        Assert.That(device.added, Is.True);
+        Assert.That(device.enabled, Is.True);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
@@ -2426,6 +2492,47 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [TestCase("Pointer", "delta")]
+    [TestCase("Pen", "delta")]
+    [TestCase("Touchscreen", "delta")]
+    [TestCase("Mouse", "delta")]
+    [TestCase("Mouse", "scroll")]
+    public void Devices_PointerDeltasHaveDirectionalChildControls(string layoutName, string controlPath)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (DeltaControl)device[controlPath];
+
+        if (device is Touchscreen) // No delta events on Touchscreens.
+        {
+            // Delta on Begin will always be (0,0).
+            BeginTouch(1, new Vector2(0, 0));
+            MoveTouch(1, new Vector2(123, 234));
+        }
+        else
+            Set(control, new Vector2(123, 234));
+
+        Assert.That(control.x.ReadValue(), Is.EqualTo(123).Within(0.0001));
+        Assert.That(control.left.ReadValue(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(control.right.ReadValue(), Is.EqualTo(123).Within(0.0001));
+        Assert.That(control.y.ReadValue(), Is.EqualTo(234).Within(0.0001));
+        Assert.That(control.up.ReadValue(), Is.EqualTo(234).Within(0.0001));
+        Assert.That(control.down.ReadValue(), Is.EqualTo(0).Within(0.0001));
+
+        if (device is Touchscreen) // No delta events on Touchscreens.
+            MoveTouch(1, new Vector2(-123, -234), delta: new Vector2(-123, -234));
+        else
+            Set(control, new Vector2(-123, -234));
+
+        Assert.That(control.x.ReadValue(), Is.EqualTo(-123).Within(0.0001));
+        Assert.That(control.left.ReadValue(), Is.EqualTo(123).Within(0.0001));
+        Assert.That(control.right.ReadValue(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(control.y.ReadValue(), Is.EqualTo(-234).Within(0.0001));
+        Assert.That(control.up.ReadValue(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(control.down.ReadValue(), Is.EqualTo(234).Within(0.0001));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
         var pointer = InputSystem.AddDevice<Pointer>();
@@ -2441,6 +2548,42 @@ partial class CoreTests
 
         Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
         Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_PointerDeltasHaveNoNormalizationAppliedToMagnitudes()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var pen = InputSystem.AddDevice<Pen>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        Assert.That(mouse.delta.m_MinValue.isEmpty);
+        Assert.That(pen.delta.m_MinValue.isEmpty);
+        Assert.That(touch.delta.m_MinValue.isEmpty);
+
+        Assert.That(mouse.delta.m_MaxValue.isEmpty);
+        Assert.That(pen.delta.m_MaxValue.isEmpty);
+        Assert.That(touch.delta.m_MaxValue.isEmpty);
+
+        Set(mouse.delta, new Vector2(123, 234), queueEventOnly: true);
+        Set(pen.delta, new Vector2(123, 234), queueEventOnly: true);
+        BeginTouch(1, Vector2.zero, queueEventOnly: true);
+        MoveTouch(1, new Vector2(123, 234), queueEventOnly: true);
+
+        InputSystem.Update();
+
+        Assert.That(mouse.delta.x.EvaluateMagnitude(), Is.EqualTo(123));
+        Assert.That(mouse.delta.y.EvaluateMagnitude(), Is.EqualTo(234));
+        Assert.That(pen.delta.x.EvaluateMagnitude(), Is.EqualTo(123));
+        Assert.That(pen.delta.y.EvaluateMagnitude(), Is.EqualTo(234));
+        Assert.That(touch.delta.x.EvaluateMagnitude(), Is.EqualTo(123));
+        Assert.That(touch.delta.y.EvaluateMagnitude(), Is.EqualTo(234));
+
+        // But also to the Vector2 controls as a whole.
+        Assert.That(mouse.delta.EvaluateMagnitude(), Is.EqualTo(new Vector2(123, 234).magnitude));
+        Assert.That(pen.delta.EvaluateMagnitude(), Is.EqualTo(new Vector2(123, 234).magnitude));
+        Assert.That(touch.delta.EvaluateMagnitude(), Is.EqualTo(new Vector2(123, 234).magnitude));
     }
 
     [Test]
@@ -3082,21 +3225,21 @@ partial class CoreTests
         BeginTouch(4, new Vector2(0.123f, 0.234f), time: 0.1);
         BeginTouch(5, new Vector2(0.234f, 0.345f), time: 0.2);
 
-        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1));
-        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2));
+        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1).Within(0.0001));
+        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2).Within(0.0001));
 
         MoveTouch(4, new Vector2(0.345f, 0.456f), time: 0.3);
         MoveTouch(4, new Vector2(0.456f, 0.567f), time: 0.3);
         MoveTouch(5, new Vector2(0.567f, 0.678f), time: 0.4);
 
-        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1));
-        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2));
+        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1).Within(0.0001));
+        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2).Within(0.0001));
 
         EndTouch(4, new Vector2(0.123f, 0.234f), time: 0.5);
         EndTouch(5, new Vector2(0.234f, 0.345f), time: 0.5);
 
-        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1));
-        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2));
+        Assert.That(touchscreen.touches[0].startTime.ReadValue(), Is.EqualTo(0.1).Within(0.0001));
+        Assert.That(touchscreen.touches[1].startTime.ReadValue(), Is.EqualTo(0.2).Within(0.0001));
     }
 
     [Test]
@@ -3132,14 +3275,14 @@ partial class CoreTests
             Assert.That(allTouchTaps[1].control, Is.SameAs(touchscreen.touches[0].tap));
             Assert.That(allTouchTaps[0].ReadValue(), Is.EqualTo(1));
             Assert.That(allTouchTaps[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.3));
-            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.3));
+            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.3).Within(0.0001));
+            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.3).Within(0.0001));
             Assert.That(allTouchTaps[2].control, Is.SameAs(touchscreen.touches[1].tap));
             Assert.That(allTouchTaps[3].control, Is.SameAs(touchscreen.touches[1].tap));
             Assert.That(allTouchTaps[2].ReadValue(), Is.EqualTo(1));
             Assert.That(allTouchTaps[3].ReadValue(), Is.EqualTo(0));
-            Assert.That(allTouchTaps[2].time, Is.EqualTo(0.3));
-            Assert.That(allTouchTaps[3].time, Is.EqualTo(0.3));
+            Assert.That(allTouchTaps[2].time, Is.EqualTo(0.3).Within(0.0001));
+            Assert.That(allTouchTaps[3].time, Is.EqualTo(0.3).Within(0.0001));
 
             // The primary touch switched from touch #0 to touch #1 when we released
             // touch #0 while touch #1 was still ongoing. Even though touch #1 then
@@ -3166,16 +3309,16 @@ partial class CoreTests
             Assert.That(allTouchTaps[1].control, Is.SameAs(touchscreen.touches[0].tap));
             Assert.That(allTouchTaps[0].ReadValue(), Is.EqualTo(1));
             Assert.That(allTouchTaps[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.8));
-            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.8));
+            Assert.That(allTouchTaps[0].time, Is.EqualTo(0.8).Within(0.0001));
+            Assert.That(allTouchTaps[1].time, Is.EqualTo(0.8).Within(0.0001));
 
             Assert.That(primaryTouchTap, Has.Count.EqualTo(2));
             Assert.That(primaryTouchTap[0].control, Is.SameAs(touchscreen.primaryTouch.tap));
             Assert.That(primaryTouchTap[1].control, Is.SameAs(touchscreen.primaryTouch.tap));
             Assert.That(primaryTouchTap[0].ReadValue(), Is.EqualTo(1));
             Assert.That(primaryTouchTap[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(primaryTouchTap[0].time, Is.EqualTo(0.8));
-            Assert.That(primaryTouchTap[1].time, Is.EqualTo(0.8));
+            Assert.That(primaryTouchTap[0].time, Is.EqualTo(0.8).Within(0.0001));
+            Assert.That(primaryTouchTap[1].time, Is.EqualTo(0.8).Within(0.0001));
         }
     }
 
@@ -3183,6 +3326,8 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanDetectTouchTaps_AndKeepTrackOfTapCounts()
     {
+        ResetTime();
+
         // Give us known tap settings.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
@@ -3202,7 +3347,7 @@ partial class CoreTests
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.EqualTo(2));
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.EqualTo(2));
 
-        runtime.currentTime = 10;
+        currentTime = 10;
         InputSystem.Update();
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.Zero);
@@ -4569,8 +4714,8 @@ partial class CoreTests
         InputDevice trackedDevice2 = null;
 
         // If we're set up to process input even when in the background, make sure
-        // this is intact.
-        if (appRunInBackground || kIsEditor)
+        // this is intact. (IgnoreFocus will always allow for running in the background)
+        if (appRunInBackground || kIsEditor || backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
         {
             // Queue a change on each device.
             Set(mouse.position, new Vector2(333, 444), queueEventOnly: true);
@@ -4647,27 +4792,14 @@ partial class CoreTests
 
                     if (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                     {
-                        if (appRunInBackground)
-                        {
-                            // All devices should have been affected.
-                            Assert.That(eventCount, Is.EqualTo(5));
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
-                            Assert.That(keyboard.aKey.isPressed, Is.True);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
-                            Assert.That(joystick.stick.ReadValue(),
-                                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
-                        }
-                        else
-                        {
-                            // All devices should be unaffected.
-                            Assert.That(eventCount, Is.Zero);
-                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
-                            Assert.That(keyboard.aKey.isPressed, Is.False);
-                            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
-                            Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
-                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
-                        }
+                        // All devices should have been affected.
+                        Assert.That(eventCount, Is.EqualTo(5));
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                        Assert.That(keyboard.aKey.isPressed, Is.True);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                        Assert.That(joystick.stick.ReadValue(),
+                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
                     }
 
                     if (kIsEditor && editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
@@ -4838,7 +4970,9 @@ partial class CoreTests
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
 
-        if (!appRunInBackground && (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
+        // We were not processing input in the background
+        if (!appRunInBackground && backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus &&
+            (!kIsEditor || editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView))
         {
             // No change on focus gain.
 
@@ -5024,9 +5158,29 @@ partial class CoreTests
                     break;
 
                 case InputSettings.BackgroundBehavior.IgnoreFocus:
-                    Assert.That(changes, Is.Empty);
-                    Assert.That(commands, Is.Empty);
-                    break;
+                    if (appRunInBackground)
+                    {
+                        Assert.That(changes, Is.Empty);
+                        Assert.That(commands, Is.Empty);
+                        break;
+                    }
+                    else
+                    {
+                        // All enabled devices should have received sync requests.
+                        Assert.That(commands, Is.EquivalentTo(new[]
+                        {
+                            "Sync Gamepad", "Sync Joystick",
+                            "Sync TrackedDevice", "Sync TrackedDevice2",
+                            "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
+                            "Sync Keyboard", "Reset Joystick"
+                        }));
+                        // Enabled devices that don't support syncs get reset.
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick", "SoftReset TrackedDevice2"
+                        }));
+                        break;
+                    }
             }
         }
 
@@ -5371,6 +5525,87 @@ partial class CoreTests
         Assert.That(mouseScrollAtKeyPressEvent, Is.EqualTo(new Vector2(5, 5)));
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_EventMerging_DoesntMergeOverFixedUpdateTimeBoundary()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 0;
+
+        var moveAction = new InputAction("Move", binding: "<Mouse>/position");
+        int performedCount = 0;
+        Vector2 mousePosition = Vector2.zero;
+        moveAction.performed += ctx =>
+        {
+            performedCount++;
+            mousePosition = ctx.ReadValue<Vector2>();
+        };
+        moveAction.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(1.0f, 2.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 1);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(2.0f, 3.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 2);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(3.0f, 4.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 3);
+        InputSystem.QueueStateEvent(mouse,
+            new MouseState
+            {
+                position = new Vector2(4.0f, 5.0f),
+                delta = new Vector2(1.0f, 1.0f),
+            }, time: 4);
+
+        // only first two events should be processed and merged together
+        {
+            runtime.currentTimeForFixedUpdate = 2.1f;
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(performedCount, Is.EqualTo(1));
+            Assert.That(mousePosition, Is.EqualTo(new Vector2(2, 3)));
+            Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(2, 2)));
+
+            performedCount = 0;
+            mousePosition = Vector2.zero;
+        }
+
+        // if we advance fixed update slightly forward, no events get processed
+        {
+            runtime.currentTimeForFixedUpdate = 2.8f;
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(performedCount, Is.EqualTo(0));
+            Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(0, 0)));
+        }
+
+        // and last two events should be processed and merged together
+        {
+            runtime.currentTimeForFixedUpdate = 4.1f;
+
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(performedCount, Is.EqualTo(1));
+            Assert.That(mousePosition, Is.EqualTo(new Vector2(4, 5)));
+            Assert.That(Mouse.current.delta.ReadValue(), Is.EqualTo(new Vector2(2, 2)));
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct PreProcessorTestDeviceState : IInputStateTypeInfo
     {
@@ -5477,5 +5712,23 @@ partial class CoreTests
 
         Assert.That(device.value1.ReadValue(), Is.EqualTo(expectedValue1));
         Assert.That(device.value2.ReadValue(), Is.EqualTo(expectedValue2));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1395648/
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_DoesntErrorOutOnMaxTouchCount()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.onEvent += (InputEventPtr eventPtr, InputDevice device) =>
+        {
+            Assert.That(() => eventPtr.HasButtonPress(), Throws.Nothing);
+        };
+
+        Assert.That(() => {
+            for (var i = 0; i < TouchscreenState.MaxTouches + 5; ++i)
+                BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
+        }, Throws.Nothing);
     }
 }

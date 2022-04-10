@@ -529,10 +529,7 @@ namespace UnityEngine.InputSystem
 
             void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
-                ////REVIEW: should we by default take the time from the device here?
-                if (time >= 0)
-                    eventPtr.time = time;
-                eventPtr.time += timeOffset;
+                eventPtr.time = (time >= 0 ? time : InputState.currentTime) + timeOffset;
                 control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
@@ -650,7 +647,7 @@ namespace UnityEngine.InputSystem
                 position = position,
                 delta = delta,
                 pressure = pressure,
-            }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
+            }, (time >= 0 ? time : InputState.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();
         }
@@ -726,10 +723,10 @@ namespace UnityEngine.InputSystem
         /// <value>Current time used by the input system.</value>
         public double currentTime
         {
-            get => runtime.currentTime;
+            get => runtime.currentTime - runtime.currentTimeOffsetToRealtimeSinceStartup;
             set
             {
-                runtime.currentTime = value;
+                runtime.currentTime = value + runtime.currentTimeOffsetToRealtimeSinceStartup;
                 runtime.dontAdvanceTimeNextDynamicUpdate = true;
             }
         }
@@ -841,27 +838,27 @@ namespace UnityEngine.InputSystem
                 if (value != null)
                 {
                     var val = eventPtr.ReadValueAsObject();
-                    if (value is float f)
+                    if (val is float f)
                     {
-                        if (!Mathf.Approximately(f, Convert.ToSingle(val)))
+                        if (!Mathf.Approximately(f, Convert.ToSingle(value)))
                             return false;
                     }
-                    else if (value is double d)
+                    else if (val is double d)
                     {
-                        if (!Mathf.Approximately((float)d, (float)Convert.ToDouble(val)))
+                        if (!Mathf.Approximately((float)d, (float)Convert.ToDouble(value)))
                             return false;
                     }
-                    else if (value is Vector2 v2)
+                    else if (val is Vector2 v2)
                     {
-                        if (!Vector2EqualityComparer.Instance.Equals(v2, val.As<Vector2>()))
+                        if (!Vector2EqualityComparer.Instance.Equals(v2, value.As<Vector2>()))
                             return false;
                     }
-                    else if (value is Vector3 v3)
+                    else if (val is Vector3 v3)
                     {
-                        if (!Vector3EqualityComparer.Instance.Equals(v3, val.As<Vector3>()))
+                        if (!Vector3EqualityComparer.Instance.Equals(v3, value.As<Vector3>()))
                             return false;
                     }
-                    else if (!value.Equals(val))
+                    else if (!val.Equals(value))
                         return false;
                 }
 
