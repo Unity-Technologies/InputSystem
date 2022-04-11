@@ -11,7 +11,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal Touchscreen SimulatorTouchscreen;
 
-        private bool m_InputSystemEnabled;
         private List<InputDevice> m_DisabledDevices;
 
         public override string title => "Input System";
@@ -84,20 +83,17 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnDestroy()
         {
-            if (m_InputSystemEnabled)
-            {
-                // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
-                if (deviceSimulator != null)
-                    deviceSimulator.touchScreenInput -= OnTouchEvent;
-                InputSystem.onDeviceChange -= OnDeviceChange;
+            // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
+            if (deviceSimulator != null)
+                deviceSimulator.touchScreenInput -= OnTouchEvent;
+            InputSystem.onDeviceChange -= OnDeviceChange;
 
-                if (SimulatorTouchscreen != null)
-                    InputSystem.RemoveDevice(SimulatorTouchscreen);
-                foreach (var device in m_DisabledDevices)
-                {
-                    if (device.added)
-                        InputSystem.EnableDevice(device);
-                }
+            if (SimulatorTouchscreen != null)
+                InputSystem.RemoveDevice(SimulatorTouchscreen);
+            foreach (var device in m_DisabledDevices)
+            {
+                if (device.added)
+                    InputSystem.EnableDevice(device);
             }
         }
     }

@@ -3559,6 +3559,7 @@ namespace UnityEngine.InputSystem
 
             InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
+            EnhancedTouchSupport.Disable();
             EnhancedTouchSupport.Reset();
             Profiler.EndSample();
         }

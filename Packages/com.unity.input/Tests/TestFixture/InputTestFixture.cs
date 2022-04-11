@@ -9,6 +9,7 @@ using NUnit.Framework.Internal;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
@@ -170,6 +171,22 @@ namespace UnityEngine.InputSystem
             {
                 InputSystem.Restore();
                 runtime.Dispose();
+
+                // Always ensure EnhancedTouch is disabled completely
+                Input.Reset();
+
+                // Make sure cleanup really did clean up.
+                Assert.That(EnhancedTouch.Touch.s_GlobalState.touchscreens.length, Is.EqualTo(0));
+                Assert.That(EnhancedTouch.Touch.s_GlobalState.playerState, Is.EqualTo(default(EnhancedTouch.Touch.FingerAndTouchState)));
+                #if UNITY_EDITOR
+                Assert.That(EnhancedTouch.Touch.s_GlobalState.editorState, Is.EqualTo(default(EnhancedTouch.Touch.FingerAndTouchState)));
+                #endif
+
+                // Some state is kept alive in-between Disable/Enable. Manually clean it out.
+                EnhancedTouch.Touch.s_GlobalState.onFingerDown = default;
+                EnhancedTouch.Touch.s_GlobalState.onFingerUp = default;
+                EnhancedTouch.Touch.s_GlobalState.onFingerMove = default;
+
 
                 // Unhook from play mode state changes.
                 #if UNITY_EDITOR
