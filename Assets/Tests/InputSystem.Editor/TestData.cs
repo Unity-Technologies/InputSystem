@@ -7,63 +7,63 @@ using Random = UnityEngine.Random;
 
 public static class TestData
 {
-	private const string kAlphaNumericCharacters =
-		"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
- 
-	public static Generator<string> alphaNumericString =
-		new(() =>
-		{
-			var length = (int)(Random.value * 25 + 1);
-			var chars = new char[length];
-			for (var i = 0; i < length; i++)
-			{
-				chars[i] = kAlphaNumericCharacters[(int)(Random.value * kAlphaNumericCharacters.Length)];
-			}
-			return new string(chars);
-		});
+    private const string kAlphaNumericCharacters =
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	public static Generator<InputActionAsset> inputActionAsset = new(() =>
-	{
-		var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-		var actionMap = asset.AddActionMap(alphaNumericString.Generate());
-		var action = actionMap.AddAction(alphaNumericString.Generate());
-		action.AddBinding("<Gamepad>/leftStick");
-		return asset;
-	});
+    public static Generator<string> alphaNumericString =
+        new(() =>
+        {
+            var length = (int)(Random.value * 25 + 1);
+            var chars = new char[length];
+            for (var i = 0; i < length; i++)
+            {
+                chars[i] = kAlphaNumericCharacters[(int)(Random.value * kAlphaNumericCharacters.Length)];
+            }
+            return new string(chars);
+        });
 
-	internal static Generator<InputActionsEditorState> editorState = 
-		new(() => new InputActionsEditorState(new SerializedObject(ScriptableObject.CreateInstance<InputActionAsset>())));
+    public static Generator<InputActionAsset> inputActionAsset = new(() =>
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var actionMap = asset.AddActionMap(alphaNumericString.Generate());
+        var action = actionMap.AddAction(alphaNumericString.Generate());
+        action.AddBinding("<Gamepad>/leftStick");
+        return asset;
+    });
 
-	internal static Generator<InputActionsEditorState> EditorStateWithAsset(ScriptableObject asset)
-	{
-		return new Generator<InputActionsEditorState>(() => new InputActionsEditorState(new SerializedObject(asset)));
-	}
+    internal static Generator<InputActionsEditorState> editorState =
+        new(() => new InputActionsEditorState(new SerializedObject(ScriptableObject.CreateInstance<InputActionAsset>())));
 
-	public static Generator<InputControlScheme.DeviceRequirement> deviceRequirement =
-		new (() => new InputControlScheme.DeviceRequirement
-		{
-			controlPath = $"<{alphaNumericString.Generate()}>"
-		});
+    internal static Generator<InputActionsEditorState> EditorStateWithAsset(ScriptableObject asset)
+    {
+        return new Generator<InputActionsEditorState>(() => new InputActionsEditorState(new SerializedObject(asset)));
+    }
 
-	public static Generator<InputControlScheme> controlScheme = new(() => new InputControlScheme(alphaNumericString.Generate()));
-	
-	public static Generator<InputControlScheme> controlSchemeWithOneDeviceRequirement = new(() =>
-		new InputControlScheme(alphaNumericString.Generate(), deviceRequirement.Generate(1)));
+    public static Generator<InputControlScheme.DeviceRequirement> deviceRequirement =
+        new(() => new InputControlScheme.DeviceRequirement
+        {
+            controlPath = $"<{alphaNumericString.Generate()}>"
+        });
 
-	public static Generator<InputControlScheme> controlSchemeWithTwoDeviceRequirements = new(() =>
-		new InputControlScheme(alphaNumericString.Generate(), deviceRequirement.Generate(2)));
+    public static Generator<InputControlScheme> controlScheme = new(() => new InputControlScheme(alphaNumericString.Generate()));
 
-	public static Generator<IEnumerable<T>> N<T>(Generator<T> generator, int count)
-	{
-		return new Generator<IEnumerable<T>>(() =>
-		{
-			var array = new T[count];
-			for (var i = 0; i < count; i++)
-			{
-				array[i] = generator.Generate();
-			}
+    public static Generator<InputControlScheme> controlSchemeWithOneDeviceRequirement = new(() =>
+        new InputControlScheme(alphaNumericString.Generate(), deviceRequirement.Generate(1)));
 
-			return array;
-		});
-	}
+    public static Generator<InputControlScheme> controlSchemeWithTwoDeviceRequirements = new(() =>
+        new InputControlScheme(alphaNumericString.Generate(), deviceRequirement.Generate(2)));
+
+    public static Generator<IEnumerable<T>> N<T>(Generator<T> generator, int count)
+    {
+        return new Generator<IEnumerable<T>>(() =>
+        {
+            var array = new T[count];
+            for (var i = 0; i < count; i++)
+            {
+                array[i] = generator.Generate();
+            }
+
+            return array;
+        });
+    }
 }

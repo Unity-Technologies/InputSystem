@@ -73,23 +73,23 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DrawControlSchemeToggles(ViewState viewState, SerializedInputBinding binding)
         {
-	        if (!viewState.controlSchemes.Any()) return;
+            if (!viewState.controlSchemes.Any()) return;
 
-	        var useInControlSchemeLabel = new Label("Use in control scheme");
-	        m_Root.Add(useInControlSchemeLabel);
+            var useInControlSchemeLabel = new Label("Use in control scheme");
+            m_Root.Add(useInControlSchemeLabel);
 
-	        foreach (var controlScheme in viewState.controlSchemes)
-	        {
-		        var checkbox = new Toggle(controlScheme.name)
-		        {
-			        value = binding.controlSchemes.Any(scheme => controlScheme.name == scheme)
-		        };
-		        m_Root.Add(checkbox);
-		        checkbox.RegisterValueChangedCallback(changeEvent =>
-		        {
-			        Dispatch(ControlSchemeCommands.ChangeSelectedBindingsControlSchemes(controlScheme.name, changeEvent.newValue));
-		        });
-	        }
+            foreach (var controlScheme in viewState.controlSchemes)
+            {
+                var checkbox = new Toggle(controlScheme.name)
+                {
+                    value = binding.controlSchemes.Any(scheme => controlScheme.name == scheme)
+                };
+                m_Root.Add(checkbox);
+                checkbox.RegisterValueChangedCallback(changeEvent =>
+                {
+                    Dispatch(ControlSchemeCommands.ChangeSelectedBindingsControlSchemes(controlScheme.name, changeEvent.newValue));
+                });
+            }
         }
 
         internal class ViewState

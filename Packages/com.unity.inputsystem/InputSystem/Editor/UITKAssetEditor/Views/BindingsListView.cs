@@ -11,19 +11,19 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class BindingsListView : ViewBase<List<BindingsListView.ViewState>>
     {
-	    private const string RowTemplateUxml = InputActionsEditorConstants.PackagePath +
-	                                           InputActionsEditorConstants.ResourcesPath +
-	                                           InputActionsEditorConstants.BindingsPanelRowTemplateUxml;
+        private const string RowTemplateUxml = InputActionsEditorConstants.PackagePath +
+            InputActionsEditorConstants.ResourcesPath +
+            InputActionsEditorConstants.BindingsPanelRowTemplateUxml;
 
-	    private const float TreeItemIndentPerLevel = 15;
+        private const float TreeItemIndentPerLevel = 15;
 
-	    private readonly VisualElement m_Root;
+        private readonly VisualElement m_Root;
 
-	    public BindingsListView(VisualElement root, StateContainer stateContainer)
-	        : base(stateContainer)
+        public BindingsListView(VisualElement root, StateContainer stateContainer)
+            : base(stateContainer)
         {
-	        m_Root = root;
-	        var bindingItemRowTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+            m_Root = root;
+            var bindingItemRowTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 RowTemplateUxml);
 
             var bindingsListView = root.Q<ListView>("bindings-list-view");
@@ -37,17 +37,17 @@ namespace UnityEngine.InputSystem.Editor
                 var name = string.Empty;
                 if (binding.isPartOfComposite)
                     name = $"{ObjectNames.NicifyVariableName(binding.name)}: " +
-                           $"{InputControlPath.ToHumanReadableString(binding.path)}";
+                        $"{InputControlPath.ToHumanReadableString(binding.path)}";
                 else if (binding.isComposite)
-	                name = binding.name;
+                    name = binding.name;
                 else
                     name = InputControlPath.ToHumanReadableString(binding.path);
 
                 e.style.paddingLeft = binding.isPartOfComposite ? TreeItemIndentPerLevel : 0;
                 e.Q<Label>("name").text = name;
                 e.Q<VisualElement>("icon").style.backgroundImage =
-	                new StyleBackground(
-		                EditorInputControlLayoutCache.GetIconForLayout(bindingState.controlType));
+                    new StyleBackground(
+                        EditorInputControlLayoutCache.GetIconForLayout(bindingState.controlType));
 
                 // only show the foldout icon if a binding has children
                 if (!binding.isComposite) return;
@@ -77,112 +77,112 @@ namespace UnityEngine.InputSystem.Editor
             };
             bindingsListView.onSelectionChange += _ =>
             {
-	            var viewState = (ViewState)bindingsListView.selectedItem;
-	            Dispatch(Commands.SelectBinding(viewState.binding));
+                var viewState = (ViewState)bindingsListView.selectedItem;
+                Dispatch(Commands.SelectBinding(viewState.binding));
             };
 
             CreateSelector(
                 state => state.selectedActionIndex,
-	            state => new ViewStateCollection<ViewState>(
-		            Selectors.GetVisibleBindingsForSelectedAction(state), ViewState.comparer),
-	            (_, bindings, _) => bindings.ToList());
+                state => new ViewStateCollection<ViewState>(
+                    Selectors.GetVisibleBindingsForSelectedAction(state), ViewState.comparer),
+                (_, bindings, _) => bindings.ToList());
         }
 
         public override void RedrawUI(List<ViewState> bindings)
         {
-	        var bindingsListView = m_Root.Q<ListView>("bindings-list-view");
-	        bindingsListView.itemsSource?.Clear();
-	        bindingsListView.itemsSource = bindings;
-	        bindingsListView.Rebuild();
+            var bindingsListView = m_Root.Q<ListView>("bindings-list-view");
+            bindingsListView.itemsSource?.Clear();
+            bindingsListView.itemsSource = bindings;
+            bindingsListView.Rebuild();
         }
 
         public struct ViewState
         {
-	        private sealed class BindingViewStateEqualityComparer : IEqualityComparer<ViewState>
-	        {
-		        public bool Equals(ViewState x, ViewState y)
-		        {
-			        return x.binding.Equals(y.binding) && x.isExpanded == y.isExpanded;
-		        }
+            private sealed class BindingViewStateEqualityComparer : IEqualityComparer<ViewState>
+            {
+                public bool Equals(ViewState x, ViewState y)
+                {
+                    return x.binding.Equals(y.binding) && x.isExpanded == y.isExpanded;
+                }
 
-		        public int GetHashCode(ViewState obj)
-		        {
-			        return HashCode.Combine(obj.binding, obj.isExpanded);
-		        }
-	        }
+                public int GetHashCode(ViewState obj)
+                {
+                    return HashCode.Combine(obj.binding, obj.isExpanded);
+                }
+            }
 
-	        public static IEqualityComparer<ViewState> comparer { get; } = new BindingViewStateEqualityComparer();
+            public static IEqualityComparer<ViewState> comparer { get; } = new BindingViewStateEqualityComparer();
 
-	        public SerializedInputBinding binding { get; }
-	        public bool isExpanded { get; }
-	        public string controlType { get; }
+            public SerializedInputBinding binding { get; }
+            public bool isExpanded { get; }
+            public string controlType { get; }
 
-	        public ViewState(SerializedInputBinding binding, bool isExpanded, string controlType)
-	        {
-		        this.binding = binding;
-		        this.isExpanded = isExpanded;
-		        this.controlType = string.IsNullOrEmpty(controlType) ? "InputControl" : controlType;
-	        }
+            public ViewState(SerializedInputBinding binding, bool isExpanded, string controlType)
+            {
+                this.binding = binding;
+                this.isExpanded = isExpanded;
+                this.controlType = string.IsNullOrEmpty(controlType) ? "InputControl" : controlType;
+            }
         }
     }
 
     internal static partial class Selectors
     {
-	    /// <summary>
-	    /// Return a collection of the bindings that should be rendered in the view based on the selected action map, selected action,
-	    /// and expanded state.
-	    /// </summary>
-	    /// <param name="state"></param>
-	    /// <returns></returns>
-	    public static IEnumerable<BindingsListView.ViewState> GetVisibleBindingsForSelectedAction(InputActionsEditorState state)
-	    {
-		    var actionMap = state.serializedObject
-			    .FindProperty(nameof(InputActionAsset.m_ActionMaps))
-			    .GetArrayElementAtIndex(state.selectedActionMapIndex);
-		    var selectedAction = new SerializedInputAction(
-			    actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-				    .GetArrayElementAtIndex(state.selectedActionIndex));
-            
-		    var bindings = actionMap
-			    .FindPropertyRelative(nameof(InputActionMap.m_Bindings))
-			    .Select(sp => new SerializedInputBinding(sp))
-			    .Where(sp => sp.action == selectedAction.name)
-			    .ToList();
+        /// <summary>
+        /// Return a collection of the bindings that should be rendered in the view based on the selected action map, selected action,
+        /// and expanded state.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public static IEnumerable<BindingsListView.ViewState> GetVisibleBindingsForSelectedAction(InputActionsEditorState state)
+        {
+            var actionMap = state.serializedObject
+                .FindProperty(nameof(InputActionAsset.m_ActionMaps))
+                .GetArrayElementAtIndex(state.selectedActionMapIndex);
+            var selectedAction = new SerializedInputAction(
+                actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                    .GetArrayElementAtIndex(state.selectedActionIndex));
 
-		    var expandedStates = state.GetOrCreateExpandedState();
-		    var indexOfPreviousComposite = -1;
-		    foreach (var binding in bindings)
-		    {
-			    if (binding.isComposite)
-			    {
-				    indexOfPreviousComposite = binding.indexOfBinding;
-				    yield return new BindingsListView.ViewState(binding, expandedStates.Contains(indexOfPreviousComposite),
-					    selectedAction.expectedControlType);
-			    }
-			    else
-			    {
-				    string controlLayout = string.Empty;
-				    try
-				    {
-					    controlLayout = InputControlPath.TryGetControlLayout(binding.path);
-				    }
-				    catch (Exception )
-				    {
-				    }
+            var bindings = actionMap
+                .FindPropertyRelative(nameof(InputActionMap.m_Bindings))
+                .Select(sp => new SerializedInputBinding(sp))
+                .Where(sp => sp.action == selectedAction.name)
+                .ToList();
 
-				    if (binding.isPartOfComposite)
-				    {
-					    if (expandedStates.Contains(indexOfPreviousComposite) == false)
-						    continue;
+            var expandedStates = state.GetOrCreateExpandedState();
+            var indexOfPreviousComposite = -1;
+            foreach (var binding in bindings)
+            {
+                if (binding.isComposite)
+                {
+                    indexOfPreviousComposite = binding.indexOfBinding;
+                    yield return new BindingsListView.ViewState(binding, expandedStates.Contains(indexOfPreviousComposite),
+                        selectedAction.expectedControlType);
+                }
+                else
+                {
+                    string controlLayout = string.Empty;
+                    try
+                    {
+                        controlLayout = InputControlPath.TryGetControlLayout(binding.path);
+                    }
+                    catch (Exception)
+                    {
+                    }
 
-					    yield return new BindingsListView.ViewState(binding, false, controlLayout);
-				    }
-				    else
-				    {
-					    yield return new BindingsListView.ViewState(binding, false, controlLayout);
-				    }
-			    }
-		    }
-	    }
+                    if (binding.isPartOfComposite)
+                    {
+                        if (expandedStates.Contains(indexOfPreviousComposite) == false)
+                            continue;
+
+                        yield return new BindingsListView.ViewState(binding, false, controlLayout);
+                    }
+                    else
+                    {
+                        yield return new BindingsListView.ViewState(binding, false, controlLayout);
+                    }
+                }
+            }
+        }
     }
 }

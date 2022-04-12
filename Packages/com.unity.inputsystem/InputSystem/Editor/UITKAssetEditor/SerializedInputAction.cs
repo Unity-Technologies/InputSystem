@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -49,14 +49,14 @@ namespace UnityEngine.InputSystem.Editor
 
         public bool Equals(SerializedInputAction other)
         {
-            return name == other.name 
-                   && expectedControlType == other.expectedControlType
-                   && type == other.type
-                   && interactions == other.interactions
-                   && processors == other.processors
-                   && initialStateCheck == other.initialStateCheck
-                   && actionTypeTooltip == other.actionTypeTooltip
-                   && expectedControlTypeTooltip == other.expectedControlTypeTooltip;
+            return name == other.name
+                && expectedControlType == other.expectedControlType
+                && type == other.type
+                && interactions == other.interactions
+                && processors == other.processors
+                && initialStateCheck == other.initialStateCheck
+                && actionTypeTooltip == other.actionTypeTooltip
+                && expectedControlTypeTooltip == other.expectedControlTypeTooltip;
         }
 
         public override bool Equals(object obj)
@@ -67,14 +67,14 @@ namespace UnityEngine.InputSystem.Editor
         public override int GetHashCode()
         {
             return HashCode.Combine(
-	            name, 
-	            expectedControlType, 
-	            (int)type, 
-	            interactions, 
-	            processors, 
-	            initialStateCheck, 
-	            actionTypeTooltip, 
-	            expectedControlTypeTooltip);
+                name,
+                expectedControlType,
+                (int)type,
+                interactions,
+                processors,
+                initialStateCheck,
+                actionTypeTooltip,
+                expectedControlTypeTooltip);
         }
     }
 }

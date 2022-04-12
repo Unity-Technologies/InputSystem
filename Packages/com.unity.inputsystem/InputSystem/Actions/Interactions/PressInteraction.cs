@@ -224,7 +224,7 @@ namespace UnityEngine.InputSystem.Interactions
             var behaviourDropdown = new EnumField(s_PressBehaviorLabel.text, target.behavior);
             behaviourDropdown.RegisterValueChangedCallback(evt =>
             {
-	            target.behavior = (PressBehavior)evt.newValue;
+                target.behavior = (PressBehavior)evt.newValue;
                 onChangedCallback?.Invoke();
             });
             root.Add(behaviourDropdown);
