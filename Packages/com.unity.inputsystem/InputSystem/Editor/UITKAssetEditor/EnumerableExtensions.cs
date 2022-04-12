@@ -11,5 +11,10 @@ namespace UnityEngine.InputSystem.Editor
 		    foreach (var item in enumerable)
 			    action(item, index++);
 	    }
+
+	    public static string Join<T>(this IEnumerable<T> enumerable, string separator)
+	    {
+		    return string.Join(separator, enumerable);
+	    }
     }
 }
