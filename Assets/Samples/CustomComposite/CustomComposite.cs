@@ -179,22 +179,22 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
 
     public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
     {
-	    var slider = new Slider(m_ScaleFactorLabel.text, 0, 2)
-	    {
-		    value = target.scaleFactor,
-		    showInputField = true
-	    };
+        var slider = new Slider(m_ScaleFactorLabel.text, 0, 2)
+        {
+            value = target.scaleFactor,
+            showInputField = true
+        };
 
-	    // Note: For UIToolkit sliders, as of Feb 2022, we can't register for the mouse up event directly
+        // Note: For UIToolkit sliders, as of Feb 2022, we can't register for the mouse up event directly
         // on the slider because an element inside the slider captures the event. The workaround is to
         // register for the event on the slider container. This will be fixed in a future version of
         // UIToolkit.
         slider.Q("unity-drag-container").RegisterCallback<MouseUpEvent>(evt =>
         {
-	        target.scaleFactor = slider.value;
-	        onChangedCallback?.Invoke();
+            target.scaleFactor = slider.value;
+            onChangedCallback?.Invoke();
         });
-	    
+
         root.Add(slider);
     }
 

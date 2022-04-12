@@ -88,8 +88,8 @@ namespace UnityEngine.InputSystem.Processors
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-	        m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
-	        m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
         private CustomOrDefaultSetting m_MinSetting;

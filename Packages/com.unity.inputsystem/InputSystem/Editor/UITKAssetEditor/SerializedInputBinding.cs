@@ -24,8 +24,8 @@ namespace UnityEngine.InputSystem.Editor
             action = serializedProperty.FindPropertyRelative("m_Action").stringValue;
             var bindingGroups = serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Groups)).stringValue;
             controlSchemes = bindingGroups != null
-	            ? bindingGroups.Split(InputBinding.kSeparatorString, StringSplitOptions.RemoveEmptyEntries)
-	            : Array.Empty<string>();
+                ? bindingGroups.Split(InputBinding.kSeparatorString, StringSplitOptions.RemoveEmptyEntries)
+                : Array.Empty<string>();
             flags = (InputBinding.Flags)serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Flags)).intValue;
             indexOfBinding = serializedProperty.GetIndexOfArrayElement();
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
