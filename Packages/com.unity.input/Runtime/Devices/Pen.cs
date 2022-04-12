@@ -120,6 +120,17 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
+        /// <summary>
+        /// Returns true if the bit for the given <paramref name="button"/> is set to true in <see cref="buttons"/>.
+        /// </summary>
+        /// <param name="button">A pen button.</param>
+        /// <returns>True if <paramref name="button"/> is set to pressed in <see cref="buttons"/>.</returns>
+        public bool IsButtonDown(PenButton button)
+        {
+            var bit = 1U << (int)button;
+            return (buttons & bit) != 0;
+        }
+
         /// <inheritdoc />
         public FourCC format => Format;
     }

@@ -126,11 +126,7 @@ namespace UnityEngine
                 case InputDeviceChange.Disconnected:
                 case InputDeviceChange.Reconnected:
                 {
-                    var isJoystick = device is Joystick;
-                    var isGamepad = !isJoystick && device is Gamepad;
-                    var isAccelerometer = !isJoystick && !isGyroAvailable && device is Accelerometer;
-
-                    if (isJoystick || isGamepad)
+                    if (device is Joystick || device is Gamepad)
                     {
                         if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
                         {
@@ -141,21 +137,34 @@ namespace UnityEngine
                             RemoveJoystick(device);
                         }
                     }
-                    else if (isAccelerometer)
+                    else if (device is Accelerometer accelerometer)
                     {
                         if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
-                            AddAccelerometer((Accelerometer)device);
+                            AddAccelerometer(accelerometer);
+                    }
+                    else if (device is Pen pen)
+                    {
+                        AddPen(pen);
                     }
                     break;
                 }
             }
         }
 
-        internal static void NextFrame()
+        internal static void OnBeforeUpdate()
         {
+            // Ignore updates that don't advance frames. Particularly
+            // BeforeRender and Editor updates.
+            if (InputState.currentUpdateType != InputUpdateType.Dynamic &&
+                InputState.currentUpdateType != InputUpdateType.Fixed &&
+                InputState.currentUpdateType != InputUpdateType.Manual)
+                return;
+
+            // Advance frame.
             s_ThisFramePressedKeys.Clear();
             s_ThisFrameReleasedKeys.Clear();
             s_Accelerometer.NextFrame();
+            s_Pen.NextFrame();
         }
 
         internal static void Reset()
@@ -182,6 +191,7 @@ namespace UnityEngine
             s_Compass = new Compass();
 
             s_Accelerometer.Cleanup();
+            s_Pen.Cleanup();
 
             InputSystem.InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
         }
@@ -204,24 +214,6 @@ namespace UnityEngine
         }
 
         private static void SimulateTouch(Touch touch)
-        {
-        }
-
-        public static PenData GetPenEvent(int index)
-        {
-            return default;
-        }
-
-        public static void ResetPenEvents()
-        {
-        }
-
-        private static PenData GetLastPenContactEvent()
-        {
-            return default;
-        }
-
-        public static void ClearLastPenContactEvent()
         {
         }
 
@@ -255,7 +247,6 @@ namespace UnityEngine
         public static bool compensateSensors { get; set; }
         public static bool stylusTouchSupported { get; }
         public static bool touchPressureSupported { get; }
-        public static int penEventCount { get; }
         public static bool anyKey { get; }
         public static bool anyKeyDown { get; }
         public static bool eatKeyPressOnTextFieldFocus { get; set; }

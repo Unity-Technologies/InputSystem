@@ -238,14 +238,14 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public unsafe Record RecordStateChange(InputControl control, void* statePtr, double time)
         {
-            var controlIndex = ArrayHelpers.IndexOfReference(m_Controls, control, m_ControlCount);
+            var controlIndex = m_Controls.IndexOfReference(control, m_ControlCount);
             if (controlIndex == -1)
             {
                 if (m_AddNewControls)
                 {
                     if (control.stateBlock.alignedSizeInBytes > m_StateSizeInBytes)
                         throw new InvalidOperationException(
-                            $"Cannot add control '{control}' with state larger than {m_StateSizeInBytes} bytes");
+                            $"Cannot add control '{control}' with state of size {control.stateBlock.alignedSizeInBytes} that is larger than the max state size of {m_StateSizeInBytes} bytes");
                     controlIndex = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount, control);
                 }
                 else
@@ -405,18 +405,8 @@ namespace UnityEngine.InputSystem.LowLevel
             // Ignore state change if it's in an input update we're not interested in.
             var currentUpdateType = InputState.currentUpdateType;
             var updateTypeMask = updateMask;
-            if ((currentUpdateType & updateTypeMask) == 0 &&
-                // EXCEPTION: When we're recording fixed and/or dynamic updates, do NOT ignore the state change
-                //            if it is from an event. The reason is that the input system concurrently records
-                //            state changes from events into both fixed and dynamic update buffers if both updates
-                //            are enabled concurrently. This means that we will see input data going into
-                //            *dynamic* update state buffers during *fixed* update and vice versa.
-                !((currentUpdateType & (InputUpdateType.Dynamic | InputUpdateType.Fixed)) != 0 &&
-                  (updateTypeMask & (InputUpdateType.Dynamic | InputUpdateType.Fixed)) != 0 &&
-                  eventPtr.valid))
-            {
+            if ((currentUpdateType & updateTypeMask) == 0)
                 return;
-            }
 
             // Ignore state change if we have a filter and the state change doesn't pass the check.
             if (onShouldRecordStateChange != null && !onShouldRecordStateChange(control, time, eventPtr))
