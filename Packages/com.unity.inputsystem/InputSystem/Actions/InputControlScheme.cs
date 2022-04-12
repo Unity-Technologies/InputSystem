@@ -113,26 +113,27 @@ namespace UnityEngine.InputSystem
         }
 
         #if UNITY_EDITOR
-	    internal InputControlScheme(SerializedProperty sp)
-	    {
-		    var requirements = new List<DeviceRequirement>();
-		    var deviceRequirementsArray = sp.FindPropertyRelative(nameof(m_DeviceRequirements));
-		    if (deviceRequirementsArray == null)
-			    throw new ArgumentException("The serialized property does not contain an InputControlScheme object.");
+        internal InputControlScheme(SerializedProperty sp)
+        {
+            var requirements = new List<DeviceRequirement>();
+            var deviceRequirementsArray = sp.FindPropertyRelative(nameof(m_DeviceRequirements));
+            if (deviceRequirementsArray == null)
+                throw new ArgumentException("The serialized property does not contain an InputControlScheme object.");
 
-		    foreach (SerializedProperty deviceRequirement in deviceRequirementsArray)
-		    {
-			    requirements.Add(new DeviceRequirement
-			    {
-				    controlPath = deviceRequirement.FindPropertyRelative(nameof(DeviceRequirement.m_ControlPath)).stringValue,
-				    m_Flags = (DeviceRequirement.Flags)deviceRequirement.FindPropertyRelative(nameof(DeviceRequirement.m_Flags)).enumValueFlag
-			    });
-		    }
+            foreach (SerializedProperty deviceRequirement in deviceRequirementsArray)
+            {
+                requirements.Add(new DeviceRequirement
+                {
+                    controlPath = deviceRequirement.FindPropertyRelative(nameof(DeviceRequirement.m_ControlPath)).stringValue,
+                    m_Flags = (DeviceRequirement.Flags)deviceRequirement.FindPropertyRelative(nameof(DeviceRequirement.m_Flags)).enumValueFlag
+                });
+            }
 
-		    m_Name = sp.FindPropertyRelative(nameof(m_Name)).stringValue;
-		    m_DeviceRequirements = requirements.ToArray();
-		    m_BindingGroup = sp.FindPropertyRelative(nameof(m_BindingGroup)).stringValue;
-	    }
+            m_Name = sp.FindPropertyRelative(nameof(m_Name)).stringValue;
+            m_DeviceRequirements = requirements.ToArray();
+            m_BindingGroup = sp.FindPropertyRelative(nameof(m_BindingGroup)).stringValue;
+        }
+
         #endif
 
         internal void SetNameAndBindingGroup(string name, string bindingGroup = null)

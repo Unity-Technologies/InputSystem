@@ -205,18 +205,18 @@ namespace UnityEngine.InputSystem.Composites
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-	        var modeField = new EnumField("Mode", target.mode)
-	        {
-		        tooltip = m_ModeLabel.text
-	        };
+            var modeField = new EnumField("Mode", target.mode)
+            {
+                tooltip = m_ModeLabel.text
+            };
 
-	        modeField.RegisterValueChangedCallback(evt =>
-	        {
-		        target.mode = (Vector2Composite.Mode)evt.newValue;
-		        onChangedCallback();
-	        });
+            modeField.RegisterValueChangedCallback(evt =>
+            {
+                target.mode = (Vector2Composite.Mode)evt.newValue;
+                onChangedCallback();
+            });
 
-	        root.Add(modeField);
+            root.Add(modeField);
         }
     }
     #endif

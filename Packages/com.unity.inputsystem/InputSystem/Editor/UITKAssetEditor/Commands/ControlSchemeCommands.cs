@@ -202,18 +202,18 @@ namespace UnityEngine.InputSystem.Editor
 
                 var groupsProperty = serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Groups));
                 var groups = groupsProperty.stringValue;
-                
+
                 if (add)
-	                groupsProperty.stringValue = groups
-		                .Split(InputBinding.kSeparatorString)
-		                .Append(controlScheme)
-		                .Distinct()
-		                .Join(InputBinding.kSeparatorString);
+                    groupsProperty.stringValue = groups
+                        .Split(InputBinding.kSeparatorString)
+                        .Append(controlScheme)
+                        .Distinct()
+                        .Join(InputBinding.kSeparatorString);
                 else
-	                groupsProperty.stringValue = groups
-		                .Split(InputBinding.kSeparatorString)
-		                .Where(s => s != controlScheme)
-		                .Join(InputBinding.kSeparatorString);
+                    groupsProperty.stringValue = groups
+                        .Split(InputBinding.kSeparatorString)
+                        .Where(s => s != controlScheme)
+                        .Join(InputBinding.kSeparatorString);
 
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
