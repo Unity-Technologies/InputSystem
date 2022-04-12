@@ -94,7 +94,7 @@
     padding-bottom: 15px;    
 }
 
-.properties-foldout > .unity-toggle {
+.properties-foldout-toggle {
     background-color: var(--input-editor-colors-properties-foldout);
 }
 
