@@ -37,6 +37,7 @@ namespace UnityEngine.InputSystem.Editor
 
 		    var visualElement = new VisualElement();
 		    foldout.Add(visualElement);
+			foldout.Q<Toggle>().AddToClassList("properties-foldout-toggle");
 
 		    switch (selectionType)
 		    {
@@ -52,12 +53,14 @@ namespace UnityEngine.InputSystem.Editor
 		    }
 
 		    var interactionsFoldout = m_Root.Q<Foldout>("interactions-foldout");
+		    interactionsFoldout.Q<Toggle>().AddToClassList("properties-foldout-toggle");
 		    m_InteractionsListView = CreateChildView(new NameAndParametersListView(
 			    interactionsFoldout, 
 			    stateContainer, 
 			    Selectors.GetInteractionsAsParameterListViews));
 
 		    var processorsFoldout = m_Root.Q<Foldout>("processors-foldout");
+		    processorsFoldout.Q<Toggle>().AddToClassList("properties-foldout-toggle");
 		    m_ProcessorsListView = CreateChildView(new NameAndParametersListView(
 			    processorsFoldout, 
 			    stateContainer, 
