@@ -1,6 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:Foldout text="Action" name="action-foldout" class="properties-foldout">
-        <ui:DropdownField label="Action Type" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="action-type-dropdown" />
-        <ui:DropdownField label="Control Type" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="control-type-dropdown" />
-    </ui:Foldout>
-</ui:UXML>
