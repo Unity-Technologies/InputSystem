@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections;
 
 namespace UnityEngine.InputSystem.Editor
@@ -7,3 +8,5 @@ namespace UnityEngine.InputSystem.Editor
         bool SequenceEqual(IViewStateCollection other);
     }
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Linq.Expressions;
 using UnityEditor;
@@ -102,3 +103,5 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+
+#endif
