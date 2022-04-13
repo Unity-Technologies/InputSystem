@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -49,3 +50,5 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+
+#endif

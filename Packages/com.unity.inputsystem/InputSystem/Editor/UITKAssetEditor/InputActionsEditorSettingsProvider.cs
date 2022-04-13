@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -31,3 +32,5 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+
+#endif

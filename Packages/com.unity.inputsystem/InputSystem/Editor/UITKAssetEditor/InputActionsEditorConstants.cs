@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorConstants
@@ -29,3 +30,5 @@ namespace UnityEngine.InputSystem.Editor
             + "This check happens implicitly for Value actions but can be explicitly enabled for Button and Pass-Through actions.";
     }
 }
+
+#endif
