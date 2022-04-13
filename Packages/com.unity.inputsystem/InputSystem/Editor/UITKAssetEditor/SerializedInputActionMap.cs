@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 
@@ -15,3 +16,5 @@ namespace UnityEngine.InputSystem.Editor
         public SerializedProperty wrappedProperty { get; }
     }
 }
+
+#endif
