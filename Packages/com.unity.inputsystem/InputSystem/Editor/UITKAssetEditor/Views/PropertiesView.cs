@@ -25,10 +25,10 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(SelectionType selectionType)
         {
-            DestroyView(m_ActionPropertyView);
-            DestroyView(m_BindingPropertyView);
-            DestroyView(m_InteractionsListView);
-            DestroyView(m_ProcessorsListView);
+            DestroyChildView(m_ActionPropertyView);
+            DestroyChildView(m_BindingPropertyView);
+            DestroyChildView(m_InteractionsListView);
+            DestroyChildView(m_ProcessorsListView);
 
             var propertiesContainer = m_Root.Q<VisualElement>("properties-container");
 

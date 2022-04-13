@@ -34,7 +34,6 @@ namespace UnityEngine.InputSystem.Editor
         /// Open window if someone clicks on an .inputactions asset or an action inside of it.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
-        // [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
             var path = AssetDatabase.GetAssetPath(instanceId);
