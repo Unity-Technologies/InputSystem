@@ -60,7 +60,7 @@ namespace UnityEngine.InputSystem.Editor
             OnClosing?.Invoke(this);
         }
 
-        public void DestroyView<TView>(TView view) where TView : IView
+        public void DestroyChildView<TView>(TView view) where TView : IView
         {
             if (view == null)
                 return;
@@ -74,9 +74,7 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.Dispatch(command);
         }
 
-        public virtual void RedrawUI(TViewState viewState)
-        {
-        }
+        public abstract void RedrawUI(TViewState viewState);
 
         /// <summary>
         /// Called when a parent view is destroying this view to give it an opportunity to clean up any
