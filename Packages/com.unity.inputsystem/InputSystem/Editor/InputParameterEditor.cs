@@ -37,9 +37,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <param name="root">The VisualElement that parameter editor elements should be added to.</param>
         /// <param name="onChangedCallback">A callback that will be called when any of the parameter editors
         /// changes value.</param>
-        public virtual void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
-        {
-        }
+        public abstract void OnDrawVisualElements(VisualElement root, Action onChangedCallback);
 
         internal abstract void SetTarget(object target);
 
@@ -264,12 +262,16 @@ namespace UnityEngine.InputSystem.Editor
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (evt.newValue == m_DefaultInitializedValue)
+                {
                     // If user sets a value that is equal to default initialized, change value slightly so it doesn't pass potential default checks.
                     ////TODO: refactor all of this to use tri-state values instead, there is no obvious float value that we can use as default (well maybe NaN),
                     ////so instead it would be better to have a separate bool to show if value is present or not.
                     m_SetValue(evt.newValue + float.Epsilon);
+                }
                 else
+                {
                     m_SetValue(evt.newValue);
+                }
             }
 
             private void ToggleUseDefaultValue(ChangeEvent<bool> evt)
