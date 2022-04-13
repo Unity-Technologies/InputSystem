@@ -41,8 +41,10 @@ namespace UnityEngine.InputSystem.Editor
             m_CompositeTypeFieldChangedHandler = _ => OnCompositeTypeFieldChanged(viewState);
             m_CompositeTypeField.RegisterValueChangedCallback(m_CompositeTypeFieldChangedHandler);
 
-            var cmd = Commands.UpdatePathNameAndValues(viewState.parameterListView.GetParameters(), viewState.selectedBindingPath);
-            viewState.parameterListView.onChange = () => { Dispatch(cmd); };
+            viewState.parameterListView.onChange = () =>
+            {
+                Dispatch(Commands.UpdatePathNameAndValues(viewState.parameterListView.GetParameters(), viewState.selectedBindingPath));
+            };
             viewState.parameterListView.OnDrawVisualElements(m_Root);
         }
 
