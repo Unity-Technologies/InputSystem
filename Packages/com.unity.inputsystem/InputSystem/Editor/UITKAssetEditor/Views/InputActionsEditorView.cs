@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -10,6 +11,9 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorView : ViewBase<InputActionsEditorView.ViewState>
     {
+        private const string saveButtonId = "save-asset-toolbar-button";
+        private const string autoSaveToggleId = "auto-save-toolbar-toggle";
+
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -31,6 +35,14 @@ namespace UnityEngine.InputSystem.Editor
             menuButton.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(root), DropdownMenuAction.Status.Disabled);
             menuButton.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
 
+            var saveButton = root.Q<ToolbarButton>(name: saveButtonId);
+            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            saveButton.clicked += SaveAsset;
+
+            var autoSaveToggle = root.Q<ToolbarToggle>(name: autoSaveToggleId);
+            autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
+            autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
+
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
             stateContainer.StateChanged += OnStateChanged;
@@ -43,6 +55,26 @@ namespace UnityEngine.InputSystem.Editor
                     controlSchemes = controlSchemes,
                     selectedControlSchemeIndex = state.selectedControlSchemeIndex
                 });
+        }
+
+        public void SaveAsset()
+        {
+            stateContainer.GetState().Save();
+        }
+
+        private void OnAutoSaveToggle(ChangeEvent<bool> evt)
+        {
+            if (evt.newValue == InputEditorUserSettings.autoSaveInputActionAssets)
+                return;
+
+            // If it changed from disabled to enabled, perform an initial save.
+            if (evt.newValue)
+                SaveAsset();
+
+            InputEditorUserSettings.autoSaveInputActionAssets = evt.newValue;
+
+            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
+            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -73,6 +105,10 @@ namespace UnityEngine.InputSystem.Editor
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             toolbarMenu.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+
+            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
+            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+
         }
 
         private void AddOrUpdateControlScheme(VisualElement parent, bool updateExisting = false)

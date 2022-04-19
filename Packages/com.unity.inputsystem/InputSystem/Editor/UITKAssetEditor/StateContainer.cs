@@ -33,6 +33,9 @@ namespace UnityEngine.InputSystem.Editor
 
             m_State = command(m_State);
 
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+                m_State.Save();
+
             // why not just invoke the state changed event immediately you ask? The Dispatch method might have
             // been called from inside a UI element event handler and if we raised the event immediately, a view
             // might try to redraw itself *during* execution of the event handler.
