@@ -8,22 +8,32 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal readonly struct InputActionsEditorState
+    [System.Serializable]
+    internal struct InputActionsEditorState
     {
-        public int selectedActionMapIndex { get; }
-        public int selectedActionIndex { get; }
-        public int selectedBindingIndex { get; }
-        public SelectionType selectionType { get; }
-        public SerializedObject serializedObject { get; }
+        public int selectedActionMapIndex { get {return m_selectedActionMapIndex; } }
+        public int selectedActionIndex { get {return m_selectedActionIndex; } }
+        public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
+        public SelectionType selectionType { get {return m_selectionType; } }
+        public InputActionAsset asset { get {return m_asset; } }
+        public SerializedObject serializedObject { get {return m_serializedObject; } }
+        SerializedObject m_serializedObject;
 
         // Control schemes
-        public int selectedControlSchemeIndex { get; }
-        public int selectedDeviceRequirementIndex { get; }
+        public int selectedControlSchemeIndex { get {return m_selectedControlSchemeIndex; } }
+        public int selectedDeviceRequirementIndex { get {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme;
 
+        [SerializeField] InputActionAsset m_asset;
+        [SerializeField] int m_selectedActionMapIndex;
+        [SerializeField] int m_selectedActionIndex;
+        [SerializeField] int m_selectedBindingIndex;
+        [SerializeField] SelectionType m_selectionType;
+        [SerializeField] int m_selectedControlSchemeIndex;
+        [SerializeField] int m_selectedDeviceRequirementIndex;
 
         public InputActionsEditorState(
-            SerializedObject inputActionAsset,
+            InputActionAsset inputActionAsset,
             int selectedActionMapIndex = 0,
             int selectedActionIndex = 0,
             int selectedBindingIndex = 0,
@@ -33,19 +43,41 @@ namespace UnityEngine.InputSystem.Editor
             int selectedControlSchemeIndex = -1,
             int selectedDeviceRequirementIndex = -1)
         {
-            serializedObject = inputActionAsset;
+            m_asset = inputActionAsset;
+            m_serializedObject = new SerializedObject(m_asset);
 
-            this.selectedActionMapIndex = selectedActionMapIndex;
-            this.selectedActionIndex = selectedActionIndex;
-            this.selectedBindingIndex = selectedBindingIndex;
-            this.selectionType = selectionType;
+            this.m_selectedActionMapIndex = selectedActionMapIndex;
+            this.m_selectedActionIndex = selectedActionIndex;
+            this.m_selectedBindingIndex = selectedBindingIndex;
+            this.m_selectionType = selectionType;
             m_ControlScheme = selectedControlScheme;
-            this.selectedControlSchemeIndex = selectedControlSchemeIndex;
-            this.selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
+            this.m_selectedControlSchemeIndex = selectedControlSchemeIndex;
+            this.m_selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
 
             m_ExpandedCompositeBindings = expandedBindingIndices == null ?
                 new Dictionary<(string, string), HashSet<int>>() :
                 new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
+        }
+
+        public InputActionsEditorState(InputActionsEditorState other)
+        {
+            m_asset = other.m_asset;
+            m_selectedActionMapIndex = other.m_selectedActionMapIndex;
+            m_selectedActionIndex = other.m_selectedActionIndex;
+            m_selectedBindingIndex = other.m_selectedBindingIndex;
+            m_selectionType = other.m_selectionType;
+            m_ControlScheme = other.m_ControlScheme;
+            m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
+            m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
+
+            // Editor may leave these as null after domain reloads, so recreate them
+            m_serializedObject = (other.m_serializedObject == null)
+                ? new SerializedObject(m_asset)
+                : other.m_serializedObject;
+
+            m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
+                ? new Dictionary<(string, string), HashSet<int>>()
+                : other.m_ExpandedCompositeBindings;
         }
 
         public InputActionsEditorState With(
@@ -59,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
             Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
         {
             return new InputActionsEditorState(
-                serializedObject,
+                m_asset,
                 selectedActionMapIndex ?? this.selectedActionMapIndex,
                 selectedActionIndex ?? this.selectedActionIndex,
                 selectedBindingIndex ?? this.selectedBindingIndex,
@@ -74,10 +106,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public void Save()
         {
-            var asset = (InputActionAsset)serializedObject.targetObject;
-            Debug.Assert(asset != null, "Can't save as SerializedObject is not an InputActionAsset type");
-            var assetPath = AssetDatabase.GetAssetPath(asset);
-            var assetJson = asset.ToJson();
+            var assetPath = AssetDatabase.GetAssetPath(m_asset);
+            var assetJson = m_asset.ToJson();
 
             var existingJson = File.ReadAllText(assetPath);
             if (assetJson != existingJson)
@@ -190,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
-        private readonly InputControlScheme m_ControlScheme;
+        [SerializeField] private readonly InputControlScheme m_ControlScheme;
     }
 
     internal enum SelectionType

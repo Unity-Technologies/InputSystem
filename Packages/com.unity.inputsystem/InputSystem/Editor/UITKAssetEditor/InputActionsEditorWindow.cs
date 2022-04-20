@@ -49,18 +49,41 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset)
         {
-            var serializedAsset = new SerializedObject(asset);
-            var stateContainer = new StateContainer(rootVisualElement, new InputActionsEditorState(serializedAsset));
+            m_state = new InputActionsEditorState(asset);
+            BuildUI(m_state);
+        }
+
+        private void CreateGUI()
+        {
+            // When opening the window for the first time there will be no state or asset yet.
+            // In that case, SetAsset() will be called after this and at that point the UI can be created.
+            // Here we only recreate the UI e.g. after a domain reload.
+            if (m_state.asset != null)
+            {
+                // After domain reloads the state will be in a invalid state as some of the fields
+                // cannot be serialized and will become null.
+                // Therefore we recreate the state here using the fields which were saved.
+                if (m_state.serializedObject == null)
+                    m_state = new InputActionsEditorState(m_state);
+
+                BuildUI(m_state);
+            }
+        }
+
+        private void BuildUI(InputActionsEditorState state)
+        {
+            var stateContainer = new StateContainer(rootVisualElement, state);
 
             var theme = EditorGUIUtility.isProSkin
                 ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
                 : AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorLight.uss");
 
             rootVisualElement.styleSheets.Add(theme);
-
             var view = new InputActionsEditorView(rootVisualElement, stateContainer);
             stateContainer.Initialize();
         }
+
+        [SerializeField] private InputActionsEditorState m_state;
     }
 }
 

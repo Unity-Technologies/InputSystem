@@ -33,11 +33,11 @@ public static class TestData
     });
 
     internal static Generator<InputActionsEditorState> editorState =
-        new(() => new InputActionsEditorState(new SerializedObject(ScriptableObject.CreateInstance<InputActionAsset>())));
+        new(() => new InputActionsEditorState(ScriptableObject.CreateInstance<InputActionAsset>()));
 
-    internal static Generator<InputActionsEditorState> EditorStateWithAsset(ScriptableObject asset)
+    internal static Generator<InputActionsEditorState> EditorStateWithAsset(InputActionAsset asset)
     {
-        return new Generator<InputActionsEditorState>(() => new InputActionsEditorState(new SerializedObject(asset)));
+        return new Generator<InputActionsEditorState>(() => new InputActionsEditorState(asset));
     }
 
     public static Generator<InputControlScheme.DeviceRequirement> deviceRequirement =
