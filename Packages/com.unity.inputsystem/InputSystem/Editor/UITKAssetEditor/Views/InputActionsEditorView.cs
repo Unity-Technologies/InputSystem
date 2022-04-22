@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
             saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
-            saveButton.clicked += SaveAsset;
+            saveButton.clicked += OnSaveButton;
 
             var autoSaveToggle = m_Root.Q<ToolbarToggle>(name: autoSaveToggleId);
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
@@ -62,24 +62,14 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
-        public void SaveAsset()
+        private void OnSaveButton()
         {
-            stateContainer.GetState().Save();
+            Dispatch(Commands.SaveAsset());
         }
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
         {
-            if (evt.newValue == InputEditorUserSettings.autoSaveInputActionAssets)
-                return;
-
-            // If it changed from disabled to enabled, perform an initial save.
-            if (evt.newValue)
-                SaveAsset();
-
-            InputEditorUserSettings.autoSaveInputActionAssets = evt.newValue;
-
-            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
-            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            Dispatch(Commands.ToggleAutoSave(evt.newValue));
         }
 
         public override void RedrawUI(ViewState viewState)

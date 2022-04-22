@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.IO;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -95,21 +94,6 @@ namespace UnityEngine.InputSystem.Editor
                 selectedControlScheme ?? this.selectedControlScheme,
                 selectedControlSchemeIndex ?? this.selectedControlSchemeIndex,
                 selectedDeviceRequirementIndex ?? this.selectedDeviceRequirementIndex);
-        }
-
-        public void Save()
-        {
-            var asset = (InputActionAsset)serializedObject.targetObject;
-            var assetPath = AssetDatabase.GetAssetPath(asset);
-            var assetJson = asset.ToJson();
-
-            var existingJson = File.ReadAllText(assetPath);
-            if (assetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(assetPath);
-                File.WriteAllText(assetPath, assetJson);
-                AssetDatabase.ImportAsset(assetPath);
-            }
         }
 
         public SerializedProperty GetActionMapByName(string actionMapName)

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine.UIElements;
@@ -69,8 +70,7 @@ namespace UnityEngine.InputSystem.Editor
                 // Therefore we recreate the state here using the fields which were saved.
                 if (m_State.serializedObject == null)
                 {
-                    var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-                    var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+                    var asset = GetAssetFromDatabase();
                     var serializedAsset = new SerializedObject(asset);
                     m_State = new InputActionsEditorState(m_State, serializedAsset);
                 }
@@ -92,8 +92,31 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.Initialize();
         }
 
+
+        private InputActionAsset GetAssetFromDatabase()
+        {
+            Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID), "Asset GUID is empty");
+            var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+        }
+
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
+
+        public static void SaveAsset(SerializedObject serializedAsset)
+        {
+            var asset = (InputActionAsset)serializedAsset.targetObject;
+            var assetPath = AssetDatabase.GetAssetPath(asset);
+            var assetJson = asset.ToJson();
+
+            var existingJson = File.ReadAllText(assetPath);
+            if (assetJson != existingJson)
+            {
+                EditorHelpers.CheckOut(assetPath);
+                File.WriteAllText(assetPath, assetJson);
+                AssetDatabase.ImportAsset(assetPath);
+            }
+        }
     }
 }
 
