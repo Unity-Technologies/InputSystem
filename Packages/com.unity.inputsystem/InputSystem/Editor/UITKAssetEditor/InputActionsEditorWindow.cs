@@ -49,30 +49,39 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset)
         {
-            m_state = new InputActionsEditorState(asset);
-            BuildUI(m_state);
+            var serializedAsset = new SerializedObject(asset);
+            m_State = new InputActionsEditorState(serializedAsset);
+            bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
+            Debug.Assert(isGUIDObtained, $"Failed to get asset {asset.name} GUID");
+
+            BuildUI();
         }
 
         private void CreateGUI()
         {
             // When opening the window for the first time there will be no state or asset yet.
-            // In that case, SetAsset() will be called after this and at that point the UI can be created.
+            // In that case, we don't do anything as SetAsset() will be called later and at that point the UI can be created.
             // Here we only recreate the UI e.g. after a domain reload.
-            if (m_state.asset != null)
+            if (!string.IsNullOrEmpty(m_AssetGUID))
             {
                 // After domain reloads the state will be in a invalid state as some of the fields
                 // cannot be serialized and will become null.
                 // Therefore we recreate the state here using the fields which were saved.
-                if (m_state.serializedObject == null)
-                    m_state = new InputActionsEditorState(m_state);
+                if (m_State.serializedObject == null)
+                {
+                    var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+                    var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+                    var serializedAsset = new SerializedObject(asset);
+                    m_State = new InputActionsEditorState(m_State, serializedAsset);
+                }
 
-                BuildUI(m_state);
+                BuildUI();
             }
         }
 
-        private void BuildUI(InputActionsEditorState state)
+        private void BuildUI()
         {
-            var stateContainer = new StateContainer(rootVisualElement, state);
+            var stateContainer = new StateContainer(rootVisualElement, m_State);
 
             var theme = EditorGUIUtility.isProSkin
                 ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
@@ -83,7 +92,8 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.Initialize();
         }
 
-        [SerializeField] private InputActionsEditorState m_state;
+        [SerializeField] private InputActionsEditorState m_State;
+        [SerializeField] private string m_AssetGUID;
     }
 }
 
