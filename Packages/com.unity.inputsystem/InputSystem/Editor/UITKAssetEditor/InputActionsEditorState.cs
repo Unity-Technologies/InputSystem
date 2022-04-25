@@ -130,9 +130,9 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionsEditorState SelectActionMap(string actionMapName)
         {
             var actionMap = GetActionMapByName(actionMapName);
-            return With(selectedBindingIndex: 0, 
-	            selectedActionMapIndex: actionMap.GetIndexOfArrayElement(),
-	            selectedActionIndex: 0);
+            return With(selectedBindingIndex: 0,
+                selectedActionMapIndex: actionMap.GetIndexOfArrayElement(),
+                selectedActionIndex: 0);
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
