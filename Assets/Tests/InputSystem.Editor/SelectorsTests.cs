@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,11 +14,11 @@ internal class SelectorsTests
         var actionMap = asset.AddActionMap("ActionMap");
         var actionOne = actionMap.AddAction("Action1", binding: "<Keyboard>/a");
         actionOne.AddCompositeBinding("2DVector")
-	        .With("left", "<Gamepad>/rightStick/x")
-	        .With("right", "<Gamepad>/rightStick/y");
+            .With("left", "<Gamepad>/rightStick/x")
+            .With("right", "<Gamepad>/rightStick/y");
         var actionTwo = actionMap.AddAction("Action2", binding: "<Keyboard>/d");
-       
-        
+
+
         var treeViewData = Selectors.GetActionsAsTreeViewData(TestData.EditorStateWithAsset(asset).Generate());
 
 

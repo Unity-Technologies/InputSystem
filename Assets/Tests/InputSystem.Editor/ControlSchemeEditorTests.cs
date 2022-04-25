@@ -78,8 +78,8 @@ public class ControlSchemesEditorTests
     public void AddNewControlSchemeCommand_GeneratesUniqueControlSchemeName()
     {
         var state = TestData.EditorStateWithAsset(TestData.inputActionAsset
-	            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("New Control Scheme")))
-	            .Generate())
+            .WithControlScheme(TestData.controlScheme.Select(s => s.WithName("New Control Scheme")))
+            .Generate())
             .Generate();
 
 
