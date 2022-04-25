@@ -36,7 +36,18 @@ namespace UnityEngine.InputSystem.Editor
             // why not just invoke the state changed event immediately you ask? The Dispatch method might have
             // been called from inside a UI element event handler and if we raised the event immediately, a view
             // might try to redraw itself *during* execution of the event handler.
-            m_RootVisualElement.schedule.Execute(() => StateChanged?.Invoke(m_State));
+            m_RootVisualElement.schedule.Execute(() =>
+            {
+                // catch exceptions here or the UIToolkit scheduled event will keep firing forever.
+                try
+	            {
+		            StateChanged?.Invoke(m_State);
+	            }
+	            catch (Exception e)
+	            {
+		            Debug.LogError(e.Message);
+	            }
+            });
         }
 
         public void Initialize()

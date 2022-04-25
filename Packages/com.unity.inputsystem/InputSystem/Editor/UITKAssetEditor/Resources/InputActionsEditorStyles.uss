@@ -1,3 +1,11 @@
+/*****************************************************************************/
+/* Global                                                                      */
+/*****************************************************************************/
+
+.unity-input-actions-editor-hidden {
+    display: none;
+}
+
 .body-panel-container {
     min-width: auto;
     border-top-width: 1px;
