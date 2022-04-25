@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngineInternal;
 
 // GOAL: Show how you can load an existing Unity project using legacy input, install com.unity.inputsystem, and play it as is while actually not using the old input system at all
@@ -66,6 +67,9 @@ namespace UnityEngine
 
         internal static void OnEnteringPlayMode()
         {
+            // EnhancedTouch is required for the Touch API
+            EnhancedTouchSupport.Enable();
+
             // We use actions to monitor for button presses and releases.
             s_ButtonActions = new InputActionMap("ButtonActions");
 
@@ -194,6 +198,9 @@ namespace UnityEngine
             s_Pen.Cleanup();
 
             InputSystem.InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
+
+            EnhancedTouchSupport.Disable();
+            EnhancedTouchSupport.Reset();
         }
 
         #region Unimplemented
@@ -208,20 +215,11 @@ namespace UnityEngine
         {
         }
 
-        public static Touch GetTouch(int index)
-        {
-            return default;
-        }
-
         private static void SimulateTouch(Touch touch)
         {
         }
 
         public static Vector2 mouseScrollDelta => default;
-        public static int touchCount => default;
-        public static Touch[] touches => new Touch[0];
-        public static bool touchSupported => false;
-        public static bool multiTouchEnabled { get; set; }
         public static bool simulateMouseWithTouches
         {
             get => false;

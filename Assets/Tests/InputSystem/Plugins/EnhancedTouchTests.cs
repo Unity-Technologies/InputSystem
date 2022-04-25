@@ -7,7 +7,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using Property = NUnit.Framework.PropertyAttribute;
@@ -28,10 +27,13 @@ internal class EnhancedTouchTests : CoreTestsFixture
         // Disable() will not reset this so default initialize it here.
         Touch.s_GlobalState.historyLengthPerFinger = 64;
 
-        if (!TestContext.CurrentContext.Test.Properties.ContainsKey("EnhancedTouchDisabled"))
+        if (TestContext.CurrentContext.Test.Properties.ContainsKey("EnhancedTouchDisabled"))
+        {
+            EnhancedTouchSupport.Disable();
+        }
+        else
         {
             InputSystem.AddDevice<Touchscreen>();
-            EnhancedTouchSupport.Enable();
         }
 
         // Make sure we don't run into interference with a TouchSimulation instance that may
@@ -42,20 +44,6 @@ internal class EnhancedTouchTests : CoreTestsFixture
 
     public override void TearDown()
     {
-        EnhancedTouchSupport.Disable();
-
-        // Make sure cleanup really did clean up.
-        Assert.That(Touch.s_GlobalState.touchscreens.length, Is.EqualTo(0));
-        Assert.That(Touch.s_GlobalState.playerState, Is.EqualTo(default(Touch.FingerAndTouchState)));
-        #if UNITY_EDITOR
-        Assert.That(Touch.s_GlobalState.editorState, Is.EqualTo(default(Touch.FingerAndTouchState)));
-        #endif
-
-        // Some state is kept alive in-between Disable/Enable. Manually clean it out.
-        Touch.s_GlobalState.onFingerDown = default;
-        Touch.s_GlobalState.onFingerUp = default;
-        Touch.s_GlobalState.onFingerMove = default;
-
         TouchSimulation.Destroy();
         TouchSimulation.s_Instance = m_OldTouchSimulationInstance;
         m_OldTouchSimulationInstance = null;

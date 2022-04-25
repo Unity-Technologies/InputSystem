@@ -75,8 +75,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     {
         InputSystem.AddDevice<Touchscreen>();
 
-        if (enableEnhancedTouch)
-            EnhancedTouchSupport.Enable();
+        if (!enableEnhancedTouch)
+            EnhancedTouchSupport.Disable();
 
         Measure.Method(() =>
         {
