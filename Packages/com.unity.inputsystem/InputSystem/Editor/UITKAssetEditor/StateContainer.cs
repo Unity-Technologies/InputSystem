@@ -40,13 +40,13 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // catch exceptions here or the UIToolkit scheduled event will keep firing forever.
                 try
-	            {
-		            StateChanged?.Invoke(m_State);
-	            }
-	            catch (Exception e)
-	            {
-		            Debug.LogError(e.Message);
-	            }
+                {
+                    StateChanged?.Invoke(m_State);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e.Message);
+                }
             });
         }
 

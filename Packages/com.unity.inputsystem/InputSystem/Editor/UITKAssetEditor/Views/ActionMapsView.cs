@@ -20,21 +20,21 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.onSelectionChange += _ => SelectActionMap();
 
             CreateSelector(Selectors.GetActionMapNames,
-	            (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
+                (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
         }
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
 
         public override void RedrawUI(ViewState viewState)
         {
-	        m_ListView.bindItem = (element, i) =>
+            m_ListView.bindItem = (element, i) =>
             {
-	            var treeViewItem = (InputActionsTreeViewItem)element;
-	            treeViewItem.label.text = (string)m_ListView.itemsSource[i];
+                var treeViewItem = (InputActionsTreeViewItem)element;
+                treeViewItem.label.text = (string)m_ListView.itemsSource[i];
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
-            
+
             addActionMapButton.clicked += ShowAddActionMapWindow;
         }
 
@@ -45,9 +45,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SelectActionMap()
         {
-	        Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+            Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
         }
-        
+
         private void ShowAddActionMapWindow()
         {
         }
@@ -62,8 +62,8 @@ namespace UnityEngine.InputSystem.Editor
 
             public ViewState(SerializedInputActionMap selectedActionMap, IEnumerable<string> actionMapNames)
             {
-	            this.selectedActionMap = selectedActionMap;
-	            this.actionMapNames = actionMapNames;
+                this.selectedActionMap = selectedActionMap;
+                this.actionMapNames = actionMapNames;
             }
         }
     }
