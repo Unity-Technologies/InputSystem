@@ -31,10 +31,10 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) => state.CollapseCompositeBinding(binding);
         }
 
-        public static Command SelectBinding(SerializedInputBinding binding)
+        public static Command SelectBinding(int bindingIndex)
         {
             return (in InputActionsEditorState state) =>
-                state.With(selectedBindingIndex: binding.indexOfBinding, selectionType: SelectionType.Binding);
+                state.With(selectedBindingIndex: bindingIndex, selectionType: SelectionType.Binding);
         }
 
         public static Command UpdatePathNameAndValues(NamedValue[] parameters, SerializedProperty pathProperty)

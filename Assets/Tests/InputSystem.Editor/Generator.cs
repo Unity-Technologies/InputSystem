@@ -31,7 +31,3 @@ public class Generator<T>
         }
     }
 }
-
-public static class Gen
-{
-}
