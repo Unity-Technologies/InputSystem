@@ -130,7 +130,9 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionsEditorState SelectActionMap(string actionMapName)
         {
             var actionMap = GetActionMapByName(actionMapName);
-            return With(selectedBindingIndex: 0, selectedActionMapIndex: actionMap.GetIndexOfArrayElement());
+            return With(selectedBindingIndex: 0, 
+	            selectedActionMapIndex: actionMap.GetIndexOfArrayElement(),
+	            selectedActionIndex: 0);
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
@@ -173,6 +175,10 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
+
+        /// <summary>
+        /// Expanded states for the actions tree view. These are stored per InputActionMap
+        /// </summary>
         private readonly InputControlScheme m_ControlScheme;
     }
 

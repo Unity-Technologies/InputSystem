@@ -21,22 +21,22 @@
     </ui:VisualElement>
     <ui:VisualElement name="body" style="flex-direction: column; flex-grow: 1;">
         <ui:TwoPaneSplitView name="actions-split-view" fixed-pane-initial-dimension="300">
-            <ui:VisualElement name="actions-container" class="body-panel-container actions-container">
+            <ui:VisualElement name="action-maps-container" class="body-panel-container actions-container">
                 <ui:VisualElement name="header" class="body-panel-header">
-                    <ui:DropdownField label="Action Maps" index="-1" name="selected-action-map-dropdown" style="width: 221px; flex-grow: 1;" />
-                    <ui:Button text="+" display-tooltip-when-elided="true" name="add-new-action-map-button" />
+                    <ui:Label text="Action Maps" display-tooltip-when-elided="true" style="flex-grow: 1;" />
+                    <ui:Button text="+" display-tooltip-when-elided="true" name="add-new-action-map-button" style="align-items: auto;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="body">
-                    <ui:ListView focusable="true" name="actions-list-view" />
+                    <ui:ListView focusable="true" name="action-maps-list-view" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:TwoPaneSplitView name="bindings-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="400" style="height: auto;">
-                <ui:VisualElement name="bindings-container" class="body-panel-container">
+            <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="400" style="height: auto;">
+                <ui:VisualElement name="actions-container" class="body-panel-container">
                     <ui:VisualElement name="header" class="body-panel-header">
-                        <ui:Label text="Bindings" display-tooltip-when-elided="true" name="bindings-label" />
+                        <ui:Label text="Actions" display-tooltip-when-elided="true" name="actions-label" />
                     </ui:VisualElement>
                     <ui:VisualElement name="body">
-                        <ui:ListView focusable="true" name="bindings-list-view" />
+                        <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" fixed-item-height="20" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="properties-container" class="body-panel-cointainer body-panel-container">
