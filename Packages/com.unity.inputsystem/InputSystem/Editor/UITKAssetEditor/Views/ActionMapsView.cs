@@ -39,6 +39,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
+	        m_ListView.bindItem = (element, i) =>
+            {
+	            var treeViewItem = (InputActionsTreeViewItem)element;
+	            treeViewItem.label.text = (string)m_ListView.itemsSource[i];
+            };
+            m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
             addActionMapButton.clicked += ShowAddActionMapWindow;
         }
@@ -58,7 +64,6 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
         }
 
-        private void ShowAddActionMapWindow()
         {
         }
 
