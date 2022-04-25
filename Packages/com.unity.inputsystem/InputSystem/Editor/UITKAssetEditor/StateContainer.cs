@@ -33,11 +33,6 @@ namespace UnityEngine.InputSystem.Editor
 
             m_State = command(m_State);
 
-            // TODO: Need to filter out Save and AutoSave events as they should not trigger duplicate saves here
-            // Possibly they also shouldn't trigger the StateChanged callbacks either.
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
-                InputActionsEditorWindow.SaveAsset(m_State.serializedObject);
-
             // why not just invoke the state changed event immediately you ask? The Dispatch method might have
             // been called from inside a UI element event handler and if we raised the event immediately, a view
             // might try to redraw itself *during* execution of the event handler.
