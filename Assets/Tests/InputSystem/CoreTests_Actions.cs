@@ -10044,6 +10044,117 @@ partial class CoreTests
             Assert.AreEqual(40.0f, magnitudes[5]);
         }
     }
+    
+    // Straight from demo project
+    public struct PointerInput
+    {
+        public bool Contact;
+        public int InputId;
+        public Vector2 Position;
+        public Vector2? Tilt;
+        public float? Pressure;
+        public Vector2? Radius;
+        public float? Twist;
+    }
+
+    // Straight from demo project
+    public class PointerInputComposite : InputBindingComposite<PointerInput>
+    {
+        [InputControl(layout = "Button")]
+        public int contact;
+
+        [InputControl(layout = "Vector2")]
+        public int position;
+
+        [InputControl(layout = "Vector2")]
+        public int tilt;
+
+        [InputControl(layout = "Vector2")]
+        public int radius;
+
+        [InputControl(layout = "Axis")]
+        public int pressure;
+
+        [InputControl(layout = "Axis")]
+        public int twist;
+
+        [InputControl(layout = "Integer")]
+        public int inputId;
+
+        public override PointerInput ReadValue(ref InputBindingCompositeContext context)
+        {
+            var contact = context.ReadValueAsButton(this.contact);
+            var pointerId = context.ReadValue<int>(inputId);
+            var pressure = context.ReadValue<float>(this.pressure);
+            var radius = context.ReadValue<Vector2, Vector2MagnitudeComparer>(this.radius);
+            var tilt = context.ReadValue<Vector2, Vector2MagnitudeComparer>(this.tilt);
+            var position = context.ReadValue<Vector2, Vector2MagnitudeComparer>(this.position);
+            var twist = context.ReadValue<float>(this.twist);
+
+            return new PointerInput
+            {
+                Contact = contact,
+                InputId = pointerId,
+                Position = position,
+                Tilt = tilt != default ? tilt : (Vector2?)null,
+                Pressure = pressure > 0 ? pressure : (float?)null,
+                Radius = radius.sqrMagnitude > 0 ? radius : (Vector2?)null,
+                Twist = twist > 0 ? twist : (float?)null,
+            };
+        }
+    }
+    
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-98
+    [Test]
+    [Category("Actions")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_WithMultipleCompositeBindings_WithoutEvaluateMagnitude_Works(bool prepopulateTouchesBeforeEnablingAction)
+    {
+        InputSystem.RegisterBindingComposite<PointerInputComposite>();
+
+        InputSystem.AddDevice<Touchscreen>();
+
+        var actionMap = new InputActionMap("test");
+        var action = actionMap.AddAction("point", InputActionType.Value);
+        for (var i = 0; i < 5; ++i)
+            action.AddCompositeBinding("PointerInput") // todo original binding had Touch0 .. Touch4 name set
+                .With("contact", $"<Touchscreen>/touch{i}/press")
+                .With("position", $"<Touchscreen>/touch{i}/position")
+                .With("radius", $"<Touchscreen>/touch{i}/radius")
+                .With("pressure", $"<Touchscreen>/touch{i}/pressure")
+                .With("inputId", $"<Touchscreen>/touch{i}/touchId");
+
+        var values = new List<PointerInput>();
+        action.started += ctx => values.Add(ctx.ReadValue<PointerInput>());
+        action.performed += ctx => values.Add(ctx.ReadValue<PointerInput>());
+        action.canceled += ctx => values.Add(ctx.ReadValue<PointerInput>());
+        
+        if (!prepopulateTouchesBeforeEnablingAction) // normally actions are enabled before any control actuations happen
+            actionMap.Enable();
+
+        // Start 5 touches, so we fill all slots [touch0, touch4] in Touchscreen with some valid touchId
+        for(var i = 0; i < 2; ++i)
+            BeginTouch(100 + i, new Vector2(100 * (i + 1), 100 * (i + 1)));
+        for(var i = 0; i < 2; ++i)
+            EndTouch(100 + i, new Vector2(100 * (i + 1), 100 * (i + 1)));
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 0 : 3));
+        values.Clear();
+
+        // Now when enabling actionMap ..
+        actionMap.Enable();
+        // On the following update we will trigger OnBeforeUpdate which will rise started/performed
+        // from InputActionState.OnBeforeInitialUpdate as controls are "actuated"
+        InputSystem.Update();
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
+        values.Clear();
+
+        // Now subsequent touches are ignored
+        BeginTouch(200, new Vector2(1, 1));
+        Assert.That(values.Count, Is.EqualTo(1));
+        Assert.That(values[0].InputId, Is.EqualTo(200));
+        Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
+    }
 
     [Test]
     [Category("Actions")]
