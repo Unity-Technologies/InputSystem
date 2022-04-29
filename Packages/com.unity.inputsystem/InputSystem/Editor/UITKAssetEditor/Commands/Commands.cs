@@ -127,13 +127,13 @@ namespace UnityEngine.InputSystem.Editor
 
         public static Command ChangeActionMapName(string newName)
         {
-	        return (in InputActionsEditorState state) =>
-	        {
-		        var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
                 InputActionSerializationHelpers.RenameActionMap(actionMap, newName);
-		        state.serializedObject.ApplyModifiedProperties();
-		        return state;
-	        };
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
         }
     }
 }
