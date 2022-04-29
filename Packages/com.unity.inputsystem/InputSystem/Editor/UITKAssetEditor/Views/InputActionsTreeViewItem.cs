@@ -26,7 +26,7 @@ public class InputActionsTreeViewItem : VisualElement
         renameTextfield.selectAllOnFocus = true;
         renameTextfield.selectAllOnMouseUp = false;
 
-        // TODO: The rename functionality is currently disabled due to focus issues. The text field doesn't 
+        // TODO: The rename functionality is currently disabled due to focus issues. The text field doesn't
         // focus correctly when calling Focus() on it (it needs to be subsequently clicked) and on losing focus,
         // we're getting two focus out events, one for the TextField and one for the contained TextElement.
         // RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
@@ -34,18 +34,18 @@ public class InputActionsTreeViewItem : VisualElement
         //
         // renameTextfield.RegisterCallback<KeyUpEvent>(e =>
         // {
-	       //  if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Escape)
-	       //  {
-		      //   (e.currentTarget as VisualElement)?.Blur();
-		      //   return;
-	       //  }
+        //  if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Escape)
+        //  {
+        //   (e.currentTarget as VisualElement)?.Blur();
+        //   return;
+        //  }
         //
-	       //  e.StopImmediatePropagation();
+        //  e.StopImmediatePropagation();
         // });
         //
         // renameTextfield.RegisterCallback<FocusOutEvent>(e =>
         // {
-	       //  OnEditTextFinished(renameTextfield);
+        //  OnEditTextFinished(renameTextfield);
         // });
     }
 
@@ -82,10 +82,10 @@ public class InputActionsTreeViewItem : VisualElement
         renameTextfield.Q<TextElement>().Focus();
         renameTextfield.SelectAll();
     }
-    
+
     public void OnEditTextFinished(TextField renameTextField)
     {
-	    delegatesFocus = false;
+        delegatesFocus = false;
 
         var text = renameTextField.value?.Trim();
         if (string.IsNullOrEmpty(text))
