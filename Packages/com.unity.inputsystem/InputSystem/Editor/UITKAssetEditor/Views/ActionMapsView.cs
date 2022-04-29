@@ -17,9 +17,21 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-            m_ListView.onSelectionChange += _ => SelectActionMap();
+            m_ListView.selectionChanged += _ => SelectActionMap();
 
-            CreateSelector(Selectors.GetActionMapNames,
+            m_ListView.bindItem = (element, i) =>
+            {
+	            var treeViewItem = (InputActionsTreeViewItem)element;
+	            treeViewItem.label.text = (string)m_ListView.itemsSource[i];
+	            treeViewItem.EditTextFinished += ChangeActionMapName;
+            };
+            m_ListView.makeItem = () => new InputActionsTreeViewItem();
+            m_ListView.unbindItem = (element, i) =>
+            {
+	            ((InputActionsTreeViewItem)element).EditTextFinished -= ChangeActionMapName;
+            };
+
+            CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
         }
 
@@ -27,20 +39,18 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
-            m_ListView.bindItem = (element, i) =>
-            {
-                var treeViewItem = (InputActionsTreeViewItem)element;
-                treeViewItem.label.text = (string)m_ListView.itemsSource[i];
-            };
-            m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
-
             addActionMapButton.clicked += ShowAddActionMapWindow;
         }
 
         public override void DestroyView()
         {
             addActionMapButton.clicked -= ShowAddActionMapWindow;
+        }
+
+        private void ChangeActionMapName(string newName)
+        {
+            Dispatch(Commands.ChangeActionMapName(newName));
         }
 
         private void SelectActionMap()
