@@ -21,14 +21,14 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.bindItem = (element, i) =>
             {
-	            var treeViewItem = (InputActionsTreeViewItem)element;
-	            treeViewItem.label.text = (string)m_ListView.itemsSource[i];
-	            treeViewItem.EditTextFinished += ChangeActionMapName;
+                var treeViewItem = (InputActionsTreeViewItem)element;
+                treeViewItem.label.text = (string)m_ListView.itemsSource[i];
+                treeViewItem.EditTextFinished += ChangeActionMapName;
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
-	            ((InputActionsTreeViewItem)element).EditTextFinished -= ChangeActionMapName;
+                ((InputActionsTreeViewItem)element).EditTextFinished -= ChangeActionMapName;
             };
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
