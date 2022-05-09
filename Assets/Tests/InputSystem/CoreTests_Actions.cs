@@ -53,7 +53,7 @@ partial class CoreTests
 
         // Enable some actions individually to make sure the code that deals
         // with re-resolution of already enabled bindings handles the enabling
-        // of just individual actions out of the whole set correctlyuk.
+        // of just individual actions out of the whole set correctly.
         action1.Enable();
         action2.Enable();
 
@@ -2077,10 +2077,10 @@ partial class CoreTests
                     .AndThen(Performed(action4,
                         value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
                         control: gamepad.leftStick, time: startTime + 0.234))
-                    // map3/action5 should have been started.
-                    .AndThen(Started<TapInteraction>(action5, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map2/action3 should have been started.
                     .AndThen(Started<TapInteraction>(action3, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
+                    // map3/action5 should have been started.
+                    .AndThen(Started<TapInteraction>(action5, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map3/action4 should have been performed as the stick has been moved
                     // beyond where it had already moved.
                     .AndThen(Performed(action4,
@@ -7463,7 +7463,10 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
             InputSystem.Update();
 
-            Assert.That(trace, Performed(action, control: gamepad.rightTrigger, value: 0.456f));
+            // Bit of an odd case. leftTrigger and rightTrigger have both changed state here so
+            // in a way, it's up to the system which one to pick. Might be useful if it was deliberately
+            // picking the control with the highest magnitude but not sure it's worth the effort.
+            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.456f));
 
             trace.Clear();
 
@@ -8177,7 +8180,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
         InputSystem.Update();
 
-        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
+        Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
 
         LogAssert.NoUnexpectedReceived();
     }

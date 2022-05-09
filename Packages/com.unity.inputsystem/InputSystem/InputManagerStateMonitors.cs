@@ -261,8 +261,15 @@ namespace UnityEngine.InputSystem
                 // Insertion sort.
                 for (var i = 1; i < signalled.length; ++i)
                 {
-                    for (var j = i; j > 0 && listeners[j - 1].monitorIndex < listeners[j].monitorIndex; --j)
+                    for (var j = i; j > 0; --j)
                     {
+                        // Sort by complexities only to keep the sort stable
+                        // i.e. don't reverse the order of controls which have the same complexity
+                        var firstComplexity = (int)((listeners[j - 1].monitorIndex >> 48) & 0xff);
+                        var secondComplexity = (int)((listeners[j].monitorIndex >> 48) & 0xff);
+                        if (firstComplexity >= secondComplexity)
+                            break;
+
                         listeners.SwapElements(j, j - 1);
                         memoryRegions.SwapElements(j, j - 1);
 
