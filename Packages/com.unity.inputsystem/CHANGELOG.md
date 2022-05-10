@@ -10,6 +10,13 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+
+### Fixed
+- Fixed composite touchscreen controls were not firing an action if screen was touched before enabling the action ([case ISXB-98](https://jira.unity3d.com/browse/ISXB-98)).
+
+### Added
+
 ## [1.4.0] - 2022-04-10
 
 ### Changed
