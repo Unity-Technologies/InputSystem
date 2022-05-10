@@ -10047,7 +10047,7 @@ partial class CoreTests
             Assert.AreEqual(40.0f, magnitudes[5]);
         }
     }
-    
+
     // Straight from demo project
     public struct PointerInput
     {
@@ -10106,7 +10106,7 @@ partial class CoreTests
             };
         }
     }
-    
+
     // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-98
     [Test]
     [Category("Actions")]
@@ -10132,14 +10132,14 @@ partial class CoreTests
         action.started += ctx => values.Add(ctx.ReadValue<PointerInput>());
         action.performed += ctx => values.Add(ctx.ReadValue<PointerInput>());
         action.canceled += ctx => values.Add(ctx.ReadValue<PointerInput>());
-        
+
         if (!prepopulateTouchesBeforeEnablingAction) // normally actions are enabled before any control actuations happen
             actionMap.Enable();
 
         // Start 5 touches, so we fill all slots [touch0, touch4] in Touchscreen with some valid touchId
-        for(var i = 0; i < 2; ++i)
+        for (var i = 0; i < 2; ++i)
             BeginTouch(100 + i, new Vector2(100 * (i + 1), 100 * (i + 1)));
-        for(var i = 0; i < 2; ++i)
+        for (var i = 0; i < 2; ++i)
             EndTouch(100 + i, new Vector2(100 * (i + 1), 100 * (i + 1)));
         Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 0 : 3));
         values.Clear();
