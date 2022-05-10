@@ -10060,7 +10060,6 @@ partial class CoreTests
         public float? Twist;
     }
 
-    // Straight from demo project
     public class PointerInputComposite : InputBindingComposite<PointerInput>
     {
         [InputControl(layout = "Button")]
@@ -10121,7 +10120,7 @@ partial class CoreTests
         var actionMap = new InputActionMap("test");
         var action = actionMap.AddAction("point", InputActionType.Value);
         for (var i = 0; i < 5; ++i)
-            action.AddCompositeBinding("PointerInput") // todo original binding had Touch0 .. Touch4 name set
+            action.AddCompositeBinding("PointerInput")
                 .With("contact", $"<Touchscreen>/touch{i}/press")
                 .With("position", $"<Touchscreen>/touch{i}/position")
                 .With("radius", $"<Touchscreen>/touch{i}/radius")
