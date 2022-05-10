@@ -1333,11 +1333,18 @@ namespace UnityEngine.InputSystem
             ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, interactionIndex);
         }
 
-        // We mangle the various indices we use into a single long for association with state change
-        // monitors. While we could look up map and binding indices from control indices, keeping
-        // all the information together avoids having to unnecessarily jump around in memory to grab
-        // the various pieces of data.
-
+        /// <summary>
+        /// Pack the mapIndex, controlIndex and bindingIndex components into a single monitor index value.
+        /// </summary>
+        /// <param name="mapIndex">Will hold the extracted mapIndex value after the function completes.</param>
+        /// <param name="controlIndex">Will hold the extracted controlIndex value after the function completes.</param>
+        /// <param name="bindingIndex">Will hold the extracted bindingIndex value after the function completes.</param>
+        /// <remarks>
+        /// We mangle the various indices we use into a single long for association with state change
+        /// monitors. While we could look up map and binding indices from control indices, keeping
+        /// all the information together avoids having to unnecessarily jump around in memory to grab
+        /// the various pieces of data.
+        /// </remarks>
         private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
             // We have limits on the numbers of maps, controls, and bindings we allow in any single
@@ -1350,12 +1357,28 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        /// <summary>
+        /// Extract the mapIndex, controlIndex and bindingIndex components from the provided bit packed argument (monitor index).
+        /// </summary>
+        /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
+        /// <param name="mapIndex">Will hold the extracted mapIndex value after the function completes.</param>
+        /// <param name="controlIndex">Will hold the extracted controlIndex value after the function completes.</param>
+        /// <param name="bindingIndex">Will hold the extracted bindingIndex value after the function completes.</param>
         private void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
             out int controlIndex, out int bindingIndex)
         {
             controlIndex = (int)(mapControlAndBindingIndex & 0x00ffffff);
             bindingIndex = (int)((mapControlAndBindingIndex >> 24) & 0xffff);
             mapIndex = (int)((mapControlAndBindingIndex >> 40) & 0xff);
+        }
+
+        /// <summary>
+        /// Extract the 'complexity' component from the provided bit packed argument (monitor index).
+        /// </summary>
+        /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
+        static public int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
+        {
+            return (int)((mapControlAndBindingIndex >> 48) & 0xff);
         }
 
         /// <summary>

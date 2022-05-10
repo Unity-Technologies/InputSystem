@@ -265,8 +265,8 @@ namespace UnityEngine.InputSystem
                     {
                         // Sort by complexities only to keep the sort stable
                         // i.e. don't reverse the order of controls which have the same complexity
-                        var firstComplexity = (int)((listeners[j - 1].monitorIndex >> 48) & 0xff);
-                        var secondComplexity = (int)((listeners[j].monitorIndex >> 48) & 0xff);
+                        var firstComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j - 1].monitorIndex);
+                        var secondComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j].monitorIndex);
                         if (firstComplexity >= secondComplexity)
                             break;
 
