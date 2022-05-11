@@ -1334,16 +1334,17 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Pack the mapIndex, controlIndex and bindingIndex components into a single monitor index value.
+        /// Bit pack the mapIndex, controlIndex, bindingIndex and complexity components into a single long monitor index value.
         /// </summary>
-        /// <param name="mapIndex">Will hold the extracted mapIndex value after the function completes.</param>
-        /// <param name="controlIndex">Will hold the extracted controlIndex value after the function completes.</param>
-        /// <param name="bindingIndex">Will hold the extracted bindingIndex value after the function completes.</param>
+        /// <param name="mapIndex">The mapIndex value to pack.</param>
+        /// <param name="controlIndex">The controlIndex value to pack.</param>
+        /// <param name="bindingIndex">The bindingIndex value to pack..</param>
         /// <remarks>
         /// We mangle the various indices we use into a single long for association with state change
         /// monitors. While we could look up map and binding indices from control indices, keeping
         /// all the information together avoids having to unnecessarily jump around in memory to grab
         /// the various pieces of data.
+        /// The complexity component is implicitly derived and does not need to be passed as an argument.
         /// </remarks>
         private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
@@ -1376,7 +1377,7 @@ namespace UnityEngine.InputSystem
         /// Extract the 'complexity' component from the provided bit packed argument (monitor index).
         /// </summary>
         /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
-        static public int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
+        internal static int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
         {
             return (int)((mapControlAndBindingIndex >> 48) & 0xff);
         }
