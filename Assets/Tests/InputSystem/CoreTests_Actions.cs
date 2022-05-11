@@ -10151,7 +10151,7 @@ partial class CoreTests
         Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
         values.Clear();
 
-        // Now subsequent touches are ignored
+        // Now subsequent touches should not be ignored
         BeginTouch(200, new Vector2(1, 1));
         Assert.That(values.Count, Is.EqualTo(1));
         Assert.That(values[0].InputId, Is.EqualTo(200));
