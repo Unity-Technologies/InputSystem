@@ -1,5 +1,5 @@
 editors:
-  - version: trunk
+  - version: 2022.2.0a10
 platforms:
   - name: win
     type: Unity::VM
