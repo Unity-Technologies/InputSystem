@@ -155,7 +155,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> -or- <paramref name="monitor"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">The <see cref="InputDevice"/> of <paramref name="control"/> has not been <see cref="InputDevice.added"/>.</exception>
         /// <remarks>
-        /// All monitors on an <see cref="InputDevice"/> are sorted by their <paramref name="monitorIndex"/> (in decreasing order) and invoked
+        /// All monitors on an <see cref="InputDevice"/> are sorted by the complexity specified in their <paramref name="monitorIndex"/> (in decreasing order) and invoked
         /// in that order.
         ///
         /// Every handler gets an opportunity to set <see cref="InputEventPtr.handled"/> to <c>true</c>. When doing so, all remaining pending monitors
