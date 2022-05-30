@@ -53,7 +53,7 @@ partial class CoreTests
 
         // Enable some actions individually to make sure the code that deals
         // with re-resolution of already enabled bindings handles the enabling
-        // of just individual actions out of the whole set correctlyuk.
+        // of just individual actions out of the whole set correctly.
         action1.Enable();
         action2.Enable();
 
@@ -2077,10 +2077,10 @@ partial class CoreTests
                     .AndThen(Performed(action4,
                         value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
                         control: gamepad.leftStick, time: startTime + 0.234))
-                    // map3/action5 should have been started.
-                    .AndThen(Started<TapInteraction>(action5, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map2/action3 should have been started.
                     .AndThen(Started<TapInteraction>(action3, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
+                    // map3/action5 should have been started.
+                    .AndThen(Started<TapInteraction>(action5, value: 1f, control: gamepad.buttonSouth, time: startTime + 0.345))
                     // map3/action4 should have been performed as the stick has been moved
                     // beyond where it had already moved.
                     .AndThen(Performed(action4,
@@ -7463,7 +7463,10 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
             InputSystem.Update();
 
-            Assert.That(trace, Performed(action, control: gamepad.rightTrigger, value: 0.456f));
+            // Bit of an odd case. leftTrigger and rightTrigger have both changed state here so
+            // in a way, it's up to the system which one to pick. Might be useful if it was deliberately
+            // picking the control with the highest magnitude but not sure it's worth the effort.
+            Assert.That(trace, Performed(action, control: gamepad.leftTrigger, value: 0.456f));
 
             trace.Clear();
 
@@ -8177,7 +8180,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
         InputSystem.Update();
 
-        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
+        Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
 
         LogAssert.NoUnexpectedReceived();
     }
@@ -10043,6 +10046,116 @@ partial class CoreTests
             Assert.AreEqual(22.0f, magnitudes[4]);
             Assert.AreEqual(40.0f, magnitudes[5]);
         }
+    }
+
+    // Straight from demo project
+    public struct PointerInput
+    {
+        public bool Contact;
+        public int InputId;
+        public Vector2 Position;
+        public Vector2? Tilt;
+        public float? Pressure;
+        public Vector2? Radius;
+        public float? Twist;
+    }
+
+    public class PointerInputComposite : InputBindingComposite<PointerInput>
+    {
+        [InputControl(layout = "Button")]
+        public int contact;
+
+        [InputControl(layout = "Vector2")]
+        public int position;
+
+        [InputControl(layout = "Vector2")]
+        public int tilt;
+
+        [InputControl(layout = "Vector2")]
+        public int radius;
+
+        [InputControl(layout = "Axis")]
+        public int pressure;
+
+        [InputControl(layout = "Axis")]
+        public int twist;
+
+        [InputControl(layout = "Integer")]
+        public int inputId;
+
+        public override PointerInput ReadValue(ref InputBindingCompositeContext context)
+        {
+            var contact = context.ReadValueAsButton(this.contact);
+            var pointerId = context.ReadValue<int>(inputId);
+            var pressure = context.ReadValue<float>(this.pressure);
+            var radius = context.ReadValue<Vector2, Vector2MagnitudeComparer>(this.radius);
+            var tilt = context.ReadValue<Vector2, Vector2MagnitudeComparer>(this.tilt);
+            var position = context.ReadValue<Vector2, Vector2MagnitudeComparer>(this.position);
+            var twist = context.ReadValue<float>(this.twist);
+
+            return new PointerInput
+            {
+                Contact = contact,
+                InputId = pointerId,
+                Position = position,
+                Tilt = tilt != default ? tilt : (Vector2?)null,
+                Pressure = pressure > 0 ? pressure : (float?)null,
+                Radius = radius.sqrMagnitude > 0 ? radius : (Vector2?)null,
+                Twist = twist > 0 ? twist : (float?)null,
+            };
+        }
+    }
+
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-98
+    [Test]
+    [Category("Actions")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_WithMultipleCompositeBindings_WithoutEvaluateMagnitude_Works(bool prepopulateTouchesBeforeEnablingAction)
+    {
+        InputSystem.RegisterBindingComposite<PointerInputComposite>();
+
+        InputSystem.AddDevice<Touchscreen>();
+
+        var actionMap = new InputActionMap("test");
+        var action = actionMap.AddAction("point", InputActionType.Value);
+        for (var i = 0; i < 5; ++i)
+            action.AddCompositeBinding("PointerInput")
+                .With("contact", $"<Touchscreen>/touch{i}/press")
+                .With("position", $"<Touchscreen>/touch{i}/position")
+                .With("radius", $"<Touchscreen>/touch{i}/radius")
+                .With("pressure", $"<Touchscreen>/touch{i}/pressure")
+                .With("inputId", $"<Touchscreen>/touch{i}/touchId");
+
+        var values = new List<PointerInput>();
+        action.started += ctx => values.Add(ctx.ReadValue<PointerInput>());
+        action.performed += ctx => values.Add(ctx.ReadValue<PointerInput>());
+        action.canceled += ctx => values.Add(ctx.ReadValue<PointerInput>());
+
+        if (!prepopulateTouchesBeforeEnablingAction) // normally actions are enabled before any control actuations happen
+            actionMap.Enable();
+
+        // Start 5 touches, so we fill all slots [touch0, touch4] in Touchscreen with some valid touchId
+        for (var i = 0; i < 2; ++i)
+            BeginTouch(100 + i, new Vector2(100 * (i + 1), 100 * (i + 1)));
+        for (var i = 0; i < 2; ++i)
+            EndTouch(100 + i, new Vector2(100 * (i + 1), 100 * (i + 1)));
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 0 : 3));
+        values.Clear();
+
+        // Now when enabling actionMap ..
+        actionMap.Enable();
+        // On the following update we will trigger OnBeforeUpdate which will rise started/performed
+        // from InputActionState.OnBeforeInitialUpdate as controls are "actuated"
+        InputSystem.Update();
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
+        values.Clear();
+
+        // Now subsequent touches should not be ignored
+        BeginTouch(200, new Vector2(1, 1));
+        Assert.That(values.Count, Is.EqualTo(1));
+        Assert.That(values[0].InputId, Is.EqualTo(200));
+        Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
     [Test]
