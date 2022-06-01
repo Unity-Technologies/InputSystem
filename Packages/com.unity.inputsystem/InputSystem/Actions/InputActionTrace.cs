@@ -475,7 +475,7 @@ namespace UnityEngine.InputSystem.Utilities
             else if (actionOrMapOrAsset is InputActionMap actionMap)
                 CloneActionStateBeforeBindingsChange(actionMap);
             else if (actionOrMapOrAsset is InputActionAsset actionAsset)
-                foreach(var actionMapInAsset in actionAsset.actionMaps)
+                foreach (var actionMapInAsset in actionAsset.actionMaps)
                     CloneActionStateBeforeBindingsChange(actionMapInAsset);
             else
                 Debug.Assert(false, "Expected InputAction, InputActionMap or InputActionAsset");
