@@ -438,7 +438,7 @@ namespace UnityEngine.InputSystem.Utilities
             m_OnActionChangeHooked = false;
         }
 
-        private void OnActionChange(object actionOrMap, InputActionChange change)
+        private void OnActionChange(object actionOrMapOrAsset, InputActionChange change)
         {
             // If we're subscribed to all actions, check if an action got triggered.
             if (m_SubscribedToAll)
@@ -448,8 +448,8 @@ namespace UnityEngine.InputSystem.Utilities
                     case InputActionChange.ActionStarted:
                     case InputActionChange.ActionPerformed:
                     case InputActionChange.ActionCanceled:
-                        Debug.Assert(actionOrMap is InputAction, "Expected an action");
-                        var triggeredAction = (InputAction)actionOrMap;
+                        Debug.Assert(actionOrMapOrAsset is InputAction, "Expected an action");
+                        var triggeredAction = (InputAction)actionOrMapOrAsset;
                         var actionIndex = triggeredAction.m_ActionIndexInState;
                         var stateForAction = triggeredAction.m_ActionMap.m_State;
 
@@ -469,17 +469,20 @@ namespace UnityEngine.InputSystem.Utilities
             if (change != InputActionChange.BoundControlsAboutToChange)
                 return;
 
-            // Grab the associated action map.
-            var action = actionOrMap as InputAction;
-            InputActionMap actionMap;
-            if (action != null)
-                actionMap = action.m_ActionMap;
+            // Grab the associated action map(s).
+            if (actionOrMapOrAsset is InputAction action)
+                CloneActionStateBeforeBindingsChange(action.m_ActionMap);
+            else if (actionOrMapOrAsset is InputActionMap actionMap)
+                CloneActionStateBeforeBindingsChange(actionMap);
+            else if (actionOrMapOrAsset is InputActionAsset actionAsset)
+                foreach(var actionMapInAsset in actionAsset.actionMaps)
+                    CloneActionStateBeforeBindingsChange(actionMapInAsset);
             else
-            {
-                actionMap = actionOrMap as InputActionMap;
-                Debug.Assert(actionMap != null, "Given object is neither an InputAction nor an InputActionMap");
-            }
+                Debug.Assert(false, "Expected InputAction, InputActionMap or InputActionAsset");
+        }
 
+        private void CloneActionStateBeforeBindingsChange(InputActionMap actionMap)
+        {
             // Grab the state.
             var state = actionMap.m_State;
             if (state == null)
