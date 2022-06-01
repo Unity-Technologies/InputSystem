@@ -1909,13 +1909,15 @@ namespace UnityEngine.InputSystem.UI
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
         //       button *clicks* when an action resets. However, we still need to send pointer ups.
 
-        private bool IgnoreNextClick(ref InputAction.CallbackContext context)
+        private bool IgnoreNextClick(ref InputAction.CallbackContext context, bool wasPressed)
         {
             // If explicitly ignoring focus due to setting, never ignore clicks
             if (explictlyIgnoreFocus)
                 return false;
-            // If context is cancelled (by focus change), ignore next click if device cannot run in background.
-            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground;
+            // If a currently active click is cancelled (by focus change), ignore next click if device cannot run in background.
+            // This prevents the cancelled click event being registered when focus is returned i.e. if
+            // the button was released while another window was focused.
+            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground && wasPressed;
         }
 
         private void OnLeftClickCallback(InputAction.CallbackContext context)
@@ -1925,9 +1927,10 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.leftButton.isPressed;
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (IgnoreNextClick(ref context))
+            if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
         }
 
@@ -1938,10 +1941,11 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.rightButton.isPressed;
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (IgnoreNextClick(ref context))
-                state.leftButton.ignoreNextClick = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.rightButton.ignoreNextClick = true;
         }
 
         private void OnMiddleClickCallback(InputAction.CallbackContext context)
@@ -1951,10 +1955,11 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.middleButton.isPressed;
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (IgnoreNextClick(ref context))
-                state.leftButton.ignoreNextClick = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.middleButton.ignoreNextClick = true;
         }
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
