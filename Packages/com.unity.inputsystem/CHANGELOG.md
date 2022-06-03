@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Fixed
+- Fix UI sometimes ignoring the first mouse click event after losing and regaining focus ([case ISXB-127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-127).
+
+
 ## [1.4.1] - 2022-05-30
 
 ### Fixed
