@@ -173,7 +173,7 @@ class APIVerificationTests
     public void API_DoesNotHaveDisallowedPublicFields()
     {
         #if HAVE_DOCTOOLS_INSTALLED
-        var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !(field.IsInitOnly && field.IsStatic) && !IsTypeWhichCanHavePublicFields(field.DeclaringType));
+        var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !(field.IsInitOnly && field.IsStatic) && !IsTypeWhichCanHavePublicFields(field.DeclaringType) && !field.IsSpecialName);
         Assert.That(disallowedPublicFields, Is.Empty);
         #endif
     }
