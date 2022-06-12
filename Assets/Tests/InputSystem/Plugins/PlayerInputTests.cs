@@ -2142,6 +2142,76 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerJoined, Is.True);
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenSecondPlayerJoins_UIInputForFirstPlayerContinuesWorking()
+    {
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var playerMap = actions.AddActionMap("Player");
+        var uiMap = actions.AddActionMap("UI");
+
+        var joinAction = playerMap.AddAction("Join", binding: "<Gamepad>/{PrimaryAction}");
+        joinAction.AddBinding("<Keyboard>/space");
+
+        // Left Stick is bound to UIInputModule Navigate
+        var navigateAction = uiMap.AddAction("Navigate", binding: "<Gamepad>/leftStick", type: InputActionType.PassThrough);
+        navigateAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+
+
+        var playerPrefab = new GameObject();
+        playerPrefab.SetActive(false);
+        var uiModule = playerPrefab.AddComponent<InputSystemUIInputModule>();
+        uiModule.AssignDefaultActions();
+        playerPrefab.AddComponent<PlayerInput>();
+        playerPrefab.GetComponent<PlayerInput>().actions = actions;
+        playerPrefab.GetComponent<PlayerInput>().uiInputModule = uiModule;
+
+        var manager = new GameObject();
+        manager.SetActive(false);
+        var playerInputManager = manager.AddComponent<PlayerInputManager>();
+        playerInputManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInputManager.joinAction = new InputActionProperty(InputActionReference.Create(joinAction));
+        playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered;
+        playerInputManager.playerPrefab = playerPrefab;
+        manager.SetActive(true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var playerJoined = false;
+        playerInputManager.onPlayerJoined += input => playerJoined = true;
+        bool leftStickMonitorExists()
+        {
+            foreach (var monitor in InputSystem.s_Manager.m_StateChangeMonitors)
+            {
+                foreach (var listener in monitor.listeners)
+                {
+                    if (listener.control?.ToString() == "Stick:/Gamepad/leftStick")
+                        return true;
+
+                }
+            }
+            return false;
+        }
+
+        // UIInputModule instance for player 1 will be bound to Gamepad
+        PressAndRelease(gamepad.buttonSouth);
+        Assert.That(playerJoined, Is.True);
+        Assert.That(leftStickMonitorExists(), Is.True);
+
+        // UIInputModule instance for player 2 will be bound to Keyboard
+        // And this should not affect player 1's controls
+        playerJoined = false;
+        PressAndRelease(keyboard.spaceKey);
+        Assert.That(playerJoined, Is.True);
+        Assert.That(leftStickMonitorExists(), Is.True);
+    }
+
     [Test] // Mimics what is reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
     [Category("PlayerInput")]
     public void PlayerInput_WhenOverridingDeviceLayout_LostDeviceShouldBeResolvedAndRepaired()
