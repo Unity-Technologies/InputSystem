@@ -25,16 +25,16 @@ platforms:
     netinstall: choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes --Source https://bfartifactory.bf.unity3d.com/artifactory/api/nuget/unity-choco-local
   - name: mac
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:latest
     flavor: m1.mac
   - name: mac_standalone
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:latest
     flavor: m1.mac
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:latest
     flavor: m1.mac
     runtime: StandaloneOSX
     scripting-backend: Il2Cpp
