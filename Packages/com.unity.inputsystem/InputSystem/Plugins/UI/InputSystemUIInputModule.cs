@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -98,6 +99,21 @@ namespace UnityEngine.InputSystem.UI
         {
             get => m_CursorLockBehavior;
             set => m_CursorLockBehavior = value;
+        }
+
+        /// <summary>
+        /// A root game object to support correct navigation in local multi-player UIs.
+        /// <remarks>
+        /// In local multi-player games where each player has their own UI, players should not be able to navigate into
+        /// another player's UI. Each player should have their own instance of an InputSystemUIInputModule, and this property
+        /// should be set to the root game object containing all UI objects for that player. If set, navigation using the
+        /// <see cref="InputSystemUIInputModule.move"/> action will be constrained to UI objects under that root.
+        /// </remarks>
+        /// </summary>
+        public GameObject localMultiPlayerRoot
+        {
+            get => m_LocalMultiPlayerRoot;
+            set => m_LocalMultiPlayerRoot = value;
         }
 
         /// <summary>
@@ -650,12 +666,15 @@ namespace UnityEngine.InputSystem.UI
                         eventData.moveVector = moveVector;
                         eventData.moveDir = moveDirection;
 
-                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
-                        usedSelectionChange = eventData.used;
+                        if (IsMoveAllowed(eventData))
+                        {
+                            ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                            usedSelectionChange = eventData.used;
 
-                        m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
-                        m_NavigationState.lastMoveTime = time;
-                        m_NavigationState.lastMoveDirection = moveDirection;
+                            m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
+                            m_NavigationState.lastMoveTime = time;
+                            m_NavigationState.lastMoveDirection = moveDirection;
+                        }
                     }
                 }
                 else
@@ -684,6 +703,45 @@ namespace UnityEngine.InputSystem.UI
                 if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
+        }
+
+        private bool IsMoveAllowed(AxisEventData eventData)
+        {
+            if (m_LocalMultiPlayerRoot == null)
+                return true;
+
+            if (eventSystem.currentSelectedGameObject == null)
+                return true;
+
+            var selectable = eventSystem.currentSelectedGameObject.GetComponent<Selectable>();
+
+            if (selectable == null)
+                return true;
+
+            Selectable navigationTarget = null;
+            switch (eventData.moveDir)
+            {
+                case MoveDirection.Right:
+                    navigationTarget = selectable.FindSelectableOnRight();
+                    break;
+
+                case MoveDirection.Up:
+                    navigationTarget = selectable.FindSelectableOnUp();
+                    break;
+
+                case MoveDirection.Left:
+                    navigationTarget = selectable.FindSelectableOnLeft();
+                    break;
+
+                case MoveDirection.Down:
+                    navigationTarget = selectable.FindSelectableOnDown();
+                    break;
+            }
+
+            if (navigationTarget == null)
+                return true;
+
+            return navigationTarget.transform.IsChildOf(m_LocalMultiPlayerRoot.transform);
         }
 
         [FormerlySerializedAs("m_RepeatDelay")]
@@ -2250,6 +2308,8 @@ namespace UnityEngine.InputSystem.UI
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;
+
+        [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
 
         /// <summary>
         /// Controls the origin point of raycasts when the cursor is locked.

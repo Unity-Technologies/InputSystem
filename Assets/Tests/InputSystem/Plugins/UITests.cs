@@ -2526,9 +2526,7 @@ internal class UITests : CoreTestsFixture
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].leftGameObject));
 
         Assert.That(players[0].leftChildReceiver.events, Is.Empty);
-        Assert.That(players[0].rightChildReceiver.events,
-            EventSequence(
-                OneEvent("type", EventType.Move))); // OnMove will still get called to *attempt* a move.
+        Assert.That(players[0].rightChildReceiver.events, Is.Empty);
 
         players[0].leftChildReceiver.events.Clear();
         players[0].rightChildReceiver.events.Clear();
