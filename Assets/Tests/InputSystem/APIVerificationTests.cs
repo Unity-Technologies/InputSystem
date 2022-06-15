@@ -26,6 +26,10 @@ using PropertyAttribute = NUnit.Framework.PropertyAttribute;
 
 class APIVerificationTests
 {
+    private static bool _docsGenerated;
+    private static string _docsFolder;
+    private static string _docsLog;
+
     private bool IsValidNameForConstant(string name)
     {
         return char.IsUpper(name[0]);
@@ -412,9 +416,17 @@ class APIVerificationTests
     }
 
     #if HAVE_DOCTOOLS_INSTALLED
-    ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
     private static string GenerateDocsDirectory(out string log)
     {
+        // only generate the docs once for any test run. This isn't in a one-time setup fixture method
+        // because it doesn't need to run for every test, so we want to keep the ones that don't need
+        // it from taking the hit.
+        if (_docsGenerated)
+        {
+            log = _docsLog;
+            return _docsFolder;
+        }
+
         // The dependency on `com.unity.modules.uielements` we have triggers a 404 error in doctools as it
         // tries to retrieve information on the "package" from `packages.unity.com`. As it is a module and not a
         // package, there's no metadata on the server and PacmanUtils.GetVersions() in doctools will log an
@@ -432,8 +444,11 @@ class APIVerificationTests
         Directory.CreateDirectory(docsFolder);
         var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
         var(buildLog, folderName) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
-        log = buildLog;
-        return Path.Combine(docsFolder, folderName);
+        log = _docsLog = buildLog;
+        _docsFolder = Path.Combine(docsFolder, folderName);
+        _docsGenerated = true;
+
+        return _docsFolder;
     }
 
     #endif
