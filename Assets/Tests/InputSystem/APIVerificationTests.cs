@@ -8,9 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Mono.Cecil;
-#if HAVE_DOCTOOLS_INSTALLED
-using UnityEditor.PackageManager.DocumentationTools.UI;
-#endif
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
@@ -100,7 +97,7 @@ class APIVerificationTests
         }
     }
 
-    private static IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
+    internal static IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
     {
         var codeBase = typeof(InputSystem).Assembly.CodeBase;
         var uri = new UriBuilder(codeBase);
@@ -109,8 +106,8 @@ class APIVerificationTests
         return asmDef.MainModule.Types.Where(type => type.IsPublic);
     }
 
-    private IEnumerable<FieldDefinition> GetInputSystemPublicFields() => GetInputSystemPublicTypes().SelectMany(t => t.Resolve().Fields).Where(f => f.IsPublic);
-    private IEnumerable<MethodDefinition> GetInputSystemPublicMethods() => GetInputSystemPublicTypes().SelectMany(t => t.Resolve().Methods).Where(m => m.IsPublic);
+    internal static IEnumerable<FieldDefinition> GetInputSystemPublicFields() => GetInputSystemPublicTypes().SelectMany(t => t.Resolve().Fields).Where(f => f.IsPublic);
+    internal static IEnumerable<MethodDefinition> GetInputSystemPublicMethods() => GetInputSystemPublicTypes().SelectMany(t => t.Resolve().Methods).Where(m => m.IsPublic);
 
     [Test]
     [Category("API")]
@@ -171,196 +168,13 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    #if !HAVE_DOCTOOLS_INSTALLED
-    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
-    #endif
     public void API_DoesNotHaveDisallowedPublicFields()
     {
-        #if HAVE_DOCTOOLS_INSTALLED
         var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !(field.IsInitOnly && field.IsStatic) && !IsTypeWhichCanHavePublicFields(field.DeclaringType) && !field.IsSpecialName);
         Assert.That(disallowedPublicFields, Is.Empty);
-        #endif
     }
 
-    private static string DocsForType(TypeDefinition type, string docsFolder)
-    {
-        var typeName = type.ToString().Replace('`', '-');
-        var docsPath = $"{docsFolder}/api/{typeName}.html";
-        if (!File.Exists(docsPath))
-            return null;
-        return File.ReadAllText(docsPath);
-    }
-
-    private static string TypeSummary(TypeDefinition type, string docsFolder)
-    {
-        var docs = DocsForType(type, docsFolder);
-        if (docs == null)
-            return null;
-        const string summaryKey = "<div class=\"markdown level0 summary\">";
-        const string endKey = "</div>";
-        var summaryIndex = docs.IndexOf(summaryKey);
-        var endIndex = docs.IndexOf(endKey, summaryIndex);
-        if (summaryIndex != -1 && endIndex != -1)
-            return docs.Substring(summaryIndex + summaryKey.Length, endIndex - (summaryIndex + summaryKey.Length));
-        return null;
-    }
-
-    private static string MethodSummary(MethodDefinition method, string docsFolder)
-    {
-        var docs = DocsForType(method.DeclaringType, docsFolder);
-        if (docs == null)
-            return null;
-        var methodName = method.Name;
-        if (method.IsGetter || method.IsSetter || method.IsAddOn)
-            methodName = methodName.Substring(4);
-        if (method.IsRemoveOn)
-            methodName = methodName.Substring(7);
-        if (method.IsConstructor)
-            methodName = "#ctor";
-
-        var methodKey = $"data-uid=\"{method.DeclaringType}.{methodName}";
-
-        // For generic methods, tag ``N onto name.
-        if (method.HasGenericParameters)
-            methodKey = $"{methodKey}``{method.GenericParameters.Count}";
-
-        // For non-get/set/add/remove methods, we need to take arguments into account
-        // to be able to differentiate overloads.
-        if (!method.IsGetter && !method.IsSetter && !method.IsAddOn && !method.IsRemoveOn)
-        {
-            string ConvertTypeName(string typeName)
-            {
-                // DocFX, at least with our current setup, seems to not be able
-                // handle any type references that aren't in the current package
-                // or in system libraries. Meaning that a method references anything in
-                // UnityEngine.dll, for example, whatever the reference is, it will
-                // get truncated to just the type name. So, "UnityEngine.EventSystems.PointerEventData",
-                // for example, comes out as just "PointerEventData".
-
-                if (!typeName.StartsWith("UnityEngine.InputSystem.") &&
-                    (typeName.StartsWith("UnityEngine.") ||
-                     typeName.StartsWith("UnityEditor.") ||
-                     typeName.StartsWith("Unity.") ||
-                     typeName.StartsWith("System.Linq")))
-                {
-                    var lastDot = typeName.LastIndexOf('.');
-                    return typeName.Substring(lastDot + 1);
-                }
-
-                // Nested types in Cecil use '/', in docs we use '.'.
-                return typeName.Replace('/', '.');
-            }
-
-            string TypeToString(TypeReference type)
-            {
-                var isByReference = type.IsByReference;
-                var isArray = false;
-
-                // If it's a Type& reference, switch to the referenced type.
-                if (type is ByReferenceType)
-                {
-                    isByReference = true;
-                    type = type.GetElementType();
-                }
-
-                // If it's a Type[] reference, switch to referenced type.
-                if (type is ArrayType)
-                {
-                    isArray = true;
-                    type = type.GetElementType();
-                }
-
-                // Parameters on generic methods and types are referenced by position,
-                // not by name.
-                string typeName;
-                if (type is GenericParameter genericParameter)
-                {
-                    ////FIXME: This doesn't work properly. The docs use `` on parameters
-                    ////       *coming* from methods and ` on parameters *coming* from types.
-                    ////       However, Cecil's GenericParameter is also used for generic
-                    ////       *arguments* and there, GenericParameter.Type simply indicates what
-                    ////       generic thing the argument is applied to, *not* where it is defined.
-                    ////       So something like "Foo<TControl>(InputControlList<TControl>)" will
-                    ////       give us GenericParameterType.Type on the use of TControl.
-                    ////       I found no way to tell the two apart. I.e. to tell whether the
-                    ////       *definition* is coming from a method or type.
-
-                    // Method parameters are referenced with ``, type parameters
-                    // with `.
-                    var prefix = genericParameter.Type == GenericParameterType.Method
-                        ? "``"
-                        : "`";
-                    typeName = $"{prefix}{genericParameter.Position}";
-                }
-                else if (type.IsGenericInstance)
-                {
-                    // Cecil uses `N<...> notation, docs use {...} notation.
-                    var genericInstanceType = (GenericInstanceType)type;
-
-                    // Extract name of generic type. Snip off `N suffix.
-                    typeName = ConvertTypeName(type.GetElementType().FullName);
-                    var indexOfBacktick = typeName.IndexOf('`');
-                    if (indexOfBacktick != -1)
-                        typeName = typeName.Substring(0, indexOfBacktick);
-
-                    typeName += "{";
-                    typeName += string.Join(",", genericInstanceType.GenericArguments.Select(TypeToString));
-                    typeName += "}";
-                }
-                else if (type.HasGenericParameters)
-                {
-                    // Same deal as IsGenericInstance.
-
-                    typeName = ConvertTypeName(type.FullName);
-                    var indexOfBacktick = typeName.IndexOf('`');
-                    if (indexOfBacktick != -1)
-                        typeName = typeName.Substring(0, indexOfBacktick);
-
-                    typeName += "{";
-                    typeName += string.Join(",", type.GenericParameters.Select(TypeToString));
-                    typeName += "}";
-                }
-                else
-                {
-                    typeName = ConvertTypeName(type.FullName);
-                }
-
-                if (isArray)
-                    typeName += "[]";
-
-                // Cecil uss &, docs use @ for 'ref' parameters.
-                if (isByReference)
-                    typeName += "@";
-
-                return typeName;
-            }
-
-            var parameters = string.Join(",", method.Parameters.Select(p => TypeToString(p.ParameterType)));
-            if (!string.IsNullOrEmpty(parameters))
-                methodKey = $"{methodKey}({parameters})";
-        }
-
-        const string nextEntryKey = "<a id=";
-        const string summaryKey = "<div class=\"markdown level1 summary\">";
-        const string endKey = "</div>";
-
-        var methodIndex = docs.IndexOf(methodKey);
-        if (methodIndex == -1)
-        {
-            Console.WriteLine($"Could not find {methodKey}");
-            return null;
-        }
-
-        var summaryIndex = docs.IndexOf(summaryKey, methodIndex);
-        var endIndex = docs.IndexOf(endKey, summaryIndex);
-        var nextEntryIndex = docs.IndexOf(nextEntryKey, methodIndex);
-        if (summaryIndex != -1 && endIndex != -1 && (summaryIndex < nextEntryIndex || nextEntryIndex == -1))
-            return docs.Substring(summaryIndex + summaryKey.Length, endIndex - (summaryIndex + summaryKey.Length));
-
-        return null;
-    }
-
-    private static bool IgnoreTypeForDocsByName(string fullName)
+    internal static bool IgnoreTypeForDocsByName(string fullName)
     {
         return
             fullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
@@ -385,182 +199,13 @@ class APIVerificationTests
             fullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName;
     }
 
-    private static bool IgnoreTypeForDocsByNamespace(string @namespace)
+    internal static bool IgnoreTypeForDocsByNamespace(string @namespace)
     {
         return
             // All our XR stuff completely lacks docs. Get XR team to fix this.
             @namespace.StartsWith("UnityEngine.InputSystem.XR") ||
             @namespace.StartsWith("UnityEngine.XR") ||
             @namespace.StartsWith("Unity.XR");
-    }
-
-    private static bool IgnoreTypeForDocs(TypeDefinition type)
-    {
-        return IgnoreTypeForDocsByName(type.FullName) || IgnoreTypeForDocsByNamespace(type.Namespace);
-    }
-
-    private static bool IgnoreMethodForDocs(MethodDefinition method)
-    {
-        if (IgnoreTypeForDocs(method.DeclaringType))
-            return true;
-
-        // Default constructors may be implicit in which case they don't need docs.
-        if (method.IsConstructor && !method.HasParameters)
-            return true;
-
-        // delegate members are implicit and don't need docs.
-        if (method.DeclaringType.Name.EndsWith("Delegate"))
-            return true;
-
-        return false;
-    }
-
-    #if HAVE_DOCTOOLS_INSTALLED
-    private static string GenerateDocsDirectory(out string log)
-    {
-        // only generate the docs once for any test run. This isn't in a one-time setup fixture method
-        // because it doesn't need to run for every test, so we want to keep the ones that don't need
-        // it from taking the hit.
-        if (_docsGenerated)
-        {
-            log = _docsLog;
-            return _docsFolder;
-        }
-
-        // The dependency on `com.unity.modules.uielements` we have triggers a 404 error in doctools as it
-        // tries to retrieve information on the "package" from `packages.unity.com`. As it is a module and not a
-        // package, there's no metadata on the server and PacmanUtils.GetVersions() in doctools will log an
-        // error to the console. This doesn't impact the rest of the run so just ignore it.
-        // This is a workaround. Remove when fixed in doctools.
-        LogAssert.ignoreFailingMessages = true;
-
-        // DocumentationBuilder users C:/temp on Windows to avoid deeply nested paths that go
-        // beyond the Windows path limit. However, on Yamato agent, C:/temp does not exist.
-        // Create it manually here.
-        #if UNITY_EDITOR_WIN
-        Directory.CreateDirectory("C:/temp");
-        #endif
-        var docsFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/docstest"));
-        Directory.CreateDirectory(docsFolder);
-        var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
-        var(buildLog, folderName) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
-        log = _docsLog = buildLog;
-        _docsFolder = Path.Combine(docsFolder, folderName);
-        _docsGenerated = true;
-
-        return _docsFolder;
-    }
-
-    #endif
-
-    [Test]
-    [Category("API")]
-    #if UNITY_EDITOR_OSX
-    [Explicit] // Fails due to file system permissions on yamato, but works locally.
-    #endif
-    #if !HAVE_DOCTOOLS_INSTALLED
-    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
-    #endif
-    public void API_DoesNotHaveUndocumentedPublicTypes()
-    {
-        #if HAVE_DOCTOOLS_INSTALLED
-        var docsFolder = GenerateDocsDirectory(out _);
-        var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
-        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types, the docs are generated in {docsFolder}");
-        #endif
-    }
-
-    [Test]
-    [Category("API")]
-    #if UNITY_EDITOR_OSX
-    [Explicit] // Fails due to file system permissions on yamato, but works locally.
-    #endif
-    #if !HAVE_DOCTOOLS_INSTALLED
-    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
-    #endif
-    public void API_DocsDoNotHaveXMLDocErrors()
-    {
-        #if HAVE_DOCTOOLS_INSTALLED
-        GenerateDocsDirectory(out var log);
-        var lines = log.Split('\n');
-        Assert.That(lines.Where(l => l.Contains("Badly formed XML")), Is.Empty);
-        Assert.That(lines.Where(l => l.Contains("Invalid cref")), Is.Empty);
-        #endif
-    }
-
-    [Test]
-    [Category("API")]
-    [Ignore("Still needs a lot of documentation work to happen")]
-    #if UNITY_EDITOR_OSX
-    [Explicit]     // Fails due to file system permissions on yamato, but works locally.
-    #endif
-    #if !HAVE_DOCTOOLS_INSTALLED
-    //[Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
-    #endif
-    public void API_DoesNotHaveUndocumentedPublicMethods()
-    {
-        #if HAVE_DOCTOOLS_INSTALLED
-        var docsFolder = GenerateDocsDirectory(out _);
-        var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
-        Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
-        #endif
-    }
-
-    private static HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
-    {
-        if (!htmlFileCache.ContainsKey(htmlFile))
-        {
-            htmlFileCache[htmlFile] = new HtmlDocument();
-            htmlFileCache[htmlFile].Load(htmlFile);
-        }
-
-        return htmlFileCache[htmlFile];
-    }
-
-    private static void CheckHTMLFileLinkConsistency(string htmlFile, List<string> unresolvedLinks, Dictionary<string, HtmlDocument> htmlFileCache)
-    {
-        var dir = Path.GetDirectoryName(htmlFile);
-        var doc = LoadHtmlDocument(htmlFile, htmlFileCache);
-        var hrefList = doc.DocumentNode.SelectNodes("//a")
-            .Select(p => p.GetAttributeValue("href", null))
-            .ToList();
-        foreach (var _link in hrefList)
-        {
-            var link = _link;
-            if (string.IsNullOrEmpty(link))
-                continue;
-
-            // ignore external links for now
-            if (link.StartsWith("http://"))
-                continue;
-
-            if (link.StartsWith("https://"))
-                continue;
-
-            if (link == "#top")
-                continue;
-
-            if (link.StartsWith("#"))
-                link = Path.GetFileName(htmlFile) + link;
-
-            var split = link.Split('#');
-            var linkedFile = split[0];
-            var tag = split.Length > 1 ? split[1] : null;
-
-            if (!File.Exists(Path.Combine(dir, linkedFile)))
-            {
-                unresolvedLinks.Add($"{link} in {htmlFile} (File Not Found)");
-                continue;
-            }
-
-            if (!string.IsNullOrEmpty(tag))
-            {
-                var linkedDoc = LoadHtmlDocument(Path.Combine(dir, linkedFile), htmlFileCache);
-                var idNode = linkedDoc.DocumentNode.SelectSingleNode($"//*[@id = '{tag}']");
-                if (idNode == null)
-                    unresolvedLinks.Add($"{link} in {htmlFile} (Tag Not Found)");
-            }
-        }
     }
 
     [Test]
@@ -601,32 +246,6 @@ class APIVerificationTests
 
         Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
-
-        #if HAVE_DOCTOOLS_INSTALLED
-        // Ensure the links are actually valid.
-        var docsFolder = GenerateDocsDirectory(out _);
-        var brokenHelpUrls =
-            monoBehaviourTypesHelpUrls.Where(
-                s =>
-                {
-                    // Parse file path and anchor.
-                    var path = s.Substring(InputSystem.kDocUrl.Length);
-                    if (path.StartsWith("/"))
-                        path = path.Substring(1);
-                    var docsFileName = path.Substring(0, path.IndexOf('#'));
-                    var anchorName = path.Substring(path.IndexOf('#') + 1);
-
-                    // Load doc.
-                    var docsFilePath = Path.Combine(docsFolder, docsFileName);
-                    var doc = new HtmlDocument();
-                    doc.Load(docsFilePath);
-
-                    // Look up anchor.
-                    return doc.DocumentNode.SelectSingleNode($"//*[@id = '{anchorName}']") == null;
-                });
-
-        Assert.That(brokenHelpUrls, Is.Empty);
-        #endif
     }
 
     private const string kAPIDirectory = "Tools/API";
@@ -946,28 +565,6 @@ class APIVerificationTests
     }
 
 #endif // UNITY_EDITOR_WIN
-
-    ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
-    ////      be great to have some way of diagnosing links that have gone stale
-    [Test]
-    [Category("API")]
-    #if UNITY_EDITOR_OSX
-    [Explicit] // Fails due to file system permissions on yamato, but works locally.
-    #endif
-    #if !HAVE_DOCTOOLS_INSTALLED
-    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
-    #endif
-    public void API_DocumentationManualDoesNotHaveMissingInternalLinks()
-    {
-        #if HAVE_DOCTOOLS_INSTALLED
-        var docsFolder = GenerateDocsDirectory(out _);
-        var unresolvedLinks = new List<string>();
-        var htmlFileCache = new Dictionary<string, HtmlDocument>();
-        foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
-            CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
-        Assert.That(unresolvedLinks, Is.Empty);
-        #endif
-    }
 
     [Test]
     [Category("API")]
