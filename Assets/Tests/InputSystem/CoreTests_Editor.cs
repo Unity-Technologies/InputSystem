@@ -3060,7 +3060,7 @@ partial class CoreTests
         var cp = new CompilerParameters { CompilerOptions = options };
         cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
-#if UNITY_2022
+#if UNITY_2022_1_OR_NEWER
         // Currently there is are cross-references to netstandard, e.g. System.IEquatable<UnityEngine.Vector2>, System.IFormattable
         // causing compilation failure for 2022 versions. This is a workaround for running these tests.
         var netstandard = Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
