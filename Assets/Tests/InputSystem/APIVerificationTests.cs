@@ -23,10 +23,6 @@ using PropertyAttribute = NUnit.Framework.PropertyAttribute;
 
 class APIVerificationTests
 {
-    private static bool _docsGenerated;
-    private static string _docsFolder;
-    private static string _docsLog;
-
     private bool IsValidNameForConstant(string name)
     {
         return char.IsUpper(name[0]);
