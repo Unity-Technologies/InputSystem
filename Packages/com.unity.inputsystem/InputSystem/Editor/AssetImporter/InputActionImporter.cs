@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
         public static void CreateInputAsset()
         {
             ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
-                kDefaultAssetLayout);
+                kDefaultAssetLayout, (Texture2D)EditorGUIUtility.Load(kAssetIcon));
         }
     }
 }
