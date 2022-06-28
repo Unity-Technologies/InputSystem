@@ -1836,9 +1836,30 @@ namespace UnityEngine.InputSystem
                 #endif
             }
 
+            m_SupportsConnectionsAsEvents = false;
+            unsafe
+            {
+                // Check if native code supports "connections as events"
+                var command = SupportsConnectionsAsEventsCommand.Create();
+                if (InputRuntimeExtensions.DeviceCommand(runtime, 0, ref command) < 0)
+                    Debug.Log("Native code does not support connections as events, using legacy hooks");
+                else
+                {
+                    m_SupportsConnectionsAsEvents = true;
+                    Debug.Log("Native code supports connections as events");
+                }
+            }
+
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
-            m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
+            if (m_SupportsConnectionsAsEvents)
+            {
+                // Don't hook onDeviceDiscovered, we'll generate this from an Event
+                // However, we need to set a handler or c++ SendDeviceDiscoveriesToScript() won't clear its queue
+                m_Runtime.onDeviceDiscovered = DummyOnNativeDeviceDiscovered;
+            }
+            else
+                m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onPlayerFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             #if UNITY_EDITOR
@@ -1991,6 +2012,9 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
         #endif
+
+        private bool m_SupportsConnectionsAsEvents;
+        private InputDevice m_dummyCreatingDevice = new InputDevice(); // Temporary used exclusively during setup of connection events
 
         ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
 
@@ -2204,6 +2228,10 @@ namespace UnityEngine.InputSystem
                 }
                 #endif
             }
+        }
+
+        private void DummyOnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
+        {
         }
 
         private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -2893,6 +2921,7 @@ namespace UnityEngine.InputSystem
             {
                 m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
                 var totalEventBytesProcessed = 0U;
+                List<int> queuedInsertDeviceIds = new List<int>();
 
                 InputEvent* skipEventMergingFor = null;
 
@@ -2938,6 +2967,12 @@ namespace UnityEngine.InputSystem
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
                     var currentEventType = currentEventReadPtr->type;
 
+                    bool isInsertEvent = m_SupportsConnectionsAsEvents && (currentEventType == DeviceInsertEvent.Type);
+                    if (isInsertEvent)
+                    {
+                        device = m_dummyCreatingDevice; // Dummy InputDevice to avoid having to add checks around subsequent 'device' derefs
+                    }
+
                     // In the editor, we discard all input events that occur in-between exiting edit mode and having
                     // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
                     // UI was sort of neither in this mode nor in that mode. This would usually lead to the game receiving
@@ -2954,8 +2989,19 @@ namespace UnityEngine.InputSystem
                         (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                          InputSystem.s_SystemObject.enterPlayModeTime == 0))
                     {
-                        m_InputEventStream.Advance(false);
-                        continue;
+                        if (currentEventType == DeviceRemoveEvent.Type)
+                        {
+                            // Retain remove events (happens during backend switches)
+                        }
+                        else if(isInsertEvent)
+                        {
+                            // Retain insert events
+                        }
+                        else
+                        {
+                            m_InputEventStream.Advance(false);
+                            continue;
+                        }
                     }
 #endif
 
@@ -2971,13 +3017,20 @@ namespace UnityEngine.InputSystem
                         device = TryGetDeviceById(currentEventReadPtr->deviceId);
                     if (device == null)
                     {
+                        if (m_SupportsConnectionsAsEvents && queuedInsertDeviceIds.Contains(currentEventReadPtr->deviceId))
+                        {
+                            // If an insert was queued, we need to make sure events referencing it is also queued (not culled)
+                        }
+                        else
+                        {
 #if UNITY_EDITOR
-                        ////TODO: see if this is a device we haven't created and if so, just ignore
-                        m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
+                            ////TODO: see if this is a device we haven't created and if so, just ignore
+                            m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
 #endif
 
-                        m_InputEventStream.Advance(false);
-                        continue;
+                            m_InputEventStream.Advance(false);
+                            continue;
+                        }
                     }
 
                     // In the editor, we may need to bump events from editor updates into player updates
@@ -3007,6 +3060,11 @@ namespace UnityEngine.InputSystem
                                 // Let only pointer and keyboard input through.
                                 if (!isPointerOrKeyboard)
                                 {
+                                    if (isInsertEvent)
+                                    {
+                                        queuedInsertDeviceIds.Add(currentEventReadPtr->deviceId);
+                                    }
+
                                     m_InputEventStream.Advance(true);
                                     continue;
                                 }
@@ -3257,6 +3315,17 @@ namespace UnityEngine.InputSystem
 
                             break;
                         }
+
+                        case DeviceInsertEvent.Type:
+                            if (m_SupportsConnectionsAsEvents)
+                            {
+                                var deviceInsertEventPtr = (DeviceInsertEvent*)currentEventReadPtr;
+                                int id = deviceInsertEventPtr->baseEvent.deviceId;
+                                string descriptor = deviceInsertEventPtr->descriptor;
+                                // Directly call what the c++ would have called via m_Runtime.onDeviceDiscovered
+                                OnNativeDeviceDiscovered(id, descriptor);
+                            }
+                            break;
 
                         case DeviceConfigurationEvent.Type:
                             device.NotifyConfigurationChanged();
