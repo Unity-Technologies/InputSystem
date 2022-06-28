@@ -2514,7 +2514,7 @@ namespace UnityEngine.InputSystem
                 #endif
 
                 // Only send command if setting is explicitly set
-                if (m_Settings.m_FeatureFlags.ContainsKey(InputFeatureNames.kUseWindowsGamingInputBackend))
+                if (m_Settings.IsFeatureExplicitlySet(InputFeatureNames.kUseWindowsGamingInputBackend))
                 {
                     var useWindowsGamingInputBackend = m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend);
                     var command = UseWindowsGamingInputCommand.Create(useWindowsGamingInputBackend);

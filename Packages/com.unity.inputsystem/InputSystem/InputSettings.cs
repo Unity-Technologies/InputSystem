@@ -678,7 +678,7 @@ namespace UnityEngine.InputSystem
             if (m_FeatureFlags == null)
                 m_FeatureFlags = new Dictionary<string, bool>();
             m_FeatureFlags[featureName.ToUpperInvariant()] = enabled;
-            
+
             OnChange();
         }
 
