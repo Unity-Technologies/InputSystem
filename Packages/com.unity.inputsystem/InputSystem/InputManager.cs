@@ -2513,11 +2513,13 @@ namespace UnityEngine.InputSystem
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
 
-                if (m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend))
+                // Only send command if setting is explicitly set
+                if (m_Settings.m_FeatureFlags.ContainsKey(InputFeatureNames.kUseWindowsGamingInputBackend))
                 {
-                    var command = UseWindowsGamingInputCommand.Create(true);
+                    var useWindowsGamingInputBackend = m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend);
+                    var command = UseWindowsGamingInputCommand.Create(useWindowsGamingInputBackend);
                     if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not enable Windows.Gaming.Input");
+                        Debug.LogError($"Could not change {InputFeatureNames.kUseWindowsGamingInputBackend} feature flag to: {useWindowsGamingInputBackend}");
                 }
             }
 

@@ -676,13 +676,9 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(featureName));
 
             if (m_FeatureFlags == null)
-                m_FeatureFlags = new HashSet<string>();
-
-            if (enabled)
-                m_FeatureFlags.Add(featureName.ToUpperInvariant());
-            else
-                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
-
+                m_FeatureFlags = new Dictionary<string, bool>();
+            m_FeatureFlags[featureName.ToUpperInvariant()] = enabled;
+            
             OnChange();
         }
 
@@ -713,11 +709,19 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
 
-        [NonSerialized] internal HashSet<string> m_FeatureFlags;
+        [NonSerialized] internal Dictionary<string, bool> m_FeatureFlags;
+
+        internal bool IsFeatureExplicitlySet(string featureName)
+        {
+            return m_FeatureFlags != null && m_FeatureFlags.ContainsKey(featureName.ToUpperInvariant());
+        }
 
         internal bool IsFeatureEnabled(string featureName)
         {
-            return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
+            bool enabled = false;
+            if (m_FeatureFlags != null)
+                m_FeatureFlags.TryGetValue(featureName.ToUpperInvariant(), out enabled);
+            return enabled;
         }
 
         internal void OnChange()
