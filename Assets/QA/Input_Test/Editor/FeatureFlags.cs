@@ -8,16 +8,17 @@ namespace UnityEngine.InputSystem
         private static readonly string useWindowsGamingInputBackendName = "USE_WINDOWS_GAMING_INPUT_BACKEND";
         private static bool useWindowsGamingInputBackend = false;
 
-        private static void LogFeatureRequest(string setting, bool enabled)
+        private static void SetInternalFeatureFlag(string setting, bool enabled)
         {
             Debug.Log($"Feature flag \"{setting}\" set to: {(enabled ? "On" : "Off")}");
+            InputSystem.settings.SetInternalFeatureFlag(setting, enabled);
         }
 
         [MenuItem("QA Tools/Input Features/Toggle USE_WINDOWS_GAMING_INPUT_BACKEND", false, 0)]
         static bool SwitchGamepadBackend()
         {
             useWindowsGamingInputBackend = !useWindowsGamingInputBackend;
-            InputSystem.settings.SetInternalFeatureFlag(useWindowsGamingInputBackendName, useWindowsGamingInputBackend);
+            SetInternalFeatureFlag(useWindowsGamingInputBackendName, useWindowsGamingInputBackend);
             return true;
         }
     }
