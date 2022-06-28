@@ -2989,7 +2989,11 @@ namespace UnityEngine.InputSystem
                         (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                          InputSystem.s_SystemObject.enterPlayModeTime == 0))
                     {
-                        if (isInsertEvent)
+                        if (currentEventType == DeviceRemoveEvent.Type)
+                        {
+                            // Retain remove events (happens during backend switches)
+                        }
+                        else if(isInsertEvent)
                         {
                             // Retain insert events
                         }
