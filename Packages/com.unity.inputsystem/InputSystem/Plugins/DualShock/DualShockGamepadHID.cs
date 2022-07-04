@@ -430,7 +430,7 @@ namespace UnityEngine.InputSystem.DualShock
                 enableFlags1 = 0x1 | // Enable motor rumble.
                     0x2,             // Disable haptics.
                 enableFlags2 = 0x4,  // Enable LEDs color.
-                lowFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(lf, byte.MinValue, byte.MinValue),
+                lowFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(lf, byte.MinValue, byte.MaxValue),
                 highFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(hf, byte.MinValue, byte.MaxValue),
                 redColor = (byte)NumberHelpers.NormalizedFloatToUInt(c.r, byte.MinValue, byte.MaxValue),
                 greenColor = (byte)NumberHelpers.NormalizedFloatToUInt(c.g, byte.MinValue, byte.MaxValue),
