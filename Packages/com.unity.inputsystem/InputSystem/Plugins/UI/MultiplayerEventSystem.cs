@@ -42,6 +42,11 @@ namespace UnityEngine.InputSystem.UI
             InitializePlayerRoot();
         }
 
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+        }
+
         private void InitializePlayerRoot()
         {
             if (m_PlayerRoot == null) return;
