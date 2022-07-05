@@ -141,7 +141,7 @@ internal class XInputTests : CoreTestsFixture
         AssertButtonPress(gamepad, new XInputControllerOSXState().WithButton(XInputControllerOSXState.Button.Select), gamepad.selectButton);
     }
 
-// Temporary: Disables tests in standalone trunk builds (https://fogbugz.unity3d.com/f/cases/1410131/)
+// Disable tests in standalone builds from 2022.1+ see UUM-19622
 #if !UNITY_STANDALONE_OSX || !TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST
     [Test]
     [Category("Devices")]
