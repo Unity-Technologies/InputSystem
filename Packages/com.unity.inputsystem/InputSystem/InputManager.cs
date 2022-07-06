@@ -2512,15 +2512,6 @@ namespace UnityEngine.InputSystem
                 #if UNITY_EDITOR
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
                 #endif
-
-                // Only send command if setting is explicitly set
-                if (m_Settings.IsFeatureExplicitlySet(InputFeatureNames.kUseWindowsGamingInputBackend))
-                {
-                    var useWindowsGamingInputBackend = m_Settings.IsFeatureEnabled(InputFeatureNames.kUseWindowsGamingInputBackend);
-                    var command = UseWindowsGamingInputCommand.Create(useWindowsGamingInputBackend);
-                    if (ExecuteGlobalCommand(ref command) < 0)
-                        Debug.LogError($"Could not change {InputFeatureNames.kUseWindowsGamingInputBackend} feature flag to: {useWindowsGamingInputBackend}");
-                }
             }
 
             // Cache some values.
