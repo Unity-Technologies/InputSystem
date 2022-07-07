@@ -100,7 +100,8 @@ namespace UnityEngine.InputSystem.Editor
         private static string GetPropertyTitle(SerializedProperty property)
         {
             if (property.GetParentProperty() == null && property.displayName != null &&
-                property.displayName.Length > 0 && property.type == nameof(InputAction))
+                property.displayName.Length > 0 &&
+                (property.type == nameof(InputAction) || property.type == nameof(InputActionMap)))
             {
                 return $"{property.displayName}";
             }
