@@ -1100,6 +1100,7 @@ namespace UnityEngine.InputSystem
             {
                 instance = Object.Instantiate(prefab);
 
+                #if UNITY_INPUT_SYSTEM_ENABLE_UI
                 // When cloning the UIInputModule it will also copy the references to actions in the
                 // prefab UIInputModule, which we don't want. Each player needs their own individual actions
                 // otherwise they can modify other player's actions (e.g. when enabling/disabling).
@@ -1108,6 +1109,7 @@ namespace UnityEngine.InputSystem
                 var clonedPlayerInput = instance.GetComponentInChildren<PlayerInput>();
                 if (clonedPlayerInput && clonedPlayerInput.uiInputModule != null)
                     clonedPlayerInput.uiInputModule.CloneActions();
+                #endif
 
                 instance.SetActive(true);
             }
