@@ -2165,11 +2165,11 @@ internal class PlayerInputTests : CoreTestsFixture
 
         var playerPrefab = new GameObject();
         playerPrefab.SetActive(false);
-        var uiModule = playerPrefab.AddComponent<InputSystemUIInputModule>();
-        uiModule.AssignDefaultActions();
+        var prefabUIModule = playerPrefab.AddComponent<InputSystemUIInputModule>();
+        prefabUIModule.AssignDefaultActions();
         playerPrefab.AddComponent<PlayerInput>();
         playerPrefab.GetComponent<PlayerInput>().actions = actions;
-        playerPrefab.GetComponent<PlayerInput>().uiInputModule = uiModule;
+        playerPrefab.GetComponent<PlayerInput>().uiInputModule = prefabUIModule;
 
         var manager = new GameObject();
         manager.SetActive(false);
@@ -2183,33 +2183,31 @@ internal class PlayerInputTests : CoreTestsFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var playerJoined = false;
-        playerInputManager.onPlayerJoined += input => playerJoined = true;
-        bool leftStickMonitorExists()
-        {
-            foreach (var monitor in InputSystem.s_Manager.m_StateChangeMonitors)
-            {
-                foreach (var listener in monitor.listeners)
-                {
-                    if (listener.control?.ToString() == "Stick:/Gamepad/leftStick")
-                        return true;
-
-                }
-            }
-            return false;
-        }
+        List<PlayerInput> joinedPlayers = new List<PlayerInput>();
+        playerInputManager.onPlayerJoined += input => joinedPlayers.Add(input);
 
         // UIInputModule instance for player 1 will be bound to Gamepad
         PressAndRelease(gamepad.buttonSouth);
-        Assert.That(playerJoined, Is.True);
-        Assert.That(leftStickMonitorExists(), Is.True);
+        Assert.That(joinedPlayers.Count, Is.EqualTo(1));
+
+        // Player 1's controls are functional
+        bool player1Moved = false;
+        joinedPlayers[0].uiInputModule.move.action.performed += cxt => player1Moved = true;
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
+        Assert.That(player1Moved, Is.True);
+
+        Set(gamepad.leftStick, new Vector2(0.0f, 0.0f));
+        player1Moved = false;
 
         // UIInputModule instance for player 2 will be bound to Keyboard
         // And this should not affect player 1's controls
-        playerJoined = false;
         PressAndRelease(keyboard.spaceKey);
-        Assert.That(playerJoined, Is.True);
-        Assert.That(leftStickMonitorExists(), Is.True);
+        Assert.That(joinedPlayers.Count, Is.EqualTo(2));
+        Assert.That(player1Moved, Is.False);
+
+        // Player 1's controls still work after player 2 joined
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
+        Assert.That(player1Moved, Is.True);
     }
 
     [Test] // Mimics what is reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320

@@ -1099,6 +1099,24 @@ namespace UnityEngine.InputSystem
             try
             {
                 instance = Object.Instantiate(prefab);
+
+                // When cloning the UIInputModule it will also copy the references to actions in the
+                // prefab UIInputModule, which we don't want. Each player needs their own individual actions
+                // otherwise they can modify other player's actions (e.g. when enabling/disabling).
+                // Using the property setters to replace the actions with new ones would invoke unwanted
+                // side effects on the existing ones, therefore we just create a fresh new UIModule here.
+                var clonedPlayerInput = instance.GetComponentInChildren<PlayerInput>();
+                if (clonedPlayerInput && clonedPlayerInput.m_UIInputModule != null)
+                {
+                    var existingUIModule = instance.GetComponentInChildren<InputSystemUIInputModule>();
+                    if (existingUIModule != null && existingUIModule == clonedPlayerInput.m_UIInputModule)
+                        DestroyImmediate(existingUIModule);
+
+                    var clonedUIModule = instance.AddComponent<InputSystemUIInputModule>();
+                    clonedUIModule.AssignDefaultActions();
+                    clonedPlayerInput.m_UIInputModule = clonedUIModule;
+                }
+
                 instance.SetActive(true);
             }
             finally
