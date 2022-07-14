@@ -1099,18 +1099,6 @@ namespace UnityEngine.InputSystem
             try
             {
                 instance = Object.Instantiate(prefab);
-
-                #if UNITY_INPUT_SYSTEM_ENABLE_UI
-                // When cloning the UIInputModule it will also copy the references to actions in the
-                // prefab UIInputModule, which we don't want. Each player needs their own individual actions
-                // otherwise they can modify other player's actions (e.g. when enabling/disabling).
-                // Using the property setters to replace the actions with new ones would invoke unwanted
-                // side effects on the existing ones.
-                var clonedPlayerInput = instance.GetComponentInChildren<PlayerInput>();
-                if (clonedPlayerInput && clonedPlayerInput.uiInputModule != null)
-                    clonedPlayerInput.uiInputModule.CloneActions();
-                #endif
-
                 instance.SetActive(true);
             }
             finally
@@ -1227,7 +1215,24 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
+            {
+                // Check that no other player is sharing the uiInputModule actions, *before* we do the assignment.
+                // Using the actionAsset setter will cause side effects on the other players if it is shared
+                // I.e. will cause their actions to become disabled and remove their state monitors.
+                if (uiInputModule.actionsAsset != null)
+                {
+                    for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                    {
+                        if (s_AllActivePlayers[i].uiInputModule.actionsAsset == uiInputModule.actionsAsset && s_AllActivePlayers[i] != this)
+                        {
+                            uiInputModule.CloneActions(); // Create new, independent action state that doesn't reference other players actions
+                            break;
+                        }
+                    }
+                }
+
                 uiInputModule.actionsAsset = m_Actions;
+            }
             #endif
 
             switch (m_NotificationBehavior)
