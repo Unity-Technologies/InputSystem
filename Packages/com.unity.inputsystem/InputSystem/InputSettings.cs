@@ -661,6 +661,13 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// TODO:
+        /// </summary>
+        public InputActionAsset globalInputActionsAsset { get; set; }
+
+        public bool disableGlobalInputActions { get; set; }
+
+        /// <summary>
         /// Improves shortcut key support by making composite controls consume control input
         /// </summary>
         /// <remarks>
