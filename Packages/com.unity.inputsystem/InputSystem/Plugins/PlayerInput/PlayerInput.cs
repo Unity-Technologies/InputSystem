@@ -1196,7 +1196,6 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            ////REVIEW: should we *always* Instantiate()?
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
@@ -1215,24 +1214,7 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
-            {
-                // Check that no other player is sharing the uiInputModule actions, *before* we do the assignment.
-                // Using the actionAsset setter will cause side effects on the other players if it is shared
-                // I.e. will cause their actions to become disabled and remove their state monitors.
-                if (uiInputModule.actionsAsset != null)
-                {
-                    for (var i = 0; i < s_AllActivePlayersCount; ++i)
-                    {
-                        if (s_AllActivePlayers[i].uiInputModule.actionsAsset == uiInputModule.actionsAsset && s_AllActivePlayers[i] != this)
-                        {
-                            uiInputModule.CloneActions(); // Create new, independent action state that doesn't reference other players actions
-                            break;
-                        }
-                    }
-                }
-
                 uiInputModule.actionsAsset = m_Actions;
-            }
             #endif
 
             switch (m_NotificationBehavior)

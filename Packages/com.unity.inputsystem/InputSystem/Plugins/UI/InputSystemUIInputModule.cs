@@ -1401,52 +1401,6 @@ namespace UnityEngine.InputSystem.UI
             trackedDevicePosition = default;
         }
 
-        /// <summary>
-        /// Clones all the underlying action assignments, the <see cref="actionsAsset"/> as well as all individual
-        /// actions such as <see cref="leftClick"/>.
-        /// </summary>
-        /// <remarks>
-        /// This performs a deep copy of the actions, ensuring that multiple instances have their own instances and
-        /// will not interfere with one another's actions.
-        /// This should be called after instantiating clones that e.g. should be used by different players.
-        /// Without calling this the stored <see cref="InputActionReference"/> will effectively act as if they are shallow copies.
-        /// Calls to <see cref="AssignDefaultActions"/>, <see cref="UnassignActions"/> and <see cref="actionsAsset"/> would
-        /// affect all instances if the actions are not cloned first.
-        /// </remarks>
-        public void CloneActions()
-        {
-            if (m_ActionsAsset == null)
-                return;
-
-            var oldActions = m_ActionsAsset;
-            m_ActionsAsset = Instantiate(m_ActionsAsset);
-
-            void CheckAndReplace(ref InputActionReference actionRef, int map, int action)
-            {
-                if (actionRef != null && actionRef.action == oldActions.actionMaps[map].actions[action])
-                    actionRef = InputActionReference.Create(m_ActionsAsset.actionMaps[map].actions[action]);
-            }
-
-            for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
-            {
-                for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
-                    m_ActionsAsset.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
-
-                for (var action = 0; action < oldActions.actionMaps[actionMap].actions.Count; action++)
-                {
-                    CheckAndReplace(ref m_CancelAction, actionMap, action);
-                    CheckAndReplace(ref m_SubmitAction, actionMap, action);
-                    CheckAndReplace(ref m_MoveAction, actionMap, action);
-                    CheckAndReplace(ref m_LeftClickAction, actionMap, action);
-                    CheckAndReplace(ref m_RightClickAction, actionMap, action);
-                    CheckAndReplace(ref m_MiddleClickAction, actionMap, action);
-                    CheckAndReplace(ref m_ScrollWheelAction, actionMap, action);
-                    CheckAndReplace(ref m_TrackedDeviceOrientationAction, actionMap, action);
-                    CheckAndReplace(ref m_TrackedDevicePositionAction, actionMap, action);
-                }
-            }
-        }
-
         [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
         public InputActionReference trackedDeviceSelect
         {
@@ -1585,17 +1539,28 @@ namespace UnityEngine.InputSystem.UI
                 s_InputActionReferenceCounts.Add(action, referenceState);
             }
 
+            // This instance took part in incrementing the refCount
+            m_InputActionEnabledByThis[action] = true;
+
             action.Enable();
         }
 
-        private static void DisableInputAction(InputActionReference inputActionReference)
+        private void DisableInputAction(InputActionReference inputActionReference)
         {
             var action = inputActionReference?.action;
             if (action == null)
                 return;
 
-            if (!s_InputActionReferenceCounts.TryGetValue(action,
-                out var referenceState))
+            // If this instance was not responsible for enabling/incrementing refCount, then it should
+            // not be responsible for decrementing the refCount either.
+            if (!m_InputActionEnabledByThis.TryGetValue(action, out bool enableByThis))
+                return;
+            if (enableByThis == false)
+                return;
+
+            m_InputActionEnabledByThis[action] = false;
+
+            if (!s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
                 return;
 
             if (referenceState.refCount - 1 == 0 && referenceState.enabledByInputModule)
@@ -2324,7 +2289,7 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
 
         private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
-
+        private Dictionary<InputAction, bool> m_InputActionEnabledByThis = new Dictionary<InputAction, bool>();
         private struct InputActionReferenceState
         {
             public int refCount;
