@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             var viewData = GetOrCreateViewData(property);
             var propertyIsClone = IsPropertyAClone(property);
 
-            if (viewData.TreeView != null && !propertyIsClone)
+            if (!propertyIsClone && viewData.TreeView != null && viewData.TreeView.serializedObject == property.serializedObject)
                 return;
 
             if (propertyIsClone)

@@ -1391,7 +1391,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void UpdateSerializedObjectDirtyCount()
         {
-            m_SerializedObjectDirtyCount = EditorUtility.GetDirtyCount(serializedObject.targetObject);
+            m_SerializedObjectDirtyCount = serializedObject != null ? EditorUtility.GetDirtyCount(serializedObject.targetObject) : 0;
         }
 
         private bool ReloadIfSerializedObjectHasBeenChanged()
