@@ -2218,10 +2218,6 @@ namespace UnityEngine.InputSystem.UI
             if (oldAction == null)
                 return null;
 
-            var oldActionEnabled = oldAction.enabled;
-            if (oldActionEnabled)
-                DisableInputAction(actionReference);
-
             var oldActionMap = oldAction.actionMap;
             Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
 
@@ -2233,11 +2229,7 @@ namespace UnityEngine.InputSystem.UI
             if (newAction == null)
                 return null;
 
-            var reference = InputActionReference.Create(newAction);
-            if (oldActionEnabled)
-                EnableInputAction(reference);
-
-            return reference;
+            return InputActionReference.Create(newAction);
         }
 
         public InputActionAsset actionsAsset
