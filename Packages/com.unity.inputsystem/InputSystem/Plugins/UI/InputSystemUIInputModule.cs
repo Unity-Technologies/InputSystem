@@ -1508,16 +1508,16 @@ namespace UnityEngine.InputSystem.UI
 
         private void DisableAllActions()
         {
-            DisableInputAction(m_PointAction);
-            DisableInputAction(m_LeftClickAction);
-            DisableInputAction(m_RightClickAction);
-            DisableInputAction(m_MiddleClickAction);
-            DisableInputAction(m_MoveAction);
-            DisableInputAction(m_SubmitAction);
-            DisableInputAction(m_CancelAction);
-            DisableInputAction(m_ScrollWheelAction);
-            DisableInputAction(m_TrackedDeviceOrientationAction);
-            DisableInputAction(m_TrackedDevicePositionAction);
+            DisableInputAction(m_PointAction, true);
+            DisableInputAction(m_LeftClickAction, true);
+            DisableInputAction(m_RightClickAction, true);
+            DisableInputAction(m_MiddleClickAction, true);
+            DisableInputAction(m_MoveAction, true);
+            DisableInputAction(m_SubmitAction, true);
+            DisableInputAction(m_CancelAction, true);
+            DisableInputAction(m_ScrollWheelAction, true);
+            DisableInputAction(m_TrackedDeviceOrientationAction, true);
+            DisableInputAction(m_TrackedDevicePositionAction, true);
         }
 
         private void EnableInputAction(InputActionReference inputActionReference)
@@ -1539,26 +1539,21 @@ namespace UnityEngine.InputSystem.UI
                 s_InputActionReferenceCounts.Add(action, referenceState);
             }
 
-            // This instance took part in incrementing the refCount
-            m_InputActionEnabledByThis[action] = true;
-
             action.Enable();
         }
 
-        private void DisableInputAction(InputActionReference inputActionReference)
+        private void DisableInputAction(InputActionReference inputActionReference, bool onDisableComponent = false)
         {
             var action = inputActionReference?.action;
             if (action == null)
                 return;
 
-            // If this instance was not responsible for enabling/incrementing refCount, then it should
-            // not be responsible for decrementing the refCount either.
-            if (!m_InputActionEnabledByThis.TryGetValue(action, out bool enableByThis))
+            // Don't decrement refCount when we were not responsible for incrementing it.
+            // I.e. when we were not enabled yet. When OnDisabled is called, isActiveAndEnabled will
+            // already have been set to false. In that case we pass onDisableComponent to check if we
+            // came from OnDisabled and therefore need to allow disabling.
+            if (!isActiveAndEnabled && !onDisableComponent)
                 return;
-            if (enableByThis == false)
-                return;
-
-            m_InputActionEnabledByThis[action] = false;
 
             if (!s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
                 return;
@@ -2289,7 +2284,7 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] internal CursorLockBehavior m_CursorLockBehavior = CursorLockBehavior.OutsideScreen;
 
         private static Dictionary<InputAction, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<InputAction, InputActionReferenceState>();
-        private Dictionary<InputAction, bool> m_InputActionEnabledByThis = new Dictionary<InputAction, bool>();
+
         private struct InputActionReferenceState
         {
             public int refCount;
