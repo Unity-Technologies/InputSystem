@@ -668,6 +668,11 @@ namespace UnityEngine.InputSystem
         public bool disableGlobalInputActions { get; set; }
 
         /// <summary>
+        /// How long to wait between raising repeat events.
+        /// </summary>
+        public float inputEventRepeatDelayInSeconds { get; set; }
+
+        /// <summary>
         /// Improves shortcut key support by making composite controls consume control input
         /// </summary>
         /// <remarks>

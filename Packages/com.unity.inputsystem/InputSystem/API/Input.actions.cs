@@ -77,6 +77,21 @@ namespace UnityEngine.InputSystem.HighLevel
         }
 
         /// <summary>
+        /// Read the stored value from the given InputActionEventData.
+        /// </summary>
+        /// <param name="actionEventData"></param>
+        /// <returns>The value of the action as it was when the event fired</returns>
+        /// <remarks>
+        /// Event data are cached until the end of the frame they were created in so that it's safe to use
+        /// them outside the event handler. This means that Input&lt;TActionType&gt;.value shouldn't be used
+        /// to retrieve the value of the action if what you want is the value at the time of the event.
+        /// </remarks>
+        public TActionType ReadValue(InputActionEventData actionEventData)
+        {
+	        return actionEventData.ReadValue<TActionType>();
+        }
+
+        /// <summary>
         /// Check if a specific interaction was performed this frame.
         /// </summary>
         /// <typeparam name="TInteraction"></typeparam>

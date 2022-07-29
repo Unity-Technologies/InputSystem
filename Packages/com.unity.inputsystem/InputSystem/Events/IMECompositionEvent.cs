@@ -133,6 +133,16 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+#if UNITY_2021_2_OR_NEWER
+        public Span<char> AsSpan()
+        {
+	        fixed(char* ptr = buffer)
+	        {
+		        return new Span<char>(ptr, size);
+	        }
+        }
+#endif
+
         public IEnumerator<char> GetEnumerator()
         {
             return new Enumerator(this);

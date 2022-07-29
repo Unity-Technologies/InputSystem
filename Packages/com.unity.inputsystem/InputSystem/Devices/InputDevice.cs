@@ -376,6 +376,8 @@ namespace UnityEngine.InputSystem
         [Obsolete("Use 'InputSystem.devices' instead. (UnityUpgradable) -> InputSystem.devices", error: false)]
         public static ReadOnlyArray<InputDevice> all => InputSystem.devices;
 
+        public DeviceType deviceType => m_DeviceType;
+
         /// <summary>
         /// This constructor is public for the sake of <c>Activator.CreateInstance</c> only. To construct
         /// devices, use methods such as <see cref="InputSystem.AddDevice{TDevice}(string)"/>. Manually
@@ -709,6 +711,8 @@ namespace UnityEngine.InputSystem
         // for the corresponding control.
         // NOTE: This contains *leaf* controls only.
         internal uint[] m_StateOffsetToControlMap;
+
+        private DeviceType m_DeviceType;
 
         // Holds the nodes that represent the tree of memory ranges that each control occupies. This is used when
         // determining what controls have changed given a state event or partial state update.
@@ -1133,5 +1137,22 @@ namespace UnityEngine.InputSystem
             return !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
                 startOffset, sizeInBits);
         }
+    }
+
+    [Flags]
+    public enum DeviceType
+    {
+	    Unspecified = 0,
+	    Keyboard = 1 << 0,
+	    Mouse = 1 << 1,
+	    Gamepad = 1 << 2,
+	    Touch = 1 << 3,
+	    XR = 1 << 4,
+	    Joystick = 1 << 5,
+	    RacingWheel = 1 << 6,
+	    FlightStick = 1 << 7,
+	    ArcadeStick = 1 << 8,
+	    Motion = 1 << 9,
+	    Any = ~Unspecified
     }
 }

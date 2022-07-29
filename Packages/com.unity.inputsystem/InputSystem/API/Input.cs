@@ -1800,5 +1800,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 s_Joysticks[i] = null;
             }
         }
+
+		public static InputEvent lastInput { get; }
     }
 }
