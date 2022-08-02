@@ -209,15 +209,26 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
-            return *valuePtr;
+            return new PoseState()
+            {
+                isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
+                trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
+                position = position.ReadUnprocessedValueFromState(statePtr),
+                rotation = rotation.ReadUnprocessedValueFromState(statePtr),
+                velocity = velocity.ReadUnprocessedValueFromState(statePtr),
+                angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
+            };
         }
 
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(PoseState value, void* statePtr)
         {
-            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
-            UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<PoseState>());
+            isTracked.WriteValueIntoState(value.isTracked, statePtr);
+            trackingState.WriteValueIntoState((uint)value.trackingState, statePtr);
+            position.WriteValueIntoState(value.position, statePtr);
+            rotation.WriteValueIntoState(value.rotation, statePtr);
+            velocity.WriteValueIntoState(value.velocity, statePtr);
+            angularVelocity.WriteValueIntoState(value.angularVelocity, statePtr);
         }
     }
 }
