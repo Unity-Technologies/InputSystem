@@ -182,6 +182,16 @@ namespace UnityEngine.InputSystem.XR
         /// <seealso cref="PoseState.angularVelocity"/>
         public Vector3Control angularVelocity { get; private set; }
 
+        public override unsafe ref readonly PoseState value
+        {
+            get
+            {
+                m_CachedValue = *(PoseState*)((byte*)currentStatePtr + (int)m_StateBlock.byteOffset);
+                ProcessValue(ref m_CachedValue);
+                return ref m_CachedValue;
+            }
+        }
+
         /// <summary>
         /// Default-initialize the pose control.
         /// </summary>

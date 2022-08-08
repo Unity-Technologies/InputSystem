@@ -20,6 +20,15 @@ namespace UnityEngine.InputSystem.Controls
     {
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame
 
+        public override unsafe ref readonly float value
+        {
+            get
+            {
+                m_CachedValue = this.CheckStateIsAtDefault(currentStatePtr) ? 0.0f : 1.0f;
+                return ref m_CachedValue;
+            }
+        }
+
         /// <summary>
         /// Default initialization. Sets state size to 1 bit and format to
         /// <see cref="InputStateBlock.FormatBit"/>.

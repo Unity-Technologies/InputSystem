@@ -708,6 +708,41 @@ namespace UnityEngine.InputSystem
         // NOTE: This contains *leaf* controls only.
         internal uint[] m_StateOffsetToControlMap;
 
+        // Holds the nodes that represent the tree of memory ranges that each control occupies. This is used when
+        // determining what controls have changed given a state event or partial state update.
+        internal ControlBitRangeNode[] m_ControlTreeNodes;
+
+        // An indirection table for control bit range nodes to point at zero or more controls. Indices are used to
+        // point into the m_ChildrenForEachControl array.
+        internal ushort[] m_ControlTreeIndices;
+
+        internal struct ControlBitRangeNode
+        {
+            // only store the end bit offset of each range because we always do a full tree traversal so
+            // the start offset is always calculated at each level.
+            public ushort endBitOffset;
+
+            // points to the location in the nodes array where the left child of this node lives, or -1 if there
+            // is no child. The right child is always at the next index.
+            public short leftChildIndex;
+
+            // each node can point at multiple controls (because multiple controls can use the same range in memory and
+            // also because of overlaps in bit ranges). The control indicies for each node are stored contiguously in the
+            // m_ControlTreeIndicies array on the device, which acts as an indirection table, and these two values tell
+            // us where to start for each node and how many controls this node points at. This is an unsigned short so that
+            // we could in theory support devices with up to 65553 controls.
+            public ushort controlStartIndex;
+            public byte controlCount;
+
+            public ControlBitRangeNode(ushort endOffset)
+            {
+                controlStartIndex = 0;
+                controlCount = 0;
+                endBitOffset = endOffset;
+                leftChildIndex = -1;
+            }
+        }
+
         // ATM we pack everything into 32 bits. Given we're operating on bit offsets and counts, this imposes some tight limits
         // on controls and their associated state memory. Should this turn out to be a problem, bump m_StateOffsetToControlMap
         // to a ulong[] and up the counts here to account for having 64 bits available instead of only 32.
@@ -905,6 +940,107 @@ namespace UnityEngine.InputSystem
 
                 return deviceOfType;
             }
+        }
+
+        internal unsafe void WriteChangedControlStates(byte* deviceStateBuffer, void* statePtr, uint stateSizeInBytes,
+            uint stateOffsetInDevice)
+        {
+            Debug.Assert(m_ControlTreeNodes != null && m_ControlTreeIndices != null);
+
+            if (m_ControlTreeNodes.Length == 0)
+                return;
+
+            if (m_StateBlock.sizeInBits != stateSizeInBytes * 8)
+            {
+                if (m_ControlTreeNodes[0].leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
+                        stateOffsetInDevice * 8, deviceStateBuffer, m_ControlTreeNodes[0], 0);
+            }
+            else
+            {
+                if (m_ControlTreeNodes[0].leftChildIndex != -1)
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8, stateOffsetInDevice * 8,
+                        deviceStateBuffer, m_ControlTreeNodes[0], 0);
+            }
+        }
+
+        internal unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parent, uint startOffset)
+        {
+            var leftNode = m_ControlTreeNodes[parent.leftChildIndex];
+            if (Math.Max(stateOffsetInDeviceInBits, startOffset) <=
+                Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, leftNode.endBitOffset))
+            {
+                var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
+                for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                if (leftNode.leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
+                        deviceStatePtr, leftNode, startOffset);
+            }
+
+            var rightNode = m_ControlTreeNodes[parent.leftChildIndex + 1];
+            if (Math.Max(stateOffsetInDeviceInBits, leftNode.endBitOffset) <=
+                Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, rightNode.endBitOffset))
+            {
+                var controlEndIndex = rightNode.controlStartIndex + rightNode.controlCount;
+                for (int i = rightNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                if (rightNode.leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
+                        deviceStatePtr, rightNode, leftNode.endBitOffset);
+            }
+        }
+
+        internal unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+
+            // have any bits in the region defined by the left node changed?
+            if (MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr, startOffset,
+                leftNode.endBitOffset - startOffset) == false)
+            {
+                // update the state of any controls pointed to by the left node
+                var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
+                for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                // process the left child node if it exists
+                if (leftNode.leftChildIndex != -1)
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits, deviceStatePtr,
+                        leftNode, startOffset);
+            }
+
+            // process the right child node if it exists
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+
+            // if no bits in the range defined by the right node have changed, return
+            if (MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr, leftNode.endBitOffset,
+                (uint)(rightNode.endBitOffset - leftNode.endBitOffset))) return;
+
+            // update the state of any controls pointed to by the right node
+            var rightNodeControlEndIndex = rightNode.controlStartIndex + rightNode.controlCount;
+            for (int i = rightNode.controlStartIndex; i < rightNodeControlEndIndex; i++)
+            {
+                var controlIndex = m_ControlTreeIndices[i];
+                m_ChildrenForEachControl[controlIndex].MarkAsStale();
+            }
+
+            if (rightNode.leftChildIndex != -1)
+                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits, deviceStatePtr,
+                    rightNode, leftNode.endBitOffset);
         }
     }
 }

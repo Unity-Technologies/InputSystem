@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- Improved the performance of InputAction.ReadValue and InputControl.ReadValue calls by introducing caching behaviour to input controls. Input controls now keep track of whether their underlying state has been changed and only read the value from the underlying state and apply processors when absolutely necessary.
+
 ### Fixed
 - Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
 
@@ -38,6 +41,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where PlayerInput behavior description was not updated when changing action assset ([case ISXB-286](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-286)).
 
 ### Changed
+- Readded OnDisable() member to MultiplayerEventSystem which was previously removed from the API
 - Improved performance of HID descriptor parsing by moving json parsing to a simple custom predicitve parser instead of relying on Unity's json parsing. This should improve domain reload times when there are many HID devices connected to a machine.
 
 ## [1.4.2] - 2022-08-12

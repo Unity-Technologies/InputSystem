@@ -442,6 +442,25 @@ namespace UnityEngine.InputSystem
         public abstract int valueSizeInBytes { get; }
 
         /// <summary>
+        /// Compute an absolute, normalized magnitude value using the control's cached value that indicates the
+        /// extent to which the control is actuated.
+        /// </summary>
+        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
+        /// <remarks>
+        /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
+        /// an enumeration of values (such as <see cref="TouchPhaseControl"/>), there is no meaningful
+        /// linear ordering of values (one could derive a linear ordering through the actual enum values but
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="TouchPhase.Canceled"/>
+        /// has a higher or lower "magnitude" as a state of <see cref="TouchPhase.Began"/>).
+        ///
+        /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
+        /// return value should be considered an invalid value.
+        /// </remarks>
+        /// <seealso cref="EvaluateMagnitude(void*)"/>
+        /// <seealso cref="EvaluateMagnitude()"/>
+        public virtual float magnitude => - 1;
+
+        /// <summary>
         /// Return a string representation of the control useful for debugging.
         /// </summary>
         /// <returns>A string representation of the control.</returns>
@@ -847,6 +866,8 @@ namespace UnityEngine.InputSystem
         internal int m_ChildCount;
         internal int m_ChildStartIndex;
         internal ControlFlags m_ControlFlags;
+        internal bool m_CachedValueIsStale;
+        internal bool m_UnprocessedCachedValueIsStale;
 
         ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValue m_DefaultState;
@@ -973,6 +994,12 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        internal void MarkAsStale()
+        {
+            m_CachedValueIsStale = true;
+            m_UnprocessedCachedValueIsStale = true;
+        }
+
         #if UNITY_EDITOR
         internal virtual IEnumerable<object> GetProcessors()
         {
@@ -991,17 +1018,73 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
+        /// <summary>
+        /// Returns the current value of the control after processors have been applied.
+        /// </summary>
+        /// <remarks>
+        /// Note that this property implements caching to avoid applying processors when the underlying
+        /// control has not changed. With this in mind, be aware of processors that use global state, such
+        /// as the <see cref="Processors.AxisDeadzoneProcessor"/>. Unless the control has been actuated, the processors
+        /// will not run and calls to <see cref="value"/> will return the same result as previous calls. The
+        /// <see cref="ReadValue"/> method exists for cases where it is important to always run the
+        /// processors.
+        ///
+        /// Also note that this property returns the result as ref readonly. If custom control states are in use, i.e.
+        /// any controls not shipped with the Input System package, be careful of accidental defensive copies
+        /// <see href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies"/>.
+        /// </remarks>
+        /// <seealso cref="ReadValue"/>
+        public virtual ref readonly TValue value
+        {
+            get
+            {
+                #if UNITY_EDITOR
+                if (!useCachedValue)
+                    return ref ReadStateInEditor();
+                #endif
+                if (!m_CachedValueIsStale) return ref m_CachedValue;
+
+                m_CachedValue = ProcessValue(unprocessedValue);
+                m_CachedValueIsStale = false;
+
+                return ref m_CachedValue;
+            }
+        }
+
+        internal virtual unsafe ref readonly TValue unprocessedValue
+        {
+            get
+            {
+                #if UNITY_EDITOR
+                if (!useCachedValue)
+                    return ref ReadUnprocessedStateInEditor();
+                #endif
+
+                if (!m_UnprocessedCachedValueIsStale) return ref m_UnprocessedCachedValue;
+
+                m_UnprocessedCachedValue = ReadUnprocessedValueFromState(currentStatePtr);
+                m_UnprocessedCachedValueIsStale = false;
+
+                return ref m_UnprocessedCachedValue;
+            }
+        }
+
         public override Type valueType => typeof(TValue);
 
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
         /// <summary>
-        /// Get the control's current value as read from <see cref="InputControl.currentStatePtr"/>
+        /// Get the control's current value.
         /// </summary>
-        /// <returns>The control's current value.</returns>
+        /// <returns>The control's current value.
+        /// </returns>
         /// <remarks>
         /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
+        ///
+        /// This call does not use caching and can be quite a bit less performant than using the <see cref="value"/>
+        /// property but has the advantage that it will always apply the control's processor stack.
         /// </remarks>
+        /// <seealso cref="value"/>
         public TValue ReadValue()
         {
             unsafe
@@ -1174,7 +1257,50 @@ namespace UnityEngine.InputSystem
             return value;
         }
 
+        /// <summary>
+        /// Applies all control processors to the passed value.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <remarks>
+        /// Use this overload when your state struct is large to avoid creating copies of the state.
+        /// </remarks>
+        public void ProcessValue(ref TValue value)
+        {
+            if (m_ProcessorStack.length > 0)
+            {
+                value = m_ProcessorStack.firstValue.Process(value, this);
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        value = m_ProcessorStack.additionalValues[i].Process(value, this);
+            }
+        }
+
         internal InlinedArray<InputProcessor<TValue>> m_ProcessorStack;
+        protected TValue m_CachedValue;
+        protected TValue m_UnprocessedCachedValue;
+        #if UNITY_EDITOR
+        protected bool useCachedValue => !InputUpdate.s_LatestUpdateType.IsEditorUpdate();
+
+        protected unsafe ref readonly TValue ReadStateInEditor()
+        {
+            // we don't use cached values during editor updates because editor updates cause controls to look at a
+            // different block of state memory, and since the cached values are from the play mode memory, we'd
+            // end up returning the wrong values.
+            m_EditorValue = ReadValueFromState(currentStatePtr);
+            return ref m_EditorValue;
+        }
+
+        protected unsafe ref readonly TValue ReadUnprocessedStateInEditor()
+        {
+            m_UnprocessedEditorValue = ReadUnprocessedValueFromState(currentStatePtr);
+            return ref m_UnprocessedEditorValue;
+        }
+
+        // these fields are just to work with the fact that the 'value' property is ref readonly, so we
+        // need somewhere with a known lifetime to store these so they can be returned by ref.
+        private TValue m_EditorValue;
+        private TValue m_UnprocessedEditorValue;
+        #endif
 
         // Only layouts are allowed to modify the processor stack.
         internal TProcessor TryGetProcessor<TProcessor>()

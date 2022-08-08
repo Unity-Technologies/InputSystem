@@ -3451,7 +3451,7 @@ namespace UnityEngine.InputSystem
             return makeDeviceCurrent;
         }
 
-        private static unsafe void WriteStateChange(InputStateBuffers.DoubleBuffers buffers, int deviceIndex,
+        private unsafe void WriteStateChange(InputStateBuffers.DoubleBuffers buffers, int deviceIndex,
             ref InputStateBlock deviceStateBlock, uint stateOffsetInDevice, void* statePtr, uint stateSizeInBytes, bool flippedBuffers)
         {
             var frontBuffer = buffers.GetFrontBuffer(deviceIndex);
@@ -3475,6 +3475,16 @@ namespace UnityEngine.InputSystem
                     (byte*)backBuffer + deviceStateBlock.byteOffset,
                     deviceStateSize);
             }
+
+            // if the buffers have just been flipped, and we're doing a full state update, then the state from the
+            // previous update is now in the back buffer, and we should be comparing to that when checking what
+            // controls have changed
+            var buffer = (byte*)frontBuffer;
+            if (flippedBuffers && deviceStateSize == stateSizeInBytes)
+                buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
+
+            m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
+                stateSizeInBytes, stateOffsetInDevice);
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);

@@ -35,6 +35,8 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; set; }
 
+        public override float magnitude => value.magnitude;
+
         /// <summary>
         /// Default-initialize the control.
         /// </summary>

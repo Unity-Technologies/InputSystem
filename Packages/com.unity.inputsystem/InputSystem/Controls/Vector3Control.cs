@@ -15,6 +15,8 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(offset = 8, displayName = "Z")]
         public AxisControl z { get; set; }
 
+        public override float magnitude => value.magnitude;
+
         public Vector3Control()
         {
             m_StateBlock.format = InputStateBlock.FormatVector3;

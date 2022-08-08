@@ -22,6 +22,15 @@ namespace UnityEngine.InputSystem.Controls
         {
             public int component { get; set; }
 
+            public override ref readonly float value
+            {
+                get
+                {
+                    m_CachedValue = ProcessValue(((DpadControl)m_Parent).unprocessedValue[component]);
+                    return ref m_CachedValue;
+                }
+            }
+
             protected override void FinishSetup()
             {
                 base.FinishSetup();
@@ -69,6 +78,29 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Right, displayName = "Right")]
         public ButtonControl right { get; set; }
+
+        public override ref readonly Vector2 value
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (!useCachedValue)
+                    return ref ReadStateInEditor();
+#endif
+
+                if (!m_CachedValueIsStale)
+                    return ref m_CachedValue;
+
+                m_CachedValueIsStale = false;
+                var upIsPressed = up.value >= up.pressPointOrDefault;
+                var downIsPressed = down.value >= down.pressPointOrDefault;
+                var leftIsPressed = left.value >= left.pressPointOrDefault;
+                var rightIsPressed = right.value >= right.pressPointOrDefault;
+
+                m_CachedValue = ProcessValue(MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed));
+                return ref m_CachedValue;
+            }
+        }
 
         ////TODO: should have X and Y child controls as well
 

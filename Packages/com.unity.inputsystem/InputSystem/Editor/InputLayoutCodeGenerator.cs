@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -229,6 +230,61 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
                 --writer.indentLevel;
                 writer.WriteLine("});");
+            }
+
+            writer.WriteLine();
+
+            if (device.m_ControlTreeNodes != null)
+            {
+                if (device.m_ControlTreeIndices == null)
+                    throw new InvalidOperationException(
+                        $"Control tree indicies was null. Ensure the '{device.displayName}' device was created without errors.");
+
+                writer.WriteLine("builder.WithControlTree(new byte[]");
+                writer.WriteLine("{");
+                ++writer.indentLevel;
+                writer.WriteLine("// Control tree nodes as bytes");
+                var nodesAsBytes = MemoryMarshal.AsBytes<InputDevice.ControlBitRangeNode>(device.m_ControlTreeNodes);
+
+                for (var i = 0; i < nodesAsBytes.Length;)
+                {
+                    if (i != 0)
+                        writer.WriteLine();
+
+                    writer.WriteIndent();
+                    for (var j = 0; j < 30 && i < nodesAsBytes.Length; j++, i++)
+                    {
+                        var node = nodesAsBytes[i];
+                        writer.Write((i != 0 ? ", " : "") + node);
+                    }
+                }
+                writer.WriteLine();
+                --writer.indentLevel;
+
+                writer.WriteLine("}, new ushort[]");
+
+                ++writer.indentLevel;
+                writer.WriteLine("{");
+                ++writer.indentLevel;
+                writer.WriteLine("// Control tree node indicies");
+                writer.WriteLine();
+
+                for (var i = 0; i < device.m_ControlTreeIndices.Length;)
+                {
+                    if (i != 0)
+                        writer.WriteLine();
+
+                    writer.WriteIndent();
+                    for (var j = 0; j < 30 && i < device.m_ControlTreeIndices.Length; j++, i++)
+                    {
+                        writer.Write((i != 0 ? ", " : "") + device.m_ControlTreeIndices[i]);
+                    }
+                }
+
+                writer.WriteLine();
+                --writer.indentLevel;
+                writer.WriteLine("});");
+                --writer.indentLevel;
             }
 
             writer.WriteLine();

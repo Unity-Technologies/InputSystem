@@ -392,7 +392,7 @@ namespace UnityEngine.InputSystem.UI
 
             // Sync position.
             if (m_VirtualMouse != null)
-                m_SystemMouse.WarpCursorPosition(m_VirtualMouse.position.ReadValue());
+                m_SystemMouse.WarpCursorPosition(m_VirtualMouse.position.value);
 
             // Turn off mouse cursor image.
             if (m_CursorGraphic != null)
@@ -429,7 +429,7 @@ namespace UnityEngine.InputSystem.UI
                 var delta = new Vector2(m_CursorSpeed * stickValue.x * deltaTime, m_CursorSpeed * stickValue.y * deltaTime);
 
                 // Update position.
-                var currentPosition = m_VirtualMouse.position.ReadValue();
+                var currentPosition = m_VirtualMouse.position.value;
                 var newPosition = currentPosition + delta;
 
                 ////REVIEW: for the hardware cursor, clamp to something else?

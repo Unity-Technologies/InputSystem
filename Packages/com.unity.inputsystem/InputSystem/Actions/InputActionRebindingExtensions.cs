@@ -2355,7 +2355,7 @@ namespace UnityEngine.InputSystem
                         {
                             // Haven't seen this control changing actuation yet. Record its current actuation as its
                             // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
-                            startingMagnitude = control.EvaluateMagnitude();
+                            startingMagnitude = control.magnitude;
                             m_StartingActuations.Add(control, startingMagnitude);
                         }
 
