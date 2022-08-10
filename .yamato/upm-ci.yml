@@ -67,6 +67,7 @@ run_ios_{{ editor.version }}:
   agent:
       type: Unity::mobile::iPhone
       image: package-ci/macos-12-mobile:stable
+      model: SE
       flavor: b1.medium
   skip_checkout: true
   dependencies:
