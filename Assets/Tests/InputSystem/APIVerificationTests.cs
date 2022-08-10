@@ -16,6 +16,7 @@ using UnityEngine.InputSystem.Editor;
 using UnityEngine;
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.TestTools;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -81,7 +82,12 @@ class APIVerificationTests
                 resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputEventTypeInfo).FullName) ||
 
                 // serializable types may depend on the field names to match serialized data (eg. Json)
-                resolved.Attributes.HasFlag(TypeAttributes.Serializable)
+                resolved.Attributes.HasFlag(TypeAttributes.Serializable) ||
+
+                // These types need to use fields because they are returned as ref readonly from InputAction.value and we
+                // want to avoid defensive copies being created for every property access.
+                resolved.Name == nameof(Bone) ||
+                resolved.Name == nameof(Eyes)
             )
                 return true;
 
