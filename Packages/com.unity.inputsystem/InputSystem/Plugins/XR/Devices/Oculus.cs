@@ -11,7 +11,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus VR headset (such as the Oculus Rift series of devices).
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Headset")]
+    [InputControlLayout(displayName = "Oculus Headset", hideInUI = true)]
     public class OculusHMD : XRHMD
     {
         [InputControl]
@@ -67,7 +67,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus Touch controller.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Touch Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Oculus Touch Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class OculusTouchController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
@@ -156,7 +156,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus Remote controller.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Remote")]
+    [InputControlLayout(displayName = "Oculus Remote", hideInUI = true)]
     public class OculusRemote : InputDevice
     {
         [InputControl]
@@ -179,7 +179,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// A Standalone VR headset that includes on-headset controls.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Headset (w/ on-headset controls)")]
+    [InputControlLayout(displayName = "Oculus Headset (w/ on-headset controls)", hideInUI = true)]
     public class OculusHMDExtended : OculusHMD
     {
         [InputControl]
@@ -199,7 +199,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// A Gear VR controller.
     /// </summary>
-    [InputControlLayout(displayName = "GearVR Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "GearVR Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class GearVRTrackedController : XRController
     {
         [InputControl]

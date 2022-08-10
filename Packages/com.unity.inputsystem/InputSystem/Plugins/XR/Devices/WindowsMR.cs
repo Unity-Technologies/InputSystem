@@ -10,7 +10,7 @@ namespace UnityEngine.XR.WindowsMR.Input
     /// <summary>
     /// A Windows Mixed Reality XR headset.
     /// </summary>
-    [InputControlLayout(displayName = "Windows MR Headset")]
+    [InputControlLayout(displayName = "Windows MR Headset", hideInUI = true)]
     public class WMRHMD : XRHMD
     {
         [InputControl]
@@ -29,7 +29,7 @@ namespace UnityEngine.XR.WindowsMR.Input
     /// <summary>
     /// A Windows Mixed Reality XR controller.
     /// </summary>
-    [InputControlLayout(displayName = "HoloLens Hand", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "HoloLens Hand", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class HololensHand : XRController
     {
         [InputControl(noisy = true, aliases = new[] { "gripVelocity" })]
@@ -52,7 +52,7 @@ namespace UnityEngine.XR.WindowsMR.Input
         }
     }
 
-    [InputControlLayout(displayName = "Windows MR Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Windows MR Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class WMRSpatialController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "thumbstickaxes" })]
