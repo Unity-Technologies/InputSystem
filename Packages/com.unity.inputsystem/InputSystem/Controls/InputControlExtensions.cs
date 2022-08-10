@@ -1898,15 +1898,19 @@ namespace UnityEngine.InputSystem
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public DeviceBuilder WithControlTree(Span<byte> controlTreeNodes, ushort[] controlTreeIndicies)
+            public unsafe DeviceBuilder WithControlTree(byte[] controlTreeNodes, ushort[] controlTreeIndicies)
             {
                 var sizeOfNode = UnsafeUtility.SizeOf<InputDevice.ControlBitRangeNode>();
                 var numNodes = controlTreeNodes.Length / sizeOfNode;
                 device.m_ControlTreeNodes = new InputDevice.ControlBitRangeNode[numNodes];
-                for (var i = 0; i < numNodes; i++)
+                fixed (byte* nodePtr = controlTreeNodes)
                 {
-                    device.m_ControlTreeNodes[i] = MemoryMarshal.Read<InputDevice.ControlBitRangeNode>(
-                        controlTreeNodes.Slice(i * sizeOfNode, sizeOfNode));
+	                for (var i = 0; i < numNodes; i++)
+	                {
+		                device.m_ControlTreeNodes[i] = *(InputDevice.ControlBitRangeNode*)(nodePtr + i * sizeOfNode);
+		                // device.m_ControlTreeNodes[i] = MemoryMarshal.Read<InputDevice.ControlBitRangeNode>(
+		                //     controlTreeNodes.Slice(i * sizeOfNode, sizeOfNode));
+	                }
                 }
 
                 device.m_ControlTreeIndices = controlTreeIndicies;

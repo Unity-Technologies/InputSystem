@@ -1037,15 +1037,15 @@ namespace UnityEngine.InputSystem.Layouts
                     stateBlock.effectiveBitOffset + stateBlock.sizeInBits == parent.endBitOffset)
                     continue;
 
-                if (MathF.Abs(stateBlock.effectiveBitOffset + stateBlock.sizeInBits - (int)absoluteMidPoint) <
-                    MathF.Abs(closestControlEndPointToMidPoint - absoluteMidPoint) &&
+                if (Math.Abs(stateBlock.effectiveBitOffset + stateBlock.sizeInBits - (int)absoluteMidPoint) <
+                    Math.Abs(closestControlEndPointToMidPoint - absoluteMidPoint) &&
                     stateBlock.effectiveBitOffset + stateBlock.sizeInBits < parent.endBitOffset)
                 {
                     closestControlEndPointToMidPoint = (ushort)(stateBlock.effectiveBitOffset + stateBlock.sizeInBits);
                 }
 
-                if (MathF.Abs(stateBlock.effectiveBitOffset - (int)absoluteMidPoint) <
-                    MathF.Abs(closestControlStartPointToMidPoint - absoluteMidPoint))
+                if (Math.Abs(stateBlock.effectiveBitOffset - (int)absoluteMidPoint) <
+                    Math.Abs(closestControlStartPointToMidPoint - absoluteMidPoint))
                 {
                     closestControlStartPointToMidPoint = (ushort)stateBlock.effectiveBitOffset;
                 }
