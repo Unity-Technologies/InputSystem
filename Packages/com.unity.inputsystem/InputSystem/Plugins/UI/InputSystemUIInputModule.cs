@@ -857,7 +857,7 @@ namespace UnityEngine.InputSystem.UI
             var oldActionNull = property?.action == null;
             var oldActionEnabled = property?.action != null && property.action.enabled;
 
-            DisableInputAction(property);
+            TryDisableInputAction(property);
             property = newValue;
 
             #if DEBUG
@@ -1508,16 +1508,16 @@ namespace UnityEngine.InputSystem.UI
 
         private void DisableAllActions()
         {
-            DisableInputAction(m_PointAction);
-            DisableInputAction(m_LeftClickAction);
-            DisableInputAction(m_RightClickAction);
-            DisableInputAction(m_MiddleClickAction);
-            DisableInputAction(m_MoveAction);
-            DisableInputAction(m_SubmitAction);
-            DisableInputAction(m_CancelAction);
-            DisableInputAction(m_ScrollWheelAction);
-            DisableInputAction(m_TrackedDeviceOrientationAction);
-            DisableInputAction(m_TrackedDevicePositionAction);
+            TryDisableInputAction(m_PointAction, true);
+            TryDisableInputAction(m_LeftClickAction, true);
+            TryDisableInputAction(m_RightClickAction, true);
+            TryDisableInputAction(m_MiddleClickAction, true);
+            TryDisableInputAction(m_MoveAction, true);
+            TryDisableInputAction(m_SubmitAction, true);
+            TryDisableInputAction(m_CancelAction, true);
+            TryDisableInputAction(m_ScrollWheelAction, true);
+            TryDisableInputAction(m_TrackedDeviceOrientationAction, true);
+            TryDisableInputAction(m_TrackedDevicePositionAction, true);
         }
 
         private void EnableInputAction(InputActionReference inputActionReference)
@@ -1542,14 +1542,20 @@ namespace UnityEngine.InputSystem.UI
             action.Enable();
         }
 
-        private static void DisableInputAction(InputActionReference inputActionReference)
+        private void TryDisableInputAction(InputActionReference inputActionReference, bool isComponentDisabling = false)
         {
             var action = inputActionReference?.action;
             if (action == null)
                 return;
 
-            if (!s_InputActionReferenceCounts.TryGetValue(action,
-                out var referenceState))
+            // Don't decrement refCount when we were not responsible for incrementing it.
+            // I.e. when we were not enabled yet. When OnDisabled is called, isActiveAndEnabled will
+            // already have been set to false. In that case we pass isComponentDisabling to check if we
+            // came from OnDisabled and therefore need to allow disabling.
+            if (!isActiveAndEnabled && !isComponentDisabling)
+                return;
+
+            if (!s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
                 return;
 
             if (referenceState.refCount - 1 == 0 && referenceState.enabledByInputModule)
@@ -2212,10 +2218,6 @@ namespace UnityEngine.InputSystem.UI
             if (oldAction == null)
                 return null;
 
-            var oldActionEnabled = oldAction.enabled;
-            if (oldActionEnabled)
-                DisableInputAction(actionReference);
-
             var oldActionMap = oldAction.actionMap;
             Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
 
@@ -2227,11 +2229,7 @@ namespace UnityEngine.InputSystem.UI
             if (newAction == null)
                 return null;
 
-            var reference = InputActionReference.Create(newAction);
-            if (oldActionEnabled)
-                EnableInputAction(reference);
-
-            return reference;
+            return InputActionReference.Create(newAction);
         }
 
         public InputActionAsset actionsAsset
