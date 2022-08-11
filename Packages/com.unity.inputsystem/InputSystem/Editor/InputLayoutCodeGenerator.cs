@@ -247,7 +247,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine("// Control tree nodes as bytes");
                 var nodePtr = (byte*)UnsafeUtility.AddressOf(ref device.m_ControlTreeNodes[0]);
                 var byteCount = device.m_ControlTreeNodes.Length * UnsafeUtility.SizeOf<InputDevice.ControlBitRangeNode>();
-                
+
                 for (var i = 0; i < byteCount;)
                 {
                     if (i != 0)
@@ -256,7 +256,7 @@ namespace UnityEngine.InputSystem.Editor
                     writer.WriteIndent();
                     for (var j = 0; j < 30 && i < byteCount; j++, i++)
                     {
-	                    writer.Write((i != 0 ? ", " : "") + *(nodePtr + i));
+                        writer.Write((i != 0 ? ", " : "") + *(nodePtr + i));
                     }
                 }
                 writer.WriteLine();

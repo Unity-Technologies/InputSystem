@@ -1903,14 +1903,14 @@ namespace UnityEngine.InputSystem
                 var sizeOfNode = UnsafeUtility.SizeOf<InputDevice.ControlBitRangeNode>();
                 var numNodes = controlTreeNodes.Length / sizeOfNode;
                 device.m_ControlTreeNodes = new InputDevice.ControlBitRangeNode[numNodes];
-                fixed (byte* nodePtr = controlTreeNodes)
+                fixed(byte* nodePtr = controlTreeNodes)
                 {
-	                for (var i = 0; i < numNodes; i++)
-	                {
-		                device.m_ControlTreeNodes[i] = *(InputDevice.ControlBitRangeNode*)(nodePtr + i * sizeOfNode);
-		                // device.m_ControlTreeNodes[i] = MemoryMarshal.Read<InputDevice.ControlBitRangeNode>(
-		                //     controlTreeNodes.Slice(i * sizeOfNode, sizeOfNode));
-	                }
+                    for (var i = 0; i < numNodes; i++)
+                    {
+                        device.m_ControlTreeNodes[i] = *(InputDevice.ControlBitRangeNode*)(nodePtr + i * sizeOfNode);
+                        // device.m_ControlTreeNodes[i] = MemoryMarshal.Read<InputDevice.ControlBitRangeNode>(
+                        //     controlTreeNodes.Slice(i * sizeOfNode, sizeOfNode));
+                    }
                 }
 
                 device.m_ControlTreeIndices = controlTreeIndicies;
