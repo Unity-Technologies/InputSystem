@@ -11,7 +11,6 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ### Changed
-- Readded OnDisable() member to MultiplayerEventSystem which was previously removed from the API.
 - Hide XR legacy HMD and controllers layouts from Editor UI dropdown.
 
 ### Fixed
