@@ -4,9 +4,7 @@
     image: package-ci/win10:v1.15.0-713263
     flavor: b1.large
   commands:
-    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm
-    #- upm-ci package pack --package-path ./Packages/com.unity.inputsystem
-    #- upm-ci package test -u 2021.3 --package-path ./Packages/com.unity.inputsystem --type package-tests --extra-create-project-arg=-upmNoDefaultPackages --enable-code-coverage --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*''
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm    
     - upm-ci project pack --project-path ./
     - upm-ci project test -u 2021.3 --project-path ./ --type package-tests --package-filter com.unity.inputsystem --extra-create-project-arg=-upmNoDefaultPackages --enable-code-coverage --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+InputSystem*'
   artifacts:
