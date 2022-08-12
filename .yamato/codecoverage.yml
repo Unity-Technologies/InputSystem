@@ -6,7 +6,7 @@
   commands:
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm    
     - upm-ci project pack --project-path ./
-    - upm-ci project test -u 2021.3 --project-path ./ --type package-tests --package-filter com.unity.inputsystem --extra-create-project-arg=-upmNoDefaultPackages --enable-code-coverage --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+InputSystem*'        
+    - upm-ci project test -u 2021.3 --project-path ./ --type package-tests --package-filter com.unity.inputsystem --extra-create-project-arg=-upmNoDefaultPackages --enable-code-coverage --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem.Tests'        
   artifacts:
     logs:
       paths:
