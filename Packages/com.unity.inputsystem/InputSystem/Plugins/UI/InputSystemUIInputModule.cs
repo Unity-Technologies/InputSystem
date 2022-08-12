@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -98,6 +99,21 @@ namespace UnityEngine.InputSystem.UI
         {
             get => m_CursorLockBehavior;
             set => m_CursorLockBehavior = value;
+        }
+
+        /// <summary>
+        /// A root game object to support correct navigation in local multi-player UIs.
+        /// <remarks>
+        /// In local multi-player games where each player has their own UI, players should not be able to navigate into
+        /// another player's UI. Each player should have their own instance of an InputSystemUIInputModule, and this property
+        /// should be set to the root game object containing all UI objects for that player. If set, navigation using the
+        /// <see cref="InputSystemUIInputModule.move"/> action will be constrained to UI objects under that root.
+        /// </remarks>
+        /// </summary>
+        internal GameObject localMultiPlayerRoot
+        {
+            get => m_LocalMultiPlayerRoot;
+            set => m_LocalMultiPlayerRoot = value;
         }
 
         /// <summary>
@@ -650,12 +666,15 @@ namespace UnityEngine.InputSystem.UI
                         eventData.moveVector = moveVector;
                         eventData.moveDir = moveDirection;
 
-                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
-                        usedSelectionChange = eventData.used;
+                        if (IsMoveAllowed(eventData))
+                        {
+                            ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                            usedSelectionChange = eventData.used;
 
-                        m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
-                        m_NavigationState.lastMoveTime = time;
-                        m_NavigationState.lastMoveDirection = moveDirection;
+                            m_NavigationState.consecutiveMoveCount = m_NavigationState.consecutiveMoveCount + 1;
+                            m_NavigationState.lastMoveTime = time;
+                            m_NavigationState.lastMoveDirection = moveDirection;
+                        }
                     }
                 }
                 else
@@ -684,6 +703,45 @@ namespace UnityEngine.InputSystem.UI
                 if (!data.used && submitAction != null && submitAction.WasPressedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
+        }
+
+        private bool IsMoveAllowed(AxisEventData eventData)
+        {
+            if (m_LocalMultiPlayerRoot == null)
+                return true;
+
+            if (eventSystem.currentSelectedGameObject == null)
+                return true;
+
+            var selectable = eventSystem.currentSelectedGameObject.GetComponent<Selectable>();
+
+            if (selectable == null)
+                return true;
+
+            Selectable navigationTarget = null;
+            switch (eventData.moveDir)
+            {
+                case MoveDirection.Right:
+                    navigationTarget = selectable.FindSelectableOnRight();
+                    break;
+
+                case MoveDirection.Up:
+                    navigationTarget = selectable.FindSelectableOnUp();
+                    break;
+
+                case MoveDirection.Left:
+                    navigationTarget = selectable.FindSelectableOnLeft();
+                    break;
+
+                case MoveDirection.Down:
+                    navigationTarget = selectable.FindSelectableOnDown();
+                    break;
+            }
+
+            if (navigationTarget == null)
+                return true;
+
+            return navigationTarget.transform.IsChildOf(m_LocalMultiPlayerRoot.transform);
         }
 
         [FormerlySerializedAs("m_RepeatDelay")]
@@ -799,7 +857,7 @@ namespace UnityEngine.InputSystem.UI
             var oldActionNull = property?.action == null;
             var oldActionEnabled = property?.action != null && property.action.enabled;
 
-            DisableInputAction(property);
+            TryDisableInputAction(property);
             property = newValue;
 
             #if DEBUG
@@ -1450,16 +1508,16 @@ namespace UnityEngine.InputSystem.UI
 
         private void DisableAllActions()
         {
-            DisableInputAction(m_PointAction);
-            DisableInputAction(m_LeftClickAction);
-            DisableInputAction(m_RightClickAction);
-            DisableInputAction(m_MiddleClickAction);
-            DisableInputAction(m_MoveAction);
-            DisableInputAction(m_SubmitAction);
-            DisableInputAction(m_CancelAction);
-            DisableInputAction(m_ScrollWheelAction);
-            DisableInputAction(m_TrackedDeviceOrientationAction);
-            DisableInputAction(m_TrackedDevicePositionAction);
+            TryDisableInputAction(m_PointAction, true);
+            TryDisableInputAction(m_LeftClickAction, true);
+            TryDisableInputAction(m_RightClickAction, true);
+            TryDisableInputAction(m_MiddleClickAction, true);
+            TryDisableInputAction(m_MoveAction, true);
+            TryDisableInputAction(m_SubmitAction, true);
+            TryDisableInputAction(m_CancelAction, true);
+            TryDisableInputAction(m_ScrollWheelAction, true);
+            TryDisableInputAction(m_TrackedDeviceOrientationAction, true);
+            TryDisableInputAction(m_TrackedDevicePositionAction, true);
         }
 
         private void EnableInputAction(InputActionReference inputActionReference)
@@ -1484,14 +1542,20 @@ namespace UnityEngine.InputSystem.UI
             action.Enable();
         }
 
-        private static void DisableInputAction(InputActionReference inputActionReference)
+        private void TryDisableInputAction(InputActionReference inputActionReference, bool isComponentDisabling = false)
         {
             var action = inputActionReference?.action;
             if (action == null)
                 return;
 
-            if (!s_InputActionReferenceCounts.TryGetValue(action,
-                out var referenceState))
+            // Don't decrement refCount when we were not responsible for incrementing it.
+            // I.e. when we were not enabled yet. When OnDisabled is called, isActiveAndEnabled will
+            // already have been set to false. In that case we pass isComponentDisabling to check if we
+            // came from OnDisabled and therefore need to allow disabling.
+            if (!isActiveAndEnabled && !isComponentDisabling)
+                return;
+
+            if (!s_InputActionReferenceCounts.TryGetValue(action, out var referenceState))
                 return;
 
             if (referenceState.refCount - 1 == 0 && referenceState.enabledByInputModule)
@@ -1909,13 +1973,15 @@ namespace UnityEngine.InputSystem.UI
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
         //       button *clicks* when an action resets. However, we still need to send pointer ups.
 
-        private bool IgnoreNextClick(ref InputAction.CallbackContext context)
+        private bool IgnoreNextClick(ref InputAction.CallbackContext context, bool wasPressed)
         {
             // If explicitly ignoring focus due to setting, never ignore clicks
             if (explictlyIgnoreFocus)
                 return false;
-            // If context is cancelled (by focus change), ignore next click if device cannot run in background.
-            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground;
+            // If a currently active click is cancelled (by focus change), ignore next click if device cannot run in background.
+            // This prevents the cancelled click event being registered when focus is returned i.e. if
+            // the button was released while another window was focused.
+            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground && wasPressed;
         }
 
         private void OnLeftClickCallback(InputAction.CallbackContext context)
@@ -1925,9 +1991,10 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.leftButton.isPressed;
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (IgnoreNextClick(ref context))
+            if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
         }
 
@@ -1938,10 +2005,11 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.rightButton.isPressed;
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (IgnoreNextClick(ref context))
-                state.leftButton.ignoreNextClick = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.rightButton.ignoreNextClick = true;
         }
 
         private void OnMiddleClickCallback(InputAction.CallbackContext context)
@@ -1951,10 +2019,11 @@ namespace UnityEngine.InputSystem.UI
                 return;
 
             ref var state = ref GetPointerStateForIndex(index);
+            bool wasPressed = state.middleButton.isPressed;
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
-            if (IgnoreNextClick(ref context))
-                state.leftButton.ignoreNextClick = true;
+            if (IgnoreNextClick(ref context, wasPressed))
+                state.middleButton.ignoreNextClick = true;
         }
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
@@ -2149,10 +2218,6 @@ namespace UnityEngine.InputSystem.UI
             if (oldAction == null)
                 return null;
 
-            var oldActionEnabled = oldAction.enabled;
-            if (oldActionEnabled)
-                DisableInputAction(actionReference);
-
             var oldActionMap = oldAction.actionMap;
             Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
 
@@ -2164,11 +2229,7 @@ namespace UnityEngine.InputSystem.UI
             if (newAction == null)
                 return null;
 
-            var reference = InputActionReference.Create(newAction);
-            if (oldActionEnabled)
-                EnableInputAction(reference);
-
-            return reference;
+            return InputActionReference.Create(newAction);
         }
 
         public InputActionAsset actionsAsset
@@ -2245,6 +2306,8 @@ namespace UnityEngine.InputSystem.UI
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;
+
+        [NonSerialized] private GameObject m_LocalMultiPlayerRoot;
 
         /// <summary>
         /// Controls the origin point of raycasts when the cursor is locked.

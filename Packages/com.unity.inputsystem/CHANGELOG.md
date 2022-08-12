@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.4.2] - 2022-08-12
+
+### Changed
+- Hide XR legacy HMD and controllers layouts from Editor UI dropdown.
+
+### Fixed
+- Fix UI sometimes ignoring the first mouse click event after losing and regaining focus ([case ISXB-127](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-127).
+- Fixed issue when using MultiplayerEventSystems where the visual state of UI controls would change due to constant toggling of CanvasGroup.interactable on and off ([case ISXB-112](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-112)).
+- Fixed an issue where the Input Action asset icon would not be visible during asset creation ([case ISXB-6](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-6)).
+- Fixed DualSense low frequency motor speed being always set to min value.
+- Fixed an issue where `ReadUnprocessedValueFromState` in PoseControl always returning default values.
+- Fix Player 1's UI controls stop working after second player joins ([case ISXB-125](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125)))
+
+
 ## [1.4.1] - 2022-05-30
 
 ### Fixed

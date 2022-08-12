@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.XR;
 
 namespace Unity.XR.OpenVR
 {
-    [InputControlLayout(displayName = "OpenVR Headset")]
+    [InputControlLayout(displayName = "OpenVR Headset", hideInUI = true)]
     public class OpenVRHMD : XRHMD
     {
         [InputControl(noisy = true)]
@@ -43,7 +43,7 @@ namespace Unity.XR.OpenVR
         }
     }
 
-    [InputControlLayout(displayName = "Windows MR Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Windows MR Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class OpenVRControllerWMR : XRController
     {
         [InputControl(noisy = true)]
@@ -96,7 +96,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An HTC Vive Wand controller.
     /// </summary>
-    [InputControlLayout(displayName = "Vive Wand", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Vive Wand", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class ViveWand : XRControllerWithRumble
     {
         [InputControl]
@@ -142,7 +142,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An HTC Vive lighthouse.
     /// </summary>
-    [InputControlLayout(displayName = "Vive Lighthouse")]
+    [InputControlLayout(displayName = "Vive Lighthouse", hideInUI = true)]
     public class ViveLighthouse : TrackedDevice
     {
     }
@@ -167,7 +167,7 @@ namespace Unity.XR.OpenVR
         }
     }
 
-    [InputControlLayout(displayName = "Handed Vive Tracker", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Handed Vive Tracker", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class HandedViveTracker : ViveTracker
     {
         [InputControl]
@@ -196,7 +196,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An Oculus Touch controller.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Touch Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Oculus Touch Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class OpenVROculusTouchController : XRControllerWithRumble
     {
         [InputControl]
