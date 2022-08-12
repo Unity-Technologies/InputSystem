@@ -20,6 +20,7 @@ namespace UnityEngine.InputSystem.Controls
     {
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame
 
+        /// <inheritdoc/>
         public override unsafe ref readonly float value
         {
             get

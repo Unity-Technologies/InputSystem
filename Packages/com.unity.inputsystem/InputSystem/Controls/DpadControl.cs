@@ -22,6 +22,7 @@ namespace UnityEngine.InputSystem.Controls
         {
             public int component { get; set; }
 
+            /// <inheritdoc/>
             public override ref readonly float value
             {
                 get
@@ -79,6 +80,7 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(bit = (int)ButtonBits.Right, displayName = "Right")]
         public ButtonControl right { get; set; }
 
+        /// <inheritdoc/>
         public override ref readonly Vector2 value
         {
             get

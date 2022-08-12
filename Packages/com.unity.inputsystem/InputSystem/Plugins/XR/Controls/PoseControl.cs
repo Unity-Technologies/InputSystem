@@ -182,6 +182,7 @@ namespace UnityEngine.InputSystem.XR
         /// <seealso cref="PoseState.angularVelocity"/>
         public Vector3Control angularVelocity { get; private set; }
 
+        /// <inheritdoc/>
         public override unsafe ref readonly PoseState value
         {
             get

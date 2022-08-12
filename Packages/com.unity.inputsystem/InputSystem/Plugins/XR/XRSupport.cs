@@ -200,6 +200,7 @@ namespace UnityEngine.InputSystem.XR
         [InputControl(offset = 16, displayName = "Rotation")]
         public QuaternionControl rotation { get; private set; }
 
+        /// <inheritdoc/>
         public override ref readonly Bone value
         {
             get
@@ -307,6 +308,7 @@ namespace UnityEngine.InputSystem.XR
             rightEyeOpenAmount.WriteValueIntoState(value.rightEyeOpenAmount, statePtr);
         }
 
+        /// <inheritdoc/>
         public override ref readonly Eyes value
         {
             get
