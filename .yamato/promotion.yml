@@ -9,8 +9,9 @@ promote:
   variables:
     UPMCI_PROMOTION: 1
   commands:
-    - move ./Assets/Samples ./Packages/com.unity.inputsystem
-    - move ./Assets/Samples.meta ./Packages/com.unity.inputsystem
+    - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
+    - xcopy /Y /H .\Assets\Samples.meta .\Packages\com.unity.inputsystem
+    - del /AH .\Assets\Samples.meta
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/
