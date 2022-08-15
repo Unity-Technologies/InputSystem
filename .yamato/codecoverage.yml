@@ -1,4 +1,4 @@
-  name : Test Coverage Test
+  name : Code Coverage Test
   agent:
     type: Unity::VM
     image: package-ci/win10:v1.15.0-713263
