@@ -866,8 +866,12 @@ namespace UnityEngine.InputSystem
         internal int m_ChildCount;
         internal int m_ChildStartIndex;
         internal ControlFlags m_ControlFlags;
-        internal bool m_CachedValueIsStale;
-        internal bool m_UnprocessedCachedValueIsStale;
+
+        // Value caching
+        // These values will be set to true during state updates if the control has actually changed value.
+        // Set to true initially so default state will be returned on the first call
+        internal bool m_CachedValueIsStale = true;
+        internal bool m_UnprocessedCachedValueIsStale = true;
 
         ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValue m_DefaultState;

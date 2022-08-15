@@ -1908,8 +1908,6 @@ namespace UnityEngine.InputSystem
                     for (var i = 0; i < numNodes; i++)
                     {
                         device.m_ControlTreeNodes[i] = *(InputDevice.ControlBitRangeNode*)(nodePtr + i * sizeOfNode);
-                        // device.m_ControlTreeNodes[i] = MemoryMarshal.Read<InputDevice.ControlBitRangeNode>(
-                        //     controlTreeNodes.Slice(i * sizeOfNode, sizeOfNode));
                     }
                 }
 

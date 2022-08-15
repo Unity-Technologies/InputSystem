@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
@@ -716,6 +717,20 @@ namespace UnityEngine.InputSystem
         // point into the m_ChildrenForEachControl array.
         internal ushort[] m_ControlTreeIndices;
 
+        // When a device gets built from a layout, we create a binary tree from its controls where each node in the tree
+        // represents the range of bits that cover the left or right section of the parent range. For example, starting
+        // with the entire device state block as the parent, where the state block is 100 bits long, the left node will
+        // cover from bits 0-50, and the right from bits 50-100. For the left node, we'll get two more child nodes where
+        // the left will cover bits 0-25, and the right bits 25-50 and so on. Each node will point at any controls that
+        // either fit exactly into its range, or overlap the splitting point between both nodes. In reality, picking the
+        // mid-point to split each parent node is a little convoluted and will rarely be the absolute mid-point, but that's
+        // the basic idea.
+        //
+        // At runtime, when state events come in, we can then really quickly perform a bunch of memcmps on both sides of
+        // the tree and recurse down the branches that have changed. When nodes have controls, we can then check if those
+        // controls have changes, and mark them as stale so their cached values get updated the next time their values
+        // are read.
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         internal struct ControlBitRangeNode
         {
             // only store the end bit offset of each range because we always do a full tree traversal so
@@ -950,6 +965,9 @@ namespace UnityEngine.InputSystem
             if (m_ControlTreeNodes.Length == 0)
                 return;
 
+            // if we're dealing with a delta state event or just an individual control update through InputState.ChangeState
+            // the size of the new data will not be the same size as the device state block, so use the 'partial' change state
+            // method to update just those controls that overlap with the changed state.
             if (m_StateBlock.sizeInBits != stateSizeInBytes * 8)
             {
                 if (m_ControlTreeNodes[0].leftChildIndex != -1)
@@ -959,15 +977,15 @@ namespace UnityEngine.InputSystem
             else
             {
                 if (m_ControlTreeNodes[0].leftChildIndex != -1)
-                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8, stateOffsetInDevice * 8,
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
                         deviceStateBuffer, m_ControlTreeNodes[0], 0);
             }
         }
 
-        internal unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
-            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parent, uint startOffset)
+        private unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
         {
-            var leftNode = m_ControlTreeNodes[parent.leftChildIndex];
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
             if (Math.Max(stateOffsetInDeviceInBits, startOffset) <=
                 Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, leftNode.endBitOffset))
             {
@@ -983,7 +1001,7 @@ namespace UnityEngine.InputSystem
                         deviceStatePtr, leftNode, startOffset);
             }
 
-            var rightNode = m_ControlTreeNodes[parent.leftChildIndex + 1];
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
             if (Math.Max(stateOffsetInDeviceInBits, leftNode.endBitOffset) <=
                 Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, rightNode.endBitOffset))
             {
@@ -1000,26 +1018,34 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
-            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        private unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
         {
             var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
 
             // have any bits in the region defined by the left node changed?
-            if (MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr, startOffset,
-                leftNode.endBitOffset - startOffset) == false)
+            if (HasDataChangedInRange(deviceStatePtr, statePtr, startOffset, leftNode.endBitOffset - startOffset))
             {
                 // update the state of any controls pointed to by the left node
                 var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
                 for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
                 {
                     var controlIndex = m_ControlTreeIndices[i];
-                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                    var control = m_ChildrenForEachControl[controlIndex];
+
+                    // nodes aren't always an exact fit for control memory ranges so check here if the control pointed
+                    // at by this node has actually changed state so we don't mark controls as stale needlessly.
+                    // We need to offset the device and new state pointers by the byte offset of the device state block
+                    // because all controls have this offset baked into them, but deviceStatePtr points at the already
+                    // offset block of device memory (remember, all devices share one big block of memory) and statePtr
+                    // points at a block of memory of the same size as the device state.
+                    if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset, (byte*)statePtr - m_StateBlock.byteOffset, null))
+                        control.MarkAsStale();
                 }
 
                 // process the left child node if it exists
                 if (leftNode.leftChildIndex != -1)
-                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits, deviceStatePtr,
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
                         leftNode, startOffset);
             }
 
@@ -1027,7 +1053,7 @@ namespace UnityEngine.InputSystem
             var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
 
             // if no bits in the range defined by the right node have changed, return
-            if (MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr, leftNode.endBitOffset,
+            if (!HasDataChangedInRange(deviceStatePtr, statePtr, leftNode.endBitOffset,
                 (uint)(rightNode.endBitOffset - leftNode.endBitOffset))) return;
 
             // update the state of any controls pointed to by the right node
@@ -1035,12 +1061,25 @@ namespace UnityEngine.InputSystem
             for (int i = rightNode.controlStartIndex; i < rightNodeControlEndIndex; i++)
             {
                 var controlIndex = m_ControlTreeIndices[i];
-                m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                var control = m_ChildrenForEachControl[controlIndex];
+
+                if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset, (byte*)statePtr - m_StateBlock.byteOffset, null))
+                    control.MarkAsStale();
             }
 
             if (rightNode.leftChildIndex != -1)
-                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits, deviceStatePtr,
+                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
                     rightNode, leftNode.endBitOffset);
+        }
+
+        private static unsafe bool HasDataChangedInRange(byte* deviceStatePtr, void* statePtr, uint startOffset, uint sizeInBits)
+        {
+            if (sizeInBits == 1)
+                return MemoryHelpers.ReadSingleBit(deviceStatePtr, startOffset) !=
+                    MemoryHelpers.ReadSingleBit(statePtr, startOffset);
+
+            return !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                startOffset, sizeInBits);
         }
     }
 }

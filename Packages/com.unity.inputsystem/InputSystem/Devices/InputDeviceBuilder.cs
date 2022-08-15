@@ -1089,6 +1089,9 @@ namespace UnityEngine.InputSystem.Layouts
 
         private void AddControlToNode(InputControl control, ref int controlIndiciesNextFreeIndex, int nodeIndex)
         {
+            Debug.Assert(m_Device.m_ControlTreeNodes[nodeIndex].controlCount < 255,
+                "Control bit range nodes can address maximum of 255 controls.");
+
             ref var node = ref m_Device.m_ControlTreeNodes[nodeIndex];
             var leafControlStartIndex = node.controlStartIndex;
             if (node.controlCount == 0)

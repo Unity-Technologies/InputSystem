@@ -438,6 +438,56 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public unsafe void Controls_ValueIsReadFromStateMemoryOnlyWhenControlHasBeenMarkedAsStale()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // read the value once initially so it gets cached
+        var value = gamepad.leftTrigger.value;
+
+        // Note that we have to write a different value here (0.5) to the one we write below, otherwise the
+        // state comparison during the state update won't see any difference between the values and won't
+        // mark the control as stale
+        gamepad.leftTrigger.WriteValueIntoState(0.5f, gamepad.currentStatePtr);
+
+        // because we wrote the state manually into the current state ptr, the stale flag is not set, so calling
+        // value should return whatever was previously cached (0 by default).
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update();
+
+        // but this time, we updated state through the system which *does* set the stale flag on controls that
+        // have changed.
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ValueIsSetToDefaultStateOnInitialization()
+    {
+        var json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""rightTrigger"",
+                        ""defaultState"" : ""0.5""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var gamepad = InputDevice.Build<Gamepad>("CustomGamepad");
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f));
+    }
+
+    [Test]
+    [Category("Controls")]
     public unsafe void Controls_CanWriteValueFromObjectIntoState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
