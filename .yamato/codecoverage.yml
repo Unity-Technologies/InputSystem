@@ -20,7 +20,7 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - upm-ci~/tools/utr/utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal --report-performance-data --performance-project-id=InputSystem
+    - upm-ci~/tools/utr/utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal --report-performance-data --performance-project-id=InputSystem --enable-code-coverage --code-coverage-options 'generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*' --extra-utr-arg=--coverage-results-path={{ platform.yamato_source_dir }}/upm-ci~/test-results/CoverageResults
   artifacts:
     UTR_Output.zip:
       paths:
