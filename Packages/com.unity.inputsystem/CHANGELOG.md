@@ -11,7 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ## Fixed
-- Fix for mitigating symtoms reported in ([case UUM-10774](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774) effectively avoiding reenabling mouse, pen or touch devices in `InputSystemPlugin.OnDestroy()` if currently quitting the editor to avoid editor crashing. Note that the actual issue needs a separate fix in Unity and this package fix is only to avoid running into the issue.
+- Fix for mitigating symptoms reported in ([case UUM-10774](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774) effectively avoiding reenabling mouse, pen or touch devices in `InputSystemPlugin.OnDestroy()` if currently quitting the editor. The fix avoids editor crashing if closed when Simulator Window is open. Note that the actual issue needs a separate fix in Unity and this package fix is only to avoid running into the issue.
 
 ## [1.4.2] - 2022-08-18
 
