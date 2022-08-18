@@ -1196,7 +1196,6 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            ////REVIEW: should we *always* Instantiate()?
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
