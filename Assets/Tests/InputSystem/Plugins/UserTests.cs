@@ -583,6 +583,23 @@ internal class UserTests : CoreTestsFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanUnpairDevice_WhenPairedToMultipleUsers()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputUser.PerformPairingWithDevice(gamepad);
+        InputUser.PerformPairingWithDevice(keyboard);
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+
+        user.UnpairDevicesAndRemoveUser();
+
+        Assert.That(InputUser.all[0].pairedDevices, Is.EquivalentTo(new[] {gamepad}));
+        Assert.That(InputUser.all[1].pairedDevices, Is.EquivalentTo(new[] {keyboard}));
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CanQueryUnpairedDevices()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
