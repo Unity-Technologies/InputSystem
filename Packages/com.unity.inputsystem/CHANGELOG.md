@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.4.2] - 2022-08-12
 
 ## Fixed
 - Fix for mitigating symptoms reported in ([case UUM-10774](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774) effectively avoiding reenabling mouse, pen or touch devices in `InputSystemPlugin.OnDestroy()` if currently quitting the editor. The fix avoids editor crashing if closed when Simulator Window is open. Note that the actual issue needs a separate fix in Unity and this package fix is only to avoid running into the issue.
@@ -16,7 +16,6 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.4.2] - 2022-08-18
 
 ### Changed
-- Readded OnDisable() member to MultiplayerEventSystem which was previously removed from the API.
 - Hide XR legacy HMD and controllers layouts from Editor UI dropdown.
 
 ### Fixed

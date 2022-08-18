@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem.UI
         /// <see cref="InputSystemUIInputModule.move"/> action will be constrained to UI objects under that root.
         /// </remarks>
         /// </summary>
-        public GameObject localMultiPlayerRoot
+        internal GameObject localMultiPlayerRoot
         {
             get => m_LocalMultiPlayerRoot;
             set => m_LocalMultiPlayerRoot = value;
