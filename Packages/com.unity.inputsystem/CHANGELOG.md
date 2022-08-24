@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Added missing script and gizmo icon for `TrackedPoseDriver.cs` component ([case ISXB-262](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-262)).
+- Fix an issue where users could end up with the wrong device assignments when using the InputUser API directly and removing a user ([case ISXB-274](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-231)).
 
 ## [1.4.2] - 2022-08-12
 

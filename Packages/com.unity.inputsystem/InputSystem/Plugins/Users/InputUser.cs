@@ -1170,7 +1170,8 @@ namespace UnityEngine.InputSystem.Users
 
             var deviceIndex = asLostDevice
                 ? s_GlobalState.allLostDevices.IndexOfReference(device, s_GlobalState.allLostDeviceCount)
-                : s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allPairedDeviceCount);
+                : s_GlobalState.allPairedDevices.IndexOfReference(device, s_GlobalState.allUserData[userIndex].deviceStartIndex,
+                s_GlobalState.allUserData[userIndex].deviceCount);
             if (deviceIndex == -1)
             {
                 // Device not in list. Ignore.
