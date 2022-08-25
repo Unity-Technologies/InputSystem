@@ -215,6 +215,16 @@ namespace UnityEngine.InputSystem.HighLevel
         Any = Int32.MaxValue
     }
 
+    public enum JoystickSlot
+    {
+        Slot1 = 0,
+        Slot2,
+        Slot3,
+        Slot4,
+        All = Int32.MaxValue,
+        Any = Int32.MaxValue
+    }
+    
     public static partial class Input
     {
         // These device collections use "stable" indexing. If a device that was connected disconnects, the
@@ -243,6 +253,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// A collection of all gamepads currently connected to the system.
         /// </summary>
         public static IReadOnlyList<Gamepad> gamepads { get; }
+
         /// <summary>
         /// Is the indicated control currently pressed.
         /// </summary>
@@ -286,25 +297,23 @@ namespace UnityEngine.InputSystem.HighLevel
         }
 
         /// <summary>
-        /// Turns any two inputs into an axis value between -1 and 1.
+        /// For single analogue inputs
         /// </summary>
-        /// <param name="minAxis"></param>
-        /// <param name="maxAxis"></param>
-        /// <returns></returns>
-        public static float GetAxis(Inputs minAxis, Inputs maxAxis)
+        /// <param name="input"></param>
+        /// <returns>A value between 0 at un-actuated to 1 at fully actuated.</returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static float GetAxis(Inputs input)
         {
-            throw new NotImplementedException();
+	        throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Turns any four inputs into a non-normalized vector.
+        /// Turns any two inputs into an axis value between -1 and 1.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="up"></param>
-        /// <param name="down"></param>
+        /// <param name="negativeAxis"></param>
+        /// <param name="positiveAxis"></param>
         /// <returns></returns>
-        public static Vector2 GetAxis(Inputs left, Inputs right, Inputs up, Inputs down)
+        public static float GetAxis(Inputs negativeAxis, Inputs positiveAxis)
         {
             throw new NotImplementedException();
         }
@@ -317,7 +326,20 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="up"></param>
         /// <param name="down"></param>
         /// <returns></returns>
-        public static Vector2 GetAxisNormalized(Inputs left, Inputs right, Inputs up, Inputs down)
+        public static Vector2 GetAxis(Inputs left, Inputs right, Inputs up, Inputs down)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Turns any four inputs into an un-normalized vector.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="up"></param>
+        /// <param name="down"></param>
+        /// <returns></returns>
+        public static Vector2 GetAxisRaw(Inputs left, Inputs right, Inputs up, Inputs down)
         {
             throw new NotImplementedException();
         }
@@ -326,7 +348,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// Get the value of either stick on a specific gamepad, or any gamepad if gamepadSlot is Any.
         /// </summary>
         /// <param name="stick"></param>
-        /// <param name="gamepadSlot">If -1, uses the current gamepad, otherwise the gamepad at this index.</param>
+        /// <param name="gamepadSlot">Read values from the gamepad in this slot, or any gamepad if GamepadSlot.Any is specified.</param>
         /// <returns></returns>
         public static Vector2 GetAxis(GamepadAxis stick, GamepadSlot gamepadSlot = GamepadSlot.Any)
         {
@@ -338,7 +360,10 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </summary>
         /// <param name="joystickIndex"></param>
         /// <returns></returns>
-        public static Vector2 GetJoystickAxis(int joystickIndex)
+        /// <remarks>
+        /// Joystick slot must always be specified
+        /// </remarks>
+        public static Vector2 GetJoystickAxis(int joystickAxis, JoystickSlot joystickSlot = JoystickSlot.Any)
         {
             throw new NotImplementedException();
         }
