@@ -108,8 +108,10 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
+#if UNITY_2022_1_OR_NEWER
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+#endif
         }
 
         private CustomOrDefaultSetting m_DurationSetting;

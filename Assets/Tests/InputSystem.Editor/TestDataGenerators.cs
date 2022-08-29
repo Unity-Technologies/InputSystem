@@ -1,3 +1,4 @@
+#if UNITY_2022_1_OR_NEWER
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
@@ -64,3 +65,4 @@ public static class TestDataGenerators
         return new InputControlScheme(name, controlScheme.deviceRequirements, controlScheme.bindingGroup);
     }
 }
+#endif
