@@ -179,6 +179,7 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
 
     public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
     {
+#if UNITY_2022_1_OR_NEWER
         var slider = new Slider(m_ScaleFactorLabel.text, 0, 2)
         {
             value = target.scaleFactor,
@@ -196,6 +197,7 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
         });
 
         root.Add(slider);
+#endif
     }
 
     private GUIContent m_ScaleFactorLabel = new GUIContent("Scale Factor");

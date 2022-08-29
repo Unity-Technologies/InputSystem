@@ -1,3 +1,4 @@
+#if UNITY_2022_1_OR_NEWER
 using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
@@ -342,3 +343,4 @@ public class ControlSchemesEditorTests
         Assert.That(groupsProperty.stringValue, Is.EqualTo(string.Empty));
     }
 }
+#endif

@@ -210,6 +210,7 @@ namespace UnityEngine.InputSystem.Editor
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
 
+#if UNITY_2022_1_OR_NEWER
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
             {
                 var value = m_GetValue();
@@ -289,6 +290,8 @@ namespace UnityEngine.InputSystem.Editor
                 m_OpenInputSettingsButton.visible = m_UseDefaultValue;
             }
 
+#endif
+
             public void OnGUI()
             {
                 EditorGUILayout.BeginHorizontal();
@@ -357,9 +360,11 @@ namespace UnityEngine.InputSystem.Editor
             private GUIContent m_OpenInputSettingsLabel;
             private GUIContent m_HelpBoxText;
             private FloatField m_FloatField;
-            private HelpBox m_HelpBox;
             private Button m_OpenInputSettingsButton;
             private Toggle m_DefaultToggle;
+#if UNITY_2022_1_OR_NEWER
+            private HelpBox m_HelpBox;
+#endif
         }
     }
 }
