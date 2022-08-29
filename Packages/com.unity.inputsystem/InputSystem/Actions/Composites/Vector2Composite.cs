@@ -9,6 +9,7 @@ using UnityEngine.Scripting;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
 
 ////TODO: add support for ramp up/down
