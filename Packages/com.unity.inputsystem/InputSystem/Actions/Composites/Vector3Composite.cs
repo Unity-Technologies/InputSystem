@@ -8,6 +8,7 @@ using UnityEngine.Scripting;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
 
 namespace UnityEngine.InputSystem.Composites
