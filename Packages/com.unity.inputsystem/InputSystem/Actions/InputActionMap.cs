@@ -378,7 +378,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < actionCount; ++i)
             {
                 var action = m_Actions[i];
-                if (action.m_Id == nameOrId || string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (action.m_Id == nameOrId || string.Equals(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase))
                     return i;
             }
 
@@ -1723,7 +1723,7 @@ namespace UnityEngine.InputSystem
                     var mapIndex = 0;
                     for (; mapIndex < mapList.Count; ++mapIndex)
                     {
-                        if (string.Compare(mapList[mapIndex].name, mapName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        if (string.Equals(mapList[mapIndex].name, mapName, StringComparison.InvariantCultureIgnoreCase))
                         {
                             map = mapList[mapIndex];
                             break;
@@ -1774,7 +1774,7 @@ namespace UnityEngine.InputSystem
                     var mapIndex = 0;
                     for (; mapIndex < mapList.Count; ++mapIndex)
                     {
-                        if (string.Compare(mapList[mapIndex].name, mapName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        if (string.Equals(mapList[mapIndex].name, mapName, StringComparison.InvariantCultureIgnoreCase))
                         {
                             map = mapList[mapIndex];
                             break;

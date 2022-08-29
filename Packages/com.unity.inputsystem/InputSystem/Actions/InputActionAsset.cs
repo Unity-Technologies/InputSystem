@@ -644,7 +644,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < m_ActionMaps.Length; ++i)
             {
                 var map = m_ActionMaps[i];
-                if (string.Compare(nameOrId, map.name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Equals(nameOrId, map.name, StringComparison.InvariantCultureIgnoreCase))
                     return map;
             }
 
@@ -718,7 +718,7 @@ namespace UnityEngine.InputSystem
                 return -1;
 
             for (var i = 0; i < m_ControlSchemes.Length; ++i)
-                if (string.Compare(name, m_ControlSchemes[i].name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Equals(name, m_ControlSchemes[i].name, StringComparison.InvariantCultureIgnoreCase))
                     return i;
 
             return -1;

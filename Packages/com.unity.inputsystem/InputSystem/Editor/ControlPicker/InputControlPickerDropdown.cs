@@ -347,8 +347,8 @@ namespace UnityEngine.InputSystem.Editor
                 // If the key has a display name that differs from the key name, show it in the UI.
                 var displayName = key.m_DisplayNameFromLayout;
                 var keyDisplayName = key.displayName;
-                if (keyDisplayName.All(x => x.IsPrintable()) && string.Compare(keyDisplayName, displayName,
-                    StringComparison.InvariantCultureIgnoreCase) != 0)
+                if (keyDisplayName.All(x => x.IsPrintable()) && !string.Equals(keyDisplayName, displayName,
+                    StringComparison.InvariantCultureIgnoreCase))
                     displayName = $"{displayName} (Current Layout: {key.displayName})";
 
                 // For left/right modifier keys, prepend artificial combined version.

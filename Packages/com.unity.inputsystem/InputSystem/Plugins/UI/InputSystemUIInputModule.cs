@@ -713,9 +713,8 @@ namespace UnityEngine.InputSystem.UI
             if (eventSystem.currentSelectedGameObject == null)
                 return true;
 
-            var selectable = eventSystem.currentSelectedGameObject.GetComponent<Selectable>();
-
-            if (selectable == null)
+            
+            if (!eventSystem.currentSelectedGameObject.TryGetComponent<Selectable>(out var selectable))
                 return true;
 
             Selectable navigationTarget = null;

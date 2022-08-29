@@ -145,10 +145,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             // Touchscreen will record a button down and button up on a TouchControl when a tap occurs.
             // We only want to record the button down, not the button up.
-            if (currentTouchState->isTapRelease)
-                return false;
-
-            return true;
+            return !currentTouchState->isTapRelease;
         }
 
         private unsafe void OnTouchRecorded(InputStateHistory.Record record)

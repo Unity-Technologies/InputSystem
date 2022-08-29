@@ -751,10 +751,8 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(control));
 
             var parser = new PathParser(expected);
-            if (MatchesRecursive(ref parser, control, prefixOnly: true) && parser.isAtEnd)
-                return true;
 
-            return false;
+            return MatchesRecursive(ref parser, control, prefixOnly: true) && parser.isAtEnd;
         }
 
         private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl, bool prefixOnly = false)

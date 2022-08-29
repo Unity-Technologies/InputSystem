@@ -367,7 +367,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void SelectFirstToplevelItem()
         {
-            if (rootItem.children.Any())
+            if (rootItem.children.Count > 0)
                 SetSelection(new[] {rootItem.children[0].id}, TreeViewSelectionOptions.FireSelectionChanged);
         }
 
@@ -773,7 +773,7 @@ namespace UnityEngine.InputSystem.Editor
             if (blocks.Length < 1)
                 return;
 
-            Type CopyTagToType(string tagName)
+            static Type CopyTagToType(string tagName)
             {
                 switch (tagName)
                 {

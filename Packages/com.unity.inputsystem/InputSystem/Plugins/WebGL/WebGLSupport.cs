@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.WebGL
             string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             // If the device isn't a WebGL device, we're not interested.
-            if (string.Compare(description.interfaceName, InterfaceName, StringComparison.InvariantCultureIgnoreCase) != 0)
+            if (!string.Equals(description.interfaceName, InterfaceName, StringComparison.InvariantCultureIgnoreCase))
                 return null;
 
             // If it was matched by the standard mapping, we don't need to fall back to generating a layout.

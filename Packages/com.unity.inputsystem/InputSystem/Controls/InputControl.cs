@@ -183,11 +183,8 @@ namespace UnityEngine.InputSystem
             get
             {
                 RefreshConfigurationIfNeeded();
-                if (m_ShortDisplayName != null)
-                    return m_ShortDisplayName;
-                if (m_ShortDisplayNameFromLayout != null)
-                    return m_ShortDisplayNameFromLayout;
-                return null;
+
+                return m_ShortDisplayName != null ? m_ShortDisplayName : m_ShortDisplayNameFromLayout;
             }
             protected set => m_ShortDisplayName = value;
         }

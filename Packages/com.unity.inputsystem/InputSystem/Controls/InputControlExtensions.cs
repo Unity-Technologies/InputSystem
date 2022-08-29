@@ -105,9 +105,7 @@ namespace UnityEngine.InputSystem
                 //
                 // If we're looking for a specific threshold here, consider the control to always
                 // be under. But if not, consider it actuated "by virtue of not being in default state".
-                if (Mathf.Approximately(threshold, 0))
-                    return true;
-                return false;
+                return Mathf.Approximately(threshold, 0);
             }
 
             if (Mathf.Approximately(threshold, 0))

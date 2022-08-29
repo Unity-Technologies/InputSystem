@@ -590,7 +590,7 @@ namespace UnityEngine.InputSystem.Editor
                     var didRename = false;
                     for (var n = 0; n < numGroups; ++n)
                     {
-                        if (string.Compare(groupsArray[n], oldBindingGroup, StringComparison.InvariantCultureIgnoreCase) != 0)
+                        if (!string.Equals(groupsArray[n], oldBindingGroup, StringComparison.InvariantCultureIgnoreCase))
                             continue;
                         if (string.IsNullOrEmpty(newBindingGroup))
                         {

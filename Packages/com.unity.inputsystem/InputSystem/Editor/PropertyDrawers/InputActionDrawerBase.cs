@@ -103,8 +103,7 @@ namespace UnityEngine.InputSystem.Editor
             if (property.GetParentProperty() != null && property.GetParentProperty().isArray)
                 propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
 
-            if (property.displayName != null &&
-                property.displayName.Length > 0 &&
+            if (!string.IsNullOrEmpty(property.displayName) &&
                 (property.type == nameof(InputAction) || property.type == nameof(InputActionMap)))
             {
                 return $"{property.displayName}{propertyTitleNumeral}";

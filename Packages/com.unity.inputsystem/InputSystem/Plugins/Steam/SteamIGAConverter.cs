@@ -740,10 +740,9 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 return false;
 
             var assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
-            if (!string.IsNullOrEmpty(assetPath) && Path.GetExtension(assetPath) == ".vdf")
-                return true;
 
-            return false;
+
+            return !string.IsNullOrEmpty(assetPath) && Path.GetExtension(assetPath) == ".vdf";
         }
 
         ////TODO: support setting class and namespace name

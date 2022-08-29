@@ -186,7 +186,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Make sure it ends with .asset.
             var extension = Path.GetExtension(path);
-            if (string.Compare(extension, ".asset", StringComparison.InvariantCultureIgnoreCase) != 0)
+            if (!string.Equals(extension, ".asset", StringComparison.InvariantCultureIgnoreCase))
                 path += ".asset";
 
             // Create settings file.

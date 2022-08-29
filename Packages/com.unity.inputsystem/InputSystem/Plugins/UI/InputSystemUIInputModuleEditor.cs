@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             {
                 foreach (var action in actions)
                 {
-                    if (string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    if (string.Equals(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase))
                         return action;
                 }
             }
@@ -30,8 +30,7 @@ namespace UnityEngine.InputSystem.UI.Editor
 
             var path = AssetDatabase.GetAssetPath(actions);
             var assets = AssetDatabase.LoadAllAssetsAtPath(path);
-            return assets.Where(asset => asset is InputActionReference)
-                .Cast<InputActionReference>()
+            return assets.OfType<InputActionReference>()
                 .OrderBy(x => x.name)
                 .ToArray();
         }

@@ -846,7 +846,7 @@ namespace UnityEngine.InputSystem
             var bindings = action.GetOrCreateActionMap().m_Bindings;
             var bindingCount = bindings.LengthSafe();
             for (var i = 0; i < bindingCount; ++i)
-                if (string.Compare(bindings[i].action, oldName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Equals(bindings[i].action, oldName, StringComparison.InvariantCultureIgnoreCase))
                     bindings[i].action = newName;
         }
 
@@ -1368,15 +1368,13 @@ namespace UnityEngine.InputSystem
                 // To find the next binding for a specific action, we may have to jump
                 // over unrelated bindings in-between.
                 var index = m_BindingIndexInMap;
-                while (true)
+                do
                 {
                     index += next ? 1 : -1;
                     if (index < 0 || index >= bindings.Length)
                         return default;
-
-                    if (m_Action == null || bindings[index].TriggersAction(m_Action))
-                        break;
                 }
+                while (m_Action != null && !bindings[index].TriggersAction(m_Action));
 
                 return new BindingSyntax(m_ActionMap, index, m_Action);
             }
