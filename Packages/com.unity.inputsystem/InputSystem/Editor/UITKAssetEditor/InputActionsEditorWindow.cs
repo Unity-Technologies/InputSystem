@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
 using System;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -6,6 +6,17 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    // TODO: Remove when UIToolkit editor is complete and set as the default editor
+    [InitializeOnLoad]
+    internal static class EnableUITKEditor
+    {
+        static EnableUITKEditor()
+        {
+            // set this feature flag to true to enable the UITK editor
+            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditor, false);
+        }
+    }
+
     internal class InputActionsEditorWindow : EditorWindow
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
@@ -13,6 +24,9 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
         {
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor))
+                return false;
+
             var path = AssetDatabase.GetAssetPath(instanceId);
             if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                 return false;
@@ -35,7 +49,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset)
         {
-            // var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>("Assets/GlobalInputActionsTest.inputactions");
             var serializedAsset = new SerializedObject(asset);
             var stateContainer = new StateContainer(rootVisualElement, new InputActionsEditorState(serializedAsset));
 

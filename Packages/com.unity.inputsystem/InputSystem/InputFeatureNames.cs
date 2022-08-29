@@ -8,5 +8,6 @@ namespace UnityEngine.InputSystem
         public const string kUseOptimizedControls = "USE_OPTIMIZED_CONTROLS";
         public const string kUseReadValueCaching = "USE_READ_VALUE_CACHING";
         public const string kParanoidReadValueCachingChecks = "PARANOID_READ_VALUE_CACHING_CHECKS";
+        public const string kUseUIToolkitEditor = "USE_UITOOLKIT_EDITOR";
     }
 }
