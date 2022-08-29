@@ -10,7 +10,7 @@
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     # Run upm-ci verification tests as well as tests contained in the package.
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2021.3 --enable-code-coverage --code-coverage-options="generateHtmlReport;pathFilters:+**/Packages/com.unity.inputsystem/**,-**/Tests/**;verbosity:verbose" --extra-utr-arg=--coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/test-results/CoverageResults
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2021.3 --enable-code-coverage --code-coverage-options="generateHtmlReport;pathFilters:+**/Packages/com.unity.inputsystem/**,-**/Tests/**;dontClear;verbosity:verbose" --extra-utr-arg=--coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/test-results/CoverageResults
     {% if platform.installscript %}
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
     - {{ platform.installscript }} 2021.3
@@ -20,7 +20,7 @@
     - mv ./Packages/com.unity.inputsystem/Samples ./Assets
     - mv ./Packages/com.unity.inputsystem/Samples.meta ./Assets
     # Now run our full test suite that sits in Assets/Tests by running UTR on our project.
-    - upm-ci~/tools/utr/utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/ --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal --report-performance-data --performance-project-id=InputSystem --enable-code-coverage --code-coverage-options="generateHtmlReport;pathFilters:+**/Packages/com.unity.inputsystem/**,-**/Tests/**;verbosity:verbose" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/test-results/CoverageResults
+    - upm-ci~/tools/utr/utr --testproject . --timeout=1200 --editor-location=.Editor --artifacts_path=upm-ci~/test-results/ --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal --report-performance-data --performance-project-id=InputSystem --enable-code-coverage --code-coverage-options="generateHtmlReport;pathFilters:+**/Packages/com.unity.inputsystem/**,-**/Tests/**;dontClear;verbosity:verbose" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/test-results/CoverageResults
   artifacts:
     UTR_Output.zip:
       paths:
