@@ -244,7 +244,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// <seealso cref="Equals(InputDeviceDescription)"/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
                 return false;
             return obj is InputDeviceDescription description && Equals(description);
         }
@@ -387,9 +387,7 @@ namespace UnityEngine.InputSystem.Layouts
             var json = new JsonParser(deviceDescriptor);
             if (!json.NavigateToProperty(propertyName))
             {
-                if (string.IsNullOrEmpty(propertyValue))
-                    return true;
-                return false;
+                return string.IsNullOrEmpty(propertyValue);
             }
 
             return json.CurrentPropertyHasValueEqualTo(propertyValue);

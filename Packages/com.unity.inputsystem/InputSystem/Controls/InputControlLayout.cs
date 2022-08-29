@@ -583,7 +583,7 @@ namespace UnityEngine.InputSystem.Layouts
             for (var i = 0; i < m_Controls.Length; ++i)
             {
                 ref var control = ref m_Controls[i];
-                if (string.Compare(control.name, path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Equals(control.name, path, StringComparison.InvariantCultureIgnoreCase))
                     return control;
 
                 ////FIXME: what this can't handle is "outerArray4/innerArray5"; not sure we care, though

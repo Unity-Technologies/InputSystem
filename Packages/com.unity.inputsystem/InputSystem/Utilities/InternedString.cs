@@ -171,26 +171,26 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static bool operator==(InternedString a, string b)
         {
-            return string.Compare(a.m_StringLowerCase, b.ToLower(CultureInfo.InvariantCulture),
-                StringComparison.InvariantCultureIgnoreCase) == 0;
+            return string.Equals(a.m_StringLowerCase, b.ToLower(CultureInfo.InvariantCulture),
+                StringComparison.InvariantCultureIgnoreCase);
         }
 
         public static bool operator!=(InternedString a, string b)
         {
-            return string.Compare(a.m_StringLowerCase, b.ToLower(CultureInfo.InvariantCulture),
-                StringComparison.InvariantCultureIgnoreCase) != 0;
+            return !string.Equals(a.m_StringLowerCase, b.ToLower(CultureInfo.InvariantCulture),
+                StringComparison.InvariantCultureIgnoreCase);
         }
 
         public static bool operator==(string a, InternedString b)
         {
-            return string.Compare(a.ToLower(CultureInfo.InvariantCulture), b.m_StringLowerCase,
-                StringComparison.InvariantCultureIgnoreCase) == 0;
+            return string.Equals(a.ToLower(CultureInfo.InvariantCulture), b.m_StringLowerCase,
+                StringComparison.InvariantCultureIgnoreCase);
         }
 
         public static bool operator!=(string a, InternedString b)
         {
-            return string.Compare(a.ToLower(CultureInfo.InvariantCulture), b.m_StringLowerCase,
-                StringComparison.InvariantCultureIgnoreCase) != 0;
+            return !string.Equals(a.ToLower(CultureInfo.InvariantCulture), b.m_StringLowerCase,
+                StringComparison.InvariantCultureIgnoreCase);
         }
 
         public static bool operator<(InternedString left, InternedString right)

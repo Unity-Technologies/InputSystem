@@ -1550,10 +1550,7 @@ namespace UnityEngine.InputSystem
             // must be in list.
             var map = GetOrCreateActionMap();
             var deviceList = map.devices;
-            if (deviceList != null && !deviceList.Value.ContainsReference(device))
-                return false;
-
-            return true;
+            return deviceList == null || deviceList.Value.ContainsReference(device);
         }
 
         internal InputBinding? FindEffectiveBindingMask()
@@ -1609,7 +1606,7 @@ namespace UnityEngine.InputSystem
             {
                 ref var binding = ref bindingsInMap[i];
 
-                if (string.Compare(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                if (string.Equals(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) ||
                     binding.action == m_Id)
                     ++bindingIndexOnAction;
             }

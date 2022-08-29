@@ -475,8 +475,8 @@ namespace UnityEngine.InputSystem.Editor
                 var name = controlSchemes[i].name;
                 m_ControlSchemeOptions[i + 1] = new GUIContent(name);
 
-                if (selectedDefaultControlScheme != null && string.Compare(name, selectedDefaultControlScheme,
-                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (selectedDefaultControlScheme != null && string.Equals(name, selectedDefaultControlScheme,
+                    StringComparison.InvariantCultureIgnoreCase))
                     m_SelectedDefaultControlScheme = i + 1;
             }
             if (m_SelectedDefaultControlScheme <= 0)

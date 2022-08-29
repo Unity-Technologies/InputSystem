@@ -508,8 +508,8 @@ namespace UnityEngine.InputSystem.Users
             var controlSchemes = s_GlobalState.allUserData[index].actions.controlSchemes;
             for (var i = 0; i < controlSchemes.Count; ++i)
             {
-                if (string.Compare(controlSchemes[i].name, schemeName,
-                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Equals(controlSchemes[i].name, schemeName,
+                    StringComparison.InvariantCultureIgnoreCase))
                 {
                     scheme = controlSchemes[i];
                     return true;
