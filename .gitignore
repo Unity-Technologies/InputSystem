@@ -6,7 +6,6 @@ InitTestScene*
 Assets/Plugins/Editor/JetBrains
 Assets/Plugins/Editor/JetBrains.meta
 Builds/
-CodeCoverage/
 Logs/
 Library/
 Temp/
