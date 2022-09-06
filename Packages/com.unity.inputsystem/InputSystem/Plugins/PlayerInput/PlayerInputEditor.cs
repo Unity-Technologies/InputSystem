@@ -73,13 +73,8 @@ namespace UnityEngine.InputSystem.Editor
             // Action config section.
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_ActionsProperty);
-            var actionsWhereChanged = false;
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
-            {
                 OnActionAssetChange();
-                actionsWhereChanged = true;
-            }
-
             ++EditorGUI.indentLevel;
             if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 1) // Don't show if <Any> is the only option.
             {
@@ -167,7 +162,7 @@ namespace UnityEngine.InputSystem.Editor
             // Notifications/event section.
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_NotificationBehaviorProperty, m_NotificationBehaviorText);
-            if (EditorGUI.EndChangeCheck() || actionsWhereChanged || !m_NotificationBehaviorInitialized)
+            if (EditorGUI.EndChangeCheck() || !m_NotificationBehaviorInitialized)
                 OnNotificationBehaviorChange();
             switch ((PlayerNotifications)m_NotificationBehaviorProperty.intValue)
             {
