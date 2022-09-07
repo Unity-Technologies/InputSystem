@@ -1,5 +1,11 @@
 * Guides
   * [Installation](Installation.md)
+  * [Concepts](Concepts.md)
+  * [Workflows](Workflows.md)
+    * [Workflow-Direct](Workflow-Direct.md)
+    * [Workflow-EmbeddedActions](Workflow-EmbeddedActions.md)
+    * [Workflow-ActionsAsset](Workflow-ActionsAsset.md)
+    * [Workflow-PlayerInput](Workflow-PlayerInput.md)
   * [Quick start guide](QuickStartGuide.md)
     * [How do I...?](HowDoI.md)
     * [Migrating from the old input system](Migration.md)
