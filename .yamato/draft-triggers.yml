@@ -1,0 +1,86 @@
+{% metadata_file .yamato/draft-config.metadata %}
+---
+
+draft_run_all_tests:
+  name: "[Draft] Run All Tests"
+  dependencies:
+    - .yamato/draft-triggers.yml#draft_run_upm_isolation_tests
+    - .yamato/draft-triggers.yml#draft_run_upm_isolation_andpack_tests
+    - .yamato/draft-triggers.yml#draft_run_editor_playmode_tests
+    - .yamato/draft-triggers.yml#draft_run_editor_playmode_andisolation_tests
+    - .yamato/draft-triggers.yml#draft_run_standalone_playmode_tests
+    - .yamato/draft-triggers.yml#draft_run_standalone_playmode_andisolation_tests
+    - .yamato/draft-triggers.yml#draft_run_device_playmode_tests
+    - .yamato/draft-upm-publish.yml#publish_andisolation_dryrun
+    - .yamato/draft-upm-publish.yml#publish_dryrun
+  triggers:
+    cancel_old_ci: true
+    expression: ( NOT pull_request.draft ) AND ( pull_request.target eq "develop" )
+
+# temp
+draft_run_upm_isolation_andpack_tests:
+  name: "[Draft] Run UPM Isolation (And Pack) Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for editor_platform in editor_platforms %}
+    - .yamato/draft-upm-isolation.yml#draft_upm_isolation_andpack_{{ editor_platform.name }}_{{ editor.version }}
+    {% endfor %} # editor_platforms
+    {% endfor %} # editors
+
+# temp
+draft_run_editor_playmode_andisolation_tests:
+  name: "[Draft] Run Editor Playmode (And Isolation) Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for editor_platform in editor_platforms %}
+    - .yamato/draft-editor-playmode.yml#draft_editor_playmode_andisolation_{{ editor_platform.name }}_{{ editor.version }}
+    {% endfor %} # editor_platforms
+    {% endfor %} # editors
+
+# temp
+draft_run_standalone_playmode_andisolation_tests:
+  name: "[Draft] Run Standalone Playmode (And Isolation) Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for standalone_platform in standalone_platforms %}
+    - .yamato/draft-standalone-playmode.yml#draft_standalone_playmode_andisolation_{{ standalone_platform.name }}_{{ editor.version }}
+    {% endfor %} # standalone_platforms
+    {% endfor %} # editors
+
+draft_run_upm_isolation_tests:
+  name: "[Draft] Run UPM Isolation Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for editor_platform in editor_platforms %}
+    - .yamato/draft-upm-isolation.yml#draft_upm_isolation_{{ editor_platform.name }}_{{ editor.version }}
+    {% endfor %} # editor_platforms
+    {% endfor %} # editors
+
+draft_run_editor_playmode_tests:
+  name: "[Draft] Run Editor Playmode Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for editor_platform in editor_platforms %}
+    - .yamato/draft-editor-playmode.yml#draft_editor_playmode_{{ editor_platform.name }}_{{ editor.version }}
+    {% endfor %} # editor_platforms
+    {% endfor %} # editors
+
+draft_run_standalone_playmode_tests:
+  name: "[Draft] Run Standalone Playmode Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for standalone_platform in standalone_platforms %}
+    - .yamato/draft-standalone-playmode.yml#draft_standalone_playmode_{{ standalone_platform.name }}_{{ editor.version }}
+    {% endfor %} # standalone_platforms
+    {% endfor %} # editors
+
+draft_run_device_playmode_tests:
+  name: "[Draft] Run Device Playmode Tests"
+  dependencies:
+    {% for editor in editors %}
+    {% for backend in scripting_backends %}
+    - .yamato/draft-android-playmode.yml#draft_run_android_{{ editor.version }}_{{ backend.name }}
+    {% endfor %} # scripting_backends
+    - .yamato/draft-ios-playmode.yml#draft_run_ios_{{ editor.version }}
+    - .yamato/draft-tvos-playmode.yml#draft_build_tvos_{{ editor.version }}
+    {% endfor %} # editors

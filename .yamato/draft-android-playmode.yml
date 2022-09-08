@@ -1,0 +1,59 @@
+{% metadata_file .yamato/draft-config.metadata %}
+---
+
+{% for editor in editors %}
+{% for backend in scripting_backends %}
+
+draft_build_android_{{ editor.version }}_{{ backend.name }}:
+  name: "[Draft] Build Playmode Tests [android, {{ backend.name }}, {{ editor.version }}]"
+  agent:
+      type: Unity::VM
+      image: mobile/android-package-ci-win:latest
+      flavor: b1.xlarge
+  commands:
+    - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast -w
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
+    - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
+  artifacts:
+    players:
+        paths:
+          - "build/players/**"
+    logs:
+        paths:
+          - "build/logs/**"
+
+draft_run_android_{{ editor.version }}_{{ backend.name }}:
+  name: "[Draft] Run Playmode Tests [android, {{ backend.name }}, {{ editor.version }}]"
+  agent:
+      type: Unity::mobile::shield
+      image: mobile/android-package-ci-win:latest
+      flavor: b1.medium
+  # Skip repository cloning
+  skip_checkout: true
+  # Set a dependency on the build job
+  dependencies:
+    - .yamato/draft-android-playmode.yml#draft_build_android_{{ editor.version }}_{{ backend.name }}  
+  commands:
+    - |
+       # Download standalone UnityTestRunner
+       curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
+       # Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
+       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+       # Establish an ADB connection with the device
+       start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+       # List the connected devices
+       start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
+       ./utr --suite=playmode --platform=android --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+  after:
+    - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+    - if not exist build\test-results mkdir build\test-results
+    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
+  # Set uploadable artifact paths
+  artifacts:
+    logs:
+      paths:
+        - "build/test-results/**"
+
+{% endfor %} # scripting_backends
+{% endfor %} # editors

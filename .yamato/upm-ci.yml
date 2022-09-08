@@ -173,12 +173,12 @@ all_tests:
     - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
     {% endfor %}
     - .yamato/upm-ci.yml#publish_dryrun
-  triggers:
-    cancel_old_ci: true
-    pull_requests:
-      - targets:
-          only:
-            - "develop"
+#  triggers:
+#    cancel_old_ci: true
+#    pull_requests:
+#      - targets:
+#          only:
+#            - "develop"
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:

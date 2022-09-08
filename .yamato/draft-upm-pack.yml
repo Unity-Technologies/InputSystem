@@ -1,0 +1,38 @@
+{% metadata_file .yamato/draft-config.metadata %}
+
+pack_agent:
+  type: Unity::VM
+  image: package-ci/ubuntu:stable
+  flavor: b1.small
+
+---
+
+draft_pack:
+  name: "[Draft] Pack"
+  agent:
+    type: {{ pack_agent.type }}
+    image: {{ pack_agent.image }}
+    flavor: {{ pack_agent.flavor }}
+  commands:
+    - npm install upm-ci-utils@{{ upm_ci_pinned_stable_version }} --registry {{ upm_ci_install_registry }} -g
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+  artifacts:
+    packages:
+      paths:
+        - "upm-ci~/packages/**/*"
+
+draft_pack_with_samples:
+  name: "[Draft] Pack with Samples"
+  agent:
+    type: {{ pack_agent.type }}
+    image: {{ pack_agent.image }}
+    flavor: {{ pack_agent.flavor }}
+  commands:
+    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
+    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
+    - npm install upm-ci-utils@{{ upm_ci_pinned_stable_version }} --registry {{ upm_ci_install_registry }} -g
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+  artifacts:
+    packages:
+      paths:
+        - "upm-ci~/packages/**/*"
