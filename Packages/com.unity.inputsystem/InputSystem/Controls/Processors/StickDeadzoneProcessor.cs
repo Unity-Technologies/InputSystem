@@ -86,13 +86,13 @@ namespace UnityEngine.InputSystem.Processors
             m_MaxSetting.OnGUI();
         }
 
+#if UNITY_2022_1_OR_NEWER
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-#if UNITY_2022_1_OR_NEWER
             m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
             m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
-#endif
         }
+#endif
 
         private CustomOrDefaultSetting m_MinSetting;
         private CustomOrDefaultSetting m_MaxSetting;

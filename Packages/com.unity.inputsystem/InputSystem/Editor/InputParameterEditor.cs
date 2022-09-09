@@ -32,13 +32,15 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public abstract void OnGUI();
 
-        /// <summary>
-        /// Add visual elements for this parameter editor to a root VisualElement.
-        /// </summary>
-        /// <param name="root">The VisualElement that parameter editor elements should be added to.</param>
-        /// <param name="onChangedCallback">A callback that will be called when any of the parameter editors
-        /// changes value.</param>
-        public abstract void OnDrawVisualElements(VisualElement root, Action onChangedCallback);
+#if UNITY_2022_1_OR_NEWER
+	    /// <summary>
+	    /// Add visual elements for this parameter editor to a root VisualElement.
+	    /// </summary>
+	    /// <param name="root">The VisualElement that parameter editor elements should be added to.</param>
+	    /// <param name="onChangedCallback">A callback that will be called when any of the parameter editors
+	    /// changes value.</param>
+	    public abstract void OnDrawVisualElements(VisualElement root, Action onChangedCallback);
+#endif
 
         internal abstract void SetTarget(object target);
 
