@@ -17,7 +17,7 @@ Sonar-Win-Dotnet-SonarScanner:
     SONAR_HOST_URL: "https://sonarqube.internal.unity3d.com"
     SONARQUBE_PROJECT_NAME: "InputSystem"
     SONAR_PROJECT_KEY: "com.unity.inputsystem"
-    PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: "./"
+    PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: "*"
     RIDER_VERSION: "3.0.12"
   commands:
     - |
@@ -28,7 +28,7 @@ Sonar-Win-Dotnet-SonarScanner:
       unity-config project add dependency com.unity.ide.rider@%RIDER_VERSION%
     - start /W %YAMATO_WORK_DIR%\.Editor\Unity.exe -projectPath %YAMATO_SOURCE_DIR%\%PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT% -batchmode -quit -nographics -logFile %YAMATO_SOURCE_DIR%\Editor.log -executeMethod "Packages.Rider.Editor.RiderScriptEditor.SyncSolution"
     - |
-      cmd /v /s /c "dotnet sonarscanner begin /k:"%SONARQUBE_PROJECT_NAME%" /d:sonar.login=!SONAR_TOKEN! /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.projectBaseDir=%YAMATO_SOURCE_DIR%\%PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT% /d:sonar.sourceEncoding="UTF-8" /d:sonar.sources=%YAMATO_SOURCE_DIR%\package /d:sonar.inclusion=%YAMATO_SOURCE_DIR%\package\**\* /d:sonar.scm.provider=git /d:sonar.log.level=DEBUG /d:sonar.verbose=true /d:sonar.qualitygate.wait=true"
+      cmd /v /s /c "dotnet sonarscanner begin /k:"%SONARQUBE_PROJECT_NAME%" /d:sonar.login=!SONAR_TOKEN! /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.projectBaseDir=%YAMATO_SOURCE_DIR%\%PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT% /d:sonar.sourceEncoding="UTF-8" /d:sonar.sources=%YAMATO_SOURCE_DIR%\Packages /d:sonar.inclusion=%YAMATO_SOURCE_DIR%\Packages\**\* /d:sonar.scm.provider=git /d:sonar.log.level=DEBUG /d:sonar.verbose=true /d:sonar.qualitygate.wait=true"
       dotnet build %YAMATO_SOURCE_DIR%\%PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT%\%SONARQUBE_PROJECT_NAME%.sln /t:Rebuild /p:SonarQubeTestProject=false
       cmd /v /s /c "dotnet sonarscanner end /d:sonar.login=!SONAR_TOKEN!"
   artifacts:
