@@ -17,7 +17,7 @@ Sonar-Win-Dotnet-SonarScanner:
     SONAR_HOST_URL: "https://sonarqube.internal.unity3d.com"
     SONARQUBE_PROJECT_NAME: "InputSystem"
     SONAR_PROJECT_KEY: "com.unity.inputsystem"
-    PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: "*"
+    PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: 
     RIDER_VERSION: "3.0.12"
   commands:
     - |
