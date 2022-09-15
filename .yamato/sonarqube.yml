@@ -15,7 +15,7 @@ Sonar-Win-Dotnet-SonarScanner:
   variables:    
     EDITOR_VERSION: "2021"
     SONAR_HOST_URL: "https://sonar-staging.internal.unity3d.com"
-    SONARQUBE_PROJECT_NAME: "InputSystem"
+    SONARQUBE_PROJECT_NAME: "SonarProject"
     SONAR_PROJECT_KEY: "com.unity.inputsystem"
     PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: "\\"
     RIDER_VERSION: "3.0.12"
