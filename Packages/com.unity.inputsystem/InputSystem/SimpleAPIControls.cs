@@ -1,4 +1,6 @@
-﻿namespace UnityEngine.InputSystem.HighLevelAPI
+﻿using System.Collections.Generic;
+
+namespace UnityEngine.InputSystem.HighLevelAPI
 {
     // It is in principle beneficial to have a list of all controls,
     // as this is where stability of enum API values could be enforced.
@@ -11,6 +13,8 @@
     // and provide necessary overrides instead.
     internal enum InputControl
     {
+        Invalid = 0x0,
+        
         KeyboardButtonSpace = 0x0100000,
         KeyboardButtonDigit0,
         KeyboardButtonDigit1,
@@ -152,6 +156,20 @@
         Left = InputControl.GamepadStickLeft,
         Right = InputControl.GamepadStickRight
     }
+
+    // Not sure if we need this one,
+    // but could be beneficial for cases where users need to
+    // show icon or text for a latest used control
+    // or for rebinding to check if engaged control is of the same type
+    public enum InputControlType
+    {
+        Button, // every button could be also read as one way axis
+        OneWayAxis, // do we need separate one?
+        TwoWayAxis,
+        Stick,
+        CursorPosition,
+        ScrollDelta
+    }
     
     // It is useful to allow the users to store controls in some generic data structure like a list,
     // for that we need to unify all enums back to generic InputControl, but keep the type safety.
@@ -162,6 +180,8 @@
         
         // TODO do we want to add some type checking here?
         // is it even possible?
+
+        public bool IsValid() => control == InputControl.Invalid;
 
         public static implicit operator InputControlReference(KeyboardButton btn)
         {
@@ -192,6 +212,8 @@
         {
             return new InputControlReference() {control = (InputControl)btn};
         }
+
+        public InputControlType GetControlType() => Input.InputControlToType(control);
     }
 
     // Device slots are similar concept to player slots in split screen games.
@@ -215,6 +237,9 @@
 
     public static class Input
     {
+        // By default all devices go to unassigned slot,
+        // this methods should be used to manage slot assignment.
+        // DeviceSlot.Any is not a valid argument.
         public static void AssignDeviceToSlot(InputDevice device, DeviceSlot slot)
         {
         }
@@ -223,20 +248,48 @@
         {
         }
 
+        // If provided with DeviceSlot.Any returns all devices.
         public static InputDevice[] GetDevices(DeviceSlot slot)
         {
             return null;
         }
-        
-        public static InputDevice GetLatestUsedDevice(DeviceSlot slot)
+
+        // Returns latest used device in this frame, or null otherwise.
+        // Useful for player join-in, or showing icon of latest used device.
+        // If provided with DeviceSlot.Any returns latest used device in general.
+        public static InputDevice GetLatestUsedDevice(DeviceSlot slot = DeviceSlot.Any)
         {
             return null;
+        }
+
+        // Returns latest used control in this frame, or invalid reference otherwise. 
+        // Useful for rebinding implementation.
+        public static InputControlReference GetLatestUsedControl(InputDevice device)
+        {
+            return new InputControlReference();
         }
 
         public static bool IsConnected(DeviceSlot slot)
         {
             return GetDevices(slot).Length != 0;
         }
+        
+        // --------------------------------------------------------------------
+
+        // Sets trigger set point for analogue buttons,
+        // like gamepad triggers, joystick triggers, gamepad stick buttons up/down/left/right.
+        // Default is 0.5f 
+        public static void SetTriggerPressPoint(float pressPoint, DeviceSlot slot = DeviceSlot.Any)
+        {
+            
+        }
+
+        public static void SetStickDeadzone(float deadzone, DeviceSlot slot = DeviceSlot.Any)
+        {
+            
+        }
+
+        internal static InputControlType InputControlToType(InputControl control) => InputControlType.Button;
 
         // Less type-safe API, only to be used when required to store controls of different type
         // together in some data structure like list or array.
@@ -257,6 +310,8 @@
 
             public static Vector2 GetStick(InputControlReference control, DeviceSlot slot) => Vector2.zero;
         };
+        
+        // -------------------------------------------------------------------- Keyboard support
 
         public static bool IsPressed(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.IsButtonPressed(button, slot);
@@ -277,6 +332,7 @@
             return new Vector2( GetAxis(right, slot) - GetAxis(left, slot), GetAxis(up, slot) - GetAxis(down, slot));
         }
         
+        // -------------------------------------------------------------------- Mouse support
         public static bool IsPressed(MouseButton button, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.IsButtonPressed(button, slot);
 
@@ -292,9 +348,13 @@
         public static float GetAxis(MouseTwoWayAxis button, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.GetTwoWayAxis(button, slot);
 
+        // Returns current mouse cursor position
         public static Vector2 GetMousePosition(DeviceSlot slot = DeviceSlot.Any) => Vector2.zero;
 
+        // Returns current frame accumulated mouse scroll value
         public static Vector2 GetMouseScroll(DeviceSlot slot = DeviceSlot.Any) => Vector2.zero;
+
+        // -------------------------------------------------------------------- Gamepad support
 
         public static bool IsPressed(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.IsButtonPressed(button, slot);
@@ -305,22 +365,28 @@
         public static bool WasUp(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.WasButtonUp(button, slot);
 
-        // returns value in [0, 1] range
+        // Returns value in [0, 1] range
         public static float GetAxis(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.GetOneWayAxis(button, slot);
 
-        // returns value in [-1, 1] range
+        // Returns value in [-1, 1] range
         public static float GetAxis(GamepadTwoWayAxis axis, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.GetTwoWayAxis(axis, slot);
         public static Vector2 GetAxis(GamepadStick stick, DeviceSlot slot = DeviceSlot.Any) =>
             ByReference.GetStick(stick, slot);
-
-        private static void SetRebinding(InputControl driveInputControl, InputControl[] withAnyOfFollowingControls, DeviceSlot inSlot)
-        {
-        }
-
         
-        private static void StartRebinding(InputControl control, DeviceSlot slot)
+        // --------------------------------------------------------------------
+
+        // Replaces which controls drive a provided control.
+        // By default every control drives itself,
+        // e.g. pressing Space key on keyboard will report as space key.
+        // But it's possible to override which keys will be reported as space key,
+        // e.g. pressing Enter key could be driving Space key.
+        // But pressing Space key then would do nothing.  
+        public static void SetRebinding(
+            InputControlReference driveControl,
+            IEnumerable<InputControlReference> withAnyOfFollowingControls,
+            DeviceSlot inSlot)
         {
         }
     }

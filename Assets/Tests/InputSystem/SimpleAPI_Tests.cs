@@ -7,6 +7,8 @@ internal partial class CoreTests
     [Test]
     public void SimpleAPI_Test()
     {
+        Input.IsPressed(GamepadButton.DpadLeft);
+
         var a = Input.IsPressed(KeyboardButton.Digit1);
 
         Input.WasUp(GamepadButton.Start);
