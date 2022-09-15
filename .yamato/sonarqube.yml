@@ -1,7 +1,7 @@
 # This is an example of a Yamato job to run Sonar Scanner 
 # on a repository with a Unity Project folder at it's root. It makes the
 # assumption that Unity Packages are found in a foler names "packages" on
-# the same level as the project.
+# the same level as the project. Lalala
 # 
 # For more information on how to customize this job, please see :
 # https://docs.google.com/document/d/1vI87NG1jS5RuU76-VjIA4AxHgLk8ukCnQ0mdcQ4SUpQ/edit#heading=h.scriamutdb8
