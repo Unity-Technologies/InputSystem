@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using UnityEngine.InputSystem.HighLevelAPI;
 
 internal partial class CoreTests
@@ -16,6 +17,17 @@ internal partial class CoreTests
 
         Input.WasDown(MouseButton.ScrollUp);
 
-        Input.GetAxis(MouseTwoWayAxis.PositionHorizontal);
+        Input.GetAxis(MouseTwoWayAxis.ScrollHorizontalTimeNormalized);
+
+        //Input.IsPressed2(KeyboardButton.Digit1, DeviceSlot.Slot2);
+
+        var foo = new InputControlReference[]
+        {
+            MouseButton.Left,
+            MouseButton.Right,
+            KeyboardButton.Space
+        };
+        
+        var anyPressed = foo.Select(x => Input.ByReference.IsButtonPressed(x, DeviceSlot.Any)).Any();
     }
 }

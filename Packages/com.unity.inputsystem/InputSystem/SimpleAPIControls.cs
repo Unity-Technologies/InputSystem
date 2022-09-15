@@ -5,7 +5,9 @@
     // Also we could separate controls by type based on this enum,
     // e.g. have bool IsButton(InputControl control) and similar.
     // It's also useful for rebinding activities.
-    // But for sake of type safety, let's not expose it directly to the user,
+    // Plus we can figure out if we need to split a control into multiple of different types,
+    // e.g. mouse scroll is vector2 delta control, and also 2 single axis controls, plus 4 buttons.
+    // But for the sake of type safety, let's not expose it directly to the user,
     // and provide necessary overrides instead.
     internal enum InputControl
     {
@@ -26,12 +28,16 @@
         MouseButtonScrollRight,
         MouseButtonScrollDown,
 
-        // two way axis goes [-1, 1]
-        MouseTwoWayAxisScrollHorizontal = 0x0210000,
-        MouseTwoWayAxisScrollVertical,
+        // mouse scroll divided by delta time, and normalized to [-1, 1] range
+        // useful for using scroll like gamepad stick
+        MouseTwoWayAxisScrollHorizontalTimeNormalized = 0x0210000,
+        MouseTwoWayAxisScrollVerticalTimeNormalized,
 
-        // Cursor position is an absolute value control, unlike two way axis
-        MouseCursorPosition = 0x0230000,
+        // Cursor position is an absolute value control, unlike vector2 control which is normalized
+        MouseCursorPosition = 0x0220000,
+
+        // Scroll delta is a relative value control, unlike vector2 control which is normalized
+        MouseScrollDelta = 0x0230000,
 
         GamepadButtonLeftTrigger = 0x0300000,
         GamepadButtonRightTrigger,
@@ -92,11 +98,11 @@
         ScrollRight = InputControl.MouseButtonScrollRight,
         ScrollDown = InputControl.MouseButtonScrollDown,
     }
-    
+
     public enum MouseTwoWayAxis
     {
-        ScrollHorizontal = InputControl.MouseTwoWayAxisScrollHorizontal,
-        ScrollVertical = InputControl.MouseTwoWayAxisScrollVertical
+        ScrollHorizontalTimeNormalized = InputControl.MouseTwoWayAxisScrollHorizontalTimeNormalized,
+        ScrollVerticalTimeNormalized = InputControl.MouseTwoWayAxisScrollVerticalTimeNormalized,
     }
 
     // buttons
@@ -146,6 +152,47 @@
         Left = InputControl.GamepadStickLeft,
         Right = InputControl.GamepadStickRight
     }
+    
+    // It is useful to allow the users to store controls in some generic data structure like a list,
+    // for that we need to unify all enums back to generic InputControl, but keep the type safety.
+    // This container struct tries to achieve exactly that.
+    public struct InputControlReference
+    {
+        internal InputControl control;
+        
+        // TODO do we want to add some type checking here?
+        // is it even possible?
+
+        public static implicit operator InputControlReference(KeyboardButton btn)
+        {
+            return new InputControlReference() {control = (InputControl)btn};
+        }
+
+        public static implicit operator InputControlReference(MouseButton btn)
+        {
+            return new InputControlReference() {control = (InputControl)btn};
+        }
+        
+        public static implicit operator InputControlReference(MouseTwoWayAxis btn)
+        {
+            return new InputControlReference() {control = (InputControl)btn};
+        }
+
+        public static implicit operator InputControlReference(GamepadButton btn)
+        {
+            return new InputControlReference() {control = (InputControl)btn};
+        }
+
+        public static implicit operator InputControlReference(GamepadTwoWayAxis btn)
+        {
+            return new InputControlReference() {control = (InputControl)btn};
+        }
+
+        public static implicit operator InputControlReference(GamepadStick btn)
+        {
+            return new InputControlReference() {control = (InputControl)btn};
+        }
+    }
 
     // Device slots are similar concept to player slots in split screen games.
     // But a specific device slot can contain multiple devices, like a keyboard and a mouse.
@@ -191,105 +238,90 @@
             return GetDevices(slot).Length != 0;
         }
 
-        private static bool IsPressed(InputControl control, DeviceSlot slot) => false;
-
-        private static bool WasDown(InputControl control, DeviceSlot slot) => false;
-
-        private static bool WasUp(InputControl control, DeviceSlot slot) => false;
-
-        // any button is also a one way axis
-        private static float GetOneWayAxis(InputControl control, DeviceSlot slot) => 0.0f;
-
-        private static float GetTwoWayAxis(InputControl control, DeviceSlot slot) => 0.0f;
-
-        private static Vector2 GetStick(InputControl control, DeviceSlot slot) => Vector2.zero;
-
-        public static bool IsPressed(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any)
+        // Less type-safe API, only to be used when required to store controls of different type
+        // together in some data structure like list or array.
+        // Notice that we can't do GetAxis here and have to revert to spell out method name fully,
+        // this is to avoid clash of return type overloads.
+        public static class ByReference
         {
-            return IsPressed((InputControl) button, slot);
-        }
+            public static bool IsButtonPressed(InputControlReference control, DeviceSlot slot) => false;
 
-        public static bool WasDown(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return WasDown((InputControl) button, slot);
-        }
+            public static bool WasButtonDown(InputControlReference control, DeviceSlot slot) => false;
+            
+            public static bool WasButtonUp(InputControlReference control, DeviceSlot slot) => false;
 
-        public static bool WasUp(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return WasUp((InputControl) button, slot);
-        }
+            // any button is also a one way axis
+            public static float GetOneWayAxis(InputControlReference control, DeviceSlot slot) => 0.0f;
 
-        public static float GetAxis(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return GetOneWayAxis((InputControl) button, slot);
-        }
+            public static float GetTwoWayAxis(InputControlReference control, DeviceSlot slot) => 0.0f;
+
+            public static Vector2 GetStick(InputControlReference control, DeviceSlot slot) => Vector2.zero;
+        };
+
+        public static bool IsPressed(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.IsButtonPressed(button, slot);
+
+        public static bool WasDown(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.WasButtonDown(button, slot);
+
+        public static bool WasUp(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.WasButtonUp(button, slot);
+
+        public static float GetAxis(KeyboardButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.GetOneWayAxis(button, slot);
 
         // helper for WASD like controls
         public static Vector2 GetAxis(KeyboardButton left, KeyboardButton up, KeyboardButton right, KeyboardButton down,
             DeviceSlot slot = DeviceSlot.Any)
         {
-            return Vector2.zero;
+            return new Vector2( GetAxis(right, slot) - GetAxis(left, slot), GetAxis(up, slot) - GetAxis(down, slot));
         }
         
-        public static bool IsPressed(MouseButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return IsPressed((InputControl) button, slot);
-        }
+        public static bool IsPressed(MouseButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.IsButtonPressed(button, slot);
 
-        public static bool WasDown(MouseButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return WasDown((InputControl) button, slot);
-        }
+        public static bool WasDown(MouseButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.WasButtonDown(button, slot);
 
-        public static bool WasUp(MouseButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return WasUp((InputControl) button, slot);
-        }
+        public static bool WasUp(MouseButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.WasButtonUp(button, slot);
 
-        public static float GetAxis(MouseButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return GetOneWayAxis((InputControl) button, slot);
-        }
+        public static float GetAxis(MouseButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.GetOneWayAxis(button, slot);
         
-        public static float GetAxis(MouseTwoWayAxis axis, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return GetTwoWayAxis((InputControl) axis, slot);
-        }
+        public static float GetAxis(MouseTwoWayAxis button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.GetTwoWayAxis(button, slot);
 
         public static Vector2 GetMousePosition(DeviceSlot slot = DeviceSlot.Any) => Vector2.zero;
 
         public static Vector2 GetMouseScroll(DeviceSlot slot = DeviceSlot.Any) => Vector2.zero;
 
-        public static bool IsPressed(GamepadButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return IsPressed((InputControl) button, slot);
-        }
+        public static bool IsPressed(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.IsButtonPressed(button, slot);
 
-        public static bool WasDown(GamepadButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return WasDown((InputControl) button, slot);
-        }
+        public static bool WasDown(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.WasButtonDown(button, slot);
 
-        public static bool WasUp(GamepadButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return WasUp((InputControl) button, slot);
-        }
+        public static bool WasUp(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.WasButtonUp(button, slot);
 
         // returns value in [0, 1] range
-        public static float GetAxis(GamepadButton button, DeviceSlot slot = DeviceSlot.Any)
-        {
-            return GetOneWayAxis((InputControl) button, slot);
-        }
+        public static float GetAxis(GamepadButton button, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.GetOneWayAxis(button, slot);
 
         // returns value in [-1, 1] range
-        public static float GetAxis(GamepadTwoWayAxis axis, DeviceSlot slot = DeviceSlot.Any)
+        public static float GetAxis(GamepadTwoWayAxis axis, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.GetTwoWayAxis(axis, slot);
+        public static Vector2 GetAxis(GamepadStick stick, DeviceSlot slot = DeviceSlot.Any) =>
+            ByReference.GetStick(stick, slot);
+
+        private static void SetRebinding(InputControl driveInputControl, InputControl[] withAnyOfFollowingControls, DeviceSlot inSlot)
         {
-            return GetTwoWayAxis((InputControl) axis, slot);
         }
 
-        public static Vector2 GetAxis(GamepadStick stick, DeviceSlot slot = DeviceSlot.Any)
+        
+        private static void StartRebinding(InputControl control, DeviceSlot slot)
         {
-            return GetStick((InputControl) stick, slot);
         }
     }
 }
