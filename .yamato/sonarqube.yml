@@ -20,6 +20,8 @@ Sonar-Win-Dotnet-SonarScanner:
     PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: "\\"
     RIDER_VERSION: "3.0.12"
   commands:
+    - echo !SONAR_TOKEN!
+    - echo %SONAR_TOKEN%
     - |
       cd %YAMATO_WORK_DIR%
       unity-downloader-cli -u %EDITOR_VERSION% -c Editor --fast --wait
