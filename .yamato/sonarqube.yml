@@ -31,7 +31,7 @@ Sonar-Win-Dotnet-SonarScanner:
       move %YAMATO_SOURCE_DIR%\Packages\com.unity.inputsystem %YAMATO_SOURCE_DIR%\SonarProject\Packages\com.unity.inputsystem
     - start /W %YAMATO_WORK_DIR%\.Editor\Unity.exe -projectPath %YAMATO_SOURCE_DIR%\SonarProject -batchmode -quit -nographics -logFile %YAMATO_SOURCE_DIR%\SonarProject\Editor.log -executeMethod "Packages.Rider.Editor.RiderScriptEditor.SyncSolution"
     - |
-      cmd /v /s /c "dotnet sonarscanner begin /k:"%SONAR_PROJECT_KEY%" /d:sonar.login=!SONAR_TOKEN_STAGING! /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.projectBaseDir=%YAMATO_SOURCE_DIR%\SonarProject /d:sonar.sourceEncoding="UTF-8" /d:sonar.scm.provider=git /d:sonar.log.level=DEBUG /d:sonar.verbose=true /d:sonar.qualitygate.wait=true /d:sonar.branch.name=%BRANCH_NAME%"
+      cmd /v /s /c "dotnet sonarscanner begin /k:"%SONAR_PROJECT_KEY%" /d:sonar.login=!SONAR_TOKEN_STAGING! /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.projectBaseDir=%YAMATO_SOURCE_DIR%\SonarProject /d:sonar.sourceEncoding="UTF-8" /d:sonar.sources=%YAMATO_SOURCE_DIR%\SonarProject\Packages /d:sonar.inclusion=%YAMATO_SOURCE_DIR%\SonarProject\Packages\**\* /d:sonar.scm.provider=git /d:sonar.log.level=DEBUG /d:sonar.verbose=true /d:sonar.qualitygate.wait=true /d:sonar.branch.name=%BRANCH_NAME%"
       dotnet build %YAMATO_SOURCE_DIR%\SonarProject\%SONARQUBE_PROJECT_NAME%.sln /t:Rebuild /p:SonarQubeTestProject=false
       cmd /v /s /c "dotnet sonarscanner end /d:sonar.login=!SONAR_TOKEN_STAGING!"
   artifacts:
