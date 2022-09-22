@@ -30,10 +30,21 @@ namespace UnityEngine.InputSystem.Editor
         private const int kHexDumpLineHeight = 25;
         private const int kOffsetLabelWidth = 30;
         private const int kHexGroupWidth = 25;
+        private const int kBitGroupWidth = 75;
+
+        void Update()
+        {
+            if (m_PollControlState && m_Control != null)
+            {
+                PollBuffersFromControl(m_Control);
+                Repaint();
+            }
+        }
 
         public void InitializeWithEvent(InputEventPtr eventPtr, InputControl control)
         {
             m_Control = control;
+            m_PollControlState = false;
             m_StateBuffers = new byte[1][];
             m_StateBuffers[0] = GetEventStateBuffer(eventPtr, control);
             m_SelectedStateBuffer = 0;
@@ -46,6 +57,7 @@ namespace UnityEngine.InputSystem.Editor
             var numEvents = eventPtrs.Length;
 
             m_Control = control;
+            m_PollControlState = false;
             m_StateBuffers = new byte[numEvents][];
             for (var i = 0; i < numEvents; ++i)
                 m_StateBuffers[i] = GetEventStateBuffer(eventPtrs[i], control);
@@ -88,15 +100,23 @@ namespace UnityEngine.InputSystem.Editor
             {
                 UnsafeUtility.MemCpy(bufferPtr + stateOffset, dataPtr, dataSize);
             }
-
+            
             return buffer;
         }
 
         public unsafe void InitializeWithControl(InputControl control)
         {
             m_Control = control;
+            m_PollControlState = true;
             m_SelectedStateBuffer = (int)BufferSelector.Default;
 
+            PollBuffersFromControl(control, selectBuffer: true);
+
+            titleContent = new GUIContent(control.displayName);
+        }
+
+        private unsafe void PollBuffersFromControl(InputControl control, bool selectBuffer = false)
+        {
             var bufferChoices = new List<GUIContent>();
             var bufferChoiceValues = new List<int>();
 
@@ -119,7 +139,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 m_StateBuffers[i] = buffer;
 
-                if (m_StateBuffers[m_SelectedStateBuffer] == null)
+                if (selectBuffer && m_StateBuffers[m_SelectedStateBuffer] == null)
                     m_SelectedStateBuffer = (int)selector;
 
                 bufferChoices.Add(Contents.bufferChoices[i]);
@@ -128,8 +148,6 @@ namespace UnityEngine.InputSystem.Editor
 
             m_BufferChoices = bufferChoices.ToArray();
             m_BufferChoiceValues = bufferChoiceValues.ToArray();
-
-            titleContent = new GUIContent(control.displayName);
         }
 
         private static unsafe void* TryGetDeviceState(InputDevice device, BufferSelector selector)
@@ -155,6 +173,10 @@ namespace UnityEngine.InputSystem.Editor
                     if (manager.m_StateBuffers.m_EditorStateBuffers.valid)
                         return manager.m_StateBuffers.m_EditorStateBuffers.GetBackBuffer(deviceIndex);
                     break;
+                case BufferSelector.NoiseMaskBuffer:
+                    return manager.m_StateBuffers.noiseMaskBuffer;
+                case BufferSelector.ResetMaskBuffer:
+                    return manager.m_StateBuffers.resetMaskBuffer;
             }
 
             return null;
@@ -173,8 +195,12 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            m_PollControlState = GUILayout.Toggle(m_PollControlState, Contents.live, EditorStyles.toolbarButton);
+
             m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawMemory, EditorStyles.toolbarButton,
                 GUILayout.Width(150));
+
+            m_ShowAsBits = GUILayout.Toggle(m_ShowAsBits, Contents.showBits, EditorStyles.toolbarButton);
 
             if (m_CompareStateBuffers)
             {
@@ -233,12 +259,39 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private byte[] TryGetBackBufferForCurrentlySelected()
+        {
+            if (m_StateBuffers.Length != (int)BufferSelector.COUNT)
+                return null;
+            
+            switch ((BufferSelector)m_SelectedStateBuffer)
+            {
+                case BufferSelector.PlayerUpdateFrontBuffer:
+                    return m_StateBuffers[(int)BufferSelector.PlayerUpdateBackBuffer];
+                case BufferSelector.EditorUpdateFrontBuffer:
+                    return m_StateBuffers[(int)BufferSelector.EditorUpdateBackBuffer];
+                default:
+                    return null;
+            }
+        }
+
+        private string FormatByte(byte value)
+        {
+            if (m_ShowAsBits)
+                return Convert.ToString(value, 2).PadLeft(8, '0');
+            else
+                return value.ToString("X2");
+        }
+
         ////TODO: support dumping multiple state side-by-side when comparing
         private void DrawHexDump()
         {
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 
             var stateBuffer = m_StateBuffers[m_SelectedStateBuffer];
+            var prevStateBuffer = TryGetBackBufferForCurrentlySelected();
+            if (prevStateBuffer != null && prevStateBuffer.Length != stateBuffer.Length) // we assume they're same length, otherwise ignore prev buffer
+                prevStateBuffer = null;
             var numBytes = stateBuffer.Length;
             var numHexGroups = numBytes / kBytesPerHexGroup + (numBytes % kBytesPerHexGroup > 0 ? 1 : 0);
             var numLines = numHexGroups / kHexGroupsPerLine + (numHexGroups % kHexGroupsPerLine > 0 ? 1 : 0);
@@ -262,26 +315,49 @@ namespace UnityEngine.InputSystem.Editor
                 // Draw hex groups.
                 var hexGroupRect = offsetLabelRect;
                 hexGroupRect.x += kOffsetLabelWidth + 10;
-                hexGroupRect.width = kHexGroupWidth;
+                hexGroupRect.width = m_ShowAsBits ? kBitGroupWidth : kHexGroupWidth;
                 for (var group = 0;
                      group < kHexGroupsPerLine && currentHexGroup < numHexGroups;
                      ++group, ++currentHexGroup)
                 {
                     // Convert bytes to hex.
                     var hex = string.Empty;
-                    for (var i = 0; i < kBytesPerHexGroup; ++i)
+                    
+                    for (var i = 0; i < kBytesPerHexGroup; ++i, ++currentByte)
                     {
                         if (currentByte >= numBytes)
-                            hex = "  " + hex;
-                        else
-                            hex = stateBuffer[currentByte].ToString("X2") + hex;
-                        ++currentByte;
+                        {
+                            hex += "  ";
+                            continue;
+                        }
+
+                        var current = FormatByte(stateBuffer[currentByte]);
+                        if (prevStateBuffer == null)
+                        {
+                            hex += current;
+                            continue;
+                        }
+                        
+                        var prev = FormatByte(prevStateBuffer[currentByte]);
+                        if (prev.Length != current.Length)
+                        {
+                            hex += current;
+                            continue;
+                        }
+
+                        for (var j = 0; j < current.Length; ++j)
+                        {
+                            if (current[j] != prev[j])
+                                hex += $"<color=#C84B31FF>{current[j]}</color>";
+                            else
+                                hex += current[j];
+                        }
                     }
 
                     ////TODO: draw alternating backgrounds for the hex groups
 
-                    GUI.Label(hexGroupRect, hex);
-                    hexGroupRect.x += kHexGroupWidth;
+                    GUI.Label(hexGroupRect, hex, style: Styles.hexLabel);
+                    hexGroupRect.x += m_ShowAsBits ? kBitGroupWidth : kHexGroupWidth;
                 }
 
                 currentLineRect.y += kHexDumpLineHeight;
@@ -299,6 +375,8 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private bool m_CompareStateBuffers;
         [SerializeField] private bool m_ShowDifferentOnly;
         [SerializeField] private bool m_ShowRawBytes;
+        [SerializeField] private bool m_ShowAsBits;
+        [SerializeField] private bool m_PollControlState;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private Vector2 m_HexDumpScrollPosition;
@@ -316,6 +394,8 @@ namespace UnityEngine.InputSystem.Editor
             PlayerUpdateBackBuffer,
             EditorUpdateFrontBuffer,
             EditorUpdateBackBuffer,
+            NoiseMaskBuffer,
+            ResetMaskBuffer,
             COUNT,
             Default = PlayerUpdateFrontBuffer
         }
@@ -330,18 +410,31 @@ namespace UnityEngine.InputSystem.Editor
                 fontSize = EditorStyles.boldFont.fontSize - 2,
                 normal = new GUIStyleState { textColor = Color.black }
             };
+
+            public static GUIStyle hexLabel = new GUIStyle
+            {
+                fontStyle = FontStyle.Normal,
+                font = Font.CreateDynamicFontFromOSFont("Courier", EditorStyles.label.fontSize + 2),
+                fontSize = EditorStyles.label.fontSize + 2,
+                normal = new GUIStyleState { textColor = Color.white },
+                richText = true
+            };
         }
 
         private static class Contents
         {
+            public static GUIContent live = new GUIContent("Live");
             public static GUIContent showRawMemory = new GUIContent("Display Raw Memory");
+            public static GUIContent showBits = new GUIContent("Bits/Hex");
             public static GUIContent showDifferentOnly = new GUIContent("Show Only Differences");
             public static GUIContent[] bufferChoices =
             {
                 new GUIContent("Player (Current)"),
                 new GUIContent("Player (Previous)"),
                 new GUIContent("Editor (Current)"),
-                new GUIContent("Editor (Previous)")
+                new GUIContent("Editor (Previous)"),
+                new GUIContent("Noise Mask"),
+                new GUIContent("Reset Mask")
             };
         }
     }
