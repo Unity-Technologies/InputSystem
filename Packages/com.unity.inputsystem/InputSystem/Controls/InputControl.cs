@@ -359,6 +359,12 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal ulong jitterMask
+        {
+            get => m_JitterMask;
+            set => m_JitterMask = value;
+        }
+
         /// <summary>
         /// Whether the control is considered synthetic.
         /// </summary>
@@ -847,6 +853,7 @@ namespace UnityEngine.InputSystem
         internal int m_ChildCount;
         internal int m_ChildStartIndex;
         internal ControlFlags m_ControlFlags;
+        internal ulong m_JitterMask;
 
         ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValue m_DefaultState;

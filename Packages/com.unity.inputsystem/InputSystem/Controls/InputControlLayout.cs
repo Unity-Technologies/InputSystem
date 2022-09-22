@@ -225,6 +225,19 @@ namespace UnityEngine.InputSystem.Layouts
                         flags &= ~Flags.IsNoisy;
                 }
             }
+            
+            /// <summary>
+            /// Mark some control bits as noisy to avoid setting device ".current" field when they change. 
+            /// </summary>
+            /// <value>Bit mask, up to 64 bits.</value>
+            /// <remarks>
+            /// We determine if control was updated by checking if any of the control memory bits changed.
+            /// This property allows to ignore changes in specified bits (set as 1 in this mask) as noise,
+            /// which allows to essentially ignore some jitter in controls like sticks or triggers.
+            /// </remarks>
+            /// <seealso cref="InputControlAttribute.jitterMask"/>
+            /// <seealso cref="InputControl.noisy"/>
+            public ulong jitterMask { get; set; }
 
             /// <summary>
             /// Get or set whether to mark the control as "synthetic".
@@ -319,6 +332,7 @@ namespace UnityEngine.InputSystem.Layouts
                 result.arraySize = !isArray ? other.arraySize : arraySize;
                 ////FIXME: allow overrides to unset this
                 result.isNoisy = isNoisy || other.isNoisy;
+                result.jitterMask = jitterMask | other.jitterMask; // has to be "binary OR"!
                 result.dontReset = dontReset || other.dontReset;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;
@@ -755,6 +769,12 @@ namespace UnityEngine.InputSystem.Layouts
                 public ControlBuilder IsNoisy(bool value)
                 {
                     builder.m_Controls[index].isNoisy = value;
+                    return this;
+                }
+                
+                public ControlBuilder WithJitterMask(ulong value)
+                {
+                    builder.m_Controls[index].jitterMask = value;
                     return this;
                 }
 
@@ -1271,6 +1291,11 @@ namespace UnityEngine.InputSystem.Layouts
             if (attribute != null)
                 arraySize = attribute.arraySize;
 
+            // Determine jitter bits.
+            var jitterMask = 0UL;
+            if (attribute != null)
+                jitterMask = attribute.jitterMask;
+
             // Determine default state.
             var defaultState = new PrimitiveValue();
             if (attribute != null)
@@ -1304,6 +1329,7 @@ namespace UnityEngine.InputSystem.Layouts
                 isModifyingExistingControl = isModifyingChildControlByPath,
                 isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
+                jitterMask = jitterMask,
                 dontReset = dontReset,
                 isSynthetic = isSynthetic,
                 arraySize = arraySize,
@@ -1762,6 +1788,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string displayName;
             public string shortDisplayName;
             public bool noisy;
+            public ulong jitterMask;
             public bool dontReset;
             public bool synthetic;
 
@@ -1797,6 +1824,7 @@ namespace UnityEngine.InputSystem.Layouts
                     sizeInBits = sizeInBits,
                     isModifyingExistingControl = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    jitterMask = jitterMask,
                     dontReset = dontReset,
                     isSynthetic = synthetic,
                     isFirstDefinedInThisLayout = true,
@@ -1869,6 +1897,7 @@ namespace UnityEngine.InputSystem.Layouts
                         usages = item.usages.Select(x => x.ToString()).ToArray(),
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
+                        jitterMask = item.jitterMask,
                         dontReset = item.dontReset,
                         synthetic = item.isSynthetic,
                         arraySize = item.arraySize,

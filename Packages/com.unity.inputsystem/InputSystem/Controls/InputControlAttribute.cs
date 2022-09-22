@@ -286,6 +286,18 @@ namespace UnityEngine.InputSystem.Layouts
         public int arraySize { get; set; }
 
         /// <summary>
+        /// Mark some control bits as noisy to avoid setting device ".current" field when they change. 
+        /// </summary>
+        /// <value>Bit mask, up to 64 bits.</value>
+        /// <remarks>
+        /// We determine if control was updated by checking if any of the control memory bits changed.
+        /// This property allows to ignore changes in specified bits (set as 1 in this mask) as noise,
+        /// which allows to essentially ignore some jitter in controls like sticks or triggers.
+        /// </remarks>
+        /// <seealso cref="InputControl.noisy"/>
+        public ulong jitterMask { get; set; }
+
+        /// <summary>
         /// Display name to assign to the control.
         /// </summary>
         /// <value>Display name for the control.</value>

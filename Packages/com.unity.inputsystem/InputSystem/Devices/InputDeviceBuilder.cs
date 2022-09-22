@@ -409,10 +409,11 @@ namespace UnityEngine.InputSystem.Layouts
 
             // Set flags and misc things.
             control.noisy = controlItem.isNoisy;
+            control.jitterMask = controlItem.jitterMask;
             control.synthetic = controlItem.isSynthetic;
             control.usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
             control.dontReset = (control.noisy || controlItem.dontReset) && !control.usesStateFromOtherControl; // Imply dontReset for noisy controls.
-            if (control.noisy)
+            if (control.noisy || control.jitterMask > 0)
                 m_Device.noisy = true;
             control.isButton = control is ButtonControl;
             if (control.dontReset)

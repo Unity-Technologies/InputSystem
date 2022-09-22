@@ -286,6 +286,8 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine($"    .WithAliases({control.m_AliasStartIndex}, {control.m_AliasCount})");
             if (control.noisy)
                 writer.WriteLine("    .IsNoisy(true)");
+            if (control.jitterMask != 0)
+                writer.WriteLine($"    .WithJitterMask({control.jitterMask}UL)");
             if (control.synthetic)
                 writer.WriteLine("    .IsSynthetic(true)");
             if (control.dontReset)

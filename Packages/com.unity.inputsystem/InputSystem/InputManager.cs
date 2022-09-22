@@ -2178,6 +2178,24 @@ namespace UnityEngine.InputSystem
                     if (control.dontReset)
                         MemoryHelpers.SetBitsInBuffer(resetMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
                             (int)stateBlock.sizeInBits, false);
+
+                    // If control has jitter bits, toggle jitter bits *off* in the noise mask.
+                    if (control.jitterMask != 0)
+                    {
+                        if (stateBlock.sizeInBits > 64)
+                        {
+                            Debug.LogError($"jitterMask is not supported for controls over 64 bits in size ('{control.name}')");
+                        }
+                        else
+                        {
+                            ////TODO: this is quite slow
+                            for (var i = 0; i < stateBlock.sizeInBits; ++i)
+                            {
+                                var value = (control.jitterMask & (1UL << i)) != 0;
+                                MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset + i, 1, !value);
+                            }
+                        }
+                    }
                 }
 
                 // If control has default state, write it into to the device's default state.
