@@ -82,6 +82,61 @@ internal class SwitchTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_SwitchProAxisJitter_DoesntMakeDeviceCurrent()
+    {
+        var device1 = InputSystem.AddDevice<SwitchProControllerHID>();
+        var device2 = InputSystem.AddDevice<SwitchProControllerHID>();
+
+        InputSystem.QueueStateEvent(device1,
+            new SwitchProControllerHIDInputState
+            {
+                leftStickX = 0x7f,
+                leftStickY = 0x7f,
+                rightStickX = 0x7f,
+                rightStickY = 0x7f,
+            });
+        InputSystem.QueueStateEvent(device2,
+            new SwitchProControllerHIDInputState
+            {
+                leftStickX = 0x7f,
+                leftStickY = 0x7f,
+                rightStickX = 0x7f,
+                rightStickY = 0x7f,
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        var jitterMask = 0b111;
+
+        InputSystem.QueueStateEvent(device1,
+            new SwitchProControllerHIDInputState
+            {
+                leftStickX = (byte)(0x7f - jitterMask),
+                leftStickY = (byte)(0x7f - jitterMask),
+                rightStickX = (byte)(0x7f - jitterMask),
+                rightStickY = (byte)(0x7f - jitterMask),
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        InputSystem.QueueStateEvent(device1,
+            new SwitchProControllerHIDInputState
+            {
+                leftStickX = (byte)(0x7f - jitterMask - 1),
+                leftStickY = (byte)(0x7f - jitterMask - 1),
+                rightStickX = (byte)(0x7e - jitterMask - 1),
+                rightStickY = (byte)(0x7e - jitterMask - 1),
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        ////TODO: 7f <-> 80 jitter does break this, because it changes all the bits:
+        //// as in 0b0111'1111 <-> 0b1000'0000
+        //// we need to support this later on when we will be able to do LPF filtering on incoming controls
+    }
+
+    [Test]
+    [Category("Devices")]
     [TestCase(0x0f0d, 0x0092)]
     [TestCase(0x0f0d, 0x00aa)]
     [TestCase(0x0f0d, 0x00c1)]
