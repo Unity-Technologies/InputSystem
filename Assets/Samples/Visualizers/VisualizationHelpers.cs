@@ -138,6 +138,37 @@ namespace UnityEngine.InputSystem.Samples
             }
         }
 
+        // Visualizes .current device value
+        public class CurrentDeviceVisualizer : Visualizer
+        {
+            private InputDevice m_CurrentDevice = null;
+
+            public override void OnDraw(Rect rect)
+            {
+                // For now, only draw the current value.
+                DrawRectangle(rect, new Color(1, 1, 1, 0.1f));
+                
+                var name = m_CurrentDevice != null ? m_CurrentDevice.name : "null";
+                DrawText(name, new Vector2(rect.xMin + 4, (rect.yMin + rect.yMax) / 2.0f), ValueTextStyle);
+            }
+
+            public override void AddSample(object value, double time)
+            {
+                var device = (InputDevice)value;
+                if (device is Gamepad)
+                    m_CurrentDevice = Gamepad.current;
+                else if (device is Mouse)
+                    m_CurrentDevice = Mouse.current;
+                else if (device is Pen)
+                    m_CurrentDevice = Pen.current;
+                else if (device is Pointer) // should be last, because it's a base class for Mouse and Pen
+                    m_CurrentDevice = Pointer.current;
+                else
+                    throw new ArgumentException(
+                        $"Expected device type that implements .current, but got '{device.name}' (deviceId: {device.deviceId}) instead ");
+            }
+        }
+
         ////TODO: allow asymmetric center (i.e. center not being a midpoint of rectangle)
         ////TODO: enforce proper proportion between X and Y; it's confusing that X and Y can have different units yet have the same length
         public class Vector2Visualizer : ValueVisualizer<Vector2>
