@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.Switch
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
-    public class SwitchProControllerHID : Gamepad, IInputStateCallbackReceiver, IEventPreProcessor
+    public class SwitchProControllerHID : Gamepad, IInputUpdateCallbackReceiver, IEventPreProcessor
     {
         [InputControl(name = "capture", displayName = "Capture")]
         public ButtonControl captureButton { get; protected set; }
@@ -222,19 +222,9 @@ namespace UnityEngine.InputSystem.Switch
             ExecuteCommand(ref commandUsb);
         }
 
-        public void OnNextUpdate()
+        public void OnUpdate()
         {
             HandshakeTick();
-        }
-
-        public void OnStateEvent(InputEventPtr eventPtr)
-        {
-            InputState.Change(this, eventPtr);
-        }
-
-        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
-        {
-            return false;
         }
 
         public unsafe bool PreProcessEvent(InputEventPtr eventPtr)
