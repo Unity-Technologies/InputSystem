@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.Samples
             {
                 // For now, only draw the current value.
                 DrawRectangle(rect, new Color(1, 1, 1, 0.1f));
-                
+
                 var name = m_CurrentDevice != null ? m_CurrentDevice.name : "null";
                 DrawText(name, new Vector2(rect.xMin + 4, (rect.yMin + rect.yMax) / 2.0f), ValueTextStyle);
             }
