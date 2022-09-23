@@ -100,7 +100,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 UnsafeUtility.MemCpy(bufferPtr + stateOffset, dataPtr, dataSize);
             }
-            
+
             return buffer;
         }
 
@@ -263,7 +263,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_StateBuffers.Length != (int)BufferSelector.COUNT)
                 return null;
-            
+
             switch ((BufferSelector)m_SelectedStateBuffer)
             {
                 case BufferSelector.PlayerUpdateFrontBuffer:
@@ -322,7 +322,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // Convert bytes to hex.
                     var hex = string.Empty;
-                    
+
                     for (var i = 0; i < kBytesPerHexGroup; ++i, ++currentByte)
                     {
                         if (currentByte >= numBytes)
@@ -337,7 +337,7 @@ namespace UnityEngine.InputSystem.Editor
                             hex += current;
                             continue;
                         }
-                        
+
                         var prev = FormatByte(prevStateBuffer[currentByte]);
                         if (prev.Length != current.Length)
                         {
