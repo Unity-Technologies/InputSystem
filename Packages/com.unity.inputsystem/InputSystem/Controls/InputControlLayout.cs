@@ -225,9 +225,9 @@ namespace UnityEngine.InputSystem.Layouts
                         flags &= ~Flags.IsNoisy;
                 }
             }
-            
+
             /// <summary>
-            /// Mark some control bits as noisy to avoid setting device ".current" field when they change. 
+            /// Mark some control bits as noisy to avoid setting device ".current" field when they change.
             /// </summary>
             /// <value>Bit mask, up to 64 bits.</value>
             /// <remarks>
@@ -771,7 +771,7 @@ namespace UnityEngine.InputSystem.Layouts
                     builder.m_Controls[index].isNoisy = value;
                     return this;
                 }
-                
+
                 public ControlBuilder WithJitterMask(ulong value)
                 {
                     builder.m_Controls[index].jitterMask = value;

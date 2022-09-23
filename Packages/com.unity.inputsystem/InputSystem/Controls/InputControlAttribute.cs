@@ -286,7 +286,7 @@ namespace UnityEngine.InputSystem.Layouts
         public int arraySize { get; set; }
 
         /// <summary>
-        /// Mark some control bits as noisy to avoid setting device ".current" field when they change. 
+        /// Mark some control bits as noisy to avoid setting device ".current" field when they change.
         /// </summary>
         /// <value>Bit mask, up to 64 bits.</value>
         /// <remarks>

@@ -1753,7 +1753,7 @@ namespace UnityEngine.InputSystem
                 control.noisy = value;
                 return this;
             }
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithJitterMask(ulong jitterMask)
             {
