@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+- Fixed an issue that made OnScreenStick unusable when used in conjunction with PlayerInput in Auto-Switch devices mode, or with any code that changes user/device pairing on unsued device activity being detected ([case ISXB-48](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-48)).
+
 ## [1.4.3] - 2022-09-23
 
 ### Fixed
