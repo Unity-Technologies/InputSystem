@@ -286,7 +286,7 @@ internal class OnScreenTests : CoreTestsFixture
         // of re-resolving bindings, which causes any active actions to cancel. This code replicates that.
         InputUser.listenForUnpairedDeviceActivity++;
         InputUser.PerformPairingWithDevice(InputSystem.GetDevice<Touchscreen>());
-        InputUser.onUnpairedDeviceUsed += (_, _) =>
+        InputUser.onUnpairedDeviceUsed += (control, eventPtr) =>
         {
             uiTestScene.uiInputModule.actionsAsset.actionMaps[0].LazyResolveBindings(true);
         };
