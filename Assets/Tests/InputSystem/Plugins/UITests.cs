@@ -1348,7 +1348,7 @@ internal class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
-		#endif
+        #endif
 
         // Touch right object on first touchscreen and left object on second touchscreen.
         BeginTouch(1, secondPosition, screen: touch1);
