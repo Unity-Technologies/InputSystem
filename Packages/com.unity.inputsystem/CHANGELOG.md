@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
 
 ## [1.4.3] - 2022-09-23
 
@@ -22,7 +24,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Improved performance of HID descriptor parsing by moving json parsing to a simple custom predicitve parser instead of relying on Unity's json parsing. This should improve domain reload times when there are many HID devices connected to a machine.
-- Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
 
 ## [1.4.2] - 2022-08-12
 
