@@ -9,8 +9,6 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSettingsBuildProvider : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
-        private InputSettings m_SettingsAddedToPreloadedAssets;
-
         public int callbackOrder => 0;
 
         public void OnPreprocessBuild(BuildReport report)
@@ -18,56 +16,37 @@ namespace UnityEngine.InputSystem.Editor
             if (InputSystem.settings == null)
                 return;
 
-            var wasDirty = IsPlayerSettingsDirty();
-            m_SettingsAddedToPreloadedAssets = null;
+            // If there is no asset and we operate on temporary object,
+            // adding it would result in preloadedAssets containing null object "{fileID: 0}",
+            // which then we can't easily remove from the list in post build.
+            // Hence we ignore adding temporary objects to preloaded assets.
+            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(InputSystem.settings)))
+                return;
 
             // Add InputSettings object assets, if it's not in there already.
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
             if (!preloadedAssets.Contains(InputSystem.settings))
             {
-                m_SettingsAddedToPreloadedAssets = InputSystem.settings;
-                ArrayHelpers.Append(ref preloadedAssets, m_SettingsAddedToPreloadedAssets);
+                ArrayHelpers.Append(ref preloadedAssets, InputSystem.settings);
                 PlayerSettings.SetPreloadedAssets(preloadedAssets);
             }
-
-            if (!wasDirty)
-                ClearPlayerSettingsDirtyFlag();
         }
 
         public void OnPostprocessBuild(BuildReport report)
-        {
-            if (m_SettingsAddedToPreloadedAssets == null)
-                return;
-
-            var wasDirty = IsPlayerSettingsDirty();
-
-            // Revert back to original state.
+        { 
+            // Revert back to original state by removing all input settings from preloaded assets.
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
-            var index = preloadedAssets.IndexOfReference<Object, Object>(m_SettingsAddedToPreloadedAssets);
-            if (index != -1)
+            while(preloadedAssets != null && preloadedAssets.Length > 0)
             {
-                ArrayHelpers.EraseAt(ref preloadedAssets, index);
-                PlayerSettings.SetPreloadedAssets(preloadedAssets);
+                var index = preloadedAssets.IndexOf(x => x is InputSettings);
+                if (index != -1)
+                {
+                    ArrayHelpers.EraseAt(ref preloadedAssets, index);
+                    PlayerSettings.SetPreloadedAssets(preloadedAssets);
+                }
+                else
+                    break;
             }
-            m_SettingsAddedToPreloadedAssets = null;
-
-            if (!wasDirty)
-                ClearPlayerSettingsDirtyFlag();
-        }
-
-        private static bool IsPlayerSettingsDirty()
-        {
-            var settings = Resources.FindObjectsOfTypeAll<PlayerSettings>();
-            if (settings != null && settings.Length > 0)
-                return EditorUtility.IsDirty(settings[0]);
-            return false;
-        }
-
-        private static void ClearPlayerSettingsDirtyFlag()
-        {
-            var settings = Resources.FindObjectsOfTypeAll<PlayerSettings>();
-            if (settings != null && settings.Length > 0)
-                EditorUtility.ClearDirty(settings[0]);
         }
     }
 }

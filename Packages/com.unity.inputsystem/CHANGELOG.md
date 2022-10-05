@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
+- Fixed `{fileID: 0}` getting appended to `ProjectSettings.asset` file when building a project ([case ISXB-296](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-296)).
 
 ## [1.4.3] - 2022-09-23
 
