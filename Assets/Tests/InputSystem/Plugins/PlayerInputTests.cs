@@ -2242,6 +2242,37 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.devices[0], !Is.SameAs(gamepad)); // expected replacement (by design, not a requirement)
         Assert.That(playerInput.devices[0].name, Is.EqualTo(gamepad.name));
     }
+    
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanJoinPlayersThroughButtonPress_AfterAutoSwitchedPlayerDeleted()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        
+        var prefabPlayerInput = prefab.AddComponent<PlayerInput>();
+        prefabPlayerInput.actions = InputActionAsset.FromJson(kActions);
+        prefabPlayerInput.neverAutoSwitchControlSchemes = false;
+
+        var player = PlayerInput.Instantiate(prefab);
+        
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        
+        Press(gamepad.buttonSouth);
+
+        Object.DestroyImmediate(player);
+
+        var manager = new GameObject();
+        manager.SetActive(false); // Delay OnEnable() until we have all components.
+
+        var managerComponent = manager.AddComponent<PlayerInputManager>();
+        
+        manager.SetActive(true);
+        
+        Press(gamepad.buttonSouth);
+    }
 
     // An action is either
     //   (a) button-like, or
