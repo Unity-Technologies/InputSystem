@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
+- Fixed `ArgumentOutOfRangeException` when a Player Input that has been auto switched is deleted, and then a Player Input Manager attempts to join a new player.
 
 ## [1.4.3] - 2022-09-23
 
