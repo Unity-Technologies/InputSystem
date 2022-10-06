@@ -1,6 +1,6 @@
 # Workflow Overview - Using Embedded Actions
 
-![image alt text](./Images/Workflow-Embedded.png)
+![image alt text](./Images/Workflow-Embedded.svg)
 
 You can use the **InputAction class** in your script to define actions in your script. This adds a layer of abstraction between your actual action code or methods, and the bindings to specific device controls.
 

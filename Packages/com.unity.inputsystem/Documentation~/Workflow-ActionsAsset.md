@@ -1,6 +1,6 @@
 # Workflow Overview - Using an Actions Asset
 
-![image alt text](./Images/Workflow-ActionsAsset.png)
+![image alt text](./Images/Workflow-ActionsAsset.svg)
 
 The Actions Asset provides a way to define, group, and manage sets of actions as data stored in an asset, instead of defining them directly in your code.
 

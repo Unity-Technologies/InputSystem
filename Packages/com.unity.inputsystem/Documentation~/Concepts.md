@@ -8,7 +8,7 @@ When you become familiar with these concepts, you will be able to understand the
 
 These basic concepts and terms refer to the steps in the sequence of events that occur when a user sends input to your game or app. The Input System provides features which implement these steps, or you can choose to implement some of them yourself.
 
-![image alt text](Images/ConceptsOverview.png)
+![image alt text](Images/ConceptsOverview.svg)
 
 **User**: The person playing your game or using your app, by holding or touching the input device and providing input.
 

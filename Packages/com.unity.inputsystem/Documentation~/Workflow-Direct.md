@@ -1,6 +1,6 @@
 # Workflow Overview - Directly Reading Device States
 
-![image alt text](./Images/Workflow-Direct.png)
+![image alt text](./Images/Workflow-Direct.svg)
 
 This is the simplest and most direct workflow, but the least flexible. It’s useful if you want a quick implementation with one type of device. It might not be the best choice if you want to provide your users with multiple types of input or if you want to target multiple platforms.
 

@@ -3,7 +3,7 @@
   * [Concepts](Concepts.md)
   * [Workflows](Workflows.md)
     * [Workflow-Direct](Workflow-Direct.md)
-    * [Workflow-EmbeddedActions](Workflow-EmbeddedActions.md)
+    * [Workflow-EmbeddedActions](Workflow-Embedded.md)
     * [Workflow-ActionsAsset](Workflow-ActionsAsset.md)
     * [Workflow-PlayerInput](Workflow-PlayerInput.md)
   * [Quick start guide](QuickStartGuide.md)
