@@ -1660,13 +1660,28 @@ namespace UnityEngine.InputSystem.UI
                 touchId = touchscreen.primaryTouch.touchId.ReadValue();
                 touchPosition = touchscreen.primaryTouch.position.ReadValue();
             }
+
+            int displayIndex = 0;
+#if UNITY_INPUT_SYSTEM_ENABLE_MULTIDISPLAY
+            if (device is Pointer pointerCast)
+            {
+                displayIndex = pointerCast.displayIndex.ReadValue();
+            }
+#endif
+
             if (touchId != 0)
                 pointerId = ExtendedPointerEventData.MakePointerIdForTouch(pointerId, touchId);
 
             // Early out if it's the last used pointer.
             // NOTE: Can't just compare by device here because of touchscreens potentially having multiple associated pointers.
             if (m_CurrentPointerId == pointerId)
+            {
+#if UNITY_INPUT_SYSTEM_ENABLE_MULTIDISPLAY
+				ref var state = ref GetPointerStateForIndex(m_CurrentPointerIndex);
+                state.eventData.displayIndex = displayIndex;
+#endif
                 return m_CurrentPointerIndex;
+            }
 
             // Search m_PointerIds for an existing entry.
             // NOTE: This is a linear search but m_PointerIds is only IDs and the number of concurrent pointers
@@ -1736,7 +1751,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (m_CurrentPointerIndex == -1)
                 {
-                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
+                    m_CurrentPointerIndex = AllocatePointer(pointerId, displayIndex, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
                 }
                 else
                 {
@@ -1751,6 +1766,11 @@ namespace UnityEngine.InputSystem.UI
                     eventData.device = device;
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
+
+#if UNITY_INPUT_SYSTEM_ENABLE_MULTIDISPLAY
+                    eventData.displayIndex = displayIndex;
+#endif
+
                     eventData.touchId = touchId;
 
                     // Make sure these don't linger around when we switch to a different kind of pointer.
@@ -1773,7 +1793,7 @@ namespace UnityEngine.InputSystem.UI
             if (pointerType != UIPointerType.None)
             {
                 // Device has an associated position input. Create a new pointer record.
-                index = AllocatePointer(pointerId, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
+                index = AllocatePointer(pointerId, displayIndex, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
             }
             else
             {
@@ -1795,7 +1815,7 @@ namespace UnityEngine.InputSystem.UI
                 if (pointerDevice != null && !(pointerDevice is Touchscreen)) // Touchscreen only temporarily allocate pointer states.
                 {
                     // Create MouseOrPen style pointer.
-                    index = AllocatePointer(pointerDevice.deviceId, 0, UIPointerType.MouseOrPen, pointControls.Value[0], pointerDevice);
+                    index = AllocatePointer(pointerDevice.deviceId, displayIndex, 0, UIPointerType.MouseOrPen, pointControls.Value[0], pointerDevice);
                 }
                 else
                 {
@@ -1807,13 +1827,13 @@ namespace UnityEngine.InputSystem.UI
                     if (trackedDevice != null)
                     {
                         // Create a Tracked style pointer.
-                        index = AllocatePointer(trackedDevice.deviceId, 0, UIPointerType.Tracked, positionControls.Value[0], trackedDevice);
+                        index = AllocatePointer(trackedDevice.deviceId, displayIndex, 0, UIPointerType.Tracked, positionControls.Value[0], trackedDevice);
                     }
                     else
                     {
                         // We got input from a non-pointer device and apparently there's no pointer we can route the
                         // input into. Just create a pointer state for the device and leave it at that.
-                        index = AllocatePointer(pointerId, 0, UIPointerType.None, control, device);
+                        index = AllocatePointer(pointerId, displayIndex, 0, UIPointerType.None, control, device);
                     }
                 }
             }
@@ -1828,7 +1848,7 @@ namespace UnityEngine.InputSystem.UI
             return index;
         }
 
-        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputControl control, InputDevice device, InputControl touchControl = null)
+        private int AllocatePointer(int pointerId, int displayIndex, int touchId, UIPointerType pointerType, InputControl control, InputDevice device, InputControl touchControl = null)
         {
             // Recover event instance from previous record.
             var eventData = default(ExtendedPointerEventData);
@@ -1845,6 +1865,11 @@ namespace UnityEngine.InputSystem.UI
                 eventData = new ExtendedPointerEventData(eventSystem);
 
             eventData.pointerId = pointerId;
+
+#if UNITY_INPUT_SYSTEM_ENABLE_MULTIDISPLAY
+            eventData.displayIndex = displayIndex;
+#endif
+
             eventData.touchId = touchId;
             eventData.pointerType = pointerType;
             eventData.control = control;

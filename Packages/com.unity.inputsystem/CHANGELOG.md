@@ -13,6 +13,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
 
+### Changed
+- Exposed `displayIndex` property for `Pointer`, `Touchscreen`, `TouchControl`, `TouchState`, `Mouse`, `MouseState`; Enable multi-display input for all platforms that implement it;
+
 ## [1.4.3] - 2022-09-23
 
 ### Fixed

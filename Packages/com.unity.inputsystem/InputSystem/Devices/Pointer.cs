@@ -181,6 +181,11 @@ namespace UnityEngine.InputSystem
         public ButtonControl press { get; protected set; }
 
         /// <summary>
+        /// The index of the display that was pointed.
+        /// </summary>
+        public virtual IntegerControl displayIndex { get; protected set; }
+
+        /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
         /// device connected to the system.
         /// </summary>

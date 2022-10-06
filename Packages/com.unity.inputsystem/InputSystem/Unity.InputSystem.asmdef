@@ -55,6 +55,11 @@
             "name": "com.unity.ugui",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_UI"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "1.1.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_MULTIDISPLAY"
         }
     ],
     "noEngineReferences": false
