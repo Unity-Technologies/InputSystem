@@ -16,11 +16,10 @@ namespace UnityEngine.InputSystem.Editor
             if (InputSystem.settings == null)
                 return;
 
-            // If there is no asset and we operate on temporary object,
-            // adding it would result in preloadedAssets containing null object "{fileID: 0}",
-            // which then we can't easily remove from the list in post build.
+            // If we operate on temporary object instead of input setting asset,
+            // adding temporary asset would result in preloadedAssets containing null object "{fileID: 0}".
             // Hence we ignore adding temporary objects to preloaded assets.
-            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(InputSystem.settings)))
+            if (!EditorUtility.IsPersistent(InputSystem.settings))
                 return;
 
             // Add InputSettings object assets, if it's not in there already.
@@ -33,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         public void OnPostprocessBuild(BuildReport report)
-        { 
+        {
             // Revert back to original state by removing all input settings from preloaded assets.
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
             while(preloadedAssets != null && preloadedAssets.Length > 0)
