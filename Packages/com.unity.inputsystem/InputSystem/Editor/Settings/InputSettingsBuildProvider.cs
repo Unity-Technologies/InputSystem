@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Revert back to original state by removing all input settings from preloaded assets.
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
-            while(preloadedAssets != null && preloadedAssets.Length > 0)
+            while (preloadedAssets != null && preloadedAssets.Length > 0)
             {
                 var index = preloadedAssets.IndexOf(x => x is InputSettings);
                 if (index != -1)
