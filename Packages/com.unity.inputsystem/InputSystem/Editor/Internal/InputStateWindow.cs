@@ -414,7 +414,7 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIStyle hexLabel = new GUIStyle
             {
                 fontStyle = FontStyle.Normal,
-                font = Font.CreateDynamicFontFromOSFont("Courier", EditorStyles.label.fontSize + 2),
+                font = EditorGUIUtility.Load("Fonts/RobotoMono/RobotoMono-Regular.ttf") as Font,
                 fontSize = EditorStyles.label.fontSize + 2,
                 normal = new GUIStyleState { textColor = Color.white },
                 richText = true
