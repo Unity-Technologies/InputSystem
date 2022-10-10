@@ -542,7 +542,6 @@ namespace UnityEngine.InputSystem.XR
         /// Must support reading a value of type <see cref="Vector3"/>.
         /// </summary>
         /// <seealso cref="positionInput"/>
-        [Obsolete("positionAction has been deprecated. Use positionInput instead.")]
         public InputAction positionAction
         {
             get => m_PositionInput.action;
@@ -557,7 +556,6 @@ namespace UnityEngine.InputSystem.XR
         /// Must support reading a value of type <see cref="Quaternion"/>.
         /// </summary>
         /// <seealso cref="rotationInput"/>
-        [Obsolete("rotationAction has been deprecated. Use rotationInput instead.")]
         public InputAction rotationAction
         {
             get => m_RotationInput.action;
