@@ -527,14 +527,14 @@ namespace UnityEngine.InputSystem.XR
 
             if (rotationValid &&
                 (m_TrackingType == TrackingType.RotationAndPosition ||
-                m_TrackingType == TrackingType.RotationOnly))
+                 m_TrackingType == TrackingType.RotationOnly))
             {
                 transform.localRotation = newRotation;
             }
 
-            if (positionValid && 
+            if (positionValid &&
                 (m_TrackingType == TrackingType.RotationAndPosition ||
-                m_TrackingType == TrackingType.PositionOnly))
+                 m_TrackingType == TrackingType.PositionOnly))
             {
                 transform.localPosition = newPosition;
             }
