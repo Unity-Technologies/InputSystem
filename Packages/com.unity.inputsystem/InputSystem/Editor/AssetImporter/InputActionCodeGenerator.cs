@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Begin class.
-            writer.WriteLine($"public partial class @{options.className} : IInputActionCollection2, IDisposable");
+            writer.WriteLine($"public partial class @{options.className}: IInputActionCollection2, IDisposable");
             writer.BeginBlock();
 
             writer.WriteLine($"public InputActionAsset asset {{ get; }}");
@@ -242,7 +242,6 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine($"if (instance == null || m_Wrapper.m_{mapTypeName}CallbackInterfaces.Contains(instance)) return;");
                 writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterfaces.Add(instance);");
 
-                //writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterface = instance;");
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
