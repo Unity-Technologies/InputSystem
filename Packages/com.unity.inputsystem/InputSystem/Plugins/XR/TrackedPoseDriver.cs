@@ -41,6 +41,32 @@ namespace UnityEngine.InputSystem.XR
             PositionOnly,
         }
 
+        /// <summary>
+        /// These bit flags correspond with <c>UnityEngine.XR.InputTrackingState</c>
+        /// but that enum is not used to avoid adding a dependency to the XR module.
+        /// Only the Position and Rotation flags are used by this class, so velocity and acceleration flags are not duplicated here.
+        /// </summary>
+        [Flags]
+        enum TrackingStates
+        {
+            /// <summary>
+            /// Position and rotation are not valid.
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// Position is valid.
+            /// See <c>InputTrackingState.Position</c>.
+            /// </summary>
+            Position = 1 << 0,
+
+            /// <summary>
+            /// Rotation is valid.
+            /// See <c>InputTrackingState.Rotation</c>.
+            /// </summary>
+            Rotation = 1 << 1,
+        }
+
         [SerializeField, Tooltip("Which Transform properties to update.")]
         TrackingType m_TrackingType;
         /// <summary>
@@ -203,7 +229,7 @@ namespace UnityEngine.InputSystem.XR
 
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
-        int m_CurrentTrackingState;
+        TrackingStates m_CurrentTrackingState;
         bool m_RotationBound;
         bool m_PositionBound;
         bool m_TrackingStateBound;
@@ -361,13 +387,13 @@ namespace UnityEngine.InputSystem.XR
         void OnTrackingStatePerformed(InputAction.CallbackContext context)
         {
             Debug.Assert(m_TrackingStateBound, this);
-            m_CurrentTrackingState = context.ReadValue<int>();
+            m_CurrentTrackingState = (TrackingStates)context.ReadValue<int>();
         }
 
         void OnTrackingStateCanceled(InputAction.CallbackContext context)
         {
             Debug.Assert(m_TrackingStateBound, this);
-            m_CurrentTrackingState = 0;
+            m_CurrentTrackingState = TrackingStates.None;
         }
 
         /// <summary>
@@ -448,7 +474,7 @@ namespace UnityEngine.InputSystem.XR
                     m_CurrentRotation = m_RotationInput.action.ReadValue<Quaternion>();
 
                 if (m_TrackingStateInput.action != null)
-                    m_CurrentTrackingState = m_TrackingStateInput.action.ReadValue<int>();
+                    m_CurrentTrackingState = (TrackingStates)m_TrackingStateInput.action.ReadValue<int>();
 
                 m_IsFirstUpdate = false;
             }
@@ -502,12 +528,8 @@ namespace UnityEngine.InputSystem.XR
         /// <param name="newRotation">The new local rotation to possibly set.</param>
         protected virtual void SetLocalTransform(Vector3 newPosition, Quaternion newRotation)
         {
-            // These bit flags correspond with UnityEngine.XR.InputTrackingState
-            // but that enum is not used to avoid adding a dependency to the XR module.
-            const int positionFlag = 1 << 0; // InputTrackingState.Position
-            const int rotationFlag = 1 << 1; // InputTrackingState.Rotation
-            var positionValid = m_IgnoreTrackingState || (m_CurrentTrackingState & positionFlag) != 0;
-            var rotationValid = m_IgnoreTrackingState || (m_CurrentTrackingState & rotationFlag) != 0;
+            var positionValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Position) != 0;
+            var rotationValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Rotation) != 0;
 
             if (rotationValid &&
                 (m_TrackingType == TrackingType.RotationAndPosition ||
