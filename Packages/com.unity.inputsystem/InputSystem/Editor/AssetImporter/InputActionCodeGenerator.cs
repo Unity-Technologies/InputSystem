@@ -172,6 +172,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.BeginBlock();
             writer.WriteLine("asset.Disable();");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public IEnumerable<InputBinding> bindings => asset.bindings;");
             writer.WriteLine();
@@ -180,6 +181,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.BeginBlock();
             writer.WriteLine("return asset.FindAction(actionNameOrId, throwIfNotFound);");
             writer.EndBlock();
+            writer.WriteLine();
 
             writer.WriteLine("public int FindBinding(InputBinding bindingMask, out InputAction action)");
             writer.BeginBlock();
@@ -253,6 +255,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 writer.EndBlock();
+                writer.WriteLine();
 
                 // UnregisterCallbacks method.
                 writer.WriteLine($"private void UnregisterCallbacks(I{mapTypeName} instance)");
@@ -267,6 +270,7 @@ namespace UnityEngine.InputSystem.Editor
                     writer.WriteLine($"@{actionName}.canceled -= instance.On{actionTypeName};");
                 }
                 writer.EndBlock();
+                writer.WriteLine();
 
                 // RemoveCallbacks method.
                 writer.WriteLine($"public void RemoveCallbacks(I{mapTypeName} instance)");
@@ -274,6 +278,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterfaces.Remove(instance))");
                 writer.WriteLine($"    UnregisterCallbacks(instance);");
                 writer.EndBlock();
+                writer.WriteLine();
 
                 // SetCallbacks method.
                 writer.WriteLine($"public void SetCallbacks(I{mapTypeName} instance)");
