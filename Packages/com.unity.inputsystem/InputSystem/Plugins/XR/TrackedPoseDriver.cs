@@ -362,37 +362,31 @@ namespace UnityEngine.InputSystem.XR
 
         void OnPositionPerformed(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_PositionBound, this);
             m_CurrentPosition = context.ReadValue<Vector3>();
         }
 
         void OnPositionCanceled(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_PositionBound, this);
             m_CurrentPosition = Vector3.zero;
         }
 
         void OnRotationPerformed(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_RotationBound, this);
             m_CurrentRotation = context.ReadValue<Quaternion>();
         }
 
         void OnRotationCanceled(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_RotationBound, this);
             m_CurrentRotation = Quaternion.identity;
         }
 
         void OnTrackingStatePerformed(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_TrackingStateBound, this);
             m_CurrentTrackingState = (TrackingStates)context.ReadValue<int>();
         }
 
         void OnTrackingStateCanceled(InputAction.CallbackContext context)
         {
-            Debug.Assert(m_TrackingStateBound, this);
             m_CurrentTrackingState = TrackingStates.None;
         }
 

@@ -336,99 +336,203 @@ internal class XRTests : CoreTestsFixture
         public QuaternionControl quaternion { get; private set; }
         [InputControl]
         public Vector3Control vector3 { get; private set; }
+        [InputControl]
+        public IntegerControl trackingState { get; private set; }
         protected override void FinishSetup()
         {
             base.FinishSetup();
             quaternion = GetChildControl<QuaternionControl>("quaternion");
             vector3 = GetChildControl<Vector3Control>("vector3");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+        }
+    }
+
+    [TestCase(InputTrackingState.None, true)]
+    [TestCase(InputTrackingState.None, false)]
+    [TestCase(InputTrackingState.Position, false)]
+    [TestCase(InputTrackingState.Rotation, false)]
+    [TestCase(InputTrackingState.Position | InputTrackingState.Rotation, false)]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_CanConstrainWithTrackingState(InputTrackingState trackingState, bool ignoreTrackingState)
+    {
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+        var positionValid = ignoreTrackingState || (trackingState & InputTrackingState.Position) != 0;
+        var rotationValid = ignoreTrackingState || (trackingState & InputTrackingState.Rotation) != 0;
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = ignoreTrackingState;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+            tpd.trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
+
+            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
+            device.vector3.WriteValueIntoEvent(position, stateEvent);
+            device.trackingState.WriteValueIntoEvent((int)trackingState, stateEvent);
+
+            // Constrained by Tracking State only
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(positionValid ? position : Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(rotationValid ? rotation : Quaternion.identity));
+
+            // Constrained by both Tracking State and PositionOnly Tracking Type
+            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(positionValid ? position : Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
+
+            // Constrained by both Tracking State and RotationOnly Tracking Type
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(rotationValid ? rotation : Quaternion.identity));
         }
     }
 
     [Test]
     [Category("Components")]
-    public void Components_CanUpdateGameObjectTransformThroughTrackedPoseDriver()
+    public void Components_TrackedPoseDriver_CanConstrainWithUpdateType()
     {
-        var position = new Vector3(1.0f, 2.0f, 3.0f);
+        var position = new Vector3(1f, 2f, 3f);
         var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
 
         var go = new GameObject();
         var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = true;
+        var transform = tpd.transform;
         var device = InputSystem.AddDevice<TestHMD>();
 
         using (StateEvent.From(device, out var stateEvent))
         {
-            var positionAction = new InputAction();
-            positionAction.AddBinding("<TestHMD>/vector3");
-
-            var rotationAction = new InputAction();
-            rotationAction.AddBinding("<TestHMD>/quaternion");
-
-            tpd.positionInput = new InputActionProperty(positionAction);
-            tpd.rotationInput = new InputActionProperty(rotationAction);
-
-            // before render only
-            var go1 = tpd.gameObject;
-            go1.transform.position = Vector3.zero;
-            go1.transform.rotation = new Quaternion(0, 0, 0, 0);
-            tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
-            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
 
             device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
             device.vector3.WriteValueIntoEvent(position, stateEvent);
 
+            // BeforeRender only
+            tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
 
-            var go2 = tpd.gameObject;
-            go2.transform.position = Vector3.zero;
-            go2.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
 
-            // update only
-            var go3 = tpd.gameObject;
-            go3.transform.position = Vector3.zero;
-            go3.transform.rotation = new Quaternion(0, 0, 0, 0);
+            // Update only
             tpd.updateType = TrackedPoseDriver.UpdateType.Update;
-            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
 
-            var go4 = tpd.gameObject;
-            go4.transform.position = Vector3.zero;
-            go4.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
 
-            // check the rot/pos case also Update AND Render.
+            // Update and BeforeRender
             tpd.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
-            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
-            var go5 = tpd.gameObject;
-            go5.transform.position = Vector3.zero;
-            go5.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
 
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.Dynamic);
-            Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
-            Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
 
-            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
-            var go6 = tpd.gameObject;
-            go6.transform.position = Vector3.zero;
-            go6.transform.rotation = new Quaternion(0, 0, 0, 0);
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
             InputSystem.QueueEvent(stateEvent);
             InputSystem.Update(InputUpdateType.BeforeRender);
-            Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
-            Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+        }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_CanConstrainWithTrackingType()
+    {
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.ignoreTrackingState = true;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+
+            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
+            device.vector3.WriteValueIntoEvent(position, stateEvent);
+
+            // Position only
+            tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(Quaternion.identity));
+
+            // Rotation only
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+            // Rotation and Position
+            tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
         }
     }
 
@@ -438,25 +542,30 @@ internal class XRTests : CoreTestsFixture
     {
         var positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
         var rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+        var trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
 
         var go = new GameObject();
         var component = go.AddComponent<TrackedPoseDriver>();
         component.enabled = false;
         component.positionInput = positionInput;
         component.rotationInput = rotationInput;
+        component.trackingStateInput = trackingStateInput;
 
         Assert.That(positionInput.action.enabled, Is.False);
         Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
 
         component.enabled = true;
 
         Assert.That(positionInput.action.enabled, Is.True);
         Assert.That(rotationInput.action.enabled, Is.True);
+        Assert.That(trackingStateInput.action.enabled, Is.True);
 
         component.enabled = false;
 
         Assert.That(positionInput.action.enabled, Is.False);
         Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
     }
 
     [Test]
@@ -466,35 +575,43 @@ internal class XRTests : CoreTestsFixture
         var map = new InputActionMap("map");
         map.AddAction("Position", binding: "<TestHMD>/vector3");
         map.AddAction("Rotation", binding: "<TestHMD>/quaternion");
+        map.AddAction("Tracking State", binding: "<TestHMD>/trackingState");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
 
         var positionReference = ScriptableObject.CreateInstance<InputActionReference>();
         var rotationReference = ScriptableObject.CreateInstance<InputActionReference>();
+        var trackingStateReference = ScriptableObject.CreateInstance<InputActionReference>();
         positionReference.Set(asset, "map", "Position");
         rotationReference.Set(asset, "map", "Rotation");
+        trackingStateReference.Set(asset, "map", "Tracking State");
 
         var positionInput = new InputActionProperty(positionReference);
         var rotationInput = new InputActionProperty(rotationReference);
+        var trackingStateInput = new InputActionProperty(trackingStateReference);
 
         var go = new GameObject();
         var component = go.AddComponent<TrackedPoseDriver>();
         component.enabled = false;
         component.positionInput = positionInput;
         component.rotationInput = rotationInput;
+        component.trackingStateInput = trackingStateInput;
 
         Assert.That(positionInput.action.enabled, Is.False);
         Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
 
         component.enabled = true;
 
         Assert.That(positionInput.action.enabled, Is.False);
         Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
 
         component.enabled = false;
 
         Assert.That(positionInput.action.enabled, Is.False);
         Assert.That(rotationInput.action.enabled, Is.False);
+        Assert.That(trackingStateInput.action.enabled, Is.False);
     }
 
     [Test]
