@@ -1,6 +1,7 @@
 {
     "name": "Unity.InputSystem.UIIntegration",
     "references": [
+        "Unity.InputSystem",
         "Unity.ugui"
     ],
     "includePlatforms": [],

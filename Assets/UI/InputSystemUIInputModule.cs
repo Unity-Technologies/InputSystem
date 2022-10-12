@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.UI
     /// resulting module will automatically have a set of default input actions assigned to it
     /// (see <see cref="AssignDefaultActions"/>).
     /// </remarks>
-    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#setting-up-ui-input")]
+    //[HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#setting-up-ui-input")]
     public class InputSystemUIInputModule : BaseInputModule
     {
         /// <summary>
@@ -184,9 +184,9 @@ namespace UnityEngine.InputSystem.UI
         /// <seealso cref="InputDevice.deviceId"/>
         public override bool IsPointerOverGameObject(int pointerOrTouchId)
         {
-            if (InputSystem.isProcessingEvents)
-                Debug.LogWarning(
-                    "Calling IsPointerOverGameObject() from within event processing (such as from InputAction callbacks) will not work as expected; it will query UI state from the last frame");
+            // if (InputSystem.isProcessingEvents)
+            //     Debug.LogWarning(
+            //         "Calling IsPointerOverGameObject() from within event processing (such as from InputAction callbacks) will not work as expected; it will query UI state from the last frame");
 
             var stateIndex = -1;
 
@@ -459,7 +459,7 @@ namespace UnityEngine.InputSystem.UI
             // Button press.
             if (button.wasPressedThisFrame)
             {
-                button.pressTime = InputRuntime.s_Instance.unscaledGameTime;
+                button.pressTime = LowLevelUIIntegration.UIIntegrationExtensions.unscaledGameTime;
 
                 eventData.delta = Vector2.zero;
                 eventData.dragging = false;
@@ -531,7 +531,7 @@ namespace UnityEngine.InputSystem.UI
                         // First click on this object.
                         eventData.clickCount = 1;
                     }
-                    eventData.clickTime = InputRuntime.s_Instance.unscaledGameTime;
+                    eventData.clickTime = LowLevelUIIntegration.UIIntegrationExtensions.unscaledGameTime;
                 }
 
                 // Invoke OnPointerUp.
@@ -626,7 +626,7 @@ namespace UnityEngine.InputSystem.UI
             var movement = navigationState.move;
             if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
             {
-                var time = InputRuntime.s_Instance.unscaledGameTime;
+                var time = LowLevelUIIntegration.UIIntegrationExtensions.unscaledGameTime;
                 var moveVector = navigationState.move;
 
                 var moveDirection = MoveDirection.None;
@@ -805,7 +805,7 @@ namespace UnityEngine.InputSystem.UI
             // if running in the background is enabled, we already have rules in place what kind of input
             // is allowed through and what isn't. And for the input that *IS* allowed through, the UI should
             // react.
-            get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground;
+            get => explictlyIgnoreFocus || LowLevelUIIntegration.UIIntegrationExtensions.runInBackground;
         }
 
         [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
@@ -1409,12 +1409,15 @@ namespace UnityEngine.InputSystem.UI
         }
 
 #if UNITY_EDITOR
+        // TODO where should we put this?
+        public const string kDefaultInputActionsAssetPath = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        
         protected override void Reset()
         {
             base.Reset();
 
             var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
-                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
+                kDefaultInputActionsAssetPath,
                 typeof(InputActionAsset));
             // Setting default asset and actions when creating via inspector
             Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);
@@ -1442,7 +1445,7 @@ namespace UnityEngine.InputSystem.UI
 
             if (m_OnControlsChangedDelegate == null)
                 m_OnControlsChangedDelegate = OnControlsChanged;
-            InputActionState.s_GlobalState.onActionControlsChanged.AddCallback(m_OnControlsChangedDelegate);
+            LowLevelUIIntegration.UIIntegrationExtensions.onActionControlsChanged += m_OnControlsChangedDelegate;
 
             if (HasNoActions())
                 AssignDefaultActions();
@@ -1457,7 +1460,7 @@ namespace UnityEngine.InputSystem.UI
         {
             ResetPointers();
 
-            InputActionState.s_GlobalState.onActionControlsChanged.RemoveCallback(m_OnControlsChangedDelegate);
+            LowLevelUIIntegration.UIIntegrationExtensions.onActionControlsChanged -= m_OnControlsChangedDelegate;
 
             DisableAllActions();
             UnhookActions();
@@ -1981,7 +1984,7 @@ namespace UnityEngine.InputSystem.UI
             // If a currently active click is cancelled (by focus change), ignore next click if device cannot run in background.
             // This prevents the cancelled click event being registered when focus is returned i.e. if
             // the button was released while another window was focused.
-            return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground && wasPressed;
+            return context.canceled && !LowLevelUIIntegration.UIIntegrationExtensions.isPlayerFocused && !context.control.device.canRunInBackground && wasPressed;
         }
 
         private void OnLeftClickCallback(InputAction.CallbackContext context)

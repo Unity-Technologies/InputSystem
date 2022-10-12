@@ -168,7 +168,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Return a string representation useful for showing in UI.
         /// </summary>
-        internal string ToDisplayName()
+        public string ToDisplayName()
         {
             return string.IsNullOrEmpty(name) ? GetDisplayName(action) : name;
         }

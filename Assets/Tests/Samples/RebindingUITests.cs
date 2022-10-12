@@ -4,7 +4,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Samples.RebindUI;
+#if false
 using UnityEngine.InputSystem.UI;
+#endif
 using UnityEngine.UI;
 
 public class RebindingUITests : CoreTestsFixture
@@ -83,6 +85,7 @@ public class RebindingUITests : CoreTestsFixture
         Assert.That(bindingLabel.text, Is.EqualTo("Q"));
     }
 
+    #if false
     // https://fogbugz.unity3d.com/f/cases/1271591/
     [Test]
     [Category("Samples")]
@@ -168,6 +171,7 @@ public class RebindingUITests : CoreTestsFixture
         Assert.That(rebind.ongoingRebind.candidates, Is.Empty);
         Assert.That(bindingLabel.text, Is.EqualTo("<Waiting...>"));
     }
+    #endif
 
     private class TestEventSystem : EventSystem
     {

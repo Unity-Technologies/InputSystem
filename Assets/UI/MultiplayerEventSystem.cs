@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.UI
     /// Mouse selection will ignore any game objects not within this hierarchy, and all other navigation, using keyboard or
     /// gamepad for example, will be constrained to game objects under that hierarchy.
     /// </remarks>
-    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#multiplayer-uis")]
+    //[HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#multiplayer-uis")]
     public class MultiplayerEventSystem : EventSystem
     {
         [Tooltip("If set, only process mouse and navigation events for any game objects which are children of this game object.")]

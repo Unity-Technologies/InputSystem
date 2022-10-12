@@ -5,9 +5,9 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
-#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
-using UnityEngine.InputSystem.UI;
-#endif
+// #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
+// using UnityEngine.InputSystem.UI;
+// #endif
 
 ////TODO: add support for keeping a player's InputUser alive and reconnecting back to it
 
@@ -730,23 +730,23 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.
         /// </summary>
-        public InputSystemUIInputModule uiInputModule
-        {
-            get => m_UIInputModule;
-            set
-            {
-                if (m_UIInputModule == value)
-                    return;
+        // public InputSystemUIInputModule uiInputModule
+        // {
+        //     get => m_UIInputModule;
+        //     set
+        //     {
+        //         if (m_UIInputModule == value)
+        //             return;
 
-                if (m_UIInputModule != null && m_UIInputModule.actionsAsset == m_Actions)
-                    m_UIInputModule.actionsAsset = null;
+        //         if (m_UIInputModule != null && m_UIInputModule.actionsAsset == m_Actions)
+        //             m_UIInputModule.actionsAsset = null;
 
-                m_UIInputModule = value;
+        //         m_UIInputModule = value;
 
-                if (m_UIInputModule != null && m_Actions != null)
-                    m_UIInputModule.actionsAsset = m_Actions;
-            }
-        }
+        //         if (m_UIInputModule != null && m_Actions != null)
+        //             m_UIInputModule.actionsAsset = m_Actions;
+        //     }
+        // }
         #endif
 
         /// <summary>
@@ -1134,13 +1134,13 @@ namespace UnityEngine.InputSystem
         [SerializeField] internal InputActionAsset m_Actions;
         [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
-        [Tooltip("UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.")]
 
         #if UNITY_INPUT_SYSTEM_ENABLE_UI
-        [SerializeField] internal InputSystemUIInputModule m_UIInputModule;
-        [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
+        // [Tooltip("UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.")]
+        // [SerializeField] internal InputSystemUIInputModule m_UIInputModule;
         #endif
 
+        [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
         [SerializeField] internal ControlsChangedEvent m_ControlsChangedEvent;
@@ -1213,8 +1213,8 @@ namespace UnityEngine.InputSystem
                 }
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
-            if (uiInputModule != null)
-                uiInputModule.actionsAsset = m_Actions;
+            // if (uiInputModule != null)
+            //     uiInputModule.actionsAsset = m_Actions;
             #endif
 
             switch (m_NotificationBehavior)

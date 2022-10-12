@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Utilities
     /// array one by one.
     /// </remarks>
     /// <typeparam name="TValue">Element type for the array.</typeparam>
-    internal struct InlinedArray<TValue> : IEnumerable<TValue>
+    public struct InlinedArray<TValue> : IEnumerable<TValue>
     {
         // We inline the first value so if there's only one, there's
         // no additional allocation. If more are added, we allocate an array.
@@ -430,7 +430,7 @@ namespace UnityEngine.InputSystem.Utilities
         }
     }
 
-    internal static class InputArrayExtensions
+    public static class InputArrayExtensions
     {
         public static int IndexOfReference<TValue>(this InlinedArray<TValue> array, TValue value)
             where TValue : class

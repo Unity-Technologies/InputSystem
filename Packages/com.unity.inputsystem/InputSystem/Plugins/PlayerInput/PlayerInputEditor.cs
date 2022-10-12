@@ -8,10 +8,10 @@ using UnityEditor;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
-#if UNITY_INPUT_SYSTEM_ENABLE_UI
-using UnityEngine.InputSystem.UI;
-using UnityEngine.InputSystem.UI.Editor;
-#endif
+// #if UNITY_INPUT_SYSTEM_ENABLE_UI
+// using UnityEngine.InputSystem.UI;
+// using UnityEngine.InputSystem.UI.Editor;
+// #endif
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlsChangedEventProperty = serializedObject.FindProperty(nameof(PlayerInput.m_ControlsChangedEvent));
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
-            m_UIInputModuleProperty = serializedObject.FindProperty(nameof(PlayerInput.m_UIInputModule));
+            // m_UIInputModuleProperty = serializedObject.FindProperty(nameof(PlayerInput.m_UIInputModule));
             #endif
         }
 
@@ -137,23 +137,23 @@ namespace UnityEngine.InputSystem.Editor
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             // UI config section.
-            if (m_UIPropertyText == null)
-                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", m_UIInputModuleProperty.GetTooltip());
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_UIInputModuleProperty, m_UIPropertyText);
-            if (EditorGUI.EndChangeCheck())
-                serializedObject.ApplyModifiedProperties();
+            // if (m_UIPropertyText == null)
+            //     m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", m_UIInputModuleProperty.GetTooltip());
+            // EditorGUI.BeginChangeCheck();
+            // EditorGUILayout.PropertyField(m_UIInputModuleProperty, m_UIPropertyText);
+            // if (EditorGUI.EndChangeCheck())
+            //     serializedObject.ApplyModifiedProperties();
 
-            if (m_UIInputModuleProperty.objectReferenceValue != null)
-            {
-                var uiModule = m_UIInputModuleProperty.objectReferenceValue as InputSystemUIInputModule;
-                if (m_ActionsProperty.objectReferenceValue != null && uiModule.actionsAsset != m_ActionsProperty.objectReferenceValue)
-                {
-                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
-                    if (GUILayout.Button(m_FixInputModuleText))
-                        InputSystemUIInputModuleEditor.ReassignActions(uiModule, m_ActionsProperty.objectReferenceValue as InputActionAsset);
-                }
-            }
+            // if (m_UIInputModuleProperty.objectReferenceValue != null)
+            // {
+            //     var uiModule = m_UIInputModuleProperty.objectReferenceValue as InputSystemUIInputModule;
+            //     if (m_ActionsProperty.objectReferenceValue != null && uiModule.actionsAsset != m_ActionsProperty.objectReferenceValue)
+            //     {
+            //         EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
+            //         if (GUILayout.Button(m_FixInputModuleText))
+            //             InputSystemUIInputModuleEditor.ReassignActions(uiModule, m_ActionsProperty.objectReferenceValue as InputActionAsset);
+            //     }
+            // }
             #endif
 
             // Camera section.
@@ -556,7 +556,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_NeverAutoSwitchControlSchemesProperty;
         [NonSerialized] private SerializedProperty m_NotificationBehaviorProperty;
         #if UNITY_INPUT_SYSTEM_ENABLE_UI
-        [NonSerialized] private SerializedProperty m_UIInputModuleProperty;
+        // [NonSerialized] private SerializedProperty m_UIInputModuleProperty;
         #endif
         [NonSerialized] private SerializedProperty m_ActionEventsProperty;
         [NonSerialized] private SerializedProperty m_CameraProperty;

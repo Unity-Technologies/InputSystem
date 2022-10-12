@@ -97,6 +97,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
     }
 
+    #if false
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_CanLinkSpecificDeviceToUI()
@@ -120,6 +121,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
     }
+    #endif
 
     [Test]
     [Category("PlayerInput")]
@@ -454,6 +456,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput2.actions.actionMaps[0].actions[0].bindings[0].overridePath, Is.SameAs("<Gamepad>/buttonNorth"));
     }
 
+    #if false
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_DuplicatingActions_AssignsNewInstanceToUI()
@@ -479,6 +482,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput1.actions, Is.SameAs(ui1.actionsAsset));
         Assert.That(playerInput2.actions, Is.SameAs(ui2.actionsAsset));
     }
+    #endif
 
     [Test]
     [Category("PlayerInput")]
@@ -2142,6 +2146,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerJoined, Is.True);
     }
 
+    #if false
     // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125
     [Test]
     [Category("PlayerInput")]
@@ -2209,6 +2214,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
         Assert.That(player1Moved, Is.True);
     }
+    #endif
 
     [Test] // Mimics what is reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
     [Category("PlayerInput")]

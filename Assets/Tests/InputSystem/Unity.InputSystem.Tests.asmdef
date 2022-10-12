@@ -4,6 +4,7 @@
     "references": [
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
+        "Unity.InputSystem.UIIntegration",
         "Unity.ugui",
         "Unity.PackageManagerDocTools.Editor",
         "UnityEngine.TestRunner",
