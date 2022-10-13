@@ -1,7 +1,6 @@
 {
     "name": "Unity.InputSystem",
     "references": [
-        "Unity.ugui"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -50,11 +49,6 @@
             "name": "com.unity.modules.physics2d",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_PHYSICS2D"
-        },
-        {
-            "name": "com.unity.ugui",
-            "expression": "1.0.0",
-            "define": "UNITY_INPUT_SYSTEM_ENABLE_UI"
         }
     ],
     "noEngineReferences": false
