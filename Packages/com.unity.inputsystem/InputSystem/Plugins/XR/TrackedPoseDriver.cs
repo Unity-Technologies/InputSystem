@@ -128,9 +128,10 @@ namespace UnityEngine.InputSystem.XR
         }
 
         [SerializeField, Tooltip("Ignore Tracking State and always treat the input pose as valid.")]
-        bool m_IgnoreTrackingState = true;
+        bool m_IgnoreTrackingState;
         /// <summary>
         /// Ignore tracking state and always treat the input pose as valid when updating the <see cref="Transform"/> properties.
+        /// The recommended value is <see langword="false"/> so the tracking state input is used.
         /// </summary>
         /// <seealso cref="trackingStateInput"/>
         public bool ignoreTrackingState
@@ -229,7 +230,7 @@ namespace UnityEngine.InputSystem.XR
 
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
-        TrackingStates m_CurrentTrackingState;
+        TrackingStates m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
         bool m_RotationBound;
         bool m_PositionBound;
         bool m_TrackingStateBound;
@@ -467,8 +468,7 @@ namespace UnityEngine.InputSystem.XR
                 if (m_RotationInput.action != null)
                     m_CurrentRotation = m_RotationInput.action.ReadValue<Quaternion>();
 
-                if (m_TrackingStateInput.action != null)
-                    m_CurrentTrackingState = (TrackingStates)m_TrackingStateInput.action.ReadValue<int>();
+                ReadTrackingState();
 
                 m_IsFirstUpdate = false;
             }
@@ -477,6 +477,62 @@ namespace UnityEngine.InputSystem.XR
                 OnBeforeRender();
             else
                 OnUpdate();
+        }
+
+        void ReadTrackingState()
+        {
+            var trackingStateAction = m_TrackingStateInput.action;
+            if (trackingStateAction != null && !trackingStateAction.enabled)
+            {
+                // Treat a disabled action as the default None value for the ReadValue call
+                m_CurrentTrackingState = TrackingStates.None;
+                return;
+            }
+
+            if (trackingStateAction == null || trackingStateAction.m_BindingsCount == 0)
+            {
+                // Treat an Input Action Reference with no reference the same as
+                // an enabled Input Action with no authored bindings, and allow driving the Transform pose.
+                m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
+                return;
+            }
+
+            // Grab state.
+            var actionMap = trackingStateAction.GetOrCreateActionMap();
+            actionMap.ResolveBindingsIfNecessary();
+            var state = actionMap.m_State;
+
+            // Get list of resolved controls to determine if a device actually has tracking state.
+            var hasResolvedControl = false;
+            if (state != null)
+            {
+                var actionIndex = trackingStateAction.m_ActionIndexInState;
+                var totalBindingCount = state.totalBindingCount;
+                for (var i = 0; i < totalBindingCount; ++i)
+                {
+                    unsafe
+                    {
+                        ref var bindingState = ref state.bindingStates[i];
+                        if (bindingState.actionIndex != actionIndex)
+                            continue;
+                        if (bindingState.isComposite)
+                            continue;
+
+                        if (bindingState.controlCount > 0)
+                        {
+                            hasResolvedControl = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Retain the current value if there is no resolved binding.
+            // Since the field initializes to allowing position and rotation,
+            // this allows for driving the Transform pose always when the device
+            // doesn't support reporting the tracking state.
+            if (hasResolvedControl)
+                m_CurrentTrackingState = (TrackingStates)trackingStateAction.ReadValue<int>();
         }
 
         /// <summary>

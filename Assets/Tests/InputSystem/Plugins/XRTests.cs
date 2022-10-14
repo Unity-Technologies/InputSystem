@@ -330,20 +330,35 @@ internal class XRTests : CoreTestsFixture
     }
 
     [InputControlLayout(updateBeforeRender = true)]
-    private class TestHMD : UnityEngine.InputSystem.InputDevice
+    class TestHMD : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]
-        public QuaternionControl quaternion { get; private set; }
+        public QuaternionControl rotation { get; private set; }
         [InputControl]
-        public Vector3Control vector3 { get; private set; }
+        public Vector3Control position { get; private set; }
         [InputControl]
         public IntegerControl trackingState { get; private set; }
         protected override void FinishSetup()
         {
             base.FinishSetup();
-            quaternion = GetChildControl<QuaternionControl>("quaternion");
-            vector3 = GetChildControl<Vector3Control>("vector3");
+            rotation = GetChildControl<QuaternionControl>("rotation");
+            position = GetChildControl<Vector3Control>("position");
             trackingState = GetChildControl<IntegerControl>("trackingState");
+        }
+    }
+
+    [InputControlLayout(updateBeforeRender = true)]
+    class TestHMDWithoutTrackingState : UnityEngine.InputSystem.InputDevice
+    {
+        [InputControl]
+        public QuaternionControl rotation { get; private set; }
+        [InputControl]
+        public Vector3Control position { get; private set; }
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+            rotation = GetChildControl<QuaternionControl>("rotation");
+            position = GetChildControl<Vector3Control>("position");
         }
     }
 
@@ -370,12 +385,12 @@ internal class XRTests : CoreTestsFixture
 
         using (StateEvent.From(device, out var stateEvent))
         {
-            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
-            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
             tpd.trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
 
-            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
-            device.vector3.WriteValueIntoEvent(position, stateEvent);
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
             device.trackingState.WriteValueIntoEvent((int)trackingState, stateEvent);
 
             // Constrained by Tracking State only
@@ -423,11 +438,11 @@ internal class XRTests : CoreTestsFixture
 
         using (StateEvent.From(device, out var stateEvent))
         {
-            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
-            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
 
-            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
-            device.vector3.WriteValueIntoEvent(position, stateEvent);
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
 
             // BeforeRender only
             tpd.updateType = TrackedPoseDriver.UpdateType.BeforeRender;
@@ -498,11 +513,11 @@ internal class XRTests : CoreTestsFixture
 
         using (StateEvent.From(device, out var stateEvent))
         {
-            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
-            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
 
-            device.quaternion.WriteValueIntoEvent(rotation, stateEvent);
-            device.vector3.WriteValueIntoEvent(position, stateEvent);
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
 
             // Position only
             tpd.trackingType = TrackedPoseDriver.TrackingType.PositionOnly;
@@ -540,8 +555,8 @@ internal class XRTests : CoreTestsFixture
     [Category("Components")]
     public void Components_TrackedPoseDriver_EnablesAndDisablesDirectActions()
     {
-        var positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/vector3"));
-        var rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/quaternion"));
+        var positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+        var rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
         var trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
 
         var go = new GameObject();
@@ -573,8 +588,8 @@ internal class XRTests : CoreTestsFixture
     public void Components_TrackedPoseDriver_DoesNotEnableOrDisableReferenceActions()
     {
         var map = new InputActionMap("map");
-        map.AddAction("Position", binding: "<TestHMD>/vector3");
-        map.AddAction("Rotation", binding: "<TestHMD>/quaternion");
+        map.AddAction("Position", binding: "<TestHMD>/position");
+        map.AddAction("Rotation", binding: "<TestHMD>/rotation");
         map.AddAction("Tracking State", binding: "<TestHMD>/trackingState");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
@@ -612,6 +627,105 @@ internal class XRTests : CoreTestsFixture
         Assert.That(positionInput.action.enabled, Is.False);
         Assert.That(rotationInput.action.enabled, Is.False);
         Assert.That(trackingStateInput.action.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_RequiresResolvedTrackingStateBindings()
+    {
+        // Tests the scenario that a single TrackedPoseDriver component has multiple bindings,
+        // some to a device with tracking state and some to a device without tracking state.
+        // The use case is having the Main Camera track an XRHMD (that has tracking state)
+        // or a HandheldARInputDevice (which does not have tracking state), so the tracking
+        // state should have an effective value of Position | Rotation.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMDWithoutTrackingState>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            var positionAction = new InputAction(binding: "<TestHMD>/position");
+            positionAction.AddBinding("<TestHMDWithoutTrackingState>/position");
+            var rotationAction = new InputAction(binding: "<TestHMD>/rotation");
+            rotationAction.AddBinding("<TestHMDWithoutTrackingState>/rotation");
+            var trackingStateAction = new InputAction(binding: "<TestHMD>/trackingState");
+
+            tpd.positionInput = new InputActionProperty(positionAction);
+            tpd.rotationInput = new InputActionProperty(rotationAction);
+            tpd.trackingStateInput = new InputActionProperty(trackingStateAction);
+
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
+
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+        }
+    }
+
+    [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenTrackedDeviceRemoved()
+    {
+        // Tests the scenario that XR controller devices (which have tracking state) are removed
+        // (e.g. due to being set down on a table) that the Transform pose will be retained
+        // when the tracking state is not ignored.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+        var device = InputSystem.AddDevice<TestHMD>();
+
+        using (StateEvent.From(device, out var stateEvent))
+        {
+            tpd.positionInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/position"));
+            tpd.rotationInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/rotation"));
+            tpd.trackingStateInput = new InputActionProperty(new InputAction(binding: "<TestHMD>/trackingState"));
+
+            device.rotation.WriteValueIntoEvent(rotation, stateEvent);
+            device.position.WriteValueIntoEvent(position, stateEvent);
+            device.trackingState.WriteValueIntoEvent((int)(InputTrackingState.Position | InputTrackingState.Rotation), stateEvent);
+
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+            InputSystem.RemoveDevice(device);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+            // Ensure the pose is retained even after OnEnable makes the behavior poll the input again
+            tpd.enabled = false;
+            tpd.enabled = true;
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(transform.position, Is.EqualTo(position));
+            Assert.That(transform.rotation, Is.EqualTo(rotation));
+        }
     }
 
     [Test]
