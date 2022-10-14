@@ -2880,7 +2880,7 @@ partial class CoreTests
     }
 
     [Test]
-    [Ignore]
+    [Ignore("Temp")]
     public void InputActionCodeGenerator_ShouldGenerateValidCSharpCode()
     {
         // Note that this only tests pre-generated code contents with respect to the code generator.
@@ -2916,7 +2916,7 @@ partial class CoreTests
     }
 
     [Test]
-    [Ignore]
+    [Ignore("Temp")]
     public void InputActionCodeGenerator_ShouldGenerateClassWithSupportForRegisteringAndUnregisteringActions()
     {
         // Note that this is only testing pre-generated code. See test above for consistency check on file contents of generated source code.
