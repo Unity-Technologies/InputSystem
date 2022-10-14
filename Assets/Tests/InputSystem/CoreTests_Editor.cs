@@ -2916,7 +2916,6 @@ partial class CoreTests
     }
 
     [Test]
-    [Ignore("Temp")]
     public void InputActionCodeGenerator_ShouldGenerateClassWithSupportForRegisteringAndUnregisteringActions()
     {
         // Note that this is only testing pre-generated code. See test above for consistency check on file contents of generated source code.
