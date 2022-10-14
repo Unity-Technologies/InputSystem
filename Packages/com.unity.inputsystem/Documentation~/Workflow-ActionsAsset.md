@@ -4,17 +4,17 @@
 
 The Actions Asset provides a way to define, group, and manage sets of actions as data stored in an asset, instead of defining them directly in your code.
 
-Using an Actions Asset allows you to keep the data that defines your actions separate from the GameObjects which should respond to the actions. This provides a further level of abstraction and organization, compared with defining actions in your code.
+Using an Actions Asset allows you to keep the data that defines your actions separate from the GameObjects which should respond to the actions. This provides a further level of abstraction and organization, compared with [embedding action definitions directly in your code](Workflow-Embedded.html).
 
 The Actions Asset is useful because it means all your action definitions are stored as a single asset file, separate from your scripts and prefabs. This can make it simpler to manage conceptually, and can help in practical situations where different people in your team might work on different parts of the project at the same time.
 
-Action Assets also provide other benefits over embedded actions in scripts, such as the ability to group actions into **Action Maps** and **Control Schemes**.
+Action Assets also provide other benefits over embedded actions in scripts, such as the ability to group actions into [Action Maps](ActionAssets.html#editing-action-maps) and [Control Schemes](ActionAssets.html#editing-control-schemes).
 
-Action Maps are a way to group related actions together, where each map relates to a different situation. For example, your game might involve driving vehicles and navigating on foot, and may have in-game menus. In this example, it would make sense to have three different action maps for each of these three situations, and your game code would switch between them as appropriate. The actions grouped into the "driving" action map might be called "steer", "accelerate", "brake", "handbrake", etc, whereas the actions grouped into the "on foot" action map might be "move", "jump", "crouch", "use", etc. 
+[Action Maps](ActionAssets.html#editing-action-maps) are a way to group related actions together, where each map relates to a different situation. For example, your game might involve driving vehicles and navigating on foot, and may have in-game menus. In this example, it would make sense to have three different action maps for each of these three situations, and your game code would switch between them as appropriate. The actions grouped into the "driving" action map might be called "steer", "accelerate", "brake", "handbrake", etc, whereas the actions grouped into the "on foot" action map might be "move", "jump", "crouch", "use", etc. 
 
-The Control Schemes, also defined in an Action Asset, allows you to specify which bindings belong to the control schemes you define. You might have one control scheme which is "Joypad", and another control scheme which is "Keyboard and Mouse". This allows you to determine which control scheme the user is currently using, so your game can respond to the user accordingly. This feature is often used to adapt the in-game UI to show the correct keys or buttons in on-screen prompts.
+The [Control Schemes](ActionAssets.html#editing-control-schemes), also defined in an Action Asset, allows you to specify which bindings belong to the control schemes you define. You might have one control scheme which is "Joypad", and another control scheme which is "Keyboard and Mouse". This allows you to determine which control scheme the user is currently using, so your game can respond to the user accordingly. This feature is often used to adapt the in-game UI to show the correct keys or buttons in on-screen prompts.
 
-![image alt text](./Images/Workflow-ActionsWindow.png)
+![image alt text](./Images/MyGameActions.png)
 
 ## Accessing your Actions Asset from code
 
@@ -133,10 +133,10 @@ public class DocsExampleActionsAssetCsWrapper : MonoBehaviour
 }
 ```
 
-Whether you use the C# wrapper option, or the inspector reference option, using an Action Asset like this gives you the ability to organize and edit your actions in the Actions Window. It is more flexible than using [embedded actions](./Workflow-Embedded.md), and [directly reading device states](./Workflow-Direct.md), and is generally a good solution for many projects. However, you can also add one more step of abstraction using the [**Player Input component**](./Workflow-PlayerInput.md), to set up calls to methods based on your Action definitions. 
+Whether you use the C# wrapper option, or the inspector reference option, using an Action Asset like this gives you the ability to organize and edit your actions in the Actions Window. It is more flexible than using [embedded actions](Workflow-Embedded.html), and [directly reading device states](Workflow-Direct.html), and is generally a good solution for many projects. However, you can also add one more step of abstraction using the [Player Input component](Workflow-PlayerInput.html), to set up calls to methods based on your Action definitions. 
 
 See also:
 
-* [Using Action Assets](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.4/manual/ActionAssets.html)
+* [Using Action Assets](ActionAssets.html)
 
-* [Generating a C# Class that wraps your actions](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.4/manual/ActionAssets.html#auto-generating-script-code-for-actions)
+* [Generating a C# Class that wraps your actions](ActionAssets.html#auto-generating-script-code-for-actions)
