@@ -2880,7 +2880,6 @@ partial class CoreTests
     }
 
     [Test]
-    [Ignore("Temp")]
     public void InputActionCodeGenerator_ShouldGenerateValidCSharpCode()
     {
         // Note that this only tests pre-generated code contents with respect to the code generator.
@@ -2888,8 +2887,9 @@ partial class CoreTests
         // Hence, one need to regenerate the source file below if code generator is updated to produce different output. This is not ideal and could be improved if dynamic compilation is used.
 
         var directory = "Assets/Tests/InputSystem";
-        var csFileContents = File.ReadAllText(Path.Combine(directory, "InputActionCodeGeneratorActions.cs"));
-        var assetPath = Path.Combine(directory, "InputActionCodeGeneratorActions.inputactions");
+        var csFilePath = $"{directory}/InputActionCodeGeneratorActions.cs";
+        var assetPath = $"{directory}/InputActionCodeGeneratorActions.inputactions";
+        var csFileContents = File.ReadAllText(csFilePath);
         var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
 
         var generatedCode = InputActionCodeGenerator.GenerateWrapperCode(asset);
