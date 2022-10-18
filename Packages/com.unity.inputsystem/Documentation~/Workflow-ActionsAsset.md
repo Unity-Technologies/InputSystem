@@ -23,30 +23,30 @@ When you use an Actions Asset, there are two distinct ways to access it from you
 * Use an **inspector reference** to the Actions Asset, or
 * Generate a **C# class** that wraps your Actions Asset.
 
-Your choice affects how you access your actions from code. With an inspector reference to your Actions Asset, you must read the actions by name using strings. If you use the **Generate C# class** feature, Unity generates an accompanying class as a new **.cs** script asset, which acts as a wrapper for your actions. You can then create an instance of the generated wrapper class in your code and directly use its API members which are named after the names of the actions that you configured.
+Your choice affects how you access your actions from code. With an **inspector reference** to your Actions Asset, you must read the actions by name using strings. If you use the **Generate C# class** feature, Unity generates an accompanying class as a new **.cs** script asset, which acts as a wrapper for your actions. You can then create an instance of the generated wrapper class in your code and directly use its API members which are named after the names of the actions that you configured.
 
 Both workflow options are described below using the same example, so you can see the difference.
 
-**Referencing the Actions Asset in the inspector**
+### Referencing the Actions Asset in the inspector
 
-To use your Actions Asset through an inspector reference:
+To use your Actions Asset through an **inspector reference**:
 
 1. Create a `public InputActionsAsset` field in your script.
 2. [Assign the reference](https://docs.unity3d.com/Manual/EditingValueProperties.html#ref-assign-dnd) in the inspector.
 3. Access the Actions in your script by name, using strings.
 
-This string-based access is demonstrated in the example below. Note that the reference to the "move" action is stored in a variable after it is found, to avoid 
+This string-based access is demonstrated in the example below.
 
 ```
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class DocsExampleActionsAssetReference : MonoBehaviour
+public class ExampleScript : MonoBehaviour
 {
     // assign the actions asset to this field in the inspector:
     public InputActionAsset actions; 
     
-    // private fields
+    // private field to store move action reference
     private InputAction moveAction;
 
     void Awake()
@@ -81,9 +81,12 @@ public class DocsExampleActionsAssetReference : MonoBehaviour
 }
 ```
 
-**Referencing the Actions Asset through a C# wrapper**
+**Note:** In the example above the reference to the "move" action is stored in a variable after it is found, to avoid accessing it by string every frame, which would be bad for performance.
 
-To use your Actions Asset through an C# wrapper:
+
+### Referencing the Actions Asset through a C# wrapper
+
+To use your Actions Asset through a **C# wrapper**:
 
 1. Select your Actions Asset in the project window
 2. In the Inspector, enable **Generate C# Class** and select **Apply**. You should see a C# asset with the same name as your Actions Asset in your project window.
