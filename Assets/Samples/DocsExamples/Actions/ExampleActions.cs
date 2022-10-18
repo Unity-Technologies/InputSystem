@@ -62,6 +62,15 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""New action"",
+                    ""type"": ""Button"",
+                    ""id"": ""50172c2c-1af4-4b76-b06e-d60442885853"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -174,6 +183,17 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
                     ""action"": ""use"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9e6a8f01-4709-40dc-8374-e12f3af73422"",
+                    ""path"": """",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""New action"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -214,6 +234,7 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
         m_gameplay_jump = m_gameplay.FindAction("jump", throwIfNotFound: true);
         m_gameplay_crouch = m_gameplay.FindAction("crouch", throwIfNotFound: true);
         m_gameplay_use = m_gameplay.FindAction("use", throwIfNotFound: true);
+        m_gameplay_Newaction = m_gameplay.FindAction("New action", throwIfNotFound: true);
         // menus
         m_menus = asset.FindActionMap("menus", throwIfNotFound: true);
         m_menus_Newaction = m_menus.FindAction("New action", throwIfNotFound: true);
@@ -280,6 +301,7 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
     private readonly InputAction m_gameplay_jump;
     private readonly InputAction m_gameplay_crouch;
     private readonly InputAction m_gameplay_use;
+    private readonly InputAction m_gameplay_Newaction;
     public struct GameplayActions
     {
         private @ExampleActions m_Wrapper;
@@ -288,6 +310,7 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
         public InputAction @jump => m_Wrapper.m_gameplay_jump;
         public InputAction @crouch => m_Wrapper.m_gameplay_crouch;
         public InputAction @use => m_Wrapper.m_gameplay_use;
+        public InputAction @Newaction => m_Wrapper.m_gameplay_Newaction;
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -309,6 +332,9 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
                 @use.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnUse;
                 @use.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnUse;
                 @use.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnUse;
+                @Newaction.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnNewaction;
+                @Newaction.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnNewaction;
+                @Newaction.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnNewaction;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -325,6 +351,9 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
                 @use.started += instance.OnUse;
                 @use.performed += instance.OnUse;
                 @use.canceled += instance.OnUse;
+                @Newaction.started += instance.OnNewaction;
+                @Newaction.performed += instance.OnNewaction;
+                @Newaction.canceled += instance.OnNewaction;
             }
         }
     }
@@ -368,6 +397,7 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
         void OnUse(InputAction.CallbackContext context);
+        void OnNewaction(InputAction.CallbackContext context);
     }
     public interface IMenusActions
     {
