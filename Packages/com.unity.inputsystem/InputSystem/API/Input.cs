@@ -1,9 +1,19 @@
 using System;
+using System.Linq;
 using UnityEngine.InputSystem.Controls;
 
 // TODO rename HighLevel to something that makes sense
 namespace UnityEngine.InputSystem.HighLevel
 {
+    internal enum InputDeviceType
+    {
+        Invalid,
+        Keyboard,
+        Mouse,
+        Gamepad,
+        Joystick
+    }
+    
     public enum Inputs
     {
         Key_Space = 10001,
@@ -260,190 +270,388 @@ namespace UnityEngine.InputSystem.HighLevel
 
 #endif
 
-        private static ButtonControl GetButtonControl(Inputs input)
+        private static InputDeviceType GetDeviceTypeForInput(Inputs input)
         {
-            // WHAT THE FCK!? or .. can we do better?
             switch (input)
             {
-                case Inputs.Key_Space: return Keyboard.current != null ? Keyboard.current[Key.Space] : null;
-                case Inputs.Key_Enter: return Keyboard.current != null ? Keyboard.current[Key.Enter] : null;
-                case Inputs.Key_Tab: return Keyboard.current != null ? Keyboard.current[Key.Tab] : null;
-                case Inputs.Key_Backquote: return Keyboard.current != null ? Keyboard.current[Key.Backquote] : null;
-                case Inputs.Key_Quote: return Keyboard.current != null ? Keyboard.current[Key.Quote] : null;
-                case Inputs.Key_Semicolon: return Keyboard.current != null ? Keyboard.current[Key.Semicolon] : null;
-                case Inputs.Key_Comma: return Keyboard.current != null ? Keyboard.current[Key.Comma] : null;
-                case Inputs.Key_Period: return Keyboard.current != null ? Keyboard.current[Key.Period] : null;
-                case Inputs.Key_Slash: return Keyboard.current != null ? Keyboard.current[Key.Slash] : null;
-                case Inputs.Key_Backslash: return Keyboard.current != null ? Keyboard.current[Key.Backslash] : null;
-                case Inputs.Key_LeftBracket: return Keyboard.current != null ? Keyboard.current[Key.LeftBracket] : null;
-                case Inputs.Key_RightBracket:
-                    return Keyboard.current != null ? Keyboard.current[Key.RightBracket] : null;
-                case Inputs.Key_Minus: return Keyboard.current != null ? Keyboard.current[Key.Minus] : null;
-                case Inputs.Key_Equals: return Keyboard.current != null ? Keyboard.current[Key.Equals] : null;
-                case Inputs.Key_A: return Keyboard.current != null ? Keyboard.current[Key.A] : null;
-                case Inputs.Key_B: return Keyboard.current != null ? Keyboard.current[Key.B] : null;
-                case Inputs.Key_C: return Keyboard.current != null ? Keyboard.current[Key.C] : null;
-                case Inputs.Key_D: return Keyboard.current != null ? Keyboard.current[Key.D] : null;
-                case Inputs.Key_E: return Keyboard.current != null ? Keyboard.current[Key.E] : null;
-                case Inputs.Key_F: return Keyboard.current != null ? Keyboard.current[Key.F] : null;
-                case Inputs.Key_G: return Keyboard.current != null ? Keyboard.current[Key.G] : null;
-                case Inputs.Key_H: return Keyboard.current != null ? Keyboard.current[Key.H] : null;
-                case Inputs.Key_I: return Keyboard.current != null ? Keyboard.current[Key.I] : null;
-                case Inputs.Key_J: return Keyboard.current != null ? Keyboard.current[Key.J] : null;
-                case Inputs.Key_K: return Keyboard.current != null ? Keyboard.current[Key.K] : null;
-                case Inputs.Key_L: return Keyboard.current != null ? Keyboard.current[Key.L] : null;
-                case Inputs.Key_M: return Keyboard.current != null ? Keyboard.current[Key.M] : null;
-                case Inputs.Key_N: return Keyboard.current != null ? Keyboard.current[Key.N] : null;
-                case Inputs.Key_O: return Keyboard.current != null ? Keyboard.current[Key.O] : null;
-                case Inputs.Key_P: return Keyboard.current != null ? Keyboard.current[Key.P] : null;
-                case Inputs.Key_Q: return Keyboard.current != null ? Keyboard.current[Key.Q] : null;
-                case Inputs.Key_R: return Keyboard.current != null ? Keyboard.current[Key.R] : null;
-                case Inputs.Key_S: return Keyboard.current != null ? Keyboard.current[Key.S] : null;
-                case Inputs.Key_T: return Keyboard.current != null ? Keyboard.current[Key.T] : null;
-                case Inputs.Key_U: return Keyboard.current != null ? Keyboard.current[Key.U] : null;
-                case Inputs.Key_V: return Keyboard.current != null ? Keyboard.current[Key.V] : null;
-                case Inputs.Key_W: return Keyboard.current != null ? Keyboard.current[Key.W] : null;
-                case Inputs.Key_X: return Keyboard.current != null ? Keyboard.current[Key.X] : null;
-                case Inputs.Key_Y: return Keyboard.current != null ? Keyboard.current[Key.Y] : null;
-                case Inputs.Key_Z: return Keyboard.current != null ? Keyboard.current[Key.Z] : null;
-                case Inputs.Key_Digit1: return Keyboard.current != null ? Keyboard.current[Key.Digit1] : null;
-                case Inputs.Key_Digit2: return Keyboard.current != null ? Keyboard.current[Key.Digit2] : null;
-                case Inputs.Key_Digit3: return Keyboard.current != null ? Keyboard.current[Key.Digit3] : null;
-                case Inputs.Key_Digit4: return Keyboard.current != null ? Keyboard.current[Key.Digit4] : null;
-                case Inputs.Key_Digit5: return Keyboard.current != null ? Keyboard.current[Key.Digit5] : null;
-                case Inputs.Key_Digit6: return Keyboard.current != null ? Keyboard.current[Key.Digit6] : null;
-                case Inputs.Key_Digit7: return Keyboard.current != null ? Keyboard.current[Key.Digit7] : null;
-                case Inputs.Key_Digit8: return Keyboard.current != null ? Keyboard.current[Key.Digit8] : null;
-                case Inputs.Key_Digit9: return Keyboard.current != null ? Keyboard.current[Key.Digit9] : null;
-                case Inputs.Key_Digit0: return Keyboard.current != null ? Keyboard.current[Key.Digit0] : null;
-                case Inputs.Key_LeftShift: return Keyboard.current != null ? Keyboard.current[Key.LeftShift] : null;
-                case Inputs.Key_RightShift: return Keyboard.current != null ? Keyboard.current[Key.RightShift] : null;
-                case Inputs.Key_LeftAlt: return Keyboard.current != null ? Keyboard.current[Key.LeftAlt] : null;
-                case Inputs.Key_RightAlt: return Keyboard.current != null ? Keyboard.current[Key.RightAlt] : null;
-                case Inputs.Key_LeftCtrl: return Keyboard.current != null ? Keyboard.current[Key.LeftCtrl] : null;
-                case Inputs.Key_RightCtrl: return Keyboard.current != null ? Keyboard.current[Key.RightCtrl] : null;
-                case Inputs.Key_LeftMeta: return Keyboard.current != null ? Keyboard.current[Key.LeftMeta] : null;
-                case Inputs.Key_RightMeta: return Keyboard.current != null ? Keyboard.current[Key.RightMeta] : null;
-                case Inputs.Key_ContextMenu: return Keyboard.current != null ? Keyboard.current[Key.ContextMenu] : null;
-                case Inputs.Key_Escape: return Keyboard.current != null ? Keyboard.current[Key.Escape] : null;
-                case Inputs.Key_LeftArrow: return Keyboard.current != null ? Keyboard.current[Key.LeftArrow] : null;
-                case Inputs.Key_RightArrow: return Keyboard.current != null ? Keyboard.current[Key.RightArrow] : null;
-                case Inputs.Key_UpArrow: return Keyboard.current != null ? Keyboard.current[Key.UpArrow] : null;
-                case Inputs.Key_DownArrow: return Keyboard.current != null ? Keyboard.current[Key.DownArrow] : null;
-                case Inputs.Key_Backspace: return Keyboard.current != null ? Keyboard.current[Key.Backspace] : null;
-                case Inputs.Key_PageDown: return Keyboard.current != null ? Keyboard.current[Key.PageDown] : null;
-                case Inputs.Key_PageUp: return Keyboard.current != null ? Keyboard.current[Key.PageUp] : null;
-                case Inputs.Key_Home: return Keyboard.current != null ? Keyboard.current[Key.Home] : null;
-                case Inputs.Key_End: return Keyboard.current != null ? Keyboard.current[Key.End] : null;
-                case Inputs.Key_Insert: return Keyboard.current != null ? Keyboard.current[Key.Insert] : null;
-                case Inputs.Key_Delete: return Keyboard.current != null ? Keyboard.current[Key.Delete] : null;
-                case Inputs.Key_CapsLock: return Keyboard.current != null ? Keyboard.current[Key.CapsLock] : null;
-                case Inputs.Key_NumLock: return Keyboard.current != null ? Keyboard.current[Key.NumLock] : null;
-                case Inputs.Key_PrintScreen: return Keyboard.current != null ? Keyboard.current[Key.PrintScreen] : null;
-                case Inputs.Key_ScrollLock: return Keyboard.current != null ? Keyboard.current[Key.ScrollLock] : null;
-                case Inputs.Key_Pause: return Keyboard.current != null ? Keyboard.current[Key.Pause] : null;
-                case Inputs.Key_NumpadEnter: return Keyboard.current != null ? Keyboard.current[Key.NumpadEnter] : null;
-                case Inputs.Key_NumpadDivide:
-                    return Keyboard.current != null ? Keyboard.current[Key.NumpadDivide] : null;
-                case Inputs.Key_NumpadMultiply:
-                    return Keyboard.current != null ? Keyboard.current[Key.NumpadMultiply] : null;
-                case Inputs.Key_NumpadPlus: return Keyboard.current != null ? Keyboard.current[Key.NumpadPlus] : null;
-                case Inputs.Key_NumpadMinus: return Keyboard.current != null ? Keyboard.current[Key.NumpadMinus] : null;
-                case Inputs.Key_NumpadPeriod:
-                    return Keyboard.current != null ? Keyboard.current[Key.NumpadPeriod] : null;
-                case Inputs.Key_NumpadEquals:
-                    return Keyboard.current != null ? Keyboard.current[Key.NumpadEquals] : null;
-                case Inputs.Key_Numpad0: return Keyboard.current != null ? Keyboard.current[Key.Numpad0] : null;
-                case Inputs.Key_Numpad1: return Keyboard.current != null ? Keyboard.current[Key.Numpad1] : null;
-                case Inputs.Key_Numpad2: return Keyboard.current != null ? Keyboard.current[Key.Numpad2] : null;
-                case Inputs.Key_Numpad3: return Keyboard.current != null ? Keyboard.current[Key.Numpad3] : null;
-                case Inputs.Key_Numpad4: return Keyboard.current != null ? Keyboard.current[Key.Numpad4] : null;
-                case Inputs.Key_Numpad5: return Keyboard.current != null ? Keyboard.current[Key.Numpad5] : null;
-                case Inputs.Key_Numpad6: return Keyboard.current != null ? Keyboard.current[Key.Numpad6] : null;
-                case Inputs.Key_Numpad7: return Keyboard.current != null ? Keyboard.current[Key.Numpad7] : null;
-                case Inputs.Key_Numpad8: return Keyboard.current != null ? Keyboard.current[Key.Numpad8] : null;
-                case Inputs.Key_Numpad9: return Keyboard.current != null ? Keyboard.current[Key.Numpad9] : null;
-                case Inputs.Key_F1: return Keyboard.current != null ? Keyboard.current[Key.F1] : null;
-                case Inputs.Key_F2: return Keyboard.current != null ? Keyboard.current[Key.F2] : null;
-                case Inputs.Key_F3: return Keyboard.current != null ? Keyboard.current[Key.F3] : null;
-                case Inputs.Key_F4: return Keyboard.current != null ? Keyboard.current[Key.F4] : null;
-                case Inputs.Key_F5: return Keyboard.current != null ? Keyboard.current[Key.F5] : null;
-                case Inputs.Key_F6: return Keyboard.current != null ? Keyboard.current[Key.F6] : null;
-                case Inputs.Key_F7: return Keyboard.current != null ? Keyboard.current[Key.F7] : null;
-                case Inputs.Key_F8: return Keyboard.current != null ? Keyboard.current[Key.F8] : null;
-                case Inputs.Key_F9: return Keyboard.current != null ? Keyboard.current[Key.F9] : null;
-                case Inputs.Key_F10: return Keyboard.current != null ? Keyboard.current[Key.F10] : null;
-                case Inputs.Key_F11: return Keyboard.current != null ? Keyboard.current[Key.F11] : null;
-                case Inputs.Key_F12: return Keyboard.current != null ? Keyboard.current[Key.F12] : null;
-                case Inputs.Key_OEM1: return Keyboard.current != null ? Keyboard.current[Key.OEM1] : null;
-                case Inputs.Key_OEM2: return Keyboard.current != null ? Keyboard.current[Key.OEM2] : null;
-                case Inputs.Key_OEM3: return Keyboard.current != null ? Keyboard.current[Key.OEM3] : null;
-                case Inputs.Key_OEM4: return Keyboard.current != null ? Keyboard.current[Key.OEM4] : null;
-                case Inputs.Key_OEM5: return Keyboard.current != null ? Keyboard.current[Key.OEM5] : null;
+                case Inputs.Key_Space: return InputDeviceType.Keyboard;
+                case Inputs.Key_Enter: return InputDeviceType.Keyboard;
+                case Inputs.Key_Tab: return InputDeviceType.Keyboard;
+                case Inputs.Key_Backquote: return InputDeviceType.Keyboard;
+                case Inputs.Key_Quote: return InputDeviceType.Keyboard;
+                case Inputs.Key_Semicolon: return InputDeviceType.Keyboard;
+                case Inputs.Key_Comma: return InputDeviceType.Keyboard;
+                case Inputs.Key_Period: return InputDeviceType.Keyboard;
+                case Inputs.Key_Slash: return InputDeviceType.Keyboard;
+                case Inputs.Key_Backslash: return InputDeviceType.Keyboard;
+                case Inputs.Key_LeftBracket: return InputDeviceType.Keyboard;
+                case Inputs.Key_RightBracket: return InputDeviceType.Keyboard;
+                case Inputs.Key_Minus: return InputDeviceType.Keyboard;
+                case Inputs.Key_Equals: return InputDeviceType.Keyboard;
+                case Inputs.Key_A: return InputDeviceType.Keyboard;
+                case Inputs.Key_B: return InputDeviceType.Keyboard;
+                case Inputs.Key_C: return InputDeviceType.Keyboard;
+                case Inputs.Key_D: return InputDeviceType.Keyboard;
+                case Inputs.Key_E: return InputDeviceType.Keyboard;
+                case Inputs.Key_F: return InputDeviceType.Keyboard;
+                case Inputs.Key_G: return InputDeviceType.Keyboard;
+                case Inputs.Key_H: return InputDeviceType.Keyboard;
+                case Inputs.Key_I: return InputDeviceType.Keyboard;
+                case Inputs.Key_J: return InputDeviceType.Keyboard;
+                case Inputs.Key_K: return InputDeviceType.Keyboard;
+                case Inputs.Key_L: return InputDeviceType.Keyboard;
+                case Inputs.Key_M: return InputDeviceType.Keyboard;
+                case Inputs.Key_N: return InputDeviceType.Keyboard;
+                case Inputs.Key_O: return InputDeviceType.Keyboard;
+                case Inputs.Key_P: return InputDeviceType.Keyboard;
+                case Inputs.Key_Q: return InputDeviceType.Keyboard;
+                case Inputs.Key_R: return InputDeviceType.Keyboard;
+                case Inputs.Key_S: return InputDeviceType.Keyboard;
+                case Inputs.Key_T: return InputDeviceType.Keyboard;
+                case Inputs.Key_U: return InputDeviceType.Keyboard;
+                case Inputs.Key_V: return InputDeviceType.Keyboard;
+                case Inputs.Key_W: return InputDeviceType.Keyboard;
+                case Inputs.Key_X: return InputDeviceType.Keyboard;
+                case Inputs.Key_Y: return InputDeviceType.Keyboard;
+                case Inputs.Key_Z: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit1: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit2: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit3: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit4: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit5: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit6: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit7: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit8: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit9: return InputDeviceType.Keyboard;
+                case Inputs.Key_Digit0: return InputDeviceType.Keyboard;
+                case Inputs.Key_LeftShift: return InputDeviceType.Keyboard;
+                case Inputs.Key_RightShift: return InputDeviceType.Keyboard;
+                case Inputs.Key_LeftAlt: return InputDeviceType.Keyboard;
+                case Inputs.Key_RightAlt: return InputDeviceType.Keyboard;
+                case Inputs.Key_LeftCtrl: return InputDeviceType.Keyboard;
+                case Inputs.Key_RightCtrl: return InputDeviceType.Keyboard;
+                case Inputs.Key_LeftMeta: return InputDeviceType.Keyboard;
+                case Inputs.Key_RightMeta: return InputDeviceType.Keyboard;
+                case Inputs.Key_ContextMenu: return InputDeviceType.Keyboard;
+                case Inputs.Key_Escape: return InputDeviceType.Keyboard;
+                case Inputs.Key_LeftArrow: return InputDeviceType.Keyboard;
+                case Inputs.Key_RightArrow: return InputDeviceType.Keyboard;
+                case Inputs.Key_UpArrow: return InputDeviceType.Keyboard;
+                case Inputs.Key_DownArrow: return InputDeviceType.Keyboard;
+                case Inputs.Key_Backspace: return InputDeviceType.Keyboard;
+                case Inputs.Key_PageDown: return InputDeviceType.Keyboard;
+                case Inputs.Key_PageUp: return InputDeviceType.Keyboard;
+                case Inputs.Key_Home: return InputDeviceType.Keyboard;
+                case Inputs.Key_End: return InputDeviceType.Keyboard;
+                case Inputs.Key_Insert: return InputDeviceType.Keyboard;
+                case Inputs.Key_Delete: return InputDeviceType.Keyboard;
+                case Inputs.Key_CapsLock: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumLock: return InputDeviceType.Keyboard;
+                case Inputs.Key_PrintScreen: return InputDeviceType.Keyboard;
+                case Inputs.Key_ScrollLock: return InputDeviceType.Keyboard;
+                case Inputs.Key_Pause: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadEnter: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadDivide: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadMultiply: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadPlus: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadMinus: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadPeriod: return InputDeviceType.Keyboard;
+                case Inputs.Key_NumpadEquals: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad0: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad1: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad2: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad3: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad4: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad5: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad6: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad7: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad8: return InputDeviceType.Keyboard;
+                case Inputs.Key_Numpad9: return InputDeviceType.Keyboard;
+                case Inputs.Key_F1: return InputDeviceType.Keyboard;
+                case Inputs.Key_F2: return InputDeviceType.Keyboard;
+                case Inputs.Key_F3: return InputDeviceType.Keyboard;
+                case Inputs.Key_F4: return InputDeviceType.Keyboard;
+                case Inputs.Key_F5: return InputDeviceType.Keyboard;
+                case Inputs.Key_F6: return InputDeviceType.Keyboard;
+                case Inputs.Key_F7: return InputDeviceType.Keyboard;
+                case Inputs.Key_F8: return InputDeviceType.Keyboard;
+                case Inputs.Key_F9: return InputDeviceType.Keyboard;
+                case Inputs.Key_F10: return InputDeviceType.Keyboard;
+                case Inputs.Key_F11: return InputDeviceType.Keyboard;
+                case Inputs.Key_F12: return InputDeviceType.Keyboard;
+                case Inputs.Key_OEM1: return InputDeviceType.Keyboard;
+                case Inputs.Key_OEM2: return InputDeviceType.Keyboard;
+                case Inputs.Key_OEM3: return InputDeviceType.Keyboard;
+                case Inputs.Key_OEM4: return InputDeviceType.Keyboard;
+                case Inputs.Key_OEM5: return InputDeviceType.Keyboard;
 
-                case Inputs.Mouse_Left: return Mouse.current != null ? Mouse.current.leftButton : null;
-                case Inputs.Mouse_Right: return Mouse.current != null ? Mouse.current.rightButton : null;
-                case Inputs.Mouse_Middle: return Mouse.current != null ? Mouse.current.middleButton : null;
-                case Inputs.Mouse_Forward: return Mouse.current != null ? Mouse.current.forwardButton : null;
-                case Inputs.Mouse_Back: return Mouse.current != null ? Mouse.current.backButton : null;
+                case Inputs.Mouse_Left: return InputDeviceType.Mouse;
+                case Inputs.Mouse_Right: return InputDeviceType.Mouse;
+                case Inputs.Mouse_Middle: return InputDeviceType.Mouse;
+                case Inputs.Mouse_Forward: return InputDeviceType.Mouse;
+                case Inputs.Mouse_Back: return InputDeviceType.Mouse;
 
-                case Inputs.Gamepad_DpadUp: return Gamepad.current != null ? Gamepad.current.dpad.up : null;
-                case Inputs.Gamepad_DpadDown: return Gamepad.current != null ? Gamepad.current.dpad.down : null;
-                case Inputs.Gamepad_DpadLeft: return Gamepad.current != null ? Gamepad.current.dpad.left : null;
-                case Inputs.Gamepad_DpadRight: return Gamepad.current != null ? Gamepad.current.dpad.right : null;
-                case Inputs.Gamepad_North: return Gamepad.current != null ? Gamepad.current.buttonNorth : null;
-                case Inputs.Gamepad_East: return Gamepad.current != null ? Gamepad.current.buttonEast : null;
-                case Inputs.Gamepad_South: return Gamepad.current != null ? Gamepad.current.buttonSouth : null;
-                case Inputs.Gamepad_West: return Gamepad.current != null ? Gamepad.current.buttonWest : null;
-                case Inputs.Gamepad_LeftStickButton:
-                    return Gamepad.current != null ? Gamepad.current.leftStickButton : null;
-                case Inputs.Gamepad_RightStickButton:
-                    return Gamepad.current != null ? Gamepad.current.rightStickButton : null;
-                case Inputs.Gamepad_LeftShoulder: return Gamepad.current != null ? Gamepad.current.leftShoulder : null;
-                case Inputs.Gamepad_RightShoulder:
-                    return Gamepad.current != null ? Gamepad.current.rightShoulder : null;
-                case Inputs.Gamepad_LeftStickUp: return Gamepad.current != null ? Gamepad.current.leftStick.up : null;
-                case Inputs.Gamepad_LeftStickDown:
-                    return Gamepad.current != null ? Gamepad.current.leftStick.down : null;
-                case Inputs.Gamepad_LeftStickLeft:
-                    return Gamepad.current != null ? Gamepad.current.leftStick.left : null;
-                case Inputs.Gamepad_LeftStickRight:
-                    return Gamepad.current != null ? Gamepad.current.leftStick.right : null;
-                case Inputs.Gamepad_RightStickUp: return Gamepad.current != null ? Gamepad.current.rightStick.up : null;
-                case Inputs.Gamepad_RightStickDown:
-                    return Gamepad.current != null ? Gamepad.current.rightStick.down : null;
-                case Inputs.Gamepad_RightStickLeft:
-                    return Gamepad.current != null ? Gamepad.current.rightStick.left : null;
-                case Inputs.Gamepad_RightStickRight:
-                    return Gamepad.current != null ? Gamepad.current.rightStick.right : null;
-                case Inputs.Gamepad_LeftTrigger: return Gamepad.current != null ? Gamepad.current.leftTrigger : null;
-                case Inputs.Gamepad_RightTrigger: return Gamepad.current != null ? Gamepad.current.rightTrigger : null;
-                case Inputs.Gamepad_Start: return Gamepad.current != null ? Gamepad.current.startButton : null;
-                case Inputs.Gamepad_Select: return Gamepad.current != null ? Gamepad.current.selectButton : null;
-                
-                case Inputs.Joystick_Trigger: return Joystick.current != null ? Joystick.current.trigger : null;
+                case Inputs.Gamepad_DpadUp: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_DpadDown: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_DpadLeft: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_DpadRight: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_North: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_East: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_South: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_West: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftStickButton: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightStickButton: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftShoulder: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightShoulder: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftStickUp: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftStickDown: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftStickLeft: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftStickRight: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightStickUp: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightStickDown: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightStickLeft: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightStickRight: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_LeftTrigger: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_RightTrigger: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_Start: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_Select: return InputDeviceType.Gamepad;
 
-                // TODO check do we need this for 2019.4?
-                // default: return null;
+                case Inputs.Joystick_Trigger: return InputDeviceType.Joystick;
             }
-
+            
             throw new ArgumentException($"Unexpected Inputs enum value '{input}'");
         }
+
+        private static ButtonControl GetKeyboardButtonControl(Keyboard k, Inputs input)
+        {
+            if (k == null)
+                return null;
+
+            switch (input)
+            {
+                case Inputs.Key_Space: return k[Key.Space];
+                case Inputs.Key_Enter: return k[Key.Enter];
+                case Inputs.Key_Tab: return k[Key.Tab];
+                case Inputs.Key_Backquote: return k[Key.Backquote];
+                case Inputs.Key_Quote: return k[Key.Quote];
+                case Inputs.Key_Semicolon: return k[Key.Semicolon];
+                case Inputs.Key_Comma: return k[Key.Comma];
+                case Inputs.Key_Period: return k[Key.Period];
+                case Inputs.Key_Slash: return k[Key.Slash];
+                case Inputs.Key_Backslash: return k[Key.Backslash];
+                case Inputs.Key_LeftBracket: return k[Key.LeftBracket];
+                case Inputs.Key_RightBracket:
+                    return k[Key.RightBracket];
+                case Inputs.Key_Minus: return k[Key.Minus];
+                case Inputs.Key_Equals: return k[Key.Equals];
+                case Inputs.Key_A: return k[Key.A];
+                case Inputs.Key_B: return k[Key.B];
+                case Inputs.Key_C: return k[Key.C];
+                case Inputs.Key_D: return k[Key.D];
+                case Inputs.Key_E: return k[Key.E];
+                case Inputs.Key_F: return k[Key.F];
+                case Inputs.Key_G: return k[Key.G];
+                case Inputs.Key_H: return k[Key.H];
+                case Inputs.Key_I: return k[Key.I];
+                case Inputs.Key_J: return k[Key.J];
+                case Inputs.Key_K: return k[Key.K];
+                case Inputs.Key_L: return k[Key.L];
+                case Inputs.Key_M: return k[Key.M];
+                case Inputs.Key_N: return k[Key.N];
+                case Inputs.Key_O: return k[Key.O];
+                case Inputs.Key_P: return k[Key.P];
+                case Inputs.Key_Q: return k[Key.Q];
+                case Inputs.Key_R: return k[Key.R];
+                case Inputs.Key_S: return k[Key.S];
+                case Inputs.Key_T: return k[Key.T];
+                case Inputs.Key_U: return k[Key.U];
+                case Inputs.Key_V: return k[Key.V];
+                case Inputs.Key_W: return k[Key.W];
+                case Inputs.Key_X: return k[Key.X];
+                case Inputs.Key_Y: return k[Key.Y];
+                case Inputs.Key_Z: return k[Key.Z];
+                case Inputs.Key_Digit1: return k[Key.Digit1];
+                case Inputs.Key_Digit2: return k[Key.Digit2];
+                case Inputs.Key_Digit3: return k[Key.Digit3];
+                case Inputs.Key_Digit4: return k[Key.Digit4];
+                case Inputs.Key_Digit5: return k[Key.Digit5];
+                case Inputs.Key_Digit6: return k[Key.Digit6];
+                case Inputs.Key_Digit7: return k[Key.Digit7];
+                case Inputs.Key_Digit8: return k[Key.Digit8];
+                case Inputs.Key_Digit9: return k[Key.Digit9];
+                case Inputs.Key_Digit0: return k[Key.Digit0];
+                case Inputs.Key_LeftShift: return k[Key.LeftShift];
+                case Inputs.Key_RightShift: return k[Key.RightShift];
+                case Inputs.Key_LeftAlt: return k[Key.LeftAlt];
+                case Inputs.Key_RightAlt: return k[Key.RightAlt];
+                case Inputs.Key_LeftCtrl: return k[Key.LeftCtrl];
+                case Inputs.Key_RightCtrl: return k[Key.RightCtrl];
+                case Inputs.Key_LeftMeta: return k[Key.LeftMeta];
+                case Inputs.Key_RightMeta: return k[Key.RightMeta];
+                case Inputs.Key_ContextMenu: return k[Key.ContextMenu];
+                case Inputs.Key_Escape: return k[Key.Escape];
+                case Inputs.Key_LeftArrow: return k[Key.LeftArrow];
+                case Inputs.Key_RightArrow: return k[Key.RightArrow];
+                case Inputs.Key_UpArrow: return k[Key.UpArrow];
+                case Inputs.Key_DownArrow: return k[Key.DownArrow];
+                case Inputs.Key_Backspace: return k[Key.Backspace];
+                case Inputs.Key_PageDown: return k[Key.PageDown];
+                case Inputs.Key_PageUp: return k[Key.PageUp];
+                case Inputs.Key_Home: return k[Key.Home];
+                case Inputs.Key_End: return k[Key.End];
+                case Inputs.Key_Insert: return k[Key.Insert];
+                case Inputs.Key_Delete: return k[Key.Delete];
+                case Inputs.Key_CapsLock: return k[Key.CapsLock];
+                case Inputs.Key_NumLock: return k[Key.NumLock];
+                case Inputs.Key_PrintScreen: return k[Key.PrintScreen];
+                case Inputs.Key_ScrollLock: return k[Key.ScrollLock];
+                case Inputs.Key_Pause: return k[Key.Pause];
+                case Inputs.Key_NumpadEnter: return k[Key.NumpadEnter];
+                case Inputs.Key_NumpadDivide:
+                    return k[Key.NumpadDivide];
+                case Inputs.Key_NumpadMultiply:
+                    return k[Key.NumpadMultiply];
+                case Inputs.Key_NumpadPlus: return k[Key.NumpadPlus];
+                case Inputs.Key_NumpadMinus: return k[Key.NumpadMinus];
+                case Inputs.Key_NumpadPeriod:
+                    return k[Key.NumpadPeriod];
+                case Inputs.Key_NumpadEquals:
+                    return k[Key.NumpadEquals];
+                case Inputs.Key_Numpad0: return k[Key.Numpad0];
+                case Inputs.Key_Numpad1: return k[Key.Numpad1];
+                case Inputs.Key_Numpad2: return k[Key.Numpad2];
+                case Inputs.Key_Numpad3: return k[Key.Numpad3];
+                case Inputs.Key_Numpad4: return k[Key.Numpad4];
+                case Inputs.Key_Numpad5: return k[Key.Numpad5];
+                case Inputs.Key_Numpad6: return k[Key.Numpad6];
+                case Inputs.Key_Numpad7: return k[Key.Numpad7];
+                case Inputs.Key_Numpad8: return k[Key.Numpad8];
+                case Inputs.Key_Numpad9: return k[Key.Numpad9];
+                case Inputs.Key_F1: return k[Key.F1];
+                case Inputs.Key_F2: return k[Key.F2];
+                case Inputs.Key_F3: return k[Key.F3];
+                case Inputs.Key_F4: return k[Key.F4];
+                case Inputs.Key_F5: return k[Key.F5];
+                case Inputs.Key_F6: return k[Key.F6];
+                case Inputs.Key_F7: return k[Key.F7];
+                case Inputs.Key_F8: return k[Key.F8];
+                case Inputs.Key_F9: return k[Key.F9];
+                case Inputs.Key_F10: return k[Key.F10];
+                case Inputs.Key_F11: return k[Key.F11];
+                case Inputs.Key_F12: return k[Key.F12];
+                case Inputs.Key_OEM1: return k[Key.OEM1];
+                case Inputs.Key_OEM2: return k[Key.OEM2];
+                case Inputs.Key_OEM3: return k[Key.OEM3];
+                case Inputs.Key_OEM4: return k[Key.OEM4];
+                case Inputs.Key_OEM5: return k[Key.OEM5];
+                default: return null;
+            }
+        }
+
+        private static ButtonControl GetMouseButtonControl(Mouse m, Inputs input)
+        {
+            if (m == null)
+                return null;
+            switch (input)
+            {
+                case Inputs.Mouse_Left: return m.leftButton;
+                case Inputs.Mouse_Right: return m.rightButton;
+                case Inputs.Mouse_Middle: return m.middleButton;
+                case Inputs.Mouse_Forward: return m.forwardButton;
+                case Inputs.Mouse_Back: return m.backButton;
+                default: return null;
+            }
+        }
         
-        // TODO consider overloads instead of one huge enum
+        private static ButtonControl GetGamepadButtonControl(Gamepad g, Inputs input)
+        {
+            if (g == null)
+                return null;
+            switch (input)
+            {
+                case Inputs.Gamepad_DpadUp: return g.dpad.up;
+                case Inputs.Gamepad_DpadDown: return g.dpad.down;
+                case Inputs.Gamepad_DpadLeft: return g.dpad.left;
+                case Inputs.Gamepad_DpadRight: return g.dpad.right;
+                case Inputs.Gamepad_North: return g.buttonNorth;
+                case Inputs.Gamepad_East: return g.buttonEast;
+                case Inputs.Gamepad_South: return g.buttonSouth;
+                case Inputs.Gamepad_West: return g.buttonWest;
+                case Inputs.Gamepad_LeftStickButton:
+                    return g.leftStickButton;
+                case Inputs.Gamepad_RightStickButton:
+                    return g.rightStickButton;
+                case Inputs.Gamepad_LeftShoulder: return g.leftShoulder;
+                case Inputs.Gamepad_RightShoulder:
+                    return g.rightShoulder;
+                case Inputs.Gamepad_LeftStickUp: return g.leftStick.up;
+                case Inputs.Gamepad_LeftStickDown:
+                    return g.leftStick.down;
+                case Inputs.Gamepad_LeftStickLeft:
+                    return g.leftStick.left;
+                case Inputs.Gamepad_LeftStickRight:
+                    return g.leftStick.right;
+                case Inputs.Gamepad_RightStickUp: return g.rightStick.up;
+                case Inputs.Gamepad_RightStickDown:
+                    return g.rightStick.down;
+                case Inputs.Gamepad_RightStickLeft:
+                    return g.rightStick.left;
+                case Inputs.Gamepad_RightStickRight:
+                    return g.rightStick.right;
+                case Inputs.Gamepad_LeftTrigger: return g.leftTrigger;
+                case Inputs.Gamepad_RightTrigger: return g.rightTrigger;
+                case Inputs.Gamepad_Start: return g.startButton;
+                case Inputs.Gamepad_Select: return g.selectButton;
+                default: return null;
+            }
+        }
+
+        private static ButtonControl GetJoystickButtonControl(Joystick j, Inputs input)
+        {
+            if (j == null)
+                return null;
+            switch (input)
+            {
+                case Inputs.Joystick_Trigger: return j.trigger;
+                default: return null;
+            }
+        }
 
         /// <summary>
         ///     Is the indicated control currently pressed.
         /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
+        /// <param name="input">Control from Inputs enum</param>
+        /// <returns>True if control is currently pressed, false if control is not pressed or not available (device disconnected, etc).</returns>
         /// <remarks>
         ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         ///     and return true if the control is currently pressed on any of them.
         /// </remarks>
         public static bool IsControlPressed(Inputs input)
         {
-            return GetButtonControl(input)?.isPressed ?? false;
+            var deviceType = GetDeviceTypeForInput(input);
+
+            switch (deviceType)
+            {
+                case InputDeviceType.Keyboard:
+                    return InputSystem.devices
+                        .OfType<Keyboard>()
+                        .Any(x => GetKeyboardButtonControl(x, input).isPressed);
+                case InputDeviceType.Mouse:
+                    return InputSystem.devices
+                        .OfType<Mouse>()
+                        .Any(x => GetMouseButtonControl(x, input).isPressed);
+                case InputDeviceType.Gamepad:
+                    return InputSystem.devices
+                        .OfType<Gamepad>()
+                        .Any(x => GetGamepadButtonControl(x, input).isPressed);
+                case InputDeviceType.Joystick:
+                    return InputSystem.devices
+                        .OfType<Joystick>()
+                        .Any(x => GetJoystickButtonControl(x, input).isPressed);
+                case InputDeviceType.Invalid:
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -457,7 +665,30 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static bool IsControlDown(Inputs input)
         {
-            return GetButtonControl(input)?.wasPressedThisFrame ?? false;
+            var deviceType = GetDeviceTypeForInput(input);
+
+            switch (deviceType)
+            {
+                case InputDeviceType.Keyboard:
+                    return InputSystem.devices
+                        .OfType<Keyboard>()
+                        .Any(x => GetKeyboardButtonControl(x, input).wasPressedThisFrame);
+                case InputDeviceType.Mouse:
+                    return InputSystem.devices
+                        .OfType<Mouse>()
+                        .Any(x => GetMouseButtonControl(x, input).wasPressedThisFrame);
+                case InputDeviceType.Gamepad:
+                    return InputSystem.devices
+                        .OfType<Gamepad>()
+                        .Any(x => GetGamepadButtonControl(x, input).wasPressedThisFrame);
+                case InputDeviceType.Joystick:
+                    return InputSystem.devices
+                        .OfType<Joystick>()
+                        .Any(x => GetJoystickButtonControl(x, input).wasPressedThisFrame);
+                case InputDeviceType.Invalid:
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -470,8 +701,30 @@ namespace UnityEngine.InputSystem.HighLevel
         ///     and return true if the control was released in the current frame on any of them.
         /// </remarks>
         public static bool IsControlUp(Inputs input)
-        {
-            return GetButtonControl(input)?.wasReleasedThisFrame ?? false;
+        {            var deviceType = GetDeviceTypeForInput(input);
+
+            switch (deviceType)
+            {
+                case InputDeviceType.Keyboard:
+                    return InputSystem.devices
+                        .OfType<Keyboard>()
+                        .Any(x => GetKeyboardButtonControl(x, input).wasReleasedThisFrame);
+                case InputDeviceType.Mouse:
+                    return InputSystem.devices
+                        .OfType<Mouse>()
+                        .Any(x => GetMouseButtonControl(x, input).wasReleasedThisFrame);
+                case InputDeviceType.Gamepad:
+                    return InputSystem.devices
+                        .OfType<Gamepad>()
+                        .Any(x => GetGamepadButtonControl(x, input).wasReleasedThisFrame);
+                case InputDeviceType.Joystick:
+                    return InputSystem.devices
+                        .OfType<Joystick>()
+                        .Any(x => GetJoystickButtonControl(x, input).wasReleasedThisFrame);
+                case InputDeviceType.Invalid:
+                default:
+                    return false;
+            }
         }
 
         // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
