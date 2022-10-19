@@ -620,7 +620,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <summary>
         ///     Is the indicated control currently pressed.
         /// </summary>
-        /// <param name="input">Control from Inputs enum</param>
+        /// <param name="input">Control from Inputs enum.</param>
         /// <returns>True if control is currently pressed, false if control is not pressed or not available (device disconnected, etc).</returns>
         /// <remarks>
         ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
@@ -657,8 +657,8 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <summary>
         ///     True in the frame that the input was pressed.
         /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
+        /// <param name="input">Control from Inputs enum.</param>
+        /// <returns>True if control was actuated in the current frame, false if control was not actuated or not available (device disconnected, etc).</returns>
         /// <remarks>
         ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         ///     and return true if the control was actuated in the current frame on any of them.
@@ -694,8 +694,8 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <summary>
         ///     True in the frame that the input was released.
         /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
+        /// <param name="input">Control from Inputs enum.</param>
+        /// <returns>True if control was released in the current frame, false if control was not released or not available (device disconnected, etc).</returns>
         /// <remarks>
         ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         ///     and return true if the control was released in the current frame on any of them.
