@@ -373,7 +373,8 @@ namespace UnityEngine.InputSystem.LowLevel
                         fixed(byte* tempBufferPtr = tempBuffer)
                         UnsafeUtility.MemCpy(tailPtr, tempBufferPtr, remainingSize);
 
-                        tailPtr += remainingSize;
+                        var alignedSizeInBytes = remainingSize.AlignToMultipleOf(4);
+                        tailPtr += alignedSizeInBytes;
                         totalEventSize += eventSizeInBytes;
 
                         if (tailPtr >= endPtr)

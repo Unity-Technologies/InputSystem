@@ -1416,6 +1416,51 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanDeserializeInputEventTraceFromMemory()
+    {
+        // Start the trace
+        var eventTrace = new InputEventTrace();
+        eventTrace.Enable();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Generate some events
+        Press(gamepad.buttonSouth);
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+
+        InputSystem.Update();
+
+        // Serialize trace to memory
+        eventTrace.Disable();
+
+        var dataStream = new MemoryStream();
+        eventTrace.WriteTo(dataStream);
+        eventTrace.Disable();
+        dataStream.Flush();
+        dataStream.Position = 0;
+
+        eventTrace.Clear();
+
+        // Deserialize trace from memory
+        eventTrace.ReadFrom(dataStream);
+
+        // Check the deserialized event traces
+        var eventPtr = default(InputEventPtr);
+
+        // This line should not cause an infinite loop
+        eventTrace.Replay().PlayAllEvents();
+
+        Assert.That(eventTrace.eventCount, Is.EqualTo(2));
+        Assert.IsTrue(eventTrace.GetNextEvent(ref eventPtr));
+        Assert.That(eventPtr.deviceId, Is.EqualTo(gamepad.deviceId));
+        Assert.That(gamepad.buttonSouth.ReadUnprocessedValueFromEvent(eventPtr), Is.EqualTo(1));
+
+        Assert.IsTrue(eventTrace.GetNextEvent(ref eventPtr));
+        Assert.That(eventPtr.deviceId, Is.EqualTo(gamepad.deviceId));
+        Assert.That(gamepad.leftStick.ReadUnprocessedValueFromEvent(eventPtr), Is.EqualTo(new Vector2(0.123f, 0.234f)));
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanClearEventTrace()
     {
         using (var trace = new InputEventTrace())
