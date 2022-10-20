@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.HighLevel;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.TestTools.Utils;
 using Input = UnityEngine.InputSystem.HighLevel.Input;
 
 internal partial class CoreTests
@@ -132,5 +133,42 @@ internal partial class CoreTests
             Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
             Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
         }
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_CanQueryGetAxis()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var gamepadState = new GamepadState()
+            .WithButton(GamepadButton.North)
+            .WithButton(GamepadButton.West);
+        gamepadState.leftStick = new Vector2(-1, -1);
+        gamepadState.rightStick = new Vector2(1, 1);
+        gamepadState.leftTrigger = 0.7f;
+        InputSystem.QueueStateEvent(gamepad, gamepadState);
+        InputSystem.Update();
+        
+        // normal buttons should return 0.0f or 1.0f
+        Assert.That(Input.GetAxis(Inputs.Gamepad_North), Is.EqualTo(1.0f));
+        Assert.That(Input.GetAxis(Inputs.Gamepad_South), Is.EqualTo(0.0f));
+        
+        Assert.That(Input.GetAxis(Inputs.Gamepad_North, Inputs.Gamepad_East), Is.EqualTo(-1.0f));
+        Assert.That(Input.GetAxis(Inputs.Gamepad_East, Inputs.Gamepad_West), Is.EqualTo(1.0f));
+        Assert.That(Input.GetAxis(Inputs.Gamepad_North, Inputs.Gamepad_West), Is.EqualTo(0.0f));
+
+        // triggers should return [0.0f, 1.0f]
+        Assert.That(Input.GetAxis(Inputs.Gamepad_LeftTrigger), Is.EqualTo(gamepadState.leftTrigger));
+        Assert.That(Input.GetAxis(Inputs.Gamepad_RightTrigger), Is.EqualTo(0.0f));
+
+        // check normalization
+        Assert.That(Input.GetAxisRaw(Inputs.Gamepad_West, Inputs.Gamepad_East, Inputs.Gamepad_North, Inputs.Gamepad_East), Is.EqualTo(new Vector2(-1, 1)));
+        Assert.That(Input.GetAxis(Inputs.Gamepad_West, Inputs.Gamepad_East, Inputs.Gamepad_North, Inputs.Gamepad_East),
+            Is.EqualTo(new Vector2(-0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
+
+        // sticks go via different path
+        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.71f, -0.71f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
     }
 }
