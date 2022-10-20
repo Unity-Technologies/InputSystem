@@ -274,149 +274,153 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             switch (input)
             {
-                case Inputs.Key_Space: return InputDeviceType.Keyboard;
-                case Inputs.Key_Enter: return InputDeviceType.Keyboard;
-                case Inputs.Key_Tab: return InputDeviceType.Keyboard;
-                case Inputs.Key_Backquote: return InputDeviceType.Keyboard;
-                case Inputs.Key_Quote: return InputDeviceType.Keyboard;
-                case Inputs.Key_Semicolon: return InputDeviceType.Keyboard;
-                case Inputs.Key_Comma: return InputDeviceType.Keyboard;
-                case Inputs.Key_Period: return InputDeviceType.Keyboard;
-                case Inputs.Key_Slash: return InputDeviceType.Keyboard;
-                case Inputs.Key_Backslash: return InputDeviceType.Keyboard;
-                case Inputs.Key_LeftBracket: return InputDeviceType.Keyboard;
-                case Inputs.Key_RightBracket: return InputDeviceType.Keyboard;
-                case Inputs.Key_Minus: return InputDeviceType.Keyboard;
-                case Inputs.Key_Equals: return InputDeviceType.Keyboard;
-                case Inputs.Key_A: return InputDeviceType.Keyboard;
-                case Inputs.Key_B: return InputDeviceType.Keyboard;
-                case Inputs.Key_C: return InputDeviceType.Keyboard;
-                case Inputs.Key_D: return InputDeviceType.Keyboard;
-                case Inputs.Key_E: return InputDeviceType.Keyboard;
-                case Inputs.Key_F: return InputDeviceType.Keyboard;
-                case Inputs.Key_G: return InputDeviceType.Keyboard;
-                case Inputs.Key_H: return InputDeviceType.Keyboard;
-                case Inputs.Key_I: return InputDeviceType.Keyboard;
-                case Inputs.Key_J: return InputDeviceType.Keyboard;
-                case Inputs.Key_K: return InputDeviceType.Keyboard;
-                case Inputs.Key_L: return InputDeviceType.Keyboard;
-                case Inputs.Key_M: return InputDeviceType.Keyboard;
-                case Inputs.Key_N: return InputDeviceType.Keyboard;
-                case Inputs.Key_O: return InputDeviceType.Keyboard;
-                case Inputs.Key_P: return InputDeviceType.Keyboard;
-                case Inputs.Key_Q: return InputDeviceType.Keyboard;
-                case Inputs.Key_R: return InputDeviceType.Keyboard;
-                case Inputs.Key_S: return InputDeviceType.Keyboard;
-                case Inputs.Key_T: return InputDeviceType.Keyboard;
-                case Inputs.Key_U: return InputDeviceType.Keyboard;
-                case Inputs.Key_V: return InputDeviceType.Keyboard;
-                case Inputs.Key_W: return InputDeviceType.Keyboard;
-                case Inputs.Key_X: return InputDeviceType.Keyboard;
-                case Inputs.Key_Y: return InputDeviceType.Keyboard;
-                case Inputs.Key_Z: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit1: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit2: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit3: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit4: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit5: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit6: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit7: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit8: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit9: return InputDeviceType.Keyboard;
-                case Inputs.Key_Digit0: return InputDeviceType.Keyboard;
-                case Inputs.Key_LeftShift: return InputDeviceType.Keyboard;
-                case Inputs.Key_RightShift: return InputDeviceType.Keyboard;
-                case Inputs.Key_LeftAlt: return InputDeviceType.Keyboard;
-                case Inputs.Key_RightAlt: return InputDeviceType.Keyboard;
-                case Inputs.Key_LeftCtrl: return InputDeviceType.Keyboard;
-                case Inputs.Key_RightCtrl: return InputDeviceType.Keyboard;
-                case Inputs.Key_LeftMeta: return InputDeviceType.Keyboard;
-                case Inputs.Key_RightMeta: return InputDeviceType.Keyboard;
-                case Inputs.Key_ContextMenu: return InputDeviceType.Keyboard;
-                case Inputs.Key_Escape: return InputDeviceType.Keyboard;
-                case Inputs.Key_LeftArrow: return InputDeviceType.Keyboard;
-                case Inputs.Key_RightArrow: return InputDeviceType.Keyboard;
-                case Inputs.Key_UpArrow: return InputDeviceType.Keyboard;
-                case Inputs.Key_DownArrow: return InputDeviceType.Keyboard;
-                case Inputs.Key_Backspace: return InputDeviceType.Keyboard;
-                case Inputs.Key_PageDown: return InputDeviceType.Keyboard;
-                case Inputs.Key_PageUp: return InputDeviceType.Keyboard;
-                case Inputs.Key_Home: return InputDeviceType.Keyboard;
-                case Inputs.Key_End: return InputDeviceType.Keyboard;
-                case Inputs.Key_Insert: return InputDeviceType.Keyboard;
-                case Inputs.Key_Delete: return InputDeviceType.Keyboard;
-                case Inputs.Key_CapsLock: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumLock: return InputDeviceType.Keyboard;
-                case Inputs.Key_PrintScreen: return InputDeviceType.Keyboard;
-                case Inputs.Key_ScrollLock: return InputDeviceType.Keyboard;
-                case Inputs.Key_Pause: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadEnter: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadDivide: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadMultiply: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadPlus: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadMinus: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadPeriod: return InputDeviceType.Keyboard;
-                case Inputs.Key_NumpadEquals: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad0: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad1: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad2: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad3: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad4: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad5: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad6: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad7: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad8: return InputDeviceType.Keyboard;
-                case Inputs.Key_Numpad9: return InputDeviceType.Keyboard;
-                case Inputs.Key_F1: return InputDeviceType.Keyboard;
-                case Inputs.Key_F2: return InputDeviceType.Keyboard;
-                case Inputs.Key_F3: return InputDeviceType.Keyboard;
-                case Inputs.Key_F4: return InputDeviceType.Keyboard;
-                case Inputs.Key_F5: return InputDeviceType.Keyboard;
-                case Inputs.Key_F6: return InputDeviceType.Keyboard;
-                case Inputs.Key_F7: return InputDeviceType.Keyboard;
-                case Inputs.Key_F8: return InputDeviceType.Keyboard;
-                case Inputs.Key_F9: return InputDeviceType.Keyboard;
-                case Inputs.Key_F10: return InputDeviceType.Keyboard;
-                case Inputs.Key_F11: return InputDeviceType.Keyboard;
-                case Inputs.Key_F12: return InputDeviceType.Keyboard;
-                case Inputs.Key_OEM1: return InputDeviceType.Keyboard;
-                case Inputs.Key_OEM2: return InputDeviceType.Keyboard;
-                case Inputs.Key_OEM3: return InputDeviceType.Keyboard;
-                case Inputs.Key_OEM4: return InputDeviceType.Keyboard;
-                case Inputs.Key_OEM5: return InputDeviceType.Keyboard;
+                case Inputs.Key_Space:
+                case Inputs.Key_Enter:
+                case Inputs.Key_Tab:
+                case Inputs.Key_Backquote:
+                case Inputs.Key_Quote:
+                case Inputs.Key_Semicolon:
+                case Inputs.Key_Comma:
+                case Inputs.Key_Period:
+                case Inputs.Key_Slash:
+                case Inputs.Key_Backslash:
+                case Inputs.Key_LeftBracket:
+                case Inputs.Key_RightBracket:
+                case Inputs.Key_Minus:
+                case Inputs.Key_Equals:
+                case Inputs.Key_A:
+                case Inputs.Key_B:
+                case Inputs.Key_C:
+                case Inputs.Key_D:
+                case Inputs.Key_E:
+                case Inputs.Key_F:
+                case Inputs.Key_G:
+                case Inputs.Key_H:
+                case Inputs.Key_I:
+                case Inputs.Key_J:
+                case Inputs.Key_K:
+                case Inputs.Key_L:
+                case Inputs.Key_M:
+                case Inputs.Key_N:
+                case Inputs.Key_O:
+                case Inputs.Key_P:
+                case Inputs.Key_Q:
+                case Inputs.Key_R:
+                case Inputs.Key_S:
+                case Inputs.Key_T:
+                case Inputs.Key_U:
+                case Inputs.Key_V:
+                case Inputs.Key_W:
+                case Inputs.Key_X:
+                case Inputs.Key_Y:
+                case Inputs.Key_Z:
+                case Inputs.Key_Digit1:
+                case Inputs.Key_Digit2:
+                case Inputs.Key_Digit3:
+                case Inputs.Key_Digit4:
+                case Inputs.Key_Digit5:
+                case Inputs.Key_Digit6:
+                case Inputs.Key_Digit7:
+                case Inputs.Key_Digit8:
+                case Inputs.Key_Digit9:
+                case Inputs.Key_Digit0:
+                case Inputs.Key_LeftShift:
+                case Inputs.Key_RightShift:
+                case Inputs.Key_LeftAlt:
+                case Inputs.Key_RightAlt:
+                case Inputs.Key_LeftCtrl:
+                case Inputs.Key_RightCtrl:
+                case Inputs.Key_LeftMeta:
+                case Inputs.Key_RightMeta:
+                case Inputs.Key_ContextMenu:
+                case Inputs.Key_Escape:
+                case Inputs.Key_LeftArrow:
+                case Inputs.Key_RightArrow:
+                case Inputs.Key_UpArrow:
+                case Inputs.Key_DownArrow:
+                case Inputs.Key_Backspace:
+                case Inputs.Key_PageDown:
+                case Inputs.Key_PageUp:
+                case Inputs.Key_Home:
+                case Inputs.Key_End:
+                case Inputs.Key_Insert:
+                case Inputs.Key_Delete:
+                case Inputs.Key_CapsLock:
+                case Inputs.Key_NumLock:
+                case Inputs.Key_PrintScreen:
+                case Inputs.Key_ScrollLock:
+                case Inputs.Key_Pause:
+                case Inputs.Key_NumpadEnter:
+                case Inputs.Key_NumpadDivide:
+                case Inputs.Key_NumpadMultiply:
+                case Inputs.Key_NumpadPlus:
+                case Inputs.Key_NumpadMinus:
+                case Inputs.Key_NumpadPeriod:
+                case Inputs.Key_NumpadEquals:
+                case Inputs.Key_Numpad0:
+                case Inputs.Key_Numpad1:
+                case Inputs.Key_Numpad2:
+                case Inputs.Key_Numpad3:
+                case Inputs.Key_Numpad4:
+                case Inputs.Key_Numpad5:
+                case Inputs.Key_Numpad6:
+                case Inputs.Key_Numpad7:
+                case Inputs.Key_Numpad8:
+                case Inputs.Key_Numpad9:
+                case Inputs.Key_F1:
+                case Inputs.Key_F2:
+                case Inputs.Key_F3:
+                case Inputs.Key_F4:
+                case Inputs.Key_F5:
+                case Inputs.Key_F6:
+                case Inputs.Key_F7:
+                case Inputs.Key_F8:
+                case Inputs.Key_F9:
+                case Inputs.Key_F10:
+                case Inputs.Key_F11:
+                case Inputs.Key_F12:
+                case Inputs.Key_OEM1:
+                case Inputs.Key_OEM2:
+                case Inputs.Key_OEM3:
+                case Inputs.Key_OEM4:
+                case Inputs.Key_OEM5:
+                    return InputDeviceType.Keyboard;
 
-                case Inputs.Mouse_Left: return InputDeviceType.Mouse;
-                case Inputs.Mouse_Right: return InputDeviceType.Mouse;
-                case Inputs.Mouse_Middle: return InputDeviceType.Mouse;
-                case Inputs.Mouse_Forward: return InputDeviceType.Mouse;
-                case Inputs.Mouse_Back: return InputDeviceType.Mouse;
+                case Inputs.Mouse_Left:
+                case Inputs.Mouse_Right:
+                case Inputs.Mouse_Middle:
+                case Inputs.Mouse_Forward:
+                case Inputs.Mouse_Back:
+                    return InputDeviceType.Mouse;
 
-                case Inputs.Gamepad_DpadUp: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_DpadDown: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_DpadLeft: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_DpadRight: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_North: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_East: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_South: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_West: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftStickButton: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightStickButton: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftShoulder: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightShoulder: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftStickUp: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftStickDown: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftStickLeft: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftStickRight: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightStickUp: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightStickDown: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightStickLeft: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightStickRight: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_LeftTrigger: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_RightTrigger: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_Start: return InputDeviceType.Gamepad;
-                case Inputs.Gamepad_Select: return InputDeviceType.Gamepad;
+                case Inputs.Gamepad_DpadUp:
+                case Inputs.Gamepad_DpadDown:
+                case Inputs.Gamepad_DpadLeft:
+                case Inputs.Gamepad_DpadRight:
+                case Inputs.Gamepad_North:
+                case Inputs.Gamepad_East:
+                case Inputs.Gamepad_South:
+                case Inputs.Gamepad_West:
+                case Inputs.Gamepad_LeftStickButton:
+                case Inputs.Gamepad_RightStickButton:
+                case Inputs.Gamepad_LeftShoulder:
+                case Inputs.Gamepad_RightShoulder:
+                case Inputs.Gamepad_LeftStickUp:
+                case Inputs.Gamepad_LeftStickDown:
+                case Inputs.Gamepad_LeftStickLeft:
+                case Inputs.Gamepad_LeftStickRight:
+                case Inputs.Gamepad_RightStickUp:
+                case Inputs.Gamepad_RightStickDown:
+                case Inputs.Gamepad_RightStickLeft:
+                case Inputs.Gamepad_RightStickRight:
+                case Inputs.Gamepad_LeftTrigger:
+                case Inputs.Gamepad_RightTrigger:
+                case Inputs.Gamepad_Start:
+                case Inputs.Gamepad_Select:
+                    return InputDeviceType.Gamepad;
 
-                case Inputs.Joystick_Trigger: return InputDeviceType.Joystick;
+                case Inputs.Joystick_Trigger:
+                    return InputDeviceType.Joystick;
             }
             
             throw new ArgumentException($"Unexpected Inputs enum value '{input}'");
