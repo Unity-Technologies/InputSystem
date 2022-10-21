@@ -739,29 +739,36 @@ namespace UnityEngine.InputSystem.HighLevel
         public static float GetAxis(Inputs input)
         {
             var deviceType = GetDeviceTypeForInput(input);
+            var maxValue = 0.0f;
 
             switch (deviceType)
             {
                 case InputDeviceType.Keyboard:
-                    return InputSystem.devices
-                        .OfType<Keyboard>()
-                        .Max(x => Mathf.Clamp01(GetKeyboardButtonControl(x, input).ReadValue()));
+                    foreach (var device in InputSystem.devices.OfType<Keyboard>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetKeyboardButtonControl(device, input).ReadValue()));
+                    break;
                 case InputDeviceType.Mouse:
-                    return InputSystem.devices
-                        .OfType<Mouse>()
-                        .Max(x => Mathf.Clamp01(GetMouseButtonControl(x, input).ReadValue()));
+                    foreach (var device in InputSystem.devices.OfType<Mouse>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetMouseButtonControl(device, input).ReadValue()));
+                    break;
                 case InputDeviceType.Gamepad:
-                    return InputSystem.devices
-                        .OfType<Gamepad>()
-                        .Max(x => Mathf.Clamp01(GetGamepadButtonControl(x, input).ReadValue()));
+                    foreach (var device in InputSystem.devices.OfType<Gamepad>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetGamepadButtonControl(device, input).ReadValue()));
+                    break;
                 case InputDeviceType.Joystick:
-                    return InputSystem.devices
-                        .OfType<Joystick>()
-                        .Max(x => Mathf.Clamp01(GetJoystickButtonControl(x, input).ReadValue()));
+                    foreach (var device in InputSystem.devices.OfType<Joystick>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetJoystickButtonControl(device, input).ReadValue()));
+                    break;
                 case InputDeviceType.Invalid:
                 default:
-                    return 0.0f;
+                    break;
             }
+            
+            return maxValue;
         }
 
         /// <summary>
@@ -775,6 +782,17 @@ namespace UnityEngine.InputSystem.HighLevel
             return GetAxis(positiveAxis) - GetAxis(negativeAxis);
         }
 
+        private static Vector2 NormalizeAxis(Vector2 axis, float deadzone)
+        {
+            var currentMag = axis.magnitude;
+            if (currentMag < 0.0001f)
+                return Vector2.zero;
+            var min = deadzone;
+            var max = 1.0f - deadzone;
+            var newMag = Mathf.InverseLerp(min, max, currentMag);
+            return axis * (newMag / currentMag);
+        }
+
         /// <summary>
         /// Turns any four inputs into a normalized vector.
         /// </summary>
@@ -785,15 +803,9 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static Vector2 GetAxis(Inputs left, Inputs right, Inputs up, Inputs down)
         {
-            var vec2 = GetAxisRaw(left, right, up, down);
-            var currentMag = vec2.magnitude;
-            var min = InputSystem.settings.defaultDeadzoneMin;
-            var max = InputSystem.settings.defaultDeadzoneMax;
-            if (currentMag < 0.0001f)
-                return Vector2.zero;
-
-            var newMag = Mathf.InverseLerp(min, max, currentMag);
-            return vec2 * (newMag / currentMag);
+            var axis = GetAxisRaw(left, right, up, down);
+            var deadzone = GetInputSystemDefaultDeadZone(); // TODO account for controls being on gamepads
+            return NormalizeAxis(axis, deadzone);
         }
 
         /// <summary>
@@ -829,6 +841,18 @@ namespace UnityEngine.InputSystem.HighLevel
             return InputSystem.devices.OfType<Gamepad>();
         }
 
+        private static float GetInputSystemDefaultDeadZone()
+        {
+            return Mathf.Max(InputSystem.settings.defaultDeadzoneMin,
+                1.0f - InputSystem.settings.defaultDeadzoneMax);
+        }
+
+        private static float GetGamepadDeadZone(GamepadSlot gamepadSlot)
+        {
+            // TODO implement me!
+            return GetInputSystemDefaultDeadZone();
+        }
+
         /// <summary>
         /// Get the value of either stick on a specific gamepad, or any gamepad if gamepadSlot is Any.
         /// </summary>
@@ -837,8 +861,10 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static Vector2 GetAxis(GamepadAxis stick, GamepadSlot gamepadSlot = GamepadSlot.Any)
         {
-            return GetGamepadsForSlot(gamepadSlot)
-                .Aggregate(Vector2.zero, (current, gamepad) => current + GetGamepadStickControl(gamepad, stick).ReadValue());
+            var axis = Vector2.zero;
+            foreach (var gamepad in GetGamepadsForSlot(gamepadSlot))
+                axis += GetGamepadStickControl(gamepad, stick).ReadValue();
+            return NormalizeAxis(axis, GetGamepadDeadZone(gamepadSlot));
         }
         
         private static StickControl GetJoystickStickControl(Joystick joystick, int joystickAxis)
@@ -871,8 +897,10 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static Vector2 GetJoystickAxis(int joystickAxis, JoystickSlot joystickSlot = JoystickSlot.Any)
         {
-            return GetJoysticksForSlot(joystickSlot)
-                .Aggregate(Vector2.zero, (current, joystick) => current + GetJoystickStickControl(joystick, joystickAxis).ReadValue());
+            var axis = Vector2.zero;
+            foreach (var joystick in GetJoysticksForSlot(joystickSlot))
+                axis += GetJoystickStickControl(joystick, joystickAxis).ReadValue();
+            return NormalizeAxis(axis, GetInputSystemDefaultDeadZone());
         }
 
         // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
