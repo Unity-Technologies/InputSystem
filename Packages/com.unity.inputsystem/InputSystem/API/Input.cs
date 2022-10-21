@@ -732,7 +732,7 @@ namespace UnityEngine.InputSystem.HighLevel
         }
 
         /// <summary>
-        /// Returns actuation value for single analogous controls.
+        /// Returns actuation value for single analogue controls.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
         /// <returns>A value between 0 at un-actuated to 1 at fully actuated.</returns>
@@ -789,7 +789,7 @@ namespace UnityEngine.InputSystem.HighLevel
             var currentMag = vec2.magnitude;
             var min = InputSystem.settings.defaultDeadzoneMin;
             var max = InputSystem.settings.defaultDeadzoneMax;
-            if (currentMag < min)
+            if (currentMag < 0.0001f)
                 return Vector2.zero;
 
             var newMag = Mathf.InverseLerp(min, max, currentMag);

@@ -139,7 +139,13 @@ internal partial class CoreTests
     [Category("HighLevelAPI")]
     public void HighLevelAPI_CanQueryGetAxis()
     {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        
+        var keyboardState = new KeyboardState();
+        keyboardState.Press(Key.W);
+        keyboardState.Press(Key.A);
+        InputSystem.QueueStateEvent(keyboard, keyboardState);
 
         var gamepadState = new GamepadState()
             .WithButton(GamepadButton.North)
@@ -151,9 +157,14 @@ internal partial class CoreTests
         InputSystem.Update();
         
         // normal buttons should return 0.0f or 1.0f
+        Assert.That(Input.GetAxis(Inputs.Key_W), Is.EqualTo(1.0f));
+        Assert.That(Input.GetAxis(Inputs.Key_S), Is.EqualTo(0.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_North), Is.EqualTo(1.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_South), Is.EqualTo(0.0f));
         
+        Assert.That(Input.GetAxis(Inputs.Key_A, Inputs.Key_D), Is.EqualTo(-1.0f));
+        Assert.That(Input.GetAxis(Inputs.Key_S, Inputs.Key_W), Is.EqualTo(1.0f));
+        Assert.That(Input.GetAxis(Inputs.Key_A, Inputs.Key_W), Is.EqualTo(0.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_North, Inputs.Gamepad_East), Is.EqualTo(-1.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_East, Inputs.Gamepad_West), Is.EqualTo(1.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_North, Inputs.Gamepad_West), Is.EqualTo(0.0f));
@@ -163,6 +174,9 @@ internal partial class CoreTests
         Assert.That(Input.GetAxis(Inputs.Gamepad_RightTrigger), Is.EqualTo(0.0f));
 
         // check normalization
+        Assert.That(Input.GetAxisRaw(Inputs.Key_A, Inputs.Key_D, Inputs.Key_W, Inputs.Key_S), Is.EqualTo(new Vector2(-1, 1)));
+        Assert.That(Input.GetAxis(Inputs.Key_A, Inputs.Key_D, Inputs.Key_W, Inputs.Key_S),
+            Is.EqualTo(new Vector2(-0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
         Assert.That(Input.GetAxisRaw(Inputs.Gamepad_West, Inputs.Gamepad_East, Inputs.Gamepad_North, Inputs.Gamepad_East), Is.EqualTo(new Vector2(-1, 1)));
         Assert.That(Input.GetAxis(Inputs.Gamepad_West, Inputs.Gamepad_East, Inputs.Gamepad_North, Inputs.Gamepad_East),
             Is.EqualTo(new Vector2(-0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
