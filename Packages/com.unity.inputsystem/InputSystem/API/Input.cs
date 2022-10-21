@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Controls;
 
@@ -171,14 +172,14 @@ namespace UnityEngine.InputSystem.HighLevel
         Joystick_Trigger = 40001
     }
 
-// RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
-#if false
     public enum GamepadAxis
     {
         LeftStick,
         RightStick
     }
 
+// RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
+#if false
     public enum GamepadButton
     {
         DpadUp,
@@ -206,6 +207,7 @@ namespace UnityEngine.InputSystem.HighLevel
         Triangle = North,
         Circle = East
     }
+#endif
 
     public enum GamepadSlot
     {
@@ -234,8 +236,6 @@ namespace UnityEngine.InputSystem.HighLevel
         All = Int32.MaxValue,
         Any = Int32.MaxValue
     }
-
-#endif
 
     public static class Input
     {
@@ -422,7 +422,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case Inputs.Joystick_Trigger:
                     return InputDeviceType.Joystick;
             }
-            
+
             throw new ArgumentException($"Unexpected Inputs enum value '{input}'");
         }
 
@@ -731,28 +731,66 @@ namespace UnityEngine.InputSystem.HighLevel
             }
         }
 
-        // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
-#if false
         /// <summary>
-        /// For single analogue inputs
+        /// Returns actuation value for single analogue controls.
         /// </summary>
-        /// <param name="input"></param>
+        /// <param name="input">Control from Inputs enum.</param>
         /// <returns>A value between 0 at un-actuated to 1 at fully actuated.</returns>
-        /// <exception cref="NotImplementedException"></exception>
         public static float GetAxis(Inputs input)
         {
-            throw new NotImplementedException();
+            var deviceType = GetDeviceTypeForInput(input);
+            var maxValue = 0.0f;
+
+            switch (deviceType)
+            {
+                case InputDeviceType.Keyboard:
+                    foreach (var device in InputSystem.devices.OfType<Keyboard>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetKeyboardButtonControl(device, input).ReadValue()));
+                    break;
+                case InputDeviceType.Mouse:
+                    foreach (var device in InputSystem.devices.OfType<Mouse>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetMouseButtonControl(device, input).ReadValue()));
+                    break;
+                case InputDeviceType.Gamepad:
+                    foreach (var device in InputSystem.devices.OfType<Gamepad>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetGamepadButtonControl(device, input).ReadValue()));
+                    break;
+                case InputDeviceType.Joystick:
+                    foreach (var device in InputSystem.devices.OfType<Joystick>())
+                        maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetJoystickButtonControl(device, input).ReadValue()));
+                    break;
+                case InputDeviceType.Invalid:
+                default:
+                    break;
+            }
+            
+            return maxValue;
         }
 
         /// <summary>
         /// Turns any two inputs into an axis value between -1 and 1.
         /// </summary>
-        /// <param name="negativeAxis"></param>
-        /// <param name="positiveAxis"></param>
-        /// <returns></returns>
+        /// <param name="negativeAxis">Control from Inputs enum.</param>
+        /// <param name="positiveAxis">Control from Inputs enum.</param>
+        /// <returns>Value from [-1, 1] inclusive. If both controls are fully actuated, 0 will be returned.</returns>
         public static float GetAxis(Inputs negativeAxis, Inputs positiveAxis)
         {
-            throw new NotImplementedException();
+            return GetAxis(positiveAxis) - GetAxis(negativeAxis);
+        }
+
+        private static Vector2 NormalizeAxis(Vector2 axis, float deadzone)
+        {
+            var currentMag = axis.magnitude;
+            if (currentMag < 0.0001f)
+                return Vector2.zero;
+            var min = deadzone;
+            var max = 1.0f - deadzone;
+            var newMag = Mathf.InverseLerp(min, max, currentMag);
+            return axis * (newMag / currentMag);
         }
 
         /// <summary>
@@ -765,7 +803,9 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static Vector2 GetAxis(Inputs left, Inputs right, Inputs up, Inputs down)
         {
-            throw new NotImplementedException();
+            var axis = GetAxisRaw(left, right, up, down);
+            var deadzone = GetInputSystemDefaultDeadZone(); // TODO account for controls being on gamepads
+            return NormalizeAxis(axis, deadzone);
         }
 
         /// <summary>
@@ -778,7 +818,39 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static Vector2 GetAxisRaw(Inputs left, Inputs right, Inputs up, Inputs down)
         {
-            throw new NotImplementedException();
+            return new Vector2(GetAxis(left, right), GetAxis(down, up));
+        }
+
+        private static StickControl GetGamepadStickControl(Gamepad gamepad, GamepadAxis stick)
+        {
+            if (gamepad == null)
+                return null;
+
+            switch (stick)
+            {
+                case GamepadAxis.LeftStick: return gamepad.leftStick;
+                case GamepadAxis.RightStick: return gamepad.rightStick;
+            }
+
+            throw new ArgumentException($"Unexpected GamepadAxis enum value '{stick}'");
+        }
+
+        private static IEnumerable<Gamepad> GetGamepadsForSlot(GamepadSlot gamepadSlot)
+        {
+            // TODO implement me properly
+            return InputSystem.devices.OfType<Gamepad>();
+        }
+
+        private static float GetInputSystemDefaultDeadZone()
+        {
+            return Mathf.Max(InputSystem.settings.defaultDeadzoneMin,
+                1.0f - InputSystem.settings.defaultDeadzoneMax);
+        }
+
+        private static float GetGamepadDeadZone(GamepadSlot gamepadSlot)
+        {
+            // TODO implement me!
+            return GetInputSystemDefaultDeadZone();
         }
 
         /// <summary>
@@ -789,7 +861,30 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static Vector2 GetAxis(GamepadAxis stick, GamepadSlot gamepadSlot = GamepadSlot.Any)
         {
-            throw new NotImplementedException();
+            var axis = Vector2.zero;
+            foreach (var gamepad in GetGamepadsForSlot(gamepadSlot))
+                axis += GetGamepadStickControl(gamepad, stick).ReadValue();
+            return NormalizeAxis(axis, GetGamepadDeadZone(gamepadSlot));
+        }
+        
+        private static StickControl GetJoystickStickControl(Joystick joystick, int joystickAxis)
+        {
+            if (joystick == null)
+                return null;
+
+            // TODO what is supposed to be here? 
+            switch (joystickAxis)
+            {
+                case 0: return joystick.stick;
+                default:
+                    throw new ArgumentException($"Unexpected joystickAxis value '{joystickAxis}'");
+            }
+        }
+
+        private static IEnumerable<Joystick> GetJoysticksForSlot(JoystickSlot joystickSlot)
+        {
+            // TODO implement me properly
+            return InputSystem.devices.OfType<Joystick>();
         }
 
         /// <summary>
@@ -802,9 +897,14 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static Vector2 GetJoystickAxis(int joystickAxis, JoystickSlot joystickSlot = JoystickSlot.Any)
         {
-            throw new NotImplementedException();
+            var axis = Vector2.zero;
+            foreach (var joystick in GetJoysticksForSlot(joystickSlot))
+                axis += GetJoystickStickControl(joystick, joystickAxis).ReadValue();
+            return NormalizeAxis(axis, GetInputSystemDefaultDeadZone());
         }
 
+        // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
+#if false
         /// <summary>
         /// True when the button is held.
         /// </summary>
