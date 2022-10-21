@@ -185,4 +185,41 @@ internal partial class CoreTests
         Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.71f, -0.71f)).Using(new Vector2EqualityComparer(0.01f)));
         Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
     }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_CanSetGamepadTriggerPoint()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var gamepadState = new GamepadState();
+        gamepadState.leftTrigger = 0.3f;
+        InputSystem.QueueStateEvent(gamepad, gamepadState);
+        InputSystem.Update();
+        
+        Input.SetGamepadTriggerPressPoint(0.5f);
+        Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.False);
+
+        Input.SetGamepadTriggerPressPoint(0.3f);
+        Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.True);
+    }
+    
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_CanSetGamepadDeadZone()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var gamepadState = new GamepadState();
+        gamepadState.leftStick = new Vector2(-0.3f, 0.3f);
+        gamepadState.rightStick = new Vector2(0.7f, -0.7f);
+        InputSystem.QueueStateEvent(gamepad, gamepadState);
+        InputSystem.Update();
+        
+        Input.SetGamepadStickDeadzone(0.0f);
+        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.26f, 0.26f)).Using(new Vector2EqualityComparer(0.01f)));
+
+        Input.SetGamepadStickDeadzone(0.3f);
+        Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.71f, -0.71f)).Using(new Vector2EqualityComparer(0.01f)));
+    }
 }

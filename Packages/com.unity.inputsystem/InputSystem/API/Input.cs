@@ -270,6 +270,37 @@ namespace UnityEngine.InputSystem.HighLevel
 
 #endif
 
+        private struct GamepadConfig
+        {
+            public float triggerPresspoint;
+            public float deadzone;
+
+            public static GamepadConfig CreateConfigFromSettings()
+            {
+                return new GamepadConfig
+                {
+                    triggerPresspoint = InputSystem.settings.defaultButtonPressPoint,
+                    deadzone = Mathf.Max(InputSystem.settings.defaultDeadzoneMin,
+                        1.0f - InputSystem.settings.defaultDeadzoneMax)
+                };
+            }
+        }
+
+        private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot12 + 1];
+        private static bool s_InitGamepadConfigsOnce = true;
+
+        // TODO somehow call this during input system initialization
+        private static void InitializeGamepadConfigs()
+        {
+            if (!s_InitGamepadConfigsOnce)
+                return;
+            s_InitGamepadConfigsOnce = false;
+            
+            var defaultConfig = GamepadConfig.CreateConfigFromSettings();
+            for(var i = 0; i < s_GamepadConfigs.Length; ++i)
+                s_GamepadConfigs[i] = defaultConfig;
+        }
+
         private static InputDeviceType GetDeviceTypeForInput(Inputs input)
         {
             switch (input)
@@ -647,7 +678,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     return InputSystem.devices
                         .OfType<Gamepad>()
-                        .Any(x => GetGamepadButtonControl(x, input).isPressed);
+                        .Any(x => GetGamepadButtonControl(x, input).ReadValue() >= GetGamepadTriggerPressPoint(x));
                 case InputDeviceType.Joystick:
                     return InputSystem.devices
                         .OfType<Joystick>()
@@ -684,7 +715,13 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     return InputSystem.devices
                         .OfType<Gamepad>()
-                        .Any(x => GetGamepadButtonControl(x, input).wasPressedThisFrame);
+                        .Any(x =>
+                        {
+                            var ctrl = GetGamepadButtonControl(x, input);
+                            var pressPoint = GetGamepadTriggerPressPoint(x);
+                            return x.wasUpdatedThisFrame && (ctrl.ReadValue() >= pressPoint) &&
+                                   (ctrl.ReadValueFromPreviousFrame() < pressPoint);
+                        });
                 case InputDeviceType.Joystick:
                     return InputSystem.devices
                         .OfType<Joystick>()
@@ -720,7 +757,13 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     return InputSystem.devices
                         .OfType<Gamepad>()
-                        .Any(x => GetGamepadButtonControl(x, input).wasReleasedThisFrame);
+                        .Any(x =>
+                        {
+                            var ctrl = GetGamepadButtonControl(x, input);
+                            var pressPoint = GetGamepadTriggerPressPoint(x);
+                            return x.wasUpdatedThisFrame && (ctrl.ReadValue() < pressPoint) &&
+                                   (ctrl.ReadValueFromPreviousFrame() >= pressPoint);
+                        });
                 case InputDeviceType.Joystick:
                     return InputSystem.devices
                         .OfType<Joystick>()
@@ -804,7 +847,12 @@ namespace UnityEngine.InputSystem.HighLevel
         public static Vector2 GetAxis(Inputs left, Inputs right, Inputs up, Inputs down)
         {
             var axis = GetAxisRaw(left, right, up, down);
-            var deadzone = GetInputSystemDefaultDeadZone(); // TODO account for controls being on gamepads
+            var deadzone = (GetDeviceTypeForInput(left) == InputDeviceType.Gamepad
+                            || GetDeviceTypeForInput(right) == InputDeviceType.Gamepad
+                            || GetDeviceTypeForInput(up) == InputDeviceType.Gamepad
+                            || GetDeviceTypeForInput(down) == InputDeviceType.Gamepad)
+                ? GetGamepadDeadZone(GamepadSlot.All)
+                : GetInputSystemDefaultDeadZone();
             return NormalizeAxis(axis, deadzone);
         }
 
@@ -849,8 +897,29 @@ namespace UnityEngine.InputSystem.HighLevel
 
         private static float GetGamepadDeadZone(GamepadSlot gamepadSlot)
         {
-            // TODO implement me!
-            return GetInputSystemDefaultDeadZone();
+            // TODO remove me when init is implemented
+            InitializeGamepadConfigs();
+
+            switch (gamepadSlot)
+            {
+                case GamepadSlot.Slot1:
+                case GamepadSlot.Slot2:
+                case GamepadSlot.Slot3:
+                case GamepadSlot.Slot4:
+                case GamepadSlot.Slot5:
+                case GamepadSlot.Slot6:
+                case GamepadSlot.Slot7:
+                case GamepadSlot.Slot8:
+                case GamepadSlot.Slot9:
+                case GamepadSlot.Slot10:
+                case GamepadSlot.Slot11:
+                case GamepadSlot.Slot12:
+                    return s_GamepadConfigs[(int)gamepadSlot].deadzone;
+                case GamepadSlot.All:
+                    return s_GamepadConfigs[0].deadzone; // TODO what should it mean?
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
+            }
         }
 
         /// <summary>
@@ -866,7 +935,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 axis += GetGamepadStickControl(gamepad, stick).ReadValue();
             return NormalizeAxis(axis, GetGamepadDeadZone(gamepadSlot));
         }
-        
+
         private static StickControl GetJoystickStickControl(Joystick joystick, int joystickAxis)
         {
             if (joystick == null)
@@ -937,6 +1006,46 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             throw new NotImplementedException();
         }
+#endif
+        
+        private static GamepadSlot FindSlotForGamepad(Gamepad gamepad)
+        {
+            // TODO implement me
+            return GamepadSlot.Slot1;
+        }
+
+        private static float GetGamepadTriggerPressPoint(Gamepad gamepad)
+        {
+            // TODO remove me when init is implemented
+            InitializeGamepadConfigs();
+
+            var gamepadSlot = FindSlotForGamepad(gamepad);
+            switch (gamepadSlot)
+            {
+                case GamepadSlot.Slot1:
+                case GamepadSlot.Slot2:
+                case GamepadSlot.Slot3:
+                case GamepadSlot.Slot4:
+                case GamepadSlot.Slot5:
+                case GamepadSlot.Slot6:
+                case GamepadSlot.Slot7:
+                case GamepadSlot.Slot8:
+                case GamepadSlot.Slot9:
+                case GamepadSlot.Slot10:
+                case GamepadSlot.Slot11:
+                case GamepadSlot.Slot12:
+                    return s_GamepadConfigs[(int)gamepadSlot].triggerPresspoint;
+                case GamepadSlot.All:
+                    return s_GamepadConfigs[0].triggerPresspoint; // TODO what should it mean?
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
+            }
+        }
+        
+        private static float GetGamepadDeadZone(Gamepad gamepad)
+        {
+            return GetGamepadDeadZone(FindSlotForGamepad(gamepad));
+        }
 
         /// <summary>
         /// Set the value at which gamepad triggers need to be actuated before they will be considered pressed.
@@ -948,7 +1057,32 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static void SetGamepadTriggerPressPoint(float pressPoint, GamepadSlot gamepadSlot = GamepadSlot.All)
         {
-            throw new NotImplementedException();
+            // TODO remove me when init is implemented
+            InitializeGamepadConfigs();
+
+            switch (gamepadSlot)
+            {
+                case GamepadSlot.Slot1:
+                case GamepadSlot.Slot2:
+                case GamepadSlot.Slot3:
+                case GamepadSlot.Slot4:
+                case GamepadSlot.Slot5:
+                case GamepadSlot.Slot6:
+                case GamepadSlot.Slot7:
+                case GamepadSlot.Slot8:
+                case GamepadSlot.Slot9:
+                case GamepadSlot.Slot10:
+                case GamepadSlot.Slot11:
+                case GamepadSlot.Slot12:
+                    s_GamepadConfigs[(int)gamepadSlot].triggerPresspoint = pressPoint;
+                    break;
+                case GamepadSlot.All:
+                    for (var i = 0; i < s_GamepadConfigs.Length; ++i)
+                        s_GamepadConfigs[i].triggerPresspoint = pressPoint;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
+            }
         }
 
         /// <summary>
@@ -958,9 +1092,37 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="gamepadSlot"></param>
         public static void SetGamepadStickDeadzone(float deadzone, GamepadSlot gamepadSlot = GamepadSlot.All)
         {
-            throw new NotImplementedException();
+            // TODO remove me when init is implemented
+            InitializeGamepadConfigs();
+
+            switch (gamepadSlot)
+            {
+                case GamepadSlot.Slot1:
+                case GamepadSlot.Slot2:
+                case GamepadSlot.Slot3:
+                case GamepadSlot.Slot4:
+                case GamepadSlot.Slot5:
+                case GamepadSlot.Slot6:
+                case GamepadSlot.Slot7:
+                case GamepadSlot.Slot8:
+                case GamepadSlot.Slot9:
+                case GamepadSlot.Slot10:
+                case GamepadSlot.Slot11:
+                case GamepadSlot.Slot12:
+                    s_GamepadConfigs[(int)gamepadSlot].deadzone = deadzone;
+                    break;
+                case GamepadSlot.All:
+                    for (var i = 0; i < s_GamepadConfigs.Length; ++i)
+                        s_GamepadConfigs[i].deadzone = deadzone;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
+            }
+
         }
 
+        // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
+#if false
         /// <summary>
         /// True if there is a connected gamepad in the indicated slot.
         /// </summary>
