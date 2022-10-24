@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Improved performance of HID descriptor parsing by moving json parsing to a simple custom predicitve parser instead of relying on Unity's json parsing. This should improve domain reload times when there are many HID devices connected to a machine.
+- Disable shortcut support by default. This restores the behaviour from v1.3 and fixes the case of actions not triggering if multiple actions are enabled using the same controls ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 
 ## [1.4.2] - 2022-08-12
 

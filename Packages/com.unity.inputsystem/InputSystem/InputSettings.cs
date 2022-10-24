@@ -676,7 +676,13 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(featureName));
 
             if (m_FeatureFlags == null)
+            {
                 m_FeatureFlags = new HashSet<string>();
+
+                // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
+                // existing flag name, as users are aware of that now.
+                m_FeatureFlags.Add(InputFeatureNames.kDisableShortcutSupport.ToUpperInvariant());
+            }
 
             if (enabled)
                 m_FeatureFlags.Add(featureName.ToUpperInvariant());
@@ -717,6 +723,10 @@ namespace UnityEngine.InputSystem
 
         internal bool IsFeatureEnabled(string featureName)
         {
+            // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
+            // existing flag name, as users are aware of that now.
+            if (m_FeatureFlags == null && featureName == InputFeatureNames.kDisableShortcutSupport) return true;
+
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
         }
 
