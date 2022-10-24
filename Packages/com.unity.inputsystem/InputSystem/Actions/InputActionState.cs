@@ -897,7 +897,7 @@ namespace UnityEngine.InputSystem
             return mapIndices[map.m_MapIndexInState];
         }
 
-        private void CheckForAndLogAnyConflictingControls(InputActionAsset asset)
+        private void CheckForAndLogAnyConflictingControls()
         {
             for (var i = 0; i < totalControlCount; ++i)
             {
@@ -928,24 +928,30 @@ namespace UnityEngine.InputSystem
                     if (controlGroupingAndComplexity[i * 2] == controlGroupingAndComplexity[n * 2] && // Group
                         controlGroupingAndComplexity[i * 2 + 1] == controlGroupingAndComplexity[n * 2 + 1]) // Complexity
                     {
-                        String conflictingActions = "";
-                        foreach (var actionMap in asset.m_ActionMaps)
+                        for (var mapIdx = 0; mapIdx < totalMapCount; ++mapIdx)
                         {
+                            var actionMap = maps[mapIdx];
+
                             var actionStartIdx = mapIndices[actionMap.m_MapIndexInState].actionStartIndex;
                             var lastActionIdxPlusOne = mapIndices[actionMap.m_MapIndexInState].actionCount + actionStartIdx;
 
                             void appendActionMapAndActionNames(ref BindingState conflictingBinding)
                             {
-                                // Append ActionMap name
-                                if (conflictingActions.Length > 0)
-                                    conflictingActions += ", ";
-                                conflictingActions += actionMap.name;
-
-                                // Append Actions
-                                foreach (var a in actionMap)
+                                foreach (var a in actionMap.m_Actions)
                                 {
                                     if (a.m_ActionIndexInState == conflictingBinding.actionIndex)
-                                        conflictingActions += ":" + a.name;
+                                    {
+                                        if (actionMap.asset && actionMap.asset.name.Length > 0)
+                                            Debug.LogWarning("Potential input binding conflict found in Input Action Asset: " + actionMap.asset.name +
+                                                ". Binding " + control.path + " is being used with the Input Action: " + actionMap.name + ":" + a.name +
+                                                ". But is also enabled in another InputAction. Only one of these actions will receive events. Please remove or disable unneeded actions with the conflicting bindings.");
+
+                                        else
+                                            Debug.LogWarning("Potential input binding conflict found" +
+                                                ". Binding " + control.path + " is being used with the Input Action: " + actionMap.name + ":" + a.name +
+                                                ". But is also enabled in another InputAction. Only one of these actions will receive events. Please remove or disable unneeded actions with the conflicting bindings.");
+                                        break;
+                                    }
                                 }
                             }
 
@@ -953,12 +959,8 @@ namespace UnityEngine.InputSystem
                                 appendActionMapAndActionNames(ref binding);
                             if (otherBinding.actionIndex >= actionStartIdx && otherBinding.actionIndex < lastActionIdxPlusOne)
                                 appendActionMapAndActionNames(ref otherBinding);
-                        }
 
-                        var assetInfo = (asset.name.Length > 0) ? (" in Input Action Asset: " + asset.name) : "";
-                        Debug.LogWarning("Potential input binding conflict found" + assetInfo +
-                            ". Binding " + control.path + " is being used with the following multiple Input Actions: " + conflictingActions +
-                            ". Only one of these actions will receive events. Please remove or disable unneeded actions with the conflicting bindings.");
+                        }
                     }
                 }
             }
@@ -997,7 +999,7 @@ namespace UnityEngine.InputSystem
             else
                 NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
 
-            CheckForAndLogAnyConflictingControls(map.asset);
+            CheckForAndLogAnyConflictingControls();
         }
 
         private void EnableControls(InputActionMap map)
@@ -1035,7 +1037,7 @@ namespace UnityEngine.InputSystem
             NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
 
             if (!action.isSingletonAction)
-                CheckForAndLogAnyConflictingControls(action.m_ActionMap.asset);
+                CheckForAndLogAnyConflictingControls();
         }
 
         private void EnableControls(InputAction action)
