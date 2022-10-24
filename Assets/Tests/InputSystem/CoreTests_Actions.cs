@@ -30,14 +30,50 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map1 = new InputActionMap("map1");
+        var action1 = map1.AddAction(name: "action1");
+        action1.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var map2 = new InputActionMap("map2");
+        var action2 = map2.AddAction(name: "action2");
+        action2.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        var action3 = map2.AddAction(name: "action3", binding: "<Keyboard>/w");
+
+        map1.Enable();
+        map2.Enable();
+
+        Press(keyboard.wKey);
+
+        // All Actions were triggered
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(action2.WasPerformedThisFrame());
+        Assert.That(action3.WasPerformedThisFrame());
+    }
+
     // Premise: Binding the same control multiple times in different ways from multiple concurrently active
     //          actions should result in the input system figuring out which *one* action gets to act on the input.
     [Test]
     [Category("Actions")]
     [TestCase(true)]
     [TestCase(false)]
-    public void Actions_CanConsumeInput(bool legacyComposites)
+    public void Actions_WhenShortcutsEnabled_CanConsumeInput(bool legacyComposites)
     {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, false);
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var map = new InputActionMap();
@@ -124,13 +160,11 @@ partial class CoreTests
         Assert.That(!action3.WasPerformedThisFrame());
     }
 
-    // For now, maintain a kill switch for the new behavior for users to have an out where the
-    // the behavior is simply breaking their project.
     [Test]
     [Category("Actions")]
-    public void Actions_CanDisableShortcutSupport()
+    public void Actions_ShortcutSupportDisabledByDefault()
     {
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+        Assert.That(InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport), Is.True);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -216,8 +250,10 @@ partial class CoreTests
     [TestCase("leftShift", "leftAlt", "space", true)]
     [TestCase("leftShift", null, "space", false)]
     [TestCase("leftShift", "leftAlt", "space", false)]
-    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
+    public void Actions_WhenShortcutsEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
     {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, false);
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
@@ -292,8 +328,10 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
+    public void Actions_WhenShortcutsAreEnabled_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
     {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, false);
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var map = new InputActionMap();
@@ -3052,7 +3090,7 @@ partial class CoreTests
             action2.Disable();
             Set(gamepad.leftTrigger, 0.234f);
 
-            Assert.That(trace, Performed(action2, value: -0.123f).AndThen(Performed(action1, value: 0.123f)));
+            Assert.That(trace, Performed(action1, value: 0.123f).AndThen(Performed(action2, value: -0.123f)));
         }
     }
 
