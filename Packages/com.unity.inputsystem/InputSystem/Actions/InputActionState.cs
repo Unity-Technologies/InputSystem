@@ -897,6 +897,73 @@ namespace UnityEngine.InputSystem
             return mapIndices[map.m_MapIndexInState];
         }
 
+        private void CheckForAndLogAnyConflictingControls(InputActionAsset asset)
+        {
+            for (var i = 0; i < totalControlCount; ++i)
+            {
+                var control = controls[i];
+                var bindingIndex = controlIndexToBindingIndex[i];
+                ref var binding = ref bindingStates[bindingIndex];
+                var action = actionStates[binding.actionIndex];
+                if (action.isDisabled)
+                    continue;
+
+                // Look ahead for any duplicate controls that are attached to enabled actions
+                for (var n = i + 1; n < totalControlCount; ++n)
+                {
+                    var otherControl = controls[n];
+                    var otherBindingIndex = controlIndexToBindingIndex[n];
+
+                    ref var otherBinding = ref bindingStates[otherBindingIndex];
+                    var otherAction = actionStates[otherBinding.actionIndex];
+                    if (otherAction.isDisabled)
+                        continue;
+
+                    // Conflicting control was found!
+                    // HOWEVER this only warns about actions with the same number of bindings (same complexity).
+                    // E.g. If WASD keys in a composite binding conflict with the WASD keys used also by another action would cause a warning here.
+                    // However an action with less bindings, like just the 'W' key by itself and 'WASD' would NOT trigger a warning.
+                    // This is because that case could be a genuine shortcut case e.g. 'CTRL+W' and 'W' should not show a warning.
+                    // BUT this would trigger a warning for something like: CTRL+W and SHIFT+W, which is a genuine shortcut case!!
+                    if (controlGroupingAndComplexity[i * 2] == controlGroupingAndComplexity[n * 2] && // Group
+                        controlGroupingAndComplexity[i * 2 + 1] == controlGroupingAndComplexity[n * 2 + 1]) // Complexity
+                    {
+                        String conflictingActions = "";
+                        foreach (var actionMap in asset.m_ActionMaps)
+                        {
+                            var actionStartIdx = mapIndices[actionMap.m_MapIndexInState].actionStartIndex;
+                            var lastActionIdxPlusOne = mapIndices[actionMap.m_MapIndexInState].actionCount + actionStartIdx;
+
+                            void appendActionMapAndActionNames(ref BindingState conflictingBinding)
+                            {
+                                // Append ActionMap name
+                                if (conflictingActions.Length > 0)
+                                    conflictingActions += ", ";
+                                conflictingActions += actionMap.name;
+
+                                // Append Actions
+                                foreach (var a in actionMap)
+                                {
+                                    if (a.m_ActionIndexInState == conflictingBinding.actionIndex)
+                                        conflictingActions += ":" + a.name;
+                                }
+                            }
+
+                            if (binding.actionIndex >= actionStartIdx && binding.actionIndex < lastActionIdxPlusOne)
+                                appendActionMapAndActionNames(ref binding);
+                            if (otherBinding.actionIndex >= actionStartIdx && otherBinding.actionIndex < lastActionIdxPlusOne)
+                                appendActionMapAndActionNames(ref otherBinding);
+                        }
+
+                        var assetInfo = (asset.name.Length > 0) ? (" in Input Action Asset: " + asset.name) : "";
+                        Debug.LogWarning("Potential input binding conflict found" + assetInfo +
+                            ". Binding " + control.path + " is being used with the following multiple Input Actions: " + conflictingActions +
+                            ". Only one of these actions will receive events. Please remove or disable unneeded actions with the conflicting bindings.");
+                    }
+                }
+            }
+        }
+
         public void EnableAllActions(InputActionMap map)
         {
             Debug.Assert(map != null, "Map must not be null");
@@ -929,6 +996,8 @@ namespace UnityEngine.InputSystem
                 NotifyListenersOfActionChange(InputActionChange.ActionEnabled, map.m_SingletonAction);
             else
                 NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
+
+            CheckForAndLogAnyConflictingControls(map.asset);
         }
 
         private void EnableControls(InputActionMap map)
@@ -964,6 +1033,9 @@ namespace UnityEngine.InputSystem
 
             HookOnBeforeUpdate();
             NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
+
+            if (!action.isSingletonAction)
+                CheckForAndLogAnyConflictingControls(action.m_ActionMap.asset);
         }
 
         private void EnableControls(InputAction action)

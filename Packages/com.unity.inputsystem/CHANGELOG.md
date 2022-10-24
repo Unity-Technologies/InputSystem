@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Improved performance of HID descriptor parsing by moving json parsing to a simple custom predicitve parser instead of relying on Unity's json parsing. This should improve domain reload times when there are many HID devices connected to a machine.
+- Added warnings about potential binding conflicts when the shortcut feature is enabled ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254)).
 
 ## [1.4.2] - 2022-08-12
 

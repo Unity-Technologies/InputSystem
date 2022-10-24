@@ -10160,6 +10160,79 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_DuplicateBindings_CauseWarnings(bool shortcutsEnabled)
+    {
+        var previousSetting = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, !shortcutsEnabled);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map1 = new InputActionMap("map1");
+        var action1 = map1.AddAction(name: "action1");
+        action1.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var map2 = new InputActionMap("map2");
+        var action2 = map2.AddAction(name: "action2");
+        action2.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        var action3 = map2.AddAction(name: "action3", binding: "<Keyboard>/w");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map1.Enable();
+        LogAssert.NoUnexpectedReceived();
+
+        map2.Enable();
+
+        // After enabling map we should see warnings (if shortcuts are enabled)
+        // BUT only warnings about WASD conflicting with WASD on the other action
+        // It will NOT be reported that action3 is conflicting because that could be a
+        // genuine shortcut case e.g. 'CTRL+W' and 'W' should not show a warning.
+        if (shortcutsEnabled)
+            LogAssert.Expect(LogType.Warning, new Regex("Potential input binding conflict found"));
+        else
+            LogAssert.NoUnexpectedReceived();
+
+        int action1Count = 0;
+        int action2Count = 0;
+        int action3Count = 0;
+        action1.started += ctx => action1Count++;
+        action2.started += ctx => action2Count++;
+        action3.started += ctx => action3Count++;
+
+        Press(keyboard.wKey);
+        if (shortcutsEnabled )
+        {
+            // First action with the most bindings is the ONLY one to trigger
+            Assert.That(action1Count, Is.EqualTo(1));
+            Assert.That(action2Count, Is.EqualTo(0));
+            Assert.That(action3Count, Is.EqualTo(0));
+        }
+        else
+        {
+            // All actions were triggered
+            Assert.That(action1Count, Is.EqualTo(1));
+            Assert.That(action2Count, Is.EqualTo(1));
+            Assert.That(action3Count, Is.EqualTo(1));
+        }
+
+        // Restore global setting
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, previousSetting);
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {
