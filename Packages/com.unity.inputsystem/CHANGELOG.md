@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
 - Fixed `{fileID: 0}` getting appended to `ProjectSettings.asset` file when building a project ([case ISXB-296](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-296)).
 - Fixed `Type of instance in array does not match expected type` assertion when using PlayerInput in combination with Control Schemes and Interactions ([case ISXB-282](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-282)).
+- Reverted the `InputActions consume their inputs` behaviour introduced in v1.4. This shortcut support feature can still be enabled by is switched off by default for now ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 
 ## [1.4.3] - 2022-09-23
 
@@ -26,7 +27,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Improved performance of HID descriptor parsing by moving json parsing to a simple custom predicitve parser instead of relying on Unity's json parsing. This should improve domain reload times when there are many HID devices connected to a machine.
-- Disable shortcut support by default. This restores the behaviour from v1.3 and fixes the case of actions not triggering if multiple actions are enabled using the same controls ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 
 ## [1.4.2] - 2022-08-12
 
