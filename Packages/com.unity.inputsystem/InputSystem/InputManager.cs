@@ -1777,6 +1777,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
             RegisterControlLayout("TrackedDevice", typeof(TrackedDevice));
+            RegisterControlLayout("PerformanceTestDevice", typeof(PerformanceTestDevice));
 
             // Precompiled layouts.
             RegisterPrecompiledLayout<FastKeyboard>(FastKeyboard.metadata);
