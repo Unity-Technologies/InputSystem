@@ -14,7 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
 - Fixed `{fileID: 0}` getting appended to `ProjectSettings.asset` file when building a project ([case ISXB-296](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-296)).
 - Fixed `Type of instance in array does not match expected type` assertion when using PlayerInput in combination with Control Schemes and Interactions ([case ISXB-282](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-282)).
-- Reverted the `InputActions consume their inputs` behaviour introduced in v1.4. This shortcut support feature can still be enabled by is switched off by default for now ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
+- The `InputActions consume their inputs` behaviour for shortcut support introduced in v1.4 is opt-in now and can be enabled via the project settings ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 
 ## [1.4.3] - 2022-09-23
 
