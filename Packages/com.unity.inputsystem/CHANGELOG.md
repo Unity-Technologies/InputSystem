@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `{fileID: 0}` getting appended to `ProjectSettings.asset` file when building a project ([case ISXB-296](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-296)).
 - Fixed `Type of instance in array does not match expected type` assertion when using PlayerInput in combination with Control Schemes and Interactions ([case ISXB-282](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-282)).
 - Fixed Memory alignment issue with deserialized InputEventTraces that could cause infinite loops when playing back replays ([case ISXB-317](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-317)).
+- Fixed an InvalidOperationException when using Hold interaction, and by extension any interaction that changes to performed state after a timeout ([case ISXB-332](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-330)).
 
 ## [1.4.3] - 2022-09-23
 
