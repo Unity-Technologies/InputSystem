@@ -10245,7 +10245,7 @@ partial class CoreTests
         action3.started += ctx => action3Count++;
 
         Press(keyboard.wKey);
-        if (shortcutsEnabled )
+        if (shortcutsEnabled)
         {
             // First action with the most bindings is the ONLY one to trigger
             Assert.That(action1Count, Is.EqualTo(1));
@@ -10260,7 +10260,6 @@ partial class CoreTests
             Assert.That(action3Count, Is.EqualTo(1));
         }
     }
-
 
     [Test]
     [Category("Actions")]
