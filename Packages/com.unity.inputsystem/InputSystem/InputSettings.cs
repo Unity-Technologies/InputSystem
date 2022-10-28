@@ -675,14 +675,19 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
-            if (m_FeatureFlags == null)
+            // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
+            // existing flag name, as users are aware of that now.
+            if (featureName == InputFeatureNames.kDisableShortcutSupport)
             {
-                m_FeatureFlags = new HashSet<string>();
-
-                // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
-                // existing flag name, as users are aware of that now.
-                m_FeatureFlags.Add(InputFeatureNames.kDisableShortcutSupport.ToUpperInvariant());
+                if (m_ImprovedShortcutSupportEnabled == !enabled) return;
+                Debug.LogWarning("Please note that the use of SetInternalFeatureFlag(\"DISABLE_SHORTCUT_SUPPORT\", ...) is unsupported and will be removed in future releases. Enabling Improved Shortcut Support via the 'Project Settings - Input System Package' panel will remove this message.");
+                m_ImprovedShortcutSupportEnabled = !enabled;
+                OnChange();
+                return;
             }
+
+            if (m_FeatureFlags == null)
+                m_FeatureFlags = new HashSet<string>();
 
             if (enabled)
                 m_FeatureFlags.Add(featureName.ToUpperInvariant());
@@ -718,14 +723,15 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+        [SerializeField] private bool m_ImprovedShortcutSupportEnabled = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
         internal bool IsFeatureEnabled(string featureName)
         {
             // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
-            // existing flag name, as users are aware of that now.
-            if (m_FeatureFlags == null && featureName == InputFeatureNames.kDisableShortcutSupport) return true;
+            // existing flag name, as some users are aware of that now.
+            if (featureName == InputFeatureNames.kDisableShortcutSupport) return !m_ImprovedShortcutSupportEnabled;
 
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
         }

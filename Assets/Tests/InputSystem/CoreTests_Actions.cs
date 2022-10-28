@@ -10196,6 +10196,72 @@ partial class CoreTests
         Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
+    // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.
+    // This test should be repurposed once that behaviour is fixed.
+    [Test]
+    [Category("Actions")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_ImprovedShortcutSupport_ConsumesWASD(bool shortcutsEnabled)
+    {
+        if (shortcutsEnabled)
+            LogAssert.Expect(LogType.Warning, new Regex("Please note that the use of SetInternalFeatureFlag"));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, !shortcutsEnabled);
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map1 = new InputActionMap("map1");
+        var action1 = map1.AddAction(name: "action1");
+        action1.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var map2 = new InputActionMap("map2");
+        var action2 = map2.AddAction(name: "action2");
+        action2.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        var action3 = map2.AddAction(name: "action3", binding: "<Keyboard>/w");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map1.Enable();
+        LogAssert.NoUnexpectedReceived();
+
+        map2.Enable();
+
+        int action1Count = 0;
+        int action2Count = 0;
+        int action3Count = 0;
+        action1.started += ctx => action1Count++;
+        action2.started += ctx => action2Count++;
+        action3.started += ctx => action3Count++;
+
+        Press(keyboard.wKey);
+        if (shortcutsEnabled )
+        {
+            // First action with the most bindings is the ONLY one to trigger
+            Assert.That(action1Count, Is.EqualTo(1));
+            Assert.That(action2Count, Is.EqualTo(0));
+            Assert.That(action3Count, Is.EqualTo(0));
+        }
+        else
+        {
+            // All actions were triggered
+            Assert.That(action1Count, Is.EqualTo(1));
+            Assert.That(action2Count, Is.EqualTo(1));
+            Assert.That(action3Count, Is.EqualTo(1));
+        }
+    }
+
+
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
