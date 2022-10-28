@@ -2042,8 +2042,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
         var map1 = new InputActionMap("map1");
@@ -2080,6 +2078,8 @@ partial class CoreTests
             // Enable only map1.
             map1.Enable();
 
+            // Creating gamepad after maps are enabled to test trace catching binding resolve. Case ISXB-29.
+            var gamepad = InputSystem.AddDevice<Gamepad>();
             Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), startTime + 0.123);
 
             // map1/action1 should have been started and performed.
