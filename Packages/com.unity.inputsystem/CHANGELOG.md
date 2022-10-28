@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Type of instance in array does not match expected type` assertion when using PlayerInput in combination with Control Schemes and Interactions ([case ISXB-282](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-282)).
 - Fixed Memory alignment issue with deserialized InputEventTraces that could cause infinite loops when playing back replays ([case ISXB-317](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-317)).
 - Fixed an InvalidOperationException when using Hold interaction, and by extension any interaction that changes to performed state after a timeout ([case ISXB-332](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-330)).
+- Fixed `Given object is neither an InputAction nor an InputActionMap` when using `InputActionTrace` on input action from an input action asset ([case ISXB-29](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-29)).
 
 ## [1.4.3] - 2022-09-23
 
@@ -45,7 +46,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.4.1] - 2022-05-30
 
 ### Fixed
-- Fixed composite touchscreen controls were not firing an action if screen was touched before enabling the action ([case ISXB-98](https://jira.unity3d.com/browse/ISXB-98)).
+- Fixed composite touchscreen controls were not firing an action if screen was touched before enabling the action ([case ISXB-98](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-98)).
 
 ## [1.4.0] - 2022-04-10
 
