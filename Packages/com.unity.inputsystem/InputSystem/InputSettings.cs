@@ -680,7 +680,6 @@ namespace UnityEngine.InputSystem
             if (featureName == InputFeatureNames.kDisableShortcutSupport)
             {
                 if (m_ImprovedShortcutSupportEnabled == !enabled) return;
-                Debug.LogWarning("Please note that the use of SetInternalFeatureFlag(\"DISABLE_SHORTCUT_SUPPORT\", ...) is unsupported and will be removed in future releases. Enabling Improved Shortcut Support via the 'Project Settings - Input System Package' panel will remove this message.");
                 m_ImprovedShortcutSupportEnabled = !enabled;
                 OnChange();
                 return;

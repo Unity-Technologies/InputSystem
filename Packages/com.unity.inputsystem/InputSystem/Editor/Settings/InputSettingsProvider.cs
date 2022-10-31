@@ -146,15 +146,17 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
 
                 EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Shortcut support", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_ImprovedShortcutSupportEnabled, m_ImprovedShortcutSupportContent);
-
-                EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions to consume and block any other actions which are enabled and sharing the same controls. "
-                    + "E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time, which would be the expected result in this example. "
-                    + "However, in other cases this might not give the desired result. E.g. if the 'W', 'A', 'S' and 'D' keys are bound to different actions which are all enabled at the same time, then only one of those actions will trigger. "
-                    + "Therefore if you enable this feature, be sure to remove any of these duplicate control bindings so that controls are only ever bound to a single action. Alternatively, you can disable actions or action maps at runtime to remove these conflicts."
-                    , MessageType.None);
+                if (m_ImprovedShortcutSupportEnabled.boolValue)
+                    EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
+                        + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
+                        + "Therefore actions requiring less keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
+                        + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
+                        + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
+                        + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
+                        , MessageType.None);
 
                 if (EditorGUI.EndChangeCheck())
                     Apply();
@@ -307,7 +309,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
-            m_ImprovedShortcutSupportContent = new GUIContent("Improved Shortcut Support", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
+            m_ImprovedShortcutSupportContent = new GUIContent("Enable Input Consumption", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
