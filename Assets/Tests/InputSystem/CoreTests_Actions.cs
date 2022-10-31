@@ -10204,9 +10204,6 @@ partial class CoreTests
     [TestCase(false)]
     public void Actions_ImprovedShortcutSupport_ConsumesWASD(bool shortcutsEnabled)
     {
-        if (shortcutsEnabled)
-            LogAssert.Expect(LogType.Warning, new Regex("Please note that the use of SetInternalFeatureFlag"));
-
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, !shortcutsEnabled);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
