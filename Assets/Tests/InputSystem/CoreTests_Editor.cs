@@ -303,7 +303,7 @@ partial class CoreTests
     {
         Assert.Fail();
     }
-    
+
     [Test]
     [Category("Editor")]
     public void Editor_DomainReload_CanRemoveDevicesDuringDomainReload()
