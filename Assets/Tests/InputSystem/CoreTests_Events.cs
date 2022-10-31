@@ -1416,6 +1416,94 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanDeserializeInputEventTraceFromMemory()
+    {
+        var dataStream = new MemoryStream();
+        long sourceTraceEventSize = 0;
+        long sourceEventCount = 0;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Generate a trace
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            // Enough events that the aggregate of any padding introduced due to alignment would
+            // start to skew data in last event
+            Press(gamepad.buttonEast);
+            Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonWest);
+            Press(gamepad.buttonNorth);
+
+            Release(gamepad.buttonEast);
+            Release(gamepad.buttonSouth);
+            Release(gamepad.buttonWest);
+            Release(gamepad.buttonNorth);
+
+            Press(gamepad.buttonEast);
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonWest);
+            Press(gamepad.buttonNorth);
+            Set(gamepad.rightStick, new Vector2(-0.123f, -0.234f));
+
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(14));
+            sourceEventCount = trace.eventCount;
+            sourceTraceEventSize = trace.totalEventSizeInBytes;
+
+            // Serialize trace to memory
+            trace.WriteTo(dataStream);
+            trace.Disable();
+            dataStream.Flush();
+        }
+
+        // Deserialize trace from memory into a fresh new buffer
+        using (var trace = new InputEventTrace())
+        {
+            dataStream.Position = 0;
+            trace.ReadFrom(dataStream);
+
+            // Check that we have read the correct number of bytes
+            Assert.That(trace.allocatedSizeInBytes, Is.EqualTo(sourceTraceEventSize));
+            Assert.That(trace.totalEventSizeInBytes, Is.EqualTo(sourceTraceEventSize));
+
+            // This line should not cause an infinite loop
+            trace.Replay().PlayAllEvents();
+
+            // Collect content and event count manually using enumeration
+            var retrievedEvents = new List<InputEventPtr>();
+            int eventCount = 0;
+            long aggregateEventSize = 0;
+            var current = default(InputEventPtr);
+            while (trace.GetNextEvent(ref current))
+            {
+                eventCount++;
+                aggregateEventSize += current.sizeInBytes;
+                retrievedEvents.Add(current);
+            }
+
+            // Check sum of enumerated values and header values match
+            Assert.That(trace.eventCount, Is.EqualTo(sourceEventCount));
+            Assert.That(eventCount, Is.EqualTo(trace.eventCount));
+            Assert.That(trace.totalEventSizeInBytes, Is.GreaterThanOrEqualTo(aggregateEventSize));
+
+            // Check event data is correct
+            Assert.That(retrievedEvents[0].deviceId, Is.EqualTo(gamepad.deviceId));
+            Assert.That(gamepad.buttonEast.ReadUnprocessedValueFromEvent(retrievedEvents[0]), Is.EqualTo(1));
+            Assert.That(gamepad.buttonSouth.ReadUnprocessedValueFromEvent(retrievedEvents[0]), Is.EqualTo(0));
+
+            // Especially the last one
+            var lastIdx = eventCount - 1;
+            Assert.That(retrievedEvents[lastIdx].deviceId, Is.EqualTo(gamepad.deviceId));
+            Assert.That(gamepad.rightStick.ReadUnprocessedValueFromEvent(retrievedEvents[lastIdx]), Is.EqualTo(new Vector2(-0.123f, -0.234f)));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanClearEventTrace()
     {
         using (var trace = new InputEventTrace())
