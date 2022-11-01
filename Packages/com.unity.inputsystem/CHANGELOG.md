@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
 - Fixed `{fileID: 0}` getting appended to `ProjectSettings.asset` file when building a project ([case ISXB-296](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-296)).
 - Fixed `Type of instance in array does not match expected type` assertion when using PlayerInput in combination with Control Schemes and Interactions ([case ISXB-282](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-282)).
+- The `InputActions consume their inputs` behaviour for shortcut support introduced in v1.4 is opt-in now and can be enabled via the project settings ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 - Fixed Memory alignment issue with deserialized InputEventTraces that could cause infinite loops when playing back replays ([case ISXB-317](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-317)).
 - Fixed an InvalidOperationException when using Hold interaction, and by extension any interaction that changes to performed state after a timeout ([case ISXB-332](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-330)).
 - Fixed `Given object is neither an InputAction nor an InputActionMap` when using `InputActionTrace` on input action from an input action asset ([case ISXB-29](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-29)).
