@@ -3797,6 +3797,317 @@ internal class UITests : CoreTestsFixture
         Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerExit), Is.True);
     }
 
+    #region Multi Display Tests
+#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
+    [UnityTest]
+    public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnScreenSpaceCanvas()
+    {
+        // Setup the Test Scene
+        InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+        actions.Enable();
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Set Display Index to 1
+        byte targetDisplay = 1;
+        scene.camera.targetDisplay = targetDisplay; // Only need to set camera since this is scene space canvas
+        yield return null;
+
+        // Touch Display 1
+        Vector2 pressPosition = new Vector2(100, 100);
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+
+        // Verify Display Index Was Set
+        Assert.AreEqual(2, scene.parentReceiver.events.Count);
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[0].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[1].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[1].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
+
+        // Set Display Index to 0
+        scene.camera.targetDisplay = 0;
+        yield return null;
+
+        // Touch Display 1
+        scene.ClearEvents();
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+
+        // Verify Clicks On Display 1 Are Ignored On Display 0
+        Assert.AreEqual(0, scene.parentReceiver.events.Count);
+    }
+
+    [UnityTest]
+    public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
+    {
+        // Setup the Test Scene
+        InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+        actions.Enable();
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Set Display Index to 1
+        byte targetDisplay = 1;
+        scene.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        scene.canvas.targetDisplay = targetDisplay;
+        yield return null;
+
+        // Touch Display 1
+        Vector2 pressPosition = new Vector2(100, 100);
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+
+        // Verify Display Index Was Set
+        Assert.AreEqual(2, scene.parentReceiver.events.Count);
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[0].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[1].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[1].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
+
+        // Set Display Index to 0
+        scene.canvas.targetDisplay = 0;
+        yield return null;
+
+        // Touch Display 1
+        scene.ClearEvents();
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+
+        // Verify Clicks On Display 1 Are Ignored On Display 0
+        Assert.AreEqual(0, scene.parentReceiver.events.Count);
+    }
+
+    [UnityTest]
+    public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnScreenSpaceCanvas()
+    {
+        // Setup the Test Scene
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var clickAction = uiActions.AddAction("click", type: InputActionType.PassThrough, binding: "<Mouse>/leftButton");
+        actions.Enable();
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Set Display Index to 1
+        int targetDisplay = 1;
+        scene.camera.targetDisplay = targetDisplay;
+        yield return null;
+
+        // Move Mouse on Display 1
+        Vector2 clickPosition = scene.From640x480ToScreen(10, 10);
+        Set(mouse.displayIndex, targetDisplay);
+        Set(mouse.position, clickPosition);
+
+        // Click on Display 1 - Tests reuse of last used pointer
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
+        yield return null;
+
+        // Verify Display Index Was Set
+        Assert.AreEqual(2, scene.parentReceiver.events.Count);
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[0].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(clickPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[1].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[1].pointerData.position, Is.EqualTo(clickPosition).Using(Vector2EqualityComparer.Instance));
+
+        // Set Display Index to 0
+        scene.camera.targetDisplay = 0;
+        yield return null;
+
+        // Click Display 1
+        scene.ClearEvents();
+        Set(mouse.displayIndex, targetDisplay);
+        Set(mouse.position, clickPosition);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
+
+        // Verify Clicks On Display 1 Are Ignored On Display 0
+        Assert.AreEqual(0, scene.parentReceiver.events.Count);
+    }
+
+    [UnityTest]
+    public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnOverlayCanvas()
+    {
+        // Setup the Test Scene
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var clickAction = uiActions.AddAction("click", type: InputActionType.PassThrough, binding: "<Mouse>/leftButton");
+        actions.Enable();
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Set Display Index to 1
+        byte targetDisplay = 1;
+        scene.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        scene.canvas.targetDisplay = targetDisplay;
+        yield return null;
+
+        // Move Mouse on Display 1
+        Vector2 clickPosition = scene.From640x480ToScreen(10, 10);
+        Set(mouse.displayIndex, targetDisplay);
+        Set(mouse.position, clickPosition);
+
+        // Click on Display 1 - Tests reuse of last used pointer
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
+        yield return null;
+
+        // Verify Display Index Was Set
+        Assert.AreEqual(2, scene.parentReceiver.events.Count);
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[0].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(clickPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.AreEqual(targetDisplay, scene.parentReceiver.events[1].pointerData.displayIndex);
+        Assert.That(scene.parentReceiver.events[1].pointerData.position, Is.EqualTo(clickPosition).Using(Vector2EqualityComparer.Instance));
+
+        // Set Display Index to 0
+        scene.canvas.targetDisplay = 0;
+        yield return null;
+
+        // Click Display 1
+        scene.ClearEvents();
+        Set(mouse.displayIndex, targetDisplay);
+        Set(mouse.position, clickPosition);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
+
+        // Verify Clicks On Display 1 Are Ignored On Display 0
+        Assert.AreEqual(0, scene.parentReceiver.events.Count);
+    }
+
+    [UnityTest]
+    public IEnumerator UI_DisplayIndexMatchesDisplayMultiplePointers()
+    {
+        // Setup the Test Scene
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var touchPointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var touchClickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+        var mouseClickAction = uiActions.AddAction("click", type: InputActionType.PassThrough, binding: "<Mouse>/rightButton");
+        actions.Enable();
+        scene.uiModule.point = InputActionReference.Create(touchPointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(touchClickAction);
+        scene.uiModule.rightClick = InputActionReference.Create(mouseClickAction);
+        scene.uiModule.pointerBehavior = UIPointerBehavior.SingleUnifiedPointer;
+
+        // Set Display Index to 1
+        byte targetDisplay = 1;
+        scene.camera.targetDisplay = targetDisplay; // Only need to set camera since this is scene space canvas
+        yield return null;
+
+        // Touch, Click, Touch Display 1
+        Vector2 pressPosition = new Vector2(100, 100);
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        Set(mouse.displayIndex, targetDisplay);
+        PressAndRelease(mouse.rightButton, queueEventOnly: true);
+        yield return null;
+        PressAndRelease(mouse.rightButton, queueEventOnly: true);
+        yield return null;
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+
+        // Verify Display Index Was Set
+        Vector2[] positions = {
+            pressPosition,
+            pressPosition,
+            pressPosition,
+            Vector2.zero,
+            Vector2.zero,
+            pressPosition,
+        };
+        Assert.AreEqual(6, scene.parentReceiver.events.Count);
+        for (int i = 0; i < scene.parentReceiver.events.Count; i++)
+        {
+            Assert.AreEqual(targetDisplay, scene.parentReceiver.events[i].pointerData.displayIndex);
+            Assert.That(scene.parentReceiver.events[i].pointerData.position, Is.EqualTo(positions[i]).Using(Vector2EqualityComparer.Instance));
+        }
+
+        // Set Display Index to 0
+        scene.camera.targetDisplay = 0; // Only need to set camera since this is scene space canvas
+        yield return null;
+
+        // Touch, Click, Touch Display 1
+        scene.ClearEvents();
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        Set(mouse.displayIndex, targetDisplay);
+        PressAndRelease(mouse.rightButton, queueEventOnly: true);
+        yield return null;
+        PressAndRelease(mouse.rightButton, queueEventOnly: true);
+        yield return null;
+        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        yield return null;
+
+        // Verify Clicks On Display 1 Are Ignored On Display 0
+        Assert.AreEqual(0, scene.parentReceiver.events.Count);
+    }
+#else
+    [UnityTest]
+    public IEnumerator UI_DisplayIndexTouchSecondDisplayOnOverlayCanvas()
+    {
+        // Setup the Test Scene
+        InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
+        var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
+        actions.Enable();
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Set Display Index to 1
+        byte targetDisplay = 1;
+        scene.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        scene.canvas.targetDisplay = targetDisplay;
+        yield return null;
+
+        // Touch Display 1
+        Vector2 pressPosition = new Vector2(100, 100);
+        BeginTouch(1, pressPosition, queueEventOnly: true);
+        yield return null;
+        EndTouch(1, pressPosition, queueEventOnly: true);
+        yield return null;
+
+        // Verify Touch Occurred 
+        Assert.AreEqual(1, scene.parentReceiver.events.Count);
+        Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
+    }
+#endif
+    #endregion
+
     public class MyButton : UnityEngine.UI.Button
     {
         public bool receivedPointerDown;
@@ -4055,6 +4366,9 @@ internal class UITests : CoreTestsFixture
                 twist = eventData.twist,
                 radius = eventData.radius,
                 radiusVariance = eventData.radiusVariance,
+#endif
+#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
+                displayIndex = eventData.displayIndex,
 #endif
             };
 

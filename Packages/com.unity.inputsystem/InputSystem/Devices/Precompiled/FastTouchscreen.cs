@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem
         public const string metadata = "AutoWindowSpace;Touch;Vector2;Delta;Analog;TouchPress;Button;Axis;Integer;TouchPhase;Double;Touchscreen;Pointer";
         public FastTouchscreen()
         {
-            var builder = this.Setup(290, 5, 0)
+            var builder = this.Setup(301, 5, 0)
                 .WithName("Touchscreen")
                 .WithDisplayName("Touchscreen")
                 .WithChildren(0, 16)
@@ -113,6 +113,9 @@ namespace UnityEngine.InputSystem
 
             // /Touchscreen/primaryTouch/tapCount
             var ctrlTouchscreenprimaryTouchtapCount = Initialize_ctrlTouchscreenprimaryTouchtapCount(kIntegerLayout, ctrlTouchscreenprimaryTouch);
+
+            // /Touchscreen/primaryTouch/displayIndex
+            var ctrlTouchscreenprimaryTouchdisplayIndex = Initialize_ctrlTouchscreenprimaryTouchdisplayIndex(kIntegerLayout, ctrlTouchscreenprimaryTouch);
 
             // /Touchscreen/primaryTouch/indirectTouch
             var ctrlTouchscreenprimaryTouchindirectTouch = Initialize_ctrlTouchscreenprimaryTouchindirectTouch(kButtonLayout, ctrlTouchscreenprimaryTouch);
@@ -216,6 +219,9 @@ namespace UnityEngine.InputSystem
             // /Touchscreen/touch0/tapCount
             var ctrlTouchscreentouch0tapCount = Initialize_ctrlTouchscreentouch0tapCount(kIntegerLayout, ctrlTouchscreentouch0);
 
+            // /Touchscreen/touch0/displayIndex
+            var ctrlTouchscreentouch0displayIndex = Initialize_ctrlTouchscreentouch0displayIndex(kIntegerLayout, ctrlTouchscreentouch0);
+
             // /Touchscreen/touch0/indirectTouch
             var ctrlTouchscreentouch0indirectTouch = Initialize_ctrlTouchscreentouch0indirectTouch(kButtonLayout, ctrlTouchscreentouch0);
 
@@ -287,6 +293,9 @@ namespace UnityEngine.InputSystem
 
             // /Touchscreen/touch1/tapCount
             var ctrlTouchscreentouch1tapCount = Initialize_ctrlTouchscreentouch1tapCount(kIntegerLayout, ctrlTouchscreentouch1);
+
+            // /Touchscreen/touch1/displayIndex
+            var ctrlTouchscreentouch1displayIndex = Initialize_ctrlTouchscreentouch1displayIndex(kIntegerLayout, ctrlTouchscreentouch1);
 
             // /Touchscreen/touch1/indirectTouch
             var ctrlTouchscreentouch1indirectTouch = Initialize_ctrlTouchscreentouch1indirectTouch(kButtonLayout, ctrlTouchscreentouch1);
@@ -360,6 +369,9 @@ namespace UnityEngine.InputSystem
             // /Touchscreen/touch2/tapCount
             var ctrlTouchscreentouch2tapCount = Initialize_ctrlTouchscreentouch2tapCount(kIntegerLayout, ctrlTouchscreentouch2);
 
+            // /Touchscreen/touch2/displayIndex
+            var ctrlTouchscreentouch2displayIndex = Initialize_ctrlTouchscreentouch2displayIndex(kIntegerLayout, ctrlTouchscreentouch2);
+
             // /Touchscreen/touch2/indirectTouch
             var ctrlTouchscreentouch2indirectTouch = Initialize_ctrlTouchscreentouch2indirectTouch(kButtonLayout, ctrlTouchscreentouch2);
 
@@ -431,6 +443,9 @@ namespace UnityEngine.InputSystem
 
             // /Touchscreen/touch3/tapCount
             var ctrlTouchscreentouch3tapCount = Initialize_ctrlTouchscreentouch3tapCount(kIntegerLayout, ctrlTouchscreentouch3);
+
+            // /Touchscreen/touch3/displayIndex
+            var ctrlTouchscreentouch3displayIndex = Initialize_ctrlTouchscreentouch3displayIndex(kIntegerLayout, ctrlTouchscreentouch3);
 
             // /Touchscreen/touch3/indirectTouch
             var ctrlTouchscreentouch3indirectTouch = Initialize_ctrlTouchscreentouch3indirectTouch(kButtonLayout, ctrlTouchscreentouch3);
@@ -504,6 +519,9 @@ namespace UnityEngine.InputSystem
             // /Touchscreen/touch4/tapCount
             var ctrlTouchscreentouch4tapCount = Initialize_ctrlTouchscreentouch4tapCount(kIntegerLayout, ctrlTouchscreentouch4);
 
+            // /Touchscreen/touch4/displayIndex
+            var ctrlTouchscreentouch4displayIndex = Initialize_ctrlTouchscreentouch4displayIndex(kIntegerLayout, ctrlTouchscreentouch4);
+
             // /Touchscreen/touch4/indirectTouch
             var ctrlTouchscreentouch4indirectTouch = Initialize_ctrlTouchscreentouch4indirectTouch(kButtonLayout, ctrlTouchscreentouch4);
 
@@ -575,6 +593,9 @@ namespace UnityEngine.InputSystem
 
             // /Touchscreen/touch5/tapCount
             var ctrlTouchscreentouch5tapCount = Initialize_ctrlTouchscreentouch5tapCount(kIntegerLayout, ctrlTouchscreentouch5);
+
+            // /Touchscreen/touch5/displayIndex
+            var ctrlTouchscreentouch5displayIndex = Initialize_ctrlTouchscreentouch5displayIndex(kIntegerLayout, ctrlTouchscreentouch5);
 
             // /Touchscreen/touch5/indirectTouch
             var ctrlTouchscreentouch5indirectTouch = Initialize_ctrlTouchscreentouch5indirectTouch(kButtonLayout, ctrlTouchscreentouch5);
@@ -648,6 +669,9 @@ namespace UnityEngine.InputSystem
             // /Touchscreen/touch6/tapCount
             var ctrlTouchscreentouch6tapCount = Initialize_ctrlTouchscreentouch6tapCount(kIntegerLayout, ctrlTouchscreentouch6);
 
+            // /Touchscreen/touch6/displayIndex
+            var ctrlTouchscreentouch6displayIndex = Initialize_ctrlTouchscreentouch6displayIndex(kIntegerLayout, ctrlTouchscreentouch6);
+
             // /Touchscreen/touch6/indirectTouch
             var ctrlTouchscreentouch6indirectTouch = Initialize_ctrlTouchscreentouch6indirectTouch(kButtonLayout, ctrlTouchscreentouch6);
 
@@ -719,6 +743,9 @@ namespace UnityEngine.InputSystem
 
             // /Touchscreen/touch7/tapCount
             var ctrlTouchscreentouch7tapCount = Initialize_ctrlTouchscreentouch7tapCount(kIntegerLayout, ctrlTouchscreentouch7);
+
+            // /Touchscreen/touch7/displayIndex
+            var ctrlTouchscreentouch7displayIndex = Initialize_ctrlTouchscreentouch7displayIndex(kIntegerLayout, ctrlTouchscreentouch7);
 
             // /Touchscreen/touch7/indirectTouch
             var ctrlTouchscreentouch7indirectTouch = Initialize_ctrlTouchscreentouch7indirectTouch(kButtonLayout, ctrlTouchscreentouch7);
@@ -792,6 +819,9 @@ namespace UnityEngine.InputSystem
             // /Touchscreen/touch8/tapCount
             var ctrlTouchscreentouch8tapCount = Initialize_ctrlTouchscreentouch8tapCount(kIntegerLayout, ctrlTouchscreentouch8);
 
+            // /Touchscreen/touch8/displayIndex
+            var ctrlTouchscreentouch8displayIndex = Initialize_ctrlTouchscreentouch8displayIndex(kIntegerLayout, ctrlTouchscreentouch8);
+
             // /Touchscreen/touch8/indirectTouch
             var ctrlTouchscreentouch8indirectTouch = Initialize_ctrlTouchscreentouch8indirectTouch(kButtonLayout, ctrlTouchscreentouch8);
 
@@ -864,6 +894,9 @@ namespace UnityEngine.InputSystem
             // /Touchscreen/touch9/tapCount
             var ctrlTouchscreentouch9tapCount = Initialize_ctrlTouchscreentouch9tapCount(kIntegerLayout, ctrlTouchscreentouch9);
 
+            // /Touchscreen/touch9/displayIndex
+            var ctrlTouchscreentouch9displayIndex = Initialize_ctrlTouchscreentouch9displayIndex(kIntegerLayout, ctrlTouchscreentouch9);
+
             // /Touchscreen/touch9/indirectTouch
             var ctrlTouchscreentouch9indirectTouch = Initialize_ctrlTouchscreentouch9indirectTouch(kButtonLayout, ctrlTouchscreentouch9);
 
@@ -932,12 +965,14 @@ namespace UnityEngine.InputSystem
             this.touchControlArray[8] = ctrlTouchscreentouch8;
             this.touchControlArray[9] = ctrlTouchscreentouch9;
             this.primaryTouch = ctrlTouchscreenprimaryTouch;
+            this.displayIndex = ctrlTouchscreenprimaryTouchdisplayIndex;
             this.position = ctrlTouchscreenposition;
             this.delta = ctrlTouchscreendelta;
             this.radius = ctrlTouchscreenradius;
             this.pressure = ctrlTouchscreenpressure;
             this.press = ctrlTouchscreenpress;
             ctrlTouchscreenprimaryTouch.press = ctrlTouchscreenprimaryTouchpress;
+            ctrlTouchscreenprimaryTouch.displayIndex = ctrlTouchscreenprimaryTouchdisplayIndex;
             ctrlTouchscreenprimaryTouch.touchId = ctrlTouchscreenprimaryTouchtouchId;
             ctrlTouchscreenprimaryTouch.position = ctrlTouchscreenprimaryTouchposition;
             ctrlTouchscreenprimaryTouch.delta = ctrlTouchscreenprimaryTouchdelta;
@@ -960,6 +995,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenradius.x = ctrlTouchscreenradiusx;
             ctrlTouchscreenradius.y = ctrlTouchscreenradiusy;
             ctrlTouchscreentouch0.press = ctrlTouchscreentouch0press;
+            ctrlTouchscreentouch0.displayIndex = ctrlTouchscreentouch0displayIndex;
             ctrlTouchscreentouch0.touchId = ctrlTouchscreentouch0touchId;
             ctrlTouchscreentouch0.position = ctrlTouchscreentouch0position;
             ctrlTouchscreentouch0.delta = ctrlTouchscreentouch0delta;
@@ -972,6 +1008,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch0.startTime = ctrlTouchscreentouch0startTime;
             ctrlTouchscreentouch0.startPosition = ctrlTouchscreentouch0startPosition;
             ctrlTouchscreentouch1.press = ctrlTouchscreentouch1press;
+            ctrlTouchscreentouch1.displayIndex = ctrlTouchscreentouch1displayIndex;
             ctrlTouchscreentouch1.touchId = ctrlTouchscreentouch1touchId;
             ctrlTouchscreentouch1.position = ctrlTouchscreentouch1position;
             ctrlTouchscreentouch1.delta = ctrlTouchscreentouch1delta;
@@ -984,6 +1021,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch1.startTime = ctrlTouchscreentouch1startTime;
             ctrlTouchscreentouch1.startPosition = ctrlTouchscreentouch1startPosition;
             ctrlTouchscreentouch2.press = ctrlTouchscreentouch2press;
+            ctrlTouchscreentouch2.displayIndex = ctrlTouchscreentouch2displayIndex;
             ctrlTouchscreentouch2.touchId = ctrlTouchscreentouch2touchId;
             ctrlTouchscreentouch2.position = ctrlTouchscreentouch2position;
             ctrlTouchscreentouch2.delta = ctrlTouchscreentouch2delta;
@@ -996,6 +1034,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch2.startTime = ctrlTouchscreentouch2startTime;
             ctrlTouchscreentouch2.startPosition = ctrlTouchscreentouch2startPosition;
             ctrlTouchscreentouch3.press = ctrlTouchscreentouch3press;
+            ctrlTouchscreentouch3.displayIndex = ctrlTouchscreentouch3displayIndex;
             ctrlTouchscreentouch3.touchId = ctrlTouchscreentouch3touchId;
             ctrlTouchscreentouch3.position = ctrlTouchscreentouch3position;
             ctrlTouchscreentouch3.delta = ctrlTouchscreentouch3delta;
@@ -1008,6 +1047,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch3.startTime = ctrlTouchscreentouch3startTime;
             ctrlTouchscreentouch3.startPosition = ctrlTouchscreentouch3startPosition;
             ctrlTouchscreentouch4.press = ctrlTouchscreentouch4press;
+            ctrlTouchscreentouch4.displayIndex = ctrlTouchscreentouch4displayIndex;
             ctrlTouchscreentouch4.touchId = ctrlTouchscreentouch4touchId;
             ctrlTouchscreentouch4.position = ctrlTouchscreentouch4position;
             ctrlTouchscreentouch4.delta = ctrlTouchscreentouch4delta;
@@ -1020,6 +1060,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch4.startTime = ctrlTouchscreentouch4startTime;
             ctrlTouchscreentouch4.startPosition = ctrlTouchscreentouch4startPosition;
             ctrlTouchscreentouch5.press = ctrlTouchscreentouch5press;
+            ctrlTouchscreentouch5.displayIndex = ctrlTouchscreentouch5displayIndex;
             ctrlTouchscreentouch5.touchId = ctrlTouchscreentouch5touchId;
             ctrlTouchscreentouch5.position = ctrlTouchscreentouch5position;
             ctrlTouchscreentouch5.delta = ctrlTouchscreentouch5delta;
@@ -1032,6 +1073,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch5.startTime = ctrlTouchscreentouch5startTime;
             ctrlTouchscreentouch5.startPosition = ctrlTouchscreentouch5startPosition;
             ctrlTouchscreentouch6.press = ctrlTouchscreentouch6press;
+            ctrlTouchscreentouch6.displayIndex = ctrlTouchscreentouch6displayIndex;
             ctrlTouchscreentouch6.touchId = ctrlTouchscreentouch6touchId;
             ctrlTouchscreentouch6.position = ctrlTouchscreentouch6position;
             ctrlTouchscreentouch6.delta = ctrlTouchscreentouch6delta;
@@ -1044,6 +1086,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch6.startTime = ctrlTouchscreentouch6startTime;
             ctrlTouchscreentouch6.startPosition = ctrlTouchscreentouch6startPosition;
             ctrlTouchscreentouch7.press = ctrlTouchscreentouch7press;
+            ctrlTouchscreentouch7.displayIndex = ctrlTouchscreentouch7displayIndex;
             ctrlTouchscreentouch7.touchId = ctrlTouchscreentouch7touchId;
             ctrlTouchscreentouch7.position = ctrlTouchscreentouch7position;
             ctrlTouchscreentouch7.delta = ctrlTouchscreentouch7delta;
@@ -1056,6 +1099,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch7.startTime = ctrlTouchscreentouch7startTime;
             ctrlTouchscreentouch7.startPosition = ctrlTouchscreentouch7startPosition;
             ctrlTouchscreentouch8.press = ctrlTouchscreentouch8press;
+            ctrlTouchscreentouch8.displayIndex = ctrlTouchscreentouch8displayIndex;
             ctrlTouchscreentouch8.touchId = ctrlTouchscreentouch8touchId;
             ctrlTouchscreentouch8.position = ctrlTouchscreentouch8position;
             ctrlTouchscreentouch8.delta = ctrlTouchscreentouch8delta;
@@ -1068,6 +1112,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch8.startTime = ctrlTouchscreentouch8startTime;
             ctrlTouchscreentouch8.startPosition = ctrlTouchscreentouch8startPosition;
             ctrlTouchscreentouch9.press = ctrlTouchscreentouch9press;
+            ctrlTouchscreentouch9.displayIndex = ctrlTouchscreentouch9displayIndex;
             ctrlTouchscreentouch9.touchId = ctrlTouchscreentouch9touchId;
             ctrlTouchscreentouch9.position = ctrlTouchscreentouch9position;
             ctrlTouchscreentouch9.delta = ctrlTouchscreentouch9delta;
@@ -1215,30 +1260,31 @@ namespace UnityEngine.InputSystem
             // State offset to control index map.
             builder.WithStateOffsetToControlIndexMap(new uint[]
             {
-                32784u, 16810012u, 16810024u, 33587229u, 33587241u, 50364448u, 50364449u, 50364450u, 50364460u, 50364461u
-                , 50364462u, 67141662u, 67141663u, 67141667u, 67141674u, 67141675u, 67141679u, 83918851u, 83918867u, 100696100u
-                , 100696112u, 117473317u, 117473329u, 134225925u, 134225941u, 134225942u, 138420247u, 146801688u, 148898841u, 167837722u
-                , 201359398u, 218136615u, 234913842u, 251691070u, 268468287u, 285245506u, 285245507u, 285245508u, 302022720u, 302022721u
-                , 302022725u, 318799925u, 335577158u, 352354375u, 369106999u, 369107000u, 373301305u, 381682746u, 383779899u, 402718780u
-                , 436240456u, 453017673u, 469794890u, 486572118u, 503349335u, 520126554u, 520126555u, 520126556u, 536903768u, 536903769u
-                , 536903773u, 553680973u, 570458206u, 587235423u, 603988047u, 603988048u, 608182353u, 616563794u, 618660947u, 637599828u
-                , 671121504u, 687898721u, 704675938u, 721453166u, 738230383u, 755007602u, 755007603u, 755007604u, 771784816u, 771784817u
-                , 771784821u, 788562021u, 805339254u, 822116471u, 838869095u, 838869096u, 843063401u, 851444842u, 853541995u, 872480876u
-                , 906002552u, 922779769u, 939556986u, 956334214u, 973111431u, 989888650u, 989888651u, 989888652u, 1006665864u, 1006665865u
-                , 1006665869u, 1023443069u, 1040220302u, 1056997519u, 1073750143u, 1073750144u, 1077944449u, 1086325890u, 1088423043u, 1107361924u
-                , 1140883600u, 1157660817u, 1174438034u, 1191215262u, 1207992479u, 1224769698u, 1224769699u, 1224769700u, 1241546912u, 1241546913u
-                , 1241546917u, 1258324117u, 1275101350u, 1291878567u, 1308631191u, 1308631192u, 1312825497u, 1321206938u, 1323304091u, 1342242972u
-                , 1375764648u, 1392541865u, 1409319082u, 1426096310u, 1442873527u, 1459650746u, 1459650747u, 1459650748u, 1476427960u, 1476427961u
-                , 1476427965u, 1493205165u, 1509982398u, 1526759615u, 1543512239u, 1543512240u, 1547706545u, 1556087986u, 1558185139u, 1577124020u
-                , 1610645696u, 1627422913u, 1644200130u, 1660977358u, 1677754575u, 1694531794u, 1694531795u, 1694531796u, 1711309008u, 1711309009u
-                , 1711309013u, 1728086213u, 1744863446u, 1761640663u, 1778393287u, 1778393288u, 1782587593u, 1790969034u, 1793066187u, 1812005068u
-                , 1845526744u, 1862303961u, 1879081178u, 1895858406u, 1912635623u, 1929412842u, 1929412843u, 1929412844u, 1946190056u, 1946190057u
-                , 1946190061u, 1962967261u, 1979744494u, 1996521711u, 2013274335u, 2013274336u, 2017468641u, 2025850082u, 2027947235u, 2046886116u
-                , 2080407792u, 2097185009u, 2113962226u, 2130739454u, 2147516671u, 2164293890u, 2164293891u, 2164293892u, 2181071104u, 2181071105u
-                , 2181071109u, 2197848309u, 2214625542u, 2231402759u, 2248155383u, 2248155384u, 2252349689u, 2260731130u, 2262828283u, 2281767164u
-                , 2315288840u, 2332066057u, 2348843274u, 2365620502u, 2382397719u, 2399174938u, 2399174939u, 2399174940u, 2415952152u, 2415952153u
-                , 2415952157u, 2432729357u, 2449506590u, 2466283807u, 2483036431u, 2483036432u, 2487230737u, 2495612178u, 2497709331u, 2516648212u
-                , 2550169888u, 2566947105u
+                32784u, 16810013u, 16810025u, 33587230u, 33587242u, 50364449u, 50364450u, 50364451u, 50364461u, 50364462u
+                , 50364463u, 67141663u, 67141664u, 67141668u, 67141675u, 67141676u, 67141680u, 83918851u, 83918867u, 100696101u
+                , 100696113u, 117473318u, 117473330u, 134225925u, 134225941u, 134225942u, 138420247u, 142614552u, 146801689u, 148898842u
+                , 167837723u, 201359399u, 218136616u, 234913843u, 251691072u, 268468289u, 285245508u, 285245509u, 285245510u, 302022722u
+                , 302022723u, 302022727u, 318799926u, 335577160u, 352354377u, 369107000u, 369107001u, 373301306u, 377495611u, 381682748u
+                , 383779901u, 402718782u, 436240458u, 453017675u, 469794892u, 486572121u, 503349338u, 520126557u, 520126558u, 520126559u
+                , 536903771u, 536903772u, 536903776u, 553680975u, 570458209u, 587235426u, 603988049u, 603988050u, 608182355u, 612376660u
+                , 616563797u, 618660950u, 637599831u, 671121507u, 687898724u, 704675941u, 721453170u, 738230387u, 755007606u, 755007607u
+                , 755007608u, 771784820u, 771784821u, 771784825u, 788562024u, 805339258u, 822116475u, 838869098u, 838869099u, 843063404u
+                , 847257709u, 851444846u, 853541999u, 872480880u, 906002556u, 922779773u, 939556990u, 956334219u, 973111436u, 989888655u
+                , 989888656u, 989888657u, 1006665869u, 1006665870u, 1006665874u, 1023443073u, 1040220307u, 1056997524u, 1073750147u, 1073750148u
+                , 1077944453u, 1082138758u, 1086325895u, 1088423048u, 1107361929u, 1140883605u, 1157660822u, 1174438039u, 1191215268u, 1207992485u
+                , 1224769704u, 1224769705u, 1224769706u, 1241546918u, 1241546919u, 1241546923u, 1258324122u, 1275101356u, 1291878573u, 1308631196u
+                , 1308631197u, 1312825502u, 1317019807u, 1321206944u, 1323304097u, 1342242978u, 1375764654u, 1392541871u, 1409319088u, 1426096317u
+                , 1442873534u, 1459650753u, 1459650754u, 1459650755u, 1476427967u, 1476427968u, 1476427972u, 1493205171u, 1509982405u, 1526759622u
+                , 1543512245u, 1543512246u, 1547706551u, 1551900856u, 1556087993u, 1558185146u, 1577124027u, 1610645703u, 1627422920u, 1644200137u
+                , 1660977366u, 1677754583u, 1694531802u, 1694531803u, 1694531804u, 1711309016u, 1711309017u, 1711309021u, 1728086220u, 1744863454u
+                , 1761640671u, 1778393294u, 1778393295u, 1782587600u, 1786781905u, 1790969042u, 1793066195u, 1812005076u, 1845526752u, 1862303969u
+                , 1879081186u, 1895858415u, 1912635632u, 1929412851u, 1929412852u, 1929412853u, 1946190065u, 1946190066u, 1946190070u, 1962967269u
+                , 1979744503u, 1996521720u, 2013274343u, 2013274344u, 2017468649u, 2021662954u, 2025850091u, 2027947244u, 2046886125u, 2080407801u
+                , 2097185018u, 2113962235u, 2130739464u, 2147516681u, 2164293900u, 2164293901u, 2164293902u, 2181071114u, 2181071115u, 2181071119u
+                , 2197848318u, 2214625552u, 2231402769u, 2248155392u, 2248155393u, 2252349698u, 2256544003u, 2260731140u, 2262828293u, 2281767174u
+                , 2315288850u, 2332066067u, 2348843284u, 2365620513u, 2382397730u, 2399174949u, 2399174950u, 2399174951u, 2415952163u, 2415952164u
+                , 2415952168u, 2432729367u, 2449506601u, 2466283818u, 2483036441u, 2483036442u, 2487230747u, 2491425052u, 2495612189u, 2497709342u
+                , 2516648223u, 2550169899u, 2566947116u
             });
 
             builder.WithControlTree(new byte[]
@@ -1408,7 +1454,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenprimaryTouch.Setup()
                 .At(this, 0)
                 .WithParent(parent)
-                .WithChildren(16, 12)
+                .WithChildren(16, 13)
                 .WithName("primaryTouch")
                 .WithDisplayName("Primary Touch")
                 .WithLayout(kTouchLayout)
@@ -1430,7 +1476,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenposition.Setup()
                 .At(this, 1)
                 .WithParent(parent)
-                .WithChildren(40, 2)
+                .WithChildren(41, 2)
                 .WithName("position")
                 .WithDisplayName("Position")
                 .WithLayout(kVector2Layout)
@@ -1456,7 +1502,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreendelta.Setup()
                 .At(this, 2)
                 .WithParent(parent)
-                .WithChildren(42, 6)
+                .WithChildren(43, 6)
                 .WithName("delta")
                 .WithDisplayName("Delta")
                 .WithLayout(kDeltaLayout)
@@ -1500,7 +1546,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenradius.Setup()
                 .At(this, 4)
                 .WithParent(parent)
-                .WithChildren(48, 2)
+                .WithChildren(49, 2)
                 .WithName("radius")
                 .WithDisplayName("Radius")
                 .WithLayout(kVector2Layout)
@@ -1545,7 +1591,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch0.Setup()
                 .At(this, 6)
                 .WithParent(parent)
-                .WithChildren(50, 12)
+                .WithChildren(51, 13)
                 .WithName("touch0")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1566,7 +1612,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch1.Setup()
                 .At(this, 7)
                 .WithParent(parent)
-                .WithChildren(74, 12)
+                .WithChildren(76, 13)
                 .WithName("touch1")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1587,7 +1633,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch2.Setup()
                 .At(this, 8)
                 .WithParent(parent)
-                .WithChildren(98, 12)
+                .WithChildren(101, 13)
                 .WithName("touch2")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1608,7 +1654,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch3.Setup()
                 .At(this, 9)
                 .WithParent(parent)
-                .WithChildren(122, 12)
+                .WithChildren(126, 13)
                 .WithName("touch3")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1629,7 +1675,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch4.Setup()
                 .At(this, 10)
                 .WithParent(parent)
-                .WithChildren(146, 12)
+                .WithChildren(151, 13)
                 .WithName("touch4")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1650,7 +1696,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch5.Setup()
                 .At(this, 11)
                 .WithParent(parent)
-                .WithChildren(170, 12)
+                .WithChildren(176, 13)
                 .WithName("touch5")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1671,7 +1717,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch6.Setup()
                 .At(this, 12)
                 .WithParent(parent)
-                .WithChildren(194, 12)
+                .WithChildren(201, 13)
                 .WithName("touch6")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1692,7 +1738,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch7.Setup()
                 .At(this, 13)
                 .WithParent(parent)
-                .WithChildren(218, 12)
+                .WithChildren(226, 13)
                 .WithName("touch7")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1713,7 +1759,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch8.Setup()
                 .At(this, 14)
                 .WithParent(parent)
-                .WithChildren(242, 12)
+                .WithChildren(251, 13)
                 .WithName("touch8")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1734,7 +1780,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch9.Setup()
                 .At(this, 15)
                 .WithParent(parent)
-                .WithChildren(266, 12)
+                .WithChildren(276, 13)
                 .WithName("touch9")
                 .WithDisplayName("Touch")
                 .WithLayout(kTouchLayout)
@@ -1778,7 +1824,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenprimaryTouchposition.Setup()
                 .At(this, 17)
                 .WithParent(parent)
-                .WithChildren(28, 2)
+                .WithChildren(29, 2)
                 .WithName("position")
                 .WithDisplayName("Primary Touch Position")
                 .WithShortDisplayName("Primary Touch Position")
@@ -1801,7 +1847,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenprimaryTouchdelta.Setup()
                 .At(this, 18)
                 .WithParent(parent)
-                .WithChildren(30, 6)
+                .WithChildren(31, 6)
                 .WithName("delta")
                 .WithDisplayName("Primary Touch Delta")
                 .WithShortDisplayName("Primary Touch Delta")
@@ -1844,7 +1890,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreenprimaryTouchradius.Setup()
                 .At(this, 20)
                 .WithParent(parent)
-                .WithChildren(36, 2)
+                .WithChildren(37, 2)
                 .WithName("radius")
                 .WithDisplayName("Primary Touch Radius")
                 .WithShortDisplayName("Primary Touch Radius")
@@ -1926,11 +1972,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreenprimaryTouchtapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreenprimaryTouchdisplayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreenprimaryTouchdisplayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreenprimaryTouchdisplayIndex.Setup()
+                .At(this, 24)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Primary Touch Display Index")
+                .WithShortDisplayName("Primary Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 34,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreenprimaryTouchdisplayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreenprimaryTouchindirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreenprimaryTouchindirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreenprimaryTouchindirectTouch.Setup()
-                .At(this, 24)
+                .At(this, 25)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Primary Touch Indirect Touch?")
@@ -1954,7 +2021,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchtap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreenprimaryTouchtap.Setup()
-                .At(this, 25)
+                .At(this, 26)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Primary Touch Tap")
@@ -1978,7 +2045,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchstartTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreenprimaryTouchstartTime.Setup()
-                .At(this, 26)
+                .At(this, 27)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Primary Touch Start Time")
@@ -2000,9 +2067,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchstartPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreenprimaryTouchstartPosition.Setup()
-                .At(this, 27)
+                .At(this, 28)
                 .WithParent(parent)
-                .WithChildren(38, 2)
+                .WithChildren(39, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Primary Touch Start Position")
                 .WithShortDisplayName("Primary Touch Start Position")
@@ -2023,7 +2090,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchpositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchpositionx.Setup()
-                .At(this, 28)
+                .At(this, 29)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Primary Touch Primary Touch Position X")
@@ -2045,7 +2112,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchpositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchpositiony.Setup()
-                .At(this, 29)
+                .At(this, 30)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Primary Touch Primary Touch Position Y")
@@ -2067,7 +2134,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchdeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreenprimaryTouchdeltaup.Setup()
-                .At(this, 30)
+                .At(this, 31)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Primary Touch Primary Touch Delta Up")
@@ -2089,7 +2156,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchdeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreenprimaryTouchdeltadown.Setup()
-                .At(this, 31)
+                .At(this, 32)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Primary Touch Primary Touch Delta Down")
@@ -2111,7 +2178,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchdeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreenprimaryTouchdeltaleft.Setup()
-                .At(this, 32)
+                .At(this, 33)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Primary Touch Primary Touch Delta Left")
@@ -2133,7 +2200,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchdeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreenprimaryTouchdeltaright.Setup()
-                .At(this, 33)
+                .At(this, 34)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Primary Touch Primary Touch Delta Right")
@@ -2155,7 +2222,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchdeltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchdeltax.Setup()
-                .At(this, 34)
+                .At(this, 35)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Primary Touch Primary Touch Delta X")
@@ -2176,7 +2243,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchdeltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchdeltay.Setup()
-                .At(this, 35)
+                .At(this, 36)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Primary Touch Primary Touch Delta Y")
@@ -2197,7 +2264,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchradiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchradiusx.Setup()
-                .At(this, 36)
+                .At(this, 37)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Primary Touch Primary Touch Radius X")
@@ -2218,7 +2285,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchradiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchradiusy.Setup()
-                .At(this, 37)
+                .At(this, 38)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Primary Touch Primary Touch Radius Y")
@@ -2239,7 +2306,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchstartPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchstartPositionx.Setup()
-                .At(this, 38)
+                .At(this, 39)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Primary Touch Primary Touch Start Position X")
@@ -2260,7 +2327,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenprimaryTouchstartPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenprimaryTouchstartPositiony.Setup()
-                .At(this, 39)
+                .At(this, 40)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Primary Touch Primary Touch Start Position Y")
@@ -2281,7 +2348,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenpositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenpositionx.Setup()
-                .At(this, 40)
+                .At(this, 41)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Position X")
@@ -2303,7 +2370,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenpositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenpositiony.Setup()
-                .At(this, 41)
+                .At(this, 42)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Position Y")
@@ -2325,7 +2392,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreendeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreendeltaup.Setup()
-                .At(this, 42)
+                .At(this, 43)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Delta Up")
@@ -2347,7 +2414,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreendeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreendeltadown.Setup()
-                .At(this, 43)
+                .At(this, 44)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Delta Down")
@@ -2369,7 +2436,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreendeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreendeltaleft.Setup()
-                .At(this, 44)
+                .At(this, 45)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Delta Left")
@@ -2391,7 +2458,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreendeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreendeltaright.Setup()
-                .At(this, 45)
+                .At(this, 46)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Delta Right")
@@ -2413,7 +2480,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreendeltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreendeltax.Setup()
-                .At(this, 46)
+                .At(this, 47)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Delta X")
@@ -2434,7 +2501,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreendeltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreendeltay.Setup()
-                .At(this, 47)
+                .At(this, 48)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Delta Y")
@@ -2455,7 +2522,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenradiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenradiusx.Setup()
-                .At(this, 48)
+                .At(this, 49)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Radius X")
@@ -2476,7 +2543,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreenradiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreenradiusy.Setup()
-                .At(this, 49)
+                .At(this, 50)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Radius Y")
@@ -2497,7 +2564,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch0touchId.Setup()
-                .At(this, 50)
+                .At(this, 51)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -2520,9 +2587,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch0position.Setup()
-                .At(this, 51)
+                .At(this, 52)
                 .WithParent(parent)
-                .WithChildren(62, 2)
+                .WithChildren(64, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -2543,9 +2610,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch0delta.Setup()
-                .At(this, 52)
+                .At(this, 53)
                 .WithParent(parent)
-                .WithChildren(64, 6)
+                .WithChildren(66, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -2565,7 +2632,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0pressure.Setup()
-                .At(this, 53)
+                .At(this, 54)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -2586,9 +2653,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch0radius.Setup()
-                .At(this, 54)
+                .At(this, 55)
                 .WithParent(parent)
-                .WithChildren(70, 2)
+                .WithChildren(72, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -2608,7 +2675,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch0phase.Setup()
-                .At(this, 55)
+                .At(this, 56)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -2630,7 +2697,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch0press.Setup()
-                .At(this, 56)
+                .At(this, 57)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -2653,7 +2720,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch0tapCount.Setup()
-                .At(this, 57)
+                .At(this, 58)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -2670,11 +2737,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch0tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch0displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch0displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch0displayIndex.Setup()
+                .At(this, 59)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 90,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch0displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch0indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch0indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch0indirectTouch.Setup()
-                .At(this, 58)
+                .At(this, 60)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -2698,7 +2786,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch0tap.Setup()
-                .At(this, 59)
+                .At(this, 61)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -2721,7 +2809,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch0startTime.Setup()
-                .At(this, 60)
+                .At(this, 62)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -2743,9 +2831,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch0startPosition.Setup()
-                .At(this, 61)
+                .At(this, 63)
                 .WithParent(parent)
-                .WithChildren(72, 2)
+                .WithChildren(74, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -2766,7 +2854,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0positionx.Setup()
-                .At(this, 62)
+                .At(this, 64)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -2788,7 +2876,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0positiony.Setup()
-                .At(this, 63)
+                .At(this, 65)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -2810,7 +2898,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch0deltaup.Setup()
-                .At(this, 64)
+                .At(this, 66)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -2832,7 +2920,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch0deltadown.Setup()
-                .At(this, 65)
+                .At(this, 67)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -2854,7 +2942,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch0deltaleft.Setup()
-                .At(this, 66)
+                .At(this, 68)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -2876,7 +2964,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch0deltaright.Setup()
-                .At(this, 67)
+                .At(this, 69)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -2898,7 +2986,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0deltax.Setup()
-                .At(this, 68)
+                .At(this, 70)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -2919,7 +3007,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0deltay.Setup()
-                .At(this, 69)
+                .At(this, 71)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -2940,7 +3028,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0radiusx.Setup()
-                .At(this, 70)
+                .At(this, 72)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -2961,7 +3049,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0radiusy.Setup()
-                .At(this, 71)
+                .At(this, 73)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -2982,7 +3070,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0startPositionx.Setup()
-                .At(this, 72)
+                .At(this, 74)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -3003,7 +3091,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch0startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch0startPositiony.Setup()
-                .At(this, 73)
+                .At(this, 75)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -3024,7 +3112,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch1touchId.Setup()
-                .At(this, 74)
+                .At(this, 76)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -3047,9 +3135,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch1position.Setup()
-                .At(this, 75)
+                .At(this, 77)
                 .WithParent(parent)
-                .WithChildren(86, 2)
+                .WithChildren(89, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -3070,9 +3158,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch1delta.Setup()
-                .At(this, 76)
+                .At(this, 78)
                 .WithParent(parent)
-                .WithChildren(88, 6)
+                .WithChildren(91, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -3092,7 +3180,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1pressure.Setup()
-                .At(this, 77)
+                .At(this, 79)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -3113,9 +3201,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch1radius.Setup()
-                .At(this, 78)
+                .At(this, 80)
                 .WithParent(parent)
-                .WithChildren(94, 2)
+                .WithChildren(97, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -3135,7 +3223,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch1phase.Setup()
-                .At(this, 79)
+                .At(this, 81)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -3157,7 +3245,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch1press.Setup()
-                .At(this, 80)
+                .At(this, 82)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -3180,7 +3268,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch1tapCount.Setup()
-                .At(this, 81)
+                .At(this, 83)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -3197,11 +3285,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch1tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch1displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch1displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch1displayIndex.Setup()
+                .At(this, 84)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 146,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch1displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch1indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch1indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch1indirectTouch.Setup()
-                .At(this, 82)
+                .At(this, 85)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -3225,7 +3334,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch1tap.Setup()
-                .At(this, 83)
+                .At(this, 86)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -3248,7 +3357,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch1startTime.Setup()
-                .At(this, 84)
+                .At(this, 87)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -3270,9 +3379,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch1startPosition.Setup()
-                .At(this, 85)
+                .At(this, 88)
                 .WithParent(parent)
-                .WithChildren(96, 2)
+                .WithChildren(99, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -3293,7 +3402,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1positionx.Setup()
-                .At(this, 86)
+                .At(this, 89)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -3315,7 +3424,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1positiony.Setup()
-                .At(this, 87)
+                .At(this, 90)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -3337,7 +3446,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch1deltaup.Setup()
-                .At(this, 88)
+                .At(this, 91)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -3359,7 +3468,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch1deltadown.Setup()
-                .At(this, 89)
+                .At(this, 92)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -3381,7 +3490,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch1deltaleft.Setup()
-                .At(this, 90)
+                .At(this, 93)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -3403,7 +3512,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch1deltaright.Setup()
-                .At(this, 91)
+                .At(this, 94)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -3425,7 +3534,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1deltax.Setup()
-                .At(this, 92)
+                .At(this, 95)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -3446,7 +3555,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1deltay.Setup()
-                .At(this, 93)
+                .At(this, 96)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -3467,7 +3576,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1radiusx.Setup()
-                .At(this, 94)
+                .At(this, 97)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -3488,7 +3597,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1radiusy.Setup()
-                .At(this, 95)
+                .At(this, 98)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -3509,7 +3618,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1startPositionx.Setup()
-                .At(this, 96)
+                .At(this, 99)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -3530,7 +3639,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch1startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch1startPositiony.Setup()
-                .At(this, 97)
+                .At(this, 100)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -3551,7 +3660,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch2touchId.Setup()
-                .At(this, 98)
+                .At(this, 101)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -3574,9 +3683,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch2position.Setup()
-                .At(this, 99)
+                .At(this, 102)
                 .WithParent(parent)
-                .WithChildren(110, 2)
+                .WithChildren(114, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -3597,9 +3706,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch2delta.Setup()
-                .At(this, 100)
+                .At(this, 103)
                 .WithParent(parent)
-                .WithChildren(112, 6)
+                .WithChildren(116, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -3619,7 +3728,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2pressure.Setup()
-                .At(this, 101)
+                .At(this, 104)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -3640,9 +3749,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch2radius.Setup()
-                .At(this, 102)
+                .At(this, 105)
                 .WithParent(parent)
-                .WithChildren(118, 2)
+                .WithChildren(122, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -3662,7 +3771,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch2phase.Setup()
-                .At(this, 103)
+                .At(this, 106)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -3684,7 +3793,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch2press.Setup()
-                .At(this, 104)
+                .At(this, 107)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -3707,7 +3816,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch2tapCount.Setup()
-                .At(this, 105)
+                .At(this, 108)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -3724,11 +3833,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch2tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch2displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch2displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch2displayIndex.Setup()
+                .At(this, 109)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 202,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch2displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch2indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch2indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch2indirectTouch.Setup()
-                .At(this, 106)
+                .At(this, 110)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -3752,7 +3882,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch2tap.Setup()
-                .At(this, 107)
+                .At(this, 111)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -3775,7 +3905,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch2startTime.Setup()
-                .At(this, 108)
+                .At(this, 112)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -3797,9 +3927,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch2startPosition.Setup()
-                .At(this, 109)
+                .At(this, 113)
                 .WithParent(parent)
-                .WithChildren(120, 2)
+                .WithChildren(124, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -3820,7 +3950,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2positionx.Setup()
-                .At(this, 110)
+                .At(this, 114)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -3842,7 +3972,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2positiony.Setup()
-                .At(this, 111)
+                .At(this, 115)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -3864,7 +3994,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch2deltaup.Setup()
-                .At(this, 112)
+                .At(this, 116)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -3886,7 +4016,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch2deltadown.Setup()
-                .At(this, 113)
+                .At(this, 117)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -3908,7 +4038,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch2deltaleft.Setup()
-                .At(this, 114)
+                .At(this, 118)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -3930,7 +4060,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch2deltaright.Setup()
-                .At(this, 115)
+                .At(this, 119)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -3952,7 +4082,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2deltax.Setup()
-                .At(this, 116)
+                .At(this, 120)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -3973,7 +4103,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2deltay.Setup()
-                .At(this, 117)
+                .At(this, 121)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -3994,7 +4124,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2radiusx.Setup()
-                .At(this, 118)
+                .At(this, 122)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -4015,7 +4145,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2radiusy.Setup()
-                .At(this, 119)
+                .At(this, 123)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -4036,7 +4166,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2startPositionx.Setup()
-                .At(this, 120)
+                .At(this, 124)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -4057,7 +4187,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch2startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch2startPositiony.Setup()
-                .At(this, 121)
+                .At(this, 125)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -4078,7 +4208,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch3touchId.Setup()
-                .At(this, 122)
+                .At(this, 126)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -4101,9 +4231,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch3position.Setup()
-                .At(this, 123)
+                .At(this, 127)
                 .WithParent(parent)
-                .WithChildren(134, 2)
+                .WithChildren(139, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -4124,9 +4254,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch3delta.Setup()
-                .At(this, 124)
+                .At(this, 128)
                 .WithParent(parent)
-                .WithChildren(136, 6)
+                .WithChildren(141, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -4146,7 +4276,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3pressure.Setup()
-                .At(this, 125)
+                .At(this, 129)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -4167,9 +4297,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch3radius.Setup()
-                .At(this, 126)
+                .At(this, 130)
                 .WithParent(parent)
-                .WithChildren(142, 2)
+                .WithChildren(147, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -4189,7 +4319,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch3phase.Setup()
-                .At(this, 127)
+                .At(this, 131)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -4211,7 +4341,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch3press.Setup()
-                .At(this, 128)
+                .At(this, 132)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -4234,7 +4364,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch3tapCount.Setup()
-                .At(this, 129)
+                .At(this, 133)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -4251,11 +4381,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch3tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch3displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch3displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch3displayIndex.Setup()
+                .At(this, 134)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 258,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch3displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch3indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch3indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch3indirectTouch.Setup()
-                .At(this, 130)
+                .At(this, 135)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -4279,7 +4430,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch3tap.Setup()
-                .At(this, 131)
+                .At(this, 136)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -4302,7 +4453,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch3startTime.Setup()
-                .At(this, 132)
+                .At(this, 137)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -4324,9 +4475,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch3startPosition.Setup()
-                .At(this, 133)
+                .At(this, 138)
                 .WithParent(parent)
-                .WithChildren(144, 2)
+                .WithChildren(149, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -4347,7 +4498,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3positionx.Setup()
-                .At(this, 134)
+                .At(this, 139)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -4369,7 +4520,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3positiony.Setup()
-                .At(this, 135)
+                .At(this, 140)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -4391,7 +4542,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch3deltaup.Setup()
-                .At(this, 136)
+                .At(this, 141)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -4413,7 +4564,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch3deltadown.Setup()
-                .At(this, 137)
+                .At(this, 142)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -4435,7 +4586,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch3deltaleft.Setup()
-                .At(this, 138)
+                .At(this, 143)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -4457,7 +4608,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch3deltaright.Setup()
-                .At(this, 139)
+                .At(this, 144)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -4479,7 +4630,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3deltax.Setup()
-                .At(this, 140)
+                .At(this, 145)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -4500,7 +4651,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3deltay.Setup()
-                .At(this, 141)
+                .At(this, 146)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -4521,7 +4672,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3radiusx.Setup()
-                .At(this, 142)
+                .At(this, 147)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -4542,7 +4693,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3radiusy.Setup()
-                .At(this, 143)
+                .At(this, 148)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -4563,7 +4714,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3startPositionx.Setup()
-                .At(this, 144)
+                .At(this, 149)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -4584,7 +4735,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch3startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch3startPositiony.Setup()
-                .At(this, 145)
+                .At(this, 150)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -4605,7 +4756,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch4touchId.Setup()
-                .At(this, 146)
+                .At(this, 151)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -4628,9 +4779,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch4position.Setup()
-                .At(this, 147)
+                .At(this, 152)
                 .WithParent(parent)
-                .WithChildren(158, 2)
+                .WithChildren(164, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -4651,9 +4802,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch4delta.Setup()
-                .At(this, 148)
+                .At(this, 153)
                 .WithParent(parent)
-                .WithChildren(160, 6)
+                .WithChildren(166, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -4673,7 +4824,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4pressure.Setup()
-                .At(this, 149)
+                .At(this, 154)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -4694,9 +4845,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch4radius.Setup()
-                .At(this, 150)
+                .At(this, 155)
                 .WithParent(parent)
-                .WithChildren(166, 2)
+                .WithChildren(172, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -4716,7 +4867,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch4phase.Setup()
-                .At(this, 151)
+                .At(this, 156)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -4738,7 +4889,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch4press.Setup()
-                .At(this, 152)
+                .At(this, 157)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -4761,7 +4912,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch4tapCount.Setup()
-                .At(this, 153)
+                .At(this, 158)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -4778,11 +4929,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch4tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch4displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch4displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch4displayIndex.Setup()
+                .At(this, 159)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 314,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch4displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch4indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch4indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch4indirectTouch.Setup()
-                .At(this, 154)
+                .At(this, 160)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -4806,7 +4978,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch4tap.Setup()
-                .At(this, 155)
+                .At(this, 161)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -4829,7 +5001,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch4startTime.Setup()
-                .At(this, 156)
+                .At(this, 162)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -4851,9 +5023,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch4startPosition.Setup()
-                .At(this, 157)
+                .At(this, 163)
                 .WithParent(parent)
-                .WithChildren(168, 2)
+                .WithChildren(174, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -4874,7 +5046,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4positionx.Setup()
-                .At(this, 158)
+                .At(this, 164)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -4896,7 +5068,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4positiony.Setup()
-                .At(this, 159)
+                .At(this, 165)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -4918,7 +5090,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch4deltaup.Setup()
-                .At(this, 160)
+                .At(this, 166)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -4940,7 +5112,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch4deltadown.Setup()
-                .At(this, 161)
+                .At(this, 167)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -4962,7 +5134,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch4deltaleft.Setup()
-                .At(this, 162)
+                .At(this, 168)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -4984,7 +5156,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch4deltaright.Setup()
-                .At(this, 163)
+                .At(this, 169)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -5006,7 +5178,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4deltax.Setup()
-                .At(this, 164)
+                .At(this, 170)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -5027,7 +5199,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4deltay.Setup()
-                .At(this, 165)
+                .At(this, 171)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -5048,7 +5220,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4radiusx.Setup()
-                .At(this, 166)
+                .At(this, 172)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -5069,7 +5241,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4radiusy.Setup()
-                .At(this, 167)
+                .At(this, 173)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -5090,7 +5262,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4startPositionx.Setup()
-                .At(this, 168)
+                .At(this, 174)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -5111,7 +5283,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch4startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch4startPositiony.Setup()
-                .At(this, 169)
+                .At(this, 175)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -5132,7 +5304,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch5touchId.Setup()
-                .At(this, 170)
+                .At(this, 176)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -5155,9 +5327,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch5position.Setup()
-                .At(this, 171)
+                .At(this, 177)
                 .WithParent(parent)
-                .WithChildren(182, 2)
+                .WithChildren(189, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -5178,9 +5350,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch5delta.Setup()
-                .At(this, 172)
+                .At(this, 178)
                 .WithParent(parent)
-                .WithChildren(184, 6)
+                .WithChildren(191, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -5200,7 +5372,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5pressure.Setup()
-                .At(this, 173)
+                .At(this, 179)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -5221,9 +5393,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch5radius.Setup()
-                .At(this, 174)
+                .At(this, 180)
                 .WithParent(parent)
-                .WithChildren(190, 2)
+                .WithChildren(197, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -5243,7 +5415,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch5phase.Setup()
-                .At(this, 175)
+                .At(this, 181)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -5265,7 +5437,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch5press.Setup()
-                .At(this, 176)
+                .At(this, 182)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -5288,7 +5460,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch5tapCount.Setup()
-                .At(this, 177)
+                .At(this, 183)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -5305,11 +5477,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch5tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch5displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch5displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch5displayIndex.Setup()
+                .At(this, 184)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 370,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch5displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch5indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch5indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch5indirectTouch.Setup()
-                .At(this, 178)
+                .At(this, 185)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -5333,7 +5526,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch5tap.Setup()
-                .At(this, 179)
+                .At(this, 186)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -5356,7 +5549,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch5startTime.Setup()
-                .At(this, 180)
+                .At(this, 187)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -5378,9 +5571,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch5startPosition.Setup()
-                .At(this, 181)
+                .At(this, 188)
                 .WithParent(parent)
-                .WithChildren(192, 2)
+                .WithChildren(199, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -5401,7 +5594,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5positionx.Setup()
-                .At(this, 182)
+                .At(this, 189)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -5423,7 +5616,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5positiony.Setup()
-                .At(this, 183)
+                .At(this, 190)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -5445,7 +5638,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch5deltaup.Setup()
-                .At(this, 184)
+                .At(this, 191)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -5467,7 +5660,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch5deltadown.Setup()
-                .At(this, 185)
+                .At(this, 192)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -5489,7 +5682,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch5deltaleft.Setup()
-                .At(this, 186)
+                .At(this, 193)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -5511,7 +5704,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch5deltaright.Setup()
-                .At(this, 187)
+                .At(this, 194)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -5533,7 +5726,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5deltax.Setup()
-                .At(this, 188)
+                .At(this, 195)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -5554,7 +5747,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5deltay.Setup()
-                .At(this, 189)
+                .At(this, 196)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -5575,7 +5768,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5radiusx.Setup()
-                .At(this, 190)
+                .At(this, 197)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -5596,7 +5789,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5radiusy.Setup()
-                .At(this, 191)
+                .At(this, 198)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -5617,7 +5810,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5startPositionx.Setup()
-                .At(this, 192)
+                .At(this, 199)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -5638,7 +5831,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch5startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch5startPositiony.Setup()
-                .At(this, 193)
+                .At(this, 200)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -5659,7 +5852,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch6touchId.Setup()
-                .At(this, 194)
+                .At(this, 201)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -5682,9 +5875,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch6position.Setup()
-                .At(this, 195)
+                .At(this, 202)
                 .WithParent(parent)
-                .WithChildren(206, 2)
+                .WithChildren(214, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -5705,9 +5898,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch6delta.Setup()
-                .At(this, 196)
+                .At(this, 203)
                 .WithParent(parent)
-                .WithChildren(208, 6)
+                .WithChildren(216, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -5727,7 +5920,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6pressure.Setup()
-                .At(this, 197)
+                .At(this, 204)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -5748,9 +5941,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch6radius.Setup()
-                .At(this, 198)
+                .At(this, 205)
                 .WithParent(parent)
-                .WithChildren(214, 2)
+                .WithChildren(222, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -5770,7 +5963,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch6phase.Setup()
-                .At(this, 199)
+                .At(this, 206)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -5792,7 +5985,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch6press.Setup()
-                .At(this, 200)
+                .At(this, 207)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -5815,7 +6008,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch6tapCount.Setup()
-                .At(this, 201)
+                .At(this, 208)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -5832,11 +6025,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch6tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch6displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch6displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch6displayIndex.Setup()
+                .At(this, 209)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 426,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch6displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch6indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch6indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch6indirectTouch.Setup()
-                .At(this, 202)
+                .At(this, 210)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -5860,7 +6074,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch6tap.Setup()
-                .At(this, 203)
+                .At(this, 211)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -5883,7 +6097,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch6startTime.Setup()
-                .At(this, 204)
+                .At(this, 212)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -5905,9 +6119,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch6startPosition.Setup()
-                .At(this, 205)
+                .At(this, 213)
                 .WithParent(parent)
-                .WithChildren(216, 2)
+                .WithChildren(224, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -5928,7 +6142,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6positionx.Setup()
-                .At(this, 206)
+                .At(this, 214)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -5950,7 +6164,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6positiony.Setup()
-                .At(this, 207)
+                .At(this, 215)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -5972,7 +6186,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch6deltaup.Setup()
-                .At(this, 208)
+                .At(this, 216)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -5994,7 +6208,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch6deltadown.Setup()
-                .At(this, 209)
+                .At(this, 217)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -6016,7 +6230,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch6deltaleft.Setup()
-                .At(this, 210)
+                .At(this, 218)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -6038,7 +6252,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch6deltaright.Setup()
-                .At(this, 211)
+                .At(this, 219)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -6060,7 +6274,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6deltax.Setup()
-                .At(this, 212)
+                .At(this, 220)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -6081,7 +6295,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6deltay.Setup()
-                .At(this, 213)
+                .At(this, 221)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -6102,7 +6316,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6radiusx.Setup()
-                .At(this, 214)
+                .At(this, 222)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -6123,7 +6337,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6radiusy.Setup()
-                .At(this, 215)
+                .At(this, 223)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -6144,7 +6358,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6startPositionx.Setup()
-                .At(this, 216)
+                .At(this, 224)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -6165,7 +6379,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch6startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch6startPositiony.Setup()
-                .At(this, 217)
+                .At(this, 225)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -6186,7 +6400,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch7touchId.Setup()
-                .At(this, 218)
+                .At(this, 226)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -6209,9 +6423,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch7position.Setup()
-                .At(this, 219)
+                .At(this, 227)
                 .WithParent(parent)
-                .WithChildren(230, 2)
+                .WithChildren(239, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -6232,9 +6446,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch7delta.Setup()
-                .At(this, 220)
+                .At(this, 228)
                 .WithParent(parent)
-                .WithChildren(232, 6)
+                .WithChildren(241, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -6254,7 +6468,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7pressure.Setup()
-                .At(this, 221)
+                .At(this, 229)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -6275,9 +6489,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch7radius.Setup()
-                .At(this, 222)
+                .At(this, 230)
                 .WithParent(parent)
-                .WithChildren(238, 2)
+                .WithChildren(247, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -6297,7 +6511,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch7phase.Setup()
-                .At(this, 223)
+                .At(this, 231)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -6319,7 +6533,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch7press.Setup()
-                .At(this, 224)
+                .At(this, 232)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -6342,7 +6556,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch7tapCount.Setup()
-                .At(this, 225)
+                .At(this, 233)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -6359,11 +6573,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch7tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch7displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch7displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch7displayIndex.Setup()
+                .At(this, 234)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 482,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch7displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch7indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch7indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch7indirectTouch.Setup()
-                .At(this, 226)
+                .At(this, 235)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -6387,7 +6622,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch7tap.Setup()
-                .At(this, 227)
+                .At(this, 236)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -6410,7 +6645,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch7startTime.Setup()
-                .At(this, 228)
+                .At(this, 237)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -6432,9 +6667,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch7startPosition.Setup()
-                .At(this, 229)
+                .At(this, 238)
                 .WithParent(parent)
-                .WithChildren(240, 2)
+                .WithChildren(249, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -6455,7 +6690,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7positionx.Setup()
-                .At(this, 230)
+                .At(this, 239)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -6477,7 +6712,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7positiony.Setup()
-                .At(this, 231)
+                .At(this, 240)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -6499,7 +6734,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch7deltaup.Setup()
-                .At(this, 232)
+                .At(this, 241)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -6521,7 +6756,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch7deltadown.Setup()
-                .At(this, 233)
+                .At(this, 242)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -6543,7 +6778,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch7deltaleft.Setup()
-                .At(this, 234)
+                .At(this, 243)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -6565,7 +6800,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch7deltaright.Setup()
-                .At(this, 235)
+                .At(this, 244)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -6587,7 +6822,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7deltax.Setup()
-                .At(this, 236)
+                .At(this, 245)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -6608,7 +6843,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7deltay.Setup()
-                .At(this, 237)
+                .At(this, 246)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -6629,7 +6864,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7radiusx.Setup()
-                .At(this, 238)
+                .At(this, 247)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -6650,7 +6885,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7radiusy.Setup()
-                .At(this, 239)
+                .At(this, 248)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -6671,7 +6906,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7startPositionx.Setup()
-                .At(this, 240)
+                .At(this, 249)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -6692,7 +6927,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch7startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch7startPositiony.Setup()
-                .At(this, 241)
+                .At(this, 250)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -6713,7 +6948,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch8touchId.Setup()
-                .At(this, 242)
+                .At(this, 251)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -6736,9 +6971,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch8position.Setup()
-                .At(this, 243)
+                .At(this, 252)
                 .WithParent(parent)
-                .WithChildren(254, 2)
+                .WithChildren(264, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -6759,9 +6994,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch8delta.Setup()
-                .At(this, 244)
+                .At(this, 253)
                 .WithParent(parent)
-                .WithChildren(256, 6)
+                .WithChildren(266, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -6781,7 +7016,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8pressure.Setup()
-                .At(this, 245)
+                .At(this, 254)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -6802,9 +7037,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch8radius.Setup()
-                .At(this, 246)
+                .At(this, 255)
                 .WithParent(parent)
-                .WithChildren(262, 2)
+                .WithChildren(272, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -6824,7 +7059,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch8phase.Setup()
-                .At(this, 247)
+                .At(this, 256)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -6846,7 +7081,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch8press.Setup()
-                .At(this, 248)
+                .At(this, 257)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -6869,7 +7104,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch8tapCount.Setup()
-                .At(this, 249)
+                .At(this, 258)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -6886,11 +7121,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch8tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch8displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch8displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch8displayIndex.Setup()
+                .At(this, 259)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 538,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch8displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch8indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch8indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch8indirectTouch.Setup()
-                .At(this, 250)
+                .At(this, 260)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -6914,7 +7170,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch8tap.Setup()
-                .At(this, 251)
+                .At(this, 261)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -6937,7 +7193,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch8startTime.Setup()
-                .At(this, 252)
+                .At(this, 262)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -6959,9 +7215,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch8startPosition.Setup()
-                .At(this, 253)
+                .At(this, 263)
                 .WithParent(parent)
-                .WithChildren(264, 2)
+                .WithChildren(274, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -6982,7 +7238,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8positionx.Setup()
-                .At(this, 254)
+                .At(this, 264)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -7004,7 +7260,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8positiony.Setup()
-                .At(this, 255)
+                .At(this, 265)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -7026,7 +7282,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch8deltaup.Setup()
-                .At(this, 256)
+                .At(this, 266)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -7048,7 +7304,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch8deltadown.Setup()
-                .At(this, 257)
+                .At(this, 267)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -7070,7 +7326,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch8deltaleft.Setup()
-                .At(this, 258)
+                .At(this, 268)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -7092,7 +7348,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch8deltaright.Setup()
-                .At(this, 259)
+                .At(this, 269)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -7114,7 +7370,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8deltax.Setup()
-                .At(this, 260)
+                .At(this, 270)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -7135,7 +7391,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8deltay.Setup()
-                .At(this, 261)
+                .At(this, 271)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -7156,7 +7412,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8radiusx.Setup()
-                .At(this, 262)
+                .At(this, 272)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -7177,7 +7433,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8radiusy.Setup()
-                .At(this, 263)
+                .At(this, 273)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -7198,7 +7454,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8startPositionx.Setup()
-                .At(this, 264)
+                .At(this, 274)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -7219,7 +7475,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch8startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch8startPositiony.Setup()
-                .At(this, 265)
+                .At(this, 275)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
@@ -7240,7 +7496,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9touchId = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch9touchId.Setup()
-                .At(this, 266)
+                .At(this, 276)
                 .WithParent(parent)
                 .WithName("touchId")
                 .WithDisplayName("Touch Touch ID")
@@ -7263,9 +7519,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9position = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch9position.Setup()
-                .At(this, 267)
+                .At(this, 277)
                 .WithParent(parent)
-                .WithChildren(278, 2)
+                .WithChildren(289, 2)
                 .WithName("position")
                 .WithDisplayName("Touch Position")
                 .WithShortDisplayName("Touch Position")
@@ -7286,9 +7542,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9delta = new UnityEngine.InputSystem.Controls.DeltaControl();
             ctrlTouchscreentouch9delta.Setup()
-                .At(this, 268)
+                .At(this, 278)
                 .WithParent(parent)
-                .WithChildren(280, 6)
+                .WithChildren(291, 6)
                 .WithName("delta")
                 .WithDisplayName("Touch Delta")
                 .WithShortDisplayName("Touch Delta")
@@ -7308,7 +7564,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9pressure = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9pressure.Setup()
-                .At(this, 269)
+                .At(this, 279)
                 .WithParent(parent)
                 .WithName("pressure")
                 .WithDisplayName("Touch Pressure")
@@ -7329,9 +7585,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9radius = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch9radius.Setup()
-                .At(this, 270)
+                .At(this, 280)
                 .WithParent(parent)
-                .WithChildren(286, 2)
+                .WithChildren(297, 2)
                 .WithName("radius")
                 .WithDisplayName("Touch Radius")
                 .WithShortDisplayName("Touch Radius")
@@ -7351,7 +7607,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9phase = new UnityEngine.InputSystem.Controls.TouchPhaseControl();
             ctrlTouchscreentouch9phase.Setup()
-                .At(this, 271)
+                .At(this, 281)
                 .WithParent(parent)
                 .WithName("phase")
                 .WithDisplayName("Touch Touch Phase")
@@ -7373,7 +7629,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9press = new UnityEngine.InputSystem.Controls.TouchPressControl();
             ctrlTouchscreentouch9press.Setup()
-                .At(this, 272)
+                .At(this, 282)
                 .WithParent(parent)
                 .WithName("press")
                 .WithDisplayName("Touch Touch Contact?")
@@ -7396,7 +7652,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9tapCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlTouchscreentouch9tapCount.Setup()
-                .At(this, 273)
+                .At(this, 283)
                 .WithParent(parent)
                 .WithName("tapCount")
                 .WithDisplayName("Touch Tap Count")
@@ -7413,11 +7669,32 @@ namespace UnityEngine.InputSystem
             return ctrlTouchscreentouch9tapCount;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlTouchscreentouch9displayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlTouchscreentouch9displayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlTouchscreentouch9displayIndex.Setup()
+                .At(this, 284)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Touch Display Index")
+                .WithShortDisplayName("Touch Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 594,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .Finish();
+            return ctrlTouchscreentouch9displayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlTouchscreentouch9indirectTouch(InternedString kButtonLayout, InputControl parent)
         {
             var ctrlTouchscreentouch9indirectTouch = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch9indirectTouch.Setup()
-                .At(this, 274)
+                .At(this, 285)
                 .WithParent(parent)
                 .WithName("indirectTouch")
                 .WithDisplayName("Touch Indirect Touch?")
@@ -7441,7 +7718,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9tap = new UnityEngine.InputSystem.Controls.ButtonControl();
             ctrlTouchscreentouch9tap.Setup()
-                .At(this, 275)
+                .At(this, 286)
                 .WithParent(parent)
                 .WithName("tap")
                 .WithDisplayName("Touch Tap")
@@ -7464,7 +7741,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9startTime = new UnityEngine.InputSystem.Controls.DoubleControl();
             ctrlTouchscreentouch9startTime.Setup()
-                .At(this, 276)
+                .At(this, 287)
                 .WithParent(parent)
                 .WithName("startTime")
                 .WithDisplayName("Touch Start Time")
@@ -7486,9 +7763,9 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9startPosition = new UnityEngine.InputSystem.Controls.Vector2Control();
             ctrlTouchscreentouch9startPosition.Setup()
-                .At(this, 277)
+                .At(this, 288)
                 .WithParent(parent)
-                .WithChildren(288, 2)
+                .WithChildren(299, 2)
                 .WithName("startPosition")
                 .WithDisplayName("Touch Start Position")
                 .WithShortDisplayName("Touch Start Position")
@@ -7509,7 +7786,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9positionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9positionx.Setup()
-                .At(this, 278)
+                .At(this, 289)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Position X")
@@ -7531,7 +7808,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9positiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9positiony.Setup()
-                .At(this, 279)
+                .At(this, 290)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Position Y")
@@ -7553,7 +7830,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9deltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch9deltaup.Setup()
-                .At(this, 280)
+                .At(this, 291)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Touch Touch Delta Up")
@@ -7575,7 +7852,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9deltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch9deltadown.Setup()
-                .At(this, 281)
+                .At(this, 292)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Touch Touch Delta Down")
@@ -7597,7 +7874,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9deltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlTouchscreentouch9deltaleft.Setup()
-                .At(this, 282)
+                .At(this, 293)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Touch Touch Delta Left")
@@ -7619,7 +7896,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9deltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlTouchscreentouch9deltaright.Setup()
-                .At(this, 283)
+                .At(this, 294)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Touch Touch Delta Right")
@@ -7641,7 +7918,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9deltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9deltax.Setup()
-                .At(this, 284)
+                .At(this, 295)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Delta X")
@@ -7662,7 +7939,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9deltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9deltay.Setup()
-                .At(this, 285)
+                .At(this, 296)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Delta Y")
@@ -7683,7 +7960,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9radiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9radiusx.Setup()
-                .At(this, 286)
+                .At(this, 297)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Radius X")
@@ -7704,7 +7981,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9radiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9radiusy.Setup()
-                .At(this, 287)
+                .At(this, 298)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Radius Y")
@@ -7725,7 +8002,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9startPositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9startPositionx.Setup()
-                .At(this, 288)
+                .At(this, 299)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Touch Touch Start Position X")
@@ -7746,7 +8023,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlTouchscreentouch9startPositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlTouchscreentouch9startPositiony.Setup()
-                .At(this, 289)
+                .At(this, 300)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Touch Touch Start Position Y")
