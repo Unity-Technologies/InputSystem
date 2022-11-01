@@ -157,10 +157,12 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(33)]
         public byte tapCount;
 
-        // Not currently used, but still needed in this struct for padding,
-        // as il2cpp does not implement FieldOffset.
+        /// <summary>
+        /// The index of the display that was touched.
+        /// </summary>
+        [InputControl(name = "displayIndex", displayName = "Display Index", layout = "Integer")]
         [FieldOffset(34)]
-        byte displayIndex;
+        public byte displayIndex;
 
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0, synthetic = true)]
         [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 4)]
@@ -506,6 +508,23 @@ namespace UnityEngine.InputSystem
         /// has been lifted off the screen.
         /// </remarks>
         public TouchControl primaryTouch { get; protected set; }
+
+        /// <summary>
+        /// Gets the index of the display that was touched.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
+        /// </summary>
+        public override IntegerControl displayIndex
+        {
+            get
+            {
+                return primaryTouch.displayIndex;
+            }
+
+            protected set
+            {
+                primaryTouch.displayIndex = value;
+            }
+        }
 
         /// <summary>
         /// Array of all <see cref="TouchControl"/>s on the device.

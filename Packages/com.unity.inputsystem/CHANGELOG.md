@@ -17,6 +17,9 @@ however, it has to be formatted properly to pass verification tests.
 - Added the ability to change the origin positioning and movement behaviour of the OnScreenStick (`OnScreenStick.cs`) via the new `behaviour` property. This currently supports three modes of operation, two of which are new in addition to the previous behaviour. Based on the user contribution from [eblabs](https://github.com/eblabs) in [#658](https://github.com/Unity-Technologies/InputSystem/pull/658).
 - Significantly optimized cost of `InputAction.ReadValue` and `InputControl.ReadValue` calls by introducing caching behaviour to input controls. Input controls now keep track of whether their underlying state has been changed and only read the value from the underlying state and apply processors when absolutely necessary. Optimization is opt-in for now, please call `InputSystem.settings.SetInternalFeatureFlag("USE_READ_VALUE_CACHING", true);` in your project to enable it. If there are issues try enabling `InputSystem.settings.SetInternalFeatureFlag("PARANOID_READ_VALUE_CACHING_CHECKS", true);` and check in the console if there are any errors regarding caching.
 
+### Changed
+- Exposed `displayIndex` property for `Pointer`, `Touchscreen`, `TouchControl`, `TouchState`, `Mouse`, `MouseState` which enables look up of the logical screen associated with a pointer event via (display documentation)[https://docs.unity3d.com/ScriptReference/Display.html]
+
 ### Fixed
 - Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
 - Fixed an issue on PS5 where device disconnected events that happen while the app is in the background are missed causing orphaned devices to hang around forever and exceptions when the same device is added again ([case UUM-7842](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744)).
