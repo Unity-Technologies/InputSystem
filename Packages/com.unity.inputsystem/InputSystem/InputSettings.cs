@@ -675,6 +675,16 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
+            // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
+            // existing flag name, as users are aware of that now.
+            if (featureName == InputFeatureNames.kDisableShortcutSupport)
+            {
+                if (m_ShortcutKeysConsumeInputs == !enabled) return;
+                m_ShortcutKeysConsumeInputs = !enabled;
+                OnChange();
+                return;
+            }
+
             if (m_FeatureFlags == null)
                 m_FeatureFlags = new HashSet<string>();
 
@@ -712,11 +722,16 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+        [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
         internal bool IsFeatureEnabled(string featureName)
         {
+            // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
+            // existing flag name, as some users are aware of that now.
+            if (featureName == InputFeatureNames.kDisableShortcutSupport) return !m_ShortcutKeysConsumeInputs;
+
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
         }
 

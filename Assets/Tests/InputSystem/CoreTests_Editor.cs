@@ -306,6 +306,27 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_DomainReload_CanRemoveDevicesDuringDomainReload()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>(); // just to make sure keyboard stays as-is
+
+        currentTime = 1;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+
+        runtime.ReportInputDeviceRemoved(device);
+
+        currentTime = 2;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices[0], Is.AssignableTo<Keyboard>());
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
         InputSystem.SaveAndReset();
