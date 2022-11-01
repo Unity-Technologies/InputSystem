@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+- Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
+
 ## [1.4.4] - 2022-11-01
 
 ### Fixed
