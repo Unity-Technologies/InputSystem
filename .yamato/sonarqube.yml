@@ -25,8 +25,8 @@ Sonar-Win-Dotnet-SonarScanner:
       cd %YAMATO_WORK_DIR%
       unity-downloader-cli -u %EDITOR_VERSION% -c Editor --fast --wait
     - |
-      unity-config settings project-path %YAMATO_WORK_DIR%
       unity-config project create %YAMATO_SOURCE_DIR%\SonarProject
+      unity-config settings project-path %YAMATO_SOURCE_DIR%\SonarProject
       unity-config project add dependency com.unity.ide.rider@%RIDER_VERSION%
       move %YAMATO_SOURCE_DIR%\Packages\com.unity.inputsystem %YAMATO_SOURCE_DIR%\SonarProject\Packages\com.unity.inputsystem
       echo "helllloooo: %SONAR_TOKEN_STAGING%"
