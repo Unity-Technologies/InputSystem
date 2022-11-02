@@ -16,24 +16,22 @@ public class PerfTestScript : MonoBehaviour
     }
 
     private PoseState[] poses;
-    private InputAction[] actionsForReadValue; 
-    private InputAction[] actionsWithCallbacks; 
+    private InputActionMap actionMapForReadValue;
+    private InputAction[] actionsForReadValue;
+    private InputActionMap actionMapWithCallbacks; 
 
-    //public Mode mode = Mode.ReadValueFromControl;
+    public Mode mode = Mode.ReadValueFromControl;
+    public int actionCount = 100;
 
-    // private void DisposeActions(ref InputAction[] actions)
-    // {
-    //     if (actions == null)
-    //         return;
-    //     
-    //     foreach (var action in actions)
-    //     {
-    //         action.Disable();
-    //         action.Dispose();
-    //     }
-    //
-    //     actions = null;
-    // }
+     private void DisposeActionMap(ref InputActionMap actionMap)
+     {
+         if (actionMap == null)
+             return;
+         
+         actionMap.Disable();
+         actionMap.Dispose();
+         actionMap = null;
+     }
 
     void Update()
     {
@@ -50,25 +48,36 @@ public class PerfTestScript : MonoBehaviour
         switch (mode)
         {
             case Mode.ReadValueFromControl:
-                //DisposeActions(ref actionsForReadValue);
-                //DisposeActions(ref actionsWithCallbacks);
+                actionsForReadValue = null;
+                DisposeActionMap(ref actionMapForReadValue);
+                DisposeActionMap(ref actionMapWithCallbacks);
 
                 for (var i = 0; i < controls.Length; ++i)
                     poses[i] = controls[i].ReadValue();
 
                 break;
             case Mode.ReadValueFromActions:
-                // DisposeActions(ref actionsWithCallbacks);
-                //
-                // if (actionsForReadValue == null)
-                // {
-                //     
-                // }
+                DisposeActionMap(ref actionMapWithCallbacks);
+                
+                if (actionMapForReadValue == null)
+                {
+                    actionMapForReadValue = new InputActionMap("actionMapForReadValue");
+                    actionsForReadValue = new InputAction[actionCount];
+
+                    for (var i = 0; i < actionCount; ++i)
+                        actionsForReadValue[i] = actionMapForReadValue.AddAction($"perfAction{i}", binding: $"<PerformanceTestDevice>/pose{i}");
+                    
+                    actionMapForReadValue.Enable();
+                }
+
+                for (var i = 0; i < actionCount; ++i)
+                    poses[i] = actionsForReadValue[i].ReadValue<PoseState>();
 
                 
                 break;
             case Mode.CallbacksFromActions:
-                // DisposeActions(ref actionsForReadValue);
+                actionsForReadValue = null;
+                DisposeActionMap(ref actionMapForReadValue);
 
                 break;
             default:
