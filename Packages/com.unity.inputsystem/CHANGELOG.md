@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
 
 ## [1.4.4] - 2022-11-01
 
