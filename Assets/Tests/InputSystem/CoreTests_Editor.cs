@@ -306,6 +306,27 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_DomainReload_CanRemoveDevicesDuringDomainReload()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>(); // just to make sure keyboard stays as-is
+
+        currentTime = 1;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+
+        runtime.ReportInputDeviceRemoved(device);
+
+        currentTime = 2;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices[0], Is.AssignableTo<Keyboard>());
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
         InputSystem.SaveAndReset();
@@ -1734,6 +1755,49 @@ partial class CoreTests
             Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/space"));
             Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().groups, Is.EqualTo("scheme1"));
             Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().groups, Is.EqualTo("scheme2"));
+        }
+    }
+
+    // https://github.com/Unity-Technologies/InputSystem/pull/1024
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_WithControlSchemes()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+        action1.AddCompositeBinding("Axis")
+            .With("Positive", "<Keyboard>/a", groups: "scheme1")
+            .With("Negative", "<Keyboard>/b", groups: "scheme1");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+        };
+        tree.Reload();
+        tree.bindingGroupForNewBindings = "scheme2";
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+            tree.CopySelectedItemsToClipboard();
+            tree.SelectItem("map/action2");
+            tree.PasteDataFromClipboard();
+
+            Assert.That(tree.FindItemByPath("map/action2"), Is.Not.Null);
+            var c = tree["map/action2"].children;
+            Assert.That(c, Has.Count.EqualTo(1));
+            Assert.That(c[0], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(c[0].As<CompositeBindingTreeItem>().groups, Is.EqualTo(""));
+            Assert.That(c[0].children, Has.Count.EqualTo(2));
+            Assert.That(c[0].children[0].As<PartOfCompositeBindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
+            Assert.That(c[0].children[0].As<PartOfCompositeBindingTreeItem>().groups, Is.EqualTo("scheme2"));
+            Assert.That(c[0].children[1].As<PartOfCompositeBindingTreeItem>().path, Is.EqualTo("<Keyboard>/b"));
+            Assert.That(c[0].children[1].As<PartOfCompositeBindingTreeItem>().groups, Is.EqualTo("scheme2"));
         }
     }
 
