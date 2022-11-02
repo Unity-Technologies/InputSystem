@@ -231,7 +231,7 @@ There are several ways to do this:
 4. You can [poll the current state](#polling-actions) of an Action whenever you need it.
 5. [`InputActionTrace`](#inputactiontrace) can record changes happening on Actions.
 
-There are also two higher-level, more streamlined ways of picking up input from Actions: use [`PlayerInput`](Components.md#notification-behaviors), or [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
+There are also two higher-level, more streamlined ways of picking up input from Actions: use [`PlayerInput`](PlayerInput.md#notification-behaviors), or [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
 
 #### Action callbacks
 
@@ -465,7 +465,7 @@ You can also use the [`InputActionVisualizer`](Debugging.md#inputactionvisualize
 
 ### Using Actions with multiple players
 
-You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, see documentation on the [Player Input Manager](Components.md#playerinputmanager-component) component.
+You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, see documentation on the [Player Input Manager](PlayerInputManager.md) component.
 
 ## Terms and concepts
 

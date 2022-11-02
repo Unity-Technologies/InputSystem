@@ -47,21 +47,21 @@ To get input directly through an Input Action, follow these steps:
 2. Create Actions.
 3. Script Action responses.
 
-### Step 1: Add a `PlayerInput` Component
+### Step 1: Add a PlayerInput Component
 
 Getting input directly from an Input Device is quick and convenient, but requires a separate path for each type of Device. That also makes it harder to later change which Device Control triggers a specific event in the game.
 
-Alternatively, you can use Actions as an intermediary between Devices and the in-game responses they trigger. The easiest way to do this is to use the [`PlayerInput`](Components.md) component. To add this component, click the __Add Component__ button in the GameObject Inspector:
+Alternatively, you can use Actions as an intermediary between Devices and the in-game responses they trigger. The easiest way to do this is to use the [`PlayerInput`](PlayerInput.md) component. To add this component, click the __Add Component__ button in the GameObject Inspector:
 
 ![Add Player Input Component](Images/AddPlayerInput.png)
 
 ### Step 2: Create Input Actions
 
-Each [`PlayerInput`](Components.md) component represents one player in the game. To receive input, the component must be connected to a set of Input Actions. The quickest way to create a new set of Actions is to click the __Create Actions…__ button in the Inspector window for that component. This creates an Asset pre-populated with a default set of Input Action Maps, Input Actions, and Input Bindings.
+Each [Player Input Component](PlayerInput.md) represents one player in the game. To receive input, the component must be connected to a set of Input Actions. The quickest way to create a new set of Actions is to click the __Create Actions…__ button in the Inspector window for that component. This creates an Asset pre-populated with a default set of Input Action Maps, Input Actions, and Input Bindings.
 
 ![Create Actions from Player Input Component](Images/PlayerInputCreateActions.png)
 
-When you click the __Create Actions__ button, Unity asks you where to create the new Asset. Choose a name and folder inside the `Assets` folder of your Project (or just accept the defaults) and select __Okay__. This creates a new `.inputactions` Asset in your Project, connects it to the [`PlayerInput`](Components.md) component, and brings up the editor window for `.inputactions` files.
+When you click the __Create Actions__ button, Unity asks you where to create the new Asset. Choose a name and folder inside the `Assets` folder of your Project (or just accept the defaults) and select __Okay__. This creates a new `.inputactions` Asset in your Project, connects it to the Player Input component, and brings up the editor window for `.inputactions` files.
 
 ![MyGameActions](Images/MyGameActions.png)
 
@@ -69,11 +69,11 @@ You can edit the default set to fit the needs of your Project. See the in-depth 
 
 ### Step 3: Setting up Action responses
 
-Once the component has its Actions, you must set up a response for each Action. [`PlayerInput`](Components.md) allows you to set up responses in several ways, using the __Behavior__ property in the Inspector window:
+Once the component has its Actions, you must set up a response for each Action. The Player Input component allows you to set up responses in several ways, using the __Behavior__ property in the Inspector window:
 
 ![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)
 
-For more details about the options, see documentation on [notification behaviors](Components.md#notification-behaviors). The screenshot above uses __Invoke Unity Events__, which uses `UnityEvent` in the same way the Unity UI does. Unity displays an event for each Action that is linked to the component. This allows you to directly wire in the target method for each event.
+For more details about the options, see documentation on [notification behaviors](PlayerInput.md#notification-behaviors). The screenshot above uses __Invoke Unity Events__, which uses `UnityEvent` in the same way the Unity UI does. Unity displays an event for each Action that is linked to the component. This allows you to directly wire in the target method for each event.
 
 ![PlayerInput Action Events](Images/MyPlayerActionEvents.png)
 
@@ -89,8 +89,8 @@ public class MyPlayerScript : MonoBehaviour
 }
 ```
 
-This completes the basic setup using [`PlayerInput`](Components.md).
+This completes the basic setup using [`PlayerInput`](PlayerInput.md).
 
 ## Alternate ways to set up Input Actions
 
-There are ways other than [`PlayerInput`](Components.md) to set up Input Actions. For more information, see documentation on [Creating Actions](Actions.md#creating-actions).
+There are ways other than [`PlayerInput`](PlayerInput.md) to set up Input Actions. For more information, see documentation on [Creating Actions](Actions.md#creating-actions).
