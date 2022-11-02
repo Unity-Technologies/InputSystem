@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
@@ -20,31 +21,38 @@ public class PerfTestScript : MonoBehaviour
     private InputAction[] actionsForReadValue;
     private InputActionMap actionMapWithCallbacks; 
 
-    public Mode mode = Mode.ReadValueFromControl;
-    public int actionCount = 100;
+    //public Mode mode = Mode.ReadValueFromActions;
 
-     private void DisposeActionMap(ref InputActionMap actionMap)
-     {
-         if (actionMap == null)
-             return;
-         
-         actionMap.Disable();
-         actionMap.Dispose();
-         actionMap = null;
-     }
+    private void DisposeActionMap(ref InputActionMap actionMap)
+    {
+        if (actionMap == null)
+            return;
+        
+        actionMap.Disable();
+        actionMap.Dispose();
+        actionMap = null;
+    }
+
+    static readonly ProfilerMarker s_Marker_ReadValuesFromControls = new ProfilerMarker("PerfTest.ReadValuesFromControls");
+    static readonly ProfilerMarker s_Marker_ReadValueFromActions = new ProfilerMarker("PerfTest.ReadValueFromActions");
+    //static readonly ProfilerMarker s_Marker_CallbacksFromActions = new ProfilerMarker("PerfTest.CallbacksFromActions");
 
     void Update()
     {
         if (PerformanceTestDevice.current == null)
             return;
 
-        var devices = InputSystem.devices.OfType<PerformanceTestDevice>();
+        var devices = InputSystem.devices.OfType<PerformanceTestDevice>().ToArray();
         var controls = devices.SelectMany(x => x.poses).ToArray();
 
+        var recreateActions = false;
         if (poses == null || poses.Length != controls.Length)
+        {
             poses = new PoseState[controls.Length];
+            recreateActions = true;
+        }
 
-        var mode = Mode.ReadValueFromControl;
+        var mode = Mode.ReadValueFromActions;
         switch (mode)
         {
             case Mode.ReadValueFromControl:
@@ -52,32 +60,51 @@ public class PerfTestScript : MonoBehaviour
                 DisposeActionMap(ref actionMapForReadValue);
                 DisposeActionMap(ref actionMapWithCallbacks);
 
-                for (var i = 0; i < controls.Length; ++i)
-                    poses[i] = controls[i].ReadValue();
+                using (s_Marker_ReadValuesFromControls.Auto())
+                {
+                    for (var i = 0; i < controls.Length; ++i)
+                        poses[i] = controls[i].ReadValue();
+                }
 
                 break;
             case Mode.ReadValueFromActions:
                 DisposeActionMap(ref actionMapWithCallbacks);
                 
-                if (actionMapForReadValue == null)
+                if (actionMapForReadValue == null || recreateActions)
                 {
-                    actionMapForReadValue = new InputActionMap("actionMapForReadValue");
-                    actionsForReadValue = new InputAction[actionCount];
+                    actionsForReadValue = null;
+                    DisposeActionMap(ref actionMapForReadValue);
 
-                    for (var i = 0; i < actionCount; ++i)
-                        actionsForReadValue[i] = actionMapForReadValue.AddAction($"perfAction{i}", binding: $"<PerformanceTestDevice>/pose{i}");
+                    for (var i = 0; i < devices.Length; ++i)
+                        InputSystem.SetDeviceUsage(devices[i], $"perfDevice{i}");
                     
+                    actionMapForReadValue = new InputActionMap("actionMapForReadValue");
+                    actionsForReadValue = new InputAction[controls.Length]; // action per control
+
+                    for (var i = 0; i < actionsForReadValue.Length; ++i)
+                    {
+                        var controlIndex = i % PerformanceTestDeviceState.kPoseCount;
+                        var deviceIndex = i / PerformanceTestDeviceState.kPoseCount;
+                        var usageName = $"perfDevice{deviceIndex}";
+                        actionsForReadValue[i] = actionMapForReadValue.AddAction($"perfAction{i}", binding: $"<PerformanceTestDevice>{{{usageName}}}/pose{controlIndex}");
+                    }
+
                     actionMapForReadValue.Enable();
                 }
 
-                for (var i = 0; i < actionCount; ++i)
-                    poses[i] = actionsForReadValue[i].ReadValue<PoseState>();
+                using (s_Marker_ReadValueFromActions.Auto())
+                {
+                    for (var i = 0; i < actionsForReadValue.Length; ++i)
+                        poses[i] = actionsForReadValue[i].ReadValue<PoseState>();
+                }
 
-                
+
                 break;
             case Mode.CallbacksFromActions:
                 actionsForReadValue = null;
                 DisposeActionMap(ref actionMapForReadValue);
+
+
 
                 break;
             default:
@@ -89,7 +116,7 @@ public class PerfTestScript : MonoBehaviour
     {
         if (poses == null)
             return;
-        for (var i = 0; i < 2; ++i)
-            GUI.Label(new Rect(0.0f, 20.0f * i, 500.0f, 20.0f), $"pose{i}.position = {poses[i].position}");
+        GUI.Label(new Rect(0.0f, 20.0f * 0, 500.0f, 20.0f), $"pose{0}.position = {poses[0].position}");
+        GUI.Label(new Rect(0.0f, 20.0f * 1, 500.0f, 20.0f), $"pose{poses.Length - 1}.position = {poses[^1].position}");
     }
 }

@@ -209,17 +209,17 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
-            return *valuePtr;
-            // return new PoseState()
-            // {
-            //     isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
-            //     trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
-            //     position = position.ReadUnprocessedValueFromState(statePtr),
-            //     rotation = rotation.ReadUnprocessedValueFromState(statePtr),
-            //     velocity = velocity.ReadUnprocessedValueFromState(statePtr),
-            //     angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
-            // };
+            // var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
+            // return *valuePtr;
+            return new PoseState()
+            {
+                isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
+                trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
+                position = position.ReadUnprocessedValueFromState(statePtr),
+                rotation = rotation.ReadUnprocessedValueFromState(statePtr),
+                velocity = velocity.ReadUnprocessedValueFromState(statePtr),
+                angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
+            };
         }
 
         /// <inheritdoc />

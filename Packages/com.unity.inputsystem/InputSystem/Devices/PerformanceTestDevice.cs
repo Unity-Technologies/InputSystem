@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem
     [StructLayout(LayoutKind.Explicit, Size = PoseState.kSizeInBytes * kPoseCount)]
     public unsafe struct PerformanceTestDeviceState : IInputStateTypeInfo
     {
-        internal const int kPoseCount = 50;
+        public const int kPoseCount = 50;
 
         public static FourCC Format => new FourCC('P', 'T', 'D', 'S');
 
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem
         public FourCC format => Format;
     }
     
-    [InputControlLayout(stateType = typeof(PerformanceTestDeviceState))]
+    [InputControlLayout(stateType = typeof(PerformanceTestDeviceState), canRunInBackground = true)]
     public class PerformanceTestDevice : InputDevice
     {
         public PoseControl[] poses { get; protected set; }
