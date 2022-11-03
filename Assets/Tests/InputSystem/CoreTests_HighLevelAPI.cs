@@ -202,6 +202,11 @@ internal partial class CoreTests
 
         Input.SetGamepadTriggerPressPoint(0.3f);
         Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.True);
+        
+        gamepadState.leftTrigger = 0.1f;
+        InputSystem.QueueStateEvent(gamepad, gamepadState);
+        InputSystem.Update();
+        Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.False);
     }
     
     [Test]
@@ -217,9 +222,10 @@ internal partial class CoreTests
         InputSystem.Update();
         
         Input.SetGamepadStickDeadzone(0.0f);
-        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.26f, 0.26f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.3f, 0.3f)).Using(new Vector2EqualityComparer(0.01f)));
 
         Input.SetGamepadStickDeadzone(0.3f);
-        Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.71f, -0.71f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.13f, 0.13f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.70f, -0.70f)).Using(new Vector2EqualityComparer(0.01f)));
     }
 }

@@ -270,15 +270,15 @@ namespace UnityEngine.InputSystem.HighLevel
 
         private struct GamepadConfig
         {
-            public float triggerPresspoint;
-            public float deadzone;
+            public float triggerPressPoint;
+            public float deadZone;
 
             public static GamepadConfig CreateConfigFromSettings()
             {
                 return new GamepadConfig
                 {
-                    triggerPresspoint = InputSystem.settings.defaultButtonPressPoint,
-                    deadzone = InputSystem.settings.defaultDeadzoneMin
+                    triggerPressPoint = InputSystem.settings.defaultButtonPressPoint,
+                    deadZone = InputSystem.settings.defaultDeadzoneMin
                 };
             }
         }
@@ -888,7 +888,7 @@ namespace UnityEngine.InputSystem.HighLevel
             var maxAxisMagSquared = 0.0f;
             foreach (var (gamepad, slot) in GetGamepadsForSlot(gamepadSlot))
             {
-                var rawAxis = GetGamepadStickControl(gamepad, stick).ReadValue();
+                var rawAxis = GetGamepadStickControl(gamepad, stick).ReadUnprocessedValue();
                 var deadZone = GetGamepadStickDeadZone(slot);
                 var axis = NormalizeAxis(rawAxis, deadZone);
                 var axisMaxSquared = axis.sqrMagnitude;
@@ -935,7 +935,7 @@ namespace UnityEngine.InputSystem.HighLevel
             var maxAxisMagSquared = 0.0f;
             foreach (var (joystick, slot) in GetJoysticksForSlot(joystickSlot))
             {
-                var rawAxis = GetJoystickStickControl(joystick, joystickAxis).ReadValue();
+                var rawAxis = GetJoystickStickControl(joystick, joystickAxis).ReadUnprocessedValue();
                 var deadZone = InputSystem.settings.defaultDeadzoneMin;
                 var axis = NormalizeAxis(rawAxis, deadZone);
                 var axisMaxSquared = axis.sqrMagnitude;
@@ -1004,7 +1004,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    return s_GamepadConfigs[(int)gamepadSlot].triggerPresspoint;
+                    return s_GamepadConfigs[(int)gamepadSlot].triggerPressPoint;
                 case GamepadSlot.All:
                     throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
                 default:
@@ -1039,11 +1039,11 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    s_GamepadConfigs[(int)gamepadSlot].triggerPresspoint = pressPoint;
+                    s_GamepadConfigs[(int)gamepadSlot].triggerPressPoint = pressPoint;
                     break;
                 case GamepadSlot.All:
                     for (var i = 0; i < s_GamepadConfigs.Length; ++i)
-                        s_GamepadConfigs[i].triggerPresspoint = pressPoint;
+                        s_GamepadConfigs[i].triggerPressPoint = pressPoint;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
@@ -1069,7 +1069,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    return s_GamepadConfigs[(int)gamepadSlot].deadzone;
+                    return s_GamepadConfigs[(int)gamepadSlot].deadZone;
                 case GamepadSlot.All:
                     throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
                 default:
@@ -1101,11 +1101,11 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    s_GamepadConfigs[(int)gamepadSlot].deadzone = deadzone;
+                    s_GamepadConfigs[(int)gamepadSlot].deadZone = deadzone;
                     break;
                 case GamepadSlot.All:
                     for (var i = 0; i < s_GamepadConfigs.Length; ++i)
-                        s_GamepadConfigs[i].deadzone = deadzone;
+                        s_GamepadConfigs[i].deadZone = deadzone;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
