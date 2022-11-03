@@ -59,5 +59,5 @@ Using the Player Input component provides the flexibility of being able to conne
 
 However, although requiring less code, you may find that coding the connections in your own script is simpler and faster than setting up and keeping track of these connections in a PlayerInput component on a GameObject.
 
-To get started using this workflow, you need to [set up an Actions Asset as described in the previous workflow](Workflow-ActionsAsset.html). Then, rather than accessing your action values or assigning callbacks directly in your code, instead you make the connections between the actions and your code using the **Player Input component** UI. [Read more about using the Player Input component here](PlayerInput.html).
+To get started using this workflow, [see the documentation for the Player Input component](PlayerInput.html).
 

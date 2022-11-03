@@ -1,21 +1,34 @@
 # The PlayerInput component
 
-The Input System provides two `MonoBehaviour` components that simplify how you set up and work with input:
+The Input System provides two related components that simplify how you set up and work with input: the **Player Input** component and the [**Player Input Manager**](PlayerInputManager.md) component.
 
-|Component|Description|
-|---------|-----------|
-|[`PlayerInput`](#playerinput-component)|Represents a single player, and that player's associated [Input Actions](Actions.md).|
-|[`PlayerInputManager`](PlayerInputManager.md)|Handles setups that allow for several concurrent users (for example, player lobbies and split-screen gameplay in a game).|
+The **Player Input** component represents a single player, and that player's associated [Input Actions](Actions.md), whereas the [**Player Input Manager**](PlayerInputManager.md) component handles setups that allow for several concurrent users (for example, player lobbies and split-screen gameplay in a game).
 
->__Note__: These components are built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.
 
-## `PlayerInput` component
+## The Player Input component
 
 ![PlayerInput](Images/PlayerInput.png)
 
-Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. Multiple `PlayerInput` instances can exist at the same time (though not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
+*Above, the Player Input component as visible in the inspector, with an Actions Asset called "ExampleActions" assigned.*
+
+Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. You can use multiple `PlayerInput` instances at the same time (although not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
 
 Each `PlayerInput` corresponds to one [`InputUser`](UserManagement.md). You can use [`PlayerInput.user`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_user) to query the `InputUser` from the component.
+
+>__Note__: These components are built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.
+
+## Getting started
+
+To get started using the Player Input component, use the following steps:
+
+1. [Add](https://docs.unity3d.com/Manual/UsingComponents.html) a **Player Input** component to a GameObject. This would usually be the GameObject that represents the player in your game.<br/><br/>
+2. [Create an Input Actions asset](ActionAssets.md). You can do this by clicking the "Create Actions..." button which is visible in the Player Input component inspector if you have not yet assigned actions to it (shown below).<br/><br/>![Create Actions from Player Input Component](Images/PlayerInputCreateActions.png)<br/><br/>
+3. When creating the actions asset, Unity asks you where to create the new Asset. Choose a name and folder inside the **Assets** folder of your Project (or just accept the defaults) and select Okay. This creates a new `.inputactions` Asset in your Project, connects it to the Player Input component, and brings up the editor window for the Input Action asset.<br/><br/>
+4. [Configure the Actions Asset](ActionAssets.md) so that it contains the actions you want your users to be able to perform, bound to the controls they should use to perform them.<br/><br/>![MyGameActions](Images/MyGameActions.png)<br/><br/>
+5. Set up Action responses, by selecting a **Behaviour** type from the Behaviour menu. The Behaviour type you select affects how you should implement the methods that handle your Action responses. See the  [notification behaviors](#notification-behaviors) section further down for details.<br/><br/>![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)<br/><br/>
+
+
+## Configuring the Player Input component
 
 You can use the following properties to configure `PlayerInput`:
 
@@ -29,11 +42,11 @@ You can use the following properties to configure `PlayerInput`:
 
 ### Actions
 
-To receive input, each player must have an associated set of Input Actions. When you create these via the `PlayerInput` Inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the `PlayerInput` component places no restrictions on the arrangement of Actions.
+To receive input, each player must have an associated set of Input Actions. When you create these via the Player Input inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the Player Input component places no restrictions on the arrangement of Actions.
 
-`PlayerInput` automatically handles [enabling and disabling](Actions.md#using-actions) Actions, and also handles installing [callbacks](Actions.md#responding-to-actions) on the Actions. When multiple `PlayerInput` components use the same Actions, the components automatically create [private copies of the Actions](Actions.md#using-actions-with-multiple-players).
+The Player Input component automatically handles [enabling and disabling](Actions.md#using-actions) Actions, and also handles installing [callbacks](Actions.md#responding-to-actions) on the Actions. When multiple Player Input components use the same Actions, the components automatically create [private copies of the Actions](Actions.md#using-actions-with-multiple-players).
 
-When first enabled, `PlayerInput` enables all Actions from the the [`Default Action Map`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_defaultActionMap). If no default Action Map exists, `PlayerInput` does not enable any Actions. To manually enable Actions, you can call [`Enable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Enable) and [`Disable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Disable) on the Action Maps or Actions, like you would do [without `PlayerInput`](Actions.md#using-actions). To check which Action Map is currently enabled, or to switch to a different one, use the  [`PlayerInput.currentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_currentActionMap) property. To switch Action Maps with an Action Map name, you can also call [`PlayerInput.SwitchCurrentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_SwitchCurrentActionMap_System_String_).
+When first enabled, the Player Input component enables all Actions from the the [`Default Action Map`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_defaultActionMap). If no default Action Map exists, the Player Input component does not enable any Actions. To manually enable Actions, you can call [`Enable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Enable) and [`Disable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Disable) on the Action Maps or Actions, like you would do [without `PlayerInput`](Actions.md#using-actions). To check which Action Map is currently enabled, or to switch to a different one, use the  [`PlayerInput.currentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_currentActionMap) property. To switch Action Maps with an Action Map name, you can also call [`PlayerInput.SwitchCurrentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_SwitchCurrentActionMap_System_String_).
 
 To disable a player's input, call [`PlayerInput.DeactivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_DeactivateInput). To re-enable it, call [`PlayerInput.ActivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_ActivateInput). The latter enables the default Action Map, if it exists.
 
@@ -41,38 +54,37 @@ When `PlayerInput` is disabled, it automatically disables the currently active A
 
 See the [notification behaviors](#notification-behaviors) section below for how to be notified when player triggers an Action.
 
-#### `SendMessage`/`BroadcastMessage` Actions
+### When using **Send Messages** or **Broadcast Messages**
 
-When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to `Send Messages` or `Broadcast Messages`, you can set your app to respond to Actions by defining methods in components like so:
+When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to **Send Messages** or **Broadcast Messages**, you can set your app to respond to Actions by defining methods in components like so:
 
 ```CSharp
 public class MyPlayerScript : MonoBehaviour
 {
-    // "fire" action becomes "OnFire" method. If you're not interested in the
-    // value from the control that triggers the action, use a method
-    // without arguments.
-    public void OnFire()
+    // "jump" action becomes "OnJump" method.
+
+    // If you're not interested in the value from the control that triggers the action, use a method without arguments.
+    public void OnJump()
     {
+        // your Jump code here
     }
 
-    // If you are interested in the value from the control that triggers an action,
-    // you can declare a parameter of type InputValue.
+    // If you are interested in the value from the control that triggers an action, you can declare a parameter of type InputValue.
     public void OnMove(InputValue value)
     {
         // Read value from control. The type depends on what type of controls.
         // the action is bound to.
         var v = value.Get<Vector2>();
 
-        // IMPORTANT: The given InputValue is only valid for the duration of the callback.
-        //            Storing the InputValue references somewhere and calling Get<T>()
-        //            later does not work correctly.
+        // IMPORTANT: 
+        // The given InputValue is only valid for the duration of the callback. Storing the InputValue references somewhere and calling Get<T>() later does not work correctly.
     }
 }
 ```
 
-The component must be on the same `GameObject` to use `Send Messages`, or on any child `GameObject` to use `Broadcast Messages`.
+The component must be on the same `GameObject` if you are using `Send Messages`, or on the same or any child `GameObject` if you are using `Broadcast Messages`.
 
-#### `UnityEvent` Actions
+### When using **Invoke Unity Events**
 
 When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to `Invoke Unity Events`, each Action has to be routed to a target method. The methods have the same format as the [`started`, `performed`, and `canceled` callbacks](Actions.md#action-callbacks) on [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html).
 
