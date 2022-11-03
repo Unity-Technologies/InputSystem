@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 // This script is designed to have the OnMove and
 // OnJump methods called by a PlayerInput component
 
-public class DocsExamplePlayerInput : MonoBehaviour
+public class ExamplePlayerInput : MonoBehaviour
 {
     Vector2 moveAmount;
 

@@ -40,15 +40,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "New action",
-                    "type": "Button",
-                    "id": "50172c2c-1af4-4b76-b06e-d60442885853",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -153,6 +144,17 @@
                 },
                 {
                     "name": "",
+                    "id": "69f2763d-08bc-4aac-9c35-f4f5f22e2928",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "41041dd1-570a-487c-856e-d58cfa06509a",
                     "path": "<Gamepad>{Player1}/buttonNorth",
                     "interactions": "",
@@ -164,12 +166,12 @@
                 },
                 {
                     "name": "",
-                    "id": "9e6a8f01-4709-40dc-8374-e12f3af73422",
-                    "path": "",
+                    "id": "4ac0be70-ea16-4ea3-98d4-0cf19fab4aec",
+                    "path": "<Keyboard>/x",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "New action",
+                    "action": "use",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
