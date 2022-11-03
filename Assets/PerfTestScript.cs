@@ -52,7 +52,7 @@ public class PerfTestScript : MonoBehaviour
             recreateActions = true;
         }
 
-        var mode = Mode.ReadValueFromActions;
+        var mode = Mode.CallbacksFromActions;
         switch (mode)
         {
             case Mode.ReadValueFromControl:
@@ -104,7 +104,31 @@ public class PerfTestScript : MonoBehaviour
                 actionsForReadValue = null;
                 DisposeActionMap(ref actionMapForReadValue);
 
+                if (actionMapWithCallbacks == null || recreateActions)
+                {
+                    DisposeActionMap(ref actionMapWithCallbacks);
 
+                    for (var i = 0; i < devices.Length; ++i)
+                        InputSystem.SetDeviceUsage(devices[i], $"perfDevice{i}");
+                    
+                    actionMapWithCallbacks = new InputActionMap("actionMapForReadValue");
+
+                    for (var i = 0; i < controls.Length; ++i)
+                    {
+                        var controlIndex = i % PerformanceTestDeviceState.kPoseCount;
+                        var deviceIndex = i / PerformanceTestDeviceState.kPoseCount;
+                        var usageName = $"perfDevice{deviceIndex}";
+                        var action = actionMapWithCallbacks.AddAction($"perfAction{i}", binding: $"<PerformanceTestDevice>{{{usageName}}}/pose{controlIndex}");
+
+                        var actionPoseIndex = i;
+                        action.performed += ctx =>
+                        {
+                            poses[actionPoseIndex] = ctx.ReadValue<PoseState>();
+                        };
+                    }
+
+                    actionMapWithCallbacks.Enable();
+                }
 
                 break;
             default:
