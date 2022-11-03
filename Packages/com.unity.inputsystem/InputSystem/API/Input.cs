@@ -1006,7 +1006,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot12:
                     return s_GamepadConfigs[(int)gamepadSlot].triggerPresspoint;
                 case GamepadSlot.All:
-                    throw new InvalidEnumArgumentException("Passing GamepadSlot.All is not valid for this operation");
+                    throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
                 default:
                     throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
             }
@@ -1071,7 +1071,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot12:
                     return s_GamepadConfigs[(int)gamepadSlot].deadzone;
                 case GamepadSlot.All:
-                    throw new InvalidEnumArgumentException("Passing GamepadSlot.All is not valid for this operation");
+                    throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
                 default:
                     throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
             }
