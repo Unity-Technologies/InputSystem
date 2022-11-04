@@ -1,5 +1,5 @@
 
-* [Introduction](Introduction.md)
+* [Introduction](index.md)
   * [Installation](Installation.md)
   * [Concepts](Concepts.md)
   * [Workflows](Workflows.md)
