@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -853,6 +854,113 @@ namespace UnityEngine.InputSystem
         internal PrimitiveValue m_MinValue;
         internal PrimitiveValue m_MaxValue;
 
+        internal FourCC m_OptimizedControlDataType;
+
+        /// <summary>
+        /// For some controls it's possible to safely read/write state memory directly
+        /// instead of calling ReadUnprocessedValueFromState/WriteValueIntoState.
+        /// This value will represent a type that should be used for reading/writing directly.
+        /// Or be InputStateBlock.kFormatInvalid if no casting is possible.
+        /// </summary>
+        /// <remarks>
+        /// For example AxisControl might be a "float" in state memory, and if no processing applied during reading (e.g. no invert/scale/etc),
+        /// then it could be read as float in memory directly without calling ReadUnprocessedValueFromState.
+        /// If then Vector3Control has 3 AxisControls as consecutive floats in memory,
+        /// then we can cast Vector3Control state memory directly to Vector3 without calling ReadUnprocessedValueFromState on x/y/z axes.
+        ///
+        /// Value is computed by automatically calling <see cref="InputControl.CalculateOptimizedControlDataType"/> when system believes control changes setup configuration.
+        /// Value can be updated manually by calling <see cref="InputControl.ApplyParameterChanges"/>.
+        /// </remarks>
+        public FourCC optimizedControlDataType => m_OptimizedControlDataType;
+
+        /// <summary>
+        /// Calculate and return a type that can represent control value in memory directly.
+        /// Value then is cached in <see cref="InputControl.optimizedControlDataType"/>.
+        /// Function shouldn't be called manually.
+        /// </summary>
+        protected virtual FourCC CalculateOptimizedControlDataType()
+        {
+            return InputStateBlock.kFormatInvalid;
+        }
+
+        /// <summary>
+        /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others) and recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        public void ApplyParameterChanges()
+        {
+            // First we go through all children of our own hierarchy
+            SetOptimizedControlDataTypeRecursively();
+
+            // Then we go through all parents up to the root, because our own change might influence their optimization status
+            // e.g. let's say we have a tree where root is Vector3 and children are three AxisControl
+            // And user is calling this method on AxisControl which goes from Float to NotOptimized.
+            // Then we need to also transition Vector3 to NotOptimized as well.
+
+            var currentParent = parent;
+            while (currentParent != null)
+            {
+                currentParent.SetOptimizedControlDataType();
+                currentParent = currentParent.parent;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetOptimizedControlDataType()
+        {
+            // setting check need to be inline so we clear optimizations if setting is disabled after the fact
+            m_OptimizedControlDataType = InputSettings.optimizedControlsFeatureEnabled
+                ? CalculateOptimizedControlDataType()
+                : (FourCC)InputStateBlock.kFormatInvalid;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void SetOptimizedControlDataTypeRecursively()
+        {
+            // Need to go depth-first because CalculateOptimizedControlDataType might depend on computed values of children
+            if (m_ChildCount > 0)
+            {
+                foreach (var inputControl in children)
+                    inputControl.SetOptimizedControlDataTypeRecursively();
+            }
+
+            SetOptimizedControlDataType();
+        }
+
+        // This function exists to warn users to start using ApplyParameterChanges for edge cases that were previously not intentionally supported,
+        // where control properties suddenly change underneath us without us anticipating that.
+        // This is mainly to AxisControl fields being public and capable of changing at any time even if we were not anticipated such a usage pattern.
+        // Also it's not clear if InputControl.stateBlock.format can potentially change at any time, likely not.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // Only do this check in development builds and editor in hope that it will be sufficient to catch any misuse during development.
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
+        internal void EnsureOptimizationTypeHasNotChanged()
+        {
+            if (!InputSettings.optimizedControlsFeatureEnabled)
+                return;
+
+            var currentOptimizedControlDataType = CalculateOptimizedControlDataType();
+            if (currentOptimizedControlDataType != optimizedControlDataType)
+            {
+                Debug.LogError(
+                    $"Control '{name}' / '{path}' suddenly changed optimization state due to either format " +
+                    $"change or control parameters change (was '{optimizedControlDataType}' but became '{currentOptimizedControlDataType}'), " +
+                    "this hinders control hot path optimization, please call control.ApplyParameterChanges() " +
+                    "after the changes to the control to fix this error.");
+
+                // Automatically fix the issue
+                // Note this function is only executed in editor and development builds
+                m_OptimizedControlDataType = currentOptimizedControlDataType;
+            }
+
+            if (m_ChildCount > 0)
+            {
+                foreach (var inputControl in children)
+                    inputControl.EnsureOptimizationTypeHasNotChanged();
+            }
+        }
+
         [Flags]
         internal enum ControlFlags
         {
@@ -935,6 +1043,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < list.Count; ++i)
                 list[i].CallFinishSetupRecursive();
             FinishSetup();
+            SetOptimizedControlDataTypeRecursively();
         }
 
         internal string MakeChildPath(string path)
@@ -1162,6 +1271,7 @@ namespace UnityEngine.InputSystem
             return UnsafeUtility.MemCmp(firstValuePtr, secondValuePtr, UnsafeUtility.SizeOf<TValue>()) != 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue ProcessValue(TValue value)
         {
             if (m_ProcessorStack.length > 0)
