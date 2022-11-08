@@ -17,7 +17,7 @@ Sonar-Win-Dotnet-SonarScanner:
     SONAR_HOST_URL: "https://sonar-staging.internal.unity3d.com"
     SONARQUBE_PROJECT_NAME: "SonarProject"
     SONAR_PROJECT_KEY: "input:com.unity.inputsystem"
-    SONAR_COVERAGE_EXCLUSION_FOLDERS: "Samples/**/*,Tests/**/*"
+    SONAR_COVERAGE_EXCLUSION_FOLDERS: "Samples/**/*,Tests/**/*, Documentation~/**/*"
     PATH_TO_PROJECT_RELATIVE_TO_REPO_ROOT: "\\"
     RIDER_VERSION: "3.0.12"    
   commands:    
