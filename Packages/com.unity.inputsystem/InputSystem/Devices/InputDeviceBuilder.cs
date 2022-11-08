@@ -893,7 +893,7 @@ namespace UnityEngine.InputSystem.Layouts
             if (m_Device.allControls.Count > (1U << InputDevice.kControlIndexBits))
                 throw new NotSupportedException($"Device '{m_Device}' exceeds maximum supported control count of {1U << InputDevice.kControlIndexBits} (has {m_Device.allControls.Count} controls)");
 
-            var rootNode = new InputDevice.ControlBitRangeNode((ushort)m_Device.m_StateBlock.sizeInBits);
+            var rootNode = new InputDevice.ControlBitRangeNode((ushort)(m_Device.m_StateBlock.sizeInBits - 1));
             m_Device.m_ControlTreeNodes = new InputDevice.ControlBitRangeNode[1];
             m_Device.m_ControlTreeNodes[0] = rootNode;
 
@@ -913,8 +913,10 @@ namespace UnityEngine.InputSystem.Layouts
                     throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit size of {(1U << InputDevice.kStateSizeBits) - 1} (bit offset {control.stateBlock.sizeInBits})");
             }
 
+#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
             if (control != m_Device)
-                InsertControl(ref m_Device.m_ControlTreeNodes[0], control, ref controlIndiciesNextFreeIndex, 0);
+                InsertControlBitRangeNode(ref m_Device.m_ControlTreeNodes[0], control, ref controlIndiciesNextFreeIndex, 0);
+#endif
 
             // Add all leaf controls to state offset mapping.
             if (control.m_ChildCount == 0)
@@ -957,7 +959,7 @@ namespace UnityEngine.InputSystem.Layouts
             control.isSetupFinished = true;
         }
 
-        private void InsertControl(ref InputDevice.ControlBitRangeNode parent, InputControl control, ref int controlIndiciesNextFreeIndex, ushort startOffset)
+        private void InsertControlBitRangeNode(ref InputDevice.ControlBitRangeNode parent, InputControl control, ref int controlIndiciesNextFreeIndex, ushort startOffset)
         {
             InputDevice.ControlBitRangeNode leftNode;
             InputDevice.ControlBitRangeNode rightNode;
@@ -1003,10 +1005,10 @@ namespace UnityEngine.InputSystem.Layouts
 
             // otherwise, if the node ends in the left node, recurse left
             if (control.m_StateBlock.effectiveBitOffset < leftNode.endBitOffset)
-                InsertControl(ref m_Device.m_ControlTreeNodes[parent.leftChildIndex], control,
+                InsertControlBitRangeNode(ref m_Device.m_ControlTreeNodes[parent.leftChildIndex], control,
                     ref controlIndiciesNextFreeIndex, startOffset);
             else
-                InsertControl(ref m_Device.m_ControlTreeNodes[parent.leftChildIndex + 1], control,
+                InsertControlBitRangeNode(ref m_Device.m_ControlTreeNodes[parent.leftChildIndex + 1], control,
                     ref controlIndiciesNextFreeIndex, leftNode.endBitOffset);
         }
 

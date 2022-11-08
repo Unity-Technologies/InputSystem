@@ -436,6 +436,7 @@ partial class CoreTests
         }
     }
 
+#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
     [Test]
     [Category("Controls")]
     public unsafe void Controls_ValueIsReadFromStateMemoryOnlyWhenControlHasBeenMarkedAsStale()
@@ -461,6 +462,38 @@ partial class CoreTests
         // have changed.
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f));
     }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // read all values to initially mark everything as cached
+        foreach (var control in keyboard.allControls)
+        {
+            var v = ((ButtonControl)control).value;
+        }
+
+        foreach (var control in keyboard.allControls)
+        {
+            Assert.That(control.m_CachedValueIsStale, Is.False);
+        }
+
+        var keyboardState = new KeyboardState((Key[])Enum.GetValues(typeof(Key)));
+        InputSystem.QueueStateEvent(keyboard, keyboardState);
+        InputSystem.Update();
+
+        foreach (var control in keyboard.allControls)
+        {
+            if (control == keyboard.imeSelected) // not a real key
+                continue;
+
+            Assert.That(control.m_CachedValueIsStale, Is.True);
+        }
+    }
+
+#endif
 
     [Test]
     [Category("Controls")]

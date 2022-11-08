@@ -8,6 +8,7 @@
 * [Actuation](#control-actuation)
 * [Noisy Controls](#noisy-controls)
 * [Synthetic Controls](#synthetic-controls)
+* [Performance Optimization](#performance-optimization)
 
 An Input Control represents a source of values. These values can be of any structured or primitive type. The only requirement is that the type is [blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
 
@@ -229,3 +230,16 @@ A synthetic Control is a Control that doesn't correspond to an actual physical c
 Whether a given Control is synthetic is indicated by its [`InputControl.synthetic`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_synthetic) property.
 
 The system considers synthetic Controls for [interactive rebinding](ActionBindings.md#interactive-rebinding) but always favors non-synthetic Controls. If both a synthetic and a non-synthetic Control that are a potential match exist, the non-synthetic Control wins by default. This makes it possible to interactively bind to `<Gamepad>/leftStick/left`, for example, but also makes it possible to bind to `<Gamepad>/leftStickPress` without getting interference from the synthetic buttons on the stick.
+
+## Performance Optimization
+
+### Control Value Caching
+
+When the conditional flag 'UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING' is defined, the Input System will switch to an optimized path for reading control values. This path efficiently marks controls as 'stale' when they have been actuated and subsequent calls to [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_value) will only apply control processing when absolutely necessary. Control processing in this case can mean any hard-coded processing that might exist on the control, such as with [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) which has built-in inversion, normalisation, scaling etc, or any processors that have been applied to the controls' [processor stack](Processors.md#processors-on-controls). This can have a significant positive impact on performance, especially when using complex composite input actions with many composite parts, such as a movement input action that could be bound to W, A, S, and D on the keyboard, two gamepad sticks and a DPad.
+
+This feature is not enabled by default as it can result in the following minor behavioural changes:
+ * some control processors use global state. Without cached value optimizations, it is possible to read the control value, change the global state, read the control value again, and get a new value due to the fact that the control processor runs on every call. With cached value optimizations, reading the control value will only ever return a new value if the physical control has been actuated. Changing the global state of a control processor will have no effect otherwise.
+ * writing to device state using low-level APIs like [`InputControl<T>.WriteValueIntoState`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_WriteValueIntoState__0_System_Void__) does not set the stale flag and subsequent calls to [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_value) will not reflect those changes.
+The [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) method supports these scenarios by always running control processing, so it is possible to run with cached value optimizations turned on and still achieve the previous behaviour, but be aware that [`InputAction.ReadValue`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1) always reads values through the cached path.
+
+>**How to set the UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING define**: The simplest approach is to open the Player settings for your project, scroll down to Scripting Define Symbols, and add it there. This is a semi-colon delimited list, so if there are any defines already there, simply add a semi-colon before typing UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING.

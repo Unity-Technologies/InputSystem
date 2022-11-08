@@ -720,8 +720,8 @@ namespace UnityEngine.InputSystem
         // When a device gets built from a layout, we create a binary tree from its controls where each node in the tree
         // represents the range of bits that cover the left or right section of the parent range. For example, starting
         // with the entire device state block as the parent, where the state block is 100 bits long, the left node will
-        // cover from bits 0-50, and the right from bits 50-100. For the left node, we'll get two more child nodes where
-        // the left will cover bits 0-25, and the right bits 25-50 and so on. Each node will point at any controls that
+        // cover from bits 0-50, and the right from bits 51-99. For the left node, we'll get two more child nodes where
+        // the left will cover bits 0-25, and the right bits 26-49 and so on. Each node will point at any controls that
         // either fit exactly into its range, or overlap the splitting point between both nodes. In reality, picking the
         // mid-point to split each parent node is a little convoluted and will rarely be the absolute mid-point, but that's
         // the basic idea.
@@ -745,7 +745,7 @@ namespace UnityEngine.InputSystem
             // also because of overlaps in bit ranges). The control indicies for each node are stored contiguously in the
             // m_ControlTreeIndicies array on the device, which acts as an indirection table, and these two values tell
             // us where to start for each node and how many controls this node points at. This is an unsigned short so that
-            // we could in theory support devices with up to 65553 controls.
+            // we could in theory support devices with up to 65535 controls. Each node however can only support 255 controls.
             public ushort controlStartIndex;
             public byte controlCount;
 
@@ -1051,6 +1051,9 @@ namespace UnityEngine.InputSystem
 
             // process the right child node if it exists
             var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+
+            Debug.Assert(leftNode.endBitOffset + (rightNode.endBitOffset - leftNode.endBitOffset) < m_StateBlock.sizeInBits,
+                "Tried to check state memory outside the bounds of the current device.");
 
             // if no bits in the range defined by the right node have changed, return
             if (!HasDataChangedInRange(deviceStatePtr, statePtr, leftNode.endBitOffset,

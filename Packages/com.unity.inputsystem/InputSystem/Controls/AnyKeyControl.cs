@@ -26,6 +26,7 @@ namespace UnityEngine.InputSystem.Controls
             get
             {
                 m_CachedValue = this.CheckStateIsAtDefault(currentStatePtr) ? 0.0f : 1.0f;
+                m_CachedValueIsStale = false;
                 return ref m_CachedValue;
             }
         }

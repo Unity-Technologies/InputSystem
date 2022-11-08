@@ -3483,8 +3483,10 @@ namespace UnityEngine.InputSystem
             if (flippedBuffers && deviceStateSize == stateSizeInBytes)
                 buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
 
+#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
             m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
                 stateSizeInBytes, stateOffsetInDevice);
+#endif
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);

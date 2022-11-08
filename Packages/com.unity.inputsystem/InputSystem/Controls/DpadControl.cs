@@ -85,6 +85,7 @@ namespace UnityEngine.InputSystem.Controls
         {
             get
             {
+#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
 #if UNITY_EDITOR
                 if (!useCachedValue)
                     return ref ReadStateInEditor();
@@ -92,6 +93,7 @@ namespace UnityEngine.InputSystem.Controls
 
                 if (!m_CachedValueIsStale)
                     return ref m_CachedValue;
+#endif
 
                 m_CachedValueIsStale = false;
                 var upIsPressed = up.value >= up.pressPointOrDefault;

@@ -1042,11 +1042,13 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                #if UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
+#if UNITY_EDITOR
                 if (!useCachedValue)
                     return ref ReadStateInEditor();
-                #endif
+#endif
                 if (!m_CachedValueIsStale) return ref m_CachedValue;
+#endif
 
                 m_CachedValue = ProcessValue(unprocessedValue);
                 m_CachedValueIsStale = false;
@@ -1059,12 +1061,14 @@ namespace UnityEngine.InputSystem
         {
             get
             {
+                #if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
                 #if UNITY_EDITOR
                 if (!useCachedValue)
                     return ref ReadUnprocessedStateInEditor();
                 #endif
 
                 if (!m_UnprocessedCachedValueIsStale) return ref m_UnprocessedCachedValue;
+                #endif
 
                 m_UnprocessedCachedValue = ReadUnprocessedValueFromState(currentStatePtr);
                 m_UnprocessedCachedValueIsStale = false;
@@ -1078,15 +1082,15 @@ namespace UnityEngine.InputSystem
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
         /// <summary>
-        /// Get the control's current value.
+        /// Get the controls current value.
         /// </summary>
-        /// <returns>The control's current value.
+        /// <returns>The controls current value.
         /// </returns>
         /// <remarks>
         /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
         ///
         /// This call does not use caching and can be quite a bit less performant than using the <see cref="value"/>
-        /// property but has the advantage that it will always apply the control's processor stack.
+        /// property but has the advantage that it will always apply the controls processor stack.
         /// </remarks>
         /// <seealso cref="value"/>
         public TValue ReadValue()
