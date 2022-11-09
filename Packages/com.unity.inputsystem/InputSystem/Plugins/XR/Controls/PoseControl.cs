@@ -1,8 +1,7 @@
-#if (UNITY_XR_AVAILABLE && !UNITY_FORCE_INPUTSYSTEM_XR_OFF) && ENABLE_VR || PACKAGE_DOCS_GENERATION
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -210,15 +209,26 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
-            return *valuePtr;
+            return new PoseState()
+            {
+                isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
+                trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
+                position = position.ReadUnprocessedValueFromState(statePtr),
+                rotation = rotation.ReadUnprocessedValueFromState(statePtr),
+                velocity = velocity.ReadUnprocessedValueFromState(statePtr),
+                angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
+            };
         }
 
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(PoseState value, void* statePtr)
         {
-            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
-            UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<PoseState>());
+            isTracked.WriteValueIntoState(value.isTracked, statePtr);
+            trackingState.WriteValueIntoState((uint)value.trackingState, statePtr);
+            position.WriteValueIntoState(value.position, statePtr);
+            rotation.WriteValueIntoState(value.rotation, statePtr);
+            velocity.WriteValueIntoState(value.velocity, statePtr);
+            angularVelocity.WriteValueIntoState(value.angularVelocity, statePtr);
         }
     }
 }

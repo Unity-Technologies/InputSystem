@@ -887,9 +887,13 @@ namespace UnityEngine.InputSystem.Editor
 
                 // If we have a binding group to set for new bindings, overwrite the binding's
                 // group with it.
-                if (!string.IsNullOrEmpty(bindingGroupForNewBindings))
+                if (!string.IsNullOrEmpty(bindingGroupForNewBindings) && tag != k_CompositeBindingTag)
+                {
                     InputActionSerializationHelpers.ChangeBinding(property,
                         groups: bindingGroupForNewBindings);
+                }
+
+                onBindingAdded?.Invoke(property);
             }
 
             return property;
@@ -1108,6 +1112,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var bindingProperty = InputActionSerializationHelpers.AddBinding(actionProperty, actionMapProperty,
                 groups: bindingGroupForNewBindings);
+            onBindingAdded?.Invoke(bindingProperty);
             OnNewItemAdded(bindingProperty);
         }
 
@@ -1125,6 +1130,7 @@ namespace UnityEngine.InputSystem.Editor
                     nameof(compositeName));
             var compositeProperty = InputActionSerializationHelpers.AddCompositeBinding(actionProperty,
                 actionMapProperty, compositeName, compositeType, groups: bindingGroupForNewBindings);
+            onBindingAdded?.Invoke(compositeProperty);
             OnNewItemAdded(compositeProperty);
         }
 
@@ -1261,9 +1267,29 @@ namespace UnityEngine.InputSystem.Editor
             // We don't get the depth of the item we're drawing the foldout for but we can
             // infer it by the amount that the given rectangle was indented.
             var indent = (int)(position.x / kFoldoutWidth);
-            position.x = foldoutOffset + (indent + 1) * kColorTagWidth + 2;
+            var indentLevel = EditorGUI.indentLevel;
+
+            // When drawing input actions in the input actions editor, we don't want to offset the foldout
+            // icon any further than the position that's passed in to this function, so take advantage of
+            // the fact that indentLevel is always zero in that editor.
+            position.x = EditorGUI.IndentedRect(position).x * Mathf.Clamp01(indentLevel) + kColorTagWidth + 2 + indent * kColorTagWidth;
+
             position.width = kFoldoutWidth;
-            return EditorGUI.Foldout(position, expandedState, GUIContent.none, true, style);
+
+            var hierarchyMode = EditorGUIUtility.hierarchyMode;
+
+            // We remove the editor indent level and set hierarchy mode to false when drawing the foldout
+            // arrow so that in the inspector we don't get additional padding on the arrow for the inspector
+            // gutter, and so that the indent level doesn't apply because we've done that ourselves.
+            EditorGUI.indentLevel = 0;
+            EditorGUIUtility.hierarchyMode = false;
+
+            var foldoutExpanded = EditorGUI.Foldout(position, expandedState, GUIContent.none, true, style);
+
+            EditorGUI.indentLevel = indentLevel;
+            EditorGUIUtility.hierarchyMode = hierarchyMode;
+
+            return foldoutExpanded;
         }
 
         protected override void RowGUI(RowGUIArgs args)
@@ -1272,7 +1298,7 @@ namespace UnityEngine.InputSystem.Editor
             var isRepaint = Event.current.type == EventType.Repaint;
 
             // Color tag at beginning of line.
-            var colorTagRect = args.rowRect;
+            var colorTagRect = EditorGUI.IndentedRect(args.rowRect);
             colorTagRect.x += item.depth * kColorTagWidth;
             colorTagRect.width = kColorTagWidth;
             if (isRepaint)
@@ -1292,7 +1318,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Bottom line.
-            var lineRect = args.rowRect;
+            var lineRect = EditorGUI.IndentedRect(args.rowRect);
             lineRect.y += lineRect.height - 1;
             lineRect.height = 1;
             if (isRepaint)
@@ -1320,16 +1346,16 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
         {
-            var textRect = GetTextRect(rowRect, item);
+            var textRect = GetTextRect(rowRect, item, false);
             textRect.x += 2;
             textRect.height -= 2;
             return textRect;
         }
 
-        private static Rect GetTextRect(Rect rowRect, TreeViewItem item)
+        private Rect GetTextRect(Rect rowRect, TreeViewItem item, bool applyIndent = true)
         {
             var indent = (item.depth + 1) * kColorTagWidth + kFoldoutWidth;
-            var textRect = rowRect;
+            var textRect = applyIndent ? EditorGUI.IndentedRect(rowRect) : rowRect;
             textRect.x += indent;
             return textRect;
         }
@@ -1365,7 +1391,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void UpdateSerializedObjectDirtyCount()
         {
-            m_SerializedObjectDirtyCount = EditorUtility.GetDirtyCount(serializedObject.targetObject);
+            m_SerializedObjectDirtyCount = serializedObject != null ? EditorUtility.GetDirtyCount(serializedObject.targetObject) : 0;
         }
 
         private bool ReloadIfSerializedObjectHasBeenChanged()
@@ -1390,12 +1416,12 @@ namespace UnityEngine.InputSystem.Editor
         public Action<ActionTreeItemBase> onDoubleClick { get; set; }
         public Action<ActionTreeItemBase> onBeginRename { get; set; }
         public Func<TreeViewItem> onBuildTree { get; set; }
+        public Action<SerializedProperty> onBindingAdded { get; set; }
 
         public bool drawHeader { get; set; }
         public bool drawPlusButton { get; set; }
         public bool drawMinusButton { get; set; }
         public bool drawActionPropertiesButton { get; set; }
-        public float foldoutOffset { get; set; }
 
         public Action<SerializedProperty> onHandleAddNewAction { get; set; }
 

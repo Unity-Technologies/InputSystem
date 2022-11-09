@@ -349,7 +349,10 @@ namespace UnityEngine.InputSystem
                     // Making a control noisy makes all its children noisy.
                     var list = children;
                     for (var i = 0; i < list.Count; ++i)
-                        list[i].noisy = true;
+                    {
+                        if (null != list[i])
+                            list[i].noisy = true;
+                    }
                 }
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;
@@ -957,6 +960,13 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     $"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
             return deviceIndex;
+        }
+
+        internal bool IsValueConsideredPressed(float value)
+        {
+            if (isButton)
+                return ((ButtonControl)this).IsValueConsideredPressed(value);
+            return value >= ButtonControl.s_GlobalDefaultButtonPressPoint;
         }
 
         internal virtual void AddProcessor(object first)

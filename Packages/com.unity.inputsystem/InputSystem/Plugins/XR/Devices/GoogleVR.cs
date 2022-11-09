@@ -1,15 +1,16 @@
-#if UNITY_XR_AVAILABLE && ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR && !PACKAGE_DOCS_GENERATION && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+// Docs generation is skipped because these are intended to be replaced with the com.unity.xr.googlevr package.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.XR;
-using UnityEngine.Scripting;
 
 namespace Unity.XR.GoogleVr
 {
     /// <summary>
     /// A head-mounted display powered by Google Daydream.
     /// </summary>
-    [InputControlLayout(displayName = "Daydream Headset")]
+    [InputControlLayout(displayName = "Daydream Headset", hideInUI = true)]
     public class DaydreamHMD : XRHMD
     {
     }
@@ -17,7 +18,7 @@ namespace Unity.XR.GoogleVr
     /// <summary>
     /// An XR controller powered by Google Daydream.
     /// </summary>
-    [InputControlLayout(displayName = "Daydream Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Daydream Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class DaydreamController : XRController
     {
         [InputControl]

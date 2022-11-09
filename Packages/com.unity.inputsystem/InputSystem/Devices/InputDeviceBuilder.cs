@@ -173,6 +173,10 @@ namespace UnityEngine.InputSystem.Layouts
                     name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
             }
 
+            // Make sure name does not contain any slashes.
+            if (name.ToString().IndexOf(InputControlPath.Separator) != -1)
+                name = new InternedString(name.ToString().CleanSlashes());
+
             // Variant defaults to variants of layout.
             if (variants.IsEmpty())
             {
@@ -188,6 +192,12 @@ namespace UnityEngine.InputSystem.Layouts
             control.m_Variants = variants;
             control.m_Parent = parent;
             control.m_Device = m_Device;
+
+            // this has to be done down here instead of in the device block above because the state for the
+            // device needs to be set up before setting noisy or it will throw because the device's m_Device
+            // hasn't been set yet. Yes, a device's m_Device is itself.
+            if (control is InputDevice)
+                control.noisy = layout.isNoisy;
 
             // Create children and configure their settings from our
             // layout values.

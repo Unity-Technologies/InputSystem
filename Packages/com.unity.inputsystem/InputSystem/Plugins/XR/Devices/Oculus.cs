@@ -1,16 +1,17 @@
-#if UNITY_XR_AVAILABLE && ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS && !PACKAGE_DOCS_GENERATION && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+// Docs generation is skipped because these are intended to be replaced with the com.unity.xr.oculus package.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem;
-using UnityEngine.Scripting;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.XR;
 
 namespace Unity.XR.Oculus.Input
 {
     /// <summary>
     /// An Oculus VR headset (such as the Oculus Rift series of devices).
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Headset")]
+    [InputControlLayout(displayName = "Oculus Headset", hideInUI = true)]
     public class OculusHMD : XRHMD
     {
         [InputControl]
@@ -66,7 +67,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus Touch controller.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Touch Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Oculus Touch Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class OculusTouchController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
@@ -155,7 +156,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus Remote controller.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Remote")]
+    [InputControlLayout(displayName = "Oculus Remote", hideInUI = true)]
     public class OculusRemote : InputDevice
     {
         [InputControl]
@@ -178,7 +179,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// A Standalone VR headset that includes on-headset controls.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Headset (w/ on-headset controls)")]
+    [InputControlLayout(displayName = "Oculus Headset (w/ on-headset controls)", hideInUI = true)]
     public class OculusHMDExtended : OculusHMD
     {
         [InputControl]
@@ -198,7 +199,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// A Gear VR controller.
     /// </summary>
-    [InputControlLayout(displayName = "GearVR Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "GearVR Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class GearVRTrackedController : XRController
     {
         [InputControl]

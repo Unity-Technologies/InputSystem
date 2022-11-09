@@ -348,7 +348,7 @@ namespace UnityEngine.InputSystem.Layouts
         {
             // String match.
             if (pattern is string str)
-                return string.Compare(str, value, StringComparison.InvariantCultureIgnoreCase) == 0;
+                return string.Compare(str, value, StringComparison.OrdinalIgnoreCase) == 0;
 
             // Regex match.
             if (pattern is Regex regex)

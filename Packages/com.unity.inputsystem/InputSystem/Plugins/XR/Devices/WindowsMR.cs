@@ -1,15 +1,16 @@
-#if UNITY_XR_AVAILABLE && ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR && !PACKAGE_DOCS_GENERATION && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
-using UnityEngine.InputSystem.XR;
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+// Docs generation is skipped because these are intended to be replaced with the com.unity.xr.windowsmr package.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR && !UNITY_FORCE_INPUTSYSTEM_XR_OFF && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.Scripting;
+using UnityEngine.InputSystem.XR;
 
 namespace UnityEngine.XR.WindowsMR.Input
 {
     /// <summary>
     /// A Windows Mixed Reality XR headset.
     /// </summary>
-    [InputControlLayout(displayName = "Windows MR Headset")]
+    [InputControlLayout(displayName = "Windows MR Headset", hideInUI = true)]
     public class WMRHMD : XRHMD
     {
         [InputControl]
@@ -28,7 +29,7 @@ namespace UnityEngine.XR.WindowsMR.Input
     /// <summary>
     /// A Windows Mixed Reality XR controller.
     /// </summary>
-    [InputControlLayout(displayName = "HoloLens Hand", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "HoloLens Hand", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class HololensHand : XRController
     {
         [InputControl(noisy = true, aliases = new[] { "gripVelocity" })]
@@ -51,7 +52,7 @@ namespace UnityEngine.XR.WindowsMR.Input
         }
     }
 
-    [InputControlLayout(displayName = "Windows MR Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Windows MR Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class WMRSpatialController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "thumbstickaxes" })]

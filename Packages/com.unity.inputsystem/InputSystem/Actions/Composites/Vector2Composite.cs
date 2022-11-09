@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int up = 0;
+        [InputControl(layout = "Axis")] public int up = 0;
 
         /// <summary>
         /// Binding for the button represents the down (that is, <c>(0,-1)</c>) direction of the vector.
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int down = 0;
+        [InputControl(layout = "Axis")] public int down = 0;
 
         /// <summary>
         /// Binding for the button represents the left (that is, <c>(-1,0)</c>) direction of the vector.
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int left = 0;
+        [InputControl(layout = "Axis")] public int left = 0;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(1,0)</c>) direction of the vector.
@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
-        [InputControl(layout = "Button")] public int right = 0;
+        [InputControl(layout = "Axis")] public int right = 0;
 
         [Obsolete("Use Mode.DigitalNormalized with 'mode' instead")]
         public bool normalize = true;

@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int up;
+        [InputControl(layout = "Axis")] public int up;
 
         /// <summary>
         /// Binding for the button that represents the down (that is, <c>(0,-1,0)</c>) direction of the vector.
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int down;
+        [InputControl(layout = "Axis")] public int down;
 
         /// <summary>
         /// Binding for the button that represents the left (that is, <c>(-1,0,0)</c>) direction of the vector.
@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int left;
+        [InputControl(layout = "Axis")] public int left;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(1,0,0)</c>) direction of the vector.
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int right;
+        [InputControl(layout = "Axis")] public int right;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(0,0,1)</c>) direction of the vector.
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int forward;
+        [InputControl(layout = "Axis")] public int forward;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(0,0,-1)</c>) direction of the vector.
@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Button")] public int backward;
+        [InputControl(layout = "Axis")] public int backward;
 
         /// <summary>
         /// How to synthesize a <c>Vector3</c> from the values read from <see cref="up"/>, <see cref="down"/>,

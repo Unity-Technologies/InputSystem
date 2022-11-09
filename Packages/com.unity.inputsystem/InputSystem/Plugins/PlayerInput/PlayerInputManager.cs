@@ -100,6 +100,15 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public bool maintainAspectRatioInSplitScreen => m_MaintainAspectRatioInSplitScreen;
 
+        /// <summary>
+        /// If <see cref="splitScreen"/> is enabled, this property determines how many screen divisions there will be.
+        /// </summary>
+        /// <remarks>
+        /// This is only used if <see cref="splitScreen"/> is true.
+        ///
+        /// By default this is set to -1 which means the screen will automatically be divided to best fit the
+        /// current number of players i.e. the highest player index in <see cref="PlayerInput"/>
+        /// </remarks>
         public int fixedNumberOfSplitScreens => m_FixedNumberOfSplitScreens;
 
         /// <summary>
@@ -455,6 +464,7 @@ namespace UnityEngine.InputSystem
         }
 
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
+        [Tooltip("Set a limit for the maximum number of players who are able to join.")]
         [SerializeField] internal int m_MaxPlayerCount = -1;
         [SerializeField] internal bool m_AllowJoining = true;
         [SerializeField] internal PlayerJoinBehavior m_JoinBehavior;
@@ -464,6 +474,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] internal GameObject m_PlayerPrefab;
         [SerializeField] internal bool m_SplitScreen;
         [SerializeField] internal bool m_MaintainAspectRatioInSplitScreen;
+        [Tooltip("Explicitly set a fixed number of screens or otherwise allow the screen to be divided automatically to best fit the number of players.")]
         [SerializeField] internal int m_FixedNumberOfSplitScreens = -1;
         [SerializeField] internal Rect m_SplitScreenRect = new Rect(0, 0, 1, 1);
 

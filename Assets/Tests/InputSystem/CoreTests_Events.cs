@@ -181,6 +181,37 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_OnAnyButtonPressed_FiltersOutNonStateEvents()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .CallOnce(_ => { ++callCount; });
+
+        InputSystem.QueueTextEvent(keyboard, ' ');
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_GetAllButtonPressesInEvent_ReturnsEmptyEnumerableForNonStateOrDeltaStateEvents()
+    {
+        var inputEvent = TextEvent.Create(InputSystem.AddDevice<Keyboard>().deviceId, ' ');
+
+        IEnumerable<InputControl> controls = null;
+        Assert.That(() =>
+        {
+            controls = InputControlExtensions.GetAllButtonPresses((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
+        }, Throws.Nothing);
+        Assert.That(controls, Is.Empty);
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanGetAllButtonPressesInEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -416,6 +447,8 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanSwitchToProcessingInFixedUpdates()
     {
+        ResetTime();
+
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var receivedOnChange = true;
@@ -468,6 +501,7 @@ partial class CoreTests
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
         runtime.currentTimeForFixedUpdate = 1;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 0;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -555,7 +589,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         runtime.advanceTimeEachDynamicUpdate = 0;
-        runtime.currentTime = 10;
+        currentTime = 10;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A), 6);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)}, 1);
@@ -590,8 +624,8 @@ partial class CoreTests
             var stateEventPtr = StateEvent.From(eventPtr);
 
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.deviceId));
-            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
-            Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
+            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(InputState.currentTime));
+            Assert.That(stateEventPtr->baseEvent.sizeInBytes.AlignToMultipleOf(4), Is.EqualTo(buffer.Length));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes,
                 Is.EqualTo(InputEvent.kBaseEventSize + sizeof(FourCC) + mouse.stateBlock.alignedSizeInBytes));
             Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));
@@ -1377,6 +1411,94 @@ partial class CoreTests
             Assert.That(events, Has.Count.EqualTo(2));
             Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(1.5).Within(0.000001));
             Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(2.5).Within(0.000001));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanDeserializeInputEventTraceFromMemory()
+    {
+        var dataStream = new MemoryStream();
+        long sourceTraceEventSize = 0;
+        long sourceEventCount = 0;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Generate a trace
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            // Enough events that the aggregate of any padding introduced due to alignment would
+            // start to skew data in last event
+            Press(gamepad.buttonEast);
+            Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonWest);
+            Press(gamepad.buttonNorth);
+
+            Release(gamepad.buttonEast);
+            Release(gamepad.buttonSouth);
+            Release(gamepad.buttonWest);
+            Release(gamepad.buttonNorth);
+
+            Press(gamepad.buttonEast);
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonWest);
+            Press(gamepad.buttonNorth);
+            Set(gamepad.rightStick, new Vector2(-0.123f, -0.234f));
+
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(14));
+            sourceEventCount = trace.eventCount;
+            sourceTraceEventSize = trace.totalEventSizeInBytes;
+
+            // Serialize trace to memory
+            trace.WriteTo(dataStream);
+            trace.Disable();
+            dataStream.Flush();
+        }
+
+        // Deserialize trace from memory into a fresh new buffer
+        using (var trace = new InputEventTrace())
+        {
+            dataStream.Position = 0;
+            trace.ReadFrom(dataStream);
+
+            // Check that we have read the correct number of bytes
+            Assert.That(trace.allocatedSizeInBytes, Is.EqualTo(sourceTraceEventSize));
+            Assert.That(trace.totalEventSizeInBytes, Is.EqualTo(sourceTraceEventSize));
+
+            // This line should not cause an infinite loop
+            trace.Replay().PlayAllEvents();
+
+            // Collect content and event count manually using enumeration
+            var retrievedEvents = new List<InputEventPtr>();
+            int eventCount = 0;
+            long aggregateEventSize = 0;
+            var current = default(InputEventPtr);
+            while (trace.GetNextEvent(ref current))
+            {
+                eventCount++;
+                aggregateEventSize += current.sizeInBytes;
+                retrievedEvents.Add(current);
+            }
+
+            // Check sum of enumerated values and header values match
+            Assert.That(trace.eventCount, Is.EqualTo(sourceEventCount));
+            Assert.That(eventCount, Is.EqualTo(trace.eventCount));
+            Assert.That(trace.totalEventSizeInBytes, Is.GreaterThanOrEqualTo(aggregateEventSize));
+
+            // Check event data is correct
+            Assert.That(retrievedEvents[0].deviceId, Is.EqualTo(gamepad.deviceId));
+            Assert.That(gamepad.buttonEast.ReadUnprocessedValueFromEvent(retrievedEvents[0]), Is.EqualTo(1));
+            Assert.That(gamepad.buttonSouth.ReadUnprocessedValueFromEvent(retrievedEvents[0]), Is.EqualTo(0));
+
+            // Especially the last one
+            var lastIdx = eventCount - 1;
+            Assert.That(retrievedEvents[lastIdx].deviceId, Is.EqualTo(gamepad.deviceId));
+            Assert.That(gamepad.rightStick.ReadUnprocessedValueFromEvent(retrievedEvents[lastIdx]), Is.EqualTo(new Vector2(-0.123f, -0.234f)));
         }
     }
 

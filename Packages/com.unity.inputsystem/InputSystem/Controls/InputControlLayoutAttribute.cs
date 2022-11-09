@@ -55,6 +55,19 @@ namespace UnityEngine.InputSystem.Layouts
 
         public string variants { get; set; }
 
+        /// <summary>
+        /// Allows marking a device as noisy regardless of control layout.
+        /// </summary>
+        /// <remarks>
+        /// Controls can be individually marked as noisy using the <see cref="InputControlAttribute.noisy"/>
+        /// attribute, but this property can be used to mark a device as noisy even when no control has been
+        /// marked as such. This can be useful when a device state layout has only been partially implemented
+        /// i.e. some data in the state memory has not been mapped to a control, and the unimplemented controls
+        /// are noisy. Without doing this, the device will constantly be made current as the system has no way
+        /// to know that the event data contains only noise.
+        /// </remarks>
+        public bool isNoisy { get; set; }
+
         internal bool? canRunInBackgroundInternal;
 
         public bool canRunInBackground

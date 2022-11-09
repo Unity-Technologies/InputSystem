@@ -12,6 +12,7 @@ namespace UnityEngine.InputSystem.Editor
         internal Touchscreen SimulatorTouchscreen;
 
         private bool m_InputSystemEnabled;
+        private bool m_Quitting;
         private List<InputDevice> m_DisabledDevices;
 
         public override string title => "Input System";
@@ -21,6 +22,9 @@ namespace UnityEngine.InputSystem.Editor
             m_InputSystemEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
             if (m_InputSystemEnabled)
             {
+                // Monitor whether the editor is quitting to avoid risking unsafe EnableDevice while quitting
+                UnityEditor.EditorApplication.quitting += OnQuitting;
+
                 m_DisabledDevices = new List<InputDevice>();
 
                 // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
@@ -95,14 +99,26 @@ namespace UnityEngine.InputSystem.Editor
                     deviceSimulator.touchScreenInput -= OnTouchEvent;
                 InputSystem.onDeviceChange -= OnDeviceChange;
 
+                UnityEditor.EditorApplication.quitting -= OnQuitting;
+
                 if (SimulatorTouchscreen != null)
                     InputSystem.RemoveDevice(SimulatorTouchscreen);
                 foreach (var device in m_DisabledDevices)
                 {
-                    if (device.added)
+                    // Note that m_Quitting is used here to mitigate the problem reported in issue tracker:
+                    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774.
+                    // Enabling a device will call into IOCTL of backend which will (may) be destroyed prior
+                    // to this callback on Unity version <= 2022.2. This is not a fix for the actual problem
+                    // of shutdown order but a package fix to mitigate this problem.
+                    if (device.added && !m_Quitting)
                         InputSystem.EnableDevice(device);
                 }
             }
+        }
+
+        private void OnQuitting()
+        {
+            m_Quitting = true;
         }
     }
 }

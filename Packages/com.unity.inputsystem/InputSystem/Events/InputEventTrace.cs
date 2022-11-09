@@ -342,7 +342,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
                 else
                 {
-                    buffer = (byte*)UnsafeUtility.Malloc((long)totalEventSizeInBytes, 4, Allocator.Persistent);
+                    buffer = (byte*)UnsafeUtility.Malloc((long)totalEventSizeInBytes, InputEvent.kAlignment, Allocator.Persistent);
                     m_EventBufferSize = (long)totalEventSizeInBytes;
                 }
                 try
@@ -373,8 +373,8 @@ namespace UnityEngine.InputSystem.LowLevel
                         fixed(byte* tempBufferPtr = tempBuffer)
                         UnsafeUtility.MemCpy(tailPtr, tempBufferPtr, remainingSize);
 
-                        tailPtr += remainingSize;
-                        totalEventSize += eventSizeInBytes;
+                        tailPtr += remainingSize.AlignToMultipleOf(InputEvent.kAlignment);
+                        totalEventSize += eventSizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
                         if (tailPtr >= endPtr)
                             break;
@@ -482,10 +482,14 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Resize the current event memory buffer to the specified size.
         /// </summary>
-        /// <param name="newBufferSize"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public bool Resize(long newBufferSize)
+        /// <param name="newBufferSize">Size to allocate for the buffer.</param>
+        /// <param name="newMaxBufferSize">Optional parameter to specifying the mark up to which the buffer is allowed to grow. By default,
+        /// this is negative which indicates the buffer should not grow. In this case, <see cref="maxSizeInBytes"/> will be set
+        /// to <paramref name="newBufferSize"/>. If this parameter is a non-negative number, it must be greater than or equal to
+        /// <paramref name="newBufferSize"/> and will become the new value for <see cref="maxSizeInBytes"/>.</param>
+        /// <returns>True if the new buffer was successfully allocated.</returns>
+        /// <exception cref="ArgumentException"><paramref name="newBufferSize"/> is negative.</exception>
+        public bool Resize(long newBufferSize, long newMaxBufferSize = -1)
         {
             if (newBufferSize <= 0)
                 throw new ArgumentException("Size must be positive", nameof(newBufferSize));
@@ -493,8 +497,11 @@ namespace UnityEngine.InputSystem.LowLevel
             if (m_EventBufferSize == newBufferSize)
                 return true;
 
+            if (newMaxBufferSize < newBufferSize)
+                newMaxBufferSize = newBufferSize;
+
             // Allocate.
-            var newEventBuffer = (byte*)UnsafeUtility.Malloc(newBufferSize, 4, Allocator.Persistent);
+            var newEventBuffer = (byte*)UnsafeUtility.Malloc(newBufferSize, InputEvent.kAlignment, Allocator.Persistent);
             if (newEventBuffer == default)
                 return false;
 
@@ -514,7 +521,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     for (var i = 0; i < m_EventCount; ++i)
                     {
                         var eventSizeInBytes = fromPtr.sizeInBytes;
-                        var alignedEventSizeInBytes = eventSizeInBytes.AlignToMultipleOf(4);
+                        var alignedEventSizeInBytes = eventSizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
                         // We only start copying once we know that the remaining events we have fit in the new buffer.
                         // This way we get the newest events and not the oldest ones.
@@ -551,9 +558,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventBuffer = newEventBuffer;
             m_EventBufferHead = newEventBuffer;
             m_EventBufferTail = m_EventBuffer + m_EventSizeInBytes;
-
-            if (m_MaxEventBufferSize < newBufferSize)
-                m_MaxEventBufferSize = newBufferSize;
+            m_MaxEventBufferSize = newMaxBufferSize;
 
             ++m_ChangeCounter;
 
@@ -748,7 +753,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         private void Allocate()
         {
-            m_EventBuffer = (byte*)UnsafeUtility.Malloc(m_EventBufferSize, 4, Allocator.Persistent);
+            m_EventBuffer = (byte*)UnsafeUtility.Malloc(m_EventBufferSize, InputEvent.kAlignment, Allocator.Persistent);
         }
 
         private void Release()
@@ -800,7 +805,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (m_EventBuffer == default)
                 return;
 
-            var bytesNeeded = inputEvent.sizeInBytes.AlignToMultipleOf(4);
+            var bytesNeeded = inputEvent.sizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
             // Make sure we can fit the event at all.
             if (bytesNeeded > m_MaxEventBufferSize)
@@ -825,7 +830,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 // If we haven't reached the max size yet, grow the buffer.
                 if (m_EventBufferSize < m_MaxEventBufferSize && !m_HasWrapped)
                 {
-                    var increment = Math.Max(m_GrowIncrementSize, bytesNeeded.AlignToMultipleOf(4));
+                    var increment = Math.Max(m_GrowIncrementSize, bytesNeeded.AlignToMultipleOf(InputEvent.kAlignment));
                     var newBufferSize = m_EventBufferSize + increment;
                     if (newBufferSize > m_MaxEventBufferSize)
                         newBufferSize = m_MaxEventBufferSize;
