@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 // Using embedded actions with callbacks or reading values each frame.
 
-public class DocsExampleEmbeddedActions : MonoBehaviour
+public class ExampleEmbeddedActions : MonoBehaviour
 {
     // these embedded actions are configurable in the inspector:
     public InputAction moveAction;

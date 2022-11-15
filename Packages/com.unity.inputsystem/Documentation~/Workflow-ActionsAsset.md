@@ -138,6 +138,9 @@ public class DocsExampleActionsAssetCsWrapper : MonoBehaviour
 
 Whether you use the C# wrapper option, or the inspector reference option, using an Action Asset like this gives you the ability to organize and edit your actions in the Actions Window. It is more flexible than using [embedded actions](Workflow-Embedded.html), and [directly reading device states](Workflow-Direct.html), and is generally a good solution for many projects. However, you can also add one more step of abstraction using the [Player Input component](Workflow-PlayerInput.html), to set up calls to methods based on your Action definitions. 
 
+>[!Note]
+>Because Action Assets can be used in these two different ways (by reference, or by C# wrapper), the code samples used throughout this documentation also vary in which way they are written. Some code samples might use a reference and strings to identify actions, and others might use the C# wrapper method.
+
 See also:
 
 * [Using Action Assets](ActionAssets.html)
