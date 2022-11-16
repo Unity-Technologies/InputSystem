@@ -1596,7 +1596,7 @@ namespace UnityEngine.InputSystem
         {
             public InputControl control { get; internal set; }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder At(InputDevice device, int index)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1610,7 +1610,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithParent(InputControl parent)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1623,7 +1623,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithName(string name)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1634,7 +1634,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithDisplayName(string displayName)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1645,7 +1645,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithShortDisplayName(string shortDisplayName)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1656,7 +1656,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithLayout(InternedString layout)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1667,7 +1667,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithUsages(int startIndex, int count)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1681,7 +1681,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithAliases(int startIndex, int count)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1695,7 +1695,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithChildren(int startIndex, int count)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1709,14 +1709,14 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithStateBlock(InputStateBlock stateBlock)
             {
                 control.m_StateBlock = stateBlock;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithDefaultState(PrimitiveValue value)
             {
                 control.m_DefaultState = value;
@@ -1724,7 +1724,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithMinAndMax(PrimitiveValue min, PrimitiveValue max)
             {
                 control.m_MinValue = min;
@@ -1732,7 +1732,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithProcessor<TProcessor, TValue>(TProcessor processor)
                 where TValue : struct
                 where TProcessor : InputProcessor<TValue>
@@ -1747,21 +1747,21 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder IsNoisy(bool value)
             {
                 control.noisy = value;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder IsSynthetic(bool value)
             {
                 control.synthetic = value;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder DontReset(bool value)
             {
                 control.dontReset = value;
@@ -1770,14 +1770,14 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder IsButton(bool value)
             {
                 control.isButton = value;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Finish()
             {
                 control.isSetupFinished = true;
@@ -1788,7 +1788,7 @@ namespace UnityEngine.InputSystem
         {
             public InputDevice device { get; internal set; }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithName(string name)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1799,7 +1799,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithDisplayName(string displayName)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1810,7 +1810,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithShortDisplayName(string shortDisplayName)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1821,7 +1821,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithLayout(InternedString layout)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1832,7 +1832,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithChildren(int startIndex, int count)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1846,21 +1846,21 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithStateBlock(InputStateBlock stateBlock)
             {
                 device.m_StateBlock = stateBlock;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder IsNoisy(bool value)
             {
                 device.noisy = value;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithControlUsage(int controlIndex, InternedString usage, InputControl control)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1876,7 +1876,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithControlAlias(int controlIndex, InternedString alias)
             {
                 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -1889,14 +1889,14 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithStateOffsetToControlIndexMap(uint[] map)
             {
                 device.m_StateOffsetToControlMap = map;
                 return this;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Finish()
             {
                 device.isSetupFinished = true;
