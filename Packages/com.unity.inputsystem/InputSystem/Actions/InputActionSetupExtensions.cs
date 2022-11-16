@@ -1100,6 +1100,12 @@ namespace UnityEngine.InputSystem
                 return WithGroups(group);
             }
 
+            /// <summary>
+            /// Add all the groups specified in <paramref name="groups"/> to the list of <see cref="InputBinding.groups"/> of the binding.
+            /// </summary>
+            /// <param name="groups">A semi-colon separated list of group names.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
             public BindingSyntax WithGroups(string groups)
             {
                 if (!valid)
@@ -1119,6 +1125,13 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Add an interaction via specified name in <paramref name="interaction"/> to the list of interactions.
+            /// </summary>
+            /// <param name="interaction">Interaction class name</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="ArgumentException">If interaction name is null or empty.</exception>
             public BindingSyntax WithInteraction(string interaction)
             {
                 if (!valid)
@@ -1132,6 +1145,12 @@ namespace UnityEngine.InputSystem
                 return WithInteractions(interaction);
             }
 
+            /// <summary>
+            /// Add the set of interactions specified in <paramref name="interactions"/> to the list of interactions.
+            /// </summary>
+            /// <param name="interactions">A semi-colon separated list of interaction names.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
             public BindingSyntax WithInteractions(string interactions)
             {
                 if (!valid)
@@ -1151,6 +1170,13 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Add an interaction of type specified in <typeparamref name="TInteraction"/> to the list of interactions.
+            /// </summary>
+            /// <typeparam name="TInteraction"></typeparam>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="NotSupportedException">Interaction type has not been registered.</exception>
             public BindingSyntax WithInteraction<TInteraction>()
                 where TInteraction : IInputInteraction
             {
@@ -1164,6 +1190,14 @@ namespace UnityEngine.InputSystem
                 return WithInteraction(interactionName);
             }
 
+            /// <summary>
+            /// Add a processor to the list of <see cref="InputBinding.processors"/> of the binding.
+            /// </summary>
+            /// <param name="processor">Name of the processor, such as &quot;Scale&quot;.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="ArgumentException">The processor name is null or empty.</exception>
+            /// <exception cref="ArgumentException">The processor name contains a semi-colon.</exception>
             public BindingSyntax WithProcessor(string processor)
             {
                 if (!valid)
@@ -1172,11 +1206,17 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException("Processor cannot be null or empty", nameof(processor));
                 if (processor.IndexOf(InputBinding.Separator) != -1)
                     throw new ArgumentException(
-                        $"Interaction string cannot contain separator character '{InputBinding.Separator}'", nameof(processor));
+                        $"Processor string cannot contain separator character '{InputBinding.Separator}'", nameof(processor));
 
                 return WithProcessors(processor);
             }
 
+            /// <summary>
+            /// Add processors to the list of <see cref="InputBinding.processors"/> of the binding.
+            /// </summary>
+            /// <param name="processors">A semi-colon separated list of processor names.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
             public BindingSyntax WithProcessors(string processors)
             {
                 if (!valid)
@@ -1196,6 +1236,13 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Add a processor to the list of <see cref="InputBinding.processors"/> of the binding.
+            /// </summary>
+            /// <typeparam name="TProcessor">Type of processor.</typeparam>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="NotSupportedException">Processor type has not been registered.</exception>
             public BindingSyntax WithProcessor<TProcessor>()
             {
                 if (!valid)
@@ -1208,6 +1255,14 @@ namespace UnityEngine.InputSystem
                 return WithProcessor(processorName);
             }
 
+            /// <summary>
+            /// Specify which action to trigger.
+            /// </summary>
+            /// <param name="action">Action to trigger.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid.</exception>
+            /// <exception cref="ArgumentNullException">Provided action is null.</exception>
+            /// <exception cref="ArgumentException">Provided action is a singleton action (not part of any action maps).</exception>
             public BindingSyntax Triggering(InputAction action)
             {
                 if (!valid)
@@ -1339,18 +1394,20 @@ namespace UnityEngine.InputSystem
             /// binding (see <see cref="InputSystem.RegisterBindingComposite"/></param>).
             /// <returns>A write accessor to the next composite binding or an invalid accessor (see
             /// <see cref="valid"/>) if no such binding was found.</returns>
-            /// <remarks>
-            /// <example>
-            /// <code>
-            /// var accessor = playerInput.actions["fire"].ChangeCompositeBinding("WASD")
-            /// </code>
-            /// </example>
-            /// </remarks>
             public BindingSyntax NextCompositeBinding(string compositeName = null)
             {
                 return IterateCompositeBinding(true, compositeName);
             }
 
+            /// <summary>
+            /// Iterate to the previous composite binding.
+            /// </summary>
+            /// <param name="compositeName">If <c>null</c> (default), an accessor to the previous composite binding,
+            /// regardless of name or type, is returned. If it is not <c>null</c>, can be either the name of
+            /// the binding (see <see cref="InputBinding.name"/>) or the name of the composite used in the
+            /// binding (see <see cref="InputSystem.RegisterBindingComposite"/>).</param>
+            /// <returns>A write accessor to the previous composite binding or an invalid accessor (see
+            /// <see cref="valid"/>) if no such binding was found.</returns>
             public BindingSyntax PreviousCompositeBinding(string compositeName = null)
             {
                 return IterateCompositeBinding(false, compositeName);
@@ -1468,6 +1525,14 @@ namespace UnityEngine.InputSystem
                     m_ActionMap.m_SingletonAction.m_SingletonActionBindings = m_ActionMap.m_Bindings;
             }
 
+            /// <summary>
+            /// Insert a composite part into a composite binding.
+            /// </summary>
+            /// <param name="partName">Name of the part in composite binding.</param>
+            /// <param name="path">Control path to bind to.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="ArgumentNullException">Part name is null or empty.</exception>
+            /// <exception cref="InvalidOperationException">The binding accessor is invalid or the binding accessor is not pointing to composite or part binding.</exception>
             public BindingSyntax InsertPartBinding(string partName, string path)
             {
                 if (string.IsNullOrEmpty(partName))
@@ -1487,6 +1552,26 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: remove this and merge it into BindingSyntax
+        /// <summary>
+        /// Write accessor to a composite binding.
+        /// </summary>
+        /// <remarks>
+        /// To add a composite binding to an action, you must first call <see cref="InputActionSetupExtensions.AddCompositeBinding"/>
+        /// and then use the CompositeSyntax struct to add composite parts.
+        /// <example>
+        /// <code>
+        /// playerInput.actions["fire"]
+        ///     .ChangeBinding(0)
+        ///     .AddCompositeBinding("2DVector")
+        ///     .With("Up", "&lt;Keyboard&gt;/w")
+        ///     .With("Down", "&lt;Keyboard&gt;/s")
+        ///     .With("Left", "&lt;Keyboard&gt;/a")
+        ///     .With("Right", "&lt;Keyboard&gt;/d");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="AddBinding(InputAction,InputBinding)"/>
+        /// <seealso cref="ChangeBinding(InputAction,int)"/>
         public struct CompositeSyntax
         {
             private readonly InputAction m_Action;
@@ -1553,6 +1638,9 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Write accessor to a control scheme.
+        /// </summary>
         public struct ControlSchemeSyntax
         {
             private readonly InputActionAsset m_Asset;
@@ -1573,6 +1661,12 @@ namespace UnityEngine.InputSystem
                 m_ControlScheme = controlScheme;
             }
 
+            /// <summary>
+            /// Sets a binding group for control scheme.
+            /// </summary>
+            /// <param name="bindingGroup">A binding group. See <see cref="InputBinding.groups"/>.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <exception cref="ArgumentNullException">If provided name is null or empty.</exception>
             public ControlSchemeSyntax WithBindingGroup(string bindingGroup)
             {
                 if (string.IsNullOrEmpty(bindingGroup))
@@ -1586,48 +1680,108 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Adds a required device to control scheme.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax WithRequiredDevice<TDevice>()
                 where TDevice : InputDevice
             {
                 return WithRequiredDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Adds an optional device to control scheme.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <see cref="InputControlScheme.DeviceRequirement.isOptional"/>
             public ControlSchemeSyntax WithOptionalDevice<TDevice>()
                 where TDevice : InputDevice
             {
                 return WithOptionalDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Combines another required device with the previous device using boolean OR
+            /// logic such that either the previous device or this device are required to be present.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <remarks>
+            /// <example>
+            /// <code>
+            /// // Create an .inputactions asset.
+            /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+            ///
+            /// asset.AddControlScheme("KeyboardAndMouseOrPen")
+            ///     .WithRequiredDevice("&lt;Keyboard&gt;")
+            ///     .WithRequiredDevice("&lt;Mouse&gt;")
+            ///     .OrWithRequiredDevice("&lt;Pen&gt;")
+            /// </code>
+            /// </example>
+            /// </remarks>
+            /// <see cref="InputControlScheme.DeviceRequirement.isOR"/>
             public ControlSchemeSyntax OrWithRequiredDevice<TDevice>()
                 where TDevice : InputDevice
             {
-                return WithRequiredDevice(DeviceTypeToControlPath<TDevice>());
+                return OrWithRequiredDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Combines another optional device with the previous device using boolean OR
+            /// logic such that either the previous device or this device are required to be present.
+            /// If this is the last device in a chain of OR'd devices, the entire chain of
+            /// devices becomes optional.
+            /// </summary>
+            /// <typeparam name="TDevice">Type of device.</typeparam>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
+            /// <see cref="InputControlScheme.DeviceRequirement.isOR"/>
             public ControlSchemeSyntax OrWithOptionalDevice<TDevice>()
                 where TDevice : InputDevice
             {
-                return WithOptionalDevice(DeviceTypeToControlPath<TDevice>());
+                return OrWithOptionalDevice(DeviceTypeToControlPath<TDevice>());
             }
 
+            /// <summary>
+            /// Adds a required device to control scheme.
+            /// </summary>
+            /// <param name="controlPath">Device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax WithRequiredDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.None);
                 return this;
             }
 
+            /// <summary>
+            /// Add an optional device to the control scheme.
+            /// </summary>
+            /// <param name="controlPath">The device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax WithOptionalDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Optional);
                 return this;
             }
 
+            /// <summary>
+            /// Adds another possible required device to the control scheme.
+            /// </summary>
+            /// <param name="controlPath">Device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax OrWithRequiredDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath, InputControlScheme.DeviceRequirement.Flags.Or);
                 return this;
             }
 
+            /// <summary>
+            /// Adds another possible optional device to control scheme.
+            /// </summary>
+            /// <param name="controlPath">Device path, like &lt;Gamepad&gt;.</param>
+            /// <returns>The same control scheme syntax for further configuration.</returns>
             public ControlSchemeSyntax OrWithOptionalDevice(string controlPath)
             {
                 AddDeviceEntry(controlPath,
@@ -1645,6 +1799,10 @@ namespace UnityEngine.InputSystem
                 return $"<{layoutName}>";
             }
 
+            /// <summary>
+            /// Builds a control scheme.
+            /// </summary>
+            /// <returns>A control scheme.</returns>
             public InputControlScheme Done()
             {
                 if (m_Asset != null)
