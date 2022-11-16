@@ -159,14 +159,90 @@ namespace UnityEngine.InputSystem.Editor
             for (var i = 0; i < controlCount; ++i)
             {
                 var control = allControls[i];
+                var controlType = control.GetType();
+                var controlTypeName = controlType.FullName.Replace('+', '.');
                 var controlVariableName = MakeControlVariableName(control);
+                var controlFieldInits = control.GetInitializersForPublicPrimitiveTypeFields();
 
                 writer.WriteLine("");
                 writer.WriteLine($"// {control.path}");
                 var parentName = "this";
                 if (control.parent != device)
                     parentName = MakeControlVariableName(control.parent);
-                writer.WriteLine($"var {controlVariableName} = {NameOfControlMethod(controlVariableName)}(k{control.layout}Layout, {parentName});");
+                
+                //writer.BeginBlock();
+                writer.WriteLine($"var {controlVariableName} = new {controlTypeName}{controlFieldInits};");
+                writer.WriteLine($"{controlVariableName}.Setup()");
+                writer.WriteLine($"    .At(this, {i})");
+                writer.WriteLine($"    .WithParent({parentName})");
+                if (control.children.Count > 0)
+                    writer.WriteLine($"    .WithChildren({control.m_ChildStartIndex}, {control.m_ChildCount})");
+                writer.WriteLine($"    .WithName(\"{control.name}\")");
+                writer.WriteLine($"    .WithDisplayName(\"{control.m_DisplayNameFromLayout.Replace("\\", "\\\\")}\")");
+                if (!string.IsNullOrEmpty(control.m_ShortDisplayNameFromLayout))
+                    writer.WriteLine(
+                        $"    .WithShortDisplayName(\"{control.m_ShortDisplayNameFromLayout.Replace("\\", "\\\\")}\")");
+                writer.WriteLine($"    .WithLayout(k{control.layout}Layout)");
+                if (control.usages.Count > 0)
+                    writer.WriteLine($"    .WithUsages({control.m_UsageStartIndex}, {control.m_UsageCount})");
+                if (control.aliases.Count > 0)
+                    writer.WriteLine($"    .WithAliases({control.m_AliasStartIndex}, {control.m_AliasCount})");
+                if (control.noisy)
+                    writer.WriteLine("    .IsNoisy(true)");
+                if (control.synthetic)
+                    writer.WriteLine("    .IsSynthetic(true)");
+                if (control.dontReset)
+                    writer.WriteLine("    .DontReset(true)");
+                if (control is ButtonControl)
+                    writer.WriteLine("    .IsButton(true)");
+                writer.WriteLine("    .WithStateBlock(new InputStateBlock");
+                writer.WriteLine("    {");
+                writer.WriteLine($"        format = new FourCC({(int) control.stateBlock.format}),");
+                writer.WriteLine($"        byteOffset = {control.stateBlock.byteOffset},");
+                writer.WriteLine($"        bitOffset = {control.stateBlock.bitOffset},");
+                writer.WriteLine($"        sizeInBits = {control.stateBlock.sizeInBits}");
+                writer.WriteLine("    })");
+                if (control.hasDefaultState)
+                    writer.WriteLine($"    .WithDefaultState({control.m_DefaultState})");
+                if (control.m_MinValue != default || control.m_MaxValue != default)
+                    writer.WriteLine($"    .WithMinAndMax({control.m_MinValue}, {control.m_MaxValue})");
+                foreach (var processor in control.GetProcessors())
+                {
+                    var isEditorWindowSpaceProcessor = processor is EditorWindowSpaceProcessor;
+                    if (isEditorWindowSpaceProcessor)
+                        writer.WriteLine("    #if UNITY_EDITOR");
+
+                    var processorType = processor.GetType().FullName.Replace("+", ".");
+                    var valueType = InputProcessor.GetValueTypeFromType(processor.GetType());
+                    var fieldInits = processor.GetInitializersForPublicPrimitiveTypeFields();
+
+                    writer.WriteLine(
+                        $"    .WithProcessor<InputProcessor<{valueType}>, {valueType}>(new {processorType}{fieldInits})");
+
+                    if (isEditorWindowSpaceProcessor)
+                        writer.WriteLine("    #endif");
+                }
+
+                writer.WriteLine("    .Finish();");
+
+                if (control is KeyControl key)
+                    writer.WriteLine($"{controlVariableName}.keyCode = UnityEngine.InputSystem.Key.{key.keyCode};");
+                else if (control is DpadControl.DpadAxisControl dpadAxis)
+                    writer.WriteLine($"{controlVariableName}.component = {dpadAxis.component};");
+
+                //writer.WriteLine($"return {controlVariableName};");
+
+                //writer.WriteLine($"var {controlVariableName} = {NameOfControlMethod(controlVariableName)}(k{control.layout}Layout, {parentName});");
+                // for (var i = 0; i < controlCount; ++i)
+                // {
+                //     var control = allControls[i];
+                //     var controlType = control.GetType();
+                //     var controlVariableName = MakeControlVariableName(control);
+                //     var controlFieldInits = control.GetInitializersForPublicPrimitiveTypeFields();
+                //     writer.WriteLine();
+                //     EmitControlMethod(writer, controlVariableName, controlType, controlFieldInits, i, control);
+                // }
+
             }
 
             // Initialize usages array.
@@ -236,15 +312,15 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("builder.Finish();");
             writer.EndBlock();
 
-            for (var i = 0; i < controlCount; ++i)
-            {
-                var control = allControls[i];
-                var controlType = control.GetType();
-                var controlVariableName = MakeControlVariableName(control);
-                var controlFieldInits = control.GetInitializersForPublicPrimitiveTypeFields();
-                writer.WriteLine();
-                EmitControlMethod(writer, controlVariableName, controlType, controlFieldInits, i, control);
-            }
+            // for (var i = 0; i < controlCount; ++i)
+            // {
+            //     var control = allControls[i];
+            //     var controlType = control.GetType();
+            //     var controlVariableName = MakeControlVariableName(control);
+            //     var controlFieldInits = control.GetInitializersForPublicPrimitiveTypeFields();
+            //     writer.WriteLine();
+            //     EmitControlMethod(writer, controlVariableName, controlType, controlFieldInits, i, control);
+            // }
 
             writer.EndBlock();
             writer.EndBlock();
