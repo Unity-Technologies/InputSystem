@@ -510,23 +510,6 @@ namespace UnityEngine.InputSystem
         public TouchControl primaryTouch { get; protected set; }
 
         /// <summary>
-        /// Gets the index of the display that was touched.
-        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
-        /// </summary>
-        public override IntegerControl displayIndex
-        {
-            get
-            {
-                return primaryTouch.displayIndex;
-            }
-
-            protected set
-            {
-                primaryTouch.displayIndex = value;
-            }
-        }
-
-        /// <summary>
         /// Array of all <see cref="TouchControl"/>s on the device.
         /// </summary>
         /// <value>All <see cref="TouchControl"/>s on the screen.</value>
@@ -572,6 +555,7 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
 
             primaryTouch = GetChildControl<TouchControl>("primaryTouch");
+            displayIndex = primaryTouch.displayIndex;
 
             // Find out how many touch controls we have.
             var touchControlCount = 0;

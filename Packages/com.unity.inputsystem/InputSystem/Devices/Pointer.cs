@@ -60,6 +60,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "press", displayName = "Press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
 
+        [InputControl(name = "displayIndex", layout = "Integer", displayName = "Display Index")]
+        public ushort displayIndex;
+
         public FourCC format => kFormat;
     }
 }
@@ -182,8 +185,9 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// The index of the display that was pointed.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
         /// </summary>
-        public virtual IntegerControl displayIndex { get; protected set; }
+        public IntegerControl displayIndex { get; protected set; }
 
         /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
@@ -215,6 +219,7 @@ namespace UnityEngine.InputSystem
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
             press = GetChildControl<ButtonControl>("press");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
 
             base.FinishSetup();
         }
