@@ -1676,13 +1676,7 @@ namespace UnityEngine.InputSystem.UI
             // Early out if it's the last used pointer.
             // NOTE: Can't just compare by device here because of touchscreens potentially having multiple associated pointers.
             if (m_CurrentPointerId == pointerId)
-            {
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
-                ref var state = ref GetPointerStateForIndex(m_CurrentPointerIndex);
-                state.eventData.displayIndex = displayIndex;
-#endif
                 return m_CurrentPointerIndex;
-            }
 
             // Search m_PointerIds for an existing entry.
             // NOTE: This is a linear search but m_PointerIds is only IDs and the number of concurrent pointers
