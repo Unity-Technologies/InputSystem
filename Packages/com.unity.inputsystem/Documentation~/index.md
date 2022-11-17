@@ -1,4 +1,6 @@
-# Input System Introduction
+# Input System
+
+## Introduction
 
 **Input** allows your users to control your game or app using a device, touch, or gestures. 
 
