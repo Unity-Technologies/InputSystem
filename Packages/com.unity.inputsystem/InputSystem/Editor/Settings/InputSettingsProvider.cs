@@ -145,6 +145,19 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
 
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                EditorGUILayout.PropertyField(m_ShortcutKeysConsumeInputs, m_ShortcutKeysConsumeInputsContent);
+                if (m_ShortcutKeysConsumeInputs.boolValue)
+                    EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
+                        + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
+                        + "Therefore actions requiring less keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
+                        + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
+                        + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
+                        + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
+                        , MessageType.None);
+
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
@@ -268,6 +281,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
+            m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
@@ -295,6 +309,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
+            m_ShortcutKeysConsumeInputsContent = new GUIContent("Enable Input Consumption", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -404,6 +419,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
+        [NonSerialized] private SerializedProperty m_ShortcutKeysConsumeInputs;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
@@ -426,6 +442,7 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_DefaultHoldTimeContent;
         private GUIContent m_TapRadiusContent;
         private GUIContent m_MultiTapDelayTimeContent;
+        private GUIContent m_ShortcutKeysConsumeInputsContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 

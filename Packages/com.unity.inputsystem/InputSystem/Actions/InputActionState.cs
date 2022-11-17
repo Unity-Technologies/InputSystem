@@ -2403,7 +2403,11 @@ namespace UnityEngine.InputSystem
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group.
                 // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1)
+                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1 &&
+                    // we can end up switching to performed state from an interaction with a timeout, at which point
+                    // the original event will probably have been removed from memory, so make sure to check
+                    // we still have one
+                    m_CurrentlyProcessingThisEvent.valid)
                     m_CurrentlyProcessingThisEvent.handled = true;
             }
             else if (newPhase == InputActionPhase.Canceled)

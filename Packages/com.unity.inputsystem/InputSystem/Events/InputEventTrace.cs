@@ -342,7 +342,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
                 else
                 {
-                    buffer = (byte*)UnsafeUtility.Malloc((long)totalEventSizeInBytes, 4, Allocator.Persistent);
+                    buffer = (byte*)UnsafeUtility.Malloc((long)totalEventSizeInBytes, InputEvent.kAlignment, Allocator.Persistent);
                     m_EventBufferSize = (long)totalEventSizeInBytes;
                 }
                 try
@@ -373,8 +373,8 @@ namespace UnityEngine.InputSystem.LowLevel
                         fixed(byte* tempBufferPtr = tempBuffer)
                         UnsafeUtility.MemCpy(tailPtr, tempBufferPtr, remainingSize);
 
-                        tailPtr += remainingSize;
-                        totalEventSize += eventSizeInBytes;
+                        tailPtr += remainingSize.AlignToMultipleOf(InputEvent.kAlignment);
+                        totalEventSize += eventSizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
                         if (tailPtr >= endPtr)
                             break;
@@ -501,7 +501,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 newMaxBufferSize = newBufferSize;
 
             // Allocate.
-            var newEventBuffer = (byte*)UnsafeUtility.Malloc(newBufferSize, 4, Allocator.Persistent);
+            var newEventBuffer = (byte*)UnsafeUtility.Malloc(newBufferSize, InputEvent.kAlignment, Allocator.Persistent);
             if (newEventBuffer == default)
                 return false;
 
@@ -521,7 +521,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     for (var i = 0; i < m_EventCount; ++i)
                     {
                         var eventSizeInBytes = fromPtr.sizeInBytes;
-                        var alignedEventSizeInBytes = eventSizeInBytes.AlignToMultipleOf(4);
+                        var alignedEventSizeInBytes = eventSizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
                         // We only start copying once we know that the remaining events we have fit in the new buffer.
                         // This way we get the newest events and not the oldest ones.
@@ -753,7 +753,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         private void Allocate()
         {
-            m_EventBuffer = (byte*)UnsafeUtility.Malloc(m_EventBufferSize, 4, Allocator.Persistent);
+            m_EventBuffer = (byte*)UnsafeUtility.Malloc(m_EventBufferSize, InputEvent.kAlignment, Allocator.Persistent);
         }
 
         private void Release()
@@ -805,7 +805,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (m_EventBuffer == default)
                 return;
 
-            var bytesNeeded = inputEvent.sizeInBytes.AlignToMultipleOf(4);
+            var bytesNeeded = inputEvent.sizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
             // Make sure we can fit the event at all.
             if (bytesNeeded > m_MaxEventBufferSize)
@@ -830,7 +830,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 // If we haven't reached the max size yet, grow the buffer.
                 if (m_EventBufferSize < m_MaxEventBufferSize && !m_HasWrapped)
                 {
-                    var increment = Math.Max(m_GrowIncrementSize, bytesNeeded.AlignToMultipleOf(4));
+                    var increment = Math.Max(m_GrowIncrementSize, bytesNeeded.AlignToMultipleOf(InputEvent.kAlignment));
                     var newBufferSize = m_EventBufferSize + increment;
                     if (newBufferSize > m_MaxEventBufferSize)
                         newBufferSize = m_MaxEventBufferSize;
