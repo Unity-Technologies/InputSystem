@@ -42,7 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
-- Documentation improvements: New workflows and concepts pages. Reorganised table of contents. Improved some code samples. Updated screenshots. 
+- Documentation improvements: New workflows and concepts pages. Reorganised table of contents. Improved some code samples. Updated screenshots.
 
 ## [1.4.2] - 2022-08-12
 

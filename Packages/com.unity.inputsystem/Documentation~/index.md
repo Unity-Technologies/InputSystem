@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**Input** allows your users to control your game or app using a device, touch, or gestures. 
+**Input** allows your users to control your game or app using a device, touch, or gestures.
 
 Unity supports input through two separate systems, one older, and one newer.
 

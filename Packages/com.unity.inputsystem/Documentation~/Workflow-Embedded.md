@@ -82,4 +82,3 @@ You can find an example of this workflow in the sample projects included with th
 Using InputActions also makes it easier to implement a system to allow the user to remap their own controls at run time.
 
 Using embedded actions like this is more flexible than [directly reading device states](Workflow-Direct.html), but less flexible than using an [actions asset](Workflow-ActionsAsset.html).
-

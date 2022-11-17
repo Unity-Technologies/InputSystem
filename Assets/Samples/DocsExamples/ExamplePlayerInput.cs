@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 // This script is designed to have the OnMove and
@@ -24,5 +24,4 @@ public class ExamplePlayerInput : MonoBehaviour
         // to use the Vector2 value from the "move" action each
         // frame, use the "moveAmount" variable here.
     }
-
 }
