@@ -111,9 +111,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
 
             // Remove from list.
-            var numPointers = m_NumPointers;
+            var originalNumPointers = m_NumPointers;
             m_Pointers.EraseAtWithCapacity(ref m_NumPointers, pointerIndex);
+            var numPointers = originalNumPointers;
             m_CurrentPositions.EraseAtWithCapacity(ref numPointers, pointerIndex);
+            numPointers = originalNumPointers;
             m_CurrentDisplayIndices.EraseAtWithCapacity(ref numPointers, pointerIndex);
 
             // Re-enable the device (only in case it's still added to the system).
