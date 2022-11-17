@@ -652,9 +652,7 @@ namespace UnityEngine.InputSystem
                 position = position,
                 delta = delta,
                 pressure = pressure,
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
                 displayIndex = displayIndex,
-#endif
             }, (time >= 0 ? time : InputState.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();

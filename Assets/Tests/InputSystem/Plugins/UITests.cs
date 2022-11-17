@@ -3798,7 +3798,8 @@ internal class UITests : CoreTestsFixture
     }
 
     #region Multi Display Tests
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
+// displayIndex is only available in UGUI v1.1.0 which is available from 2023.1 onwards
+#if UNITY_2023_1_OR_NEWER
     [UnityTest]
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnScreenSpaceCanvas()
     {
@@ -4367,7 +4368,7 @@ internal class UITests : CoreTestsFixture
                 radius = eventData.radius,
                 radiusVariance = eventData.radiusVariance,
 #endif
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
+#if UNITY_2023_1_OR_NEWER
                 displayIndex = eventData.displayIndex,
 #endif
             };
