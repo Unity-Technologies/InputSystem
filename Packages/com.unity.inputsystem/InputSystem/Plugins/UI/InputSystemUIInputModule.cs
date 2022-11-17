@@ -1662,13 +1662,11 @@ namespace UnityEngine.InputSystem.UI
             }
 
             int displayIndex = 0;
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
             if (device is Pointer pointerCast)
             {
                 displayIndex = pointerCast.displayIndex.ReadValue();
                 Debug.Assert(displayIndex <= byte.MaxValue, "Display index was larger than expected");
             }
-#endif
 
             if (touchId != 0)
                 pointerId = ExtendedPointerEventData.MakePointerIdForTouch(pointerId, touchId);
@@ -1761,12 +1759,12 @@ namespace UnityEngine.InputSystem.UI
                     eventData.device = device;
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
+                    eventData.touchId = touchId;
 
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
+// displayIndex is only available in UGUI v1.1.0 which is available from 2023.1 onwards
+#if UNITY_2023_1_OR_NEWER
                     eventData.displayIndex = displayIndex;
 #endif
-
-                    eventData.touchId = touchId;
 
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
@@ -1861,7 +1859,7 @@ namespace UnityEngine.InputSystem.UI
 
             eventData.pointerId = pointerId;
 
-#if UNITY_2023_1_OR_NEWER && (UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_ANDROID)
+#if UNITY_2023_1_OR_NEWER
             eventData.displayIndex = displayIndex;
 #endif
 
