@@ -116,11 +116,12 @@ build_tvos_{{ editor.version }}:
   agent:
     type: Unity::VM::osx # Use Unity::mobile::appletv to get tvOS device
     # TODO this should be replaced with package-ci/macos-12:default when PETS-1172 is complete
-    image: package-ci/macos-12-mobile:stable
+    image: package-ci/macos-12:default
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
     - {{ unity_downloader_install }}
+    - sudo /Applications/Xcode14.app/Contents/Developer/usr/bin/xcodebuild -downloadAllPlatforms
     - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
     - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
