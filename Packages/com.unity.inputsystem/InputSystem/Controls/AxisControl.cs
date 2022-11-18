@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
 
-////TODO: if AxisControl fields where properties, we wouldn't need ApplyParameterChanges, maybe it's ok breaking change? 
+////TODO: if AxisControl fields where properties, we wouldn't need ApplyParameterChanges, maybe it's ok breaking change?
 
 namespace UnityEngine.InputSystem.Controls
 {

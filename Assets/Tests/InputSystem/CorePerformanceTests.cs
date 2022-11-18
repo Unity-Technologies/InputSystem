@@ -546,18 +546,18 @@ internal class CorePerformanceTests : CoreTestsFixture
     {
         var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
-        
+
         var mouse = InputSystem.AddDevice<Mouse>();
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatVector2 : InputStateBlock.FormatInvalid));
 
         Measure.Method(() =>
-            {
-                var pos = new Vector2();
-                for(var i = 0; i < 100000; ++i)
-                    pos += mouse.position.ReadValue();
-            })
+        {
+            var pos = new Vector2();
+            for (var i = 0; i < 100000; ++i)
+                pos += mouse.position.ReadValue();
+        })
             .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
@@ -576,20 +576,21 @@ internal class CorePerformanceTests : CoreTestsFixture
         runtime.ReportNewInputDevice(XRTests.PoseDeviceState.CreateDeviceDescription().ToJson());
 
         InputSystem.Update();
-        
+
         var device = InputSystem.devices[0];
 
         var poseControl = device["posecontrol"] as UnityEngine.InputSystem.XR.PoseControl;
         Assert.That(poseControl.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatPose : InputStateBlock.FormatInvalid));
 
         Measure.Method(() =>
-            {
-                for(var i = 0; i < 4000; ++i)
-                    poseControl.ReadValue();
-            })
+        {
+            for (var i = 0; i < 4000; ++i)
+                poseControl.ReadValue();
+        })
             .MeasurementCount(100)
             .WarmupCount(5)
             .Run();
     }
+
 #endif
 }
