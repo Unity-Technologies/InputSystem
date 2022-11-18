@@ -1021,7 +1021,7 @@ internal class XRTests : CoreTestsFixture
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    unsafe struct PoseDeviceState : IInputStateTypeInfo
+    internal unsafe struct PoseDeviceState : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte isTracked;
         [FieldOffset(4)] public uint trackingState;
