@@ -72,7 +72,7 @@ partial class CoreTests
     [TestCase(false)]
     public void Actions_WhenShortcutsEnabled_CanConsumeInput(bool legacyComposites)
     {
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, false);
+        InputSystem.settings.shortcutKeysConsumeInput = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -164,7 +164,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_ShortcutSupportDisabledByDefault()
     {
-        Assert.That(InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport), Is.True);
+        Assert.That(InputSystem.settings.shortcutKeysConsumeInput, Is.False);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -252,7 +252,7 @@ partial class CoreTests
     [TestCase("leftShift", "leftAlt", "space", false)]
     public void Actions_WhenShortcutsEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
     {
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, false);
+        InputSystem.settings.shortcutKeysConsumeInput = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -330,7 +330,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenShortcutsAreEnabled_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
     {
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, false);
+        InputSystem.settings.shortcutKeysConsumeInput = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -8229,7 +8229,7 @@ partial class CoreTests
     public void Actions_CompositesInDifferentMapsTiedToSameControlsWork()
     {
         // This test relies on the same single input getting picked up by two different composites.
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+        InputSystem.settings.shortcutKeysConsumeInput = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -10204,7 +10204,7 @@ partial class CoreTests
     [TestCase(false)]
     public void Actions_ImprovedShortcutSupport_ConsumesWASD(bool shortcutsEnabled)
     {
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, !shortcutsEnabled);
+        InputSystem.settings.shortcutKeysConsumeInput = shortcutsEnabled;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 

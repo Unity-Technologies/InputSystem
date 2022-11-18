@@ -152,9 +152,10 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ShortcutKeysConsumeInputs.boolValue)
                     EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
                         + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
-                        + "Therefore actions requiring less keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
+                        + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
                         + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
                         + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
+                        + "However conflicts would not occur between actions which belong to different Action Assets. "
                         + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
                         , MessageType.None);
 

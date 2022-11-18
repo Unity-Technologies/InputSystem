@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added support for reading Tracking State in [TrackedPoseDriver](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver) to constrain whether the input pose is applied to the Transform. This should be used when the device supports valid flags for the position and rotation values, which is the case for XR poses.
+- Added `InputSettings.shortcutKeysConsumeInput`. This allows programmatic access to opt-in to the enhanced shortcut key behaviour ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 
 ### Fixed
 - Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
