@@ -82,10 +82,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 return;
 
             // Add to list.
-            var numPointers = m_NumPointers;
             ArrayHelpers.AppendWithCapacity(ref m_Pointers, ref m_NumPointers, pointer);
-            ArrayHelpers.AppendWithCapacity(ref m_CurrentPositions, ref numPointers, default);
-            ArrayHelpers.AppendWithCapacity(ref m_CurrentDisplayIndices, ref numPointers, default);
+            ArrayHelpers.Append(ref m_CurrentPositions, default(Vector2));
+            ArrayHelpers.Append(ref m_CurrentDisplayIndices, default(int));
 
             InputSystem.DisableDevice(pointer, keepSendingEvents: true);
         }
@@ -111,12 +110,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
 
             // Remove from list.
-            var originalNumPointers = m_NumPointers;
             m_Pointers.EraseAtWithCapacity(ref m_NumPointers, pointerIndex);
-            var numPointers = originalNumPointers;
-            m_CurrentPositions.EraseAtWithCapacity(ref numPointers, pointerIndex);
-            numPointers = originalNumPointers;
-            m_CurrentDisplayIndices.EraseAtWithCapacity(ref numPointers, pointerIndex);
+            ArrayHelpers.EraseAt(ref m_CurrentPositions, pointerIndex);
+            ArrayHelpers.EraseAt(ref m_CurrentDisplayIndices, pointerIndex);
 
             // Re-enable the device (only in case it's still added to the system).
             if (pointer.added)
