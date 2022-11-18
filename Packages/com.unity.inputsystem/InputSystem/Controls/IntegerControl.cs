@@ -21,8 +21,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc/>
         public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatInt:
@@ -35,8 +33,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc/>
         public override unsafe void WriteValueIntoState(int value, void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatInt:

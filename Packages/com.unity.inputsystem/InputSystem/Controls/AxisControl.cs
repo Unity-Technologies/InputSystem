@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
 
+////TODO: if AxisControl fields where properties, we wouldn't need ApplyParameterChanges, maybe it's ok breaking change? 
+
 namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
@@ -237,8 +239,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatFloat:
@@ -257,8 +257,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatFloat:

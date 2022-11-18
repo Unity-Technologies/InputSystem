@@ -56,8 +56,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatVector2:
@@ -72,8 +70,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatVector2:

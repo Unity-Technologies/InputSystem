@@ -67,8 +67,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc/>
         public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatQuaternion:
@@ -85,8 +83,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc/>
         public override unsafe void WriteValueIntoState(Quaternion value, void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatQuaternion:

@@ -211,8 +211,6 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatPose:
@@ -233,8 +231,6 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(PoseState value, void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatPose:

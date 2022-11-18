@@ -32,8 +32,6 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatVector3:
@@ -48,8 +46,6 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe void WriteValueIntoState(Vector3 value, void* statePtr)
         {
-            EnsureOptimizationTypeHasNotChanged();
-
             switch (m_OptimizedControlDataType)
             {
                 case InputStateBlock.kFormatVector3:

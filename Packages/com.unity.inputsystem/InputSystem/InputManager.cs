@@ -2825,6 +2825,10 @@ namespace UnityEngine.InputSystem
 
             m_CurrentUpdate = updateType;
             InputUpdate.OnUpdate(updateType);
+            
+            // Ensure optimized controls are in valid state
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
