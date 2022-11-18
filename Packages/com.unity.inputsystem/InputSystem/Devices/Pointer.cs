@@ -184,7 +184,8 @@ namespace UnityEngine.InputSystem
         public ButtonControl press { get; protected set; }
 
         /// <summary>
-        /// The index of the display that was pointed.
+        /// The index of the display the Pointer is currently on. This is useful for multiple screen setups.
+        /// This may not be supported on all platforms. When unsupported, this will always produce the index of the primary display i.e. zero.
         /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
         /// </summary>
         public IntegerControl displayIndex { get; protected set; }
