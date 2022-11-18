@@ -447,14 +447,16 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
         /// <seealso cref="InputBinding"/>
         /// <seealso cref="InputActionMap.bindings"/>
+        /// <remarks>
+        /// Example of adding a binding to an action map that binds to a Gamepad device "leftStick" control and associates it with an action:
         /// <example>
         /// <code>
-        /// // Adds a binding to map that binds to a Gamepad device "leftStick" control and associates it with action.
         /// var map = new InputActionMap();
         /// var action = map.AddAction("action");
         /// map.AddBinding("<Gamepad>/leftStick", action: action.id);
         /// </code>
         /// </example>
+        /// </remarks>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, string path, Guid action,
             string interactions = null, string groups = null)
         {
