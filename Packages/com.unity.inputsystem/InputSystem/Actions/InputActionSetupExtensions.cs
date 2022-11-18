@@ -433,28 +433,6 @@ namespace UnityEngine.InputSystem
                 action: action.id);
         }
 
-        /// <summary>
-        /// Add a new binding that triggers the action given by GUID <paramref name="action"/>.
-        /// </summary>
-        /// <param name="actionMap">Action map to add the binding to.</param>
-        /// <param name="path">Path of the control(s) to bind to. See <see cref="InputControlPath"/> and <see cref="InputBinding.path"/>.</param>
-        /// <param name="action">ID of the action as per <see cref="InputAction.id"/>.</param>
-        /// <param name="interactions">Optional list of names and parameters for interactions to apply to the
-        /// binding. See <see cref="InputBinding.interactions"/>.</param>
-        /// <param name="groups">Optional list of groups to apply to the binding. See <see cref="InputBinding.groups"/>.</param>
-        /// <returns>A write-accessor to the newly added binding.</returns>
-        /// <exception cref="ArgumentException"><paramref name="action"/> is not part of <paramref name="actionMap"/>.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
-        /// <seealso cref="InputBinding"/>
-        /// <seealso cref="InputActionMap.bindings"/>
-        /// <example>
-        /// <code>
-        /// // Adds a binding to map that binds to a Gamepad device "leftStick" control and associates it with action.
-        /// var map = new InputActionMap();
-        /// var action = map.AddAction("action");
-        /// map.AddBinding("<Gamepad>/leftStick", action: action.id);
-        /// </code>
-        /// </example>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, string path, Guid action,
             string interactions = null, string groups = null)
         {
@@ -464,16 +442,6 @@ namespace UnityEngine.InputSystem
                 action: action.ToString());
         }
 
-        /// <summary>
-        /// Add a binding to the given action map.
-        /// </summary>
-        /// <param name="actionMap">Action map to add the binding to.</param>
-        /// <param name="binding">Binding to add to the action map.</param>
-        /// <returns>A write-accessor to the newly added binding.</returns>
-        /// <exception cref="ArgumentException"><paramref name="action"/> is not part of <paramref name="actionMap"/>.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
-        /// <seealso cref="InputBinding"/>
-        /// <seealso cref="InputActionMap.bindings"/>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
             if (actionMap == null)
@@ -585,28 +553,6 @@ namespace UnityEngine.InputSystem
             return new BindingSyntax(action.GetOrCreateActionMap(), indexOnMap, action);
         }
 
-        /// <summary>
-        /// Get write access to the binding in <see cref="InputAction.bindings"/> of <paramref name="action"/>
-        /// with the given <paramref name="name"/>.
-        /// </summary>
-        /// <param name="action">Action whose bindings to change.</param>
-        /// <param name="name">Name of the binding to be changed <see cref="InputAction.bindings"/>.</param>
-        /// <returns>A write accessor to the given binding.</returns>
-        /// <remarks>
-        /// <example>
-        /// <code>
-        /// // Grab "fire" action from PlayerInput.
-        /// var fireAction = playerInput.actions["fire"];
-        ///
-        /// // Change its second binding to go to the left mouse button.
-        /// fireAction.ChangeBinding("fire")
-        ///     .WithPath("&lt;Mouse&gt;/leftButton");
-        /// </code>
-        /// </example>
-        /// </remarks>
-        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is out of range (as per <see cref="InputAction.bindings"/>
-        /// of <paramref name="action"/>).</exception>
         public static BindingSyntax ChangeBinding(this InputAction action, string name)
         {
             return action.ChangeBinding(new InputBinding { name = name });
@@ -997,12 +943,6 @@ namespace UnityEngine.InputSystem
             asset.MarkAsDirty();
         }
 
-        /// <summary>
-        /// Associates the control scheme given by <paramref name="scheme"/> with the binding group given by <paramref name="bindingGroup"/>.
-        /// </summary>
-        /// <param name="scheme">The control scheme to modify.</param>
-        /// <param name="bindingGroup">The binding group to be associated with the control scheme.</param>
-        /// <returns><paramref name="scheme"/></returns>
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
@@ -1613,14 +1553,8 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        /// <summary>
-        /// Provides fluent-API style configuration of a <see cref="InputControlScheme"/> instance referenced
-        /// directly or via an <see cref="InputActionAsset"/>.
-        /// </summary>
         public struct ControlSchemeSyntax
         {
-            // REVIEW: Consider removing this for major revision, e.g. v2 or let functionality used by it be internal to reduce API surface.
-
             private readonly InputActionAsset m_Asset;
             private readonly int m_ControlSchemeIndex;
             private InputControlScheme m_ControlScheme;
@@ -1639,12 +1573,6 @@ namespace UnityEngine.InputSystem
                 m_ControlScheme = controlScheme;
             }
 
-            /// <summary>
-            /// Sets or overwrite the binding group of the associated <see cref="InputControlScheme"/> to <paramref name="bindingGroup"/>.
-            /// </summary>
-            /// <param name="bindingGroup">The binding group to be set on the assocaited control scheme.</param>
-            /// <returns>Reference to this <c>ControlSchemeSyntax</c></returns>
-            /// <exception cref="ArgumentNullException">If <paramref name="bindingGroup"/> is <c>null</c>.</exception>
             public ControlSchemeSyntax WithBindingGroup(string bindingGroup)
             {
                 if (string.IsNullOrEmpty(bindingGroup))
@@ -1717,10 +1645,6 @@ namespace UnityEngine.InputSystem
                 return $"<{layoutName}>";
             }
 
-            /// <summary>
-            /// Call this method when done building out the control scheme to return the associated <see cref="InputControlScheme"/> instance.
-            /// </summary>
-            /// <returns>Associated <see cref="InputControlScheme"/> instance, never <c>null<c>.</returns>
             public InputControlScheme Done()
             {
                 if (m_Asset != null)
