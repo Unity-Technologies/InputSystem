@@ -31,3 +31,8 @@ Sonar-Win-Dotnet-SonarScanner:
     logs:
       paths:
         - "**/*.log"
+  triggers:
+    pull_requests:
+      - targets:
+          only:
+            - "develop"
