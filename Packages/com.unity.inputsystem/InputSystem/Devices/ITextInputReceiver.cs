@@ -41,4 +41,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         void OnIMECompositionChanged(IMECompositionString compositionString);
     }
+
+    public interface ITextInputReceiver2
+    {
+	    void OnIMECompositionChanged(char[] buffer, int stringLength);
+    }
 }

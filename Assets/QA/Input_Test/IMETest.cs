@@ -34,6 +34,7 @@ public class IMETest : MonoBehaviour
             {
                 keyboard.onTextInput += OnTextEvent;
                 keyboard.onIMECompositionChange += OnIMECompositionChange;
+                keyboard.onBufferedIMECompositionChange += OnIMECompositionChange;
                 m_AddedTextListeners = true;
             }
         }
@@ -54,6 +55,7 @@ public class IMETest : MonoBehaviour
         {
             keyboard.onTextInput -= OnTextEvent;
             keyboard.onIMECompositionChange -= OnIMECompositionChange;
+            keyboard.onBufferedIMECompositionChange -= OnIMECompositionChange;
         }
         m_AddedTextListeners = false;
     }
@@ -74,6 +76,16 @@ public class IMETest : MonoBehaviour
 
         if (compositionStringText != null)
             compositionStringText.text = this.compositionString;
+    }
+
+    private void OnIMECompositionChange(char[] buffer, int length)
+    {
+	    compositionString = "";
+	    for (var i = 0; i < length; i++)
+		    compositionString += buffer[i];
+
+	    if (compositionStringText != null)
+		    compositionStringText.text = compositionString;
     }
 
     public void Update()

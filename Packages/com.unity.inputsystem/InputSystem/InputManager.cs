@@ -3239,7 +3239,10 @@ namespace UnityEngine.InputSystem
                         {
                             var imeEventPtr = (IMECompositionEvent*)currentEventReadPtr;
                             var textInputReceiver = device as ITextInputReceiver;
-                            textInputReceiver?.OnIMECompositionChanged(imeEventPtr->compositionString);
+                            // textInputReceiver?.OnIMECompositionChanged(imeEventPtr->compositionString);
+                            ((ITextInputReceiver2)textInputReceiver)?.OnIMECompositionChanged(
+	                            CopyToIMECompositionBuffer(imeEventPtr->compositionString), 
+	                            imeEventPtr->compositionString.Count);
                             break;
                         }
 
@@ -3300,6 +3303,26 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback(updateType);
             m_CurrentUpdate = default;
+        }
+
+        private char[] CopyToIMECompositionBuffer(IMECompositionString imeCompositionString)
+        {
+            EnsureIMECompositionBufferSize(imeCompositionString.Count);
+
+	        for (int i = 0; i < imeCompositionString.Count; i++)
+	        {
+		        m_IMECompositionBuffer[i] = imeCompositionString[i];
+	        }
+
+	        return m_IMECompositionBuffer;
+        }
+
+        private char[] m_IMECompositionBuffer = new char[1024];
+
+        private void EnsureIMECompositionBufferSize(int minimumSize)
+        {
+	        if (m_IMECompositionBuffer.Length < minimumSize)
+		        m_IMECompositionBuffer = new char[minimumSize];
         }
 
         private void InvokeAfterUpdateCallback(InputUpdateType updateType)

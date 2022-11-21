@@ -861,7 +861,7 @@ namespace UnityEngine.InputSystem
     /// keyboard has certain keys or not.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
-    public class Keyboard : InputDevice, ITextInputReceiver
+    public class Keyboard : InputDevice, ITextInputReceiver, ITextInputReceiver2
     {
         /// <summary>
         /// Total number of key controls on a keyboard, i.e. the number of controls
@@ -962,6 +962,16 @@ namespace UnityEngine.InputSystem
                     m_ImeCompositionListeners.Append(value);
             }
             remove => m_ImeCompositionListeners.Remove(value);
+        }
+
+        public event Action<char[], int> onBufferedIMECompositionChange
+        {
+	        add
+	        {
+		        if (!m_ImeCompositionBufferListeners.Contains(value))
+			        m_ImeCompositionBufferListeners.Append(value);
+	        }
+	        remove => m_ImeCompositionBufferListeners.Remove(value);
         }
 
         /// <summary>
@@ -2198,10 +2208,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public void OnIMECompositionChanged(char[] compositionStringBuffer, int stringLength)
+        {
+	        if (m_ImeCompositionBufferListeners.length > 0)
+	        {
+		        for (int i = 0; i < m_ImeCompositionBufferListeners.length; i++)
+			        m_ImeCompositionBufferListeners[i](compositionStringBuffer, stringLength);
+	        }
+        }
+
         private InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
         private KeyControl[] m_Keys;
         private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
+        private InlinedArray<Action<char[], int>> m_ImeCompositionBufferListeners;
 
         /// <summary>
         /// Raw array of key controls on the keyboard.
