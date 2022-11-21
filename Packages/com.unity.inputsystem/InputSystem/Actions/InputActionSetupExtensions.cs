@@ -453,7 +453,7 @@ namespace UnityEngine.InputSystem
         /// <code>
         /// var map = new InputActionMap();
         /// var action = map.AddAction("action");
-        /// map.AddBinding("<Gamepad>/leftStick", action: action.id);
+        /// map.AddBinding("&lt;Gamepad&gt;/leftStick", action: action.id);
         /// </code>
         /// </example>
         /// </remarks>
