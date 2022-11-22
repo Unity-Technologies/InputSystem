@@ -262,5 +262,149 @@ internal class DualShockTests : CoreTestsFixture
         Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.5f * 255)));
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualSense_AxisJitter_DoesntMakeDeviceCurrent()
+    {
+        var device1 = InputSystem.AddDevice<DualSenseGamepadHID>();
+        var device2 = InputSystem.AddDevice<DualSenseGamepadHID>();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is with-in axis dead zone doesn't make device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is outside of dead zone makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow - 1,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with button change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons1 = 1,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with trigger change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualSenseHIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons1 = 1,
+                leftTrigger = 1,
+                buttons0 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualShock4_AxisJitter_DoesntMakeDeviceCurrent()
+    {
+        var device1 = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var device2 = InputSystem.AddDevice<DualShock4GamepadHID>();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is with-in axis dead zone doesn't make device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport()
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state that is outside of dead zone makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow - 1,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with button change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons2 = 1,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+
+        // reset test
+        device2.MakeCurrent();
+        Assert.That(Gamepad.current, Is.EqualTo(device2));
+
+        // queuing state with trigger change makes device current
+        InputSystem.QueueStateEvent(device1,
+            new DualShock4HIDInputReport
+            {
+                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
+                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                buttons2 = 1,
+                leftTrigger = 1,
+                buttons1 = 8 // default dpad is at 8
+            });
+        InputSystem.Update();
+        Assert.That(Gamepad.current, Is.EqualTo(device1));
+    }
+
 #endif
 }

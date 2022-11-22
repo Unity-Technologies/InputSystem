@@ -3172,9 +3172,12 @@ namespace UnityEngine.InputSystem
                             var haveChangedStateOtherThanNoise = true;
                             if (deviceIsStateCallbackReceiver)
                             {
+                                m_ShouldMakeCurrentlyUpdatingDeviceCurrent = true;
                                 // NOTE: We leave it to the device to make sure the event has the right format. This allows the
                                 //       device to handle multiple different incoming formats.
                                 ((IInputStateCallbackReceiver)device).OnStateEvent(eventPtr);
+
+                                haveChangedStateOtherThanNoise = m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
                             }
                             else
                             {
@@ -3312,6 +3315,15 @@ namespace UnityEngine.InputSystem
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
                 "InputSystem.onAfterUpdate");
+        }
+
+        private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
+
+        // This is a dirty hot fix to expose entropy from device back to input manager to make choose if we want to make device current or not.
+        // A proper fix would be to change IInputStateCallbackReceiver.OnStateEvent to return bool to make device current or not.
+        internal void DontMakeCurrentlyUpdatingDeviceCurrent()
+        {
+            m_ShouldMakeCurrentlyUpdatingDeviceCurrent = false;
         }
 
         internal unsafe bool UpdateState(InputDevice device, InputEvent* eventPtr, InputUpdateType updateType)
