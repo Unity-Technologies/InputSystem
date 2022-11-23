@@ -517,7 +517,7 @@ namespace UnityEngine.InputSystem
         RightCtrl,
 
         /// <summary>
-        /// The <see cref="Keyboard.leftMetaKey"/>.
+        /// The <see cref="Keyboard.leftMetaKey2"/>.
         /// </summary>
         LeftMeta,
 
@@ -1406,7 +1406,7 @@ namespace UnityEngine.InputSystem
         /// side of the keyboard.
         /// </summary>
         /// <value>Control representing the left system meta key.</value>
-        public KeyControl leftMetaKey => this[Key.LeftMeta];
+        public KeyControl leftMetaKey2 => this[Key.LeftMeta];
 
         /// <summary>
         /// The system "meta" key (Windows key on PC, Apple/command key on Mac) on the right
@@ -1416,7 +1416,7 @@ namespace UnityEngine.InputSystem
         public KeyControl rightMetaKey => this[Key.RightMeta];
 
         /// <summary>
-        /// Same as <see cref="leftMetaKey"/>. Windows system key on left side of keyboard.
+        /// Same as <see cref="leftMetaKey2"/>. Windows system key on left side of keyboard.
         /// </summary>
         /// <value>Control representing the left Windows system key.</value>
         public KeyControl leftWindowsKey => this[Key.LeftWindows];
@@ -1428,7 +1428,7 @@ namespace UnityEngine.InputSystem
         public KeyControl rightWindowsKey => this[Key.RightWindows];
 
         /// <summary>
-        /// Same as <see cref="leftMetaKey"/>. Apple/command system key on left side of keyboard.
+        /// Same as <see cref="leftMetaKey2"/>. Apple/command system key on left side of keyboard.
         /// </summary>
         /// <value>Control representing the left Apple/command system key.</value>
         public KeyControl leftAppleKey => this[Key.LeftApple];
@@ -1440,7 +1440,7 @@ namespace UnityEngine.InputSystem
         public KeyControl rightAppleKey => this[Key.RightApple];
 
         /// <summary>
-        /// Same as <see cref="leftMetaKey"/>. Apple/command system key on left side of keyboard.
+        /// Same as <see cref="leftMetaKey2"/>. Apple/command system key on left side of keyboard.
         /// </summary>
         /// <value>Control representing the left Apple/command system key.</value>
         public KeyControl leftCommandKey => this[Key.LeftCommand];

@@ -13,7 +13,7 @@ public class ProblematicKeysDebugLog : MonoBehaviour
 
         if (keyboard == null) { return; }
 
-        if (keyboard.leftMetaKey.ReadValue() != 0) { Debug.Log("LeftMeta"); }
+        if (keyboard.leftMetaKey2.ReadValue() != 0) { Debug.Log("LeftMeta"); }
         if (keyboard.rightMetaKey.ReadValue() != 0) { Debug.Log("RightMeta"); }
 
         if (keyboard.contextMenuKey.ReadValue() != 0) { Debug.Log("ContextMenu"); }
