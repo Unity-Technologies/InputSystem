@@ -274,10 +274,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualSenseHIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualSenseGamepadHID.JitterMaskLow,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
                 buttons0 = 8 // default dpad is at 8
             });
         InputSystem.Update();
@@ -287,10 +287,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualSenseHIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow - 1,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualSenseGamepadHID.JitterMaskLow - 1,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
                 buttons0 = 8 // default dpad is at 8
             });
         InputSystem.Update();
@@ -304,10 +304,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualSenseHIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualSenseGamepadHID.JitterMaskLow,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
                 buttons1 = 1,
                 buttons0 = 8 // default dpad is at 8
             });
@@ -322,10 +322,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualSenseHIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualSenseGamepadHID.JitterMaskLow,
+                leftStickY = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickX = DualSenseGamepadHID.JitterMaskHigh,
+                rightStickY = DualSenseGamepadHID.JitterMaskLow,
                 buttons1 = 1,
                 leftTrigger = 1,
                 buttons0 = 8 // default dpad is at 8
@@ -346,10 +346,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualShock4HIDInputReport()
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualShock4GamepadHID.JitterMaskLow,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
                 buttons1 = 8 // default dpad is at 8
             });
         InputSystem.Update();
@@ -359,10 +359,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualShock4HIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow - 1,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualShock4GamepadHID.JitterMaskLow - 1,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
                 buttons1 = 8 // default dpad is at 8
             });
         InputSystem.Update();
@@ -376,10 +376,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualShock4HIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualShock4GamepadHID.JitterMaskLow,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
                 buttons2 = 1,
                 buttons1 = 8 // default dpad is at 8
             });
@@ -394,10 +394,10 @@ internal class DualShockTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new DualShock4HIDInputReport
             {
-                leftStickX = DualSenseGamepadHID.AxisDeadZoneLow,
-                leftStickY = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickX = DualSenseGamepadHID.AxisDeadZoneHigh,
-                rightStickY = DualSenseGamepadHID.AxisDeadZoneLow,
+                leftStickX = DualShock4GamepadHID.JitterMaskLow,
+                leftStickY = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickX = DualShock4GamepadHID.JitterMaskHigh,
+                rightStickY = DualShock4GamepadHID.JitterMaskLow,
                 buttons2 = 1,
                 leftTrigger = 1,
                 buttons1 = 8 // default dpad is at 8

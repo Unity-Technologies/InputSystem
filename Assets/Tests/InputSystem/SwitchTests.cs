@@ -92,10 +92,10 @@ internal class SwitchTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new SwitchProControllerHIDInputState
             {
-                leftStickX = SwitchProControllerHID.AxisDeadZoneLow,
-                leftStickY = SwitchProControllerHID.AxisDeadZoneHigh,
-                rightStickX = SwitchProControllerHID.AxisDeadZoneHigh,
-                rightStickY = SwitchProControllerHID.AxisDeadZoneLow,
+                leftStickX = SwitchProControllerHID.JitterMaskLow,
+                leftStickY = SwitchProControllerHID.JitterMaskHigh,
+                rightStickX = SwitchProControllerHID.JitterMaskHigh,
+                rightStickY = SwitchProControllerHID.JitterMaskLow,
             });
         InputSystem.Update();
         Assert.That(Gamepad.current, Is.EqualTo(device2));
@@ -104,10 +104,10 @@ internal class SwitchTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new SwitchProControllerHIDInputState
             {
-                leftStickX = SwitchProControllerHID.AxisDeadZoneLow - 1,
-                leftStickY = SwitchProControllerHID.AxisDeadZoneHigh,
-                rightStickX = SwitchProControllerHID.AxisDeadZoneHigh,
-                rightStickY = SwitchProControllerHID.AxisDeadZoneLow,
+                leftStickX = SwitchProControllerHID.JitterMaskLow - 1,
+                leftStickY = SwitchProControllerHID.JitterMaskHigh,
+                rightStickX = SwitchProControllerHID.JitterMaskHigh,
+                rightStickY = SwitchProControllerHID.JitterMaskLow,
             });
         InputSystem.Update();
         Assert.That(Gamepad.current, Is.EqualTo(device1));
@@ -120,10 +120,10 @@ internal class SwitchTests : CoreTestsFixture
         InputSystem.QueueStateEvent(device1,
             new SwitchProControllerHIDInputState
             {
-                leftStickX = SwitchProControllerHID.AxisDeadZoneLow,
-                leftStickY = SwitchProControllerHID.AxisDeadZoneHigh,
-                rightStickX = SwitchProControllerHID.AxisDeadZoneHigh,
-                rightStickY = SwitchProControllerHID.AxisDeadZoneLow,
+                leftStickX = SwitchProControllerHID.JitterMaskLow,
+                leftStickY = SwitchProControllerHID.JitterMaskHigh,
+                rightStickX = SwitchProControllerHID.JitterMaskHigh,
+                rightStickY = SwitchProControllerHID.JitterMaskLow,
             }.WithButton(SwitchProControllerHIDInputState.Button.A));
         InputSystem.Update();
         Assert.That(Gamepad.current, Is.EqualTo(device1));

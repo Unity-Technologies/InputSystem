@@ -557,8 +557,8 @@ namespace UnityEngine.InputSystem.DualShock
         }
 
         // filter out three lower bits as jitter noise
-        internal const byte AxisDeadZoneLow = 0b01111000;
-        internal const byte AxisDeadZoneHigh = 0b10000111;
+        internal const byte JitterMaskLow = 0b01111000;
+        internal const byte JitterMaskHigh = 0b10000111;
 
         public unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
@@ -569,14 +569,14 @@ namespace UnityEngine.InputSystem.DualShock
 
                 var actuated =
                     // we need to make device current if axes are outside of deadzone specifying hardware jitter of sticks around zero point
-                    newState->leftStickX<AxisDeadZoneLow
-                                         || newState->leftStickX> AxisDeadZoneHigh
-                    || newState->leftStickY<AxisDeadZoneLow
-                                            || newState->leftStickY> AxisDeadZoneHigh
-                    || newState->rightStickX<AxisDeadZoneLow
-                                             || newState->rightStickX> AxisDeadZoneHigh
-                    || newState->rightStickY<AxisDeadZoneLow
-                                             || newState->rightStickY> AxisDeadZoneHigh
+                    newState->leftStickX<JitterMaskLow
+                                         || newState->leftStickX> JitterMaskHigh
+                    || newState->leftStickY<JitterMaskLow
+                                            || newState->leftStickY> JitterMaskHigh
+                    || newState->rightStickX<JitterMaskLow
+                                             || newState->rightStickX> JitterMaskHigh
+                    || newState->rightStickY<JitterMaskLow
+                                             || newState->rightStickY> JitterMaskHigh
                     // we need to make device current if triggers or buttons state change
                     || newState->leftTrigger != currentState->leftTrigger
                     || newState->rightTrigger != currentState->rightTrigger
@@ -892,8 +892,8 @@ namespace UnityEngine.InputSystem.DualShock
         }
 
         // filter out three lower bits as jitter noise
-        internal const byte AxisDeadZoneLow = 0b01111000;
-        internal const byte AxisDeadZoneHigh = 0b10000111;
+        internal const byte JitterMaskLow = 0b01111000;
+        internal const byte JitterMaskHigh = 0b10000111;
 
         public unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
@@ -904,14 +904,14 @@ namespace UnityEngine.InputSystem.DualShock
 
                 var actuatedOrChanged =
                     // we need to make device current if axes are outside of deadzone specifying hardware jitter of sticks around zero point
-                    newState->leftStickX<AxisDeadZoneLow
-                                         || newState->leftStickX> AxisDeadZoneHigh
-                    || newState->leftStickY<AxisDeadZoneLow
-                                            || newState->leftStickY> AxisDeadZoneHigh
-                    || newState->rightStickX<AxisDeadZoneLow
-                                             || newState->rightStickX> AxisDeadZoneHigh
-                    || newState->rightStickY<AxisDeadZoneLow
-                                             || newState->rightStickY> AxisDeadZoneHigh
+                    newState->leftStickX<JitterMaskLow
+                                         || newState->leftStickX> JitterMaskHigh
+                    || newState->leftStickY<JitterMaskLow
+                                            || newState->leftStickY> JitterMaskHigh
+                    || newState->rightStickX<JitterMaskLow
+                                             || newState->rightStickX> JitterMaskHigh
+                    || newState->rightStickY<JitterMaskLow
+                                             || newState->rightStickY> JitterMaskHigh
                     // we need to make device current if triggers or buttons state change
                     || newState->leftTrigger != currentState->leftTrigger
                     || newState->rightTrigger != currentState->rightTrigger
