@@ -145,8 +145,7 @@ namespace UnityEngine.InputSystem.Composites
             DetermineValueTypeAndSize(ref context, binding, out m_ValueType, out m_ValueSizeInBytes, out m_BindingIsButton);
 
             if (!overrideModifiersNeedToBePressedFirst)
-                overrideModifiersNeedToBePressedFirst =
-                    InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
+                overrideModifiersNeedToBePressedFirst = !InputSystem.settings.shortcutKeysConsumeInput;
         }
 
         public override object ReadValueAsObject(ref InputBindingCompositeContext context)
