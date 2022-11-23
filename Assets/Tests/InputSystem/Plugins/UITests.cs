@@ -2837,6 +2837,45 @@ internal class UITests : CoreTestsFixture
         Assert.That(pointAction.enabled, Is.False);
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125
+    [Test]
+    [Category("UI")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void UI_WhenMultipleInputModulesExist_AssigningActionAssetDoesNotDisableOtherInstancesActions(bool player2StartsDisabled = false)
+    {
+        var player1_EventSystemGO = new GameObject();
+        player1_EventSystemGO.AddComponent<EventSystem>();
+        var player1_InputModule = player1_EventSystemGO.AddComponent<InputSystemUIInputModule>();
+        if (player2StartsDisabled)
+            player1_EventSystemGO.SetActive(false); // Enable player1 later
+
+        var player1_Asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var player1_Map = player1_Asset.AddActionMap("map");
+        var pointAction = player1_Map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        player1_InputModule.point = InputActionReference.Create(pointAction);
+
+        var player2_EventSystemGO = GameObject.Instantiate(player1_EventSystemGO);
+
+
+        if (player2StartsDisabled)
+        {
+            Assert.That(pointAction.enabled, Is.False);
+            player1_EventSystemGO.SetActive(true);
+        }
+        Assert.That(pointAction.enabled, Is.True);
+
+        var player2_Asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var player2_Map = player2_Asset.AddActionMap("map");
+        var player2_pointAction = player2_Map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        player2_EventSystemGO.GetComponent<InputSystemUIInputModule>().actionsAsset = player2_Asset;
+
+        if (player2StartsDisabled)
+            Assert.That(player2_pointAction.enabled, Is.False);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
     [Test]
     [Category("UI")]
     public void UI_WhenDisablingInputModule_ActionsAreNotDisabledIfTheyWereNotEnabledByTheInputModule()

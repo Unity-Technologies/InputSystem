@@ -131,8 +131,7 @@ namespace UnityEngine.InputSystem.Composites
         protected override void FinishSetup(ref InputBindingCompositeContext context)
         {
             if (!overrideModifiersNeedToBePressedFirst)
-                overrideModifiersNeedToBePressedFirst =
-                    InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
+                overrideModifiersNeedToBePressedFirst = !InputSystem.settings.shortcutKeysConsumeInput;
         }
     }
 }

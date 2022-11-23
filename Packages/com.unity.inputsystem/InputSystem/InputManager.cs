@@ -2948,7 +2948,9 @@ namespace UnityEngine.InputSystem
                     //       Could be that ultimately we need to issue a full reset of all devices at the beginning of
                     //       play mode in the editor.
 #if UNITY_EDITOR
-                    if ((updateType & InputUpdateType.Editor) == 0 &&
+                    if ((currentEventType == StateEvent.Type ||
+                         currentEventType == DeltaStateEvent.Type) &&
+                        (updateType & InputUpdateType.Editor) == 0 &&
                         InputSystem.s_SystemObject.exitEditModeTime > 0 &&
                         currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
                         (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
