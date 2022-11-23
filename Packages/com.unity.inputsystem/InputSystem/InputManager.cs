@@ -3319,7 +3319,7 @@ namespace UnityEngine.InputSystem
 
         private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
 
-        // This is a dirty hot fix to expose entropy from device back to input manager to make choose if we want to make device current or not.
+        // This is a dirty hot fix to expose entropy from device back to input manager to make a choice if we want to make device current or not.
         // A proper fix would be to change IInputStateCallbackReceiver.OnStateEvent to return bool to make device current or not.
         internal void DontMakeCurrentlyUpdatingDeviceCurrent()
         {
