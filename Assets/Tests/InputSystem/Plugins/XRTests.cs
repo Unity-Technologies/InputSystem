@@ -1021,7 +1021,7 @@ internal class XRTests : CoreTestsFixture
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    unsafe struct PoseDeviceState : IInputStateTypeInfo
+    internal unsafe struct PoseDeviceState : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte isTracked;
         [FieldOffset(4)] public uint trackingState;
@@ -1122,6 +1122,21 @@ internal class XRTests : CoreTestsFixture
         Assert.That((device["Axis"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
         Assert.That((device["Vector2/x"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
         Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_PoseControl_IsOptimized()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+
+        runtime.ReportNewInputDevice(PoseDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        Assert.That((device["posecontrol"] as PoseControl).optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatPose));
     }
 }
 #endif
