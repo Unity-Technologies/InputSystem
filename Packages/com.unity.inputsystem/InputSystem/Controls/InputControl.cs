@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;  
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -857,26 +857,27 @@ namespace UnityEngine.InputSystem
         internal FourCC m_OptimizedControlDataType;
 
         /// <summary>
-        /// For some controls it's possible to safely read/write state memory directly
-        /// instead of calling ReadUnprocessedValueFromState/WriteValueIntoState.
-        /// This value will represent a type that should be used for reading/writing directly.
-        /// Or be InputStateBlock.kFormatInvalid if no casting is possible.
+        /// For some types of control you can safely read/write state memory directly
+        /// which is much faster than calling ReadUnprocessedValueFromState/WriteValueIntoState.
+        /// This method returns a type that you can use for reading/writing the control directly,
+        /// or it returns InputStateBlock.kFormatInvalid if it's not possible for this type of control.
         /// </summary>
         /// <remarks>
-        /// For example AxisControl might be a "float" in state memory, and if no processing applied during reading (e.g. no invert/scale/etc),
-        /// then it could be read as float in memory directly without calling ReadUnprocessedValueFromState.
-        /// If then Vector3Control has 3 AxisControls as consecutive floats in memory,
-        /// then we can cast Vector3Control state memory directly to Vector3 without calling ReadUnprocessedValueFromState on x/y/z axes.
+        /// For example, AxisControl might be a "float" in state memory, and if no processing is applied during reading (e.g. no invert/scale/etc),
+        /// then you could read it as float in memory directly without calling ReadUnprocessedValueFromState, which is faster.
+        /// Additionally, if you have a Vector3Control which uses 3 AxisControls as consecutive floats in memory,
+        /// you can cast the Vector3Control state memory directly to Vector3 without calling ReadUnprocessedValueFromState on x/y/z axes.
         ///
-        /// Value is computed by automatically calling <see cref="InputControl.CalculateOptimizedControlDataType"/> when system believes control changes setup configuration.
-        /// Value can be updated manually by calling <see cref="InputControl.ApplyParameterChanges"/>.
+        /// The value returned for any given control is computed automatically by the Input System, when the control's setup configuration changes. <see cref="InputControl.CalculateOptimizedControlDataType"/>
+        /// There are some parameter changes which don't trigger a configuration change (such as the clamp, invert, normalize, and scale parameters on AxisControl), 
+        /// so if you modify these, the optimized data type is not automatically updated. In this situation, you should manually update it by calling <see cref="InputControl.ApplyParameterChanges"/>.
         /// </remarks>
         public FourCC optimizedControlDataType => m_OptimizedControlDataType;
 
         /// <summary>
-        /// Calculate and return a type that can represent control value in memory directly.
-        /// Value then is cached in <see cref="InputControl.optimizedControlDataType"/>.
-        /// Function shouldn't be called manually.
+        /// Calculates and returns a optimized data type that can represent a control's value in memory directly.
+        /// The value then is cached in <see cref="InputControl.optimizedControlDataType"/>.
+        /// This method is for internal use only, you should not call this from your own code.
         /// </summary>
         protected virtual FourCC CalculateOptimizedControlDataType()
         {
