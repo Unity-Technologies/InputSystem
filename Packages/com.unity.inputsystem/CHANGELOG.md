@@ -10,8 +10,30 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Added support for reading Tracking State in [TrackedPoseDriver](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver) to constrain whether the input pose is applied to the Transform. This should be used when the device supports valid flags for the position and rotation values, which is the case for XR poses.
+- Added `InputSettings.shortcutKeysConsumeInput`. This allows programmatic access to opt-in to the enhanced shortcut key behaviour ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
+
 ### Fixed
+- Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
+- Fixed an issue on PS5 where device disconnected events that happen while the app is in the background are missed causing orphaned devices to hang around forever and exceptions when the same device is added again ([case UUM-7842](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744)).
+- Fixed Switch Pro, DualShock 4, DualSense gamepads becoming current on PC/macOS when no controls are changing ([case ISXB-223](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-223))).
 - Fixed an issue that made OnScreenStick unusable when used in conjunction with PlayerInput in Auto-Switch devices mode, or with any code that changes user/device pairing on unsued device activity being detected ([case ISXB-48](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-48)).
+
+### Actions
+- Extended input action code generator (`InputActionCodeGenerator.cs`) to support optional registration and unregistration of callbacks for multiple callback instances via `AddCallbacks(...)` and `RemoveCallbacks(...)` part of the generated code. Contribution by [Ramobo](https://github.com/Ramobo) in [#889](https://github.com/Unity-Technologies/InputSystem/pull/889).
+
+## [1.4.4] - 2022-11-01
+
+### Fixed
+- Fixed `ArgumentNullException` when opening the Prefab Overrides window and selecting a component with an `InputAction`.
+- Fixed `{fileID: 0}` getting appended to `ProjectSettings.asset` file when building a project ([case ISXB-296](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-296)).
+- Fixed `Type of instance in array does not match expected type` assertion when using PlayerInput in combination with Control Schemes and Interactions ([case ISXB-282](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-282)).
+- The `InputActions consume their inputs` behaviour for shortcut support introduced in v1.4 is opt-in now and can be enabled via the project settings ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
+- Fixed Memory alignment issue with deserialized InputEventTraces that could cause infinite loops when playing back replays ([case ISXB-317](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-317)).
+- Fixed an InvalidOperationException when using Hold interaction, and by extension any interaction that changes to performed state after a timeout ([case ISXB-332](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-330)).
+- Fixed `Given object is neither an InputAction nor an InputActionMap` when using `InputActionTrace` on input action from an input action asset ([case ISXB-29](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-29)).
+- Fixing devices not being removed if unplugged during domain reload (entering or exiting play mode) ([case ISXB-232](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-232)).
 
 ## [1.4.3] - 2022-09-23
 
@@ -42,7 +64,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.4.1] - 2022-05-30
 
 ### Fixed
-- Fixed composite touchscreen controls were not firing an action if screen was touched before enabling the action ([case ISXB-98](https://jira.unity3d.com/browse/ISXB-98)).
+- Fixed composite touchscreen controls were not firing an action if screen was touched before enabling the action ([case ISXB-98](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-98)).
 
 ## [1.4.0] - 2022-04-10
 

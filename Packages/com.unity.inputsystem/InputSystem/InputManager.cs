@@ -2948,7 +2948,9 @@ namespace UnityEngine.InputSystem
                     //       Could be that ultimately we need to issue a full reset of all devices at the beginning of
                     //       play mode in the editor.
 #if UNITY_EDITOR
-                    if ((updateType & InputUpdateType.Editor) == 0 &&
+                    if ((currentEventType == StateEvent.Type ||
+                         currentEventType == DeltaStateEvent.Type) &&
+                        (updateType & InputUpdateType.Editor) == 0 &&
                         InputSystem.s_SystemObject.exitEditModeTime > 0 &&
                         currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
                         (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
@@ -3170,9 +3172,12 @@ namespace UnityEngine.InputSystem
                             var haveChangedStateOtherThanNoise = true;
                             if (deviceIsStateCallbackReceiver)
                             {
+                                m_ShouldMakeCurrentlyUpdatingDeviceCurrent = true;
                                 // NOTE: We leave it to the device to make sure the event has the right format. This allows the
                                 //       device to handle multiple different incoming formats.
                                 ((IInputStateCallbackReceiver)device).OnStateEvent(eventPtr);
+
+                                haveChangedStateOtherThanNoise = m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
                             }
                             else
                             {
@@ -3310,6 +3315,15 @@ namespace UnityEngine.InputSystem
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
                 "InputSystem.onAfterUpdate");
+        }
+
+        private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
+
+        // This is a dirty hot fix to expose entropy from device back to input manager to make a choice if we want to make device current or not.
+        // A proper fix would be to change IInputStateCallbackReceiver.OnStateEvent to return bool to make device current or not.
+        internal void DontMakeCurrentlyUpdatingDeviceCurrent()
+        {
+            m_ShouldMakeCurrentlyUpdatingDeviceCurrent = false;
         }
 
         internal unsafe bool UpdateState(InputDevice device, InputEvent* eventPtr, InputUpdateType updateType)
