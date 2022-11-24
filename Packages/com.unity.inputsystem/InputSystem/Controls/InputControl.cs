@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;  
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -869,7 +869,7 @@ namespace UnityEngine.InputSystem
         /// you can cast the Vector3Control state memory directly to Vector3 without calling ReadUnprocessedValueFromState on x/y/z axes.
         ///
         /// The value returned for any given control is computed automatically by the Input System, when the control's setup configuration changes. <see cref="InputControl.CalculateOptimizedControlDataType"/>
-        /// There are some parameter changes which don't trigger a configuration change (such as the clamp, invert, normalize, and scale parameters on AxisControl), 
+        /// There are some parameter changes which don't trigger a configuration change (such as the clamp, invert, normalize, and scale parameters on AxisControl),
         /// so if you modify these, the optimized data type is not automatically updated. In this situation, you should manually update it by calling <see cref="InputControl.ApplyParameterChanges"/>.
         /// </remarks>
         public FourCC optimizedControlDataType => m_OptimizedControlDataType;
