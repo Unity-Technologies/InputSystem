@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
 - Fixed an issue on PS5 where device disconnected events that happen while the app is in the background are missed causing orphaned devices to hang around forever and exceptions when the same device is added again ([case UUM-7842](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744)).
+- Fixed Switch Pro, DualShock 4, DualSense gamepads becoming current on PC/macOS when no controls are changing ([case ISXB-223](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-223))).
 
 ### Actions
 - Extended input action code generator (`InputActionCodeGenerator.cs`) to support optional registration and unregistration of callbacks for multiple callback instances via `AddCallbacks(...)` and `RemoveCallbacks(...)` part of the generated code. Contribution by [Ramobo](https://github.com/Ramobo) in [#889](https://github.com/Unity-Technologies/InputSystem/pull/889).
