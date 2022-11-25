@@ -887,7 +887,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // If we have a binding group to set for new bindings, overwrite the binding's
                 // group with it.
-                if (!string.IsNullOrEmpty(bindingGroupForNewBindings))
+                if (!string.IsNullOrEmpty(bindingGroupForNewBindings) && tag != k_CompositeBindingTag)
                 {
                     InputActionSerializationHelpers.ChangeBinding(property,
                         groups: bindingGroupForNewBindings);
@@ -1391,7 +1391,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void UpdateSerializedObjectDirtyCount()
         {
-            m_SerializedObjectDirtyCount = EditorUtility.GetDirtyCount(serializedObject.targetObject);
+            m_SerializedObjectDirtyCount = serializedObject != null ? EditorUtility.GetDirtyCount(serializedObject.targetObject) : 0;
         }
 
         private bool ReloadIfSerializedObjectHasBeenChanged()
