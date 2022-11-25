@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NUnit.Framework;
 using System.Linq;
@@ -13,6 +14,7 @@ using UnityEngine.InputSystem.Users;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 internal class OnScreenTests : CoreTestsFixture
 {
@@ -49,6 +51,54 @@ internal class OnScreenTests : CoreTestsFixture
 
         Assert.That(stickObject.transform.position.x, Is.GreaterThan(0.0f));
         Assert.That(stickObject.transform.position.y, Is.GreaterThan(0.0f));
+    }
+
+    [Test]
+    [TestCase(OnScreenStick.Behaviour.RelativePositionWithStaticOrigin)]
+    [TestCase(OnScreenStick.Behaviour.ExactPositionWithStaticOrigin)]
+    [TestCase(OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin)]
+    [Category("Devices")]
+    public void Devices_OnScreenStickBehavesAccordingToBehaviourProperty(OnScreenStick.Behaviour expectedBehaviour)
+    {
+        var gameObject = new GameObject();
+        var stickObject = new GameObject();
+        gameObject.AddComponent<Camera>();
+        var canvas = gameObject.AddComponent<Canvas>();
+        var eventSystem = gameObject.AddComponent<EventSystem>();
+
+        stickObject.AddComponent<RectTransform>();
+        var stick = stickObject.AddComponent<OnScreenStick>();
+        stick.behaviour = expectedBehaviour;
+        stick.transform.SetParent(canvas.transform);
+        var stickTransform = (RectTransform)stick.transform;
+
+        stickTransform.anchorMin = new Vector2(0, 0);
+        stickTransform.anchorMax = new Vector2(0, 0);
+        stickTransform.anchoredPosition = new Vector2(100, 100);
+        stickTransform.sizeDelta = new Vector2(100, 100);
+
+        stick.OnPointerDown(new PointerEventData(eventSystem)
+        {
+            position = new Vector2(75, 75)
+        });
+
+        switch (expectedBehaviour)
+        {
+            case OnScreenStick.Behaviour.RelativePositionWithStaticOrigin:
+                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(50, 50, 0)));
+                stick.OnDrag(new PointerEventData(eventSystem){position = new Vector2(74, 75)});
+                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(49, 50, 0)));
+                break;
+            case OnScreenStick.Behaviour.ExactPositionWithStaticOrigin:
+                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(75, 75, 0)));
+                stick.OnDrag(new PointerEventData(eventSystem){position = new Vector2(50, 75)});
+                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(50, 75, 0)));
+                break;
+            case OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(expectedBehaviour), expectedBehaviour, null);
+        }
     }
 
     [Test]

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UI;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -100,13 +102,39 @@ namespace UnityEngine.InputSystem.OnScreen
             }
 
             m_StartPos = ((RectTransform)transform).anchoredPosition;
+
+			if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
+            m_PointerDownPos = m_StartPos;
+
+            var dynamicOrigin = new GameObject("DynamicOriginClickable", typeof(Image));
+            dynamicOrigin.transform.SetParent(transform);
+            var image = dynamicOrigin.GetComponent<Image>();
+            image.color = new Color(1, 1, 1, 0);
+            var rectTransform = (RectTransform)dynamicOrigin.transform;
+            rectTransform.sizeDelta = new Vector2(m_DynamicOriginRange * 2, m_DynamicOriginRange * 2);
+            rectTransform.localScale = new Vector3(1, 1, 0);
+            rectTransform.anchoredPosition3D = Vector3.zero;
+
+            image.sprite = SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
+            image.alphaHitTestMinimumThreshold = 0.5f;
         }
 
         private void BeginInteraction(Vector2 pointerPosition, Camera uiCamera)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                transform.parent.GetComponentInParent<RectTransform>(),
-                pointerPosition, uiCamera, out m_PointerDownPos);
+            switch (m_Behaviour)
+            {
+                case Behaviour.RelativePositionWithStaticOrigin:
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out m_PointerDownPos);
+                    break;
+                case Behaviour.ExactPositionWithStaticOrigin:
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out m_PointerDownPos);
+                    MoveStick(pointerPosition, uiCamera);
+                    break;
+                case Behaviour.ExactPositionWithDynamicOrigin:
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out var pointerDown);
+                    m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
+                    break;
+            }
         }
 
         private void MoveStick(Vector2 pointerPosition, Camera uiCamera)
@@ -116,8 +144,22 @@ namespace UnityEngine.InputSystem.OnScreen
                 pointerPosition, uiCamera, out var position);
             var delta = position - m_PointerDownPos;
 
-            delta = Vector2.ClampMagnitude(delta, movementRange);
-            ((RectTransform)transform).anchoredPosition = m_StartPos + (Vector3)delta;
+            if (m_Behaviour == Behaviour.ExactPositionWithDynamicOrigin)
+            {
+                delta = Vector2.ClampMagnitude(delta, movementRange);
+                ((RectTransform)transform).anchoredPosition = m_PointerDownPos + delta;
+            }
+            else if (m_Behaviour == Behaviour.ExactPositionWithStaticOrigin)
+            {
+                delta = position - (Vector2)m_StartPos;
+                delta = Vector2.ClampMagnitude(delta, movementRange);
+                ((RectTransform)transform).anchoredPosition = (Vector2)m_StartPos + delta;
+            }
+            else
+            {
+                delta = Vector2.ClampMagnitude(delta, movementRange);
+                ((RectTransform)transform).anchoredPosition = (Vector2)m_StartPos + delta;
+            }
 
             var newPos = new Vector2(delta.x / movementRange, delta.y / movementRange);
             SendValueToControl(newPos);
@@ -125,7 +167,7 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void EndInteraction()
         {
-            ((RectTransform)transform).anchoredPosition = m_StartPos;
+            ((RectTransform)transform).anchoredPosition = m_PointerDownPos = m_StartPos;
             SendValueToControl(Vector2.zero);
         }
 
@@ -185,6 +227,43 @@ namespace UnityEngine.InputSystem.OnScreen
             return canvas?.worldCamera ?? Camera.main;
         }
 
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.matrix = ((RectTransform)transform.parent).localToWorldMatrix;
+
+            var startPos = ((RectTransform)transform).anchoredPosition;
+            if (Application.isPlaying)
+                startPos = m_StartPos;
+
+            Gizmos.color = new Color32(84, 173, 219, 255);
+
+            var center = startPos;
+            if (Application.isPlaying && m_Behaviour == Behaviour.ExactPositionWithDynamicOrigin)
+                center = m_PointerDownPos;
+
+            DrawGizmoCircle(center, m_MovementRange);
+
+            if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
+
+            Gizmos.color = new Color32(158, 84, 219, 255);
+            DrawGizmoCircle(startPos, m_DynamicOriginRange);
+        }
+
+        private void DrawGizmoCircle(Vector2 center, float radius)
+        {
+            for (var i = 0; i < 32; i++)
+            {
+                var radians = i / 32f * Mathf.PI * 2;
+                var nextRadian = (i + 1) / 32f * Mathf.PI * 2;
+                Gizmos.DrawLine(
+                    new Vector3(center.x + Mathf.Cos(radians) * radius, center.y + Mathf.Sin(radians) * radius, 0),
+                    new Vector3(center.x + Mathf.Cos(nextRadian) * radius, center.y + Mathf.Sin(nextRadian) * radius, 0));
+            }
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
         public float movementRange
         {
             get => m_MovementRange;
@@ -192,6 +271,14 @@ namespace UnityEngine.InputSystem.OnScreen
         }
 
         /// <summary>
+        ///
+        /// </summary>
+        public float dynamicOriginRange
+        {
+            get => m_DynamicOriginRange;
+            set => m_DynamicOriginRange = value;
+        }
+
         /// Prevents stick interactions from getting cancelled due to device switching.
         /// </summary>
         /// <remarks>
@@ -217,9 +304,18 @@ namespace UnityEngine.InputSystem.OnScreen
         [SerializeField]
         private float m_MovementRange = 50;
 
+        [SerializeField]
+        private float m_DynamicOriginRange = 100;
+
         [InputControl(layout = "Vector2")]
         [SerializeField]
         private string m_ControlPath;
+
+        [SerializeField]
+        private Behaviour m_Behaviour;
+
+        [SerializeField]
+        private bool m_ShowRanges;
 
         [SerializeField]
         [Tooltip("Set this to true to prevent cancellation of pointer events due to device switching. Cancellation " +
@@ -250,37 +346,71 @@ namespace UnityEngine.InputSystem.OnScreen
             set => m_ControlPath = value;
         }
 
-        #if UNITY_EDITOR
+        // TODO: Tooltip!
+        public Behaviour behaviour
+        {
+            get => m_Behaviour;
+            set => m_Behaviour = value;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        public enum Behaviour
+        {
+            RelativePositionWithStaticOrigin,
+            ExactPositionWithStaticOrigin,
+            ExactPositionWithDynamicOrigin
+        }
+
+#if UNITY_EDITOR
         [CustomEditor(typeof(OnScreenStick))]
         internal class OnScreenStickEditor : UnityEditor.Editor
         {
-            private AnimBool m_ShowIsolatedInputActions;
-
-            private SerializedProperty m_UseIsolatedInputActions;
-            private SerializedProperty m_ControlPath;
+            private AnimBool m_ShowDynamicOriginOptions;
+			private AnimBool m_ShowIsolatedInputActions;
+            
+		    private SerializedProperty m_UseIsolatedInputActions;
+			private SerializedProperty m_Behaviour;
+            private SerializedProperty m_ControlPathInternal;
             private SerializedProperty m_MovementRange;
-            private SerializedProperty m_PointerDownAction;
+            private SerializedProperty m_DynamicOriginRange;
+			private SerializedProperty m_PointerDownAction;
             private SerializedProperty m_PointerMoveAction;
 
             public void OnEnable()
             {
-                m_ShowIsolatedInputActions = new AnimBool(false);
+                m_ShowDynamicOriginOptions = new AnimBool(false);
+				m_ShowIsolatedInputActions = new AnimBool(false);
 
                 m_UseIsolatedInputActions = serializedObject.FindProperty(nameof(OnScreenStick.m_UseIsolatedInputActions));
-                m_ControlPath = serializedObject.FindProperty(nameof(OnScreenStick.m_ControlPath));
+
+                m_Behaviour = serializedObject.FindProperty(nameof(OnScreenStick.m_Behaviour));
+                m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenStick.m_ControlPath));
                 m_MovementRange = serializedObject.FindProperty(nameof(OnScreenStick.m_MovementRange));
-                m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
+                m_DynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_DynamicOriginRange));
+            	m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
                 m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
             }
 
             public override void OnInspectorGUI()
             {
                 EditorGUILayout.PropertyField(m_MovementRange);
-                EditorGUILayout.PropertyField(m_ControlPath);
+                EditorGUILayout.PropertyField(m_ControlPathInternal);
+                EditorGUILayout.PropertyField(m_Behaviour);
 
-                EditorGUILayout.PropertyField(m_UseIsolatedInputActions);
+                m_ShowDynamicOriginOptions.target = ((OnScreenStick)target).behaviour ==
+                    Behaviour.ExactPositionWithDynamicOrigin;
+                if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicOriginOptions.faded))
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(m_DynamicOriginRange);
+                    EditorGUI.indentLevel--;
+                }
+                EditorGUILayout.EndFadeGroup();
 
-                m_ShowIsolatedInputActions.target = m_UseIsolatedInputActions.boolValue;
+				EditorGUILayout.PropertyField(m_UseIsolatedInputActions);
+				m_ShowIsolatedInputActions.target = m_UseIsolatedInputActions.boolValue;
                 if (EditorGUILayout.BeginFadeGroup(m_ShowIsolatedInputActions.faded))
                 {
                     EditorGUI.indentLevel++;
@@ -293,7 +423,7 @@ namespace UnityEngine.InputSystem.OnScreen
                 serializedObject.ApplyModifiedProperties();
             }
         }
-        #endif
+#endif
     }
 }
 #endif
