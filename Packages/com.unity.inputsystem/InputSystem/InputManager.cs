@@ -2529,6 +2529,10 @@ namespace UnityEngine.InputSystem
             ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
+            // Update devices control optimization
+            foreach (var device in devices)
+                device.SetOptimizedControlDataTypeRecursively();
+
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
@@ -2821,6 +2825,10 @@ namespace UnityEngine.InputSystem
 
             m_CurrentUpdate = updateType;
             InputUpdate.OnUpdate(updateType);
+
+            // Ensure optimized controls are in valid state
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
