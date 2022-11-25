@@ -1,19 +1,27 @@
 # Actions
 
-* [Overview](#overview)
-* [Creating Actions](#creating-actions)
-    * [Using the Action editor](#using-the-action-editor)
-    * [Embedding Actions in MonoBehaviours](#embedding-actions-in-monobehaviours)
-    * [Loading Actions from JSON](#loading-actions-from-json)
-    * [Creating Actions in code](#creating-actions-in-code)
-      * [Default Actions](#default-actions)
-* [Using Actions](#using-actions)
-    * [Responding to Actions](#responding-to-actions)
-      * [Action callbacks](#action-callbacks)
-      * [Polling Actions](#polling-actions)
-    * [Action types](#action-types)
-    * [Debugging Actions](#debugging-actions)
-    * [Using Actions with multiple players](#using-actions-with-multiple-players)
+- [Actions](#actions)
+  - [Overview](#overview)
+  - [Creating Actions](#creating-actions)
+    - [Creating Actions using the Action editor](#creating-actions-using-the-action-editor)
+    - [Creating Actions by embedding them in MonoBehaviours](#creating-actions-by-embedding-them-in-monobehaviours)
+    - [Loading Actions from JSON](#loading-actions-from-json)
+    - [Creating Actions in code](#creating-actions-in-code)
+      - [Default Actions](#default-actions)
+  - [Using Actions](#using-actions)
+    - [Responding to Actions](#responding-to-actions)
+      - [Action callbacks](#action-callbacks)
+        - [`InputActionMap.actionTriggered` callback](#inputactionmapactiontriggered-callback)
+        - [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback)
+      - [Polling Actions](#polling-actions)
+      - [`InputActionTrace`](#inputactiontrace)
+    - [Action types](#action-types)
+      - [Value](#value)
+      - [Button](#button)
+      - [Pass-Through](#pass-through)
+    - [Debugging Actions](#debugging-actions)
+    - [Using Actions with multiple players](#using-actions-with-multiple-players)
+
 
 Related pages:
 
@@ -71,19 +79,19 @@ Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSyst
 You can create Actions in any of the following ways:
 
 - Use the dedicated editor for [Input Action Assets](ActionAssets.md).
-- [Embed them](Workflow-Embedded) in MonoBehaviour components, then set up bindings in the Inspector.
+- [Embed them](Workflow-Embedded.md) in MonoBehaviour components, then set up bindings in the Inspector.
 - Manually load them from JSON.
 - Create them entirely in code, including setting up the bindings.
 
 ### Creating Actions using the Action editor
 
-For information on how to create and edit Input Action Assets in the dedicated editor, see [Action Assets](ActionAssets.md).
+For information on how to create and edit Input Action Assets in the dedicated editor, see [Action Assets](ActionAssets.md). This is the recommended workflow if you want to organise all your input actions and bindings together into a single Asset, which is often the case for many types of game or app.
 
 ![Action Editor Window](Images/MyGameActions.png)
 
 ### Creating Actions by embedding them in MonoBehaviours
 
-You can embed [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) and [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components.
+As an alternative to using an Action Asset, You can embed individual [Input Action](../api/UnityEngine.InputSystem.InputAction.html) and [Input Action Maps](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components, like this:
 
 ```CSharp
 using UnityEngine;
@@ -96,7 +104,9 @@ public class ExampleScript : MonoBehaviour
 }
 ```
 
-When you embed actions in a MonoBehaviour and assign that MonoBehaviour to a GameObject, the GameObject's Inspector window displays an interface which allows you to set up the bindings for those actions. For example:
+The result is similar to using an Action Asset, except the Actions are defined in the GameObject's properties and saved as Scene or Prefab data, instead of in a dedicated Asset.
+
+When you embed actions in a MonoBehaviour and assign that MonoBehaviour to a GameObject, the GameObject's Inspector window displays an interface similar to the Actions Asset window, which allows you to set up the bindings for those actions. For example:
 
 ![MyBehavior Inspector](Images/Workflow-EmbeddedActionsInspector.png)
 
@@ -154,9 +164,9 @@ var maps = InputActionMap.FromJson(json);
 var asset = InputActionAsset.FromJson(json);
 ```
 
-### Creating Actions entirely in code, including the bindings
+### Creating Actions in code
 
-You can manually create and configure Actions entirely in code. This also works at runtime in the Player. For example:
+You can manually create and configure Actions entirely in code, including assigning the bindings. This also works at runtime in the Player. For example:
 
 ```CSharp
 // Create free-standing Actions.
