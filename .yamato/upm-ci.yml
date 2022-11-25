@@ -114,9 +114,8 @@ run_ios_{{ editor.version }}:
 build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
-    type: Unity::VM::osx # Use Unity::mobile::appletv to get tvOS device
-    # TODO this should be replaced with package-ci/macos-12:default when PETS-1172 is complete
-    image: package-ci/macos-12-mobile:stable
+    type: Unity::VM::osx
+    image: package-ci/macos-12:default
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -130,6 +129,23 @@ build_tvos_{{ editor.version }}:
     logs:
         paths:
           - "build/logs/**"
+
+run_tvos_{{ editor.version }}:
+  name: Run Tests on {{ editor.version }} on tvos
+  agent:
+      type: Unity::mobile::appletv
+      image: package-ci/macos-12:default
+      flavor: b1.medium
+  skip_checkout: true
+  dependencies:
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
+  commands:
+    - {{ utr_install_nix }}
+    - ./utr --suite=playmode --platform=tvOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
+  artifacts:
+    logs:
+        paths:
+          - "build/test-results/**"
 
 {% for backend in scripting_backends %}
 build_android_{{ editor.version }}_{{ backend.name }}:
@@ -196,10 +212,10 @@ all_tests:
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
     {% endfor %}
     {% for backend in scripting_backends %}
-    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}  
+    - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
-    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
+    - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}
     {% endfor %}
     - .yamato/upm-ci.yml#publish_dryrun
   triggers:
