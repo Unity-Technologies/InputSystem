@@ -215,7 +215,11 @@ all_tests:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
+{% if editor.disable_tvos_run %}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
+{% else %}
     - .yamato/upm-ci.yml#run_tvos_{{ editor.version }}
+{% endif %}
     {% endfor %}
     - .yamato/upm-ci.yml#publish_dryrun
   triggers:
