@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Profiling;
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
@@ -40,7 +41,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             foreach (var item in GetRows())
                 if (item is ControlItem controlItem)
-                    ReadState(controlItem.control, out controlItem.value, out controlItem.values);
+                    ReadState(controlItem.control, ref controlItem);
         }
 
         private const float kRowHeight = 20f;
@@ -55,6 +56,7 @@ namespace UnityEngine.InputSystem.Editor
             Offset,
             Bit,
             Size,
+            Optimized,
             Value,
 
             COUNT
@@ -102,6 +104,8 @@ namespace UnityEngine.InputSystem.Editor
                 new MultiColumnHeaderState.Column {width = 40, headerContent = new GUIContent("Bit")};
             columns[(int)ColumnId.Size] =
                 new MultiColumnHeaderState.Column {headerContent = new GUIContent("Size (Bits)")};
+            columns[(int)ColumnId.Optimized] =
+                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Optimized")};
 
             if (numValueColumns == 1)
             {
@@ -184,29 +188,17 @@ namespace UnityEngine.InputSystem.Editor
             var offset = controlOffset - rootOffset;
 
             // Read state.
-            GUIContent value;
-            GUIContent[] values;
-            if (!ReadState(control, out value, out values))
-                return null;
-
-            ////TODO: come up with nice icons depicting different control types
-
             var item = new ControlItem
             {
                 id = id++,
-                displayName = control.name,
                 control = control,
                 depth = depth,
-                layout = new GUIContent(control.layout),
-                format = new GUIContent(control.stateBlock.format.ToString()),
-                offset = new GUIContent(offset.ToString()),
-                bit = new GUIContent(control.stateBlock.bitOffset.ToString()),
-                sizeInBits = new GUIContent(control.stateBlock.sizeInBits.ToString()),
-                type = new GUIContent(control.GetType().Name),
-                value = value,
-                values = values,
                 children = children
             };
+
+            ////TODO: come up with nice icons depicting different control types
+            if (!ReadState(control, ref item))
+                return null;
 
             if (children != null)
             {
@@ -217,10 +209,22 @@ namespace UnityEngine.InputSystem.Editor
             return item;
         }
 
-        private bool ReadState(InputControl control, out GUIContent value, out GUIContent[] values)
+        private bool ReadState(InputControl control, ref ControlItem item)
         {
-            value = null;
-            values = null;
+            // Compute offset. Offsets on the controls are absolute. Make them relative to the
+            // root control.
+            var controlOffset = control.stateBlock.byteOffset;
+            var rootOffset = m_RootControl.stateBlock.byteOffset;
+            var offset = controlOffset - rootOffset;
+
+            item.displayName = control.name;
+            item.layout = new GUIContent(control.layout);
+            item.format = new GUIContent(control.stateBlock.format.ToString());
+            item.offset = new GUIContent(offset.ToString());
+            item.bit = new GUIContent(control.stateBlock.bitOffset.ToString());
+            item.sizeInBits = new GUIContent(control.stateBlock.sizeInBits.ToString());
+            item.type = new GUIContent(control.GetType().Name);
+            item.optimized = new GUIContent(control.optimizedControlDataType != InputStateBlock.kFormatInvalid ? "+" : "-");
 
             try
             {
@@ -228,27 +232,27 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var text = ReadRawValueAsString(control, stateBuffer);
                     if (text != null)
-                        value = new GUIContent(text);
+                        item.value = new GUIContent(text);
                 }
                 else if (multipleStateBuffers != null)
                 {
                     var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
                     if (showDifferentOnly && control.children.Count == 0 && valueStrings.Distinct().Count() == 1)
                         return false;
-                    values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
+                    item.values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
                 }
                 else
                 {
                     var valueObject = control.ReadValueAsObject();
                     if (valueObject != null)
-                        value = new GUIContent(valueObject.ToString());
+                        item.value = new GUIContent(valueObject.ToString());
                 }
             }
             catch (Exception exception)
             {
                 // If we fail to read a value, swallow it so we don't fail completely
                 // showing anything from the device.
-                value = new GUIContent(exception.ToString());
+                item.value = new GUIContent(exception.ToString());
             }
 
             return true;
@@ -296,6 +300,9 @@ namespace UnityEngine.InputSystem.Editor
                 case (int)ColumnId.Type:
                     GUI.Label(cellRect, item.type);
                     break;
+                case (int)ColumnId.Optimized:
+                    GUI.Label(cellRect, item.optimized);
+                    break;
                 case (int)ColumnId.Value:
                     if (item.value != null)
                         GUI.Label(cellRect, item.value);
@@ -328,6 +335,7 @@ namespace UnityEngine.InputSystem.Editor
             public GUIContent bit;
             public GUIContent sizeInBits;
             public GUIContent type;
+            public GUIContent optimized;
             public GUIContent value;
             public GUIContent[] values;
         }
