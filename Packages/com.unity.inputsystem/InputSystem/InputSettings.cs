@@ -701,6 +701,13 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
+            if (featureName == InputFeatureNames.kUseOptimizedControls)
+            {
+                optimizedControlsFeatureEnabled = enabled;
+                OnChange();
+                return;
+            }
+
             if (m_FeatureFlags == null)
                 m_FeatureFlags = new HashSet<string>();
 
@@ -746,6 +753,9 @@ namespace UnityEngine.InputSystem
         {
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
         }
+
+        // Needs a static field because feature check is in the hot path
+        internal static bool optimizedControlsFeatureEnabled = false;
 
         internal void OnChange()
         {
