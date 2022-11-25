@@ -1,11 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class DocsExampleActionsAssetReference : MonoBehaviour
 {
     // assign the actions asset to this field in the inspector:
-    public InputActionAsset actions; 
-    
+    public InputActionAsset actions;
+
     // private fields
     private InputAction moveAction;
 
@@ -17,7 +17,7 @@ public class DocsExampleActionsAssetReference : MonoBehaviour
         // for the "jump" action, we add a callback method for when it is performed
         actions.FindActionMap("gameplay").FindAction("jump").performed += OnJump;
     }
-    
+
     void Update()
     {
         // our update loop polls the "move" action value each frame
@@ -34,6 +34,7 @@ public class DocsExampleActionsAssetReference : MonoBehaviour
     {
         actions.FindActionMap("gameplay").Enable();
     }
+
     void OnDisable()
     {
         actions.FindActionMap("gameplay").Disable();

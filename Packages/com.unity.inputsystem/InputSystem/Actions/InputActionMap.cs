@@ -1189,7 +1189,7 @@ namespace UnityEngine.InputSystem
             // created. Unfortunately, this can lead to some unnecessary re-resolving.
 
             needToResolveBindings = true;
-            bindingResolutionNeedsFullReResolve = fullResolve;
+            bindingResolutionNeedsFullReResolve |= fullResolve;
 
             if (s_DeferBindingResolution > 0)
                 return false;

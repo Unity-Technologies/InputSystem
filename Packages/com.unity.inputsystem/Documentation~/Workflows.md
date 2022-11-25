@@ -15,4 +15,4 @@ Each of the four main workflows described below offers different levels of flexi
 |[**Using an Actions Asset and a PlayerInput component**](Workflow-PlayerInput.html)<br/><br/>In addition to using an Actions Asset, the PlayerInput component provides a UI in the inspector to connect actions to event handlers in your script, removing the need for any intermediary code between the Input System and your Action Methods. [Read more](Workflow-PlayerInput.html)|![image alt text](Images/Workflow-PlayerInput.svg)|
 
 >[!Note]
->Because the Input System has multiple workflows, the code samples used throughout this documentation also vary, demonstrating techniques using various workflows. For example, some code samples may use embedded actions, and others might use an action asset. 
+>Because the Input System has multiple workflows, the code samples used throughout this documentation also vary, demonstrating techniques using various workflows. For example, some code samples may use embedded actions, and others might use an action asset.

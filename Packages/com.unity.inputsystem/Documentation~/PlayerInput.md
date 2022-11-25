@@ -76,7 +76,7 @@ public class MyPlayerScript : MonoBehaviour
         // the action is bound to.
         var v = value.Get<Vector2>();
 
-        // IMPORTANT: 
+        // IMPORTANT:
         // The given InputValue is only valid for the duration of the callback. Storing the InputValue references somewhere and calling Get<T>() later does not work correctly.
     }
 }
@@ -137,4 +137,3 @@ To set this up, assign a reference to a `InputSystemUIInputModule` component in 
 Once you've completed this setup, when the `PlayerInput` component configures the Actions for a specific player, it assigns the same Action configuration to the `InputSystemUIInputModule`. In other words, the same Action and Device configuration that controls the player now also controls the UI.
 
 If you use [`MultiplayerEventSystem`](UISupport.md#multiplayer-uis) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, each controlled by a separate player.
-

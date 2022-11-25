@@ -334,7 +334,7 @@ namespace UnityEngine.InputSystem.DualShock
     /// PS5 DualSense controller that is interfaced to a HID backend.
     /// </summary>
     [InputControlLayout(stateType = typeof(DualSenseHIDInputReport), displayName = "DualSense HID")]
-    public class DualSenseGamepadHID : DualShockGamepad, IEventMerger, IEventPreProcessor
+    public class DualSenseGamepadHID : DualShockGamepad, IEventMerger, IEventPreProcessor, IInputStateCallbackReceiver
     {
         // Gamepad might send 3 types of input reports:
         // - Minimal report, first byte is 0x01, observed size is 78, also can be 10
@@ -516,6 +516,9 @@ namespace UnityEngine.InputSystem.DualShock
                 return eventPtr.type != DeltaStateEvent.Type; // only skip delta state events
 
             var stateEvent = StateEvent.FromUnchecked(eventPtr);
+            if (stateEvent->stateFormat == DualSenseHIDInputReport.Format)
+                return true; // if someone queued DSVS directly, just use as-is
+
             var size = stateEvent->stateSizeInBytes;
             if (stateEvent->stateFormat != DualSenseHIDGenericInputReport.Format || size < sizeof(DualSenseHIDInputReport))
                 return false; // skip unrecognized state events otherwise they will corrupt control states
@@ -547,6 +550,50 @@ namespace UnityEngine.InputSystem.DualShock
             }
             else
                 return false; // skip unrecognized reportId
+        }
+
+        public void OnNextUpdate()
+        {
+        }
+
+        // filter out three lower bits as jitter noise
+        internal const byte JitterMaskLow = 0b01111000;
+        internal const byte JitterMaskHigh = 0b10000111;
+
+        public unsafe void OnStateEvent(InputEventPtr eventPtr)
+        {
+            if (eventPtr.type == StateEvent.Type && eventPtr.stateFormat == DualSenseHIDInputReport.Format)
+            {
+                var currentState = (DualSenseHIDInputReport*)((byte*)currentStatePtr + m_StateBlock.byteOffset);
+                var newState = (DualSenseHIDInputReport*)StateEvent.FromUnchecked(eventPtr)->state;
+
+                var actuated =
+                    // we need to make device current if axes are outside of deadzone specifying hardware jitter of sticks around zero point
+                    newState->leftStickX<JitterMaskLow
+                                         || newState->leftStickX> JitterMaskHigh
+                    || newState->leftStickY<JitterMaskLow
+                                            || newState->leftStickY> JitterMaskHigh
+                    || newState->rightStickX<JitterMaskLow
+                                             || newState->rightStickX> JitterMaskHigh
+                    || newState->rightStickY<JitterMaskLow
+                                             || newState->rightStickY> JitterMaskHigh
+                    // we need to make device current if triggers or buttons state change
+                    || newState->leftTrigger != currentState->leftTrigger
+                    || newState->rightTrigger != currentState->rightTrigger
+                    || newState->buttons0 != currentState->buttons0
+                    || newState->buttons1 != currentState->buttons1
+                    || newState->buttons2 != currentState->buttons2;
+
+                if (!actuated)
+                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+            }
+
+            InputState.Change(this, eventPtr);
+        }
+
+        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
         }
 
         [StructLayout(LayoutKind.Explicit)]
@@ -665,7 +712,7 @@ namespace UnityEngine.InputSystem.DualShock
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
     [InputControlLayout(stateType = typeof(DualShock4HIDInputReport), hideInUI = true, isNoisy = true)]
-    public class DualShock4GamepadHID : DualShockGamepad, IEventPreProcessor
+    public class DualShock4GamepadHID : DualShockGamepad, IEventPreProcessor, IInputStateCallbackReceiver
     {
         public ButtonControl leftTriggerButton { get; protected set; }
         public ButtonControl rightTriggerButton { get; protected set; }
@@ -791,8 +838,10 @@ namespace UnityEngine.InputSystem.DualShock
                 return eventPtr.type != DeltaStateEvent.Type; // only skip delta state events
 
             var stateEvent = StateEvent.FromUnchecked(eventPtr);
-            var size = stateEvent->stateSizeInBytes;
+            if (stateEvent->stateFormat == DualShock4HIDInputReport.Format)
+                return true; // if someone queued D4VS directly, just use as-is
 
+            var size = stateEvent->stateSizeInBytes;
             if (stateEvent->stateFormat != DualShock4HIDGenericInputReport.Format || size < sizeof(DualShock4HIDGenericInputReport))
                 return false; // skip unrecognized state events otherwise they will corrupt control states
 
@@ -836,6 +885,50 @@ namespace UnityEngine.InputSystem.DualShock
                 default:
                     return false; // skip unrecognized reportId
             }
+        }
+
+        public void OnNextUpdate()
+        {
+        }
+
+        // filter out three lower bits as jitter noise
+        internal const byte JitterMaskLow = 0b01111000;
+        internal const byte JitterMaskHigh = 0b10000111;
+
+        public unsafe void OnStateEvent(InputEventPtr eventPtr)
+        {
+            if (eventPtr.type == StateEvent.Type && eventPtr.stateFormat == DualShock4HIDInputReport.Format)
+            {
+                var currentState = (DualShock4HIDInputReport*)((byte*)currentStatePtr + m_StateBlock.byteOffset);
+                var newState = (DualShock4HIDInputReport*)StateEvent.FromUnchecked(eventPtr)->state;
+
+                var actuatedOrChanged =
+                    // we need to make device current if axes are outside of deadzone specifying hardware jitter of sticks around zero point
+                    newState->leftStickX<JitterMaskLow
+                                         || newState->leftStickX> JitterMaskHigh
+                    || newState->leftStickY<JitterMaskLow
+                                            || newState->leftStickY> JitterMaskHigh
+                    || newState->rightStickX<JitterMaskLow
+                                             || newState->rightStickX> JitterMaskHigh
+                    || newState->rightStickY<JitterMaskLow
+                                             || newState->rightStickY> JitterMaskHigh
+                    // we need to make device current if triggers or buttons state change
+                    || newState->leftTrigger != currentState->leftTrigger
+                    || newState->rightTrigger != currentState->rightTrigger
+                    || newState->buttons1 != currentState->buttons1
+                    || newState->buttons2 != currentState->buttons2
+                    || newState->buttons3 != currentState->buttons3;
+
+                if (!actuatedOrChanged)
+                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+            }
+
+            InputState.Change(this, eventPtr);
+        }
+
+        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
         }
 
         [StructLayout(LayoutKind.Explicit)]

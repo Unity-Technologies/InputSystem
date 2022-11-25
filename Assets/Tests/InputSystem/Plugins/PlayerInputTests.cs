@@ -2328,6 +2328,30 @@ internal class PlayerInputTests : CoreTestsFixture
         }
     ";
 
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanDisableAfterAssigningAction_WithControlSchemesAndInteractions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var action = actions.AddActionMap("map").AddAction("action", interactions: "Tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        actions.AddControlScheme("Gamepad")
+            .WithRequiredDevice<Gamepad>();
+        actions.AddControlScheme("Keyboard")
+            .WithRequiredDevice<Keyboard>();
+        actions.Enable();
+
+        var player = new GameObject();
+        var playerInput = player.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard";
+        playerInput.actions = actions;
+        player.SetActive(false); // Should cause full rebinding and not assert
+    }
+
     private struct Message : IEquatable<Message>
     {
         public string name { get; set; }

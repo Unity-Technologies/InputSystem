@@ -30,14 +30,50 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 // in terms of complexity.
 partial class CoreTests
 {
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenShortcutsDisabled_AllConflictingActionsTrigger()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map1 = new InputActionMap("map1");
+        var action1 = map1.AddAction(name: "action1");
+        action1.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var map2 = new InputActionMap("map2");
+        var action2 = map2.AddAction(name: "action2");
+        action2.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        var action3 = map2.AddAction(name: "action3", binding: "<Keyboard>/w");
+
+        map1.Enable();
+        map2.Enable();
+
+        Press(keyboard.wKey);
+
+        // All Actions were triggered
+        Assert.That(action1.WasPerformedThisFrame());
+        Assert.That(action2.WasPerformedThisFrame());
+        Assert.That(action3.WasPerformedThisFrame());
+    }
+
     // Premise: Binding the same control multiple times in different ways from multiple concurrently active
     //          actions should result in the input system figuring out which *one* action gets to act on the input.
     [Test]
     [Category("Actions")]
     [TestCase(true)]
     [TestCase(false)]
-    public void Actions_CanConsumeInput(bool legacyComposites)
+    public void Actions_WhenShortcutsEnabled_CanConsumeInput(bool legacyComposites)
     {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var map = new InputActionMap();
@@ -124,13 +160,11 @@ partial class CoreTests
         Assert.That(!action3.WasPerformedThisFrame());
     }
 
-    // For now, maintain a kill switch for the new behavior for users to have an out where the
-    // the behavior is simply breaking their project.
     [Test]
     [Category("Actions")]
-    public void Actions_CanDisableShortcutSupport()
+    public void Actions_ShortcutSupportDisabledByDefault()
     {
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+        Assert.That(InputSystem.settings.shortcutKeysConsumeInput, Is.False);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -216,8 +250,10 @@ partial class CoreTests
     [TestCase("leftShift", "leftAlt", "space", true)]
     [TestCase("leftShift", null, "space", false)]
     [TestCase("leftShift", "leftAlt", "space", false)]
-    public void Actions_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
+    public void Actions_WhenShortcutsEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut(string modifier1, string modifier2, string binding, bool legacyComposites)
     {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action = new InputAction();
@@ -292,8 +328,10 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
+    public void Actions_WhenShortcutsAreEnabled_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
     {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var map = new InputActionMap();
@@ -2004,8 +2042,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
         var map1 = new InputActionMap("map1");
@@ -2042,6 +2078,8 @@ partial class CoreTests
             // Enable only map1.
             map1.Enable();
 
+            // Creating gamepad after maps are enabled to test trace catching binding resolve. Case ISXB-29.
+            var gamepad = InputSystem.AddDevice<Gamepad>();
             Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), startTime + 0.123);
 
             // map1/action1 should have been started and performed.
@@ -3052,7 +3090,7 @@ partial class CoreTests
             action2.Disable();
             Set(gamepad.leftTrigger, 0.234f);
 
-            Assert.That(trace, Performed(action2, value: -0.123f).AndThen(Performed(action1, value: 0.123f)));
+            Assert.That(trace, Performed(action1, value: 0.123f).AndThen(Performed(action2, value: -0.123f)));
         }
     }
 
@@ -8191,7 +8229,7 @@ partial class CoreTests
     public void Actions_CompositesInDifferentMapsTiedToSameControlsWork()
     {
         // This test relies on the same single input getting picked up by two different composites.
-        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kDisableShortcutSupport, true);
+        InputSystem.settings.shortcutKeysConsumeInput = false;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -10156,6 +10194,68 @@ partial class CoreTests
         Assert.That(values.Count, Is.EqualTo(1));
         Assert.That(values[0].InputId, Is.EqualTo(200));
         Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
+    }
+
+    // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.
+    // This test should be repurposed once that behaviour is fixed.
+    [Test]
+    [Category("Actions")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Actions_ImprovedShortcutSupport_ConsumesWASD(bool shortcutsEnabled)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = shortcutsEnabled;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map1 = new InputActionMap("map1");
+        var action1 = map1.AddAction(name: "action1");
+        action1.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var map2 = new InputActionMap("map2");
+        var action2 = map2.AddAction(name: "action2");
+        action2.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        var action3 = map2.AddAction(name: "action3", binding: "<Keyboard>/w");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map1.Enable();
+        LogAssert.NoUnexpectedReceived();
+
+        map2.Enable();
+
+        int action1Count = 0;
+        int action2Count = 0;
+        int action3Count = 0;
+        action1.started += ctx => action1Count++;
+        action2.started += ctx => action2Count++;
+        action3.started += ctx => action3Count++;
+
+        Press(keyboard.wKey);
+        if (shortcutsEnabled)
+        {
+            // First action with the most bindings is the ONLY one to trigger
+            Assert.That(action1Count, Is.EqualTo(1));
+            Assert.That(action2Count, Is.EqualTo(0));
+            Assert.That(action3Count, Is.EqualTo(0));
+        }
+        else
+        {
+            // All actions were triggered
+            Assert.That(action1Count, Is.EqualTo(1));
+            Assert.That(action2Count, Is.EqualTo(1));
+            Assert.That(action3Count, Is.EqualTo(1));
+        }
     }
 
     [Test]

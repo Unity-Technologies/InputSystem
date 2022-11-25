@@ -34,7 +34,7 @@ Related pages:
 Without Actions, the meaning of your input and the device controls end up hard-coded together in your scripts, which although quick to implement, is not very flexible and therefore not always desirable. For example, here the moveVector variable is hard-coded to read values from the right stick of a gamepad:
 
 ```CSharp
-    // without Actions, you end up hard-coding device controls 
+    // without Actions, you end up hard-coding device controls
     // like this: (not always desirable)
     moveVector = gamepad.rightStick.ReadValue<Vector2>();
 ```

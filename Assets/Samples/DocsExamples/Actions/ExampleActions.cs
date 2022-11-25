@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-public partial class @ExampleActions : IInputActionCollection2, IDisposable
+public partial class @ExampleActions: IInputActionCollection2, IDisposable
 {
     public InputActionAsset asset { get; }
     public @ExampleActions()
@@ -284,12 +284,14 @@ public partial class @ExampleActions : IInputActionCollection2, IDisposable
     {
         asset.Disable();
     }
+
     public IEnumerable<InputBinding> bindings => asset.bindings;
 
     public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
     {
         return asset.FindAction(actionNameOrId, throwIfNotFound);
     }
+
     public int FindBinding(InputBinding bindingMask, out InputAction action)
     {
         return asset.FindBinding(bindingMask, out action);
