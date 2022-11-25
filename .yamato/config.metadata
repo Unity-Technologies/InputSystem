@@ -1,5 +1,6 @@
 editors:
   - version: 2020.3
+    disable_tvos_run: true
   - version: 2021.3
   - version: 2022.2
   - version: trunk
