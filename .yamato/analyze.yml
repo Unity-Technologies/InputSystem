@@ -1,15 +1,18 @@
+{% metadata_file .yamato/config.metadata %}
+---
+
 code_analyser:
   name : Code Analyzer
   agent:
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:default
     flavor: m1.mac
   commands:
     - git submodule update --init
     - mkdir Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
     - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip
     - unzip Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
-    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.4
   triggers:

@@ -9,6 +9,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
@@ -262,6 +263,45 @@ internal class OnScreenTests : CoreTestsFixture
         InputSystem.Update(); // Button is feeding events when responding to UI events.
 
         Assert.That(Gamepad.all[0].buttonSouth.isPressed, Is.False);
+    }
+
+    [UnityTest]
+    [Category("Devices")]
+    public IEnumerator Devices_OnScreenStickDoesNotReceivePointerUpEventsInIsolatedMode()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var uiTestScene = new UITestScene(this);
+        var image = uiTestScene.AddImage();
+
+        var stick = image.gameObject.AddComponent<OnScreenStick>();
+        stick.transform.SetParent(uiTestScene.canvas.transform);
+        stick.controlPath = "<Gamepad>/leftStick";
+        stick.useIsolatedInputActions = true;
+
+        var stickOriginPosition = ((RectTransform)stick.transform).anchoredPosition;
+
+
+        // PlayerInput listens for unpaired device activity and then switches to that device which has the effect
+        // of re-resolving bindings, which causes any active actions to cancel. This code replicates that.
+        InputUser.listenForUnpairedDeviceActivity++;
+        InputUser.PerformPairingWithDevice(InputSystem.GetDevice<Touchscreen>());
+        InputUser.onUnpairedDeviceUsed += (control, eventPtr) =>
+        {
+            uiTestScene.uiInputModule.actionsAsset.actionMaps[0].LazyResolveBindings(true);
+        };
+
+        yield return uiTestScene.PressAndDrag(image, new Vector2(50, 50));
+
+        // The OnScreenStick when being driven from the UI (non-isolated mode) queues the events into the next
+        // frame, because the UI events are processed after the input system update has completed (as opposed to running
+        // inside input action callbacks. When events are queued from there, they are processed in the same frame), so
+        // we need an extra frame here to flush those events.
+        yield return null;
+
+        // The effect on the stick of cancelling the pointer action is that it jumps back to the center position,
+        // so assert that it hasn't done that
+        Assert.That(stick.gameObject.GetComponent<RectTransform>().anchoredPosition, Is.Not.EqualTo(stickOriginPosition));
     }
 
     // https://fogbugz.unity3d.com/f/cases/1305016/

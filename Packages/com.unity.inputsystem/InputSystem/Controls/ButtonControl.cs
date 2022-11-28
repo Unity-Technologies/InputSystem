@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 
@@ -75,6 +76,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <returns>True if <paramref name="value"/> crosses the threshold to be considered pressed.</returns>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool IsValueConsideredPressed(float value)
         {
             return value >= pressPointOrDefault;

@@ -227,7 +227,11 @@ namespace UnityEngine.InputSystem.LowLevel
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
         public float unscaledGameTime => Time.unscaledTime;
 
-        public bool runInBackground => Application.runInBackground;
+        public bool runInBackground => Application.runInBackground ||
+        // certain platforms ignore the runInBackground flag and always run. Make sure we're
+        // not running on one of those.
+        // TODO: Add more platforms here as they're discovered.
+        Application.platform == RuntimePlatform.PS5;
 
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
