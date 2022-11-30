@@ -227,8 +227,35 @@ namespace UnityEngine.InputSystem.Switch
             HandshakeTick();
         }
 
-        public void OnStateEvent(InputEventPtr eventPtr)
+        // filter out three lower bits as jitter noise
+        internal const byte JitterMaskLow = 0b01111000;
+        internal const byte JitterMaskHigh = 0b10000111;
+
+        public unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
+            if (eventPtr.type == StateEvent.Type && eventPtr.stateFormat == SwitchProControllerHIDInputState.Format)
+            {
+                var currentState = (SwitchProControllerHIDInputState*)((byte*)currentStatePtr + m_StateBlock.byteOffset);
+                var newState = (SwitchProControllerHIDInputState*)StateEvent.FromUnchecked(eventPtr)->state;
+
+                var actuated =
+                    // we need to make device current if axes are outside of deadzone specifying hardware jitter of sticks around zero point
+                    newState->leftStickX<JitterMaskLow
+                                         || newState->leftStickX> JitterMaskHigh
+                    || newState->leftStickY<JitterMaskLow
+                                            || newState->leftStickY> JitterMaskHigh
+                    || newState->rightStickX<JitterMaskLow
+                                             || newState->rightStickX> JitterMaskHigh
+                    || newState->rightStickY<JitterMaskLow
+                                             || newState->rightStickY> JitterMaskHigh
+                    // we need to make device current if buttons state change
+                    || newState->buttons1 != currentState->buttons1
+                    || newState->buttons2 != currentState->buttons2;
+
+                if (!actuated)
+                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+            }
+
             InputState.Change(this, eventPtr);
         }
 

@@ -1461,4 +1461,45 @@ partial class CoreTests
         Assert.That(UnsafeUtility.SizeOf<TouchState>(), Is.EqualTo(TouchState.kSizeInBytes));
         Assert.That(touchscreen.touches[0].stateBlock.alignedSizeInBytes, Is.EqualTo(TouchState.kSizeInBytes));
     }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_TrivialControlsAreOptimized()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatVector2));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_ParentChangesOptimization_IfChildIsNoLongerOptimized()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        mouse.position.x.invert = true;
+        mouse.position.x.ApplyParameterChanges();
+
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+    }
 }

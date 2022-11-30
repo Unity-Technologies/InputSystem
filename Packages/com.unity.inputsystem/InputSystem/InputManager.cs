@@ -2529,6 +2529,10 @@ namespace UnityEngine.InputSystem
             ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
+            // Update devices control optimization
+            foreach (var device in devices)
+                device.SetOptimizedControlDataTypeRecursively();
+
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
@@ -2821,6 +2825,10 @@ namespace UnityEngine.InputSystem
 
             m_CurrentUpdate = updateType;
             InputUpdate.OnUpdate(updateType);
+
+            // Ensure optimized controls are in valid state
+            foreach (var device in devices)
+                device.EnsureOptimizationTypeHasNotChanged();
 
             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
@@ -3172,9 +3180,12 @@ namespace UnityEngine.InputSystem
                             var haveChangedStateOtherThanNoise = true;
                             if (deviceIsStateCallbackReceiver)
                             {
+                                m_ShouldMakeCurrentlyUpdatingDeviceCurrent = true;
                                 // NOTE: We leave it to the device to make sure the event has the right format. This allows the
                                 //       device to handle multiple different incoming formats.
                                 ((IInputStateCallbackReceiver)device).OnStateEvent(eventPtr);
+
+                                haveChangedStateOtherThanNoise = m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
                             }
                             else
                             {
@@ -3312,6 +3323,15 @@ namespace UnityEngine.InputSystem
 
             DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners,
                 "InputSystem.onAfterUpdate");
+        }
+
+        private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
+
+        // This is a dirty hot fix to expose entropy from device back to input manager to make a choice if we want to make device current or not.
+        // A proper fix would be to change IInputStateCallbackReceiver.OnStateEvent to return bool to make device current or not.
+        internal void DontMakeCurrentlyUpdatingDeviceCurrent()
+        {
+            m_ShouldMakeCurrentlyUpdatingDeviceCurrent = false;
         }
 
         internal unsafe bool UpdateState(InputDevice device, InputEvent* eventPtr, InputUpdateType updateType)

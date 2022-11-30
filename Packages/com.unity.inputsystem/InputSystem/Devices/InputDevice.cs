@@ -886,18 +886,24 @@ namespace UnityEngine.InputSystem
 
         internal bool RequestSync()
         {
+            SetOptimizedControlDataTypeRecursively();
+
             var syncCommand = RequestSyncCommand.Create();
             return device.ExecuteCommand(ref syncCommand) >= 0;
         }
 
         internal bool RequestReset()
         {
+            SetOptimizedControlDataTypeRecursively();
+
             var resetCommand = RequestResetCommand.Create();
             return device.ExecuteCommand(ref resetCommand) >= 0;
         }
 
         internal bool ExecuteEnableCommand()
         {
+            SetOptimizedControlDataTypeRecursively();
+
             var command = EnableDeviceCommand.Create();
             return device.ExecuteCommand(ref command) >= 0;
         }

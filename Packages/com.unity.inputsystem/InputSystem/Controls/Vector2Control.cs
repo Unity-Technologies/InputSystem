@@ -1,5 +1,6 @@
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Controls
 {
@@ -57,16 +58,30 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Vector2(
-                x.ReadUnprocessedValueFromState(statePtr),
-                y.ReadUnprocessedValueFromState(statePtr));
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatVector2:
+                    return *(Vector2*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
+                default:
+                    return new Vector2(
+                        x.ReadUnprocessedValueFromState(statePtr),
+                        y.ReadUnprocessedValueFromState(statePtr));
+            }
         }
 
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            x.WriteValueIntoState(value.x, statePtr);
-            y.WriteValueIntoState(value.y, statePtr);
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatVector2:
+                    *(Vector2*)((byte*)statePtr + (int)m_StateBlock.byteOffset) = value;
+                    break;
+                default:
+                    x.WriteValueIntoState(value.x, statePtr);
+                    y.WriteValueIntoState(value.y, statePtr);
+                    break;
+            }
         }
 
         /// <inheritdoc />
@@ -74,6 +89,20 @@ namespace UnityEngine.InputSystem.Controls
         {
             ////REVIEW: this can go beyond 1; that okay?
             return ReadValueFromState(statePtr).magnitude;
+        }
+
+        protected override FourCC CalculateOptimizedControlDataType()
+        {
+            if (
+                m_StateBlock.sizeInBits == sizeof(float) * 2 * 8 &&
+                m_StateBlock.bitOffset == 0 &&
+                x.optimizedControlDataType == InputStateBlock.FormatFloat &&
+                y.optimizedControlDataType == InputStateBlock.FormatFloat &&
+                y.m_StateBlock.byteOffset == x.m_StateBlock.byteOffset + 4
+            )
+                return InputStateBlock.FormatVector2;
+
+            return InputStateBlock.FormatInvalid;
         }
     }
 }

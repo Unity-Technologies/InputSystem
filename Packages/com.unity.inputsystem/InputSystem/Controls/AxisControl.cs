@@ -1,7 +1,11 @@
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
+
+////TODO: if AxisControl fields where properties, we wouldn't need ApplyParameterChanges, maybe it's ok breaking change?
 
 namespace UnityEngine.InputSystem.Controls
 {
@@ -179,6 +183,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="normalize"/>
         /// <seealso cref="scale"/>
         /// <seealso cref="invert"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected float Preprocess(float value)
         {
             if (scale)
@@ -236,16 +241,37 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
-            var value = stateBlock.ReadFloat(statePtr);
-            ////REVIEW: this isn't very raw
-            return Preprocess(value);
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatFloat:
+                    return *(float*)((byte*)statePtr + m_StateBlock.m_ByteOffset);
+                case InputStateBlock.kFormatByte:
+                    return *((byte*)statePtr + m_StateBlock.m_ByteOffset) != 0 ? 1.0f : 0.0f;
+                default:
+                {
+                    var value = stateBlock.ReadFloat(statePtr);
+                    ////REVIEW: this isn't very raw
+                    return Preprocess(value);
+                }
+            }
         }
 
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
-            value = Unpreprocess(value);
-            stateBlock.WriteFloat(statePtr, value);
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatFloat:
+                    *(float*)((byte*)statePtr + m_StateBlock.m_ByteOffset) = value;
+                    break;
+                case InputStateBlock.kFormatByte:
+                    *((byte*)statePtr + m_StateBlock.m_ByteOffset) = (byte)(value >= 0.5f ? 1 : 0);
+                    break;
+                default:
+                    value = Unpreprocess(value);
+                    stateBlock.WriteFloat(statePtr, value);
+                    break;
+            }
         }
 
         /// <inheritdoc />
@@ -282,6 +308,29 @@ namespace UnityEngine.InputSystem.Controls
             }
 
             return NormalizeProcessor.Normalize(clampedValue, min, max, 0);
+        }
+
+        protected override FourCC CalculateOptimizedControlDataType()
+        {
+            var noProcessingNeeded =
+                clamp == Clamp.None &&
+                invert == false &&
+                normalize == false &&
+                scale == false;
+
+            if (noProcessingNeeded &&
+                m_StateBlock.format == InputStateBlock.FormatFloat &&
+                m_StateBlock.sizeInBits == 32 &&
+                m_StateBlock.bitOffset == 0)
+                return InputStateBlock.FormatFloat;
+            if (noProcessingNeeded &&
+                m_StateBlock.format == InputStateBlock.FormatBit &&
+                // has to be 8, otherwise we might be mapping to a state which only represents first bit in the byte, while other bits might map to some other controls
+                // like in the mouse where LMB/RMB map to the same byte, just LMB maps to first bit and RMB maps to second bit
+                m_StateBlock.sizeInBits == 8 &&
+                m_StateBlock.bitOffset == 0)
+                return InputStateBlock.FormatByte;
+            return InputStateBlock.FormatInvalid;
         }
     }
 }
