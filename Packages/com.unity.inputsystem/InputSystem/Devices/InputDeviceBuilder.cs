@@ -913,10 +913,9 @@ namespace UnityEngine.InputSystem.Layouts
                     throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit size of {(1U << InputDevice.kStateSizeBits) - 1} (bit offset {control.stateBlock.sizeInBits})");
             }
 
-#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
+            // Construct control bit range tree
             if (control != m_Device)
                 InsertControlBitRangeNode(ref m_Device.m_ControlTreeNodes[0], control, ref controlIndiciesNextFreeIndex, 0);
-#endif
 
             // Add all leaf controls to state offset mapping.
             if (control.m_ChildCount == 0)

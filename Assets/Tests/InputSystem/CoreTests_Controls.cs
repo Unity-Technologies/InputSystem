@@ -436,11 +436,13 @@ partial class CoreTests
         }
     }
 
-#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
     [Test]
     [Category("Controls")]
     public unsafe void Controls_ValueIsReadFromStateMemoryOnlyWhenControlHasBeenMarkedAsStale()
     {
+        // disable paranoid checks because this test is consciously writing to state memory directly
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // read the value once initially so it gets cached
@@ -454,6 +456,10 @@ partial class CoreTests
         // because we wrote the state manually into the current state ptr, the stale flag is not set, so calling
         // value should return whatever was previously cached (0 by default).
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0));
+
+        // calling ApplyParameterChanges should recursively invalidate cached values
+        gamepad.ApplyParameterChanges();
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5f));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update();
@@ -492,8 +498,6 @@ partial class CoreTests
             Assert.That(control.m_CachedValueIsStale, Is.True);
         }
     }
-
-#endif
 
     [Test]
     [Category("Controls")]

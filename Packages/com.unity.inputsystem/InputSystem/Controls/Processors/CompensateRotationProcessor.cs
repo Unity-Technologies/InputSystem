@@ -28,5 +28,7 @@ namespace UnityEngine.InputSystem.Processors
         {
             return "CompensateRotation()";
         }
+
+        public override CachingPolicy cachingPolicy => CachingPolicy.EvaluateOnEveryRead;
     }
 }

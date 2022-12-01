@@ -16,7 +16,6 @@ using UnityEngine.InputSystem.Editor;
 using UnityEngine;
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.TestTools;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -82,12 +81,7 @@ class APIVerificationTests
                 resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputEventTypeInfo).FullName) ||
 
                 // serializable types may depend on the field names to match serialized data (eg. Json)
-                resolved.Attributes.HasFlag(TypeAttributes.Serializable) ||
-
-                // These types need to use fields because they are returned as ref readonly from InputAction.value and we
-                // want to avoid defensive copies being created for every property access. Also, we can't use the types
-                // Bone and Eyes here because they don't exist on some platforms
-                resolved.Name == "Bone" || resolved.Name == "Eyes"
+                resolved.Attributes.HasFlag(TypeAttributes.Serializable)
             )
                 return true;
 
@@ -425,20 +419,6 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public class DualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShockGamepad
     ")]
-    // These properties were changed to fields so they don't create defensive copies when used through
-    // the InputAction.value ref readonly property.
-    [ScopedExclusionProperty(@"1.0.0", "UnityEngine.InputSystem.XR", "public struct Bone",
-        "public System.UInt32 parentBoneIndex { get; set; }",
-        "public UnityEngine.Vector3 position { get; set; }",
-        "public UnityEngine.Quaternion rotation { get; set; }")]
-    [ScopedExclusionProperty(@"1.0.0", "UnityEngine.InputSystem.XR", "public struct Eyes",
-        "public UnityEngine.Vector3 fixationPoint { get; set; }",
-        "public float leftEyeOpenAmount { get; set; }",
-        "public UnityEngine.Vector3 leftEyePosition { get; set; }",
-        "public UnityEngine.Quaternion leftEyeRotation { get; set; }",
-        "public float rightEyeOpenAmount { get; set; }",
-        "public UnityEngine.Vector3 rightEyePosition { get; set; }",
-        "public UnityEngine.Quaternion rightEyeRotation { get; set; }")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

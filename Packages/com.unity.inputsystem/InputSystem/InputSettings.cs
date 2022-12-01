@@ -701,20 +701,27 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
-            if (featureName == InputFeatureNames.kUseOptimizedControls)
+            switch (featureName)
             {
-                optimizedControlsFeatureEnabled = enabled;
-                OnChange();
-                return;
+                case InputFeatureNames.kUseOptimizedControls:
+                    optimizedControlsFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kUseReadValueCaching:
+                    readValueCachingFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kParanoidReadValueCachingChecks:
+                    paranoidReadValueCachingChecksEnabled = enabled;
+                    break;
+                default:
+                    if (m_FeatureFlags == null)
+                        m_FeatureFlags = new HashSet<string>();
+
+                    if (enabled)
+                        m_FeatureFlags.Add(featureName.ToUpperInvariant());
+                    else
+                        m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+                    break;
             }
-
-            if (m_FeatureFlags == null)
-                m_FeatureFlags = new HashSet<string>();
-
-            if (enabled)
-                m_FeatureFlags.Add(featureName.ToUpperInvariant());
-            else
-                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
 
             OnChange();
         }
@@ -756,6 +763,8 @@ namespace UnityEngine.InputSystem
 
         // Needs a static field because feature check is in the hot path
         internal static bool optimizedControlsFeatureEnabled = false;
+        internal static bool readValueCachingFeatureEnabled = true; // TODO switch back to false
+        internal static bool paranoidReadValueCachingChecksEnabled = true;
 
         internal void OnChange()
         {

@@ -171,8 +171,6 @@ namespace UnityEngine.InputSystem.Controls
         /// <value>Multiplier for input values.</value>
         public float scaleFactor;
 
-        public override float magnitude => EvaluateMagnitude(value);
-
         /// <summary>
         /// Apply modifications to the given value according to the parameters configured
         /// on the control (<see cref="clamp"/>, <see cref="normalize"/>, etc).
@@ -285,7 +283,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
-            return EvaluateMagnitude(ReadValueFromState(statePtr));
+            return EvaluateMagnitude(ReadValueFromStateWithCaching(statePtr));
         }
 
         private float EvaluateMagnitude(float value)

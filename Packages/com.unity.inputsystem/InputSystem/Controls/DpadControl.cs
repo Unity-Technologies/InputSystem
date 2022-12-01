@@ -22,16 +22,6 @@ namespace UnityEngine.InputSystem.Controls
         {
             public int component { get; set; }
 
-            /// <inheritdoc/>
-            public override ref readonly float value
-            {
-                get
-                {
-                    m_CachedValue = ProcessValue(((DpadControl)m_Parent).unprocessedValue[component]);
-                    return ref m_CachedValue;
-                }
-            }
-
             protected override void FinishSetup()
             {
                 base.FinishSetup();
@@ -80,32 +70,6 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(bit = (int)ButtonBits.Right, displayName = "Right")]
         public ButtonControl right { get; set; }
 
-        /// <inheritdoc/>
-        public override ref readonly Vector2 value
-        {
-            get
-            {
-#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
-#if UNITY_EDITOR
-                if (!useCachedValue)
-                    return ref ReadStateInEditor();
-#endif
-
-                if (!m_CachedValueIsStale)
-                    return ref m_CachedValue;
-#endif
-
-                m_CachedValueIsStale = false;
-                var upIsPressed = up.value >= up.pressPointOrDefault;
-                var downIsPressed = down.value >= down.pressPointOrDefault;
-                var leftIsPressed = left.value >= left.pressPointOrDefault;
-                var rightIsPressed = right.value >= right.pressPointOrDefault;
-
-                m_CachedValue = ProcessValue(MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed));
-                return ref m_CachedValue;
-            }
-        }
-
         ////TODO: should have X and Y child controls as well
 
         public DpadControl()
@@ -125,10 +89,10 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            var upIsPressed = up.ReadValueFromState(statePtr) >= up.pressPointOrDefault;
-            var downIsPressed = down.ReadValueFromState(statePtr) >= down.pressPointOrDefault;
-            var leftIsPressed = left.ReadValueFromState(statePtr) >= left.pressPointOrDefault;
-            var rightIsPressed = right.ReadValueFromState(statePtr) >= right.pressPointOrDefault;
+            var upIsPressed = up.ReadValueFromStateWithCaching(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFromStateWithCaching(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFromStateWithCaching(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFromStateWithCaching(statePtr) >= right.pressPointOrDefault;
 
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }

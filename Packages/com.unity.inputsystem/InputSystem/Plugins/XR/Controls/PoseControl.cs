@@ -184,17 +184,6 @@ namespace UnityEngine.InputSystem.XR
         /// <seealso cref="PoseState.angularVelocity"/>
         public Vector3Control angularVelocity { get; private set; }
 
-        /// <inheritdoc/>
-        public override unsafe ref readonly PoseState value
-        {
-            get
-            {
-                m_CachedValue = *(PoseState*)((byte*)currentStatePtr + (int)m_StateBlock.byteOffset);
-                ProcessValue(ref m_CachedValue);
-                return ref m_CachedValue;
-            }
-        }
-
         /// <summary>
         /// Default-initialize the pose control.
         /// </summary>
@@ -229,12 +218,12 @@ namespace UnityEngine.InputSystem.XR
                 default:
                     return new PoseState()
                     {
-                        isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
-                        trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
-                        position = position.ReadUnprocessedValueFromState(statePtr),
-                        rotation = rotation.ReadUnprocessedValueFromState(statePtr),
-                        velocity = velocity.ReadUnprocessedValueFromState(statePtr),
-                        angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
+                        isTracked = isTracked.ReadUnprocessedValueFromStateWithCaching(statePtr) > 0.5f,
+                        trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        position = position.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        rotation = rotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        velocity = velocity.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        angularVelocity = angularVelocity.ReadUnprocessedValueFromStateWithCaching(statePtr),
                     };
             }
         }

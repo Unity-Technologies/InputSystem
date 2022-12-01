@@ -546,6 +546,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     {
         var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
 
         var mouse = InputSystem.AddDevice<Mouse>();
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(useOptimizedControls ? InputStateBlock.FormatFloat : InputStateBlock.FormatInvalid));
@@ -572,6 +574,8 @@ internal class CorePerformanceTests : CoreTestsFixture
     {
         var useOptimizedControls = testSetup == OptimizedControlsTest.OptimizedControls;
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, useOptimizedControls);
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
 
         runtime.ReportNewInputDevice(XRTests.PoseDeviceState.CreateDeviceDescription().ToJson());
 

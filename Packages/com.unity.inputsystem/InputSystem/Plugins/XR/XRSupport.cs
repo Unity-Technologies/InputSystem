@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
@@ -143,44 +142,15 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The index with the device's controls array where the parent bone resides.
         /// </summary>
-        public uint m_ParentBoneIndex;
-
+        public uint parentBoneIndex { get; set; }
         /// <summary>
         /// The tracked position of the bone.
         /// </summary>
-        public Vector3 m_Position;
-
+        public Vector3 position { get; set; }
         /// <summary>
         /// The tracked rotation of the bone.
         /// </summary>
-        public Quaternion m_Rotation;
-
-        /// <summary>
-        /// The index with the device's controls array where the parent bone resides.
-        /// </summary>
-        public uint parentBoneIndex
-        {
-            get => m_ParentBoneIndex;
-            set => m_ParentBoneIndex = value;
-        }
-
-        /// <summary>
-        /// The tracked position of the bone.
-        /// </summary>
-        public Vector3 position
-        {
-            get => m_Position;
-            set => m_Position = value;
-        }
-
-        /// <summary>
-        /// The tracked rotation of the bone.
-        /// </summary>
-        public Quaternion rotation
-        {
-            get => m_Rotation;
-            set => m_Rotation = value;
-        }
+        public Quaternion rotation { get; set; }
     }
 
     /// <summary>
@@ -191,94 +161,31 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// The tracked position of the left eye.
         /// </summary>
-        public Vector3 m_LeftEyePosition;
+        public Vector3 leftEyePosition { get; set; }
         /// <summary>
         /// The tracked rotation of the left eye.
         /// </summary>
-        public Quaternion m_LeftEyeRotation;
+        public Quaternion leftEyeRotation { get; set; }
         /// <summary>
         /// The tracked position of the right eye.
         /// </summary>
-        public Vector3 m_RightEyePosition;
+        public Vector3 rightEyePosition { get; set; }
         /// <summary>
         /// The tracked rotation of the right eye.
         /// </summary>
-        public Quaternion m_RightEyeRotation;
+        public Quaternion rightEyeRotation { get; set; }
         /// <summary>
         /// The point in 3D space that the pair of eyes is looking.
         /// </summary>
-        public Vector3 m_FixationPoint;
+        public Vector3 fixationPoint { get; set; }
         /// <summary>
         /// The amount [0-1] the left eye is open or closed.  1.0 is fully open.
         /// </summary>
-        public float m_LeftEyeOpenAmount;
+        public float leftEyeOpenAmount { get; set; }
         /// <summary>
         /// The amount [0-1] the right eye is open or closed.  1.0 is fully open.
         /// </summary>
-        public float m_RightEyeOpenAmount;
-
-        /// <summary>
-        /// The tracked position of the left eye.
-        /// </summary>
-        public Vector3 leftEyePosition
-        {
-            get => m_LeftEyePosition;
-            set => m_LeftEyePosition = value;
-        }
-
-        /// <summary>
-        /// The tracked rotation of the left eye.
-        /// </summary>
-        public Quaternion leftEyeRotation
-        {
-            get => m_LeftEyeRotation;
-            set => m_LeftEyeRotation = value;
-        }
-
-        /// <summary>
-        /// The tracked position of the right eye.
-        /// </summary>
-        public Vector3 rightEyePosition
-        {
-            get => m_RightEyePosition;
-            set => m_RightEyePosition = value;
-        }
-
-        /// <summary>
-        /// The tracked rotation of the right eye.
-        /// </summary>
-        public Quaternion rightEyeRotation
-        {
-            get => m_RightEyeRotation;
-            set => m_RightEyeRotation = value;
-        }
-
-        /// <summary>
-        /// The point in 3D space that the pair of eyes is looking.
-        /// </summary>
-        public Vector3 fixationPoint
-        {
-            get => m_FixationPoint;
-            set => m_FixationPoint = value;
-        }
-
-        /// <summary>
-        /// The amount [0-1] the left eye is open or closed.  1.0 is fully open.
-        /// </summary>
-        public float leftEyeOpenAmount
-        {
-            get => m_LeftEyeOpenAmount;
-            set => m_LeftEyeOpenAmount = value;
-        }
-
-        /// <summary>
-        /// The amount [0-1] the right eye is open or closed.  1.0 is fully open.
-        /// </summary>
-        public float rightEyeOpenAmount
-        {
-            get => m_RightEyeOpenAmount;
-            set => m_RightEyeOpenAmount = value;
-        }
+        public float rightEyeOpenAmount { get; set; }
     }
 
     public class BoneControl : InputControl<Bone>
@@ -289,35 +196,6 @@ namespace UnityEngine.InputSystem.XR
         public Vector3Control position { get; private set; }
         [InputControl(offset = 16, displayName = "Rotation")]
         public QuaternionControl rotation { get; private set; }
-
-        /// <inheritdoc/>
-        public override ref readonly Bone value
-        {
-            get
-            {
-#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
-
-#if UNITY_EDITOR
-                if (!useCachedValue)
-                    return ref ReadStateInEditor();
-#endif
-
-                if (!m_CachedValueIsStale) return ref m_CachedValue;
-#endif
-
-                m_CachedValue = new Bone
-                {
-                    parentBoneIndex = (uint)parentBoneIndex.unprocessedValue,
-                    position = position.unprocessedValue,
-                    rotation = rotation.unprocessedValue
-                };
-
-                ProcessValue(ref m_CachedValue);
-                m_CachedValueIsStale = false;
-
-                return ref m_CachedValue;
-            }
-        }
 
         protected override void FinishSetup()
         {
@@ -332,9 +210,9 @@ namespace UnityEngine.InputSystem.XR
         {
             return new Bone()
             {
-                parentBoneIndex = (uint)parentBoneIndex.ReadUnprocessedValueFromState(statePtr),
-                position = position.ReadUnprocessedValueFromState(statePtr),
-                rotation = rotation.ReadUnprocessedValueFromState(statePtr)
+                parentBoneIndex = (uint)parentBoneIndex.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                position = position.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rotation = rotation.ReadUnprocessedValueFromStateWithCaching(statePtr)
             };
         }
 
@@ -380,13 +258,13 @@ namespace UnityEngine.InputSystem.XR
         {
             return new Eyes()
             {
-                leftEyePosition = leftEyePosition.ReadUnprocessedValueFromState(statePtr),
-                leftEyeRotation = leftEyeRotation.ReadUnprocessedValueFromState(statePtr),
-                rightEyePosition = rightEyePosition.ReadUnprocessedValueFromState(statePtr),
-                rightEyeRotation = rightEyeRotation.ReadUnprocessedValueFromState(statePtr),
-                fixationPoint = fixationPoint.ReadUnprocessedValueFromState(statePtr),
-                leftEyeOpenAmount = leftEyeOpenAmount.ReadUnprocessedValueFromState(statePtr),
-                rightEyeOpenAmount = rightEyeOpenAmount.ReadUnprocessedValueFromState(statePtr)
+                leftEyePosition = leftEyePosition.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                leftEyeRotation = leftEyeRotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rightEyePosition = rightEyePosition.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rightEyeRotation = rightEyeRotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                fixationPoint = fixationPoint.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                leftEyeOpenAmount = leftEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                rightEyeOpenAmount = rightEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr)
             };
         }
 
@@ -399,36 +277,6 @@ namespace UnityEngine.InputSystem.XR
             fixationPoint.WriteValueIntoState(value.fixationPoint, statePtr);
             leftEyeOpenAmount.WriteValueIntoState(value.leftEyeOpenAmount, statePtr);
             rightEyeOpenAmount.WriteValueIntoState(value.rightEyeOpenAmount, statePtr);
-        }
-
-        /// <inheritdoc/>
-        public override ref readonly Eyes value
-        {
-            get
-            {
-#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
-#if UNITY_EDITOR
-                if (!useCachedValue)
-                    return ref ReadStateInEditor();
-#endif
-                if (!m_CachedValueIsStale) return ref m_CachedValue;
-#endif
-
-                m_CachedValue = new Eyes
-                {
-                    leftEyePosition = leftEyePosition.unprocessedValue,
-                    leftEyeRotation = leftEyeRotation.unprocessedValue,
-                    rightEyePosition = rightEyePosition.unprocessedValue,
-                    rightEyeRotation = rightEyeRotation.unprocessedValue,
-                    fixationPoint = fixationPoint.unprocessedValue,
-                    leftEyeOpenAmount = leftEyeOpenAmount.unprocessedValue,
-                    rightEyeOpenAmount = rightEyeOpenAmount.unprocessedValue
-                };
-                ProcessValue(ref m_CachedValue);
-                m_CachedValueIsStale = false;
-
-                return ref m_CachedValue;
-            }
         }
     }
 #pragma warning restore 0649

@@ -76,6 +76,27 @@ namespace UnityEngine.InputSystem
 
             return TypeHelpers.GetGenericTypeArgumentFromHierarchy(processorType, typeof(InputProcessor<>), 0);
         }
+
+        /// <summary>
+        /// Caching policy regarding usage of return value from processors.
+        /// </summary>
+        public enum CachingPolicy
+        {
+            /// <summary>
+            /// Cache result value if unprocessed value has not been changed.
+            /// </summary>
+            CacheResult = 0,
+
+            /// <summary>
+            /// Process value every call to <see cref="InputControl{TValue}.ReadValue()"/> even if unprocessed value has not been changed.
+            /// </summary>
+            EvaluateOnEveryRead = 1
+        }
+
+        /// <summary>
+        /// Caching policy of the processor. Override this property to provide a different value.
+        /// </summary>
+        public virtual CachingPolicy cachingPolicy => CachingPolicy.CacheResult;
     }
 
     /// <summary>

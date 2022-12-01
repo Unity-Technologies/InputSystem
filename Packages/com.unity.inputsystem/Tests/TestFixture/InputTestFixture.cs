@@ -134,6 +134,11 @@ namespace UnityEngine.InputSystem
 
                 // Always want to merge by default
                 InputSystem.settings.disableRedundantEventsMerging = false;
+
+                // Turn on all optimizations and checks
+                InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+                InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
+                InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
             }
             catch (Exception exception)
             {

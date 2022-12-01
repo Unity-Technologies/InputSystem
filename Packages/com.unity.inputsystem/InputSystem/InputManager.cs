@@ -1183,6 +1183,8 @@ namespace UnityEngine.InputSystem
             // Request device to send us an initial state update.
             if (device.enabled)
                 device.RequestSync();
+
+            device.SetOptimizedControlDataTypeRecursively();
         }
 
         ////TODO: this path should really put the device on the list of available devices
@@ -2533,6 +2535,10 @@ namespace UnityEngine.InputSystem
             foreach (var device in devices)
                 device.SetOptimizedControlDataTypeRecursively();
 
+            // Invalidate control caches due to potential changes to processors or value readers
+            foreach (var device in devices)
+                device.MarkAsStaleRecursively();
+
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
@@ -3496,17 +3502,18 @@ namespace UnityEngine.InputSystem
                     deviceStateSize);
             }
 
-            // if the buffers have just been flipped, and we're doing a full state update, then the state from the
-            // previous update is now in the back buffer, and we should be comparing to that when checking what
-            // controls have changed
-            var buffer = (byte*)frontBuffer;
-            if (flippedBuffers && deviceStateSize == stateSizeInBytes)
-                buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
+            if (InputSettings.readValueCachingFeatureEnabled)
+            {
+                // if the buffers have just been flipped, and we're doing a full state update, then the state from the
+                // previous update is now in the back buffer, and we should be comparing to that when checking what
+                // controls have changed
+                var buffer = (byte*)frontBuffer;
+                if (flippedBuffers && deviceStateSize == stateSizeInBytes)
+                    buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
 
-#if UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
-            m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
-                stateSizeInBytes, stateOffsetInDevice);
-#endif
+                m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
+                    stateSizeInBytes, stateOffsetInDevice);
+            }
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);

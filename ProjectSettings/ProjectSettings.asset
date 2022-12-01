@@ -621,7 +621,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLWasmStreaming: 0
   scriptingDefineSymbols:
-    1: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT;UNITY_INPUT_SYSTEM_CONTROL_VALUE_CACHING
+    1: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
   platformArchitecture:
     iPhone: 1
   scriptingBackend:
