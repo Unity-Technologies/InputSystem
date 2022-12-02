@@ -313,6 +313,9 @@ namespace UnityEngine.InputSystem
             remove => m_ActionCallbacks.RemoveCallback(value);
         }
 
+        /// <summary>
+        /// Construct an action map with default values.
+        /// </summary>
         public InputActionMap()
         {
         }
@@ -431,6 +434,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="actionNameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
         /// of the action. Note that matching of names is case-insensitive.</param>
+        /// <param name="throwIfNotFound">If set to <see langword="true"/> will cause an exception to be thrown when the action was not found.</param>
         /// <returns>The action with the given name or ID or <c>null</c> if no matching action
         /// was found.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
@@ -611,6 +615,11 @@ namespace UnityEngine.InputSystem
             return clone;
         }
 
+        /// <summary>
+        /// Return an boxed instance of the action map.
+        /// </summary>
+        /// <returns>An boxed clone of the action map</returns>
+        /// <seealso cref="Clone"/>
         object ICloneable.Clone()
         {
             return Clone();
@@ -658,6 +667,11 @@ namespace UnityEngine.InputSystem
             return actions.GetEnumerator();
         }
 
+        /// <summary>
+        /// Enumerate the actions in the map.
+        /// </summary>
+        /// <returns>An enumerator going over the actions in the map.</returns>
+        /// <seealso cref="GetEnumerator"/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
