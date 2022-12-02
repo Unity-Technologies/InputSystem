@@ -44,6 +44,23 @@ In-between, the stick moves according to the pointer being dragged (`IDragHandle
 
 If you want to be notified when the user starts and/or stops touching the on-screen stick, implement `IPointerDownHandler` and/or `IPointerUpHandler` on a component and add it to the stick `GameObject`.
 
+### Isolated mode
+
+The [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) simulates input events from the device specified in the [`OnScreenControl.control`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_control) property. To the Input System itself, these are normal events and can cause the paired device to change in games and applications where dynamic device switching is used, for example when the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component is used with the [`PlayerInput.neverAutoSwitchControlSchemes`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_neverAutoSwitchControlSchemes)) propety set to false. As the stick is dragged around, the paired device will alternate between the device that owns the pointer (mouse, touch, pen etc) and the device from the control path, which can result in jittery movement of the on-screen stick.
+
+Use Isolated Input Actions to fix this. This mode uses a local set of Input Action instances to drive interaction with the stick, and not the actions defined in the UI. The downside of this mode is that pointer actions will be duplicated in both the on-screen stick component and any Input Action Assets being used to drive the UI. Note that if a set of bindings is not specified for the Pointer Down Action and Pointer Move Actions, the following defaults will be used:
+
+* Pointer Down Action
+    - `<Mouse>/leftButton`
+    - `<Pen>/tip`
+    - `<Touchscreen>/touch*/press`
+    - `<XRController>/trigger`
+
+* Pointer Move Action
+    - `<Mouse>/position`
+    - `<Pen>/position`
+    - `<Touchscreen>/touch*/position`
+
 ## Writing custom on-screen Controls
 
 You can add support for new types of [Input Controls](Controls.md) by extending [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html). An easy example to follow is [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html).
