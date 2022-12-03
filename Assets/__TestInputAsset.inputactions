@@ -1,0 +1,52 @@
+{
+    "name": "",
+    "maps": [
+        {
+            "name": "DefaultActionMap",
+            "id": "73622258-459c-43e1-8a14-5811121ae85f",
+            "actions": [
+                {
+                    "name": "DefaultAction",
+                    "type": "Value",
+                    "id": "db049654-ca78-4d30-8751-0389430cfa37",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "cd295016-211b-46ed-849d-7d3bde406da0",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "DefaultAction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "ActionMapToRemove",
+            "id": "8bdadb95-426d-4844-9d92-d74302126563",
+            "actions": [],
+            "bindings": []
+        },
+        {
+            "name": "ActionMapToModify",
+            "id": "c4eb9ed1-9634-49a8-8275-ff40ef4537a9",
+            "actions": [],
+            "bindings": []
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "ControlSchemeToRemove",
+            "bindingGroup": "ControlSchemeToRemove",
+            "devices": []
+        }
+    ]
+}

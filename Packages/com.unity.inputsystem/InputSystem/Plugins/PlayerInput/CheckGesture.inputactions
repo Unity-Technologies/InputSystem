@@ -1,0 +1,34 @@
+{
+    "name": "CheckGesture",
+    "maps": [
+        {
+            "name": "Gestures",
+            "id": "5661f07a-90f0-4d2b-95fa-a4e0ed323ad8",
+            "actions": [
+                {
+                    "name": "Check",
+                    "type": "Value",
+                    "id": "bc7fd938-3105-4e16-a405-56eec54c7f65",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "Check(duration=1.5,pressPoint=0.2)",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2a81a5ce-be52-4da5-9759-22ded6f5908a",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Check",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

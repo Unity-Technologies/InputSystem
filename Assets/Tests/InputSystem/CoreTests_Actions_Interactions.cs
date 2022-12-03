@@ -385,6 +385,31 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPerformCheckInteraction()
+    {
+        var pointer = InputSystem.AddDevice<Pointer>();
+        var action = new InputAction(binding: "<Pointer>/position", interactions: "Check(duration=2.4)");
+       
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Move.
+            Move(pointer.position, new Vector2(0.43f, -0.42f));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+
+            trace.Clear();
+            
+            // Move.
+            Move(pointer.position, new Vector2(0.73f, -0.76f));
+            Move(pointer.position, new Vector2(1.13f, -0.36f));
+            
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanPerformHoldInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
