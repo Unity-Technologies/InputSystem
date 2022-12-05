@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Utilities
             var d = radius * 2;
 
             var texture = new Texture2D(d, d, DefaultFormat.LDR, TextureCreationFlags.None);
-            var colours = texture.GetPixelData<Color32>(0);
+            var colours = texture.GetRawTextureData<Color32>();
             var coloursPtr = (Color32*)colours.GetUnsafePtr();
             UnsafeUtility.MemSet(coloursPtr, 0, colours.Length * UnsafeUtility.SizeOf<Color32>());
 
