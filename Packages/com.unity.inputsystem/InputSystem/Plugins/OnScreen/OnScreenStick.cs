@@ -393,20 +393,20 @@ namespace UnityEngine.InputSystem.OnScreen
         internal class OnScreenStickEditor : UnityEditor.Editor
         {
             private AnimBool m_ShowDynamicOriginOptions;
-			private AnimBool m_ShowIsolatedInputActions;
-            
-		    private SerializedProperty m_UseIsolatedInputActions;
-			private SerializedProperty m_Behaviour;
+            private AnimBool m_ShowIsolatedInputActions;
+
+            private SerializedProperty m_UseIsolatedInputActions;
+            private SerializedProperty m_Behaviour;
             private SerializedProperty m_ControlPathInternal;
             private SerializedProperty m_MovementRange;
             private SerializedProperty m_DynamicOriginRange;
-			private SerializedProperty m_PointerDownAction;
+            private SerializedProperty m_PointerDownAction;
             private SerializedProperty m_PointerMoveAction;
 
             public void OnEnable()
             {
                 m_ShowDynamicOriginOptions = new AnimBool(false);
-				m_ShowIsolatedInputActions = new AnimBool(false);
+                m_ShowIsolatedInputActions = new AnimBool(false);
 
                 m_UseIsolatedInputActions = serializedObject.FindProperty(nameof(OnScreenStick.m_UseIsolatedInputActions));
 
@@ -414,7 +414,7 @@ namespace UnityEngine.InputSystem.OnScreen
                 m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenStick.m_ControlPath));
                 m_MovementRange = serializedObject.FindProperty(nameof(OnScreenStick.m_MovementRange));
                 m_DynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_DynamicOriginRange));
-            	m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
+                m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
                 m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
             }
 
@@ -434,8 +434,8 @@ namespace UnityEngine.InputSystem.OnScreen
                 }
                 EditorGUILayout.EndFadeGroup();
 
-				EditorGUILayout.PropertyField(m_UseIsolatedInputActions);
-				m_ShowIsolatedInputActions.target = m_UseIsolatedInputActions.boolValue;
+                EditorGUILayout.PropertyField(m_UseIsolatedInputActions);
+                m_ShowIsolatedInputActions.target = m_UseIsolatedInputActions.boolValue;
                 if (EditorGUILayout.BeginFadeGroup(m_ShowIsolatedInputActions.faded))
                 {
                     EditorGUI.indentLevel++;
