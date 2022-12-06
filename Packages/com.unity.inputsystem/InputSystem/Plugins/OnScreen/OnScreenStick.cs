@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.OnScreen
 
             m_StartPos = ((RectTransform)transform).anchoredPosition;
 
-			if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
+            if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
             m_PointerDownPos = m_StartPos;
 
             var dynamicOrigin = new GameObject("DynamicOriginClickable", typeof(Image));
@@ -131,6 +131,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     MoveStick(pointerPosition, uiCamera);
                     break;
                 case Behaviour.ExactPositionWithDynamicOrigin:
+                    // TODO: Check it's a valid origin position: use dynamicOriginRange
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out var pointerDown);
                     m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
                     break;
@@ -144,21 +145,23 @@ namespace UnityEngine.InputSystem.OnScreen
                 pointerPosition, uiCamera, out var position);
             var delta = position - m_PointerDownPos;
 
-            if (m_Behaviour == Behaviour.ExactPositionWithDynamicOrigin)
+            switch (m_Behaviour)
             {
-                delta = Vector2.ClampMagnitude(delta, movementRange);
-                ((RectTransform)transform).anchoredPosition = m_PointerDownPos + delta;
-            }
-            else if (m_Behaviour == Behaviour.ExactPositionWithStaticOrigin)
-            {
-                delta = position - (Vector2)m_StartPos;
-                delta = Vector2.ClampMagnitude(delta, movementRange);
-                ((RectTransform)transform).anchoredPosition = (Vector2)m_StartPos + delta;
-            }
-            else
-            {
-                delta = Vector2.ClampMagnitude(delta, movementRange);
-                ((RectTransform)transform).anchoredPosition = (Vector2)m_StartPos + delta;
+                case Behaviour.RelativePositionWithStaticOrigin:
+                    delta = Vector2.ClampMagnitude(delta, movementRange);
+                    ((RectTransform)transform).anchoredPosition = (Vector2)m_StartPos + delta;
+                    break;
+
+                case Behaviour.ExactPositionWithStaticOrigin:
+                    delta = position - (Vector2)m_StartPos;
+                    delta = Vector2.ClampMagnitude(delta, movementRange);
+                    ((RectTransform)transform).anchoredPosition = (Vector2)m_StartPos + delta;
+                    break;
+
+                case Behaviour.ExactPositionWithDynamicOrigin:
+                    delta = Vector2.ClampMagnitude(delta, movementRange);
+                    ((RectTransform)transform).anchoredPosition = m_PointerDownPos + delta;
+                    break;
             }
 
             var newPos = new Vector2(delta.x / movementRange, delta.y / movementRange);
@@ -262,7 +265,7 @@ namespace UnityEngine.InputSystem.OnScreen
         }
 
         /// <summary>
-        ///
+        /// The distance from the onscreen control's center of origin, around which the control can move.
         /// </summary>
         public float movementRange
         {
@@ -271,14 +274,21 @@ namespace UnityEngine.InputSystem.OnScreen
         }
 
         /// <summary>
-        ///
+        /// Defines the circular region where the onscreen control may have it's origin placed.
         /// </summary>
+        /// <remarks>
+        /// This only applies if <see cref="behaviour"/> is set to <see cref="Behaviour.ExactPositionWithDynamicOrigin"/>.
+        /// When the first press is within this region, then the control will be apprear at that position and and have it's origin of motion placed there.
+        /// Otherwise, if pressed outside of this region the control will ignore it.
+        /// This property defines the radius of the circular region. The center point being defined by the component position in the scene.
+        /// </remarks>
         public float dynamicOriginRange
         {
             get => m_DynamicOriginRange;
             set => m_DynamicOriginRange = value;
         }
 
+        /// <summary>
         /// Prevents stick interactions from getting cancelled due to device switching.
         /// </summary>
         /// <remarks>
@@ -312,6 +322,7 @@ namespace UnityEngine.InputSystem.OnScreen
         private string m_ControlPath;
 
         [SerializeField]
+        [Tooltip("Choose how the onscreen stick will move relative to it's origin and the press position.")]
         private Behaviour m_Behaviour;
 
         [SerializeField]
@@ -346,20 +357,26 @@ namespace UnityEngine.InputSystem.OnScreen
             set => m_ControlPath = value;
         }
 
-        // TODO: Tooltip!
+        /// <summary>Defines how the onscreen stick will move relative to it's origin and the press position.</summary>
         public Behaviour behaviour
         {
             get => m_Behaviour;
             set => m_Behaviour = value;
         }
 
-        /// <summary>
-        ///
-        /// </summary>
+        /// <summary>Defines how the onscreen stick will move relative to it's center of origin and the press position.</summary>
         public enum Behaviour
         {
+            /// <summary>The control's center of origin is fixed in the scene.
+            /// The control will begin unactuated at it's centered position and then move relative to the press motion.</summary>
             RelativePositionWithStaticOrigin,
+
+            /// <summary>The control's center of origin is fixed in the scene.
+            /// The control may begin from an actuated position to ensure it is always tracking the current press position.</summary>
             ExactPositionWithStaticOrigin,
+
+            /// <summary>The control's center of origin is determined by the initial press position.
+            /// The control will begin unactuated at this center position and then track the current press position.</summary>
             ExactPositionWithDynamicOrigin
         }
 
