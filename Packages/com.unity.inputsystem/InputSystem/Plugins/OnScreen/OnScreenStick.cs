@@ -34,6 +34,9 @@ namespace UnityEngine.InputSystem.OnScreen
     [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
+        /// <summary>
+        /// Callback to handle OnPointerDown UI events.
+        /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
             if (m_UseIsolatedInputActions)
@@ -45,6 +48,9 @@ namespace UnityEngine.InputSystem.OnScreen
             BeginInteraction(eventData.position, eventData.pressEventCamera);
         }
 
+        /// <summary>
+        /// Callback to handle OnDrag UI events.
+        /// </summary>
         public void OnDrag(PointerEventData eventData)
         {
             if (m_UseIsolatedInputActions)
@@ -56,6 +62,9 @@ namespace UnityEngine.InputSystem.OnScreen
             MoveStick(eventData.position, eventData.pressEventCamera);
         }
 
+        /// <summary>
+        /// Callback to handle OnPointerUp UI events.
+        /// </summary>
         public void OnPointerUp(PointerEventData eventData)
         {
             if (m_UseIsolatedInputActions)
@@ -131,7 +140,6 @@ namespace UnityEngine.InputSystem.OnScreen
                     MoveStick(pointerPosition, uiCamera);
                     break;
                 case Behaviour.ExactPositionWithDynamicOrigin:
-                    // TODO: Check it's a valid origin position: use dynamicOriginRange
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out var pointerDown);
                     m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
                     break;
