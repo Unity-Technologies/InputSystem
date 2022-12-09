@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added `InputSettings.shortcutKeysConsumeInput`. This allows programmatic access to opt-in to the enhanced shortcut key behaviour ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 - Significantly optimized cost of `ReadValue`/`ReadUnprocessedValueFromState`/`WriteValueIntoState` for some control types. Optimization is opt-in for now, please call `InputSystem.settings.SetInternalFeatureFlag("USE_OPTIMIZED_CONTROLS", true);` in your project to enable it. You can observe which controls are optimized by looking at new optimized column in device debugger. You will need to call a new `InputControl.ApplyParameterChanges()` method if the code is changing `AxisControl` fields after initial setup is done.
 - Added the ability to change the origin positioning and movement behaviour of the OnScreenStick (`OnScreenStick.cs`) via the new `behaviour` property. This currently supports three modes of operation, two of which are new in addition to the previous behaviour. Based on the user contribution from [eblabs](https://github.com/eblabs) in [#658](https://github.com/Unity-Technologies/InputSystem/pull/658).
+- Added a note in the [supported devices page](Documentation~/SupportedDevices.md) about DualSense support for Android devices.
 
 ### Fixed
 - Fixed composite bindings incorrectly getting a control scheme assigned when pasting into input asset editor with a control scheme selected.
