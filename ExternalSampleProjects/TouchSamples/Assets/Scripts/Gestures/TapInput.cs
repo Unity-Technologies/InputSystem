@@ -13,7 +13,7 @@ namespace InputSamples.Gestures
         public readonly Vector2 PressPosition;
 
         /// <summary>
-        /// Position that the tap started.
+        /// Position that the tap released on.
         /// </summary>
         public readonly Vector2 ReleasePosition;
 
