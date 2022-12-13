@@ -1,0 +1,40 @@
+# The metafile contains all information on versions and platforms
+# we want to build for, and is shared across the different jobs.
+
+{% metadata_file https://github.cds.internal.unity3d.com/unity/com.unity.inputsystem.nda/blob/8f6d168f206038b4d7ef301690dc15f745ecb7c7/.yamato/input-external-trigger-config.metadata %}
+
+---
+
+# This configuration loops through the combination of Unity Versions and
+# target platforms, and causes a build of our project to occur by calling
+# the script file in UnityProject/Assets/Editor/Build.cs. Note that
+# because each Editor platform (Windows, Mac, Linux) has different ways
+# of executing commands and also different supported build targets, there
+# are sections for each of those platforms.
+
+# WINDOWS OS TARGETS
+{% for winTarget in platforms_windows -%}
+custom-test-win-{{winTarget.name | downcase}}:
+  name: Custom Win-{{winTarget.name}}
+  agent:
+    image: {{winTarget.image}}
+    type: {{winTarget.type}}
+    flavor: b1.large
+  variables:
+    CUSTOM_REVISION: revision_not_set
+  commands:
+    - gsudo choco install unity-downloader-cli -y -s https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/unity-choco-local
+    - gsudo choco install standaloneutr -s https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/unity-choco-local -y
+    - gsudo choco upgrade standaloneutr -s https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/unity-choco-local -y
+    - gsudo NetSh Advfirewall set allprofiles state off
+    - '{{ winTarget.setup | default: 'echo "No setup needed"'}}' # Some devices require a connection setup before they can be used
+    - unity-downloader-cli -u %CUSTOM_REVISION% -c editor -c {{winTarget.downloaderComponent | default: winTarget.buildTarget | downcase}} --fast --wait
+    - UnifiedTestRunner.exe --suite=playmode --testproject=./UnityProject --editor-location=.Editor --platform={{winTarget.buildTarget}} --artifacts_path=TestResults --player-connection-ip=%BOKKEN_HOST_IP% --device-ip=%BOKKEN_DEVICE_IP%
+  artifacts:
+    editor-log-custom-{{winTarget.name | downcase}}:
+      paths:
+        - Editor-custom-{{winTarget.buildTarget | downcase}}.log
+    test-results-custom-{{winTarget.name | downcase}}:
+      paths:
+        - "TestResults/**"
+{% endfor -%}
