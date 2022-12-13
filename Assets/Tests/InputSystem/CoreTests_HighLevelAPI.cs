@@ -1,10 +1,18 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.HighLevel;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.LowLevel;
+using UnityEngine.PlayerLoop;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
+using GamepadButton = UnityEngine.InputSystem.LowLevel.GamepadButton;
 using Input = UnityEngine.InputSystem.HighLevel.Input;
 
 internal partial class CoreTests
@@ -32,14 +40,14 @@ internal partial class CoreTests
         var joystick = InputSystem.AddDevice<Joystick>();
 
         // check that all controls are not actuated
-        foreach(var value in typeof(Inputs).GetEnumValues())
+        foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
             Assert.That(Input.IsControlPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
             Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
             Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
         }
-        
+
         // press all buttons
         var keyboardState = new KeyboardState();
         foreach (var value in typeof(Key).GetEnumValues())
@@ -81,20 +89,20 @@ internal partial class CoreTests
 
         // check that all buttons are pressed, and control down is true for the first frame
         InputSystem.Update();
-        foreach(var value in typeof(Inputs).GetEnumValues())
+        foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
             if (buttonsToIgnore.Contains(input))
                 continue;
-            
+
             Assert.That(Input.IsControlPressed(input), Is.True, $"Input '{input}' should be 'pressed'");
             Assert.That(Input.IsControlDown(input), Is.True, $"Input '{input}' should be 'down'");
             Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
         }
-        
+
         // check that IsControlDown became false after one frame
         InputSystem.Update();
-        foreach(var value in typeof(Inputs).GetEnumValues())
+        foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
             if (buttonsToIgnore.Contains(input))
@@ -104,7 +112,7 @@ internal partial class CoreTests
             Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
             Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
         }
-        
+
         // release everything
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.QueueStateEvent(mouse, new MouseState());
@@ -113,7 +121,7 @@ internal partial class CoreTests
 
         // check that all controls are not pressed, and control up became true
         InputSystem.Update();
-        foreach(var value in typeof(Inputs).GetEnumValues())
+        foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
             if (buttonsToIgnore.Contains(input))
@@ -126,7 +134,7 @@ internal partial class CoreTests
 
         // check control up became false after one frame
         InputSystem.Update();
-        foreach(var value in typeof(Inputs).GetEnumValues())
+        foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
             Assert.That(Input.IsControlPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
@@ -137,11 +145,80 @@ internal partial class CoreTests
 
     [Test]
     [Category("HighLevelAPI")]
+    [TestCase(GamepadSlot.Slot1)]
+    [TestCase(GamepadSlot.Slot2)]
+    public void HighLevelAPI_CanQueryGamepadControl(GamepadSlot slot)
+    {
+        var gamepadOne = InputSystem.AddDevice<Gamepad>();
+        var gamepadTwo = InputSystem.AddDevice<Gamepad>();
+        var expectedUnusedSlot = slot == GamepadSlot.Slot2 ? GamepadSlot.Slot1 : GamepadSlot.Slot2;
+        var gamepadButtons = Enum.GetValues(typeof(UnityEngine.InputSystem.HighLevel.GamepadButton))
+            .Cast<UnityEngine.InputSystem.HighLevel.GamepadButton>()
+            .ToList();
+
+        var gamepadState = new GamepadState(
+            GamepadButton.DpadUp,
+            GamepadButton.DpadDown,
+            GamepadButton.DpadLeft,
+            GamepadButton.DpadRight,
+            GamepadButton.North,
+            GamepadButton.East,
+            GamepadButton.South,
+            GamepadButton.West,
+            GamepadButton.LeftStick,
+            GamepadButton.RightStick,
+            GamepadButton.LeftShoulder,
+            GamepadButton.RightShoulder,
+            GamepadButton.Start,
+            GamepadButton.Select)
+        {
+            leftStick = new Vector2(-1, 1),
+            rightStick = new Vector2(1, -1),
+            leftTrigger = 1.0f,
+            rightTrigger = 1.0f
+        };
+        InputSystem.QueueStateEvent(slot == GamepadSlot.Slot1 ? gamepadOne : gamepadTwo, gamepadState);
+        InputSystem.Update();
+
+        foreach (var buttonValue in gamepadButtons)
+        {
+            AssertControlStates(buttonValue, true, true, false, slot);
+            AssertControlStates(buttonValue, false, false, false, expectedUnusedSlot);
+        }
+
+        InputSystem.Update();
+
+        foreach (var buttonValue in gamepadButtons)
+        {
+            AssertControlStates(buttonValue, false, true, false, slot);
+            AssertControlStates(buttonValue, false, false, false, expectedUnusedSlot);
+        }
+
+        InputSystem.QueueStateEvent(slot == GamepadSlot.Slot1 ? gamepadOne : gamepadTwo, new GamepadState());
+        InputSystem.Update();
+
+        foreach (var buttonValue in gamepadButtons)
+        {
+            AssertControlStates(buttonValue, false, false, true, slot);
+            AssertControlStates(buttonValue, false, false, false, expectedUnusedSlot);
+        }
+
+        void AssertControlStates(UnityEngine.InputSystem.HighLevel.GamepadButton gamepadButton,
+            bool controlDown, bool controlPressed, bool controlUp, GamepadSlot gamepadSlot)
+        {
+            Assert.That(Input.IsControlDown(gamepadButton, gamepadSlot), Is.EqualTo(controlDown));
+            Assert.That(Input.IsControlPressed(gamepadButton, gamepadSlot), Is.EqualTo(controlPressed));
+            Assert.That(Input.IsControlUp(gamepadButton, gamepadSlot), Is.EqualTo(controlUp));
+        }
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
     public void HighLevelAPI_CanQueryGetAxis()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        
+
         var keyboardState = new KeyboardState();
         keyboardState.Press(Key.W);
         keyboardState.Press(Key.A);
@@ -155,13 +232,13 @@ internal partial class CoreTests
         gamepadState.leftTrigger = 0.7f;
         InputSystem.QueueStateEvent(gamepad, gamepadState);
         InputSystem.Update();
-        
+
         // normal buttons should return 0.0f or 1.0f
         Assert.That(Input.GetAxis(Inputs.Key_W), Is.EqualTo(1.0f));
         Assert.That(Input.GetAxis(Inputs.Key_S), Is.EqualTo(0.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_North), Is.EqualTo(1.0f));
         Assert.That(Input.GetAxis(Inputs.Gamepad_South), Is.EqualTo(0.0f));
-        
+
         Assert.That(Input.GetAxis(Inputs.Key_A, Inputs.Key_D), Is.EqualTo(-1.0f));
         Assert.That(Input.GetAxis(Inputs.Key_S, Inputs.Key_W), Is.EqualTo(1.0f));
         Assert.That(Input.GetAxis(Inputs.Key_A, Inputs.Key_W), Is.EqualTo(0.0f));
@@ -188,6 +265,115 @@ internal partial class CoreTests
 
     [Test]
     [Category("HighLevelAPI")]
+    public void HighLevelAPI_GamepadsCollectionIsInitializedToMaxSlots()
+    {
+        Assert.That(Input.gamepads.Count, Is.EqualTo(Input.maxGamepadSlots));
+        Assert.That(Input.gamepads, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, Input.maxGamepadSlots)));
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_GamepadsOccupyFirstFreeSlotOnConnectOrReconnect()
+    {
+        var gamepadOne = InputSystem.AddDevice<Gamepad>();
+        var gamepadTwo = InputSystem.AddDevice<Gamepad>();
+        var gamepadThree = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(Input.gamepads[0], Is.EqualTo(gamepadOne));
+        Assert.That(Input.gamepads[1], Is.EqualTo(gamepadTwo));
+        Assert.That(Input.gamepads[2], Is.EqualTo(gamepadThree));
+
+        InputSystem.RemoveDevice(gamepadTwo);
+
+        var gamepadFour = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(Input.gamepads[1], Is.EqualTo(gamepadFour));
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_IsGamepadConnected_ReturnsTrueForOccupiedSlots(
+        [NUnit.Framework.Range(0, 11)] int disconnectedSlot)
+    {
+        for (var i = 0; i < Input.maxGamepadSlots; i++)
+        {
+            InputSystem.AddDevice<Gamepad>();
+
+            Assert.That(Input.IsGamepadConnected((GamepadSlot)i), Is.True);
+        }
+
+        InputSystem.RemoveDevice(Gamepad.all[disconnectedSlot]);
+
+        Assert.That(Input.IsGamepadConnected((GamepadSlot)disconnectedSlot), Is.False);
+    }
+
+    [UnityTest]
+    [Category("HighLevelAPI")]
+    public IEnumerator HighLevelAPI_DidGamepadConnectThisFrame_IsTrueInTheFrameTheGamepadConnectedEventIsProcessed()
+    {
+        // can't use InputSystem.AddDevice here because that immediately raises the onDeviceChanged event, so the
+        // frame count will be one too early. We need to wait for one full Unity player loop update to run
+        runtime.ReportNewInputDevice<Gamepad>();
+        yield return null;
+
+        Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1), Is.True);
+
+        yield return null;
+        Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1), Is.False);
+    }
+
+    [UnityTest]
+    [Category("HighLevelAPI")]
+    public IEnumerator HighLevelAPI_DidGamepadDisconnectThisFrame_IsTrueInTheFrameTheGamepadDisconnectedEventIsProcessed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        yield return null;
+        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.False);
+
+        // can't use RemoveDevice here because that immediately raises the onDeviceChanged event, so the
+        // frame count will be one too early.
+        runtime.ReportInputDeviceRemoved(gamepad);
+        yield return null;
+        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.True);
+
+        yield return null;
+        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.False);
+    }
+
+    #if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+    [UnityTest]
+    [Category("HighLevelAPI")]
+    public IEnumerator HighLevelAPI_DidGamepadConnectThisFrame_WorksWhenEventArrivesBeforeEditorUpdate()
+    {
+        // this test simulates the editor behaviour where a device connected (or disconnected) event can occur
+        // before the editor loop update. In that case, the event gets sent through to managed code before the
+        // Time.frameCount property has been updated for this frame.
+        var playerLoop = PlayerLoop.GetCurrentPlayerLoop();
+        playerLoop.InsertSystemAsSubSystemOf<TestAsyncDeviceChangedEventPlayerLoop, TimeUpdate>(
+            () =>
+            {
+                // this code will run before the frameCount has been updated for the frame, and calling AddDevice
+                // will make the onDeviceChanged handler run in the Input class.
+                InputSystem.AddDevice<Gamepad>();
+            }, true);
+        PlayerLoop.SetPlayerLoop(playerLoop);
+
+        yield return null;
+        try
+        {
+            Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1), Is.True);
+        }
+        finally
+        {
+            PlayerLoop.SetPlayerLoop(PlayerLoop.GetDefaultPlayerLoop());
+        }
+    }
+
+    private struct TestAsyncDeviceChangedEventPlayerLoop {}
+    #endif
+
+    [Test]
+    [Category("HighLevelAPI")]
     public void HighLevelAPI_CanSetGamepadTriggerPoint()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -196,19 +382,19 @@ internal partial class CoreTests
         gamepadState.leftTrigger = 0.3f;
         InputSystem.QueueStateEvent(gamepad, gamepadState);
         InputSystem.Update();
-        
+
         Input.SetGamepadTriggerPressPoint(0.5f);
         Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.False);
 
         Input.SetGamepadTriggerPressPoint(0.3f);
         Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.True);
-        
+
         gamepadState.leftTrigger = 0.1f;
         InputSystem.QueueStateEvent(gamepad, gamepadState);
         InputSystem.Update();
         Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.False);
     }
-    
+
     [Test]
     [Category("HighLevelAPI")]
     public void HighLevelAPI_CanSetGamepadDeadZone()
@@ -220,7 +406,7 @@ internal partial class CoreTests
         gamepadState.rightStick = new Vector2(0.7f, -0.7f);
         InputSystem.QueueStateEvent(gamepad, gamepadState);
         InputSystem.Update();
-        
+
         Input.SetGamepadStickDeadzone(0.0f);
         Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.3f, 0.3f)).Using(new Vector2EqualityComparer(0.01f)));
 
