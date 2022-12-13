@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.OnScreen
             EndInteraction();
         }
 
-        public void Start()
+        private void Start()
         {
             if (m_UseIsolatedInputActions)
             {
@@ -141,7 +141,6 @@ namespace UnityEngine.InputSystem.OnScreen
             {
                 case Behaviour.RelativePositionWithStaticOrigin:
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out m_PointerDownPos);
-                    Debug.Log("JIM: BeginInteraction pointerDownPos (local): " + m_PointerDownPos);
                     break;
                 case Behaviour.ExactPositionWithStaticOrigin:
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out m_PointerDownPos);
@@ -305,7 +304,19 @@ namespace UnityEngine.InputSystem.OnScreen
         public float dynamicOriginRange
         {
             get => m_DynamicOriginRange;
-            set => m_DynamicOriginRange = value;
+            set
+            {
+                if (m_DynamicOriginRange != value)
+                {
+                    m_DynamicOriginRange = value;
+                    var dynamicOriginGO = GameObject.Find("DynamicOriginClickable");
+                    if (dynamicOriginGO)
+                    {
+                        var rectTransform = (RectTransform)dynamicOriginGO.transform;
+                        rectTransform.sizeDelta = new Vector2(value * 2, value * 2);
+                    }
+                }
+            }
         }
 
         /// <summary>

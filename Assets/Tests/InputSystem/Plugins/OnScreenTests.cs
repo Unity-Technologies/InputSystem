@@ -95,14 +95,20 @@ internal class OnScreenTests : CoreTestsFixture
         rec.anchoredPosition = initialStickPosition;
         rec.transform.SetParent(canvas.transform, worldPositionStays: false);
 
-        stick.Start(); // Needs to be called manually in test
         systemGO.SetActive(true);
         canvasGO.SetActive(true);
         stickObject.SetActive(true);
+        InputSystem.Update(); // Will invoke stick.Start() on next yield
+        yield return null;
         eventSystem.Update();
+        yield return null;
 
         Assert.That(stick.control, Is.TypeOf<StickControl>());
         var stickControl = (StickControl)stick.control;
+
+        // Check that properties can be modified after stick.Start() was called
+        stick.movementRange = stick.movementRange + 10;
+        stick.dynamicOriginRange = stick.dynamicOriginRange + 50;
 
         // Check initial state and position of the Stick
         Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition).Using(Vector2EqualityComparer.Instance));
@@ -112,7 +118,7 @@ internal class OnScreenTests : CoreTestsFixture
             orthoCamera.WorldToScreenPoint(canvas.transform.TransformPoint(v));
 
         // Press that doesn't touch any (neither the stick nor within it's dynamic placement range)
-        var outsidePress = initialStickPosition + new Vector2(stick.dynamicOriginRange + 1, 0);
+        var outsidePress = initialStickPosition + new Vector2(-stick.dynamicOriginRange - 1, 0);
         BeginTouch(1, canvasToScreenSpace(outsidePress));
         yield return null;
         eventSystem.Update();
@@ -126,17 +132,23 @@ internal class OnScreenTests : CoreTestsFixture
         yield return null;
 
         // Initial press on the visual stick
-        var beginOffset = new Vector2(stick.movementRange / 2f, 0);
+        var beginOffset = new Vector2(-stick.movementRange / 2f, 0);
         var beginPressPos = initialStickPosition + beginOffset;
         var touchOrigin = initialStickPosition;
-        if (expectedBehaviour != OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin)
+        if (expectedBehaviour == OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin)
         {
-            BeginTouch(1, canvasToScreenSpace(beginPressPos));
-            yield return null;
-            eventSystem.Update();
-            yield return null;
-            Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
+            // Touch inside dynamic origin zone (but not touching the visual element)
+            beginOffset = new Vector2(-stick.dynamicOriginRange + 1, 0);
+            beginPressPos = initialStickPosition + beginOffset;
+            touchOrigin = beginPressPos;
+            Assert.That(beginOffset.x, Is.LessThan(rec.sizeDelta.x / 2f)); // Touching outside of visual element
         }
+        BeginTouch(1, canvasToScreenSpace(beginPressPos));
+        yield return null;
+        eventSystem.Update();
+        yield return null;
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
+
         switch (expectedBehaviour)
         {
             case OnScreenStick.Behaviour.RelativePositionWithStaticOrigin:
@@ -154,18 +166,6 @@ internal class OnScreenTests : CoreTestsFixture
                 break;
 
             case OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin:
-                // Initial press causes stick origin to move - touch inside dynamic origin zone (but not touching the visual element)
-                beginOffset = new Vector2(stick.dynamicOriginRange - 1, 0);
-                beginPressPos = initialStickPosition + beginOffset;
-                touchOrigin = beginPressPos;
-                Assert.That(beginOffset.x, Is.GreaterThan(rec.sizeDelta.x / 2f)); // Touching outside of visual element
-
-                BeginTouch(1, canvasToScreenSpace(beginPressPos));
-                yield return null;
-                eventSystem.Update();
-                yield return null;
-                Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
-
                 // Check that stick origin moved to the initial pointer position - but remains unactuated
                 Assert.That(rec.anchoredPosition, Is.EqualTo(beginPressPos).Using(Vector2EqualityComparer.Instance));
                 Assert.That(Gamepad.all[0].leftStick.ReadValue(),
@@ -175,7 +175,6 @@ internal class OnScreenTests : CoreTestsFixture
             default:
                 throw new ArgumentOutOfRangeException(nameof(expectedBehaviour), expectedBehaviour, null);
         }
-
 
         // Check stick now moves with the pointer drag
         var firstMoveDelta = new Vector2(-stick.movementRange / 2f, 0);
