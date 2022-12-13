@@ -1,7 +1,7 @@
 # The metafile contains all information on versions and platforms
 # we want to build for, and is shared across the different jobs.
 
-{% metadata_file https://github.cds.internal.unity3d.com/unity/com.unity.inputsystem.nda/blob/8f6d168f206038b4d7ef301690dc15f745ecb7c7/.yamato/input-external-trigger-config.metadata %}
+{% metadata_file https://github.cds.internal.unity3d.com/unity/com.unity.inputsystem.nda/blob/b9c06007966e721cee968f8596a3e38e71837beb/.yamato/input-external-trigger-config.metadata %}
 
 ---
 
