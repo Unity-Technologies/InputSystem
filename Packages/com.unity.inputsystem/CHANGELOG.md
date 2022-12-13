@@ -24,6 +24,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Actions
 - Extended input action code generator (`InputActionCodeGenerator.cs`) to support optional registration and unregistration of callbacks for multiple callback instances via `AddCallbacks(...)` and `RemoveCallbacks(...)` part of the generated code. Contribution by [Ramobo](https://github.com/Ramobo) in [#889](https://github.com/Unity-Technologies/InputSystem/pull/889).
 
+### Changed
+- Changed define requirements of `Unity.InputSystem.TestFramework`, so that it can be used by other packages without setting the `com.unity.inputsystem` package to be testable in the project manifest.
+
 ## [1.4.4] - 2022-11-01
 
 ### Fixed
