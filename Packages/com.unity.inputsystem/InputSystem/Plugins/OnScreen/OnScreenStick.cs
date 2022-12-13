@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.OnScreen
             EndInteraction();
         }
 
-        private void Start()
+        public void Start()
         {
             if (m_UseIsolatedInputActions)
             {
@@ -130,17 +130,25 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void BeginInteraction(Vector2 pointerPosition, Camera uiCamera)
         {
+            var canvasRect = transform.parent?.GetComponentInParent<RectTransform>();
+            if (canvasRect == null)
+            {
+                Debug.LogError("OnScreenStick needs to be attached as a child to a UI Canvas to function properly.");
+                return;
+            }
+
             switch (m_Behaviour)
             {
                 case Behaviour.RelativePositionWithStaticOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out m_PointerDownPos);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out m_PointerDownPos);
+                    Debug.Log("JIM: BeginInteraction pointerDownPos (local): " + m_PointerDownPos);
                     break;
                 case Behaviour.ExactPositionWithStaticOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out m_PointerDownPos);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out m_PointerDownPos);
                     MoveStick(pointerPosition, uiCamera);
                     break;
                 case Behaviour.ExactPositionWithDynamicOrigin:
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(transform.parent.GetComponentInParent<RectTransform>(), pointerPosition, uiCamera, out var pointerDown);
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out var pointerDown);
                     m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
                     break;
             }
@@ -148,9 +156,13 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void MoveStick(Vector2 pointerPosition, Camera uiCamera)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                transform.parent.GetComponentInParent<RectTransform>(),
-                pointerPosition, uiCamera, out var position);
+            var canvasRect = transform.parent?.GetComponentInParent<RectTransform>();
+            if (canvasRect == null)
+            {
+                Debug.LogError("OnScreenStick needs to be attached as a child to a UI Canvas to function properly.");
+                return;
+            }
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out var position);
             var delta = position - m_PointerDownPos;
 
             switch (m_Behaviour)

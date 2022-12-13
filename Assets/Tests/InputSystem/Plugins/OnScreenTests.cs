@@ -53,52 +53,204 @@ internal class OnScreenTests : CoreTestsFixture
         Assert.That(stickObject.transform.position.y, Is.GreaterThan(0.0f));
     }
 
-    [Test]
-    [TestCase(OnScreenStick.Behaviour.RelativePositionWithStaticOrigin)]
-    [TestCase(OnScreenStick.Behaviour.ExactPositionWithStaticOrigin)]
-    [TestCase(OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin)]
+    [UnityTest]
     [Category("Devices")]
-    public void Devices_OnScreenStickBehavesAccordingToBehaviourProperty(OnScreenStick.Behaviour expectedBehaviour)
+    [TestCase(OnScreenStick.Behaviour.RelativePositionWithStaticOrigin, ExpectedResult = -1)]
+    [TestCase(OnScreenStick.Behaviour.ExactPositionWithStaticOrigin, ExpectedResult = -1)]
+    [TestCase(OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin, ExpectedResult = -1)]
+    public IEnumerator Devices_OnScreenStickBehavesAccordingToBehaviourProperty(OnScreenStick.Behaviour expectedBehaviour)
     {
-        var gameObject = new GameObject();
+        var systemGO = new GameObject();
+        systemGO.SetActive(false);
+        TestEventSystem eventSystem = systemGO.AddComponent<TestEventSystem>();
+        var uiModule = systemGO.AddComponent<InputSystemUIInputModule>();
+        uiModule.AssignDefaultActions();
+        eventSystem.UpdateModules();
+
+        var cameraGO = new GameObject();
+        var orthoCamera = cameraGO.AddComponent<Camera>();
+        orthoCamera.orthographic = true;
+        orthoCamera.enabled = true;
+
+        var canvasGO = new GameObject();
+        canvasGO.SetActive(false);
+        var canvas = canvasGO.AddComponent<Canvas>();
+        canvas.planeDistance = 100.0f;
+        canvas.renderMode = RenderMode.ScreenSpaceCamera;
+        canvasGO.AddComponent<GraphicRaycaster>();
+        canvas.worldCamera = orthoCamera;
+
         var stickObject = new GameObject();
-        gameObject.AddComponent<Camera>();
-        var canvas = gameObject.AddComponent<Canvas>();
-        var eventSystem = gameObject.AddComponent<EventSystem>();
-
-        stickObject.AddComponent<RectTransform>();
+        stickObject.SetActive(false);
         var stick = stickObject.AddComponent<OnScreenStick>();
+        stickObject.AddComponent<Image>();
+        stick.controlPath = "/<Gamepad>/leftStick";
         stick.behaviour = expectedBehaviour;
-        stick.transform.SetParent(canvas.transform);
-        var stickTransform = (RectTransform)stick.transform;
 
-        stickTransform.anchorMin = new Vector2(0, 0);
-        stickTransform.anchorMax = new Vector2(0, 0);
-        stickTransform.anchoredPosition = new Vector2(100, 100);
-        stickTransform.sizeDelta = new Vector2(100, 100);
+        var initialStickPosition = new Vector2(150, 150);
+        var rec = stickObject.GetComponent<RectTransform>();
+        rec.anchorMin = new Vector2(0.5f, 0.5f);
+        rec.anchorMax = new Vector2(0.5f, 0.5f);
+        rec.sizeDelta = new Vector2(100, 100);
+        rec.anchoredPosition = initialStickPosition;
+        rec.transform.SetParent(canvas.transform, worldPositionStays: false);
 
-        stick.OnPointerDown(new PointerEventData(eventSystem)
+        stick.Start(); // Needs to be called manually in test
+        systemGO.SetActive(true);
+        canvasGO.SetActive(true);
+        stickObject.SetActive(true);
+        eventSystem.Update();
+
+        Assert.That(stick.control, Is.TypeOf<StickControl>());
+        var stickControl = (StickControl)stick.control;
+
+        // Check initial state and position of the Stick
+        Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
+        Func<Vector2, Vector2> canvasToScreenSpace = (Vector2 v) =>
+            orthoCamera.WorldToScreenPoint(canvas.transform.TransformPoint(v));
+
+        // Press that doesn't touch any (neither the stick nor within it's dynamic placement range)
+        var outsidePress = initialStickPosition + new Vector2(stick.dynamicOriginRange + 1, 0);
+        BeginTouch(1, canvasToScreenSpace(outsidePress));
+        yield return null;
+        eventSystem.Update();
+        yield return null;
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        EndTouch(1, canvasToScreenSpace(outsidePress));
+        yield return null;
+        eventSystem.Update();
+        yield return null;
+
+        // Initial press on the visual stick
+        var beginOffset = new Vector2(stick.movementRange / 2f, 0);
+        var beginPressPos = initialStickPosition + beginOffset;
+        var touchOrigin = initialStickPosition;
+        if (expectedBehaviour != OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin)
         {
-            position = new Vector2(75, 75)
-        });
-
+            BeginTouch(1, canvasToScreenSpace(beginPressPos));
+            yield return null;
+            eventSystem.Update();
+            yield return null;
+            Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
+        }
         switch (expectedBehaviour)
         {
             case OnScreenStick.Behaviour.RelativePositionWithStaticOrigin:
-                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(50, 50, 0)));
-                stick.OnDrag(new PointerEventData(eventSystem){position = new Vector2(74, 75)});
-                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(49, 50, 0)));
+                // Check that the first press didn't cause the stick to move
+                Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+                touchOrigin = beginPressPos;
                 break;
+
             case OnScreenStick.Behaviour.ExactPositionWithStaticOrigin:
-                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(75, 75, 0)));
-                stick.OnDrag(new PointerEventData(eventSystem){position = new Vector2(50, 75)});
-                Assert.That(((RectTransform)stick.transform).position, Is.EqualTo(new Vector3(50, 75, 0)));
+                // Check that stick moved to the initial pointer position
+                Assert.That(rec.anchoredPosition, Is.EqualTo(beginPressPos).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(beginOffset / stick.movementRange)).Using(Vector2EqualityComparer.Instance));
                 break;
+
             case OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin:
+                // Initial press causes stick origin to move - touch inside dynamic origin zone (but not touching the visual element)
+                beginOffset = new Vector2(stick.dynamicOriginRange - 1, 0);
+                beginPressPos = initialStickPosition + beginOffset;
+                touchOrigin = beginPressPos;
+                Assert.That(beginOffset.x, Is.GreaterThan(rec.sizeDelta.x / 2f)); // Touching outside of visual element
+
+                BeginTouch(1, canvasToScreenSpace(beginPressPos));
+                yield return null;
+                eventSystem.Update();
+                yield return null;
+                Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
+
+                // Check that stick origin moved to the initial pointer position - but remains unactuated
+                Assert.That(rec.anchoredPosition, Is.EqualTo(beginPressPos).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(Vector2.zero)).Using(Vector2EqualityComparer.Instance));
                 break;
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(expectedBehaviour), expectedBehaviour, null);
         }
+
+
+        // Check stick now moves with the pointer drag
+        var firstMoveDelta = new Vector2(-stick.movementRange / 2f, 0);
+        var firstMovePos = beginPressPos + firstMoveDelta;
+        MoveTouch(1, canvasToScreenSpace(firstMovePos));
+        yield return null;
+        eventSystem.Update();
+        yield return null;
+        switch (expectedBehaviour)
+        {
+            case OnScreenStick.Behaviour.RelativePositionWithStaticOrigin:
+                Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition + firstMoveDelta).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(new Vector2(-0.5f, 0))).Using(Vector2EqualityComparer.Instance));
+                break;
+
+            case OnScreenStick.Behaviour.ExactPositionWithStaticOrigin:
+                Assert.That(rec.anchoredPosition, Is.EqualTo(firstMovePos).Using(Vector2EqualityComparer.Instance));
+                var controlDelta = firstMovePos - initialStickPosition;
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(controlDelta / stick.movementRange)).Using(Vector2EqualityComparer.Instance));
+                break;
+
+            case OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin:
+                Assert.That(rec.anchoredPosition, Is.EqualTo(firstMovePos).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(firstMoveDelta / stick.movementRange)).Using(Vector2EqualityComparer.Instance));
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(expectedBehaviour), expectedBehaviour, null);
+        }
+
+        // Check stick is clamped to stay within it's range of motion
+        var secondMoveDelta = new Vector2(100, 100);
+        var secondMovePos = touchOrigin + secondMoveDelta;
+        MoveTouch(1, canvasToScreenSpace(secondMovePos));
+        yield return null;
+        eventSystem.Update();
+        yield return null;
+        var clampedRange = secondMoveDelta;
+        clampedRange.Normalize();
+        clampedRange.Scale(new Vector2(stick.movementRange, stick.movementRange));
+        switch (expectedBehaviour)
+        {
+            case OnScreenStick.Behaviour.RelativePositionWithStaticOrigin:
+                Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition + clampedRange).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(clampedRange)).Using(new Vector2EqualityComparer(0.01f)));
+                break;
+
+            case OnScreenStick.Behaviour.ExactPositionWithStaticOrigin:
+                Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition + clampedRange).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(clampedRange)).Using(new Vector2EqualityComparer(0.01f)));
+                break;
+
+            case OnScreenStick.Behaviour.ExactPositionWithDynamicOrigin:
+                Assert.That(rec.anchoredPosition, Is.EqualTo(beginPressPos + clampedRange).Using(Vector2EqualityComparer.Instance));
+                Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+                    Is.EqualTo(stickControl.ProcessValue(clampedRange)).Using(new Vector2EqualityComparer(0.01f)));
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(expectedBehaviour), expectedBehaviour, null);
+        }
+
+        // Releasing restores the stick position
+        EndTouch(1, beginPressPos);
+        yield return null;
+        eventSystem.Update();
+        yield return null;
+        Assert.That(rec.anchoredPosition, Is.EqualTo(initialStickPosition).Using(Vector2EqualityComparer.Instance));
+        Assert.That(Gamepad.all[0].leftStick.ReadValue(),
+            Is.EqualTo(stickControl.ProcessValue(Vector2.zero)).Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]
