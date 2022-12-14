@@ -1,4 +1,3 @@
-#if UNITY_TESTS_FRAMEWORK
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -463,4 +462,3 @@ namespace UnityEngine.InputSystem
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }
-#endif
