@@ -8,7 +8,7 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
+    "overrideReferences": true,
     "precompiledReferences": [
         "nunit.framework.dll"
     ],
