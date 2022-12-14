@@ -1,3 +1,4 @@
+#if UNITY_TESTS_FRAMEWORK
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
 using System;
@@ -489,4 +490,5 @@ internal static class WinUserInput
     }
 }
 
+#endif
 #endif
