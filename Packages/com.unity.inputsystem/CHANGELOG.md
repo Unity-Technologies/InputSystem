@@ -35,6 +35,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an InvalidOperationException when using Hold interaction, and by extension any interaction that changes to performed state after a timeout ([case ISXB-332](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-330)).
 - Fixed `Given object is neither an InputAction nor an InputActionMap` when using `InputActionTrace` on input action from an input action asset ([case ISXB-29](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-29)).
 - Fixing devices not being removed if unplugged during domain reload (entering or exiting play mode) ([case ISXB-232](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-232)).
+- Fixed issue where input events were being suppressed during interactive action rebinding even when when their controls were excluded ([case ISXB-367](https://issuetracker.unity3d.com/issues/mouse-position-and-mouse-click-input-not-recognized-when-rebinding-is-active)).
+
 
 ## [1.4.3] - 2022-09-23
 
