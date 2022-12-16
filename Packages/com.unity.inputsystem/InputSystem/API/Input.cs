@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.PlayerLoop;
 
 // TODO rename HighLevel to something that makes sense
 namespace UnityEngine.InputSystem.HighLevel
@@ -14,7 +17,13 @@ namespace UnityEngine.InputSystem.HighLevel
         Gamepad,
         Joystick
     }
-    
+
+    /// <summary>
+    /// An enum for all controls that have button-like behaviour on keyboard, gamepad, mouse, and joystick devices.
+    /// </summary>
+    /// <seealso cref="Input.IsControlDown(Inputs)"/>
+    /// <seealso cref="Input.IsControlUp(Inputs)"/>
+    /// <seealso cref="Input.IsControlPressed(Inputs)"/>
     public enum Inputs
     {
         Key_Space = 10001,
@@ -143,8 +152,7 @@ namespace UnityEngine.InputSystem.HighLevel
         Gamepad_South = 30007,
         Gamepad_West = 30008,
 
-        Gamepad_LeftStickButton =
-            30009, // TODO figure out a better name, because just LeftStick is poor, e.g. Input.IsControlDown(Input.Gamepad_LeftStick) in plain english implies left stick is moved down
+        Gamepad_LeftStickButton = 30009,
         Gamepad_RightStickButton = 30010,
         Gamepad_LeftShoulder = 30011,
         Gamepad_RightShoulder = 30012,
@@ -172,32 +180,38 @@ namespace UnityEngine.InputSystem.HighLevel
         Joystick_Trigger = 40001
     }
 
+    /// <summary>
+    /// An enum for querying the state of gamepad sticks.
+    /// </summary>
+    /// <seealso cref="Input.GetAxis(GamepadAxis,GamepadSlot)"/>
     public enum GamepadAxis
     {
         LeftStick,
         RightStick
     }
 
-// RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
-#if false
+    /// <summary>
+    /// An enum for all buttons on a generic gamepad.
+    /// </summary>
+    /// <seealso cref="Input.IsControlDown(GamepadButton,GamepadSlot)"/>
     public enum GamepadButton
     {
-        DpadUp,
-        DpadDown,
-        DpadLeft,
-        DpadRight,
-        North,
-        East,
-        South,
-        West,
-        LeftStick,  // left stick pressed
-        RightStick, // right stick pressed
-        LeftShoulder,
-        RightShoulder,
-        LeftTrigger,
-        RightTrigger,
-        Start,
-        Select,
+        DpadUp = Inputs.Gamepad_DpadUp,
+        DpadDown = Inputs.Gamepad_DpadDown,
+        DpadLeft = Inputs.Gamepad_DpadLeft,
+        DpadRight = Inputs.Gamepad_DpadRight,
+        North = Inputs.Gamepad_North,
+        East = Inputs.Gamepad_East,
+        South = Inputs.Gamepad_South,
+        West = Inputs.Gamepad_West,
+        LeftStickButton = Inputs.Gamepad_LeftStickButton,  // left stick pressed
+        RightStickButton = Inputs.Gamepad_RightStickButton, // right stick pressed
+        LeftShoulder = Inputs.Gamepad_LeftShoulder,
+        RightShoulder = Inputs.Gamepad_RightShoulder,
+        LeftTrigger = Inputs.Gamepad_LeftTrigger,
+        RightTrigger = Inputs.Gamepad_RightTrigger,
+        Start = Inputs.Gamepad_Start,
+        Select = Inputs.Gamepad_Select,
         X = West,
         Y = North,
         A = South,
@@ -207,8 +221,23 @@ namespace UnityEngine.InputSystem.HighLevel
         Triangle = North,
         Circle = East
     }
-#endif
 
+    /// <summary>
+    /// An enum for addressing gamepad slots.
+    /// </summary>
+    /// <remarks>
+    /// The Input class maintains a collection of Gamepad instances that use slot indexing. That is, if a gamepad disconnects,
+    /// the next gamepad to connect goes in the vacant slot. This makes it easier to abstract gameplay or application logic
+    /// from gamepad instances.
+    /// </remarks>
+    /// <seealso cref="Input.IsControlDown(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.IsControlUp(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.IsControlPressed(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.IsGamepadConnected(GamepadSlot)"/>
+    /// <seealso cref="Input.DidGamepadConnectThisFrame(GamepadSlot)"/>
+    /// <seealso cref="Input.DidGamepadDisconnectThisFrame(GamepadSlot)"/>
+    /// <seealso cref="Input.GetAxis(GamepadAxis,GamepadSlot)"/>
+    /// <seealso cref="Input.GetGamepadDeadZone(GamepadSlot)"/>
     public enum GamepadSlot
     {
         Slot1 = 0,
@@ -239,62 +268,115 @@ namespace UnityEngine.InputSystem.HighLevel
     {
 // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
 #if false
-        // These device collections use "stable" indexing. If a device that was connected disconnects, the
-        // array index that it occupied remains empty until the same device or another device of the same type
-        // connects. This is to enable applications to abstract the concept of a device index and work at a
-        // higher level of "slot" index. This is in contrast to some of the the lower level device collections,
-        // Gamepads.all for example, where the collection is compacted when a device disconnects, and new devices,
-        // and even reconnecting devices, are added to the end of the collection.
 
-        /// <summary>
-        /// A collection of all keyboards currently connected to the system.
-        /// </summary>
-        public static IReadOnlyList<Keyboard> keyboards { get; }
-
-        /// <summary>
-        /// A collection of all mice currently connected to the system.
-        /// </summary>
-        public static IReadOnlyList<Mouse> mice { get; }
 
         /// <summary>
         /// A collection of all joysticks currently connected to the system.
         /// </summary>
         public static IReadOnlyList<Joystick> joysticks { get; }
+#endif
+
+        static Input()
+        {
+            s_GamepadSlotEnums = new ReadOnlyArray<GamepadSlot>(new[]
+            {
+                GamepadSlot.Slot1,
+                GamepadSlot.Slot2,
+                GamepadSlot.Slot3,
+                GamepadSlot.Slot4,
+                GamepadSlot.Slot5,
+                GamepadSlot.Slot6,
+                GamepadSlot.Slot7,
+                GamepadSlot.Slot8,
+                GamepadSlot.Slot9,
+                GamepadSlot.Slot10,
+                GamepadSlot.Slot11,
+                GamepadSlot.Slot12
+            });
+            s_Gamepads = new Gamepad[maxGamepadSlots];
+            s_GamepadsConnectedFrames = new int[maxGamepadSlots];
+            s_GamepadsDisconnectedFrames = new int[maxGamepadSlots];
+        }
 
         /// <summary>
         /// A collection of all gamepads currently connected to the system.
         /// </summary>
-        public static IReadOnlyList<Gamepad> gamepads { get; }
+        /// <remarks>
+        /// This collection uses "stable" indexing. If a gamepad that was connected disconnects, the
+        /// array index that it occupied remains empty until another gamepad connects. It can be the
+        /// same physical gamepad that just disconnected, or one the system has not seen before. Either
+        /// way, it will occupy the previously vacated index. In this way, applications that need to
+        /// work with multiple gamepads directly, as opposed to through the high-level APIs, can simply
+        /// keep the reference to the index and use it to query state from that gamepad.
+        /// </remarks>
+        public static IReadOnlyList<Gamepad> gamepads => s_Gamepads;
 
+        /// <summary>
+        /// A collection for conveniently looping over all gamepad slot enum values.
+        /// </summary>
+        /// <remarks>
+        /// It is a very common pattern to loop over all possibly connected gamepads and perform some action.
+        /// Without this convenience collection, the code might look like:
+        /// <example>
+        /// <code>
+        /// for(var i = 0; i &lt; Input.maxGamepadSlots; i++)
+        /// {
+        ///     if(Input.IsGamepadConnected((GamepadSlot)i))
+        ///     {
+        ///         ...
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// but with the collection can look like this:
+        /// <example>
+        /// <code>
+        /// foreach(var slot in Input.gamepadSlotEnums)
+        /// {
+        ///     if(Input.IsGamepadConnected(slot))
+        ///     {
+        ///         ...
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public static ReadOnlyArray<GamepadSlot> gamepadSlotEnums => s_GamepadSlotEnums;
+
+        /// <summary>
+        /// The maximum number of supported gamepad slots.
+        /// </summary>
+        public static int maxGamepadSlots => s_GamepadSlotEnums.Count;
+
+        private static Gamepad[] s_Gamepads;
+        private static int[] s_GamepadsConnectedFrames;
+        private static int[] s_GamepadsDisconnectedFrames;
+        private static ReadOnlyArray<GamepadSlot> s_GamepadSlotEnums;
+        private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot12 + 1];
+
+#if UNITY_EDITOR
+        internal static bool s_TimeHasUpdatedThisFrame;
 #endif
 
         private struct GamepadConfig
         {
-            public float triggerPressPoint;
-            public float deadZone;
+            public float TriggerPressPoint;
+            public float DeadZone;
 
             public static GamepadConfig CreateConfigFromSettings()
             {
                 return new GamepadConfig
                 {
-                    triggerPressPoint = InputSystem.settings.defaultButtonPressPoint,
-                    deadZone = InputSystem.settings.defaultDeadzoneMin
+                    TriggerPressPoint = InputSystem.settings.defaultButtonPressPoint,
+                    DeadZone = InputSystem.settings.defaultDeadzoneMin
                 };
             }
         }
 
-        private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot12 + 1];
-        private static bool s_InitGamepadConfigsOnce = true;
-
-        // TODO somehow call this during input system initialization
         private static void InitializeGamepadConfigs()
         {
-            if (!s_InitGamepadConfigsOnce)
-                return;
-            s_InitGamepadConfigsOnce = false;
-            
             var defaultConfig = GamepadConfig.CreateConfigFromSettings();
-            for(var i = 0; i < s_GamepadConfigs.Length; ++i)
+            for (var i = 0; i < s_GamepadConfigs.Length; ++i)
                 s_GamepadConfigs[i] = defaultConfig;
         }
 
@@ -472,8 +554,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case Inputs.Key_Slash: return k[Key.Slash];
                 case Inputs.Key_Backslash: return k[Key.Backslash];
                 case Inputs.Key_LeftBracket: return k[Key.LeftBracket];
-                case Inputs.Key_RightBracket:
-                    return k[Key.RightBracket];
+                case Inputs.Key_RightBracket: return k[Key.RightBracket];
                 case Inputs.Key_Minus: return k[Key.Minus];
                 case Inputs.Key_Equals: return k[Key.Equals];
                 case Inputs.Key_A: return k[Key.A];
@@ -539,16 +620,12 @@ namespace UnityEngine.InputSystem.HighLevel
                 case Inputs.Key_ScrollLock: return k[Key.ScrollLock];
                 case Inputs.Key_Pause: return k[Key.Pause];
                 case Inputs.Key_NumpadEnter: return k[Key.NumpadEnter];
-                case Inputs.Key_NumpadDivide:
-                    return k[Key.NumpadDivide];
-                case Inputs.Key_NumpadMultiply:
-                    return k[Key.NumpadMultiply];
+                case Inputs.Key_NumpadDivide: return k[Key.NumpadDivide];
+                case Inputs.Key_NumpadMultiply: return k[Key.NumpadMultiply];
                 case Inputs.Key_NumpadPlus: return k[Key.NumpadPlus];
                 case Inputs.Key_NumpadMinus: return k[Key.NumpadMinus];
-                case Inputs.Key_NumpadPeriod:
-                    return k[Key.NumpadPeriod];
-                case Inputs.Key_NumpadEquals:
-                    return k[Key.NumpadEquals];
+                case Inputs.Key_NumpadPeriod: return k[Key.NumpadPeriod];
+                case Inputs.Key_NumpadEquals: return k[Key.NumpadEquals];
                 case Inputs.Key_Numpad0: return k[Key.Numpad0];
                 case Inputs.Key_Numpad1: return k[Key.Numpad1];
                 case Inputs.Key_Numpad2: return k[Key.Numpad2];
@@ -594,47 +671,49 @@ namespace UnityEngine.InputSystem.HighLevel
                 default: return null;
             }
         }
-        
-        private static ButtonControl GetGamepadButtonControl(Gamepad g, Inputs input)
+
+        private static ButtonControl GetGamepadButtonControl(Gamepad gamepad, Inputs input)
         {
-            if (g == null)
-                return null;
+            if (gamepad == null)
+                throw new ArgumentNullException(nameof(gamepad));
+
             switch (input)
             {
-                case Inputs.Gamepad_DpadUp: return g.dpad.up;
-                case Inputs.Gamepad_DpadDown: return g.dpad.down;
-                case Inputs.Gamepad_DpadLeft: return g.dpad.left;
-                case Inputs.Gamepad_DpadRight: return g.dpad.right;
-                case Inputs.Gamepad_North: return g.buttonNorth;
-                case Inputs.Gamepad_East: return g.buttonEast;
-                case Inputs.Gamepad_South: return g.buttonSouth;
-                case Inputs.Gamepad_West: return g.buttonWest;
+                case Inputs.Gamepad_DpadUp: return gamepad.dpad.up;
+                case Inputs.Gamepad_DpadDown: return gamepad.dpad.down;
+                case Inputs.Gamepad_DpadLeft: return gamepad.dpad.left;
+                case Inputs.Gamepad_DpadRight: return gamepad.dpad.right;
+                case Inputs.Gamepad_North: return gamepad.buttonNorth;
+                case Inputs.Gamepad_East: return gamepad.buttonEast;
+                case Inputs.Gamepad_South: return gamepad.buttonSouth;
+                case Inputs.Gamepad_West: return gamepad.buttonWest;
                 case Inputs.Gamepad_LeftStickButton:
-                    return g.leftStickButton;
+                    return gamepad.leftStickButton;
                 case Inputs.Gamepad_RightStickButton:
-                    return g.rightStickButton;
-                case Inputs.Gamepad_LeftShoulder: return g.leftShoulder;
+                    return gamepad.rightStickButton;
+                case Inputs.Gamepad_LeftShoulder: return gamepad.leftShoulder;
                 case Inputs.Gamepad_RightShoulder:
-                    return g.rightShoulder;
-                case Inputs.Gamepad_LeftStickUp: return g.leftStick.up;
+                    return gamepad.rightShoulder;
+                case Inputs.Gamepad_LeftStickUp: return gamepad.leftStick.up;
                 case Inputs.Gamepad_LeftStickDown:
-                    return g.leftStick.down;
+                    return gamepad.leftStick.down;
                 case Inputs.Gamepad_LeftStickLeft:
-                    return g.leftStick.left;
+                    return gamepad.leftStick.left;
                 case Inputs.Gamepad_LeftStickRight:
-                    return g.leftStick.right;
-                case Inputs.Gamepad_RightStickUp: return g.rightStick.up;
+                    return gamepad.leftStick.right;
+                case Inputs.Gamepad_RightStickUp: return gamepad.rightStick.up;
                 case Inputs.Gamepad_RightStickDown:
-                    return g.rightStick.down;
+                    return gamepad.rightStick.down;
                 case Inputs.Gamepad_RightStickLeft:
-                    return g.rightStick.left;
+                    return gamepad.rightStick.left;
                 case Inputs.Gamepad_RightStickRight:
-                    return g.rightStick.right;
-                case Inputs.Gamepad_LeftTrigger: return g.leftTrigger;
-                case Inputs.Gamepad_RightTrigger: return g.rightTrigger;
-                case Inputs.Gamepad_Start: return g.startButton;
-                case Inputs.Gamepad_Select: return g.selectButton;
-                default: return null;
+                    return gamepad.rightStick.right;
+                case Inputs.Gamepad_LeftTrigger: return gamepad.leftTrigger;
+                case Inputs.Gamepad_RightTrigger: return gamepad.rightTrigger;
+                case Inputs.Gamepad_Start: return gamepad.startButton;
+                case Inputs.Gamepad_Select: return gamepad.selectButton;
+                default:
+                    throw new InvalidEnumArgumentException(nameof(input), (int)input, typeof(Inputs));
             }
         }
 
@@ -673,8 +752,13 @@ namespace UnityEngine.InputSystem.HighLevel
                         .OfType<Mouse>()
                         .Any(x => GetMouseButtonControl(x, input).isPressed);
                 case InputDeviceType.Gamepad:
-                    return GetGamepadsForSlot(GamepadSlot.All)
-                        .Any(x => GetGamepadButtonControl(x.gamepad, input).ReadValue() >= GetGamepadTriggerPressPoint(x.slot));
+                    foreach (var gamepadSlotTuple in GetGamepadsForSlot(GamepadSlot.All))
+                    {
+                        if (GetGamepadButtonControl(gamepadSlotTuple.gamepad, input).ReadValue() >=
+                            GetGamepadTriggerPressPoint(gamepadSlotTuple.slot))
+                            return true;
+                    }
+                    return false;
                 case InputDeviceType.Joystick:
                     return InputSystem.devices
                         .OfType<Joystick>()
@@ -683,6 +767,30 @@ namespace UnityEngine.InputSystem.HighLevel
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Is the indicated gamepad button currently pressed.
+        /// </summary>
+        /// <param name="button">A control from the GamepadButton enum.</param>
+        /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
+        /// <returns>True if the input is currently held down, false if the input is not pressed,
+        /// or if 'slot' is specified and no gamepad exists in that slot.</returns>
+        public static bool IsControlPressed(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
+        {
+            if (slot != GamepadSlot.All)
+                return s_Gamepads[(int)slot] != null &&
+                    GetGamepadButtonControl(s_Gamepads[(int)slot], (Inputs)button).isPressed;
+
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                if (s_Gamepads[i] == null) continue;
+
+                if (GetGamepadButtonControl(s_Gamepads[i], (Inputs)button).isPressed)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -709,14 +817,16 @@ namespace UnityEngine.InputSystem.HighLevel
                         .OfType<Mouse>()
                         .Any(x => GetMouseButtonControl(x, input).wasPressedThisFrame);
                 case InputDeviceType.Gamepad:
-                    return GetGamepadsForSlot(GamepadSlot.All)
-                        .Any(x =>
-                        {
-                            var ctrl = GetGamepadButtonControl(x.gamepad, input);
-                            var pressPoint = GetGamepadTriggerPressPoint(x.slot);
-                            return x.gamepad.wasUpdatedThisFrame && (ctrl.ReadValue() >= pressPoint) &&
-                                   (ctrl.ReadValueFromPreviousFrame() < pressPoint);
-                        });
+                    foreach (var gamepadSlotTuple in GetGamepadsForSlot(GamepadSlot.All))
+                    {
+                        var ctrl = GetGamepadButtonControl(gamepadSlotTuple.gamepad, input);
+                        var pressPoint = GetGamepadTriggerPressPoint(gamepadSlotTuple.slot);
+                        if (gamepadSlotTuple.gamepad.wasUpdatedThisFrame &&
+                            ctrl.ReadValue() >= pressPoint &&
+                            ctrl.ReadValueFromPreviousFrame() < pressPoint)
+                            return true;
+                    }
+                    return false;
                 case InputDeviceType.Joystick:
                     return InputSystem.devices
                         .OfType<Joystick>()
@@ -725,6 +835,30 @@ namespace UnityEngine.InputSystem.HighLevel
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Was the specified control pressed in the current frame.
+        /// </summary>
+        /// <param name="button">A control from the GamepadButton enum.</param>
+        /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
+        /// <returns>True if the input was pressed in the current frame, false if the input is not pressed, was
+        /// pressed in a frame previous to the current one, or if 'slot' is specified and no gamepad is connected to that slot.</returns>
+        public static bool IsControlDown(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
+        {
+            if (slot != GamepadSlot.All)
+                return s_Gamepads[(int)slot] != null &&
+                    GetGamepadButtonControl(s_Gamepads[(int)slot], (Inputs)button).wasPressedThisFrame;
+
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                if (s_Gamepads[i] == null) continue;
+
+                if (GetGamepadButtonControl(s_Gamepads[i], (Inputs)button).wasPressedThisFrame)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -737,7 +871,8 @@ namespace UnityEngine.InputSystem.HighLevel
         ///     and return true if the control was released in the current frame on any of them.
         /// </remarks>
         public static bool IsControlUp(Inputs input)
-        {            var deviceType = GetDeviceTypeForInput(input);
+        {
+            var deviceType = GetDeviceTypeForInput(input);
 
             switch (deviceType)
             {
@@ -750,14 +885,16 @@ namespace UnityEngine.InputSystem.HighLevel
                         .OfType<Mouse>()
                         .Any(x => GetMouseButtonControl(x, input).wasReleasedThisFrame);
                 case InputDeviceType.Gamepad:
-                    return GetGamepadsForSlot(GamepadSlot.All)
-                        .Any(x =>
-                        {
-                            var ctrl = GetGamepadButtonControl(x.gamepad, input);
-                            var pressPoint = GetGamepadTriggerPressPoint(x.slot);
-                            return x.gamepad.wasUpdatedThisFrame && (ctrl.ReadValue() < pressPoint) &&
-                                   (ctrl.ReadValueFromPreviousFrame() >= pressPoint);
-                        });
+                    foreach (var gamepadSlotTuple in GetGamepadsForSlot(GamepadSlot.All))
+                    {
+                        var ctrl = GetGamepadButtonControl(gamepadSlotTuple.gamepad, input);
+                        var pressPoint = GetGamepadTriggerPressPoint(gamepadSlotTuple.slot);
+                        if (gamepadSlotTuple.gamepad.wasUpdatedThisFrame &&
+                            ctrl.ReadValue() < pressPoint &&
+                            ctrl.ReadValueFromPreviousFrame() >= pressPoint)
+                            return true;
+                    }
+                    return false;
                 case InputDeviceType.Joystick:
                     return InputSystem.devices
                         .OfType<Joystick>()
@@ -766,6 +903,30 @@ namespace UnityEngine.InputSystem.HighLevel
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// True in the frame that the button was released.
+        /// </summary>
+        /// <param name="button">A control from the GamepadButton enum.</param>
+        /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
+        /// <returns>True if the input was released in the current frame, otherwise false.
+        /// Also returns false if 'slot' is specified and no gamepad is connected to that slot.</returns>
+        public static bool IsControlUp(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
+        {
+            if (slot != GamepadSlot.All)
+                return s_Gamepads[(int)slot] != null &&
+                    GetGamepadButtonControl(s_Gamepads[(int)slot], (Inputs)button).wasReleasedThisFrame;
+
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                if (s_Gamepads[i] == null) continue;
+
+                if (GetGamepadButtonControl(s_Gamepads[i], (Inputs)button).wasReleasedThisFrame)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -791,7 +952,7 @@ namespace UnityEngine.InputSystem.HighLevel
                             Mathf.Clamp01(GetMouseButtonControl(device, input).ReadValue()));
                     break;
                 case InputDeviceType.Gamepad:
-                    foreach (var device in InputSystem.devices.OfType<Gamepad>())
+                    foreach (var device in s_Gamepads.Where(g => g != null))
                         maxValue = Mathf.Max(maxValue,
                             Mathf.Clamp01(GetGamepadButtonControl(device, input).ReadValue()));
                     break;
@@ -804,7 +965,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 default:
                     break;
             }
-            
+
             return maxValue;
         }
 
@@ -872,8 +1033,31 @@ namespace UnityEngine.InputSystem.HighLevel
         // For most slots returns single device, but if passed GamepadSlot.All should return all gamepads
         private static IEnumerable<(Gamepad gamepad, GamepadSlot slot)> GetGamepadsForSlot(GamepadSlot gamepadSlot)
         {
-            // TODO implement me properly
-            return InputSystem.devices.OfType<Gamepad>().Select(x => (x, GamepadSlot.Slot1));
+            if (gamepadSlot != GamepadSlot.All)
+            {
+                yield return (s_Gamepads[(int)gamepadSlot], gamepadSlot);
+                yield break;
+            }
+
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                if (s_Gamepads[i] == null)
+                    continue;
+
+                yield return (s_Gamepads[i], (GamepadSlot)i);
+            }
+        }
+
+        private static float GetInputSystemDefaultDeadZone()
+        {
+            return Mathf.Max(InputSystem.settings.defaultDeadzoneMin,
+                1.0f - InputSystem.settings.defaultDeadzoneMax);
+        }
+
+        private static float GetGamepadDeadZone(GamepadSlot gamepadSlot)
+        {
+            // TODO implement me!
+            return GetInputSystemDefaultDeadZone();
         }
 
         /// <summary>
@@ -881,11 +1065,12 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </summary>
         /// <param name="stick"></param>
         /// <param name="gamepadSlot">Read values from the gamepad in this slot, or maximum magnitude value from all gamepads if gamepadSlot is GamepadSlot.All.</param>
-        /// <returns></returns>
+        /// <returns>A normalized Vector2 containing the actuation of the specified stick control.</returns>
         public static Vector2 GetAxis(GamepadAxis stick, GamepadSlot gamepadSlot = GamepadSlot.All)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
+
             foreach (var (gamepad, slot) in GetGamepadsForSlot(gamepadSlot))
             {
                 var rawAxis = GetGamepadStickControl(gamepad, stick).ReadUnprocessedValue();
@@ -907,7 +1092,7 @@ namespace UnityEngine.InputSystem.HighLevel
             if (joystick == null)
                 return null;
 
-            // TODO what is supposed to be here? 
+            // TODO what is supposed to be here?
             switch (joystickAxis)
             {
                 case 0: return joystick.stick;
@@ -949,47 +1134,51 @@ namespace UnityEngine.InputSystem.HighLevel
             return maxAxis;
         }
 
-        // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
+        /// <summary>
+        /// True if there is a connected gamepad in the indicated slot.
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <returns></returns>
+        public static bool IsGamepadConnected(GamepadSlot slot)
+        {
+            return s_Gamepads[(int)slot] != null;
+        }
+
+        /// <summary>
+        /// Did the gamepad in the specified slot connect in this frame.
+        /// </summary>
+        /// <param name="slot">The gamepad slot to check.</param>
+        /// <returns>True in the frame that the gamepad in the specified slot connected in.</returns>
+        /// <remarks>
+        /// Use this method when you have logic that you want to run once when a gamepad connects.
+        /// </remarks>
+        public static bool DidGamepadConnectThisFrame(GamepadSlot slot)
+        {
+            return s_GamepadsConnectedFrames[(int)slot] == Time.frameCount;
+        }
+
+        /// <summary>
+        /// Did the gamepad in the specified slot disconnect in this frame.
+        /// </summary>
+        /// <param name="slot">The gamepad slot to check.</param>
+        /// <returns>True in the frame that the gamepad in the specified slot disconnected in.</returns>
+        /// <remarks>
+        /// Use this method when you have logic that you want to run once when a gamepad disconnects, such as
+        /// showing a reconnect message.
+        /// </remarks>
+        public static bool DidGamepadDisconnectThisFrame(GamepadSlot slot)
+        {
+            return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
+        }
+
 #if false
-        /// <summary>
-        /// True when the button is held.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="gamepadSlot"></param>
-        /// <returns></returns>
-        public static bool IsGamepadButtonPressed(GamepadButton button, GamepadSlot gamepadSlot = GamepadSlot.Any)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// True in the frame the button was pressed.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="gamepadSlot"></param>
-        /// <returns></returns>
-        public static bool IsGamepadButtonDown(GamepadButton button, GamepadSlot gamepadSlot = GamepadSlot.Any)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// True in the frame the button was released.
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="gamepadSlot"></param>
-        /// <returns></returns>
-        public static bool IsGamepadButtonUp(GamepadButton input, GamepadSlot gamepadSlot = GamepadSlot.Any)
-        {
-            throw new NotImplementedException();
-        }
+        public static Vector2 mousePosition { get; }
+        public static bool mousePresent { get; }
+        public static float mouseScrollDelta { get; }
 #endif
 
         private static float GetGamepadTriggerPressPoint(GamepadSlot gamepadSlot)
         {
-            // TODO remove me when init is implemented
-            InitializeGamepadConfigs();
-
             switch (gamepadSlot)
             {
                 case GamepadSlot.Slot1:
@@ -1004,7 +1193,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    return s_GamepadConfigs[(int)gamepadSlot].triggerPressPoint;
+                    return s_GamepadConfigs[(int)gamepadSlot].TriggerPressPoint;
                 case GamepadSlot.All:
                     throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
                 default:
@@ -1022,9 +1211,6 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static void SetGamepadTriggerPressPoint(float pressPoint, GamepadSlot gamepadSlot = GamepadSlot.All)
         {
-            // TODO remove me when init is implemented
-            InitializeGamepadConfigs();
-
             switch (gamepadSlot)
             {
                 case GamepadSlot.Slot1:
@@ -1039,22 +1225,19 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    s_GamepadConfigs[(int)gamepadSlot].triggerPressPoint = pressPoint;
+                    s_GamepadConfigs[(int)gamepadSlot].TriggerPressPoint = pressPoint;
                     break;
                 case GamepadSlot.All:
                     for (var i = 0; i < s_GamepadConfigs.Length; ++i)
-                        s_GamepadConfigs[i].triggerPressPoint = pressPoint;
+                        s_GamepadConfigs[i].TriggerPressPoint = pressPoint;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
             }
         }
-        
+
         private static float GetGamepadStickDeadZone(GamepadSlot gamepadSlot)
         {
-            // TODO remove me when init is implemented
-            InitializeGamepadConfigs();
-
             switch (gamepadSlot)
             {
                 case GamepadSlot.Slot1:
@@ -1069,7 +1252,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    return s_GamepadConfigs[(int)gamepadSlot].deadZone;
+                    return s_GamepadConfigs[(int)gamepadSlot].DeadZone;
                 case GamepadSlot.All:
                     throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
                 default:
@@ -1084,9 +1267,6 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="gamepadSlot"></param>
         public static void SetGamepadStickDeadzone(float deadzone, GamepadSlot gamepadSlot = GamepadSlot.All)
         {
-            // TODO remove me when init is implemented
-            InitializeGamepadConfigs();
-
             switch (gamepadSlot)
             {
                 case GamepadSlot.Slot1:
@@ -1101,34 +1281,108 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
                 case GamepadSlot.Slot12:
-                    s_GamepadConfigs[(int)gamepadSlot].deadZone = deadzone;
+                    s_GamepadConfigs[(int)gamepadSlot].DeadZone = deadzone;
                     break;
                 case GamepadSlot.All:
                     for (var i = 0; i < s_GamepadConfigs.Length; ++i)
-                        s_GamepadConfigs[i].deadZone = deadzone;
+                        s_GamepadConfigs[i].DeadZone = deadzone;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(gamepadSlot), gamepadSlot, null);
             }
-
         }
 
-        // RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
-#if false
-        /// <summary>
-        /// True if there is a connected gamepad in the indicated slot.
-        /// </summary>
-        /// <param name="slot"></param>
-        /// <returns></returns>
-        public static bool IsGamepadConnected(GamepadSlot slot)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static Vector2 mousePosition { get; }
-        public static bool mousePresent { get; }
-        public static float mouseScrollDelta { get; }
-
+#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+        internal struct InputSystemPlayerLoopHighLevelTimeUpdate{}
+        internal struct InputSystemPlayerLoopHighLevelEndFrame{}
 #endif
+
+        internal static void Initialize()
+        {
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                s_Gamepads[i] = null;
+                s_GamepadsConnectedFrames[i] = -1;
+                s_GamepadsDisconnectedFrames[i] = -1;
+            }
+
+            InputSystem.onDeviceChange -= OnDeviceChange;
+            InputSystem.onDeviceChange += OnDeviceChange;
+
+            InitializeGamepadConfigs();
+
+            // add any existing gamepads
+            foreach (var gamepad in Gamepad.all)
+            {
+                AddGamepadToFirstFreeSlot(gamepad);
+            }
+
+#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+            // To support DidGamepadConnectThisFrame and DidGamepadDisconnectThisFrame, we make use of Time.frameCount
+            // to record what frame a device was connected or disconnected on. A problem with this is that in the editor,
+            // device connected events can come from an editor update that happens before Time.frameCount has been
+            // updated for the frame, and from the managed side, we have no way to tell that we're inside that update.
+            // An additional complication is that device connected events happen asynchronously on the native side, so
+            // sometimes the event will come through the editor update and sometimes through the normal player loop.
+            // So what we do is install two additional PlayerLoop systems, one to track when the Time.frameCount value has
+            // been updated and one to reset at the end of the frame. If we end up adding a device before the frame
+            // count has been updated, we manually add 1 to the frame count that we record.
+            var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
+            playerLoop.InsertSystemAsSubSystemOf<InputSystemPlayerLoopHighLevelTimeUpdate, TimeUpdate>(
+                () => s_TimeHasUpdatedThisFrame = true);
+            playerLoop.InsertSystemAsSubSystemOf<InputSystemPlayerLoopHighLevelEndFrame, PostLateUpdate>(
+                () => s_TimeHasUpdatedThisFrame = false);
+            UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
+#endif
+        }
+
+        private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (change == InputDeviceChange.Added)
+            {
+                AddGamepadToFirstFreeSlot(device);
+            }
+            else if (change == InputDeviceChange.Removed || change == InputDeviceChange.Disconnected)
+            {
+                RemoveGamepad(device);
+            }
+        }
+
+        private static void AddGamepadToFirstFreeSlot(InputDevice device)
+        {
+            if (!(device is Gamepad gamepad)) return;
+
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                if (s_Gamepads[i] != null) continue;
+
+                var frameCount = Time.frameCount;
+#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+                if (!s_TimeHasUpdatedThisFrame)
+                    frameCount += 1;
+#endif
+                s_Gamepads[i] = gamepad;
+                s_GamepadsConnectedFrames[i] = frameCount;
+                break;
+            }
+        }
+
+        private static void RemoveGamepad(InputDevice device)
+        {
+            for (var i = 0; i < maxGamepadSlots; i++)
+            {
+                if (s_Gamepads[i] != device) continue;
+
+                s_Gamepads[i] = null;
+
+                var frameCount = Time.frameCount;
+#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+                if (!s_TimeHasUpdatedThisFrame)
+                    frameCount += 1;
+#endif
+                s_GamepadsDisconnectedFrames[i] = frameCount;
+                break;
+            }
+        }
     }
 }

@@ -3382,6 +3382,9 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
+            // TODO: Processing for the high level API isn't free, so allow users to turn it off if they're not using it via input settings and check here.
+            HighLevel.Input.Initialize();
+
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
 #endif
@@ -3496,6 +3499,8 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            HighLevel.Input.Initialize();
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
