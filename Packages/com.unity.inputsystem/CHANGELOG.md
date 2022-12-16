@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue on PS5 where device disconnected events that happen while the app is in the background are missed causing orphaned devices to hang around forever and exceptions when the same device is added again ([case UUM-7842](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744)).
 - Fixed Switch Pro, DualShock 4, DualSense gamepads becoming current on PC/macOS when no controls are changing ([case ISXB-223](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-223))).
 - Fixed an issue that made OnScreenStick unusable when used in conjunction with PlayerInput in Auto-Switch devices mode, or with any code that changes user/device pairing on unsued device activity being detected ([case ISXB-48](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-48)).
+- Fixed issue where input events were being suppressed during interactive action rebinding even when when their controls were excluded ([case ISXB-367](https://issuetracker.unity3d.com/issues/mouse-position-and-mouse-click-input-not-recognized-when-rebinding-is-active)).
 
 ### Actions
 - Extended input action code generator (`InputActionCodeGenerator.cs`) to support optional registration and unregistration of callbacks for multiple callback instances via `AddCallbacks(...)` and `RemoveCallbacks(...)` part of the generated code. Contribution by [Ramobo](https://github.com/Ramobo) in [#889](https://github.com/Unity-Technologies/InputSystem/pull/889).
