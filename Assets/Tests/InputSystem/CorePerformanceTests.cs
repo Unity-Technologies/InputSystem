@@ -9,6 +9,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add test for domain reload logic
 
@@ -26,6 +27,19 @@ internal class CorePerformanceTests : CoreTestsFixture
         // stack traces make each native container allocation extremely expensive. For our
         // performance tests, turn this off entirely.
         NativeLeakDetection.Mode = NativeLeakDetectionMode.Disabled;
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void Performance_MakeCircles()
+    {
+        Measure.Method(() =>
+        {
+            SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
+        })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
     }
 
     ////TODO: same test but with several actions listening on each gamepad

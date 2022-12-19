@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added support for reading Tracking State in [TrackedPoseDriver](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver) to constrain whether the input pose is applied to the Transform. This should be used when the device supports valid flags for the position and rotation values, which is the case for XR poses.
 - Added `InputSettings.shortcutKeysConsumeInput`. This allows programmatic access to opt-in to the enhanced shortcut key behaviour ([case ISXB-254](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-254))).
 - Significantly optimized cost of `ReadValue`/`ReadUnprocessedValueFromState`/`WriteValueIntoState` for some control types. Optimization is opt-in for now, please call `InputSystem.settings.SetInternalFeatureFlag("USE_OPTIMIZED_CONTROLS", true);` in your project to enable it. You can observe which controls are optimized by looking at new optimized column in device debugger. You will need to call a new `InputControl.ApplyParameterChanges()` method if the code is changing `AxisControl` fields after initial setup is done.
+- Added the ability to change the origin positioning and movement behaviour of the OnScreenStick (`OnScreenStick.cs`) via the new `behaviour` property. This currently supports three modes of operation, two of which are new in addition to the previous behaviour. Based on the user contribution from [eblabs](https://github.com/eblabs) in [#658](https://github.com/Unity-Technologies/InputSystem/pull/658).
 - Significantly optimized cost of `InputAction.ReadValue` and `InputControl.ReadValue` calls by introducing caching behaviour to input controls. Input controls now keep track of whether their underlying state has been changed and only read the value from the underlying state and apply processors when absolutely necessary. Optimization is opt-in for now, please call `InputSystem.settings.SetInternalFeatureFlag("USE_READ_VALUE_CACHING", true);` in your project to enable it. If there are issues try enabling `InputSystem.settings.SetInternalFeatureFlag("PARANOID_READ_VALUE_CACHING_CHECKS", true);` and check in the console if there are any errors regarding caching.
 
 ### Fixed
@@ -21,9 +22,13 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue on PS5 where device disconnected events that happen while the app is in the background are missed causing orphaned devices to hang around forever and exceptions when the same device is added again ([case UUM-7842](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744)).
 - Fixed Switch Pro, DualShock 4, DualSense gamepads becoming current on PC/macOS when no controls are changing ([case ISXB-223](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-223))).
 - Fixed an issue that made OnScreenStick unusable when used in conjunction with PlayerInput in Auto-Switch devices mode, or with any code that changes user/device pairing on unsued device activity being detected ([case ISXB-48](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-48)).
+- Fixed issue where input events were being suppressed during interactive action rebinding even when when their controls were excluded ([case ISXB-367](https://issuetracker.unity3d.com/issues/mouse-position-and-mouse-click-input-not-recognized-when-rebinding-is-active)).
 
 ### Actions
 - Extended input action code generator (`InputActionCodeGenerator.cs`) to support optional registration and unregistration of callbacks for multiple callback instances via `AddCallbacks(...)` and `RemoveCallbacks(...)` part of the generated code. Contribution by [Ramobo](https://github.com/Ramobo) in [#889](https://github.com/Unity-Technologies/InputSystem/pull/889).
+
+### Changed
+- Changed define requirements of `Unity.InputSystem.TestFramework`, so that it can be used by other packages without setting the `com.unity.inputsystem` package to be testable in the project manifest.
 
 ## [1.4.4] - 2022-11-01
 
