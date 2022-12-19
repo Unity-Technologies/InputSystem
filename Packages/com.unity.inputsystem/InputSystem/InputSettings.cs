@@ -763,8 +763,8 @@ namespace UnityEngine.InputSystem
 
         // Needs a static field because feature check is in the hot path
         internal static bool optimizedControlsFeatureEnabled = false;
-        internal static bool readValueCachingFeatureEnabled = true; // TODO switch back to false
-        internal static bool paranoidReadValueCachingChecksEnabled = true;
+        internal static bool readValueCachingFeatureEnabled;
+        internal static bool paranoidReadValueCachingChecksEnabled;
 
         internal void OnChange()
         {

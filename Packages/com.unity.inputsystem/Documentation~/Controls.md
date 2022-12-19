@@ -235,7 +235,8 @@ The system considers synthetic Controls for [interactive rebinding](ActionBindin
 
 ### Avoiding defensive copies
 
-Use [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_value) instead of [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) to avoid copying value every time, as former is returning value as `ref readonly` while latter always makes a copy.
+Use [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_value) instead of [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) to avoid creating a copy of the control state on every call, as the former returns the value as `ref readonly` while the latter always makes a copy. Note that this optimization only applies if the call site assigns the return value to a variable that has been declared 'ref readonly'. Otherwise a copy will be made as before. Additionally, be aware of defensive copies that can be allocated by the compiler when it is unable to determine that it can safely use the readonly reference i.e. if it can't determine that the reference won't be changed, it will create a defensive copy for you. For more details, see https://learn.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#use-ref-readonly-return-statements.
+
 
 ### Control Value Caching
 
