@@ -81,7 +81,12 @@ class APIVerificationTests
                 resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputEventTypeInfo).FullName) ||
 
                 // serializable types may depend on the field names to match serialized data (eg. Json)
-                resolved.Attributes.HasFlag(TypeAttributes.Serializable)
+                resolved.Attributes.HasFlag(TypeAttributes.Serializable) ||
+
+                // These types need to use fields because they are returned as ref readonly from InputAction.value and we
+                // want to avoid defensive copies being created for every property access. Also, we can't use the types
+                // Bone and Eyes here because they don't exist on some platforms
+                resolved.Name == "Bone" || resolved.Name == "Eyes"
             )
                 return true;
 
