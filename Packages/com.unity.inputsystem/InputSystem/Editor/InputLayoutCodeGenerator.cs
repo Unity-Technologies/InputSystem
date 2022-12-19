@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
@@ -67,7 +69,7 @@ namespace UnityEngine.InputSystem.Editor
         /// speed up the creation of these devices.
         /// </remarks>
         /// <seealso cref="InputSystem.RegisterPrecompiledLayout{T}"/>
-        public static string GenerateCodeForDeviceLayout(string layoutName, string defines = null, string namePrefix = "Fast", string visibility = "public", string @namespace = null)
+        public static unsafe string GenerateCodeForDeviceLayout(string layoutName, string defines = null, string namePrefix = "Fast", string visibility = "public", string @namespace = null)
         {
             if (string.IsNullOrEmpty(layoutName))
                 throw new ArgumentNullException(nameof(layoutName));
@@ -229,6 +231,61 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
                 --writer.indentLevel;
                 writer.WriteLine("});");
+            }
+
+            writer.WriteLine();
+
+            if (device.m_ControlTreeNodes != null)
+            {
+                if (device.m_ControlTreeIndices == null)
+                    throw new InvalidOperationException(
+                        $"Control tree indicies was null. Ensure the '{device.displayName}' device was created without errors.");
+
+                writer.WriteLine("builder.WithControlTree(new byte[]");
+                writer.WriteLine("{");
+                ++writer.indentLevel;
+                writer.WriteLine("// Control tree nodes as bytes");
+                var nodePtr = (byte*)UnsafeUtility.AddressOf(ref device.m_ControlTreeNodes[0]);
+                var byteCount = device.m_ControlTreeNodes.Length * UnsafeUtility.SizeOf<InputDevice.ControlBitRangeNode>();
+
+                for (var i = 0; i < byteCount;)
+                {
+                    if (i != 0)
+                        writer.WriteLine();
+
+                    writer.WriteIndent();
+                    for (var j = 0; j < 30 && i < byteCount; j++, i++)
+                    {
+                        writer.Write((i != 0 ? ", " : "") + *(nodePtr + i));
+                    }
+                }
+                writer.WriteLine();
+                --writer.indentLevel;
+
+                writer.WriteLine("}, new ushort[]");
+
+                ++writer.indentLevel;
+                writer.WriteLine("{");
+                ++writer.indentLevel;
+                writer.WriteLine("// Control tree node indicies");
+                writer.WriteLine();
+
+                for (var i = 0; i < device.m_ControlTreeIndices.Length;)
+                {
+                    if (i != 0)
+                        writer.WriteLine();
+
+                    writer.WriteIndent();
+                    for (var j = 0; j < 30 && i < device.m_ControlTreeIndices.Length; j++, i++)
+                    {
+                        writer.Write((i != 0 ? ", " : "") + device.m_ControlTreeIndices[i]);
+                    }
+                }
+
+                writer.WriteLine();
+                --writer.indentLevel;
+                writer.WriteLine("});");
+                --writer.indentLevel;
             }
 
             writer.WriteLine();

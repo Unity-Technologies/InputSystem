@@ -93,11 +93,11 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
         /// <seealso cref="pressPoint"/>
         /// <seealso cref="InputSystem.onAnyButtonPress"/>
-        public bool isPressed => IsValueConsideredPressed(ReadValue());
+        public bool isPressed => IsValueConsideredPressed(value);
 
-        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
-        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+        public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.

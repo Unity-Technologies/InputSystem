@@ -89,10 +89,10 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            var upIsPressed = up.ReadValueFromState(statePtr) >= up.pressPointOrDefault;
-            var downIsPressed = down.ReadValueFromState(statePtr) >= down.pressPointOrDefault;
-            var leftIsPressed = left.ReadValueFromState(statePtr) >= left.pressPointOrDefault;
-            var rightIsPressed = right.ReadValueFromState(statePtr) >= right.pressPointOrDefault;
+            var upIsPressed = up.ReadValueFromStateWithCaching(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFromStateWithCaching(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFromStateWithCaching(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFromStateWithCaching(statePtr) >= right.pressPointOrDefault;
 
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }

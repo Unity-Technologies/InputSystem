@@ -283,25 +283,29 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
-            var value = ReadValueFromState(statePtr);
+            return EvaluateMagnitude(ReadValueFromStateWithCaching(statePtr));
+        }
+
+        private float EvaluateMagnitude(float value)
+        {
             if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
                 return Mathf.Abs(value);
 
             var min = m_MinValue.ToSingle();
             var max = m_MaxValue.ToSingle();
 
-            value = Mathf.Clamp(value, min, max);
+            var clampedValue = Mathf.Clamp(value, min, max);
 
             // If part of our range is in negative space, evaluate magnitude as two
             // separate subspaces.
             if (min < 0)
             {
-                if (value < 0)
-                    return NormalizeProcessor.Normalize(Mathf.Abs(value), 0, Mathf.Abs(min), 0);
-                return NormalizeProcessor.Normalize(value, 0, max, 0);
+                if (clampedValue < 0)
+                    return NormalizeProcessor.Normalize(Mathf.Abs(clampedValue), 0, Mathf.Abs(min), 0);
+                return NormalizeProcessor.Normalize(clampedValue, 0, max, 0);
             }
 
-            return NormalizeProcessor.Normalize(value, min, max, 0);
+            return NormalizeProcessor.Normalize(clampedValue, min, max, 0);
         }
 
         protected override FourCC CalculateOptimizedControlDataType()

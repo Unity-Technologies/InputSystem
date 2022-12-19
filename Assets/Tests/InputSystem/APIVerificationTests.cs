@@ -81,7 +81,12 @@ class APIVerificationTests
                 resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputEventTypeInfo).FullName) ||
 
                 // serializable types may depend on the field names to match serialized data (eg. Json)
-                resolved.Attributes.HasFlag(TypeAttributes.Serializable)
+                resolved.Attributes.HasFlag(TypeAttributes.Serializable) ||
+
+                // These types need to use fields because they are returned as ref readonly from InputAction.value and we
+                // want to avoid defensive copies being created for every property access. Also, we can't use the types
+                // Bone and Eyes here because they don't exist on some platforms
+                resolved.Name == "Bone" || resolved.Name == "Eyes"
             )
                 return true;
 
@@ -517,22 +522,27 @@ class APIVerificationTests
         }
     }
 
+    /// <summary>
+    /// Use a scoped exclusion property to exclude members of a type from API verification when the member's names are not
+    /// unique in the entire project and you don't want to exclude the unrelated members. This type will scope the exlusion
+    /// to just a particular namespace and type.
+    /// </summary>
     internal readonly struct ScopedExclusion
     {
-        public ScopedExclusion(string version, string ns, string type, string method)
+        public ScopedExclusion(string version, string ns, string type, params string[] members)
         {
             Version = version;
             Namespace = ns;
             Type = type;
-            Method = method;
+            Members = members;
         }
 
         public string Version { get; }
         public string Namespace { get; }
         public string Type { get; }
-        public string Method { get; }
+        public string[] Members { get; }
 
-        public bool IsMatch(List<string> scopeStack, string method)
+        public bool IsMatch(List<string> scopeStack, string member)
         {
             var namespaceScope = string.Empty;
             var typeScope = string.Empty;
@@ -545,7 +555,7 @@ class APIVerificationTests
                     typeScope = scopeStack[i].Trim();
             }
 
-            return namespaceScope == Namespace && typeScope == Type && method.Trim() == Method;
+            return namespaceScope == Namespace && typeScope == Type && Members.Contains(member.Trim());
         }
     }
 
@@ -554,7 +564,7 @@ class APIVerificationTests
     {
         public const string ScopedExclusions = "ScopedExclusions";
 
-        public ScopedExclusionPropertyAttribute(string version, string ns, string type, string method)
+        public ScopedExclusionPropertyAttribute(string version, string ns, string type, params string[] method)
         {
             Properties.Add(ScopedExclusions, new ScopedExclusion(version, ns, type, method));
         }

@@ -127,26 +127,26 @@ namespace UnityEngine.InputSystem.UI
             {
                 uiToolkitPointerId = GetPenPointerId(pen);
                 #if UNITY_2021_1_OR_NEWER
-                pressure = pen.pressure.EvaluateMagnitude();
-                azimuthAngle = (pen.tilt.ReadValue().x + 1) * Mathf.PI / 2;
-                altitudeAngle = (pen.tilt.ReadValue().y + 1) * Mathf.PI / 2;
-                twist = pen.twist.ReadValue() * Mathf.PI * 2;
+                pressure = pen.pressure.magnitude;
+                azimuthAngle = (pen.tilt.value.x + 1) * Mathf.PI / 2;
+                altitudeAngle = (pen.tilt.value.y + 1) * Mathf.PI / 2;
+                twist = pen.twist.value * Mathf.PI * 2;
                 #endif
             }
             else if (control.parent is TouchControl touchControl)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchControl);
                 #if UNITY_2021_1_OR_NEWER
-                pressure = touchControl.pressure.EvaluateMagnitude();
-                radius = touchControl.radius.ReadValue();
+                pressure = touchControl.pressure.magnitude;
+                radius = touchControl.radius.value;
                 #endif
             }
             else if (control.parent is Touchscreen touchscreen)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchscreen.primaryTouch);
                 #if UNITY_2021_1_OR_NEWER
-                pressure = touchscreen.pressure.EvaluateMagnitude();
-                radius = touchscreen.radius.ReadValue();
+                pressure = touchscreen.pressure.magnitude;
+                radius = touchscreen.radius.value;
                 #endif
             }
             else
