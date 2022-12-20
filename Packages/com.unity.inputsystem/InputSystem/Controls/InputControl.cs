@@ -443,6 +443,15 @@ namespace UnityEngine.InputSystem
         public abstract int valueSizeInBytes { get; }
 
         /// <summary>
+        /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
+        /// is actuated. Shortcut for <see cref="EvaluateMagnitude()"/>.
+        /// </summary>
+        /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
+        /// <seealso cref="EvaluateMagnitude(void*)"/>
+        /// <seealso cref="EvaluateMagnitude()"/>
+        public float magnitude => EvaluateMagnitude();
+
+        /// <summary>
         /// Return a string representation of the control useful for debugging.
         /// </summary>
         /// <returns>A string representation of the control.</returns>
@@ -849,6 +858,12 @@ namespace UnityEngine.InputSystem
         internal int m_ChildStartIndex;
         internal ControlFlags m_ControlFlags;
 
+        // Value caching
+        // These values will be set to true during state updates if the control has actually changed value.
+        // Set to true initially so default state will be returned on the first call
+        internal bool m_CachedValueIsStale = true;
+        internal bool m_UnprocessedCachedValueIsStale = true;
+
         ////REVIEW: store these in arrays in InputDevice instead?
         internal PrimitiveValue m_DefaultState;
         internal PrimitiveValue m_MinValue;
@@ -885,7 +900,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others) and recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls.
+        /// Apply built-in parameters changes (e.g. <see cref="AxisControl.invert"/>, others), recompute <see cref="InputControl.optimizedControlDataType"/> for impacted controls and clear cached value.
         /// </summary>
         /// <remarks>
         /// </remarks>
@@ -905,6 +920,9 @@ namespace UnityEngine.InputSystem
                 currentParent.SetOptimizedControlDataType();
                 currentParent = currentParent.parent;
             }
+
+            // Also use this method to mark cached values as stale
+            MarkAsStaleRecursively();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1083,6 +1101,20 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        internal void MarkAsStale()
+        {
+            m_CachedValueIsStale = true;
+            m_UnprocessedCachedValueIsStale = true;
+        }
+
+        internal void MarkAsStaleRecursively()
+        {
+            MarkAsStale();
+
+            foreach (var inputControl in children)
+                inputControl.MarkAsStale();
+        }
+
         #if UNITY_EDITOR
         internal virtual IEnumerable<object> GetProcessors()
         {
@@ -1106,18 +1138,139 @@ namespace UnityEngine.InputSystem
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
         /// <summary>
-        /// Get the control's current value as read from <see cref="InputControl.currentStatePtr"/>
+        /// Returns the current value of the control after processors have been applied.
         /// </summary>
-        /// <returns>The control's current value.</returns>
+        /// <returns>The controls current value.</returns>
         /// <remarks>
         /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
+        ///
+        /// If internal feature "USE_READ_VALUE_CACHING" is enabled, then this property implements caching
+        /// to avoid applying processors when the underlying control has not changed.
+        /// With this in mind, be aware of processors that use global state, such as the <see cref="Processors.AxisDeadzoneProcessor"/>.
+        /// Unless the control unprocessed value has been changed, input system settings changed or <see cref="InputControl.ApplyParameterChanges()"/> invoked,
+        /// the processors will not run and calls to <see cref="value"/> will return the same result as previous calls.
+        ///
+        /// If a processor requires to be run on every read, override <see cref="InputProcessor.cachingPolicy"/> property
+        /// in the processor and set it to <see cref="InputProcessor.CachingPolicy.EvaluateOnEveryRead"/>.
+        ///
+        /// To improve debugging try setting "PARANOID_READ_VALUE_CACHING_CHECKS" internal feature flag to check if cache value is still consistent.
+        ///
+        /// Also note that this property returns the result as ref readonly. If custom control states are in use, i.e.
+        /// any controls not shipped with the Input System package, be careful of accidental defensive copies
+        /// <see href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies"/>.
         /// </remarks>
+        /// <seealso cref="ReadValue"/>
+        public ref readonly TValue value
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return ref ReadStateInEditor();
+#endif
+
+                if (
+                    // if feature is disabled we re-evaluate every call
+                    !InputSettings.readValueCachingFeatureEnabled
+                    // if cached value is stale we re-evaluate and clear the flag
+                    || m_CachedValueIsStale
+                    // if a processor in stack needs to be re-evaluated, but unprocessedValue is still can be cached
+                    || evaluateProcessorsEveryRead
+                )
+                {
+                    m_CachedValue = ProcessValue(unprocessedValue);
+                    m_CachedValueIsStale = false;
+                }
+#if DEBUG
+                else if (InputSettings.paranoidReadValueCachingChecksEnabled)
+                {
+                    var oldUnprocessedValue = m_UnprocessedCachedValue;
+                    var newUnprocessedValue = unprocessedValue;
+                    var currentProcessedValue = ProcessValue(newUnprocessedValue);
+
+                    if (CompareValue(ref newUnprocessedValue, ref oldUnprocessedValue))
+                    {
+                        // don't warn if unprocessedValue caching failed
+                        m_CachedValue = currentProcessedValue;
+                    }
+                    else if (CompareValue(ref currentProcessedValue, ref m_CachedValue))
+                    {
+                        // processors are not behaving as expected if unprocessedValue stays the same but processedValue changed
+                        var namesList = new List<string>();
+                        foreach (var inputProcessor in m_ProcessorStack)
+                            namesList.Add(inputProcessor.ToString());
+                        var names = string.Join(", ", namesList);
+                        Debug.LogError(
+                            "Cached processed value unexpectedly became outdated due to InputProcessor's returning a different value, " +
+                            $"new value '{currentProcessedValue}' old value '{m_CachedValue}', current processors are: {names}. " +
+                            "If your processor need to be recomputed on every read please add \"public override CachingPolicy cachingPolicy => CachingPolicy.EvaluateOnEveryRead;\" to the processor.");
+                        m_CachedValue = currentProcessedValue;
+                    }
+                }
+#endif
+
+                return ref m_CachedValue;
+            }
+        }
+
+        internal unsafe ref readonly TValue unprocessedValue
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
+                    return ref ReadUnprocessedStateInEditor();
+#endif
+
+                if (
+                    // if feature is disabled we re-evaluate every call
+                    !InputSettings.readValueCachingFeatureEnabled
+                    // if cached value is stale we re-evaluate and clear the flag
+                    || m_UnprocessedCachedValueIsStale
+                )
+                {
+                    m_UnprocessedCachedValue = ReadUnprocessedValueFromState(currentStatePtr);
+                    m_UnprocessedCachedValueIsStale = false;
+                }
+#if DEBUG
+                else if (InputSettings.paranoidReadValueCachingChecksEnabled)
+                {
+                    var currentUnprocessedValue = ReadUnprocessedValueFromState(currentStatePtr);
+                    if (CompareValue(ref currentUnprocessedValue, ref m_UnprocessedCachedValue))
+                    {
+                        Debug.LogError($"Cached unprocessed value unexpectedly became outdated for unknown reason, new value '{currentUnprocessedValue}' old value '{m_UnprocessedCachedValue}'.");
+                        m_UnprocessedCachedValue = currentUnprocessedValue;
+                    }
+                }
+#endif
+
+                return ref m_UnprocessedCachedValue;
+            }
+        }
+
+        /// <summary>
+        /// Returns the current value of the control after processors have been applied.
+        /// </summary>
+        /// <returns>The controls current value.</returns>
+        /// <remarks>
+        /// This can only be called on devices that have been added to the system (<see cref="InputDevice.added"/>).
+        ///
+        /// If internal feature "USE_READ_VALUE_CACHING" is enabled, then this property implements caching
+        /// to avoid applying processors when the underlying control has not changed.
+        /// With this in mind, be aware of processors that use global state, such as the <see cref="Processors.AxisDeadzoneProcessor"/>.
+        /// Unless the control unprocessed value has been changed, input system settings changed or <see cref="InputControl.ApplyParameterChanges()"/> invoked,
+        /// the processors will not run and calls to <see cref="value"/> will return the same result as previous calls.
+        ///
+        /// If a processor requires to be run on every read, override <see cref="InputProcessor.cachingPolicy"/> property
+        /// in the processor and set it to <see cref="InputProcessor.CachingPolicy.EvaluateOnEveryRead"/>.
+        ///
+        /// To improve debugging try setting "PARANOID_READ_VALUE_CACHING_CHECKS" internal feature flag to check if cache value is still consistent.
+        /// <see href="https://docs.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies"/>.
+        /// </remarks>
+        /// <seealso cref="value"/>
         public TValue ReadValue()
         {
-            unsafe
-            {
-                return ReadValueFromState(currentStatePtr);
-            }
+            return value;
         }
 
         ////REVIEW: is 'frame' really the best wording here?
@@ -1157,12 +1310,37 @@ namespace UnityEngine.InputSystem
             return ProcessValue(ReadUnprocessedValueFromState(statePtr));
         }
 
+        /// <summary>
+        /// Read value from provided <paramref name="statePtr"/> and apply processors. Try cache result if possible.
+        /// </summary>
+        /// <param name="statePtr">State pointer to read from.</param>
+        /// <returns>The controls current value.</returns>
+        /// <remarks>
+        /// If <paramref name="statePtr"/> is "currentStatePtr", then read will be done via <see cref="value"/> property to improve performance.
+        /// </remarks>
+        /// <seealso cref="value"/>
+        public unsafe TValue ReadValueFromStateWithCaching(void* statePtr)
+        {
+            return statePtr == currentStatePtr ? value : ReadValueFromState(statePtr);
+        }
+
+        /// <summary>
+        /// Read value from provided <paramref name="statePtr"/>. Try cache result if possible.
+        /// </summary>
+        /// <param name="statePtr">State pointer to read from.</param>
+        /// <returns>The controls current value.</returns>
+        /// <remarks>
+        /// If <paramref name="statePtr"/> is "currentStatePtr", then read will be done via <see cref="unprocessedValue"/> property to improve performance.
+        /// </remarks>
+        /// <seealso cref="value"/>
+        public unsafe TValue ReadUnprocessedValueFromStateWithCaching(void* statePtr)
+        {
+            return statePtr == currentStatePtr ? unprocessedValue : ReadUnprocessedValueFromState(statePtr);
+        }
+
         public TValue ReadUnprocessedValue()
         {
-            unsafe
-            {
-                return ReadUnprocessedValueFromState(currentStatePtr);
-            }
+            return unprocessedValue;
         }
 
         public abstract unsafe TValue ReadUnprocessedValueFromState(void* statePtr);
@@ -1256,13 +1434,8 @@ namespace UnityEngine.InputSystem
             return value;
         }
 
-        public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
+        private static unsafe bool CompareValue(ref TValue firstValue, ref TValue secondValue)
         {
-            ////REVIEW: should we first compare state here? if there's no change in state, there can be no change in value and we can skip the rest
-
-            var firstValue = ReadValueFromState(firstStatePtr);
-            var secondValue = ReadValueFromState(secondStatePtr);
-
             var firstValuePtr = UnsafeUtility.AddressOf(ref firstValue);
             var secondValuePtr = UnsafeUtility.AddressOf(ref secondValue);
 
@@ -1272,20 +1445,72 @@ namespace UnityEngine.InputSystem
             return UnsafeUtility.MemCmp(firstValuePtr, secondValuePtr, UnsafeUtility.SizeOf<TValue>()) != 0;
         }
 
+        public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
+        {
+            ////REVIEW: should we first compare state here? if there's no change in state, there can be no change in value and we can skip the rest
+
+            var firstValue = ReadValueFromState(firstStatePtr);
+            var secondValue = ReadValueFromState(secondStatePtr);
+
+            return CompareValue(ref firstValue, ref secondValue);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue ProcessValue(TValue value)
         {
-            if (m_ProcessorStack.length > 0)
-            {
-                value = m_ProcessorStack.firstValue.Process(value, this);
-                if (m_ProcessorStack.additionalValues != null)
-                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
-                        value = m_ProcessorStack.additionalValues[i].Process(value, this);
-            }
+            ProcessValue(ref value);
             return value;
         }
 
+        /// <summary>
+        /// Applies all control processors to the passed value.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <remarks>
+        /// Use this overload when your state struct is large to avoid creating copies of the state.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ProcessValue(ref TValue value)
+        {
+            if (m_ProcessorStack.length <= 0)
+                return;
+
+            value = m_ProcessorStack.firstValue.Process(value, this);
+            if (m_ProcessorStack.additionalValues == null)
+                return;
+
+            for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                value = m_ProcessorStack.additionalValues[i].Process(value, this);
+        }
+
         internal InlinedArray<InputProcessor<TValue>> m_ProcessorStack;
+
+        private TValue m_CachedValue;
+        private TValue m_UnprocessedCachedValue;
+
+        #if UNITY_EDITOR
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe ref readonly TValue ReadStateInEditor()
+        {
+            // we don't use cached values during editor updates because editor updates cause controls to look at a
+            // different block of state memory, and since the cached values are from the play mode memory, we'd
+            // end up returning the wrong values.
+            m_EditorValue = ReadValueFromState(currentStatePtr);
+            return ref m_EditorValue;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe ref readonly TValue ReadUnprocessedStateInEditor()
+        {
+            m_UnprocessedEditorValue = ReadUnprocessedValueFromState(currentStatePtr);
+            return ref m_UnprocessedEditorValue;
+        }
+
+        // these fields are just to work with the fact that the 'value' property is ref readonly, so we
+        // need somewhere with a known lifetime to store these so they can be returned by ref.
+        private TValue m_EditorValue;
+        private TValue m_UnprocessedEditorValue;
+        #endif
 
         // Only layouts are allowed to modify the processor stack.
         internal TProcessor TryGetProcessor<TProcessor>()
@@ -1319,6 +1544,17 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        internal bool evaluateProcessorsEveryRead = false;
+
+        protected override void FinishSetup()
+        {
+            foreach (var processor in m_ProcessorStack)
+                if (processor.cachingPolicy == InputProcessor.CachingPolicy.EvaluateOnEveryRead)
+                    evaluateProcessorsEveryRead = true;
+
+            base.FinishSetup();
+        }
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
     }

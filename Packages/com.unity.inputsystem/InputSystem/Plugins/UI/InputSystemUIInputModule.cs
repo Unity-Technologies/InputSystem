@@ -1650,15 +1650,15 @@ namespace UnityEngine.InputSystem.UI
             // Need to check if it's a touch so that we get a correct pointerId.
             if (controlParent is TouchControl touchControl)
             {
-                touchId = touchControl.touchId.ReadValue();
-                touchPosition = touchControl.position.ReadValue();
+                touchId = touchControl.touchId.value;
+                touchPosition = touchControl.position.value;
             }
             // Could be it's a toplevel control on Touchscreen (like "<Touchscreen>/position"). In that case,
             // read the touch ID from primaryTouch.
             else if (controlParent is Touchscreen touchscreen)
             {
-                touchId = touchscreen.primaryTouch.touchId.ReadValue();
-                touchPosition = touchscreen.primaryTouch.position.ReadValue();
+                touchId = touchscreen.primaryTouch.touchId.value;
+                touchPosition = touchscreen.primaryTouch.position.value;
             }
             if (touchId != 0)
                 pointerId = ExtendedPointerEventData.MakePointerIdForTouch(pointerId, touchId);
