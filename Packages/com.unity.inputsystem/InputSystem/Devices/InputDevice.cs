@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
@@ -708,6 +710,55 @@ namespace UnityEngine.InputSystem
         // NOTE: This contains *leaf* controls only.
         internal uint[] m_StateOffsetToControlMap;
 
+        // Holds the nodes that represent the tree of memory ranges that each control occupies. This is used when
+        // determining what controls have changed given a state event or partial state update.
+        internal ControlBitRangeNode[] m_ControlTreeNodes;
+
+        // An indirection table for control bit range nodes to point at zero or more controls. Indices are used to
+        // point into the m_ChildrenForEachControl array.
+        internal ushort[] m_ControlTreeIndices;
+
+        // When a device gets built from a layout, we create a binary tree from its controls where each node in the tree
+        // represents the range of bits that cover the left or right section of the parent range. For example, starting
+        // with the entire device state block as the parent, where the state block is 100 bits long, the left node will
+        // cover from bits 0-50, and the right from bits 51-99. For the left node, we'll get two more child nodes where
+        // the left will cover bits 0-25, and the right bits 26-49 and so on. Each node will point at any controls that
+        // either fit exactly into its range, or overlap the splitting point between both nodes. In reality, picking the
+        // mid-point to split each parent node is a little convoluted and will rarely be the absolute mid-point, but that's
+        // the basic idea.
+        //
+        // At runtime, when state events come in, we can then really quickly perform a bunch of memcmps on both sides of
+        // the tree and recurse down the branches that have changed. When nodes have controls, we can then check if those
+        // controls have changes, and mark them as stale so their cached values get updated the next time their values
+        // are read.
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct ControlBitRangeNode
+        {
+            // only store the end bit offset of each range because we always do a full tree traversal so
+            // the start offset is always calculated at each level.
+            public ushort endBitOffset;
+
+            // points to the location in the nodes array where the left child of this node lives, or -1 if there
+            // is no child. The right child is always at the next index.
+            public short leftChildIndex;
+
+            // each node can point at multiple controls (because multiple controls can use the same range in memory and
+            // also because of overlaps in bit ranges). The control indicies for each node are stored contiguously in the
+            // m_ControlTreeIndicies array on the device, which acts as an indirection table, and these two values tell
+            // us where to start for each node and how many controls this node points at. This is an unsigned short so that
+            // we could in theory support devices with up to 65535 controls. Each node however can only support 255 controls.
+            public ushort controlStartIndex;
+            public byte controlCount;
+
+            public ControlBitRangeNode(ushort endOffset)
+            {
+                controlStartIndex = 0;
+                controlCount = 0;
+                endBitOffset = endOffset;
+                leftChildIndex = -1;
+            }
+        }
+
         // ATM we pack everything into 32 bits. Given we're operating on bit offsets and counts, this imposes some tight limits
         // on controls and their associated state memory. Should this turn out to be a problem, bump m_StateOffsetToControlMap
         // to a ulong[] and up the counts here to account for having 64 bits available instead of only 32.
@@ -911,6 +962,176 @@ namespace UnityEngine.InputSystem
 
                 return deviceOfType;
             }
+        }
+
+        internal unsafe void WriteChangedControlStates(byte* deviceStateBuffer, void* statePtr, uint stateSizeInBytes,
+            uint stateOffsetInDevice)
+        {
+            Debug.Assert(m_ControlTreeNodes != null && m_ControlTreeIndices != null);
+
+            if (m_ControlTreeNodes.Length == 0)
+                return;
+
+            // if we're dealing with a delta state event or just an individual control update through InputState.ChangeState
+            // the size of the new data will not be the same size as the device state block, so use the 'partial' change state
+            // method to update just those controls that overlap with the changed state.
+            if (m_StateBlock.sizeInBits != stateSizeInBytes * 8)
+            {
+                if (m_ControlTreeNodes[0].leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
+                        stateOffsetInDevice * 8, deviceStateBuffer, m_ControlTreeNodes[0], 0);
+            }
+            else
+            {
+                if (m_ControlTreeNodes[0].leftChildIndex != -1)
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
+                        deviceStateBuffer, m_ControlTreeNodes[0], 0);
+            }
+        }
+
+        private unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+            // TODO recheck
+            if (Math.Max(stateOffsetInDeviceInBits, startOffset) <=
+                Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, leftNode.endBitOffset))
+            {
+                var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
+                for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                if (leftNode.leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
+                        deviceStatePtr, leftNode, startOffset);
+            }
+
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+            // TODO recheck
+            if (Math.Max(stateOffsetInDeviceInBits, leftNode.endBitOffset) <=
+                Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, rightNode.endBitOffset))
+            {
+                var controlEndIndex = rightNode.controlStartIndex + rightNode.controlCount;
+                for (int i = rightNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                if (rightNode.leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
+                        deviceStatePtr, rightNode, leftNode.endBitOffset);
+            }
+        }
+
+        private void DumpControlBitRangeNode(int nodeIndex, ControlBitRangeNode node, uint startOffset, uint sizeInBits, List<string> output)
+        {
+            var names = new List<string>();
+            for (var i = 0; i < node.controlCount; i++)
+            {
+                var controlIndex = m_ControlTreeIndices[node.controlStartIndex + i];
+                var control = m_ChildrenForEachControl[controlIndex];
+                names.Add(control.path);
+            }
+            var namesStr = string.Join(", ", names);
+            var children = node.leftChildIndex != -1 ? $" <{node.leftChildIndex}, {node.leftChildIndex + 1}>" : "";
+            output.Add($"{nodeIndex} [{startOffset}, {startOffset + sizeInBits}]{children}->{namesStr}");
+        }
+
+        private void DumpControlTree(ControlBitRangeNode parentNode, uint startOffset, List<string> output)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+            DumpControlBitRangeNode(parentNode.leftChildIndex, leftNode, startOffset, leftNode.endBitOffset - startOffset, output);
+            DumpControlBitRangeNode(parentNode.leftChildIndex + 1, rightNode, leftNode.endBitOffset, (uint)(rightNode.endBitOffset - leftNode.endBitOffset), output);
+
+            if (leftNode.leftChildIndex != -1)
+                DumpControlTree(leftNode, startOffset, output);
+
+            if (rightNode.leftChildIndex != -1)
+                DumpControlTree(rightNode, leftNode.endBitOffset, output);
+        }
+
+        internal string DumpControlTree()
+        {
+            var output = new List<string>();
+            DumpControlTree(m_ControlTreeNodes[0], 0, output);
+            return string.Join("\n", output);
+        }
+
+        private unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+
+            // have any bits in the region defined by the left node changed?
+            // TODO recheck
+            if (HasDataChangedInRange(deviceStatePtr, statePtr, startOffset, leftNode.endBitOffset - startOffset + 1))
+            {
+                // update the state of any controls pointed to by the left node
+                var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
+                for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    var control = m_ChildrenForEachControl[controlIndex];
+
+                    // nodes aren't always an exact fit for control memory ranges so check here if the control pointed
+                    // at by this node has actually changed state so we don't mark controls as stale needlessly.
+                    // We need to offset the device and new state pointers by the byte offset of the device state block
+                    // because all controls have this offset baked into them, but deviceStatePtr points at the already
+                    // offset block of device memory (remember, all devices share one big block of memory) and statePtr
+                    // points at a block of memory of the same size as the device state.
+                    if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
+                        (byte*)statePtr - m_StateBlock.byteOffset, null))
+                        control.MarkAsStale();
+                }
+
+                // process the left child node if it exists
+                if (leftNode.leftChildIndex != -1)
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                        leftNode, startOffset);
+            }
+
+            // process the right child node if it exists
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+
+            Debug.Assert(leftNode.endBitOffset + (rightNode.endBitOffset - leftNode.endBitOffset) < m_StateBlock.sizeInBits,
+                "Tried to check state memory outside the bounds of the current device.");
+
+            // if no bits in the range defined by the right node have changed, return
+            // TODO recheck
+            if (!HasDataChangedInRange(deviceStatePtr, statePtr, leftNode.endBitOffset,
+                (uint)(rightNode.endBitOffset - leftNode.endBitOffset + 1)))
+                return;
+
+            // update the state of any controls pointed to by the right node
+            var rightNodeControlEndIndex = rightNode.controlStartIndex + rightNode.controlCount;
+            for (int i = rightNode.controlStartIndex; i < rightNodeControlEndIndex; i++)
+            {
+                var controlIndex = m_ControlTreeIndices[i];
+                var control = m_ChildrenForEachControl[controlIndex];
+
+                if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
+                    (byte*)statePtr - m_StateBlock.byteOffset, null))
+                    control.MarkAsStale();
+            }
+
+            if (rightNode.leftChildIndex != -1)
+                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                    rightNode, leftNode.endBitOffset);
+        }
+
+        private static unsafe bool HasDataChangedInRange(byte* deviceStatePtr, void* statePtr, uint startOffset, uint sizeInBits)
+        {
+            if (sizeInBits == 1)
+                return MemoryHelpers.ReadSingleBit(deviceStatePtr, startOffset) !=
+                    MemoryHelpers.ReadSingleBit(statePtr, startOffset);
+
+            return !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                startOffset, sizeInBits);
         }
     }
 }

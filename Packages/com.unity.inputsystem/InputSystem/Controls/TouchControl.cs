@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Controls
         {
             get
             {
-                switch (phase.ReadValue())
+                switch (phase.value)
                 {
                     case TouchPhase.Began:
                     case TouchPhase.Moved:

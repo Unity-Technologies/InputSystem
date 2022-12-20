@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -97,7 +98,7 @@ namespace UnityEngine.InputSystem
                 return false;
 
             // Check magnitude of actuation.
-            var magnitude = control.EvaluateMagnitude();
+            var magnitude = control.magnitude;
             if (magnitude < 0)
             {
                 // We know the control is not in default state but we also know it doesn't support
@@ -1893,6 +1894,24 @@ namespace UnityEngine.InputSystem
             public DeviceBuilder WithStateOffsetToControlIndexMap(uint[] map)
             {
                 device.m_StateOffsetToControlMap = map;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public unsafe DeviceBuilder WithControlTree(byte[] controlTreeNodes, ushort[] controlTreeIndicies)
+            {
+                var sizeOfNode = UnsafeUtility.SizeOf<InputDevice.ControlBitRangeNode>();
+                var numNodes = controlTreeNodes.Length / sizeOfNode;
+                device.m_ControlTreeNodes = new InputDevice.ControlBitRangeNode[numNodes];
+                fixed(byte* nodePtr = controlTreeNodes)
+                {
+                    for (var i = 0; i < numNodes; i++)
+                    {
+                        device.m_ControlTreeNodes[i] = *(InputDevice.ControlBitRangeNode*)(nodePtr + i * sizeOfNode);
+                    }
+                }
+
+                device.m_ControlTreeIndices = controlTreeIndicies;
                 return this;
             }
 
