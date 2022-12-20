@@ -1561,6 +1561,15 @@ namespace UnityEngine.InputSystem
             s_Manager.FlushDisconnectedDevices();
         }
 
+        /// <summary>
+        /// Return the device with given name or layout <param name="nameOrLayout"/>.
+        /// Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="nameOrLayout">Unique device name or layout to search for.</param>
+        /// <returns>The device matching the given search criteria or null.</returns>
+        /// <seealso cref="GetDevice(Type)"/>
+        /// <seealso cref="GetDevice{TDevice}"/>
+        /// <seealso cref="AddDevice{TDevice}"/>
         public static InputDevice GetDevice(string nameOrLayout)
         {
             return s_Manager.TryGetDevice(nameOrLayout);
@@ -1573,6 +1582,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <typeparam name="TDevice">Type of device to look for.</typeparam>
         /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice(string)"/>
         /// <seealso cref="GetDevice(Type)"/>
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
@@ -1587,6 +1597,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="type">Type of the device</param>
         /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice(string)"/>
         /// <seealso cref="GetDevice&lt;TDevice&gt;()"/>
         public static InputDevice GetDevice(Type type)
         {
@@ -1631,6 +1642,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="GetDevice(string)"/>
         /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
         /// <seealso cref="InputControl.usages"/>
         public static TDevice GetDevice<TDevice>(InternedString usage)
@@ -1656,6 +1668,21 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        /// <summary>
+        /// Return the device of the given type <typeparamref name="TDevice"/> that has the
+        /// given usage assigned. Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="usage">Usage of the device, e.g. "LeftHand".</param>
+        /// <typeparam name="TDevice">Type of device to look for.</typeparam>
+        /// <returns>The device with the given type and usage or null.</returns>
+        /// <remarks>
+        /// Devices usages are most commonly employed to "tag" devices for a specific role.
+        /// A common scenario, for example, is to distinguish which hand a specific <see cref="XR.XRController"/>
+        /// is associated with. However, arbitrary usages can be assigned to devices.
+        /// </remarks>
+        /// <seealso cref="GetDevice(InternedString)"/>
+        /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="InputControl.usages"/>
         public static TDevice GetDevice<TDevice>(string usage)
             where TDevice : InputDevice
         {
@@ -1696,6 +1723,18 @@ namespace UnityEngine.InputSystem
             return list;
         }
 
+        /// <summary>
+        /// Populate a list of devices that have been reported by the <see cref="IInputRuntime">runtime</see>
+        /// but could not be matched to any known <see cref="InputControlLayout">layout</see>.
+        /// </summary>
+        /// <param name="descriptions">A list to be populated with descriptions of devices that could not be recognized.</param>
+        /// <returns>The number of devices that could not be recognized.</returns>
+        /// <remarks>
+        /// If new layouts are added to the system or if additional <see cref="InputDeviceMatcher">matches</see>
+        /// are added to existing layouts, devices in this list may appear or disappear.
+        /// </remarks>
+        /// <seealso cref="InputDeviceMatcher"/>
+        /// <seealso cref="RegisterLayoutMatcher"/>
         public static int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
             return s_Manager.GetUnsupportedDevices(descriptions);
@@ -2190,8 +2229,8 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">Control path to search for</param>
+        /// <returns>List of <see cref="InputControl"/> which matched the given search criteria</returns>
         /// <example>
         /// <code>
         /// // Find all gamepads (literally: that use the "Gamepad" layout).
@@ -2211,6 +2250,14 @@ namespace UnityEngine.InputSystem
             return FindControls<InputControl>(path);
         }
 
+        /// <summary>
+        /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
+        /// </summary>
+        /// <param name="path">Control path to search for</param>
+        /// <typeparam name="TControl">Type of control <see cref="InputControl"/>.</typeparam>
+        /// <returns>Generic list of <see cref="InputControl"/> which matched the given search criteria</returns>
+        /// <seealso cref="FindControls{InputControl}(string)"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.InputSystem.InputControlList{TControl})"/>
         public static InputControlList<TControl> FindControls<TControl>(string path)
             where TControl : InputControl
         {
@@ -2219,6 +2266,15 @@ namespace UnityEngine.InputSystem
             return list;
         }
 
+        /// <summary>
+        /// Populate a list with all controls that match the given <see cref="InputControlPath">control path</see>.
+        /// </summary>
+        /// <param name="path">Control path to search for</param>
+        /// <param name="controls">Generic list of <see cref="InputControl"/> to populate with the search results</param>
+        /// <typeparam name="TControl">Type of control <see cref="InputControl"/>.</typeparam>
+        /// <returns>Count of controls which matched the given search criteria</returns>
+        /// <seealso cref="FindControls{TControl}(string)"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.InputSystem.InputControlList{TControl})"/>
         public static int FindControls<TControl>(string path, ref InputControlList<TControl> controls)
             where TControl : InputControl
         {
@@ -2460,6 +2516,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Add an event to the internal event queue.
         /// </summary>
+        /// <typeparam name="TEvent">Type of event to look enqueue.</typeparam>
         /// <param name="inputEvent">Event to add to the internal event buffer.</param>
         /// <remarks>
         /// The event will be copied in full to the internal event buffer. The internal event
@@ -2960,6 +3017,8 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// <seealso cref="IInputInteraction"/>
         /// <seealso cref="RegisterInteraction{T}"/>
+        /// <seealso cref="TryGetInteraction"/>
+        /// <seealso cref="ListInteractions"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
             if (type == null)
@@ -2975,6 +3034,18 @@ namespace UnityEngine.InputSystem
             s_Manager.interactions.AddTypeRegistration(name, type);
         }
 
+        /// <summary>
+        /// Register a new type of interaction with the system.
+        /// </summary>
+        /// <typeparam name="T">Type that implements the interaction. Must support <see cref="InputInteraction"/>.</typeparam>
+        /// <param name="name">Name to register the interaction with. This is used in bindings to refer to the interaction
+        /// (e.g. an interactions called "Tap" can be added to a binding by listing it in its <see cref="InputBinding.interactions"/>
+        /// property). If no name is supplied, the short name of <typeparamref name="T"/> is used (with "Interaction" clipped off
+        /// the name if the type name ends in that).</param>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="RegisterInteraction(Type, string)"/>
+        /// <seealso cref="TryGetInteraction"/>
+        /// <seealso cref="ListInteractions"/>
         public static void RegisterInteraction<T>(string name = null)
         {
             RegisterInteraction(typeof(T), name);
@@ -2982,6 +3053,14 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: can we move the getters and listers somewhere else? maybe `interactions` and `processors` properties and such?
 
+        /// <summary>
+        /// Search for a registered interaction type with the given name.
+        /// </summary>
+        /// <param name="name">Name of the registered interaction to search for.</param>
+        /// <returns>The type of the interaction, if one was previously registered with the give name, otherwise null.</returns>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="RegisterInteraction"/>
+        /// <seealso cref="ListInteractions"/>
         public static Type TryGetInteraction(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -2989,11 +3068,26 @@ namespace UnityEngine.InputSystem
             return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
+        /// <summary>
+        /// Gets the names of of all currently registered interactions.
+        /// </summary>
+        /// <returns>A list of currently registered interaction names.</returns>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="RegisterInteraction"/>
+        /// <seealso cref="TryGetInteraction"/>
         public static IEnumerable<string> ListInteractions()
         {
             return s_Manager.interactions.names;
         }
 
+        /// <summary>
+        /// Register a new type of binding composite with the system.
+        /// </summary>
+        /// <param name="type">Type that implements the binding composite. Must support <see cref="InputBindingComposite"/>.</param>
+        /// <param name="name">Name to register the binding composite with. This is used in bindings to refer to the composite.</param>
+        /// <seealso cref="InputBindingComposite"/>
+        /// <seealso cref="RegisterBindingComposite{T}"/>
+        /// <seealso cref="TryGetBindingComposite"/>
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (type == null)
@@ -3009,11 +3103,26 @@ namespace UnityEngine.InputSystem
             s_Manager.composites.AddTypeRegistration(name, type);
         }
 
+        /// <summary>
+        /// Register a new type of binding composite with the system.
+        /// </summary>
+        /// <typeparam name="T">Type that implements the binding composite. Must support <see cref="InputBindingComposite"/>.</typeparam>
+        /// <param name="name">Name to register the binding composite with. This is used in bindings to refer to the composite.</param>
+        /// <seealso cref="InputBindingComposite"/>
+        /// <seealso cref="RegisterBindingComposite(Type, string)"/>
+        /// <seealso cref="TryGetBindingComposite"/>
         public static void RegisterBindingComposite<T>(string name = null)
         {
             RegisterBindingComposite(typeof(T), name);
         }
 
+        /// <summary>
+        /// Search for a registered binding composite type with the given name.
+        /// </summary>
+        /// <param name="name">Name of the registered binding composite to search for.</param>
+        /// <returns>The type of the binding composite, if one was previously registered with the give name, otherwise null.</returns>
+        /// <seealso cref="InputBindingComposite"/>
+        /// <seealso cref="RegisterBindingComposite"/>
         public static Type TryGetBindingComposite(string name)
         {
             if (string.IsNullOrEmpty(name))
