@@ -12,6 +12,9 @@ namespace UnityEngine.InputSystem.LowLevel
     [Flags]
     public enum InputUpdateType
     {
+        /// <summary>
+        /// Performs no actual update but still allows devices to reset themselves. Usually occurs immediately after domain reload.
+        /// </summary>
         None = 0,
 
         /// <summary>
