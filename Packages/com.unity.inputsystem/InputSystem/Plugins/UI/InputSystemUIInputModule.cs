@@ -1596,6 +1596,17 @@ namespace UnityEngine.InputSystem.UI
             return ref m_PointerStates.additionalValues[index - 1];
         }
 
+        private int GetDisplayIndexFor(InputControl control)
+        {
+            int displayIndex = 0;
+            if (control.device is Pointer pointerCast)
+            {
+                displayIndex = pointerCast.displayIndex.ReadValue();
+                Debug.Assert(displayIndex <= byte.MaxValue, "Display index was larger than expected");
+            }
+            return displayIndex;
+        }
+
         private int GetPointerStateIndexFor(ref InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
@@ -1661,12 +1672,7 @@ namespace UnityEngine.InputSystem.UI
                 touchPosition = touchscreen.primaryTouch.position.value;
             }
 
-            int displayIndex = 0;
-            if (device is Pointer pointerCast)
-            {
-                displayIndex = pointerCast.displayIndex.ReadValue();
-                Debug.Assert(displayIndex <= byte.MaxValue, "Display index was larger than expected");
-            }
+            int displayIndex = GetDisplayIndexFor(control);
 
             if (touchId != 0)
                 pointerId = ExtendedPointerEventData.MakePointerIdForTouch(pointerId, touchId);
@@ -1986,6 +1992,9 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
@@ -2014,6 +2023,9 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnRightClickCallback(InputAction.CallbackContext context)
@@ -2028,6 +2040,9 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.rightButton.ignoreNextClick = true;
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnMiddleClickCallback(InputAction.CallbackContext context)
@@ -2042,6 +2057,9 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.middleButton.ignoreNextClick = true;
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
@@ -2070,6 +2088,9 @@ namespace UnityEngine.InputSystem.UI
             // The old input system reported scroll deltas in lines, we report pixels.
             // Need to scale as the UI system expects lines.
             state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnMoveCallback(InputAction.CallbackContext context)
@@ -2086,6 +2107,9 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldOrientation = context.ReadValue<Quaternion>();
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnTrackedDevicePositionCallback(InputAction.CallbackContext context)
@@ -2096,6 +2120,9 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldPosition = context.ReadValue<Vector3>();
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnControlsChanged(object obj)
