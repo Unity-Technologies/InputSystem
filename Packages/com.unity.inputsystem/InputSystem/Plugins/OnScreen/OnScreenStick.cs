@@ -34,6 +34,8 @@ namespace UnityEngine.InputSystem.OnScreen
     [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
+        private const string kDynamicOriginClickable = "DynamicOriginClickable";
+
         /// <summary>
         /// Callback to handle OnPointerDown UI events.
         /// </summary>
@@ -115,7 +117,7 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
             m_PointerDownPos = m_StartPos;
 
-            var dynamicOrigin = new GameObject("DynamicOriginClickable", typeof(Image));
+            var dynamicOrigin = new GameObject(kDynamicOriginClickable, typeof(Image));
             dynamicOrigin.transform.SetParent(transform);
             var image = dynamicOrigin.GetComponent<Image>();
             image.color = new Color(1, 1, 1, 0);
@@ -283,6 +285,16 @@ namespace UnityEngine.InputSystem.OnScreen
             }
         }
 
+        private void UpdateDynamicOriginClickableArea()
+        {
+            var dynamicOriginTransform = transform.Find(kDynamicOriginClickable);
+            if (dynamicOriginTransform)
+            {
+                var rectTransform = (RectTransform)dynamicOriginTransform;
+                rectTransform.sizeDelta = new Vector2(m_DynamicOriginRange * 2, m_DynamicOriginRange * 2);
+            }
+        }
+
         /// <summary>
         /// The distance from the onscreen control's center of origin, around which the control can move.
         /// </summary>
@@ -297,7 +309,7 @@ namespace UnityEngine.InputSystem.OnScreen
         /// </summary>
         /// <remarks>
         /// This only applies if <see cref="behaviour"/> is set to <see cref="Behaviour.ExactPositionWithDynamicOrigin"/>.
-        /// When the first press is within this region, then the control will be apprear at that position and and have it's origin of motion placed there.
+        /// When the first press is within this region, then the control will appear at that position and have it's origin of motion placed there.
         /// Otherwise, if pressed outside of this region the control will ignore it.
         /// This property defines the radius of the circular region. The center point being defined by the component position in the scene.
         /// </remarks>
@@ -306,15 +318,11 @@ namespace UnityEngine.InputSystem.OnScreen
             get => m_DynamicOriginRange;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DynamicOriginRange != value)
                 {
                     m_DynamicOriginRange = value;
-                    var dynamicOriginGO = GameObject.Find("DynamicOriginClickable");
-                    if (dynamicOriginGO)
-                    {
-                        var rectTransform = (RectTransform)dynamicOriginGO.transform;
-                        rectTransform.sizeDelta = new Vector2(value * 2, value * 2);
-                    }
+                    UpdateDynamicOriginClickableArea();
                 }
             }
         }
@@ -343,9 +351,12 @@ namespace UnityEngine.InputSystem.OnScreen
 
         [FormerlySerializedAs("movementRange")]
         [SerializeField]
+        [Min(0)]
         private float m_MovementRange = 50;
 
         [SerializeField]
+        [Tooltip("Defines the circular region where the onscreen control may have it's origin placed.")]
+        [Min(0)]
         private float m_DynamicOriginRange = 100;
 
         [InputControl(layout = "Vector2")]
@@ -353,11 +364,14 @@ namespace UnityEngine.InputSystem.OnScreen
         private string m_ControlPath;
 
         [SerializeField]
-        [Tooltip("Choose how the onscreen stick will move relative to it's origin and the press position.")]
+        [Tooltip("Choose how the onscreen stick will move relative to it's origin and the press position.\n\n" +
+            "RelativePositionWithStaticOrigin: The control's center of origin is fixed. " +
+            "The control will begin un-actuated at it's centered position and then move relative to the pointer or finger motion.\n\n" +
+            "ExactPositionWithStaticOrigin: The control's center of origin is fixed. The stick will immediately jump to the " +
+            "exact position of the click or touch and begin tracking motion from there.\n\n" +
+            "ExactPositionWithDynamicOrigin: The control's center of origin is determined by the initial press position. " +
+            "The stick will begin un-actuated at this center position and then track the current pointer or finger position.")]
         private Behaviour m_Behaviour;
-
-        [SerializeField]
-        private bool m_ShowRanges;
 
         [SerializeField]
         [Tooltip("Set this to true to prevent cancellation of pointer events due to device switching. Cancellation " +
@@ -399,7 +413,7 @@ namespace UnityEngine.InputSystem.OnScreen
         public enum Behaviour
         {
             /// <summary>The control's center of origin is fixed in the scene.
-            /// The control will begin unactuated at it's centered position and then move relative to the press motion.</summary>
+            /// The control will begin un-actuated at it's centered position and then move relative to the press motion.</summary>
             RelativePositionWithStaticOrigin,
 
             /// <summary>The control's center of origin is fixed in the scene.
@@ -452,7 +466,12 @@ namespace UnityEngine.InputSystem.OnScreen
                 if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicOriginOptions.faded))
                 {
                     EditorGUI.indentLevel++;
+                    EditorGUI.BeginChangeCheck();
                     EditorGUILayout.PropertyField(m_DynamicOriginRange);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        ((OnScreenStick)target).UpdateDynamicOriginClickableArea();
+                    }
                     EditorGUI.indentLevel--;
                 }
                 EditorGUILayout.EndFadeGroup();

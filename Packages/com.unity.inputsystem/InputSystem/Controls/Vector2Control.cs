@@ -62,8 +62,8 @@ namespace UnityEngine.InputSystem.Controls
                     return *(Vector2*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
                 default:
                     return new Vector2(
-                        x.ReadUnprocessedValueFromState(statePtr),
-                        y.ReadUnprocessedValueFromState(statePtr));
+                        x.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        y.ReadUnprocessedValueFromStateWithCaching(statePtr));
             }
         }
 
@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.Controls
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
             ////REVIEW: this can go beyond 1; that okay?
-            return ReadValueFromState(statePtr).magnitude;
+            return ReadValueFromStateWithCaching(statePtr).magnitude;
         }
 
         protected override FourCC CalculateOptimizedControlDataType()

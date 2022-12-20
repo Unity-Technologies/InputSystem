@@ -73,10 +73,10 @@ namespace UnityEngine.InputSystem.Controls
                     return *(Quaternion*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
                 default:
                     return new Quaternion(
-                        x.ReadValueFromState(statePtr),
-                        y.ReadValueFromState(statePtr),
-                        z.ReadValueFromState(statePtr),
-                        w.ReadUnprocessedValueFromState(statePtr));
+                        x.ReadValueFromStateWithCaching(statePtr),
+                        y.ReadValueFromStateWithCaching(statePtr),
+                        z.ReadValueFromStateWithCaching(statePtr),
+                        w.ReadUnprocessedValueFromStateWithCaching(statePtr));
             }
         }
 

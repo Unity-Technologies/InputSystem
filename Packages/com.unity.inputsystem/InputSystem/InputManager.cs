@@ -1183,6 +1183,8 @@ namespace UnityEngine.InputSystem
             // Request device to send us an initial state update.
             if (device.enabled)
                 device.RequestSync();
+
+            device.SetOptimizedControlDataTypeRecursively();
         }
 
         ////TODO: this path should really put the device on the list of available devices
@@ -2533,6 +2535,10 @@ namespace UnityEngine.InputSystem
             foreach (var device in devices)
                 device.SetOptimizedControlDataTypeRecursively();
 
+            // Invalidate control caches due to potential changes to processors or value readers
+            foreach (var device in devices)
+                device.MarkAsStaleRecursively();
+
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 "InputSystem.onSettingsChange");
@@ -3471,7 +3477,7 @@ namespace UnityEngine.InputSystem
             return makeDeviceCurrent;
         }
 
-        private static unsafe void WriteStateChange(InputStateBuffers.DoubleBuffers buffers, int deviceIndex,
+        private unsafe void WriteStateChange(InputStateBuffers.DoubleBuffers buffers, int deviceIndex,
             ref InputStateBlock deviceStateBlock, uint stateOffsetInDevice, void* statePtr, uint stateSizeInBytes, bool flippedBuffers)
         {
             var frontBuffer = buffers.GetFrontBuffer(deviceIndex);
@@ -3494,6 +3500,19 @@ namespace UnityEngine.InputSystem
                     (byte*)frontBuffer + deviceStateBlock.byteOffset,
                     (byte*)backBuffer + deviceStateBlock.byteOffset,
                     deviceStateSize);
+            }
+
+            if (InputSettings.readValueCachingFeatureEnabled)
+            {
+                // if the buffers have just been flipped, and we're doing a full state update, then the state from the
+                // previous update is now in the back buffer, and we should be comparing to that when checking what
+                // controls have changed
+                var buffer = (byte*)frontBuffer;
+                if (flippedBuffers && deviceStateSize == stateSizeInBytes)
+                    buffer = (byte*)buffers.GetBackBuffer(deviceIndex);
+
+                m_Devices[deviceIndex].WriteChangedControlStates(buffer + deviceStateBlock.byteOffset, statePtr,
+                    stateSizeInBytes, stateOffsetInDevice);
             }
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
