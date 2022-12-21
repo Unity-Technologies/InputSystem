@@ -4104,9 +4104,8 @@ internal class UITests : CoreTestsFixture
         EndTouch(1, pressPosition, queueEventOnly: true);
         yield return null;
 
-        // Verify Touch Occurred
-        Assert.AreEqual(1, scene.parentReceiver.events.Count);
-        Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
+        // Verify Touch Ignored 
+        Assert.AreEqual(0, scene.parentReceiver.events.Count);
     }
 
 #endif
