@@ -4036,7 +4036,8 @@ internal class UITests : CoreTestsFixture
         yield return null;
 
         // Verify Display Index Was Set
-        Vector2[] positions = {
+        Vector2[] positions =
+        {
             pressPosition,
             pressPosition,
             pressPosition,
@@ -4074,6 +4075,7 @@ internal class UITests : CoreTestsFixture
         // Verify Clicks On Display 1 Are Ignored On Display 0
         Assert.AreEqual(0, scene.parentReceiver.events.Count);
     }
+
 #else
     [UnityTest]
     public IEnumerator UI_DisplayIndexTouchSecondDisplayOnOverlayCanvas()
@@ -4102,10 +4104,11 @@ internal class UITests : CoreTestsFixture
         EndTouch(1, pressPosition, queueEventOnly: true);
         yield return null;
 
-        // Verify Touch Occurred 
+        // Verify Touch Occurred
         Assert.AreEqual(1, scene.parentReceiver.events.Count);
         Assert.That(scene.parentReceiver.events[0].pointerData.position, Is.EqualTo(pressPosition).Using(Vector2EqualityComparer.Instance));
     }
+
 #endif
     #endregion
 
