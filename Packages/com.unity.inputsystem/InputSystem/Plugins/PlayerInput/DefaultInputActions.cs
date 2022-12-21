@@ -392,6 +392,15 @@ namespace UnityEngine.InputSystem
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""DisplayIndex"",
+                    ""type"": ""Value"",
+                    ""id"": ""88f8c633-3b59-4b4c-a0f2-451449b14501"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -810,6 +819,17 @@ namespace UnityEngine.InputSystem
                     ""processors"": """",
                     ""groups"": ""XR"",
                     ""action"": ""TrackedDeviceOrientation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bb37490a-7df9-4e1e-a748-d834007e085a"",
+                    ""path"": ""<Touchscreen>/primaryTouch/displayIndex"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""DisplayIndex"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
