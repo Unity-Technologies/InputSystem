@@ -1283,7 +1283,7 @@ internal class UITests : CoreTestsFixture
         // the tracked device tests below don't seem to work on Android when run on the build farm. The pointer
         // positions fail the IsWithinRect checks. They work fine locally. Possibly something to do with tracked
         // devices on Shield? The build farm seems to always run them on Shield devices.
-        #if !UNITY_ANDROID
+#if !UNITY_ANDROID
         // Put tracked device #1 over left object and tracked device #2 over right object.
         // Need two updates as otherwise we'd end up with just another pointer of the right object
         // which would not result in an event.
@@ -1348,7 +1348,7 @@ internal class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
-        #endif
+#endif
 
         // Touch right object on first touchscreen and left object on second touchscreen.
         BeginTouch(1, secondPosition, screen: touch1);
@@ -1643,9 +1643,9 @@ internal class UITests : CoreTestsFixture
                     AllEvents("touchId", 1),
                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
                     OneEvent("type", EventType.PointerEnter)
-                    #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                     , OneEvent("type", EventType.PointerMove)
-                    #endif
+#endif
                     , OneEvent("type", EventType.PointerDown)
                     , OneEvent("type", EventType.InitializePotentialDrag)
                 )
@@ -1726,9 +1726,9 @@ internal class UITests : CoreTestsFixture
         }
     }
 
-    #if UNITY_IOS || UNITY_TVOS
+#if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-    #endif
+#endif
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanDriveUIFromMultipleTrackedDevices()
@@ -1773,9 +1773,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1793,9 +1793,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject, Vector3.left)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1853,9 +1853,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject)),
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-                #endif
+#endif
                 OneEvent("type", EventType.PointerExit)
             )
         );
@@ -1866,9 +1866,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
 
@@ -1885,9 +1885,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject, Vector3.right)),
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-                #endif
+#endif
                 OneEvent("type", EventType.PointerExit)
             )
         );
@@ -1898,9 +1898,9 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject, Vector3.right)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_2_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-                #endif
+#endif
             )
         );
     }
@@ -2251,9 +2251,9 @@ internal class UITests : CoreTestsFixture
         Assert.That(raycastResult.isValid, Is.False);
     }
 
-    #if UNITY_IOS || UNITY_TVOS
+#if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-    #endif
+#endif
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_XRTrackingOriginTransformModifiesTrackedPointers()
@@ -4005,13 +4005,16 @@ internal class UITests : CoreTestsFixture
         var scene = CreateTestUI();
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
         var uiActions = actions.AddActionMap("UI");
-        var touchPointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
-        var touchClickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
-        var mouseClickAction = uiActions.AddAction("click", type: InputActionType.PassThrough, binding: "<Mouse>/rightButton");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough);
+        pointAction.AddBinding("<Touchscreen>/position");
+        pointAction.AddBinding("<Mouse>/position");
+        var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough);
+        clickAction.AddBinding("<Touchscreen>/press");
+        clickAction.AddBinding("<Mouse>/leftButton");
+
         actions.Enable();
-        scene.uiModule.point = InputActionReference.Create(touchPointAction);
-        scene.uiModule.leftClick = InputActionReference.Create(touchClickAction);
-        scene.uiModule.rightClick = InputActionReference.Create(mouseClickAction);
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
         scene.uiModule.pointerBehavior = UIPointerBehavior.SingleUnifiedPointer;
 
         // Set Display Index to 1
@@ -4020,19 +4023,15 @@ internal class UITests : CoreTestsFixture
         yield return null;
 
         // Touch, Click, Touch Display 1
+        Vector2 clickPosition = scene.From640x480ToScreen(10, 10);
         Vector2 pressPosition = new Vector2(100, 100);
         BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
         yield return null;
         EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
         yield return null;
         Set(mouse.displayIndex, targetDisplay);
-        PressAndRelease(mouse.rightButton, queueEventOnly: true);
-        yield return null;
-        PressAndRelease(mouse.rightButton, queueEventOnly: true);
-        yield return null;
-        BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
-        yield return null;
-        EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
+        Set(mouse.position, clickPosition);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
         yield return null;
 
         // Verify Display Index Was Set
@@ -4040,12 +4039,9 @@ internal class UITests : CoreTestsFixture
         {
             pressPosition,
             pressPosition,
-            pressPosition,
-            Vector2.zero,
-            Vector2.zero,
-            pressPosition,
+            clickPosition,
         };
-        Assert.AreEqual(6, scene.parentReceiver.events.Count);
+        Assert.AreEqual(3, scene.parentReceiver.events.Count);
         for (int i = 0; i < scene.parentReceiver.events.Count; i++)
         {
             Assert.AreEqual(targetDisplay, scene.parentReceiver.events[i].pointerData.displayIndex);
@@ -4063,9 +4059,9 @@ internal class UITests : CoreTestsFixture
         EndTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
         yield return null;
         Set(mouse.displayIndex, targetDisplay);
-        PressAndRelease(mouse.rightButton, queueEventOnly: true);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
         yield return null;
-        PressAndRelease(mouse.rightButton, queueEventOnly: true);
+        PressAndRelease(mouse.leftButton, queueEventOnly: true);
         yield return null;
         BeginTouch(1, pressPosition, queueEventOnly: true, displayIndex: targetDisplay);
         yield return null;
