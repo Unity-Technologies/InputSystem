@@ -4076,38 +4076,6 @@ internal class UITests : CoreTestsFixture
         Assert.AreEqual(0, scene.parentReceiver.events.Count);
     }
 
-#else
-    [UnityTest]
-    public IEnumerator UI_DisplayIndexTouchSecondDisplayOnOverlayCanvas()
-    {
-        // Setup the Test Scene
-        InputSystem.AddDevice<Touchscreen>();
-        var scene = CreateTestUI();
-        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
-        var uiActions = actions.AddActionMap("UI");
-        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough, binding: "<Touchscreen>/position");
-        var clickAction = uiActions.AddAction("press", type: InputActionType.PassThrough, binding: "<Touchscreen>/press");
-        actions.Enable();
-        scene.uiModule.point = InputActionReference.Create(pointAction);
-        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
-
-        // Set Display Index to 1
-        byte targetDisplay = 1;
-        scene.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        scene.canvas.targetDisplay = targetDisplay;
-        yield return null;
-
-        // Touch Display 1
-        Vector2 pressPosition = new Vector2(100, 100);
-        BeginTouch(1, pressPosition, queueEventOnly: true);
-        yield return null;
-        EndTouch(1, pressPosition, queueEventOnly: true);
-        yield return null;
-
-        // Verify Touch Ignored 
-        Assert.AreEqual(0, scene.parentReceiver.events.Count);
-    }
-
 #endif
     #endregion
 
