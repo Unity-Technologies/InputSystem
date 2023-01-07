@@ -583,6 +583,23 @@ internal class UserTests : CoreTestsFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanUnpairDevice_WhenPairedToMultipleUsers()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputUser.PerformPairingWithDevice(gamepad);
+        InputUser.PerformPairingWithDevice(keyboard);
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+
+        user.UnpairDevicesAndRemoveUser();
+
+        Assert.That(InputUser.all[0].pairedDevices, Is.EquivalentTo(new[] {gamepad}));
+        Assert.That(InputUser.all[1].pairedDevices, Is.EquivalentTo(new[] {keyboard}));
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CanQueryUnpairedDevices()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1238,6 +1255,27 @@ internal class UserTests : CoreTestsFixture
         Assert.That(user2.pairedDevices, Is.EquivalentTo(new[] { user2pad }));
         Assert.That(user3.pairedDevices, Is.EquivalentTo(new[] { user3pad }));
     }
+
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Users")]
+    public void Users_DoNotReactToEditorInput()
+    {
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed += (control, eventPtr) => Assert.Fail("Should not react!");
+
+        runtime.PlayerFocusLost();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+    }
+
+    #endif
 
     [Test]
     [Category("Users")]

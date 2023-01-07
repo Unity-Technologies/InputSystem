@@ -1,12 +1,9 @@
-// Grouping up the XR defines since it's a pretty heavy sequence
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH || UNITY_LUMIN || UNITY_INPUT_FORCE_XR_PLUGIN) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
-#define ENABLE_XR_COMBINED_DEFINE
-#endif
-
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
@@ -15,6 +12,8 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -71,7 +70,7 @@ namespace UnityEngine.InputSystem
     /// be called on the main thread. However, select APIs like <see cref="QueueEvent"/> can be
     /// called from threads. Where this is the case, it is stated in the documentation.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
+    [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
@@ -1562,6 +1561,15 @@ namespace UnityEngine.InputSystem
             s_Manager.FlushDisconnectedDevices();
         }
 
+        /// <summary>
+        /// Return the device with given name or layout <param name="nameOrLayout"/>.
+        /// Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="nameOrLayout">Unique device name or layout to search for.</param>
+        /// <returns>The device matching the given search criteria or null.</returns>
+        /// <seealso cref="GetDevice(Type)"/>
+        /// <seealso cref="GetDevice{TDevice}"/>
+        /// <seealso cref="AddDevice{TDevice}"/>
         public static InputDevice GetDevice(string nameOrLayout)
         {
             return s_Manager.TryGetDevice(nameOrLayout);
@@ -1574,6 +1582,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <typeparam name="TDevice">Type of device to look for.</typeparam>
         /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice(string)"/>
         /// <seealso cref="GetDevice(Type)"/>
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
@@ -1588,6 +1597,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="type">Type of the device</param>
         /// <returns>The device that is assignable to the given type or null.</returns>
+        /// <seealso cref="GetDevice(string)"/>
         /// <seealso cref="GetDevice&lt;TDevice&gt;()"/>
         public static InputDevice GetDevice(Type type)
         {
@@ -1632,6 +1642,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="GetDevice(string)"/>
         /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
         /// <seealso cref="InputControl.usages"/>
         public static TDevice GetDevice<TDevice>(InternedString usage)
@@ -1657,6 +1668,21 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        /// <summary>
+        /// Return the device of the given type <typeparamref name="TDevice"/> that has the
+        /// given usage assigned. Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="usage">Usage of the device, e.g. "LeftHand".</param>
+        /// <typeparam name="TDevice">Type of device to look for.</typeparam>
+        /// <returns>The device with the given type and usage or null.</returns>
+        /// <remarks>
+        /// Devices usages are most commonly employed to "tag" devices for a specific role.
+        /// A common scenario, for example, is to distinguish which hand a specific <see cref="XR.XRController"/>
+        /// is associated with. However, arbitrary usages can be assigned to devices.
+        /// </remarks>
+        /// <seealso cref="GetDevice(InternedString)"/>
+        /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="InputControl.usages"/>
         public static TDevice GetDevice<TDevice>(string usage)
             where TDevice : InputDevice
         {
@@ -1697,6 +1723,18 @@ namespace UnityEngine.InputSystem
             return list;
         }
 
+        /// <summary>
+        /// Populate a list of devices that have been reported by the <see cref="IInputRuntime">runtime</see>
+        /// but could not be matched to any known <see cref="InputControlLayout">layout</see>.
+        /// </summary>
+        /// <param name="descriptions">A list to be populated with descriptions of devices that could not be recognized.</param>
+        /// <returns>The number of devices that could not be recognized.</returns>
+        /// <remarks>
+        /// If new layouts are added to the system or if additional <see cref="InputDeviceMatcher">matches</see>
+        /// are added to existing layouts, devices in this list may appear or disappear.
+        /// </remarks>
+        /// <seealso cref="InputDeviceMatcher"/>
+        /// <seealso cref="RegisterLayoutMatcher"/>
         public static int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
             return s_Manager.GetUnsupportedDevices(descriptions);
@@ -1759,19 +1797,86 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputDevice.enabled"/>
         public static void DisableDevice(InputDevice device, bool keepSendingEvents = false)
         {
-            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents: keepSendingEvents);
+            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents ? InputManager.DeviceDisableScope.InFrontendOnly : default);
         }
 
+        /// <summary>
+        /// Issue a <see cref="RequestSyncCommand"/> on <paramref name="device"/>. This requests the device to
+        /// send its current state as an event. If successful, the device will be updated in the next <see cref="InputSystem.Update"/>.
+        /// </summary>
+        /// <param name="device">An <see cref="InputDevice"/> that is currently part of <see cref="devices"/>.</param>
+        /// <returns>True if the request succeeded, false if it fails.</returns>
+        /// <remarks>
+        /// It depends on the backend/platform implementation whether explicit synchronization is supported. If it is, the method
+        /// will return true. If it is not, the method will return false and the request is ignored.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been <see cref="InputDevice.added"/>.</exception>
+        /// <seealso cref="RequestSyncCommand"/>
+        /// <seealso cref="ResetDevice"/>
         public static bool TrySyncDevice(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-
-            var syncCommand = RequestSyncCommand.Create();
-            var result = device.ExecuteCommand(ref syncCommand);
-            return result >= 0;
+            if (!device.added)
+                throw new InvalidOperationException($"Device '{device}' has not been added");
+            return device.RequestSync();
         }
 
+        /// <summary>
+        /// Reset the state of the given device.
+        /// </summary>
+        /// <param name="device">Device to reset. Must be <see cref="InputDevice.added"/> to the system.</param>
+        /// <param name="alsoResetDontResetControls">If true, also reset controls that are marked as <see cref="InputControlAttribute.dontReset"/>.
+        /// Leads to <see cref="InputDeviceChange.HardReset"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been <see cref="InputDevice.added"/>.</exception>
+        /// <remarks>
+        /// There are two different kinds of resets performed by the input system: a "soft" reset and a "hard" reset.
+        ///
+        /// A "hard" reset resets all controls on the device to their default state and also sends a <see cref="RequestResetCommand"/>
+        /// to the backend, instructing to also reset its own internal state (if any) to the default.
+        ///
+        /// A "soft" reset will reset only controls that are not marked as <see cref="InputControlAttribute.noisy"/> and not marked as
+        /// <see cref="InputControlAttribute.dontReset"/>. It will also not set a <see cref="RequestResetCommand"/> to the backend,
+        /// i.e. the reset will be internal to the input system only (and thus can be partial in nature).
+        ///
+        /// By default, the method will perform a "soft" reset if <paramref name="device"/> has <see cref="InputControlAttribute.noisy"/>
+        /// or <see cref="InputControlAttribute.dontReset"/> controls. If it does not, it will perform a "hard" reset.
+        ///
+        /// A "hard" reset can be forced by setting <paramref name="alsoResetDontResetControls"/> to true.
+        ///
+        /// <example>
+        /// <code>
+        /// // "Soft" reset the mouse. This will leave controls such as the mouse position intact
+        /// // but will reset button press states.
+        /// InputSystem.ResetDevice(Mouse.current);
+        ///
+        /// // "Hard" reset the mouse. This will wipe everything and reset the mouse to its default
+        /// // state.
+        /// InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
+        /// </code>
+        /// </example>
+        ///
+        /// Resetting a device will trigger a <see cref="InputDeviceChange.SoftReset"/> or <see cref="InputDeviceChange.HardReset"/>
+        /// (based on the value of <paramref name="alsoResetDontResetControls"/>) notification on <see cref="onDeviceChange"/>.
+        /// Also, all <see cref="InputAction"/>s currently in progress from controls on <paramref name="device"/> will be cancelled
+        /// (see <see cref="InputAction.canceled"/>) in a way that guarantees for them to not get triggered. That is, a reset is
+        /// semantically different from simply sending an event with default state. Using the latter, a button may be considered as
+        /// going from pressed to released whereas with a device reset, the change back to unpressed state will not be considered
+        /// a button release (and thus not trigger interactions that are waiting for a button release).
+        /// </remarks>
+        /// <seealso cref="TrySyncDevice"/>
+        /// <seealso cref="InputDeviceChange.HardReset"/>
+        /// <seealso cref="InputDeviceChange.SoftReset"/>
+        /// <seealso cref="LowLevel.DeviceResetEvent"/>
+        public static void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false)
+        {
+            s_Manager.ResetDevice(device, alsoResetDontResetControls);
+        }
+
+        // Not an auto-upgrade as it implies a change in behavior.
+        [Obsolete("Use 'ResetDevice' instead.", error: false)]
         public static bool TryResetDevice(InputDevice device)
         {
             if (device == null)
@@ -2124,8 +2229,8 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">Control path to search for</param>
+        /// <returns>List of <see cref="InputControl"/> which matched the given search criteria</returns>
         /// <example>
         /// <code>
         /// // Find all gamepads (literally: that use the "Gamepad" layout).
@@ -2145,6 +2250,14 @@ namespace UnityEngine.InputSystem
             return FindControls<InputControl>(path);
         }
 
+        /// <summary>
+        /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
+        /// </summary>
+        /// <param name="path">Control path to search for</param>
+        /// <typeparam name="TControl">Type of control <see cref="InputControl"/>.</typeparam>
+        /// <returns>Generic list of <see cref="InputControl"/> which matched the given search criteria</returns>
+        /// <seealso cref="FindControls{InputControl}(string)"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.InputSystem.InputControlList{TControl})"/>
         public static InputControlList<TControl> FindControls<TControl>(string path)
             where TControl : InputControl
         {
@@ -2153,6 +2266,15 @@ namespace UnityEngine.InputSystem
             return list;
         }
 
+        /// <summary>
+        /// Populate a list with all controls that match the given <see cref="InputControlPath">control path</see>.
+        /// </summary>
+        /// <param name="path">Control path to search for</param>
+        /// <param name="controls">Generic list of <see cref="InputControl"/> to populate with the search results</param>
+        /// <typeparam name="TControl">Type of control <see cref="InputControl"/>.</typeparam>
+        /// <returns>Count of controls which matched the given search criteria</returns>
+        /// <seealso cref="FindControls{TControl}(string)"/>
+        /// <seealso cref="FindControls{TControl}(string,ref UnityEngine.InputSystem.InputControlList{TControl})"/>
         public static int FindControls<TControl>(string path, ref InputControlList<TControl> controls)
             where TControl : InputControl
         {
@@ -2163,6 +2285,8 @@ namespace UnityEngine.InputSystem
 
         #region Events
 
+        internal static bool isProcessingEvents => s_Manager.isProcessingEvents;
+
         /// <summary>
         /// Called during <see cref="Update"/> for each event that is processed.
         /// </summary>
@@ -2171,9 +2295,9 @@ namespace UnityEngine.InputSystem
         /// or <see cref="Update"/> for details about when and how this happens),
         /// it flushes all events from the internal event buffer.
         ///
-        /// As the input system reads events from the buffer one by one, it will trigger this
+        /// As the Input System reads events from the buffer one by one, it will trigger this
         /// callback for each event which originates from a recognized device, before then proceeding
-        /// to process the event. However, if any of the callbacks sets <see cref="InputEvent.handled"/>
+        /// to process the event. If any of the callbacks sets <see cref="InputEvent.handled"/>
         /// to true, the event will be skipped and ignored.
         ///
         /// Note that a device that is disabled (see <see cref="InputDevice.enabled"/>) may still get
@@ -2181,7 +2305,7 @@ namespace UnityEngine.InputSystem
         /// backends when a device is disabled but a backend may or may not respond to the command and
         /// thus may or may not keep sending events for the device.
         ///
-        /// Note that the input system does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
+        /// Note that the Input System does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
         /// Instead, they are consumed in the order they are produced. This means that they
         /// will also surface on this callback in that order.
         ///
@@ -2208,11 +2332,23 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
+        /// The property returns an <see cref="InputEventListener"/> struct that, beyond adding and removing
+        /// callbacks, can be used to flexibly listen in on the event stream.
+        ///
+        /// <example>
+        /// <code>
+        /// // Listen for mouse events.
+        /// InputSystem.onEvent
+        ///     .ForDevice(Mouse.current)
+        ///     .Call(e => Debug.Log("Mouse event"));
+        /// </code>
+        /// </example>
+        ///
         /// If you are looking for a way to capture events, <see cref="InputEventTrace"/> may be of
         /// interest and an alternative to directly hooking into this event.
         ///
         /// If you are looking to monitor changes to specific input controls, state change monitors
-        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
+        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long,uint)"/>
         /// are usually a more efficient and convenient way to set this up.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
@@ -2220,23 +2356,108 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputEvent"/>
         /// <seealso cref="Update"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public static event Action<InputEventPtr, InputDevice> onEvent
+        public static InputEventListener onEvent
         {
-            add
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                lock (s_Manager)
-                    s_Manager.onEvent += value;
-            }
-            remove
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                lock (s_Manager)
-                    s_Manager.onEvent -= value;
-            }
+            // The listener syntax is an artificial struct. Setting it has no effect.
+            // Its only purpose is to give us access to both the += and -= syntax of C# events
+            // and at the same time provide a springboard into IObservable.
+            get => default;
+            // ReSharper disable once ValueParameterNotUsed
+            set {}
         }
+
+        /// <summary>
+        /// Listen through <see cref="onEvent"/> for a button to be pressed.
+        /// </summary>
+        /// <remarks>
+        /// The listener will get triggered whenever a <see cref="ButtonControl"/> on any device in the list of <see cref="devices"/>
+        /// goes from not being pressed to being pressed.
+        ///
+        /// <example>
+        /// <code>
+        /// // Response to the first button press. Calls our delegate
+        /// // and then immediately stops listening.
+        /// InputSystem.onAnyButtonPress
+        ///     .CallOnce(ctrl => Debug.Log($"Button {ctrl} was pressed"));
+        /// </code>
+        /// </example>
+        ///
+        /// Note that the listener will get triggered from the first button that was found in a pressed state in a
+        /// given <see cref="InputEvent"/>. If multiple buttons are pressed in an event, the listener will not
+        /// get triggered multiple times. To get all button presses in an event, use <see cref="InputControlExtensions.GetAllButtonPresses"/>
+        /// and instead listen directly through <see cref="onEvent"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.onEvent
+        ///     .Where(e => e.HasButtonPress())
+        ///     .CallOnce(eventPtr =>
+        ///     {
+        ///         foreach (var button in l.eventPtr.GetAllButtonPresses())
+        ///             Debug.Log($"Button {button} was pressed");
+        ///     });
+        /// </code>
+        /// </example>
+        ///
+        /// There is a certain overhead to listening for button presses so it is best to have listeners
+        /// installed only while the information is actually needed.
+        ///
+        /// <example>
+        /// <code>
+        /// // Script that will spawn a new player when a button on a device is pressed.
+        /// public class JoinPlayerOnPress : MonoBehaviour
+        /// {
+        ///     // We instantiate this GameObject to create a new player object.
+        ///     // Expected to have a PlayerInput component in its hierarchy.
+        ///     public GameObject playerPrefab;
+        ///
+        ///     // We want to remove the event listener we install through InputSystem.onAnyButtonPress
+        ///     // after we're done so remember it here.
+        ///     private IDisposable m_EventListener;
+        ///
+        ///     // When enabled, we install our button press listener.
+        ///     void OnEnable()
+        ///     {
+        ///         // Start listening.
+        ///         m_EventListener =
+        ///             InputSystem.onAnyButtonPress
+        ///                 .Call(OnButtonPressed)
+        ///     }
+        ///
+        ///     // When disabled, we remove our button press listener.
+        ///     void OnDisable()
+        ///     {
+        ///         m_EventListener.Dispose();
+        ///     }
+        ///
+        ///     void OnButtonPressed(InputControl button)
+        ///     {
+        ///         var device = button.device;
+        ///
+        ///         // Ignore presses on devices that are already used by a player.
+        ///         if (PlayerInput.FindFirstPairedToDevice(device) != null)
+        ///             return;
+        ///
+        ///         // Create a new player.
+        ///         var player = PlayerInput.Instantiate(playerPrefab, pairWithDevice: device);
+        ///
+        ///         // If the player did not end up with a valid input setup,
+        ///         // unjoin the player.
+        ///         if (player.hasMissingRequiredDevices)
+        ///             Destroy(player);
+        ///
+        ///         // If we only want to join a single player, could uninstall our listener here
+        ///         // or use CallOnce() instead of Call() when we set it up.
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="ButtonControl.isPressed"/>
+        /// <seealso cref="onEvent"/>
+        public static IObservable<InputControl> onAnyButtonPress =>
+            onEvent
+                .Select(e => e.GetFirstButtonPressOrNull()).Where(c => c != null);
 
         /// <summary>
         /// Add an event to the internal event queue.
@@ -2295,6 +2516,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Add an event to the internal event queue.
         /// </summary>
+        /// <typeparam name="TEvent">Type of event to look enqueue.</typeparam>
         /// <param name="inputEvent">Event to add to the internal event buffer.</param>
         /// <remarks>
         /// The event will be copied in full to the internal event buffer. The internal event
@@ -2645,22 +2867,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#if UNITY_EDITOR && ENABLE_XR_COMBINED_DEFINE
-        /// <summary>
-        /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.
-        /// </summary>
-        /// <remarks>
-        /// Enabling this allows native input to continue processing as if the application was playing, similar to how the <see cref="ExecuteInEditMode"/> attribute affects Monobehaviours.
-        /// By default, only updates flagged with <see cref="InputUpdateType.Editor"/> will be processed, and native inputs events will only be processed and registered for that type.
-        /// By setting this to true, the InputSystem will act like it is in play mode and allow full action processing to occur.
-        /// </remarks>
-        public static bool runUpdatesInEditMode
-        {
-            get => s_Manager.runUpdatesInEditMode;
-            set => s_Manager.runUpdatesInEditMode = value;
-        }
-#endif
-
         #endregion
 
         #region Settings
@@ -2769,13 +2975,13 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                InputActionState.s_OnActionChange.AddCallback(value);
+                InputActionState.s_GlobalState.onActionChange.AddCallback(value);
             }
             remove
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                InputActionState.s_OnActionChange.RemoveCallback(value);
+                InputActionState.s_GlobalState.onActionChange.RemoveCallback(value);
             }
         }
 
@@ -2811,6 +3017,8 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// <seealso cref="IInputInteraction"/>
         /// <seealso cref="RegisterInteraction{T}"/>
+        /// <seealso cref="TryGetInteraction"/>
+        /// <seealso cref="ListInteractions"/>
         public static void RegisterInteraction(Type type, string name = null)
         {
             if (type == null)
@@ -2826,6 +3034,18 @@ namespace UnityEngine.InputSystem
             s_Manager.interactions.AddTypeRegistration(name, type);
         }
 
+        /// <summary>
+        /// Register a new type of interaction with the system.
+        /// </summary>
+        /// <typeparam name="T">Type that implements the interaction. Must support <see cref="InputInteraction"/>.</typeparam>
+        /// <param name="name">Name to register the interaction with. This is used in bindings to refer to the interaction
+        /// (e.g. an interactions called "Tap" can be added to a binding by listing it in its <see cref="InputBinding.interactions"/>
+        /// property). If no name is supplied, the short name of <typeparamref name="T"/> is used (with "Interaction" clipped off
+        /// the name if the type name ends in that).</param>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="RegisterInteraction(Type, string)"/>
+        /// <seealso cref="TryGetInteraction"/>
+        /// <seealso cref="ListInteractions"/>
         public static void RegisterInteraction<T>(string name = null)
         {
             RegisterInteraction(typeof(T), name);
@@ -2833,6 +3053,14 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: can we move the getters and listers somewhere else? maybe `interactions` and `processors` properties and such?
 
+        /// <summary>
+        /// Search for a registered interaction type with the given name.
+        /// </summary>
+        /// <param name="name">Name of the registered interaction to search for.</param>
+        /// <returns>The type of the interaction, if one was previously registered with the give name, otherwise null.</returns>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="RegisterInteraction"/>
+        /// <seealso cref="ListInteractions"/>
         public static Type TryGetInteraction(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -2840,11 +3068,26 @@ namespace UnityEngine.InputSystem
             return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
+        /// <summary>
+        /// Gets the names of of all currently registered interactions.
+        /// </summary>
+        /// <returns>A list of currently registered interaction names.</returns>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="RegisterInteraction"/>
+        /// <seealso cref="TryGetInteraction"/>
         public static IEnumerable<string> ListInteractions()
         {
             return s_Manager.interactions.names;
         }
 
+        /// <summary>
+        /// Register a new type of binding composite with the system.
+        /// </summary>
+        /// <param name="type">Type that implements the binding composite. Must support <see cref="InputBindingComposite"/>.</param>
+        /// <param name="name">Name to register the binding composite with. This is used in bindings to refer to the composite.</param>
+        /// <seealso cref="InputBindingComposite"/>
+        /// <seealso cref="RegisterBindingComposite{T}"/>
+        /// <seealso cref="TryGetBindingComposite"/>
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (type == null)
@@ -2860,11 +3103,26 @@ namespace UnityEngine.InputSystem
             s_Manager.composites.AddTypeRegistration(name, type);
         }
 
+        /// <summary>
+        /// Register a new type of binding composite with the system.
+        /// </summary>
+        /// <typeparam name="T">Type that implements the binding composite. Must support <see cref="InputBindingComposite"/>.</typeparam>
+        /// <param name="name">Name to register the binding composite with. This is used in bindings to refer to the composite.</param>
+        /// <seealso cref="InputBindingComposite"/>
+        /// <seealso cref="RegisterBindingComposite(Type, string)"/>
+        /// <seealso cref="TryGetBindingComposite"/>
         public static void RegisterBindingComposite<T>(string name = null)
         {
             RegisterBindingComposite(typeof(T), name);
         }
 
+        /// <summary>
+        /// Search for a registered binding composite type with the given name.
+        /// </summary>
+        /// <param name="name">Name of the registered binding composite to search for.</param>
+        /// <returns>The type of the binding composite, if one was previously registered with the give name, otherwise null.</returns>
+        /// <seealso cref="InputBindingComposite"/>
+        /// <seealso cref="RegisterBindingComposite"/>
         public static Type TryGetBindingComposite(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -3010,7 +3268,7 @@ namespace UnityEngine.InputSystem
 
         ////FIXME: Unity is not calling this method if it's inside an #if block that is not
         ////       visible to the editor; that shouldn't be the case
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void RunInitializeInPlayer()
         {
             // We're using this method just to make sure the class constructor is called
@@ -3026,12 +3284,19 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+        // Initialization is triggered by accessing InputSystem. Some parts (like InputActions)
+        // do not rely on InputSystem and thus can be accessed without tapping InputSystem.
+        // This method will explicitly make sure we trigger initialization.
+        internal static void EnsureInitialized()
+        {
+        }
+
 #if UNITY_EDITOR
         internal static InputSystemObject s_SystemObject;
 
         internal static void InitializeInEditor(IInputRuntime runtime = null)
         {
-            Profiling.Profiler.BeginSample("InputSystem.InitializeInEditor");
+            Profiler.BeginSample("InputSystem.InitializeInEditor");
             Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -3098,12 +3363,11 @@ namespace UnityEngine.InputSystem
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
-                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor and will *DISABLE* the old UnityEngine.Input APIs.";
+                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor.";
 
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
                 {
                     EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-                    EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
                     EditorHelpers.RestartEditorAndRecompileScripts();
                 }
             }
@@ -3111,7 +3375,7 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
 
-            Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3128,6 +3392,11 @@ namespace UnityEngine.InputSystem
 
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    s_Manager.SyncAllDevicesAfterEnteringPlayMode();
+                    break;
+
+                case PlayModeStateChange.ExitingPlayMode:
+                    s_Manager.LeavePlayMode();
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
@@ -3231,12 +3500,11 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
-
-            RunInitialUpdate();
         }
 
 #endif // UNITY_EDITOR
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake
@@ -3254,11 +3522,11 @@ namespace UnityEngine.InputSystem
         {
             UISupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             DualShockSupport.Initialize();
             #endif
 
@@ -3274,6 +3542,10 @@ namespace UnityEngine.InputSystem
             iOS.iOSSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX
+            OSX.OSXSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_WEBGL
             WebGL.WebGLSupport.Initialize();
             #endif
@@ -3282,7 +3554,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if ENABLE_XR_COMBINED_DEFINE
+            #if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
             XR.XRSupport.Initialize();
             #endif
 
@@ -3297,6 +3569,10 @@ namespace UnityEngine.InputSystem
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             Steam.SteamSupport.Initialize();
             #endif
+
+            #if UNITY_EDITOR
+            UnityRemoteSupport.Initialize();
+            #endif
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
@@ -3309,7 +3585,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
-            Profiling.Profiler.BeginSample("InputSystem.Reset");
+            Profiler.BeginSample("InputSystem.Reset");
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -3348,9 +3624,10 @@ namespace UnityEngine.InputSystem
 
             Mouse.s_PlatformMouseDevice = null;
 
+            InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
-            Profiling.Profiler.EndSample();
+            Profiler.EndSample();
         }
 
         /// <summary>
@@ -3365,7 +3642,6 @@ namespace UnityEngine.InputSystem
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
 
-            InputActionState.ResetGlobals();
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
@@ -3398,7 +3674,10 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
             [SerializeField] public string systemObject;
             #endif
-            ////REVIEW: preserve InputUser state? (if even possible)
+            ////TODO: make these saved states capable of surviving domain reloads
+            [NonSerialized] public ISavedState inputActionState;
+            [NonSerialized] public ISavedState touchState;
+            [NonSerialized] public ISavedState inputUserState;
         }
 
         private static Stack<State> s_SavedStateStack;
@@ -3436,6 +3715,9 @@ namespace UnityEngine.InputSystem
                 userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(s_SystemObject),
                 #endif
+                inputActionState = InputActionState.SaveAndResetState(),
+                touchState = EnhancedTouch.Touch.SaveAndResetState(),
+                inputUserState = InputUser.SaveAndResetState()
             });
 
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
@@ -3449,11 +3731,20 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(s_SavedStateStack != null && s_SavedStateStack.Count > 0);
 
+            // Load back previous state.
+            var state = s_SavedStateStack.Pop();
+
+            state.inputUserState.StaticDisposeCurrentState();
+            state.touchState.StaticDisposeCurrentState();
+            state.inputActionState.StaticDisposeCurrentState();
+
             // Nuke what we have.
             Destroy();
 
-            // Load back previous state.
-            var state = s_SavedStateStack.Pop();
+            state.inputUserState.RestoreSavedState();
+            state.touchState.RestoreSavedState();
+            state.inputActionState.RestoreSavedState();
+
             s_Manager = state.manager;
             s_Remote = state.remote;
             s_RemoteConnection = state.remoteConnection;

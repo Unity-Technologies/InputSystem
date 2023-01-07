@@ -8,6 +8,7 @@
 * [Actuation](#control-actuation)
 * [Noisy Controls](#noisy-controls)
 * [Synthetic Controls](#synthetic-controls)
+* [Performance Optimization](#performance-optimization)
 
 An Input Control represents a source of values. These values can be of any structured or primitive type. The only requirement is that the type is [blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
 
@@ -204,7 +205,7 @@ if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
 There are two mechanisms that most notably make use of Control actuation:
 
 - [Interactive rebinding](ActionBindings.md#interactive-rebinding) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable Controls to find the one that is actuated the most.
-- [Disambiguation](ActionBindings.md#disambiguation) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
+- [Conflict resolution](ActionBindings.md#conflicting-inputs) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
 
 ## Noisy Controls
 
@@ -229,3 +230,33 @@ A synthetic Control is a Control that doesn't correspond to an actual physical c
 Whether a given Control is synthetic is indicated by its [`InputControl.synthetic`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_synthetic) property.
 
 The system considers synthetic Controls for [interactive rebinding](ActionBindings.md#interactive-rebinding) but always favors non-synthetic Controls. If both a synthetic and a non-synthetic Control that are a potential match exist, the non-synthetic Control wins by default. This makes it possible to interactively bind to `<Gamepad>/leftStick/left`, for example, but also makes it possible to bind to `<Gamepad>/leftStickPress` without getting interference from the synthetic buttons on the stick.
+
+## Performance Optimization
+
+### Avoiding defensive copies
+
+Use [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_value) instead of [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) to avoid creating a copy of the control state on every call, as the former returns the value as `ref readonly` while the latter always makes a copy. Note that this optimization only applies if the call site assigns the return value to a variable that has been declared 'ref readonly'. Otherwise a copy will be made as before. Additionally, be aware of defensive copies that can be allocated by the compiler when it is unable to determine that it can safely use the readonly reference i.e. if it can't determine that the reference won't be changed, it will create a defensive copy for you. For more details, see https://learn.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#use-ref-readonly-return-statements.
+
+
+### Control Value Caching
+
+When the 'USE_READ_VALUE_CACHING' internal feature flag is set, the Input System will switch to an optimized path for reading control values. This path efficiently marks controls as 'stale' when they have been actuated and subsequent calls to [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) will only apply control processing when absolutely necessary. Control processing in this case can mean any hard-coded processing that might exist on the control, such as with [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) which has built-in inversion, normalisation, scaling etc, or any processors that have been applied to the controls' [processor stack](Processors.md#processors-on-controls). This can have a significant positive impact on performance, especially when using complex composite input actions with many composite parts, such as a movement input action that could be bound to W, A, S, and D on the keyboard, two gamepad sticks and a DPad.
+
+This feature is not enabled by default as it can result in the following minor behavioural changes:
+ * Some control processors use global state. Without cached value optimizations, it is possible to read the control value, change the global state, read the control value again, and get a new value due to the fact that the control processor runs on every call. With cached value optimizations, reading the control value will only ever return a new value if the physical control has been actuated. Changing the global state of a control processor will have no effect otherwise.
+ * Writing to device state using low-level APIs like [`InputControl<T>.WriteValueIntoState`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_WriteValueIntoState__0_System_Void__) does not set the stale flag and subsequent calls to [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_value) will not reflect those changes.
+ * After changing properties on [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) the [`ApplyParameterChanges`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_ApplyParameterChanges) has to be called to invalidate cached value.
+
+Processors that need to run on every read can set their respective caching policy to EvaluateOnEveryRead. That will disable caching on controls that are using such processor.
+
+If there are any non-obvious inconsistencies, 'PARANOID_READ_VALUE_CACHING_CHECKS' internal feature flag can be enabled to compare cached and uncached value on every read and log an error if they don't match.
+
+### Optimized control read value
+
+When the 'USE_OPTIMIZED_CONTROLS' internal feature flag is set, the Input System will use faster way to use state memory for some controls instances.
+
+Most controls are flexible with regards to memory representation, like [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) can be one bit, multiple bits, a float, etc, or in [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) where x and y can have different memory representation. Yet for most controls there are common memory representation patterns, for example [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) are floats or single bytes, or some [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) are two consequitive floats in memory. If a control is matching a common representation we can bypass reading children control and cast memory directly to the common representation. For example if [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) is two consequitive floats in memory we can bypass reading `x` and `y` separately and just cast whole state memory to `Vector2`, this only works if `x` and `y` don't need any processing applied to them.
+
+Optimized controls compute a potential memory representation in [`InputControl.CalculateOptimizedControlDataType()`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_CalculateOptimizedControlDataType), store it [`InputControl.optimizedControlDataType`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_optimizedControlDataType) and then inside [`ReadUnprocessedValueFromState`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValueFromState_) used it to decide to cast memory directly instead of reading every children control on it's own to reconstruct the controls state.
+
+[`InputControl.ApplyParameterChanges()`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_ApplyParameterChanges) should be called after changes to ensure [`InputControl.optimizedControlDataType`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_optimizedControlDataType) is updated to the correct value when configuration changes after [`InputControl.FinishSetup()`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) was called, like value of [`AxisControl.invert`](../api/UnityEngine.InputSystem.Controls.AxisControl.html#UnityEngine_InputSystem_Controls_AxisControl_invert) flips or other cases.

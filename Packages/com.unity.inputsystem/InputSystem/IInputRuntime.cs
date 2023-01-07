@@ -89,6 +89,13 @@ namespace UnityEngine.InputSystem.LowLevel
 
         Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
 
+        #if UNITY_EDITOR
+        /// <summary>
+        /// Set delegate to be called during player loop initialization callbacks.
+        /// </summary>
+        Action onPlayerLoopInitialization { get; set; }
+        #endif
+
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
         /// </summary>
@@ -111,7 +118,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // Is true when the player or game view has focus.
         /// </summary>
         /// <seealso cref="Application.isFocused"/>
-        bool isFocused { get; }
+        bool isPlayerFocused { get; }
 
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
@@ -165,6 +172,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         bool runInBackground { get; }
 
+        Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
@@ -181,6 +189,12 @@ namespace UnityEngine.InputSystem.LowLevel
         Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
         bool isPaused { get; }
+        bool isEditorActive { get; }
+
+        // Functionality related to the Unity Remote.
+        Func<IntPtr, bool> onUnityRemoteMessage { set; }
+        void SetUnityRemoteGyroEnabled(bool value);
+        void SetUnityRemoteGyroUpdateInterval(float interval);
         #endif
     }
 

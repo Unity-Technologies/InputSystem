@@ -1,4 +1,5 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+// ENABLE_VR is not defined on Game Core but the assembly is available with limited features when the XR module is enabled.
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && (ENABLE_VR || UNITY_GAMECORE) && !UNITY_FORCE_INPUTSYSTEM_XR_OFF
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
@@ -50,7 +51,7 @@ namespace UnityEngine.InputSystem.XR
             for (var i = 0; i < stringLength; i++)
             {
                 var letter = original[i];
-                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || (allowPaths && (letter == '/')))
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == '_' || (allowPaths && (letter == '/')))
                 {
                     sanitizedName.Append(letter);
                 }
@@ -340,4 +341,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+#endif

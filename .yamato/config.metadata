@@ -1,44 +1,51 @@
 editors:
-  - version: 2019.4
   - version: 2020.3
-  - version: 2021.1
+    disable_tvos_run: true
+  - version: 2021.3
+  - version: 2022.2
   - version: trunk
-platforms:
+
+utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
+utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
+
+unity_downloader_install: pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+
+upm_ci_install: npm install -g upm-ci-utils@stable --registry https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm
+
+platforms_win:
   - name: win
     type: Unity::VM
-    image: package-ci/win10:v1.15.0-713263
+    image: package-ci/win10:default
     flavor: b1.large
-    netinstall: choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes --Source https://bfartifactory.bf.unity3d.com/artifactory/api/nuget/unity-choco-local
   - name: win_standalone
     type: Unity::VM
-    image: package-ci/win10:v1.15.0-713263
+    image: package-ci/win10:default
     flavor: b1.large
     runtime: StandaloneWindows64
-    netinstall: choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes --Source https://bfartifactory.bf.unity3d.com/artifactory/api/nuget/unity-choco-local
   - name: win_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/win10:v1.15.0-713263
+    image: package-ci/win10:default
     flavor: b1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
-    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u 
-    netinstall: choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes --Source https://bfartifactory.bf.unity3d.com/artifactory/api/nuget/unity-choco-local
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u
+platforms_nix:
   - name: mac
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:default
     flavor: m1.mac
   - name: mac_standalone
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:default
     flavor: m1.mac
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:default
     flavor: m1.mac
-    runtime: StandaloneOSX   
-    scripting-backend: Il2Cpp 
-    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u 
+    runtime: StandaloneOSX
+    scripting-backend: Il2Cpp
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u
 scripting_backends:
   - name: mono
   - name: il2cpp

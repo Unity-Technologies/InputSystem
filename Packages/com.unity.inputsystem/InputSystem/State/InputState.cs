@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// that queries input state will receive. For example, during editor updates, this will be
         /// <see cref="InputUpdateType.Editor"/> and the state buffers for the editor will be active.
         /// </remarks>
-        public static InputUpdateType currentUpdateType => InputUpdate.s_LastUpdateType;
+        public static InputUpdateType currentUpdateType => InputUpdate.s_LatestUpdateType;
 
         ////FIXME: ATM this does not work for editor updates
         /// <summary>
@@ -144,19 +144,72 @@ namespace UnityEngine.InputSystem.LowLevel
                 format == InputStateBlock.FormatULong;
         }
 
-        ////REVIEW: should these take an InputUpdateType argument?
-
-        public static void AddChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
+        /// <summary>
+        /// Add a monitor that gets triggered every time the state of <paramref name="control"/> changes.
+        /// </summary>
+        /// <param name="control">A control sitting on an <see cref="InputDevice"/> that has been <see cref="InputDevice.added"/>.</param>
+        /// <param name="monitor">Instance of the monitor that should be notified when state changes occur.</param>
+        /// <param name="monitorIndex">Numeric index of the monitors. Monitors on a device are ordered by <em>decreasing</em> monitor index
+        /// and invoked in that order.</param>
+        /// <param name="groupIndex">Numeric group of the monitor. See remarks.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> -or- <paramref name="monitor"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">The <see cref="InputDevice"/> of <paramref name="control"/> has not been <see cref="InputDevice.added"/>.</exception>
+        /// <remarks>
+        /// All monitors on an <see cref="InputDevice"/> are sorted by the complexity specified in their <paramref name="monitorIndex"/> (in decreasing order) and invoked
+        /// in that order.
+        ///
+        /// Every handler gets an opportunity to set <see cref="InputEventPtr.handled"/> to <c>true</c>. When doing so, all remaining pending monitors
+        /// from the same <paramref name="monitor"/> instance that have the same <paramref name="groupIndex"/> will be silenced and skipped over.
+        /// This can be used to establish an order of event "consumption" where one change monitor may prevent another change monitor from triggering.
+        ///
+        /// Monitors are invoked <em>after</em> a state change has been written to the device. If, for example, a <see cref="StateEvent"/> is
+        /// received that sets <see cref="Gamepad.leftTrigger"/> to <c>0.5</c>, the value is first applied to the control and then any state
+        /// monitors that may be listening to the change are invoked (thus getting <c>0.5</c> if calling <see cref="InputControl{TValue}.ReadValue()"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// class InputMonitor : IInputStateChangeMonitor
+        /// {
+        ///     public InputMonitor()
+        ///     {
+        ///         // Watch the left and right mouse button.
+        ///         // By supplying monitor indices here, we not only receive the indices in NotifyControlStateChanged,
+        ///         // we also create an ordering between the two monitors. The one on RMB will fire *before* the one
+        ///         // on LMB in case there is a single event that changes both buttons.
+        ///         InputState.AddChangeMonitor(Mouse.current.leftButton, this, monitorIndex: 1);
+        ///         InputState.AddChangeMonitor(Mouse.current.rightButton, this, monitorIndex: 2);
+        ///     }
+        ///
+        ///     public void NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
+        ///     {
+        ///         Debug.Log($"{control} changed");
+        ///
+        ///         // We can add a monitor timeout that will trigger in case the state of the
+        ///         // given control is not changed within the given time. Let's watch the control
+        ///         // for 2 seconds. If nothing happens, we will get a call to NotifyTimerExpired.
+        ///         // If, however, there is a state change, the timeout is automatically removed
+        ///         // and we will see a call to NotifyControlStateChanged instead.
+        ///         InputState.AddChangeMonitorTimeout(control, this, 2);
+        ///     }
+        ///
+        ///     public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+        ///     {
+        ///         Debug.Log($"{control} was not changed within 2 seconds");
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public static void AddChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1, uint groupIndex = default)
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
             if (monitor == null)
                 throw new ArgumentNullException(nameof(monitor));
-            if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"),
-                    nameof(control));
+            if (!control.device.added)
+                throw new ArgumentException($"Device for control '{control}' has not been added to system");
 
-            InputSystem.s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
+            InputSystem.s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex, groupIndex);
         }
 
         public static IInputStateChangeMonitor AddChangeMonitor(InputControl control,

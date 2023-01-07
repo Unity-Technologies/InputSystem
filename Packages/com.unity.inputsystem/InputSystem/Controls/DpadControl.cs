@@ -15,11 +15,9 @@ namespace UnityEngine.InputSystem.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
-    [Scripting.Preserve]
     public class DpadControl : Vector2Control
     {
         [InputControlLayout(hideInUI = true)]
-        [Scripting.Preserve]
         public class DpadAxisControl : AxisControl
         {
             public int component { get; set; }
@@ -91,17 +89,25 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
-            var upIsPressed = up.ReadValueFromState(statePtr) >= up.pressPointOrDefault;
-            var downIsPressed = down.ReadValueFromState(statePtr) >= down.pressPointOrDefault;
-            var leftIsPressed = left.ReadValueFromState(statePtr) >= left.pressPointOrDefault;
-            var rightIsPressed = right.ReadValueFromState(statePtr) >= right.pressPointOrDefault;
+            var upIsPressed = up.ReadValueFromStateWithCaching(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFromStateWithCaching(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFromStateWithCaching(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFromStateWithCaching(statePtr) >= right.pressPointOrDefault;
 
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
-            throw new NotImplementedException();
+            var upIsPressed = up.IsValueConsideredPressed(value.y);
+            var downIsPressed = down.IsValueConsideredPressed(value.y * -1f);
+            var leftIsPressed = left.IsValueConsideredPressed(value.x * -1f);
+            var rightIsPressed = right.IsValueConsideredPressed(value.x);
+
+            up.WriteValueIntoState(upIsPressed && !downIsPressed ? value.y : 0f, statePtr);
+            down.WriteValueIntoState(downIsPressed && !upIsPressed ? value.y * -1f : 0f, statePtr);
+            left.WriteValueIntoState(leftIsPressed && !rightIsPressed ? value.x * -1f : 0f, statePtr);
+            right.WriteValueIntoState(rightIsPressed && !leftIsPressed ? value.x : 0f, statePtr);
         }
 
         /// <summary>

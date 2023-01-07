@@ -33,6 +33,8 @@ using UnityEngine.Serialization;
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
 ////        the system fits together.
 
+////REVIEW: add "lastControl" property? (and maybe a lastDevice at the InputActionMap/Asset level?)
+
 ////REVIEW: have single delegate instead of separate performed/started/canceled callbacks?
 
 ////REVIEW: Do we need to have separate display names for actions?
@@ -387,7 +389,7 @@ namespace UnityEngine.InputSystem
 
                 var map = GetOrCreateActionMap();
                 if (map.m_State != null)
-                    map.LazyResolveBindings();
+                    map.LazyResolveBindings(fullResolve: true);
             }
         }
 
@@ -439,9 +441,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         ///
         /// Note that this array will not contain the same control multiple times even if more than
-        /// one binding on an action references the same control. Instead, the first binding on
-        /// an action that resolves to a particular control will essentially "own" the control
-        /// and subsequent bindings for the action will be blocked from resolving to the same control.
+        /// one binding on an action references the same control.
         ///
         /// <example>
         /// <code>
@@ -507,6 +507,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputActionPhase phase => currentState.phase;
 
+        /// <summary>
+        /// True if the action is currently in <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>
+        /// phase. False in all other cases.
+        /// </summary>
+        /// <see cref="phase"/>
         public bool inProgress => phase.IsInProgress();
 
         /// <summary>
@@ -604,9 +609,36 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether the action wants a state check on its bound controls as soon as it is enabled.
+        /// Whether the action wants a state check on its bound controls as soon as it is enabled. This is always
+        /// true for <see cref="InputActionType.Value"/> actions but can optionally be enabled for <see cref="InputActionType.Button"/>
+        /// or <see cref="InputActionType.PassThrough"/> actions.
         /// </summary>
-        internal bool wantsInitialStateCheck => type == InputActionType.Value;
+        /// <remarks>
+        /// Usually, when an action is <see cref="enabled"/> (e.g. via <see cref="Enable"/>), it will start listening for input
+        /// and then trigger once the first input arrives. However, <see cref="controls"/> bound to an action may already be
+        /// actuated when an action is enabled. For example, if a "jump" action is bound to <see cref="Keyboard.spaceKey"/>,
+        /// the space bar may already be pressed when the jump action is enabled.
+        ///
+        /// <see cref="InputActionType.Value"/> actions handle this differently by immediately performing an "initial state check"
+        /// in the next input update (see <see cref="InputSystem.Update"/>) after being enabled. If any of the bound controls
+        /// is already actuated, the action will trigger right away -- even with no change in state on the controls.
+        ///
+        /// This same behavior can be enabled explicitly for <see cref="InputActionType.Button"/> and <see cref="InputActionType.PassThrough"/>
+        /// actions using this property.
+        /// </remarks>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="InputActionType.Value"/>
+        public bool wantsInitialStateCheck
+        {
+            get => type == InputActionType.Value || (m_Flags & ActionFlags.WantsInitialStateCheck) != 0;
+            set
+            {
+                if (value)
+                    m_Flags |= ActionFlags.WantsInitialStateCheck;
+                else
+                    m_Flags &= ~ActionFlags.WantsInitialStateCheck;
+            }
+        }
 
         /// <summary>
         /// Construct an unnamed, free-standing action that is not part of any map or asset
@@ -885,6 +917,11 @@ namespace UnityEngine.InputSystem
             return clone;
         }
 
+        /// <summary>
+        /// Return an boxed instance of the action.
+        /// </summary>
+        /// <returns>An boxed clone of the action</returns>
+        /// <seealso cref="Clone"/>
         object ICloneable.Clone()
         {
             return Clone();
@@ -893,11 +930,11 @@ namespace UnityEngine.InputSystem
         ////TODO: ReadValue(void*, int)
 
         /// <summary>
-        /// Read the current value of the action. This is the last value received on <see cref="started"/>,
-        /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
+        /// Read the current value of the control that is driving this action. If no bound control is actuated, returns
+        /// default(TValue), but note that binding processors are always applied.
         /// </summary>
         /// <typeparam name="TValue">Value type to read. Must match the value type of the binding/control that triggered.</typeparam>
-        /// <returns>The current value of the action or <c>default(TValue)</c> if the action is not currently in-progress.</returns>
+        /// <returns>The current value of the control/binding that is driving this action with all binding processors applied.</returns>
         /// <remarks>
         /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
         /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
@@ -948,21 +985,13 @@ namespace UnityEngine.InputSystem
         public unsafe TValue ReadValue<TValue>()
             where TValue : struct
         {
-            var result = default(TValue);
-
             var state = GetOrCreateActionMap().m_State;
-            if (state != null)
-            {
-                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                if (actionStatePtr->phase.IsInProgress())
-                {
-                    var controlIndex = actionStatePtr->controlIndex;
-                    if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
-                }
-            }
+            if (state == null) return default(TValue);
 
-            return result;
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            return actionStatePtr->phase.IsInProgress()
+                ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
+                : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
         }
 
         /// <summary>
@@ -1000,13 +1029,17 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method can be used to forcibly cancel an action even while it is in progress. Note that unlike
         /// disabling an action, for example, this also effects APIs such as <see cref="WasPressedThisFrame"/>.
+        ///
+        /// Note that invoking this method will not modify enabled state.
         /// </remarks>
         /// <seealso cref="inProgress"/>
         /// <seealso cref="phase"/>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="Disable"/>
         public void Reset()
         {
             var state = GetOrCreateActionMap().m_State;
-            state?.ResetActionState(m_ActionIndexInState, hardReset: true);
+            state?.ResetActionState(m_ActionIndexInState, toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
         }
 
         /// <summary>
@@ -1060,6 +1093,22 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Whether the action has been <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>.
+        /// </summary>
+        /// <returns>True if the action is currently triggering.</returns>
+        /// <seealso cref="phase"/>
+        public unsafe bool IsInProgress()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->phase.IsInProgress();
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
         /// at any point in the frame.
         /// </summary>
@@ -1094,6 +1143,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasReleasedThisFrame"/>
@@ -1140,6 +1192,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasPressedThisFrame"/>
@@ -1196,6 +1251,9 @@ namespace UnityEngine.InputSystem
         ///
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1327,7 +1385,7 @@ namespace UnityEngine.InputSystem
                         var duration = interactionState.timerDuration;
                         var startTime = interactionState.timerStartTime;
                         var endTime = startTime + duration;
-                        var remainingTime = endTime - InputRuntime.s_Instance.currentTime;
+                        var remainingTime = endTime - InputState.currentTime;
                         if (remainingTime <= 0)
                             timerCompletion = 1;
                         else
@@ -1381,6 +1439,7 @@ namespace UnityEngine.InputSystem
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
+        [SerializeField] internal ActionFlags m_Flags;
 
         [NonSerialized] internal InputBinding? m_BindingMask;
         [NonSerialized] internal int m_BindingsStartIndex;
@@ -1421,14 +1480,20 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal bool isSingletonAction => m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this);
 
+        [Flags]
+        internal enum ActionFlags
+        {
+            WantsInitialStateCheck = 1 << 0,
+        }
+
         private InputActionState.TriggerState currentState
         {
             get
             {
                 if (m_ActionIndexInState == InputActionState.kInvalidIndex)
                     return new InputActionState.TriggerState();
-                Debug.Assert(m_ActionMap != null);
-                Debug.Assert(m_ActionMap.m_State != null);
+                Debug.Assert(m_ActionMap != null, "Action must have associated action map");
+                Debug.Assert(m_ActionMap.m_State != null, "Action map must have state at this point");
                 return m_ActionMap.m_State.FetchActionState(this);
             }
         }
@@ -1460,6 +1525,40 @@ namespace UnityEngine.InputSystem
                 m_SingletonAction = this,
                 m_Bindings = m_SingletonActionBindings
             };
+        }
+
+        internal void RequestInitialStateCheckOnEnabledAction()
+        {
+            Debug.Assert(enabled, "This should only be called on actions that are enabled");
+
+            var map = GetOrCreateActionMap();
+            var state = map.m_State;
+            state.SetInitialStateCheckPending(m_ActionIndexInState);
+        }
+
+        // NOTE: This does *NOT* check whether the control is valid according to the binding it
+        //       resolved from and/or the current binding mask. If, for example, the binding is
+        //       "<Keyboard>/#(ä)" and the keyboard switches from a DE layout to a US layout, the
+        //       key would still be considered valid even if the path in the binding would actually
+        //       no longer resolve to it.
+        internal bool ActiveControlIsValid(InputControl control)
+        {
+            if (control == null)
+                return false;
+
+            // Device must still be added.
+            var device = control.device;
+            if (!device.added)
+                return false;
+
+            // If we have a device list in the map or asset, device
+            // must be in list.
+            var map = GetOrCreateActionMap();
+            var deviceList = map.devices;
+            if (deviceList != null && !deviceList.Value.ContainsReference(device))
+                return false;
+
+            return true;
         }
 
         internal InputBinding? FindEffectiveBindingMask()
@@ -1524,6 +1623,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: make current event available in some form
+        ////TODO: make source binding info available (binding index? binding instance?)
 
         /// <summary>
         /// Information provided to action callbacks about what triggered an action.
@@ -1839,8 +1939,13 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
             {
                 var value = default(TValue);
-                if (m_State != null && phase.IsInProgress())
-                    value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
+                if (m_State != null)
+                {
+                    value = phase.IsInProgress() ?
+                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
+                        m_State.ApplyProcessors(bindingIndex, value);
+                }
+
                 return value;
             }
 

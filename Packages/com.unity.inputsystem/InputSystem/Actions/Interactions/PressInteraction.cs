@@ -31,7 +31,6 @@ namespace UnityEngine.InputSystem.Interactions
     /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
     /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
     /// </remarks>
-    [Preserve]
     [DisplayName("Press")]
     public class PressInteraction : IInputInteraction
     {
@@ -73,7 +72,10 @@ namespace UnityEngine.InputSystem.Interactions
                         if (actuation <= releasePointOrDefault)
                         {
                             m_WaitingForRelease = false;
-                            context.Canceled();
+                            if (Mathf.Approximately(0f, actuation))
+                                context.Canceled();
+                            else
+                                context.Started();
                         }
                     }
                     else if (actuation >= pressPointOrDefault)
@@ -85,6 +87,10 @@ namespace UnityEngine.InputSystem.Interactions
                     else if (actuation > 0 && !context.isStarted)
                     {
                         context.Started();
+                    }
+                    else if (Mathf.Approximately(0f, actuation) && context.isStarted)
+                    {
+                        context.Canceled();
                     }
                     break;
 

@@ -26,8 +26,6 @@ namespace UnityEngine.InputSystem
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
-        public bool hasFocus => m_HasFocus;
-
         ~InputTestRuntime()
         {
             Dispose();
@@ -77,7 +75,21 @@ namespace UnityEngine.InputSystem
                         (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
                         m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
 
-                    onUpdate(type, ref buffer);
+                    try
+                    {
+                        onUpdate(type, ref buffer);
+                    }
+                    catch (Exception e)
+                    {
+                        // Same order as in NativeInputRuntime
+                        Debug.LogException(e);
+                        Debug.LogError($"{e.GetType().Name} during event processing of {type} update; resetting event buffer");
+
+                        // Rethrow exception for test runtime to enable us to assert against it in tests.
+                        m_EventCount = 0;
+                        m_EventWritePosition = 0;
+                        throw;
+                    }
 
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;
@@ -120,6 +132,20 @@ namespace UnityEngine.InputSystem
                 m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
+        }
+
+        public unsafe void SetCanRunInBackground(int deviceId)
+        {
+            SetDeviceCommandCallback(deviceId,
+                (id, command) =>
+                {
+                    if (command->type == QueryCanRunInBackground.Type)
+                    {
+                        ((QueryCanRunInBackground*)command)->canRunInBackground = true;
+                        return InputDeviceCommand.GenericSuccess;
+                    }
+                    return InputDeviceCommand.GenericFailure;
+                });
         }
 
         public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
@@ -324,10 +350,13 @@ namespace UnityEngine.InputSystem
         public InputUpdateDelegate onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
+#if UNITY_EDITOR
+        public Action onPlayerLoopInitialization { get; set; }
+#endif
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
-        public bool isFocused => m_HasFocus;
+        public bool isPlayerFocused => m_HasFocus;
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
@@ -340,6 +369,7 @@ namespace UnityEngine.InputSystem
 
         public bool runInBackground { get; set; } = false;
 
+        public Vector2 screenSize { get; set; } = new Vector2(1024, 768);
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings
@@ -373,6 +403,26 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
         public bool isPaused { get; set; }
+        public bool isEditorActive { get; set; } = true;
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            get => m_UnityRemoteMessageHandler;
+            set => m_UnityRemoteMessageHandler = value;
+        }
+
+        public bool? unityRemoteGyroEnabled;
+        public float? unityRemoteGyroUpdateInterval;
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            unityRemoteGyroEnabled = value;
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            unityRemoteGyroUpdateInterval = interval;
+        }
+
         public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
@@ -392,6 +442,7 @@ namespace UnityEngine.InputSystem
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

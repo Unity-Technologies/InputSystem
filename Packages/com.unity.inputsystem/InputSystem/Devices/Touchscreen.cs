@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -90,7 +91,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// After a touch has ended or been canceled, an ID can be reused.
         /// </remarks>
         /// <seealso cref="TouchControl.touchId"/>
-        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true)]
+        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true, dontReset = true)]
         [FieldOffset(0)]
         public int touchId;
 
@@ -99,7 +100,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position of the touch.</value>
         /// <seealso cref="TouchControl.position"/>
-        [InputControl(displayName = "Position")]
+        [InputControl(displayName = "Position", dontReset = true)]
         [FieldOffset(4)]
         public Vector2 position;
 
@@ -108,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space movement delta.</value>
         /// <seealso cref="TouchControl.delta"/>
-        [InputControl(displayName = "Delta")]
+        [InputControl(displayName = "Delta", layout = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
@@ -367,7 +368,7 @@ namespace UnityEngine.InputSystem.LowLevel
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
-        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
+        [InputControl(name = "delta", useStateFrom = "primaryTouch/delta", layout = "Delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
@@ -488,8 +489,7 @@ namespace UnityEngine.InputSystem
     /// it is recommended to use the higher-level <see cref="EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
-    public class Touchscreen : Pointer, IInputStateCallbackReceiver
+    public class Touchscreen : Pointer, IInputStateCallbackReceiver, IEventMerger, ICustomDeviceReset
     {
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
@@ -591,7 +591,7 @@ namespace UnityEngine.InputSystem
         //
         // NOTE: We do *NOT* make a effort here to prevent us from losing short-lived touches. This is different
         //       from the old input system where individual touches were not reused until the next frame. This meant
-        //       that additional touches potentially had to be allocated in order to accomodate new touches coming
+        //       that additional touches potentially had to be allocated in order to accommodate new touches coming
         //       in from the system.
         //
         //       The rationale for *NOT* doing this is that:
@@ -951,6 +951,72 @@ namespace UnityEngine.InputSystem
 
             offset = touchControl.stateBlock.byteOffset - m_StateBlock.byteOffset;
             return true;
+        }
+
+        // Implement our own custom reset so that we can cancel touches instead of just wiping them
+        // with default state.
+        unsafe void ICustomDeviceReset.Reset()
+        {
+            var statePtr = currentStatePtr;
+
+            //// https://jira.unity3d.com/browse/ISX-930
+            ////TODO: Figure out a proper way to distinguish the source / reason for a state change.
+            ////      What we're doing here is constructing an event solely for the purpose of Finger.ShouldRecordTouch() not
+            ////      ignoring the state change like it does for delta resets.
+
+            using (var buffer = new NativeArray<byte>(StateEvent.GetEventSizeWithPayload<TouchState>(), Allocator.Temp))
+            {
+                var eventPtr = (StateEvent*)buffer.GetUnsafePtr();
+
+                eventPtr->baseEvent = new InputEvent(StateEvent.Type, buffer.Length, deviceId);
+
+                var primaryTouchState = (TouchState*)((byte*)statePtr + primaryTouch.stateBlock.byteOffset);
+                if (primaryTouchState->phase.IsActive())
+                {
+                    UnsafeUtility.MemCpy(eventPtr->state, primaryTouchState, UnsafeUtility.SizeOf<TouchState>());
+                    ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                    InputState.Change(primaryTouch.phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                }
+
+                var touchStates = (TouchState*)((byte*)statePtr + touches[0].stateBlock.byteOffset);
+                var touchCount = touches.Count;
+                for (var i = 0; i < touchCount; ++i)
+                {
+                    if (touchStates[i].phase.IsActive())
+                    {
+                        UnsafeUtility.MemCpy(eventPtr->state, &touchStates[i], UnsafeUtility.SizeOf<TouchState>());
+                        ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                        InputState.Change(touches[i].phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                    }
+                }
+            }
+        }
+
+        internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+                return false;
+
+            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+
+            if (currentEvent->stateFormat != TouchState.Format || nextEvent->stateFormat != TouchState.Format)
+                return false;
+
+            var currentState = (TouchState*)currentEvent->state;
+            var nextState = (TouchState*)nextEvent->state;
+
+            if (currentState->touchId != nextState->touchId || currentState->phaseId != nextState->phaseId || currentState->flags != nextState->flags)
+                return false;
+
+            nextState->delta += currentState->delta;
+
+            return true;
+        }
+
+        bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
+        {
+            return MergeForward(currentEventPtr, nextEventPtr);
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases

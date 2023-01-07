@@ -48,8 +48,6 @@ namespace UnityEngine.InputSystem.LowLevel
     /// some device (which, however, may or may not translate to an <see cref="InputDevice"/>; that
     /// part depends on whether the input system was able to create an <see cref="InputDevice"/>
     /// based on the information received from the backend).
-    ///
-    /// To implement your own type of event, TODO (manual?)
     /// </remarks>
     /// <seealso cref="InputEventPtr"/>
     // NOTE: This has to be layout compatible with native events.
@@ -255,7 +253,6 @@ namespace UnityEngine.InputSystem.LowLevel
         internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
         {
             Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
-            Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
             var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);

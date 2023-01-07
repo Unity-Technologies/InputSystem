@@ -99,13 +99,13 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "0", displayName = "0", layout = "Key", bit = (int)Key.Digit0)]
         [InputControl(name = "leftShift", displayName = "Left Shift", layout = "Key", usage = "Modifier", bit = (int)Key.LeftShift)]
         [InputControl(name = "rightShift", displayName = "Right Shift", layout = "Key", usage = "Modifier", bit = (int)Key.RightShift)]
-        [InputControl(name = "shift", displayName = "Shift", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftShift, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3")]
+        [InputControl(name = "shift", displayName = "Shift", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftShift, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3,writeMode=1")]
         [InputControl(name = "leftAlt", displayName = "Left Alt", layout = "Key", usage = "Modifier", bit = (int)Key.LeftAlt)]
         [InputControl(name = "rightAlt", displayName = "Right Alt", layout = "Key", usage = "Modifier", bit = (int)Key.RightAlt, alias = "AltGr")]
-        [InputControl(name = "alt", displayName = "Alt", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftAlt, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3")]
+        [InputControl(name = "alt", displayName = "Alt", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftAlt, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3,writeMode=1")]
         [InputControl(name = "leftCtrl", displayName = "Left Control", layout = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl)]
         [InputControl(name = "rightCtrl", displayName = "Right Control", layout = "Key", usage = "Modifier", bit = (int)Key.RightCtrl)]
-        [InputControl(name = "ctrl", displayName = "Control", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftCtrl, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3")]
+        [InputControl(name = "ctrl", displayName = "Control", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftCtrl, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3,writeMode=1")]
         [InputControl(name = "leftMeta", displayName = "Left System", layout = "Key", usage = "Modifier", bit = (int)Key.LeftMeta, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
         [InputControl(name = "rightMeta", displayName = "Right System", layout = "Key", usage = "Modifier", bit = (int)Key.RightMeta, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
         [InputControl(name = "contextMenu", displayName = "Context Menu", layout = "Key", usage = "Modifier", bit = (int)Key.ContextMenu)]
@@ -861,7 +861,6 @@ namespace UnityEngine.InputSystem
     /// keyboard has certain keys or not.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
         /// <summary>

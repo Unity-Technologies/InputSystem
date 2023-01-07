@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public InputEvent* currentEventPtr => m_RemainingNativeEventCount > 0
         ? m_CurrentNativeEventReadPtr
-        : m_CurrentAppendEventReadPtr;
+        : (m_RemainingAppendEventCount > 0 ? m_CurrentAppendEventReadPtr : null);
 
         public uint numBytesRetainedInBuffer =>
             (uint)((byte*)m_CurrentNativeEventWritePtr -
@@ -70,6 +70,19 @@ namespace UnityEngine.InputSystem.LowLevel
             m_IsOpen = false;
         }
 
+        public void CleanUpAfterException()
+        {
+            if (!isOpen)
+                return;
+
+            m_NativeBuffer.Reset();
+
+            if (m_AppendBuffer.data.IsCreated)
+                m_AppendBuffer.Dispose();
+
+            m_IsOpen = false;
+        }
+
         public void Write(InputEvent* eventPtr)
         {
             if (m_AppendBuffer.eventCount >= m_MaxAppendedEvents)
@@ -113,13 +126,37 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 m_NativeBuffer.AdvanceToNextEvent(ref m_CurrentNativeEventReadPtr, ref m_CurrentNativeEventWritePtr,
                     ref m_NumEventsRetainedInBuffer, ref m_RemainingNativeEventCount, leaveEventInBuffer);
-                return m_CurrentNativeEventReadPtr;
+            }
+            else if (m_RemainingAppendEventCount > 0)
+            {
+                var numEventRetained = 0;
+                m_AppendBuffer.AdvanceToNextEvent(ref m_CurrentAppendEventReadPtr, ref m_CurrentAppendEventWritePtr,
+                    ref numEventRetained, ref m_RemainingAppendEventCount, false);
             }
 
-            var numEventRetained = 0;
-            m_AppendBuffer.AdvanceToNextEvent(ref m_CurrentAppendEventReadPtr, ref m_CurrentAppendEventWritePtr,
-                ref numEventRetained, ref m_RemainingAppendEventCount, false);
-            return m_CurrentAppendEventReadPtr;
+            return currentEventPtr;
+        }
+
+        /// <summary>
+        /// Peeks next event in the stream
+        /// </summary>
+        public InputEvent* Peek()
+        {
+            // Advance will go to next event in m_NativeBuffer
+            if (m_RemainingNativeEventCount > 1)
+                return InputEvent.GetNextInMemory(m_CurrentNativeEventReadPtr);
+
+            // Advance will decrement m_RemainingNativeEventCount to 0
+            // and currentEventPtr will point to m_CurrentAppendEventReadPtr if any
+            if (m_RemainingNativeEventCount == 1)
+                return m_RemainingAppendEventCount > 0 ? m_CurrentAppendEventReadPtr : null;
+
+            // Advance will go to next event in m_AppendBuffer
+            if (m_RemainingAppendEventCount > 1)
+                return InputEvent.GetNextInMemory(m_CurrentAppendEventReadPtr);
+
+            // No next event
+            return null;
         }
 
         private InputEventBuffer m_NativeBuffer;

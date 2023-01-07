@@ -237,7 +237,8 @@ internal class PlayerInputTests : CoreTestsFixture
 
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
-            new Message("OnControlsChanged", instance),
+            new Message("OnControlsChanged", instance), // Keyboard&mouse.
+            new Message("OnControlsChanged", instance), // Gamepad.
             new Message("OnFire", 1f)
         }));
     }
@@ -645,6 +646,7 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultControlScheme = "Keyboard&Mouse";
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+        listener.messages.Clear();
 
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
 
@@ -656,7 +658,6 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
             ////TODO: reduce the steps in which PlayerInput updates the data to result in fewer re-resolves
-            new Message("OnControlsChanged", playerInput), // Initial resolve.
             new Message("OnControlsChanged", playerInput), // Control scheme switch.
             new Message("OnFire", 1f)
         }));
@@ -711,6 +712,7 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
         go.SetActive(true);
+        listener.messages.Clear();
 
         Assert.That(playerInput.devices, Is.Empty);
 
@@ -839,15 +841,41 @@ internal class PlayerInputTests : CoreTestsFixture
         playerInput.defaultControlScheme = "Keyboard&Mouse";
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+        playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
 
         Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        var listener = go.AddComponent<PlayerInputEventListener>();
 
         var result = playerInput.SwitchCurrentControlScheme(gamepad);
         Assert.That(result, Is.True);
 
         Assert.That(playerInput.currentControlScheme, Is.EqualTo("Gamepad"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+        Assert.That(listener.messages.Count, Is.EqualTo(1));
+        Assert.That(listener.messages[0].name, Is.EqualTo("OnControlsChanged"));
+    }
+
+    [Test]
+    [Category("PlayerInput")] // https://fogbugz.unity3d.com/f/cases/1342297/
+    public void PlayerInput_ShouldNotUnpairAndPairDevices__IfExplicitlySwitchingToTheAlreadyActiveSchemeAndDevices()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
+
+        var listener = go.AddComponent<PlayerInputEventListener>();
+
+        Assert.That(playerInput.SwitchCurrentControlScheme(keyboard, mouse), Is.True);
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(listener.messages.Count, Is.EqualTo(0)); // No switch should occurr since matched scheme
     }
 
     [Test]
@@ -954,6 +982,9 @@ internal class PlayerInputTests : CoreTestsFixture
         var player1 = PlayerInput.Instantiate(prefab, controlScheme: "Keyboard WASD", pairWithDevice: keyboard);
         var player2 = PlayerInput.Instantiate(prefab, controlScheme: "Keyboard Arrows", pairWithDevice: keyboard);
 
+        player1.GetComponent<MessageListener>().messages.Clear();
+        player2.GetComponent<MessageListener>().messages.Clear();
+
         Assert.That(player1.devices, Is.EquivalentTo(new[] { keyboard }));
         Assert.That(player2.devices, Is.EquivalentTo(new[] { keyboard }));
         Assert.That(player1.currentControlScheme, Is.EqualTo("Keyboard WASD"));
@@ -988,6 +1019,7 @@ internal class PlayerInputTests : CoreTestsFixture
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.defaultActionMap = "Other";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+        listener.messages.Clear();
 
         Set(gamepad.leftTrigger, 0.234f);
 
@@ -995,7 +1027,6 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
-            new Message("OnControlsChanged", playerInput),
             new Message("OnOtherAction", 0.234f)
         }));
     }
@@ -1011,6 +1042,7 @@ internal class PlayerInputTests : CoreTestsFixture
         var playerInput = go.AddComponent<PlayerInput>();
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+        listener.messages.Clear();
 
         Set(gamepad.leftTrigger, 0.6f);
 
@@ -1018,7 +1050,6 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.False);
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
-            new Message("OnControlsChanged", playerInput),
             new Message("OnFire", 0.6f)
         }));
 
@@ -1182,23 +1213,32 @@ internal class PlayerInputTests : CoreTestsFixture
         {
             listener = (IListener)go.AddComponent(listenerType);
         }
-        var playerInput = go.AddComponent<PlayerInput>();
 
+        var playerInput = go.AddComponent<PlayerInput>();
         playerInput.notificationBehavior = notificationBehavior;
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
         go.SetActive(true);
+        listener.messages.Clear();
 
         Press(gamepad.buttonSouth);
 
         if (receivesAllPhases)
         {
-            Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("Fire Started", 1f), new Message("Fire Performed", 1f) }));
+            Assert.That(listener.messages, Is.EquivalentTo(
+                new[]
+                {
+                    new Message("Fire Started", 1f),
+                    new Message("Fire Performed", 1f)
+                }));
         }
         else
         {
-            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+            Assert.That(listener.messages, Is.EquivalentTo(new[]
+            {
+                new Message("OnFire", 1f)
+            }));
         }
 
         listener.messages.Clear();
@@ -1235,7 +1275,8 @@ internal class PlayerInputTests : CoreTestsFixture
 
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
-            new Message("OnControlsChanged", playerInput),
+            new Message("OnControlsChanged", playerInput), // When enabled in AddComponent.
+            new Message("OnControlsChanged", playerInput), // After setting up actions.
             new Message("OnFire", 1f)
         }));
 
@@ -1255,12 +1296,15 @@ internal class PlayerInputTests : CoreTestsFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var go = new GameObject();
+        go.SetActive(false);
         var listener = go.AddComponent<MessageListener>();
         var playerInput = go.AddComponent<PlayerInput>();
 
         playerInput.notificationBehavior = PlayerNotifications.SendMessages;
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        go.SetActive(true);
 
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
 
@@ -1353,7 +1397,8 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.user.lostDevices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
-            new Message("OnControlsChanged", playerInput),
+            new Message("OnControlsChanged", playerInput), // With gamepad.
+            new Message("OnControlsChanged", playerInput), // Lost gamepad.
             new Message("OnDeviceLost", playerInput),
         }));
 
@@ -1404,6 +1449,8 @@ internal class PlayerInputTests : CoreTestsFixture
 
         go.SetActive(true);
 
+        listener.messages.Clear();
+
         Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
 
         runtime.ReportInputDeviceRemoved(gamepad);
@@ -1412,7 +1459,7 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerInput.devices, Is.Empty);
         Assert.That(playerInput.hasMissingRequiredDevices, Is.True);
         Assert.That(listener.messages,
-            Is.EquivalentTo(new[] {new Message(PlayerInput.DeviceLostMessage, playerInput)}));
+            Is.EquivalentTo(new[] { new Message(PlayerInput.DeviceLostMessage, playerInput) }));
 
         listener.messages.Clear();
 
@@ -1518,6 +1565,7 @@ internal class PlayerInputTests : CoreTestsFixture
         // NOTE: No message when controls are first enabled. This means that, for example, when rebinding happens in a UI
         //       while the component is disabled and we then enable the component, there will *NOT* be an OnControlsChanged call.
         go.SetActive(true);
+        listener.messages.Clear();
 
         // Rebind fire button.
         playerInput.actions["fire"].ApplyBindingOverride("<Gamepad>/leftTrigger", group: "Gamepad");
@@ -2094,6 +2142,107 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(playerJoined, Is.True);
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenSecondPlayerJoins_UIInputForFirstPlayerContinuesWorking()
+    {
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var playerMap = actions.AddActionMap("Player");
+        var uiMap = actions.AddActionMap("UI");
+
+        var joinAction = playerMap.AddAction("Join", binding: "<Gamepad>/{PrimaryAction}");
+        joinAction.AddBinding("<Keyboard>/space");
+
+        // Left Stick is bound to UIInputModule Navigate
+        var navigateAction = uiMap.AddAction("Navigate", binding: "<Gamepad>/leftStick", type: InputActionType.PassThrough);
+        navigateAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+
+
+        var playerPrefab = new GameObject();
+        playerPrefab.SetActive(false);
+        var prefabUIModule = playerPrefab.AddComponent<InputSystemUIInputModule>();
+        prefabUIModule.AssignDefaultActions();
+        playerPrefab.AddComponent<PlayerInput>();
+        playerPrefab.GetComponent<PlayerInput>().actions = actions;
+        playerPrefab.GetComponent<PlayerInput>().uiInputModule = prefabUIModule;
+
+        var manager = new GameObject();
+        manager.SetActive(false);
+        var playerInputManager = manager.AddComponent<PlayerInputManager>();
+        playerInputManager.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInputManager.joinAction = new InputActionProperty(InputActionReference.Create(joinAction));
+        playerInputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered;
+        playerInputManager.playerPrefab = playerPrefab;
+        manager.SetActive(true);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        List<PlayerInput> joinedPlayers = new List<PlayerInput>();
+        playerInputManager.onPlayerJoined += input => joinedPlayers.Add(input);
+
+        // UIInputModule instance for player 1 will be bound to Gamepad
+        PressAndRelease(gamepad.buttonSouth);
+        Assert.That(joinedPlayers.Count, Is.EqualTo(1));
+
+        // Player 1's controls are functional
+        bool player1Moved = false;
+        joinedPlayers[0].uiInputModule.move.action.performed += cxt => player1Moved = true;
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
+        Assert.That(player1Moved, Is.True);
+
+        Set(gamepad.leftStick, new Vector2(0.0f, 0.0f));
+        player1Moved = false;
+
+        // UIInputModule instance for player 2 will be bound to Keyboard
+        // And this should not affect player 1's controls
+        PressAndRelease(keyboard.spaceKey);
+        Assert.That(joinedPlayers.Count, Is.EqualTo(2));
+        Assert.That(player1Moved, Is.False);
+
+        // Player 1's controls still work after player 2 joined
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.0f));
+        Assert.That(player1Moved, Is.True);
+    }
+
+    [Test] // Mimics what is reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
+    [Category("PlayerInput")]
+    public void PlayerInput_WhenOverridingDeviceLayout_LostDeviceShouldBeResolvedAndRepaired()
+    {
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        go.SetActive(true);
+
+        // Actuate gamepad to pair with user (other option would be initially paired)
+        Press(gamepad.buttonSouth);
+        Assert.That(playerInput.devices[0], Is.SameAs(gamepad));
+
+        // Register a layout override (this will recreate device)
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""GamepadPlayerUsageTags"",
+                ""extend"" : ""Gamepad"",
+                ""commonUsages"" : [
+                    ""Player1"", ""Player2""
+                ]
+            }
+        ");
+
+        // As reported in https://issuetracker.unity3d.com/product/unity/issues/guid/1347320
+        // there would be no device assigned after registered layout override since this
+        // would recreate the device with the same device id (but a new instance).
+        Assert.That(playerInput.devices.Count, Is.EqualTo(1));
+        Assert.That(playerInput.devices[0], !Is.SameAs(gamepad)); // expected replacement (by design, not a requirement)
+        Assert.That(playerInput.devices[0].name, Is.EqualTo(gamepad.name));
+    }
+
     // An action is either
     //   (a) button-like, or
     //   (b) axis-like, or
@@ -2178,6 +2327,30 @@ internal class PlayerInputTests : CoreTestsFixture
             ]
         }
     ";
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanDisableAfterAssigningAction_WithControlSchemesAndInteractions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var action = actions.AddActionMap("map").AddAction("action", interactions: "Tap(duration=0.123)");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        actions.AddControlScheme("Gamepad")
+            .WithRequiredDevice<Gamepad>();
+        actions.AddControlScheme("Keyboard")
+            .WithRequiredDevice<Keyboard>();
+        actions.Enable();
+
+        var player = new GameObject();
+        var playerInput = player.AddComponent<PlayerInput>();
+        playerInput.defaultControlScheme = "Keyboard";
+        playerInput.actions = actions;
+        player.SetActive(false); // Should cause full rebinding and not assert
+    }
 
     private struct Message : IEquatable<Message>
     {

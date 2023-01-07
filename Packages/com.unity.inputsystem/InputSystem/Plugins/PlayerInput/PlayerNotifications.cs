@@ -10,15 +10,14 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Use <see cref="GameObject.SendMessage(string,object)"/> to send a message to the <see cref="GameObject"/>
         /// that <see cref="PlayerInput"/> belongs to.
-        /// </summary>
-        /// <remarks>
+        ///
         /// The message name will be the name of the action (e.g. "Jump"; it will not include the action map name),
         /// and the object will be the <see cref="PlayerInput"/> on which the action was triggered.
         ///
         /// If the notification is for an action that was triggered, <see cref="SendMessageOptions"/> will be
         /// <see cref="SendMessageOptions.RequireReceiver"/> (i.e. an error will be logged if there is no corresponding
         /// method). Otherwise it will be <see cref="SendMessageOptions.DontRequireReceiver"/>.
-        /// </remarks>
+        /// </summary>
         SendMessages,
 
         /// <summary>
@@ -27,8 +26,18 @@ namespace UnityEngine.InputSystem
         /// </summary>
         BroadcastMessages,
 
+        /// <summary>
+        /// Have a separate <a href="https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html">UnityEvent</a> for each notification.
+        /// Allows wiring up target methods to invoke such that the connection is persisted in Unity serialized data.
+        ///
+        /// See <see cref="PlayerInput.actionEvents"/> and related callbacks such as <see cref="PlayerInput.controlsChangedEvent"/>.
+        /// </summary>
         InvokeUnityEvents,
 
-        InvokeCSharpEvents,
+        ////TODO: Kill
+        /// <summary>
+        /// Use plain C# callbacks.
+        /// </summary>
+        InvokeCSharpEvents
     }
 }

@@ -107,7 +107,6 @@ namespace UnityEngine.InputSystem.iOS
     /// be represented as an iOSGameController.
     /// </remarks>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
-    [Scripting.Preserve]
     public class iOSGameController : Gamepad
     {
     }
@@ -116,7 +115,6 @@ namespace UnityEngine.InputSystem.iOS
     /// An Xbox One Bluetooth controller connected to an iOS device.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Xbox One Gamepad")]
-    [Scripting.Preserve]
     public class XboxOneGampadiOS : XInput.XInputController
     {
     }
@@ -125,8 +123,15 @@ namespace UnityEngine.InputSystem.iOS
     /// A PlayStation DualShock 4 controller connected to an iOS device.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualShock 4 Gamepad")]
-    [Scripting.Preserve]
     public class DualShock4GampadiOS : DualShockGamepad
+    {
+    }
+
+    /// <summary>
+    /// A PlayStation DualSense controller connected to an iOS device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualSense Gamepad")]
+    public class DualSenseGampadiOS : DualShockGamepad
     {
     }
 }

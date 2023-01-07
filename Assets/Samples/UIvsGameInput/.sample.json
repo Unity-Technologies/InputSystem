@@ -1,0 +1,4 @@
+{
+  "displayName": "UI vs. Game Input",
+  "description": "An example that shows how to deal with ambiguities that may arrise when overlaying interactive UI elements on top of a game scene."
+} 

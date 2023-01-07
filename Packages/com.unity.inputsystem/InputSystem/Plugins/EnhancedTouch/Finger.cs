@@ -127,15 +127,17 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             // record the current state if touch is already in progress
             if (screen.touches[index].isInProgress)
-                m_StateHistory.RecordStateChange(screen.touches[index], screen.touches[index].ReadValue());
+                m_StateHistory.RecordStateChange(screen.touches[index], screen.touches[index].value);
         }
 
         private static unsafe bool ShouldRecordTouch(InputControl control, double time, InputEventPtr eventPtr)
         {
             // We only want to record changes that come from events. We ignore internal state
             // changes that Touchscreen itself generates. This includes the resetting of deltas.
-            // NOTE: This means we are ignoring delta resets happening in Touchscreen.
             if (!eventPtr.valid)
+                return false;
+            var eventType = eventPtr.type;
+            if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                 return false;
 
             // Direct memory access for speed.
@@ -157,12 +159,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             touchState->updateStepCount = InputUpdate.s_UpdateStepCount;
 
             // Invalidate activeTouches.
-            Touch.s_PlayerState.haveBuiltActiveTouches = false;
+            Touch.s_GlobalState.playerState.haveBuiltActiveTouches = false;
 
             // Record the extra data we maintain for each touch.
             var extraData = (Touch.ExtraDataPerTouchState*)((byte*)touchHeader + m_StateHistory.bytesPerRecord -
                 UnsafeUtility.SizeOf<Touch.ExtraDataPerTouchState>());
-            extraData->uniqueId = ++Touch.s_PlayerState.lastId;
+            extraData->uniqueId = ++Touch.s_GlobalState.playerState.lastId;
 
             // We get accumulated deltas from Touchscreen. Store the accumulated
             // value and "unaccumulate" the value we store on delta.
@@ -190,14 +192,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             switch (touchState->phase)
             {
                 case TouchPhase.Began:
-                    DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_OnFingerDown, this, "Touch.onFingerDown");
+                    DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_GlobalState.onFingerDown, this, "Touch.onFingerDown");
                     break;
                 case TouchPhase.Moved:
-                    DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_OnFingerMove, this, "Touch.onFingerMove");
+                    DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_GlobalState.onFingerMove, this, "Touch.onFingerMove");
                     break;
                 case TouchPhase.Ended:
                 case TouchPhase.Canceled:
-                    DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_OnFingerUp, this, "Touch.onFingerUp");
+                    DelegateHelpers.InvokeCallbacksSafe(ref Touch.s_GlobalState.onFingerUp, this, "Touch.onFingerUp");
                     break;
             }
         }

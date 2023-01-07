@@ -219,6 +219,17 @@ namespace UnityEngine.InputSystem.UI
                 }
             }
 
+            /// <summary>
+            /// When we "release" a button other than through user interaction (e.g. through focus switching),
+            /// we don't want this to count as an actual release that ends up clicking. This flag will cause
+            /// generated events to have <c>eligibleForClick</c> to be false.
+            /// </summary>
+            public bool ignoreNextClick
+            {
+                get => m_IgnoreNextClick;
+                set => m_IgnoreNextClick = value;
+            }
+
             public float pressTime
             {
                 get => m_PressTime;
@@ -246,6 +257,7 @@ namespace UnityEngine.InputSystem.UI
             private int m_ClickCount;
             private bool m_Dragging;
             private bool m_ClickedOnSameGameObject;
+            private bool m_IgnoreNextClick;
 
             public void CopyPressStateTo(PointerEventData eventData)
             {
@@ -265,6 +277,9 @@ namespace UnityEngine.InputSystem.UI
                 eventData.rawPointerPress = m_RawPressObject;
                 eventData.pointerDrag = m_DragObject;
                 eventData.dragging = m_Dragging;
+
+                if (ignoreNextClick)
+                    eventData.eligibleForClick = false;
             }
 
             public void CopyPressStateFrom(PointerEventData eventData)

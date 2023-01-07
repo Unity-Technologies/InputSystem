@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
@@ -41,7 +44,7 @@ namespace UnityEngine.InputSystem
     public partial class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determine how the input system updates, i.e. processes pending input events.
+        /// Allows you to control how the input system handles updates. In other words, how and when pending input events are processed.
         /// </summary>
         /// <value>When to run input updates.</value>
         /// <remarks>
@@ -109,14 +112,12 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
+        /// Currently: Option is deprecated and has no influence on the system. Filtering on noise is always enabled.
+        /// Previously: Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
         /// when there is only noise in the input.
         /// </summary>
-        /// <value>Whether to check input on devices for noise.</value>
         /// <remarks>
-        /// This is <em>disabled by default</em>.
-        ///
-        /// When toggled on, this property adds extra processing every time input is
+        /// We add extra processing every time input is
         /// received on a device that is considered noisy. These devices are those that
         /// have at least one control that is marked as <see cref="InputControl.noisy"/>.
         /// A good example is the PS4 controller which has a gyroscope sensor built into
@@ -138,15 +139,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="InputControl.noisy"/>
+        [Obsolete("filterNoiseOnCurrent is deprecated, filtering of noise is always enabled now.", false)]
         public bool filterNoiseOnCurrent
         {
-            get => m_FilterNoiseOnCurrent;
+            get => false;
             set
             {
-                if (m_FilterNoiseOnCurrent == value)
-                    return;
-                m_FilterNoiseOnCurrent = value;
-                OnChange();
+                /* no op */
             }
         }
 
@@ -259,6 +258,9 @@ namespace UnityEngine.InputSystem
         ///
         /// The default value is 0.5.
         ///
+        /// Any value will implicitly be clamped to <c>0.0001f</c> as allowing a value of 0 would
+        /// cause all buttons in their default state to already be pressed.
+        ///
         /// Lowering the button press point will make triggers feel more like hair-triggers (akin
         /// to using the hair-trigger feature on Xbox Elite controllers). However, it may make using
         /// the directional buttons (i.e. <see cref="Controls.StickControl.up"/> etc) be fickle as
@@ -297,7 +299,7 @@ namespace UnityEngine.InputSystem
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
-                m_DefaultButtonPressPoint = value;
+                m_DefaultButtonPressPoint = Mathf.Clamp(value, ButtonControl.kMinButtonPressPoint, float.MaxValue);
                 OnChange();
             }
         }
@@ -359,6 +361,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a slow-tap-interaction.
+        /// </summary>
+        /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a slow-tap-interaction.</value>
+        /// <remarks>
+        /// A slow-tap-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
+        /// If the delay between press and release is less than this duration, the input does not qualify as a slow-tap-interaction.
+        ///
+        /// The default slow-tap time is 0.5 seconds.
+        /// </remarks>
+        /// <seealso cref="Interactions.SlowTapInteraction"/>
         public float defaultSlowTapTime
         {
             get => m_DefaultSlowTapTime;
@@ -372,6 +386,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default minimum duration required of a press-and-release interaction to evaluate to a hold-interaction.
+        /// </summary>
+        /// <value>The default minimum duration that the button-like input control must remain in pressed state for the interaction to evaluate to a hold-interaction.</value>
+        /// <remarks>
+        /// A hold-interaction is considered as a press-and-release sequence on a button-like input control.
+        /// This property determines the lower bound of the duration that must elapse between the button being pressed and released again.
+        /// If the delay between press and release is less than this duration, the input does not qualify as a hold-interaction.
+        ///
+        /// The default hold time is 0.4 seconds.
+        /// </remarks>
+        /// <seealso cref="Interactions.HoldInteraction"/>
         public float defaultHoldTime
         {
             get => m_DefaultHoldTime;
@@ -385,6 +411,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the default maximum radius that a touch contact may be moved from its origin to evaluate to a tap-interaction.
+        /// </summary>
+        /// <value>The default maximum radius (in pixels) that a touch contact may be moved from its origin to evaluate to a tap-interaction.</value>
+        /// <remarks>
+        /// A tap-interaction or slow-tap-interaction is considered as a press-and-release sequence.
+        /// If the associated touch contact is moved a distance equal or greater to the value of this setting,
+        /// the input sequence do not qualify as a tap-interaction.
+        ///
+        /// The default tap-radius is 5 pixels.
+        /// </remarks>
+        /// <seealso cref="Interactions.TapInteraction"/>
+        /// <seealso cref="Interactions.SlowTapInteraction"/>
+        /// <seealso cref="Interactions.MultiTapInteraction"/>
         public float tapRadius
         {
             get => m_TapRadius;
@@ -398,6 +438,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Allows you to specify the maximum duration that may pass between taps in order to evaluate to a multi-tap-interaction.
+        /// </summary>
+        /// <value>The default maximum duration (in seconds) that may pass between taps in order to evaluate to a multi-tap-interaction.</value>
+        /// <remarks>
+        /// A multi-tap interaction is considered as multiple press-and-release sequences.
+        /// This property defines the maximum duration that may pass between these press-and-release sequences.
+        /// If consecutive taps (press-and-release sequences) occur with a inter-sequence duration exceeding
+        /// this property, the interaction do not qualify as a multi-tap-interaction.
+        ///
+        /// The default multi-tap delay time is 0.75 seconds.
+        /// </remarks>
+        /// <seealso cref="defaultTapTime"/>
         public float multiTapDelayTime
         {
             get => m_MultiTapDelayTime;
@@ -407,6 +460,67 @@ namespace UnityEngine.InputSystem
                 if (m_MultiTapDelayTime == value)
                     return;
                 m_MultiTapDelayTime = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// When <c>Application.runInBackground</c> is true, this property determines what happens when application focus changes
+        /// (see <a href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html">Application.isFocused</a>) changes and how we handle
+        /// input while running the background.
+        /// </summary>
+        /// <value>What to do with input while not having focus. Set to <see cref="BackgroundBehavior.ResetAndDisableNonBackgroundDevices"/> by default.</value>
+        /// <remarks>
+        /// If <c>Application.runInBackground</c> is false, the value of this property is ignored. In that case, nothing happens when
+        /// focus is lost. However, when focus is regained, <see cref="InputSystem.TrySyncDevice"/> is called on all devices.
+        ///
+        /// Note that in the editor as well as in development standalone players, <c>Application.runInBackground</c> will effectively always be
+        /// turned on. The editor keeps the player loop running regardless of Game View focus for as long as the editor is active and in play mode
+        /// and development players will implicitly turn on the setting during the build process.
+        /// </remarks>
+        /// <seealso cref="InputSystem.ResetDevice"/>
+        /// <seealso cref="InputSystem.EnableDevice"/>
+        /// <seealso cref="InputDevice.canRunInBackground"/>
+        /// <seealso cref="editorInputBehaviorInPlayMode"/>
+        public BackgroundBehavior backgroundBehavior
+        {
+            get => m_BackgroundBehavior;
+            set
+            {
+                if (m_BackgroundBehavior == value)
+                    return;
+                m_BackgroundBehavior = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Determines how player focus is handled in the editor with respect to input.
+        /// </summary>
+        /// <remarks>
+        /// This setting only has an effect while in play mode (see <a href="https://docs.unity3d.com/ScriptReference/Application-isPlaying.html">Application.isPlaying</a>).
+        /// While not in play mode, all input is invariably routed to the editor.
+        ///
+        /// The editor generally treats Game View focus as equivalent to application focus (see <a href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html">Application.isFocused</a>).
+        /// In other words, as long as any Game View has focus, the player is considered to have input focus. As soon as focus is transferred to a non-Game View
+        /// <c>EditorWindow</c> or the editor as a whole loses focus, the player is considered to have lost input focus.
+        ///
+        /// However, unlike in built players, the editor will keep running the player loop while in play mode regardless of whether a Game View is focused
+        /// or not. This essentially equates to <a href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html">Application.runInBackground</a> always
+        /// being true in the editor.
+        ///
+        /// To accommodate this behavior, this setting determines where input is routed while the player loop is running with no Game View being focused. As such,
+        /// it also dictates which input reaches the editor (if any) while the game is playing.
+        /// </remarks>
+        /// <seealso cref="backgroundBehavior"/>
+        public EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode
+        {
+            get => m_EditorInputBehaviorInPlayMode;
+            set
+            {
+                if (m_EditorInputBehaviorInPlayMode == value)
+                    return;
+                m_EditorInputBehaviorInPlayMode = value;
                 OnChange();
             }
         }
@@ -518,6 +632,100 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Disables merging of redundant input events (at the moment, only mouse events).
+        /// Disable it if you want to get all events.
+        /// </summary>
+        /// <remarks>
+        /// When using a high frequency mouse, the number of mouse move events in each frame can be
+        /// very large, which can have a negative effect on performance. To help with this,
+        /// merging events can be used which coalesces consecutive mouse move events into a single
+        /// input action update.
+        ///
+        /// For example, if there are one hundred mouse events, but they are all position updates
+        /// with no clicks, and there is an input action callback handler for the mouse position, that
+        /// callback handler will only be called one time in the current frame. Delta and scroll
+        /// values for the mouse will still be accumulated across all mouse events.
+        /// </remarks>
+        public bool disableRedundantEventsMerging
+        {
+            get => m_DisableRedundantEventsMerging;
+            set
+            {
+                if (m_DisableRedundantEventsMerging == value)
+                    return;
+
+                m_DisableRedundantEventsMerging = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Improves shortcut key support by making composite controls consume control input
+        /// </summary>
+        /// <remarks>
+        /// Actions are exclusively triggered and will consume/block other actions sharing the same input.
+        /// E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.
+        /// Please note that enabling this will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls.
+        /// Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first.
+        /// Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls.
+        /// This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered.
+        /// These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys.
+        /// However conflicts would not occur between actions which belong to different Action Assets.
+        /// </remarks>
+        public bool shortcutKeysConsumeInput
+        {
+            get => m_ShortcutKeysConsumeInputs;
+            set
+            {
+                if (m_ShortcutKeysConsumeInputs == value)
+                    return;
+
+                m_ShortcutKeysConsumeInputs = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// Enable or disable an internal feature by its name.
+        /// </summary>
+        /// <param name="featureName">Name of the feature.</param>
+        /// <param name="enabled">Whether to enable or disable the feature.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="featureName"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This method is intended for experimental features. These must be enabled/disabled from code.
+        /// Setting or unsetting a feature flag will not be persisted in an <c>.inputsettings</c> file.
+        /// </remarks>
+        public void SetInternalFeatureFlag(string featureName, bool enabled)
+        {
+            if (string.IsNullOrEmpty(featureName))
+                throw new ArgumentNullException(nameof(featureName));
+
+            switch (featureName)
+            {
+                case InputFeatureNames.kUseOptimizedControls:
+                    optimizedControlsFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kUseReadValueCaching:
+                    readValueCachingFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kParanoidReadValueCachingChecks:
+                    paranoidReadValueCachingChecksEnabled = enabled;
+                    break;
+                default:
+                    if (m_FeatureFlags == null)
+                        m_FeatureFlags = new HashSet<string>();
+
+                    if (enabled)
+                        m_FeatureFlags.Add(featureName.ToUpperInvariant());
+                    else
+                        m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+                    break;
+            }
+
+            OnChange();
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -528,12 +736,14 @@ namespace UnityEngine.InputSystem
         [SerializeField] private int m_MaxQueuedEventsPerUpdate = 1000;
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
-        [SerializeField] private bool m_FilterNoiseOnCurrent = false;
+        [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
+        [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
         // Having a higher value here also obsoletes the need for custom press points on stick buttons
         // (the up/down/left/right ones).
+        [Min(ButtonControl.kMinButtonPressPoint)]
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_ButtonReleaseThreshold = 0.75f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
@@ -541,6 +751,20 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private bool m_DisableRedundantEventsMerging = false;
+        [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
+
+        [NonSerialized] internal HashSet<string> m_FeatureFlags;
+
+        internal bool IsFeatureEnabled(string featureName)
+        {
+            return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
+        }
+
+        // Needs a static field because feature check is in the hot path
+        internal static bool optimizedControlsFeatureEnabled = false;
+        internal static bool readValueCachingFeatureEnabled;
+        internal static bool paranoidReadValueCachingChecksEnabled;
 
         internal void OnChange()
         {
@@ -602,6 +826,78 @@ namespace UnityEngine.InputSystem
             /// accumulating or some input getting lost.
             /// </summary>
             ProcessEventsManually,
+        }
+
+        /// <summary>
+        /// Determines how the applications behaves when running in the background. See <see cref="backgroundBehavior"/>.
+        /// </summary>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html"/>
+        /// <seealso cref="backgroundBehavior"/>
+        /// <seealso cref="InputSettings.editorInputBehaviorInPlayMode"/>
+        public enum BackgroundBehavior
+        {
+            /// <summary>
+            /// When the application loses focus, issue a <see cref="InputSystem.ResetDevice"/> call on every <see cref="InputDevice"/> that is
+            /// not marked as <see cref="InputDevice.canRunInBackground"/> and then disable the device (see <see cref="InputSystem.DisableDevice"/>
+            /// and <see cref="InputDevice.enabled"/>). Devices that <see cref="InputDevice.canRunInBackground"/> will not be touched and will
+            /// keep running as is.
+            ///
+            /// In effect, this setting will "soft-reset" all devices that cannot receive input while the application does
+            /// not have focus. That is, it will reset all controls that are not marked as <see cref="InputControlLayout.ControlItem.dontReset"/>
+            /// to their default state.
+            ///
+            /// When the application comes back into focus, all devices that have been reset and disabled will be re-enabled and a synchronization
+            /// request (see <see cref="RequestSyncCommand"/>) will be sent to each device.
+            ///
+            /// Devices that are added while the application is running in the background are treated like devices that were already present
+            /// when losing focus. That is, if they cannot run in the background, they will be disabled until focus comes back.
+            ///
+            /// Note that the resets will cancel <see cref="InputAction"/>s that are in progress from controls on devices that are being reset.
+            /// </summary>
+            ResetAndDisableNonBackgroundDevices = 0,
+
+            /// <summary>
+            /// Like <see cref="ResetAndDisableNonBackgroundDevices"/> but instead treat all devices as having <see cref="InputDevice.canRunInBackground"/>
+            /// return false. This effectively means that all input is silenced while the application is running in the background.
+            /// </summary>
+            ResetAndDisableAllDevices = 1,
+
+            /// <summary>
+            /// Ignore all changes in focus and leave devices untouched. This also disables focus checks in <see cref="UI.InputSystemUIInputModule"/>.
+            /// </summary>
+            IgnoreFocus = 2,
+        }
+
+        /// <summary>
+        /// Determines how player focus is handled with respect to input when we are in play mode in the editor.
+        /// See <see cref="InputSettings.editorInputBehaviorInPlayMode"/>. The setting does not have an effect
+        /// when the editor is not in play mode.
+        /// </summary>
+        public enum EditorInputBehaviorInPlayMode
+        {
+            /// <summary>
+            /// When the game view does not have focus, input from <see cref="Pointer"/> devices (such as <see cref="Mouse"/> and <see cref="Touchscreen"/>)
+            /// is routed to the editor and not visible in player code. Input from devices such as <see cref="Gamepad"/>s will continue to
+            /// go to the game regardless of which <c>EditorWindow</c> is focused.
+            ///
+            /// This is the default. It makes sure that the devices that are used with the editor UI respect <c>EditorWindow</c> focus and thus
+            /// do not lead to accidental inputs affecting the game. While at the same time letting all other input get through to the game.
+            /// It does, however, mean that no other <c>EditorWindow</c> can tap input from these devices (such as <see cref="Gamepad"/>s and <see cref="HID"/>s).
+            /// </summary>
+            PointersAndKeyboardsRespectGameViewFocus,
+
+            /// <summary>
+            /// When the game view does not have focus, all input is routed to the editor (and thus <c>EditorWindow</c>s). No input
+            /// is received in the game regardless of the type of device generating it.
+            /// </summary>
+            AllDevicesRespectGameViewFocus,
+
+            /// <summary>
+            /// All input is going to the game at all times. This most closely aligns input behavior in the editor with that in players. <see cref="backgroundBehavior"/>
+            /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
+            /// </summary>
+            AllDeviceInputAlwaysGoesToGameView,
         }
     }
 }

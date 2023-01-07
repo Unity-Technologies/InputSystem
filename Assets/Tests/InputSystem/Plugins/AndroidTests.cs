@@ -36,7 +36,8 @@ internal class AndroidTests : CoreTestsFixture
             }.ToJson()
         });
 
-        Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
+        // Gamepad class is always adding dpad in FinishSetup so AndroidGamepadWithDpadButtons instead of AndroidGamepad is used
+        Assert.That(gamepad, Is.TypeOf<AndroidGamepadWithDpadButtons>());
         Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
     }
 
@@ -54,7 +55,8 @@ internal class AndroidTests : CoreTestsFixture
             }.ToJson()
         });
 
-        Assert.That(device, Is.TypeOf<AndroidGamepad>());
+        // Gamepad class is always adding dpad in FinishSetup so AndroidGamepadWithDpadButtons instead of AndroidGamepad is used
+        Assert.That(device, Is.TypeOf<AndroidGamepadWithDpadButtons>());
         var controller = (AndroidGamepad)device;
 
         var leftStick = new Vector2(0.789f, 0.987f);
@@ -217,7 +219,7 @@ internal class AndroidTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidXboxConttroller()
+    public void Devices_SupportsAndroidXboxController()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -231,8 +233,8 @@ internal class AndroidTests : CoreTestsFixture
                 productId = 0x02dd,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Rx,
-                    AndroidAxis.Ry,
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,
@@ -241,13 +243,13 @@ internal class AndroidTests : CoreTestsFixture
             }.ToJson()
         });
 
-        Assert.That(gamepad.name, Is.EqualTo("AndroidGamepadXboxController"));
+        Assert.That(gamepad.name, Is.EqualTo("XboxOneGamepadAndroid"));
 
         // Check if normalization works correctly
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Z, -1)
-                .WithAxis(AndroidAxis.Rz, -1));
+                .WithAxis(AndroidAxis.Brake, -1)
+                .WithAxis(AndroidAxis.Gas, -1));
 
         InputSystem.Update();
 
@@ -256,10 +258,10 @@ internal class AndroidTests : CoreTestsFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Z, 1)
-                .WithAxis(AndroidAxis.Rz, 1)
-                .WithAxis(AndroidAxis.Rx, 0.123f)
-                .WithAxis(AndroidAxis.Ry, -0.456f));
+                .WithAxis(AndroidAxis.Brake, 1)
+                .WithAxis(AndroidAxis.Gas, 1)
+                .WithAxis(AndroidAxis.Z, 0.123f)
+                .WithAxis(AndroidAxis.Rz, -0.456f));
 
 
         InputSystem.Update();
@@ -269,6 +271,186 @@ internal class AndroidTests : CoreTestsFixture
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsAndroidXboxControllerWithDpad()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                // http://www.linux-usb.org/usb.ids
+                vendorId = 0x045e,
+                productId = 0x02dd,
+                motionAxes = new[]
+                {
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
+                    AndroidAxis.Z,
+                    AndroidAxis.Rz,
+                    AndroidAxis.HatX,
+                    AndroidAxis.HatY
+                }
+            }.ToJson()
+        });
+
+        Assert.That(gamepad.name, Is.EqualTo("XboxOneGamepadAndroid"));
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, 1)
+                .WithAxis(AndroidAxis.HatY, 1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.True);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, -1)
+                .WithAxis(AndroidAxis.HatY, -1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.True);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+        Assert.That(gamepad.dpad.up.isPressed, Is.True);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, 0)
+                .WithAxis(AndroidAxis.HatY, 0));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsAndroidDualShockController()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                // http://www.linux-usb.org/usb.ids
+                vendorId = 0x054c,
+                productId = 0x09cc,
+                motionAxes = new[]
+                {
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
+                    AndroidAxis.Z,
+                    AndroidAxis.Rz,
+                    AndroidAxis.HatX,
+                    AndroidAxis.HatY
+                }
+            }.ToJson()
+        });
+
+        Assert.That(gamepad.name, Is.EqualTo("DualShock4GamepadAndroid"));
+
+        // Check if normalization works correctly
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.Brake, -1)
+                .WithAxis(AndroidAxis.Gas, -1));
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.Brake, 1)
+                .WithAxis(AndroidAxis.Gas, 1)
+                .WithAxis(AndroidAxis.Z, 0.123f)
+                .WithAxis(AndroidAxis.Rz, -0.456f));
+
+
+        InputSystem.Update();
+
+        var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsAndroidDualShockControllerWithDpad()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                // http://www.linux-usb.org/usb.ids
+                vendorId = 0x054c,
+                productId = 0x09cc,
+                motionAxes = new[]
+                {
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
+                    AndroidAxis.Z,
+                    AndroidAxis.Rz,
+                    AndroidAxis.HatX,
+                    AndroidAxis.HatY
+                }
+            }.ToJson()
+        });
+
+        Assert.That(gamepad.name, Is.EqualTo("DualShock4GamepadAndroid"));
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, 1)
+                .WithAxis(AndroidAxis.HatY, 1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.True);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, -1)
+                .WithAxis(AndroidAxis.HatY, -1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.True);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+        Assert.That(gamepad.dpad.up.isPressed, Is.True);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, 0)
+                .WithAxis(AndroidAxis.HatY, 0));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
     }
 
     [Test]
@@ -291,8 +473,8 @@ internal class AndroidTests : CoreTestsFixture
                 productId = 0x09cc,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Rx,
-                    AndroidAxis.Ry,
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,
@@ -470,5 +652,112 @@ internal class AndroidTests : CoreTestsFixture
 
         Assert.That(InputSystem.devices[0].layout, Is.EqualTo("CustomDevice"));
     }
+
+    // https://fogbugz.unity3d.com/f/cases/1308637/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReactToGamePadAxisChanges()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+            }.ToJson()
+        });
+
+        var controller = (AndroidGamepad)device;
+
+        var leftStick = new Vector2(0.3f, 0.3f);
+        var rightStick = new Vector2(0.35f, 0.35f);
+
+        var updateSticks = new Action(() =>
+        {
+            InputSystem.QueueStateEvent(controller,
+                new AndroidGameControllerState()
+                    .WithAxis(AndroidAxis.X, leftStick.x)
+                    .WithAxis(AndroidAxis.Y, leftStick.y)
+                    .WithAxis(AndroidAxis.Z, rightStick.x)
+                    .WithAxis(AndroidAxis.Rz, rightStick.y));
+        });
+
+        var processStickValue = new Func<Vector2, Vector2>(v =>
+        {
+            v.y = -v.y;
+            return new StickDeadzoneProcessor().Process(v);
+        });
+
+
+        updateSticks();
+        InputSystem.Update();
+        InputSystem.Update();
+
+        var leftStickAction = new InputAction(binding: "/<Gamepad>/leftStick");
+        var rightStickAction = new InputAction(binding: "/<Gamepad>/rightStick");
+
+        var leftStickActionPerformed = 0;
+        var rightStickActionPerformed = 0;
+        var receivedLeftStick = Vector2.zero;
+        var receivedRightStick = Vector2.zero;
+
+        leftStickAction.performed += ctx =>
+        {
+            receivedLeftStick = ctx.ReadValue<Vector2>();
+            ++leftStickActionPerformed;
+        };
+
+        rightStickAction.performed += ctx =>
+        {
+            receivedRightStick = ctx.ReadValue<Vector2>();
+            ++rightStickActionPerformed;
+        };
+
+        leftStickAction.Enable();
+        rightStickAction.Enable();
+
+        // Actions are called the first time they're enabled?
+        InputSystem.Update();
+        Assert.That(leftStickActionPerformed, Is.EqualTo(1));
+        Assert.That(rightStickActionPerformed, Is.EqualTo(1));
+
+        // Update only left stick's X value
+        leftStick.x += 0.1f;
+        updateSticks();
+        InputSystem.Update();
+        Assert.That(leftStickActionPerformed, Is.EqualTo(2));
+        Assert.That(rightStickActionPerformed, Is.EqualTo(1));
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(processStickValue(leftStick)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(processStickValue(rightStick)).Using(Vector2EqualityComparer.Instance));
+
+        // Update only left stick's Y value
+        leftStick.y += 0.1f;
+        updateSticks();
+        InputSystem.Update();
+        Assert.That(leftStickActionPerformed, Is.EqualTo(3));
+        Assert.That(rightStickActionPerformed, Is.EqualTo(1));
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(processStickValue(leftStick)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(processStickValue(rightStick)).Using(Vector2EqualityComparer.Instance));
+
+        // Update only right stick's X value
+        rightStick.x += 0.1f;
+        updateSticks();
+        InputSystem.Update();
+        Assert.That(leftStickActionPerformed, Is.EqualTo(3));
+        Assert.That(rightStickActionPerformed, Is.EqualTo(2));
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(processStickValue(leftStick)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(processStickValue(rightStick)).Using(Vector2EqualityComparer.Instance));
+
+        // Update only right stick's Y value
+        rightStick.y += 0.1f;
+        updateSticks();
+        InputSystem.Update();
+        Assert.That(leftStickActionPerformed, Is.EqualTo(3));
+        Assert.That(rightStickActionPerformed, Is.EqualTo(3));
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(processStickValue(leftStick)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(processStickValue(rightStick)).Using(Vector2EqualityComparer.Instance));
+    }
 }
+
 #endif // UNITY_EDITOR || UNITY_ANDROID

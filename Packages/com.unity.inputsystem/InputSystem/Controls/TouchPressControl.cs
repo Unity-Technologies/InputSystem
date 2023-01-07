@@ -17,7 +17,6 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     /// <seealso cref="TouchControl"/>
     [InputControlLayout(hideInUI = true)]
-    [Scripting.Preserve]
     public class TouchPressControl : ButtonControl
     {
         /// <inheritdoc />

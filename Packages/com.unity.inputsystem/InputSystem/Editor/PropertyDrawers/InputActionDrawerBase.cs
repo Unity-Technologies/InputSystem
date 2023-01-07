@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
             var viewData = GetOrCreateViewData(property);
             var propertyIsClone = IsPropertyAClone(property);
 
-            if (viewData.TreeView != null && !propertyIsClone)
+            if (!propertyIsClone && viewData.TreeView != null && viewData.TreeView.serializedObject == property.serializedObject)
                 return;
 
             if (propertyIsClone)
@@ -52,9 +52,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 onBuildTree = () => BuildTree(property),
                 onDoubleClick = item => OnItemDoubleClicked(item, property),
-                // With the tree in the inspector, the foldouts are drawn too far to the left. I don't
-                // really know where this is coming from. This works around it by adding an arbitrary offset...
-                foldoutOffset = 14,
                 drawActionPropertiesButton = true,
                 title = (GetPropertyTitle(property), property.GetTooltip())
             };
@@ -103,13 +100,17 @@ namespace UnityEngine.InputSystem.Editor
         private static string GetPropertyTitle(SerializedProperty property)
         {
             var propertyTitleNumeral = string.Empty;
-
             if (property.GetParentProperty() != null && property.GetParentProperty().isArray)
                 propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
 
-            return property.type == nameof(InputActionMap) ?
-                $"Input Action Map{propertyTitleNumeral}" :
-                $"Input Action{propertyTitleNumeral}";
+            if (property.displayName != null &&
+                property.displayName.Length > 0 &&
+                (property.type == nameof(InputAction) || property.type == nameof(InputActionMap)))
+            {
+                return $"{property.displayName}{propertyTitleNumeral}";
+            }
+
+            return property.type == nameof(InputActionMap) ? $"Input Action Map{propertyTitleNumeral}" : $"Input Action{propertyTitleNumeral}";
         }
 
         private void OnItemDoubleClicked(ActionTreeItemBase item, SerializedProperty property)

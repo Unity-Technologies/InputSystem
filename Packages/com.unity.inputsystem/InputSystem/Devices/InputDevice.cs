@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.XR;
 
 ////TODO: runtime remapping of control usages on a per-device basis
 
@@ -144,7 +145,6 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Keyboard"/>
     /// <seealso cref="Gamepad"/>
     /// <seealso cref="Touchscreen"/>
-    [Scripting.Preserve]
     public class InputDevice : InputControl
     {
         /// <summary>
@@ -175,6 +175,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputDeviceDescription description => m_Description;
 
+        ////REVIEW: When we can break the API, probably makes sense to replace this single bool with one for sending and one for receiving events
         /// <summary>
         /// Whether the device is currently enabled (that is, sends and receives events).
         /// </summary>
@@ -198,56 +199,73 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                // Fetch state from runtime, if necessary.
-                if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueried) == 0)
-                {
-                    var command = QueryEnabledStateCommand.Create();
-                    if (ExecuteCommand(ref command) >= 0)
-                    {
-                        if (command.isEnabled)
-                            m_DeviceFlags &= ~DeviceFlags.Disabled;
-                        else
-                            m_DeviceFlags |= DeviceFlags.Disabled;
-                    }
-                    else
-                    {
-                        // We got no response on the enable/disable state. Assume device is enabled.
-                        m_DeviceFlags &= ~DeviceFlags.Disabled;
-                    }
+                #if UNITY_EDITOR
+                if (InputState.currentUpdateType == InputUpdateType.Editor && (m_DeviceFlags & DeviceFlags.DisabledWhileInBackground) != 0)
+                    return true;
+                #endif
 
-                    // Only fetch enable/disable state again if we get a configuration change event.
-                    m_DeviceFlags |= DeviceFlags.DisabledStateHasBeenQueried;
-                }
+                if ((m_DeviceFlags & (DeviceFlags.DisabledInFrontend | DeviceFlags.DisabledWhileInBackground)) != 0)
+                    return false;
 
-                return (m_DeviceFlags & DeviceFlags.Disabled) != DeviceFlags.Disabled;
+                return QueryEnabledStateFromRuntime();
             }
         }
 
-        ////TODO: rename this to canReceiveInputInBackground
+        ////TODO: rename this to canReceiveInputInBackground (once we can break API)
         /// <summary>
         /// If true, the device is capable of delivering input while the application is running in the background, i.e.
         /// while <c>Application.isFocused</c> is false.
         /// </summary>
         /// <value>Whether the device can generate input while in the background.</value>
         /// <remarks>
-        /// Note that processing input in the background requires <c>Application.runInBackground</c> to be enabled in the
-        /// player preferences. If this is enabled, the input system will keep running by virtue of being part of the Unity
-        /// player loop which will keep running in the background. Note, however, that this does not necessarily mean that
-        /// the application will necessarily receive input.
+        /// The value of this property is determined by three separator factors.
         ///
-        /// Only a select set of hardware, platform, and SDK/API combinations support gathering input while not having
-        /// input focus. The most notable set of devices are HMDs and VR controllers.
+        /// For one, <see cref="native"/> devices have an inherent value for this property that can be retrieved through
+        /// <see cref="QueryCanRunInBackground"/>. This determines whether at the input collection level, the device is
+        /// capable of producing input independent of application. This is rare and only a select set of hardware, platform,
+        /// and SDK/API combinations support this. The prominent class of input devices that in general do support this
+        /// behavior are VR devices.
         ///
-        /// The value of this property is determined by sending <see cref="QueryCanRunInBackground"/> to the device.
+        /// Furthermore, the property may be force-set through a device's <see cref="InputControl.layout"/> by
+        /// means of <see cref="InputControlLayout.canRunInBackground"/>.
+        ///
+        /// Lastly, in the editor, the value of the property may be overridden depending on <see cref="InputSettings.editorInputBehaviorInPlayMode"/>
+        /// in case certain devices are automatically kept running in play mode even when no Game View has focus.
+        ///
+        /// Be aware that as far as players are concerned, only certain platforms support running Unity while not having focus.
+        /// On mobile platforms, for example, this is generally not supported. In this case, the value of this property
+        /// has no impact on input while the application does not have focus. See <see cref="InputSettings.backgroundBehavior"/>
+        /// for more details.
         /// </remarks>
+        /// <seealso cref="InputSettings.backgroundBehavior"/>
+        /// <seealso cref="InputControlLayout.canRunInBackground"/>
         public bool canRunInBackground
         {
             get
             {
-                ////TODO: make this a flag and query only once; also, allow C# devices to just set the flag directly and not perform an IOCTL at all
+                // In the editor, "background" refers to "game view not focused", not to the editor not being active.
+                // So, we modulate canRunInBackground depending on how input should behave WRT game view according
+                // to the input settings.
+                #if UNITY_EDITOR
+                var gameViewFocus = InputSystem.settings.editorInputBehaviorInPlayMode;
+                if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
+                    return false; // No device considered being able to run without game view focus.
+                if (gameViewFocus == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus)
+                    return !(this is Pointer || this is Keyboard); // Anything but pointers and keyboards considered as being able to run in background.
+                #endif
+
+                if ((m_DeviceFlags & DeviceFlags.CanRunInBackgroundHasBeenQueried) != 0)
+                    return (m_DeviceFlags & DeviceFlags.CanRunInBackground) != 0;
+
                 var command = QueryCanRunInBackground.Create();
-                if (ExecuteCommand(ref command) >= 0)
-                    return command.canRunInBackground;
+                m_DeviceFlags |= DeviceFlags.CanRunInBackgroundHasBeenQueried;
+                if (ExecuteCommand(ref command) >= 0 && command.canRunInBackground)
+                {
+                    m_DeviceFlags |= DeviceFlags.CanRunInBackground;
+                    return true;
+                }
+
+                m_DeviceFlags &= ~DeviceFlags.CanRunInBackground;
                 return false;
             }
         }
@@ -326,6 +344,8 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
         /// not cause lastUpdateTime to be changed.
+        /// The "timeline" is reset to 0 when entering play mode. If there are any events incoming or device
+        /// updates which occur prior to entering play mode, these will appear negative.
         /// </remarks>
         public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
@@ -337,17 +357,12 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Does not allocate.
         /// </remarks>
-        public ReadOnlyArray<InputControl> allControls
-        {
-            get
-            {
-                // Since m_ChildrenForEachControl contains the device's children as well as the children
-                // of each control in the hierarchy, and since each control can only have a single parent,
-                // this list will actually deliver a flattened list of all controls in the hierarchy (and without
-                // the device itself being listed).
-                return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
-            }
-        }
+        public ReadOnlyArray<InputControl> allControls =>
+            // Since m_ChildrenForEachControl contains the device's children as well as the children
+            // of each control in the hierarchy, and since each control can only have a single parent,
+            // this list will actually deliver a flattened list of all controls in the hierarchy (and without
+            // the device itself being listed).
+            new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
 
         ////REVIEW: This violates the constraint of controls being required to not have reference types as value types.
         /// <inheritdoc/>
@@ -442,7 +457,7 @@ namespace UnityEngine.InputSystem
                 m_ChildrenForEachControl[i].isConfigUpToDate = false;
 
             // Make sure we fetch the enabled/disabled state again.
-            m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
+            m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
 
             OnConfigurationChanged();
         }
@@ -463,13 +478,10 @@ namespace UnityEngine.InputSystem
         /// feed events into the input system even if not being actually in use. If, for example, an
         /// Xbox gamepad and PS4 gamepad are both connected to a PC and the user is playing with the
         /// Xbox gamepad, the PS4 gamepad would still constantly make itself <see cref="Gamepad.current"/>
-        /// by simply flooding the system with events.
-        ///
-        /// By enabling <see cref="InputSettings.filterNoiseOnCurrent"/> (disabled by default),
-        /// noise on <c>.current</c> getters will be filtered out and a device will only see <c>MakeCurrent</c>
-        /// getting called if there input was detected on non-noisy controls.
+        /// by simply flooding the system with events. Hence why by default,  noise on <c>.current</c> getters
+        /// will be filtered out and a device will only see <c>MakeCurrent</c> getting called if there input
+        /// was detected on non-noisy controls.
         /// </remarks>
-        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="Pointer.current"/>
         /// <seealso cref="Gamepad.current"/>
         /// <seealso cref="Mouse.current"/>
@@ -524,7 +536,6 @@ namespace UnityEngine.InputSystem
 
         ////TODO: add overridable OnDisable/OnEnable that fire the device commands
 
-        ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
@@ -572,16 +583,90 @@ namespace UnityEngine.InputSystem
             return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);
         }
 
+        internal bool QueryEnabledStateFromRuntime()
+        {
+            // Fetch state from runtime, if necessary.
+            if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueriedFromRuntime) == 0)
+            {
+                var command = QueryEnabledStateCommand.Create();
+                if (ExecuteCommand(ref command) >= 0)
+                {
+                    if (command.isEnabled)
+                        m_DeviceFlags &= ~DeviceFlags.DisabledInRuntime;
+                    else
+                        m_DeviceFlags |= DeviceFlags.DisabledInRuntime;
+                }
+                else
+                {
+                    // We got no response on the enable/disable state. Assume device is enabled.
+                    m_DeviceFlags &= ~DeviceFlags.DisabledInRuntime;
+                }
+
+                // Only fetch enable/disable state again if we get a configuration change event.
+                m_DeviceFlags |= DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
+            }
+
+            return (m_DeviceFlags & DeviceFlags.DisabledInRuntime) == 0;
+        }
+
+        [Serializable]
         [Flags]
         internal enum DeviceFlags
         {
             UpdateBeforeRender = 1 << 0,
+
             HasStateCallbacks = 1 << 1,
             HasControlsWithDefaultState = 1 << 2,
+            HasDontResetControls = 1 << 10,
+            HasEventMerger = 1 << 13,
+            HasEventPreProcessor = 1 << 14,
+
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
             Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
-            Disabled = 1 << 5,
-            DisabledStateHasBeenQueried = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
+
+            DisabledInFrontend = 1 << 5, // Explicitly disabled on the managed side.
+            DisabledInRuntime = 1 << 7, // Disabled in the native runtime.
+            DisabledWhileInBackground = 1 << 8, // Disabled while the player is running in the background.
+            DisabledStateHasBeenQueriedFromRuntime = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
+
+            CanRunInBackground = 1 << 11,
+            CanRunInBackgroundHasBeenQueried = 1 << 12,
+        }
+
+        internal bool disabledInFrontend
+        {
+            get => (m_DeviceFlags & DeviceFlags.DisabledInFrontend) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.DisabledInFrontend;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.DisabledInFrontend;
+            }
+        }
+
+        internal bool disabledInRuntime
+        {
+            get => (m_DeviceFlags & DeviceFlags.DisabledInRuntime) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.DisabledInRuntime;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.DisabledInRuntime;
+            }
+        }
+
+        internal bool disabledWhileInBackground
+        {
+            get => (m_DeviceFlags & DeviceFlags.DisabledWhileInBackground) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.DisabledWhileInBackground;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.DisabledWhileInBackground;
+            }
         }
 
         internal DeviceFlags m_DeviceFlags;
@@ -624,6 +709,55 @@ namespace UnityEngine.InputSystem
         // for the corresponding control.
         // NOTE: This contains *leaf* controls only.
         internal uint[] m_StateOffsetToControlMap;
+
+        // Holds the nodes that represent the tree of memory ranges that each control occupies. This is used when
+        // determining what controls have changed given a state event or partial state update.
+        internal ControlBitRangeNode[] m_ControlTreeNodes;
+
+        // An indirection table for control bit range nodes to point at zero or more controls. Indices are used to
+        // point into the m_ChildrenForEachControl array.
+        internal ushort[] m_ControlTreeIndices;
+
+        // When a device gets built from a layout, we create a binary tree from its controls where each node in the tree
+        // represents the range of bits that cover the left or right section of the parent range. For example, starting
+        // with the entire device state block as the parent, where the state block is 100 bits long, the left node will
+        // cover from bits 0-50, and the right from bits 51-99. For the left node, we'll get two more child nodes where
+        // the left will cover bits 0-25, and the right bits 26-49 and so on. Each node will point at any controls that
+        // either fit exactly into its range, or overlap the splitting point between both nodes. In reality, picking the
+        // mid-point to split each parent node is a little convoluted and will rarely be the absolute mid-point, but that's
+        // the basic idea.
+        //
+        // At runtime, when state events come in, we can then really quickly perform a bunch of memcmps on both sides of
+        // the tree and recurse down the branches that have changed. When nodes have controls, we can then check if those
+        // controls have changes, and mark them as stale so their cached values get updated the next time their values
+        // are read.
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal struct ControlBitRangeNode
+        {
+            // only store the end bit offset of each range because we always do a full tree traversal so
+            // the start offset is always calculated at each level.
+            public ushort endBitOffset;
+
+            // points to the location in the nodes array where the left child of this node lives, or -1 if there
+            // is no child. The right child is always at the next index.
+            public short leftChildIndex;
+
+            // each node can point at multiple controls (because multiple controls can use the same range in memory and
+            // also because of overlaps in bit ranges). The control indicies for each node are stored contiguously in the
+            // m_ControlTreeIndicies array on the device, which acts as an indirection table, and these two values tell
+            // us where to start for each node and how many controls this node points at. This is an unsigned short so that
+            // we could in theory support devices with up to 65535 controls. Each node however can only support 255 controls.
+            public ushort controlStartIndex;
+            public byte controlCount;
+
+            public ControlBitRangeNode(ushort endOffset)
+            {
+                controlStartIndex = 0;
+                controlCount = 0;
+                endBitOffset = endOffset;
+                leftChildIndex = -1;
+            }
+        }
 
         // ATM we pack everything into 32 bits. Given we're operating on bit offsets and counts, this imposes some tight limits
         // on controls and their associated state memory. Should this turn out to be a problem, bump m_StateOffsetToControlMap
@@ -669,6 +803,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal bool hasDontResetControls
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasDontResetControls) == DeviceFlags.HasDontResetControls;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasDontResetControls;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasDontResetControls;
+            }
+        }
+
         internal bool hasStateCallbacks
         {
             get => (m_DeviceFlags & DeviceFlags.HasStateCallbacks) == DeviceFlags.HasStateCallbacks;
@@ -678,6 +824,30 @@ namespace UnityEngine.InputSystem
                     m_DeviceFlags |= DeviceFlags.HasStateCallbacks;
                 else
                     m_DeviceFlags &= ~DeviceFlags.HasStateCallbacks;
+            }
+        }
+
+        internal bool hasEventMerger
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasEventMerger) == DeviceFlags.HasEventMerger;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasEventMerger;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasEventMerger;
+            }
+        }
+
+        internal bool hasEventPreProcessor
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasEventPreProcessor) == DeviceFlags.HasEventPreProcessor;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasEventPreProcessor;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasEventPreProcessor;
             }
         }
 
@@ -715,11 +885,34 @@ namespace UnityEngine.InputSystem
             m_UsageCount = default;
         }
 
+        internal bool RequestSync()
+        {
+            SetOptimizedControlDataTypeRecursively();
+
+            var syncCommand = RequestSyncCommand.Create();
+            return device.ExecuteCommand(ref syncCommand) >= 0;
+        }
+
         internal bool RequestReset()
         {
+            SetOptimizedControlDataTypeRecursively();
+
             var resetCommand = RequestResetCommand.Create();
-            var result = device.ExecuteCommand(ref resetCommand);
-            return result >= 0;
+            return device.ExecuteCommand(ref resetCommand) >= 0;
+        }
+
+        internal bool ExecuteEnableCommand()
+        {
+            SetOptimizedControlDataTypeRecursively();
+
+            var command = EnableDeviceCommand.Create();
+            return device.ExecuteCommand(ref command) >= 0;
+        }
+
+        internal bool ExecuteDisableCommand()
+        {
+            var command = DisableDeviceCommand.Create();
+            return device.ExecuteCommand(ref command) >= 0;
         }
 
         internal void NotifyAdded()
@@ -769,6 +962,176 @@ namespace UnityEngine.InputSystem
 
                 return deviceOfType;
             }
+        }
+
+        internal unsafe void WriteChangedControlStates(byte* deviceStateBuffer, void* statePtr, uint stateSizeInBytes,
+            uint stateOffsetInDevice)
+        {
+            Debug.Assert(m_ControlTreeNodes != null && m_ControlTreeIndices != null);
+
+            if (m_ControlTreeNodes.Length == 0)
+                return;
+
+            // if we're dealing with a delta state event or just an individual control update through InputState.ChangeState
+            // the size of the new data will not be the same size as the device state block, so use the 'partial' change state
+            // method to update just those controls that overlap with the changed state.
+            if (m_StateBlock.sizeInBits != stateSizeInBytes * 8)
+            {
+                if (m_ControlTreeNodes[0].leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
+                        stateOffsetInDevice * 8, deviceStateBuffer, m_ControlTreeNodes[0], 0);
+            }
+            else
+            {
+                if (m_ControlTreeNodes[0].leftChildIndex != -1)
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBytes * 8,
+                        deviceStateBuffer, m_ControlTreeNodes[0], 0);
+            }
+        }
+
+        private unsafe void WritePartialChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            uint stateOffsetInDeviceInBits, byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+            // TODO recheck
+            if (Math.Max(stateOffsetInDeviceInBits, startOffset) <=
+                Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, leftNode.endBitOffset))
+            {
+                var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
+                for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                if (leftNode.leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
+                        deviceStatePtr, leftNode, startOffset);
+            }
+
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+            // TODO recheck
+            if (Math.Max(stateOffsetInDeviceInBits, leftNode.endBitOffset) <=
+                Math.Min(stateOffsetInDeviceInBits + stateSizeInBits, rightNode.endBitOffset))
+            {
+                var controlEndIndex = rightNode.controlStartIndex + rightNode.controlCount;
+                for (int i = rightNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    m_ChildrenForEachControl[controlIndex].MarkAsStale();
+                }
+
+                if (rightNode.leftChildIndex != -1)
+                    WritePartialChangedControlStatesInternal(statePtr, stateSizeInBits, stateOffsetInDeviceInBits,
+                        deviceStatePtr, rightNode, leftNode.endBitOffset);
+            }
+        }
+
+        private void DumpControlBitRangeNode(int nodeIndex, ControlBitRangeNode node, uint startOffset, uint sizeInBits, List<string> output)
+        {
+            var names = new List<string>();
+            for (var i = 0; i < node.controlCount; i++)
+            {
+                var controlIndex = m_ControlTreeIndices[node.controlStartIndex + i];
+                var control = m_ChildrenForEachControl[controlIndex];
+                names.Add(control.path);
+            }
+            var namesStr = string.Join(", ", names);
+            var children = node.leftChildIndex != -1 ? $" <{node.leftChildIndex}, {node.leftChildIndex + 1}>" : "";
+            output.Add($"{nodeIndex} [{startOffset}, {startOffset + sizeInBits}]{children}->{namesStr}");
+        }
+
+        private void DumpControlTree(ControlBitRangeNode parentNode, uint startOffset, List<string> output)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+            DumpControlBitRangeNode(parentNode.leftChildIndex, leftNode, startOffset, leftNode.endBitOffset - startOffset, output);
+            DumpControlBitRangeNode(parentNode.leftChildIndex + 1, rightNode, leftNode.endBitOffset, (uint)(rightNode.endBitOffset - leftNode.endBitOffset), output);
+
+            if (leftNode.leftChildIndex != -1)
+                DumpControlTree(leftNode, startOffset, output);
+
+            if (rightNode.leftChildIndex != -1)
+                DumpControlTree(rightNode, leftNode.endBitOffset, output);
+        }
+
+        internal string DumpControlTree()
+        {
+            var output = new List<string>();
+            DumpControlTree(m_ControlTreeNodes[0], 0, output);
+            return string.Join("\n", output);
+        }
+
+        private unsafe void WriteChangedControlStatesInternal(void* statePtr, uint stateSizeInBits,
+            byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
+        {
+            var leftNode = m_ControlTreeNodes[parentNode.leftChildIndex];
+
+            // have any bits in the region defined by the left node changed?
+            // TODO recheck
+            if (HasDataChangedInRange(deviceStatePtr, statePtr, startOffset, leftNode.endBitOffset - startOffset + 1))
+            {
+                // update the state of any controls pointed to by the left node
+                var controlEndIndex = leftNode.controlStartIndex + leftNode.controlCount;
+                for (int i = leftNode.controlStartIndex; i < controlEndIndex; i++)
+                {
+                    var controlIndex = m_ControlTreeIndices[i];
+                    var control = m_ChildrenForEachControl[controlIndex];
+
+                    // nodes aren't always an exact fit for control memory ranges so check here if the control pointed
+                    // at by this node has actually changed state so we don't mark controls as stale needlessly.
+                    // We need to offset the device and new state pointers by the byte offset of the device state block
+                    // because all controls have this offset baked into them, but deviceStatePtr points at the already
+                    // offset block of device memory (remember, all devices share one big block of memory) and statePtr
+                    // points at a block of memory of the same size as the device state.
+                    if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
+                        (byte*)statePtr - m_StateBlock.byteOffset, null))
+                        control.MarkAsStale();
+                }
+
+                // process the left child node if it exists
+                if (leftNode.leftChildIndex != -1)
+                    WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                        leftNode, startOffset);
+            }
+
+            // process the right child node if it exists
+            var rightNode = m_ControlTreeNodes[parentNode.leftChildIndex + 1];
+
+            Debug.Assert(leftNode.endBitOffset + (rightNode.endBitOffset - leftNode.endBitOffset) < m_StateBlock.sizeInBits,
+                "Tried to check state memory outside the bounds of the current device.");
+
+            // if no bits in the range defined by the right node have changed, return
+            // TODO recheck
+            if (!HasDataChangedInRange(deviceStatePtr, statePtr, leftNode.endBitOffset,
+                (uint)(rightNode.endBitOffset - leftNode.endBitOffset + 1)))
+                return;
+
+            // update the state of any controls pointed to by the right node
+            var rightNodeControlEndIndex = rightNode.controlStartIndex + rightNode.controlCount;
+            for (int i = rightNode.controlStartIndex; i < rightNodeControlEndIndex; i++)
+            {
+                var controlIndex = m_ControlTreeIndices[i];
+                var control = m_ChildrenForEachControl[controlIndex];
+
+                if (!control.CompareState(deviceStatePtr - m_StateBlock.byteOffset,
+                    (byte*)statePtr - m_StateBlock.byteOffset, null))
+                    control.MarkAsStale();
+            }
+
+            if (rightNode.leftChildIndex != -1)
+                WriteChangedControlStatesInternal(statePtr, stateSizeInBits, deviceStatePtr,
+                    rightNode, leftNode.endBitOffset);
+        }
+
+        private static unsafe bool HasDataChangedInRange(byte* deviceStatePtr, void* statePtr, uint startOffset, uint sizeInBits)
+        {
+            if (sizeInBits == 1)
+                return MemoryHelpers.ReadSingleBit(deviceStatePtr, startOffset) !=
+                    MemoryHelpers.ReadSingleBit(statePtr, startOffset);
+
+            return !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                startOffset, sizeInBits);
         }
     }
 }

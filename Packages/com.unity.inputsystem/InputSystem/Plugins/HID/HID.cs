@@ -8,6 +8,9 @@ using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Scripting;
+#if UNITY_2021_2_OR_NEWER
+using UnityEngine.Pool;
+#endif
 
 // HID support is currently broken in 32-bit Windows standalone players. Consider 32bit Windows players unsupported for now.
 #if UNITY_STANDALONE_WIN && !UNITY_64
@@ -42,7 +45,6 @@ namespace UnityEngine.InputSystem.HID
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
-    [Preserve]
     public class HID : InputDevice
     {
         internal const string kHIDInterface = "HID";
@@ -975,7 +977,165 @@ namespace UnityEngine.InputSystem.HID
 
             public static HIDDeviceDescriptor FromJson(string json)
             {
+#if UNITY_2021_2_OR_NEWER
+                try
+                {
+                    // HID descriptors, when formatted correctly, are always json strings with no whitespace and a
+                    // predictable order of elements, so we can try and use this simple predictive parser to extract
+                    // the data. If for any reason the data is not formatted correctly, we'll automatically fall back
+                    // to Unity's default json parser.
+                    var descriptor = new HIDDeviceDescriptor();
+
+                    var jsonSpan = json.AsSpan();
+                    var parser = new PredictiveParser();
+                    parser.ExpectSingleChar(jsonSpan, '{');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.vendorId = parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.productId = parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.usage = parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.usagePage = (UsagePage)parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.inputReportSize = parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.outputReportSize = parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    parser.AcceptString(jsonSpan, out _);
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    descriptor.featureReportSize = parser.ExpectInt(jsonSpan);
+                    parser.AcceptSingleChar(jsonSpan, ',');
+
+                    // elements
+                    parser.AcceptString(jsonSpan, out var key);
+                    if (key.ToString() != "elements") return descriptor;
+
+                    parser.ExpectSingleChar(jsonSpan, ':');
+                    parser.ExpectSingleChar(jsonSpan, '[');
+
+                    using var pool = ListPool<HIDElementDescriptor>.Get(out var elements);
+                    while (!parser.AcceptSingleChar(jsonSpan, ']'))
+                    {
+                        parser.AcceptSingleChar(jsonSpan, ',');
+                        parser.ExpectSingleChar(jsonSpan, '{');
+
+                        HIDElementDescriptor elementDesc = default;
+
+
+                        parser.AcceptSingleChar(jsonSpan, '}');
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        // usage
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.usage = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.usagePage = (UsagePage)parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.unit = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.unitExponent = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.logicalMin = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.logicalMax = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.physicalMin = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.physicalMax = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.collectionIndex = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.reportType = (HIDReportType)parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.reportId = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        // reportCount. We don't store this one
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        parser.AcceptInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.reportSizeInBits = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.reportOffsetInBits = parser.ExpectInt(jsonSpan);
+                        parser.AcceptSingleChar(jsonSpan, ',');
+
+                        parser.ExpectString(jsonSpan);
+                        parser.ExpectSingleChar(jsonSpan, ':');
+                        elementDesc.flags = (HIDElementFlags)parser.ExpectInt(jsonSpan);
+
+                        parser.ExpectSingleChar(jsonSpan, '}');
+
+                        elements.Add(elementDesc);
+                    }
+                    descriptor.elements = elements.ToArray();
+
+                    return descriptor;
+                }
+                catch (Exception)
+                {
+                    Debug.LogWarning($"Couldn't parse HID descriptor with fast parser. Using fallback");
+                    return JsonUtility.FromJson<HIDDeviceDescriptor>(json);
+                }
+#else
                 return JsonUtility.FromJson<HIDDeviceDescriptor>(json);
+#endif
             }
         }
 

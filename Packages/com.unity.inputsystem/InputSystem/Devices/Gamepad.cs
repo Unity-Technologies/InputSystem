@@ -40,6 +40,11 @@ namespace UnityEngine.InputSystem.LowLevel
         internal const string ButtonNorthShortDisplayName = "Triangle";
         internal const string ButtonWestShortDisplayName = "Square";
         internal const string ButtonEastShortDisplayName = "East";
+        #elif UNITY_SWITCH
+        internal const string ButtonSouthShortDisplayName = "B";
+        internal const string ButtonNorthShortDisplayName = "X";
+        internal const string ButtonWestShortDisplayName = "Y";
+        internal const string ButtonEastShortDisplayName = "A";
         #else
         internal const string ButtonSouthShortDisplayName = "A";
         internal const string ButtonNorthShortDisplayName = "Y";
@@ -363,7 +368,6 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
-    [Preserve]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         /// <summary>
@@ -586,13 +590,12 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// When added, a device is automatically made current (see <see cref="InputDevice.MakeCurrent"/>), so
         /// when connecting a gamepad, it will also become current. After that, it will only become current again
-        /// when input on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
+        /// when input change on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
         ///
         /// For local multiplayer scenarios (or whenever there are multiple gamepads that need to be usable
         /// in a concurrent fashion), it is not recommended to rely on this property. Instead, it is recommended
         /// to use <see cref="PlayerInput"/> or <see cref="Users.InputUser"/>.
         /// </remarks>
-        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="all"/>
         public static Gamepad current { get; private set; }

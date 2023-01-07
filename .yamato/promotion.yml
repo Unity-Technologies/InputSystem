@@ -1,17 +1,21 @@
+{% metadata_file .yamato/config.metadata %}
+---
+
 promote:
   name: Promote to Production
   agent:
     type: Unity::VM
-    image: package-ci/win10:stable
+    image: package-ci/win10:default
     flavor: b1.large
   dependencies:
     - .yamato/publish-samples.yml 
   variables:
     UPMCI_PROMOTION: 1
   commands:
-    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
-    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
-    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
+    - xcopy /Y /H .\Assets\Samples.meta .\Packages\com.unity.inputsystem
+    - del /AH .\Assets\Samples.meta
+    - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/
   artifacts:

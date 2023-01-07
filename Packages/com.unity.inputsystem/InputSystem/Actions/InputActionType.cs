@@ -156,12 +156,25 @@ namespace UnityEngine.InputSystem
         /// trigger immediately on input. For example, if <see cref="Interactions.HoldInteraction"/> is used, the
         /// action will start as soon as a bound button crosses its press threshold but will not trigger until the
         /// button is held for the set hold duration (<see cref="Interactions.HoldInteraction.duration"/>).
+        ///
+        /// Irrespective of which type an action is set to, it is possible to find out whether it was or is considered
+        /// pressed and/or released using <see cref="InputAction.IsPressed"/>, <see cref="InputAction.WasPressedThisFrame"/>,
+        /// and <see cref="InputAction.WasReleasedThisFrame"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// action.IsPressed();
+        /// action.WasPressedThisFrame();
+        /// action.WasReleasedThisFrame();
+        /// </code>
+        /// </example>
         /// </summary>
         Button,
 
         /// <summary>
         /// An action that has no specific type of behavior and instead acts as a simple pass-through for
-        /// any value change on any bound control.
+        /// any value change on any bound control. In effect, this turns an action from a single value producer into a mere
+        /// input "sink".
         ///
         /// This is in some ways similar to <see cref="Value"/>. However, there are two key differences.
         ///
@@ -176,6 +189,17 @@ namespace UnityEngine.InputSystem
         /// on every value change regardless of what the value is. This is different from <see cref="Value"/> where the
         /// action will trigger <see cref="InputActionPhase.Started"/> when moving away from its default value and will
         /// trigger <see cref="InputActionPhase.Canceled"/> when going back to the default value.
+        ///
+        /// Note that a pass-through action my still get cancelled and thus see <see cref="InputAction.canceled"/> getting called.
+        /// This happens when a factor other than input on a device causes an action in progress to be cancelled. An example
+        /// of this is when an action is disabled (see <see cref="InputAction.Disable"/>) or when focus is lost (see <see cref="InputSettings.backgroundBehavior"/>)
+        /// and a device connection to an action is reset (see <see cref="InputSystem.ResetDevice"/>).
+        ///
+        /// Also note that for a pass-through action, calling <see cref="InputAction.ReadValue{TValue}"/> is often not
+        /// very useful as it will only return the value of the very last control that fed into the action. For pass-through
+        /// actions, it is usually best to listen to <see cref="InputAction.performed"/> in order to be notified about every
+        /// single value change. Where this is not necessary, it is generally better to employ a <see cref="Value"/> action
+        /// instead.
         /// </summary>
         PassThrough,
     }

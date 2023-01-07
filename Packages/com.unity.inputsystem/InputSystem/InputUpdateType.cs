@@ -6,42 +6,42 @@ using UnityEngine.InputSystem.Layouts;
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Enum of different player loop positions where the input system can invoke it's update mechanism.
+    /// Enum of different player loop positions where the input system can invoke its update mechanism.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "Not consistently used as flags, many using APIs expect only one type to be passed.")]
     [Flags]
     public enum InputUpdateType
     {
+        /// <summary>
+        /// Performs no actual update but still allows devices to reset themselves. Usually occurs immediately after domain reload.
+        /// </summary>
         None = 0,
 
         /// <summary>
         /// Update corresponding to <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>.
-        /// </summary>
-        /// <remarks>
+        ///
         /// Every frame has exactly one dynamic update. If not reconfigured using <see cref="PlayerLoop"/>,
         /// the dynamic update happens after all the fixed updates for the frame have run (which can be
         /// zero or more).
         ///
         /// Input updates run before script callbacks on MonoBehaviours are fired.
-        /// </remarks>
+        /// </summary>
         Dynamic = 1 << 0,
 
         /// <summary>
         /// Update corresponding to <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a>.
-        /// </summary>
-        /// <remarks>
+        ///
         /// Every frame has zero or more fixed updates. These are run before the dynamic update for the
         /// frame.
         ///
         /// Input updates run before script callbacks on MonoBehaviours are fired.
-        /// </remarks>
+        /// </summary>
         Fixed = 1 << 1,
 
         ////REVIEW: Axe this update type from the public API?
         /// <summary>
         /// Input update that happens right before rendering.
-        /// </summary>
-        /// <remarks>
+        ///
         /// The BeforeRender update affects only devices that have before-render updates enabled. This
         /// has to be done through a device's layout (<see cref="InputControlLayout.updateBeforeRender"/>
         /// and is visible through <see cref="InputDevice.updateBeforeRender"/>.
@@ -50,35 +50,36 @@ namespace UnityEngine.InputSystem.LowLevel
         /// but is coming from external tracking devices. An example are HMDs. If the head transform used
         /// for the render camera is not synchronized right before rendering, it can result in a noticeable
         /// lag between head and camera movement.
-        /// </remarks>
+        /// </summary>
         BeforeRender = 1 << 2,
 
         /// <summary>
         /// Input update that happens right before <see cref="UnityEditor.EditorWindow"/>s are updated.
-        /// </summary>
-        /// <remarks>
+        ///
         /// This update only occurs in the editor. It is triggered right before <see cref="UnityEditor.EditorApplication.update"/>.
-        /// </remarks>
-        /// <seealso cref="UnityEditor.EditorApplication.update"/>
+        /// </summary>
         Editor = 1 << 3,
 
-        ////TODO
+        /// <summary>
+        /// Input updates do not happen automatically but have to be triggered manually by calling <see cref="InputSystem.Update"/>.
+        /// </summary>
         Manual = 1 << 4,
 
-        ////REVIEW: kill?
+        /// <summary>
+        /// Default update mask. Combines <see cref="Dynamic"/>, <see cref="Fixed"/>, and <see cref="Editor"/>.
+        /// </summary>
         Default = Dynamic | Fixed | Editor,
     }
 
     internal static class InputUpdate
     {
         public static uint s_UpdateStepCount; // read only, but kept as a variable for performance reasons
-        public static InputUpdateType s_LastUpdateType;
+        public static InputUpdateType s_LatestUpdateType;
         public static UpdateStepCount s_PlayerUpdateStepCount;
         #if UNITY_EDITOR
+        public static InputUpdateType s_LatestNonEditorUpdateType;
         public static UpdateStepCount s_EditorUpdateStepCount;
         #endif
-        public static uint s_LastUpdateRetainedEventBytes;
-        public static uint s_LastUpdateRetainedEventCount;
 
         [Serializable]
         public struct UpdateStepCount
@@ -108,15 +109,14 @@ namespace UnityEngine.InputSystem.LowLevel
             public InputUpdateType lastUpdateType;
             public UpdateStepCount playerUpdateStepCount;
             #if UNITY_EDITOR
+            public InputUpdateType lastNonEditorUpdateType;
             public UpdateStepCount editorUpdateStepCount;
             #endif
-            public uint lastUpdateRetainedEventBytes;
-            public uint lastUpdateRetainedEventCount;
         }
 
         internal static void OnBeforeUpdate(InputUpdateType type)
         {
-            s_LastUpdateType = type;
+            s_LatestUpdateType = type;
             switch (type)
             {
                 case InputUpdateType.Dynamic:
@@ -124,6 +124,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnBeforeUpdate();
                     s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    #if UNITY_EDITOR
+                    s_LatestNonEditorUpdateType = type;
+                    #endif
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
@@ -136,7 +139,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal static void OnUpdate(InputUpdateType type)
         {
-            s_LastUpdateType = type;
+            s_LatestUpdateType = type;
             switch (type)
             {
                 case InputUpdateType.Dynamic:
@@ -144,6 +147,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnUpdate();
                     s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    #if UNITY_EDITOR
+                    s_LatestNonEditorUpdateType = type;
+                    #endif
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
@@ -154,31 +160,38 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        #if UNITY_EDITOR
+        internal static void RestoreStateAfterEditorUpdate()
+        {
+            s_LatestUpdateType = s_LatestNonEditorUpdateType;
+            s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+        }
+
+        #endif
+
         public static SerializedState Save()
         {
             return new SerializedState
             {
-                lastUpdateType = s_LastUpdateType,
+                lastUpdateType = s_LatestUpdateType,
                 playerUpdateStepCount = s_PlayerUpdateStepCount,
                 #if UNITY_EDITOR
-                editorUpdateStepCount = s_EditorUpdateStepCount,
+                lastNonEditorUpdateType = s_LatestNonEditorUpdateType,
+                editorUpdateStepCount = s_EditorUpdateStepCount
                 #endif
-                lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
-                lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
         }
 
         public static void Restore(SerializedState state)
         {
-            s_LastUpdateType = state.lastUpdateType;
+            s_LatestUpdateType = state.lastUpdateType;
             s_PlayerUpdateStepCount = state.playerUpdateStepCount;
-            s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
-            s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
             #if UNITY_EDITOR
+            s_LatestNonEditorUpdateType = state.lastNonEditorUpdateType;
             s_EditorUpdateStepCount = state.editorUpdateStepCount;
             #endif
 
-            switch (s_LastUpdateType)
+            switch (s_LatestUpdateType)
             {
                 case InputUpdateType.Dynamic:
                 case InputUpdateType.Manual:
@@ -196,5 +209,34 @@ namespace UnityEngine.InputSystem.LowLevel
                     break;
             }
         }
+
+        public static InputUpdateType GetUpdateTypeForPlayer(this InputUpdateType mask)
+        {
+            if ((mask & InputUpdateType.Manual) != 0)
+                return InputUpdateType.Manual;
+
+            if ((mask & InputUpdateType.Dynamic) != 0)
+                return InputUpdateType.Dynamic;
+
+            if ((mask & InputUpdateType.Fixed) != 0)
+                return InputUpdateType.Fixed;
+
+            return InputUpdateType.None;
+        }
+
+        public static bool IsPlayerUpdate(this InputUpdateType updateType)
+        {
+            if (updateType == InputUpdateType.Editor)
+                return false;
+            return updateType != default;
+        }
+
+        #if UNITY_EDITOR
+        public static bool IsEditorUpdate(this InputUpdateType updateType)
+        {
+            return updateType == InputUpdateType.Editor;
+        }
+
+        #endif
     }
 }

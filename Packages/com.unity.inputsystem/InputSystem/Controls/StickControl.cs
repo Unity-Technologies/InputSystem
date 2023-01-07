@@ -46,7 +46,6 @@ namespace UnityEngine.InputSystem.Controls
     /// the deadzoning of sticks is radial (i.e. the length of the vector is taken into account
     /// which means that <em>both</em> the X and Y axis contribute).
     /// </remarks>
-    [Scripting.Preserve]
     public class StickControl : Vector2Control
     {
         ////REVIEW: should X and Y have "Horizontal" and "Vertical" as long display names and "X" and "Y" as short names?
@@ -63,11 +62,10 @@ namespace UnityEngine.InputSystem.Controls
         ////        from state correctly.
 
         /// <summary>
-        /// A synthetic button representing the upper half of the stick's Y axis.
+        /// A synthetic button representing the upper half of the stick's Y axis, i.e. the 0 to 1 range.
         /// </summary>
         /// <value>Control representing the stick's upper half Y axis.</value>
         /// <remarks>
-        ///
         /// The control is marked as <see cref="InputControl.synthetic"/>.
         /// </remarks>
         [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Up")]
@@ -76,19 +74,36 @@ namespace UnityEngine.InputSystem.Controls
         // Also puts AxisDeadzones on the axes.
         [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
         [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
-        [Scripting.Preserve]
         public ButtonControl up { get; set; }
 
+        /// <summary>
+        /// A synthetic button representing the lower half of the stick's Y axis, i.e. the -1 to 0 range (inverted).
+        /// </summary>
+        /// <value>Control representing the stick's lower half Y axis.</value>
+        /// <remarks>
+        /// The control is marked as <see cref="InputControl.synthetic"/>.
+        /// </remarks>
         [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down")]
-        [Scripting.Preserve]
         public ButtonControl down { get; set; }
 
+        /// <summary>
+        /// A synthetic button representing the left half of the stick's X axis, i.e. the -1 to 0 range (inverted).
+        /// </summary>
+        /// <value>Control representing the stick's left half X axis.</value>
+        /// <remarks>
+        /// The control is marked as <see cref="InputControl.synthetic"/>.
+        /// </remarks>
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left")]
-        [Scripting.Preserve]
         public ButtonControl left { get; set; }
 
+        /// <summary>
+        /// A synthetic button representing the right half of the stick's X axis, i.e. the 0 to 1 range.
+        /// </summary>
+        /// <value>Control representing the stick's right half X axis.</value>
+        /// <remarks>
+        /// The control is marked as <see cref="InputControl.synthetic"/>.
+        /// </remarks>
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right")]
-        [Scripting.Preserve]
         public ButtonControl right { get; set; }
 
         protected override void FinishSetup()

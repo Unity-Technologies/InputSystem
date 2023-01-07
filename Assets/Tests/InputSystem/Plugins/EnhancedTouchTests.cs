@@ -26,7 +26,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         base.Setup();
 
         // Disable() will not reset this so default initialize it here.
-        Touch.s_HistoryLengthPerFinger = 64;
+        Touch.s_GlobalState.historyLengthPerFinger = 64;
 
         if (!TestContext.CurrentContext.Test.Properties.ContainsKey("EnhancedTouchDisabled"))
         {
@@ -45,16 +45,16 @@ internal class EnhancedTouchTests : CoreTestsFixture
         EnhancedTouchSupport.Disable();
 
         // Make sure cleanup really did clean up.
-        Assert.That(Touch.s_Touchscreens.length, Is.EqualTo(0));
-        Assert.That(Touch.s_PlayerState, Is.EqualTo(default(Touch.FingerAndTouchState)));
+        Assert.That(Touch.s_GlobalState.touchscreens.length, Is.EqualTo(0));
+        Assert.That(Touch.s_GlobalState.playerState, Is.EqualTo(default(Touch.FingerAndTouchState)));
         #if UNITY_EDITOR
-        Assert.That(Touch.s_EditorState, Is.EqualTo(default(Touch.FingerAndTouchState)));
+        Assert.That(Touch.s_GlobalState.editorState, Is.EqualTo(default(Touch.FingerAndTouchState)));
         #endif
 
         // Some state is kept alive in-between Disable/Enable. Manually clean it out.
-        Touch.s_OnFingerDown = default;
-        Touch.s_OnFingerUp = default;
-        Touch.s_OnFingerMove = default;
+        Touch.s_GlobalState.onFingerDown = default;
+        Touch.s_GlobalState.onFingerUp = default;
+        Touch.s_GlobalState.onFingerMove = default;
 
         TouchSimulation.Destroy();
         TouchSimulation.s_Instance = m_OldTouchSimulationInstance;
@@ -121,6 +121,8 @@ internal class EnhancedTouchTests : CoreTestsFixture
     [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
     public void EnhancedTouch_SupportsInputUpdateIn(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
     {
+        ResetTime();
+
         InputSystem.settings.updateMode = updateMode;
         runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
@@ -139,16 +141,20 @@ internal class EnhancedTouchTests : CoreTestsFixture
     [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate)]
     public void EnhancedTouch_SupportsEditorUpdates(InputSettings.UpdateMode updateMode)
     {
+        ResetTime();
+
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
         // To better observe that play mode and edit mode state is indeed independent and handled
         // correctly, suppress resetting of the touch device when focus is lost to the player.
         runtime.runInBackground = true;
         SetCanRunInBackground(Touchscreen.current);
 
-        InputEditorUserSettings.lockInputToGameView = false;
         InputSystem.settings.updateMode = updateMode;
         runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         // Run one player update with data.
         BeginTouch(1, new Vector2(0.123f, 0.234f));
+
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
 
         // And make sure we're not seeing the data in the editor.
@@ -439,19 +445,40 @@ internal class EnhancedTouchTests : CoreTestsFixture
     // Thus we don't want accumulation and resetting (which again are frame-to-frame kind of mechanics).
     [Test]
     [Category("EnhancedTouch")]
-    public void EnhancedTouch_DeltasInTouchHistoryDoNotAccumulateAndReset()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void EnhancedTouch_DeltasInTouchHistoryDoNotAccumulateAndReset_WithEventMergingSetTo(bool mergeRedundantEvents)
     {
+        InputSystem.settings.disableRedundantEventsMerging = !mergeRedundantEvents;
+
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.345f, 0.456f), queueEventOnly: true);
+        MoveTouch(1, new Vector2(0.456f, 0.567f), queueEventOnly: true);
 
         InputSystem.Update();
 
-        Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
-            Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
-        Assert.That(Touch.activeFingers[0].touchHistory[1].delta,
-            Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
-        Assert.That(Touch.activeFingers[0].touchHistory[2].delta,
+        Assert.That(Touch.activeFingers[0].touchHistory.Count, Is.EqualTo(mergeRedundantEvents ? 3 : 4));
+
+        if (mergeRedundantEvents)
+        {
+            // Event merging adds deltas inside
+            Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
+                Is.EqualTo(new Vector2(0.222f, 0.222f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(Touch.activeFingers[0].touchHistory[1].delta,
+                Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
+        }
+        else
+        {
+            Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
+                Is.EqualTo(new Vector2(0.222f, 0.222f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(Touch.activeFingers[0].touchHistory[1].delta,
+                Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
+            Assert.That(Touch.activeFingers[0].touchHistory[2].delta,
+                Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
+        }
+
+        Assert.That(Touch.activeFingers[0].touchHistory.Last().delta,
             Is.EqualTo(new Vector2()).Using(Vector2EqualityComparer.Instance));
     }
 
@@ -479,13 +506,13 @@ internal class EnhancedTouchTests : CoreTestsFixture
     [Category("EnhancedTouch")]
     public void EnhancedTouch_CanGetStartPositionAndTimeOfTouch()
     {
-        runtime.currentTime = 0.111;
+        currentTime = 0.111;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
-        runtime.currentTime = 0.222;
+        currentTime = 0.222;
         MoveTouch(1, new Vector2(0.345f, 0.456f), queueEventOnly: true);
         BeginTouch(2, new Vector2(0.456f, 0.567f), queueEventOnly: true);
-        runtime.currentTime = 0.333;
+        currentTime = 0.333;
         EndTouch(2, new Vector2(0.567f, 0.678f), queueEventOnly: true);
         InputSystem.Update();
 
@@ -493,25 +520,32 @@ internal class EnhancedTouchTests : CoreTestsFixture
             Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
         Assert.That(Touch.activeTouches[1].startScreenPosition,
             Is.EqualTo(new Vector2(0.456f, 0.567f)).Using(Vector2EqualityComparer.Instance));
-        Assert.That(Touch.activeTouches[0].startTime, Is.EqualTo(0.111));
-        Assert.That(Touch.activeTouches[1].startTime, Is.EqualTo(0.222));
+        Assert.That(Touch.activeTouches[0].startTime, Is.EqualTo(0.111).Within(0.0001));
+        Assert.That(Touch.activeTouches[1].startTime, Is.EqualTo(0.222).Within(0.0001));
     }
 
     [Test]
     [Category("EnhancedTouch")]
-    public void EnhancedTouch_CanAccessHistoryOfTouch()
+    [TestCase(false)]
+    [TestCase(true)]
+    public void EnhancedTouch_CanAccessHistoryOfTouch_WithEventMergingSetTo(bool mergeRedundantEvents)
     {
+        ResetTime();
+
+        InputSystem.settings.disableRedundantEventsMerging = !mergeRedundantEvents;
+
         // Noise. This one shouldn't show up in the history.
         BeginTouch(2, new Vector2(0.111f, 0.222f), queueEventOnly: true);
         EndTouch(2, new Vector2(0.111f, 0.222f), queueEventOnly: true);
         InputSystem.Update();
         InputSystem.Update(); // The end touch lingers for one frame.
 
-        runtime.currentTime = 0.876;
+        currentTime = 0.876;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
-        runtime.currentTime = 0.987;
+        currentTime = 0.987;
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.345f, 0.456f), queueEventOnly: true);
+        MoveTouch(1, new Vector2(0.456f, 0.567f), queueEventOnly: true);
         BeginTouch(3, new Vector2(0.666f, 0.666f), queueEventOnly: true);
         BeginTouch(4, new Vector2(0.777f, 0.777f), queueEventOnly: true);
         EndTouch(4, new Vector2(0.888f, 0.888f), queueEventOnly: true);
@@ -521,18 +555,22 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(3));
 
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
-        Assert.That(Touch.activeTouches[0].history, Has.Count.EqualTo(2));
+        Assert.That(Touch.activeTouches[0].history, Has.Count.EqualTo(mergeRedundantEvents ? 2 : 3));
         Assert.That(Touch.activeTouches[0].history, Has.All.Property("finger").SameAs(Touch.activeTouches[0].finger));
-        Assert.That(Touch.activeTouches[0].history[0].phase, Is.EqualTo(TouchPhase.Moved));
-        Assert.That(Touch.activeTouches[0].history[1].phase, Is.EqualTo(TouchPhase.Began));
-        Assert.That(Touch.activeTouches[0].history[0].time, Is.EqualTo(0.987));
-        Assert.That(Touch.activeTouches[0].history[1].time, Is.EqualTo(0.876));
-        Assert.That(Touch.activeTouches[0].history[0].startTime, Is.EqualTo(0.876));
-        Assert.That(Touch.activeTouches[0].history[1].startTime, Is.EqualTo(0.876));
-        Assert.That(Touch.activeTouches[0].history[0].startScreenPosition,
+        var beganIndex = mergeRedundantEvents ? 1 : 2;
+        Assert.That(Touch.activeTouches[0].history[beganIndex].phase, Is.EqualTo(TouchPhase.Began));
+        Assert.That(Touch.activeTouches[0].history[beganIndex].time, Is.EqualTo(0.876).Within(0.0001));
+        Assert.That(Touch.activeTouches[0].history[beganIndex].startTime, Is.EqualTo(0.876).Within(0.0001));
+        Assert.That(Touch.activeTouches[0].history[beganIndex].startScreenPosition,
             Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
-        Assert.That(Touch.activeTouches[0].history[1].startScreenPosition,
-            Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+        for (int index = 0; index < (mergeRedundantEvents ? 1 : 2); ++index)
+        {
+            Assert.That(Touch.activeTouches[0].history[index].phase, Is.EqualTo(TouchPhase.Moved));
+            Assert.That(Touch.activeTouches[0].history[index].time, Is.EqualTo(0.987).Within(0.0001));
+            Assert.That(Touch.activeTouches[0].history[index].startTime, Is.EqualTo(0.876).Within(0.0001));
+            Assert.That(Touch.activeTouches[0].history[index].startScreenPosition,
+                Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
+        }
 
         Assert.That(Touch.activeTouches[1].touchId, Is.EqualTo(3));
         Assert.That(Touch.activeTouches[1].history, Is.Empty);
@@ -1107,5 +1145,41 @@ internal class EnhancedTouchTests : CoreTestsFixture
 
         Assert.That(Touchscreen.current.touches[0].isInProgress, Is.True);
         Assert.That(Touchscreen.current.touches[0].position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void EnhancedTouch_ActiveTouchesGetCanceledOnFocusLoss_WithRunInBackgroundBeing(bool runInBackground)
+    {
+        runtime.runInBackground = runInBackground;
+
+        BeginTouch(1, new Vector2(123, 456));
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
+
+        runtime.PlayerFocusLost();
+
+        if (runInBackground)
+        {
+            // When running in the background, next update after focus loss sees touches cancelled
+            // and update after that sees them gone.
+            InputSystem.Update(InputUpdateType.Dynamic);
+        }
+        else
+        {
+            // When not running in the background, the same thing happens but only on focus gain.
+            runtime.PlayerFocusGained();
+            InputSystem.Update();
+        }
+
+        Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Canceled));
+
+        InputSystem.Update();
+
+        Assert.That(Touch.activeTouches, Is.Empty);
     }
 }

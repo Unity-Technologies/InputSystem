@@ -655,7 +655,9 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        // InputTestFixture puts this at ExactlyAsInPlayer. Give us a setting that allows
+        // gamepad input to go through to the editor.
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -704,7 +706,6 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
-    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }
@@ -818,7 +819,7 @@ partial class CoreTests
     [Category("State")]
     public void State_CurrentTimeTakesOffsetToRealtimeSinceStartupIntoAccount()
     {
-        runtime.currentTime += 2;
+        runtime.currentTime = 2;
         runtime.currentTimeOffsetToRealtimeSinceStartup = 1;
 
         Assert.That(InputState.currentTime, Is.EqualTo(1));
@@ -859,15 +860,15 @@ partial class CoreTests
             });
 
         // Add and immediately expire timeout.
-        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, currentTime + 1,
             timerIndex: 1234);
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutFired);
         Assert.That(!monitorFired);
         Assert.That(receivedTimerIndex.Value, Is.EqualTo(1234));
-        Assert.That(receivedTime.Value, Is.EqualTo(runtime.currentTime).Within(0.00001));
+        Assert.That(receivedTime.Value, Is.EqualTo(currentTime).Within(0.00001));
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
 
         timeoutFired = false;
@@ -876,7 +877,7 @@ partial class CoreTests
 
         // Add timeout and perform a state change. Then advance past timeout time
         // and make sure we *DO* get a notification.
-        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
         InputSystem.Update();
@@ -886,7 +887,7 @@ partial class CoreTests
 
         monitorFired = false;
 
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(!monitorFired);
@@ -896,7 +897,7 @@ partial class CoreTests
 
         // Add and remove timeout. Then advance past timeout time and make sure we *don't*
         // get a notification.
-        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
+        InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, currentTime + 1,
             timerIndex: 1423);
         InputState.RemoveChangeMonitorTimeout(monitor, timerIndex: 1423);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
@@ -923,7 +924,7 @@ partial class CoreTests
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor,
-                    runtime.currentTime + 1);
+                    InputState.currentTime + 1);
             }, timerExpiredCallback:
             (control, time, monitorIndex, timerIndex) =>
             {
@@ -938,7 +939,7 @@ partial class CoreTests
         Assert.That(monitorFired);
 
         // Expire timer.
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutFired);
@@ -964,13 +965,13 @@ partial class CoreTests
         InputState.AddChangeMonitorTimeout(gamepad.buttonSouth, monitor, 1.5);
 
         // Trigger first timeout.
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutCount, Is.EqualTo(1));
 
         // Trigger second timeout.
-        runtime.currentTime += 2;
+        currentTime += 2;
         InputSystem.Update();
 
         Assert.That(timeoutCount, Is.EqualTo(2));
@@ -1031,6 +1032,8 @@ partial class CoreTests
     [Category("State")]
     public void State_RemovingMonitorRemovesTimeouts()
     {
+        ResetTime();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var monitor = InputState.AddChangeMonitor(gamepad.buttonWest,
@@ -1042,7 +1045,7 @@ partial class CoreTests
         InputState.AddChangeMonitorTimeout(gamepad.buttonWest, monitor, 2);
         InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
 
-        runtime.currentTime = 4;
+        currentTime = 4;
         InputSystem.Update();
     }
 
@@ -1116,12 +1119,14 @@ partial class CoreTests
     [Category("State")]
     public void State_UpdatingStateDirectly_DoesNotModifyTimestampOfDeviceAndDoesNotMakeItCurrent()
     {
+        ResetTime();
+
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad2));
 
-        runtime.currentTime = 123;
+        currentTime = 123;
         InputState.Change(gamepad1, new GamepadState {leftTrigger = 0.123f});
 
         Assert.That(gamepad1.lastUpdateTime, Is.Zero.Within(0.0001));
@@ -1161,6 +1166,7 @@ partial class CoreTests
             device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
+        var sizeOfSpecialBuffers = sizeOfSingleBuffer * 3; // Noise mask, default state, and dontReset mask.
 
         const int kDoubleBufferCount =
             #if UNITY_EDITOR
@@ -1174,11 +1180,8 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
-        // QueueEvent aligns to 4-byte boundaries.
-        eventByteCount = eventByteCount.AlignToMultipleOf(4);
-
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSpecialBuffers));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
@@ -1247,10 +1250,10 @@ partial class CoreTests
             Assert.That(history[1].ReadValue(), Is.EqualTo(0.234).Within(0.00001));
             Assert.That(history[2].ReadValue(), Is.EqualTo(0.345).Within(0.00001));
             Assert.That(history[3].ReadValue(), Is.EqualTo(0.456).Within(0.00001));
-            Assert.That(history[0].time, Is.EqualTo(0.111));
-            Assert.That(history[1].time, Is.EqualTo(0.222));
-            Assert.That(history[2].time, Is.EqualTo(0.333));
-            Assert.That(history[3].time, Is.EqualTo(0.444));
+            Assert.That(history[0].time, Is.EqualTo(0.111).Within(0.0001));
+            Assert.That(history[1].time, Is.EqualTo(0.222).Within(0.0001));
+            Assert.That(history[2].time, Is.EqualTo(0.333).Within(0.0001));
+            Assert.That(history[3].time, Is.EqualTo(0.444).Within(0.0001));
             Assert.That(history[0].control, Is.SameAs(gamepad1.leftTrigger));
             Assert.That(history[1].control, Is.SameAs(gamepad1.leftTrigger));
             Assert.That(history[2].control, Is.SameAs(gamepad2.rightTrigger));
@@ -1627,7 +1630,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_ExcludesEditorInputByDefault()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
@@ -1646,7 +1649,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_CanCaptureEditorInput()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))

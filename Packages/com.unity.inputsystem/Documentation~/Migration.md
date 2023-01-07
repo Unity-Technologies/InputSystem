@@ -38,7 +38,9 @@ Acceleration events aren't made available separately from other input events. Th
 
     void StartTrace()
     {
-        trace = new InputEventTrace() {deviceId = Accelerometer.current.deviceId};
+        InputSystem.EnableDevice(Accelerometer.current);
+
+        trace = new InputEventTrace(Accelerometer.current);
         trace.Enable();
     }
 
@@ -54,13 +56,12 @@ Acceleration events aren't made available separately from other input events. Th
 
 ### [`UnityEngine.Input.anyKey`](https://docs.unity3d.com/ScriptReference/Input-anyKey.html)
 
-For keyboard keys, use:
-* [`Keyboard.current.anyKey.isPressed`](../api/UnityEngine.InputSystem.Keyboard.html)
+Use [`InputSystem.onAnyButtonPress`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress).
 
-For mouse buttons, use:
-* [`Mouse.current.leftButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
-* [`Mouse.current.rightButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
-* [`Mouse.current.middleButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
+```CSharp
+InputSystem.onAnyButtonPress
+    .CallOnce(ctrl => Debug.Log($"Button {ctrl} pressed!"));
+```
 
 ### [`UnityEngine.Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)
 
@@ -116,11 +117,11 @@ Use [`AttitudeSensor.current.orientation.ReadValue()`](../api/UnityEngine.InputS
 
 ```
 // Get:
-`Gyroscope.current.enabled`
+Gyroscope.current.enabled
 
 // Set:
-`InputSystem.EnableDevice(Gyroscope.current);`
-`InputSystem.DisableDevice(Gyroscope.current);`
+InputSystem.EnableDevice(Gyroscope.current);
+InputSystem.DisableDevice(Gyroscope.current);
 ```
 
 >__Note__: The new Input System replaces `UnityEngine.Gyroscope` with multiple separate sensor devices. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See [`UnityEngine.Input.gyro`](#gyro) section for details.
@@ -206,7 +207,7 @@ No corresponding API yet.
 
 Use [`InputSystem.EnhancedTouch.Touch.activeTouches.Count`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)
 
->__Note__: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+>__Note__: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouchSupport.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html)
 

@@ -1,9 +1,14 @@
 using System;
+using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
+using System.Reflection;
 using UnityEditor;
+using UnityEditorInternal;
+
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -61,8 +66,9 @@ namespace UnityEngine.InputSystem.LowLevel
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
+                            // Always report the original exception first to confuse users less about what it the actual failure.
                             Debug.LogException(e);
+                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
                             buffer.Reset();
                         }
 
@@ -116,6 +122,46 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        #if UNITY_EDITOR
+        private struct InputSystemPlayerLoopRunnerInitializationSystem {};
+        public Action onPlayerLoopInitialization
+        {
+            get => m_PlayerLoopInitialization;
+            set
+            {
+                // This is a hot-fix for a critical problem in input system, case 1368559, case 1367556, case 1372830
+                // TODO move it to a proper native callback instead
+                if (value != null)
+                {
+                    // Inject ourselves directly to PlayerLoop.Initialization as first subsystem to run,
+                    // Use InputSystemPlayerLoopRunnerInitializationSystem as system type
+                    var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
+                    var initStepIndex = playerLoop.subSystemList.IndexOf(x => x.type == typeof(PlayerLoop.Initialization));
+                    if (initStepIndex >= 0)
+                    {
+                        var systems = playerLoop.subSystemList[initStepIndex].subSystemList;
+
+                        // Check if we're not already injected
+                        if (!systems.Select(x => x.type)
+                            .Contains(typeof(InputSystemPlayerLoopRunnerInitializationSystem)))
+                        {
+                            ArrayHelpers.InsertAt(ref systems, 0, new UnityEngine.LowLevel.PlayerLoopSystem
+                            {
+                                type = typeof(InputSystemPlayerLoopRunnerInitializationSystem),
+                                updateDelegate = () => m_PlayerLoopInitialization?.Invoke()
+                            });
+
+                            playerLoop.subSystemList[initStepIndex].subSystemList = systems;
+                            UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
+                        }
+                    }
+                }
+
+                m_PlayerLoopInitialization = value;
+            }
+        }
+        #endif
+
         public Action<int, string> onDeviceDiscovered
         {
             get => NativeInputSystem.onDeviceDiscovered;
@@ -161,7 +207,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public bool isFocused => Application.isFocused;
+        public bool isPlayerFocused => Application.isFocused;
 
         public float pollingFrequency
         {
@@ -181,12 +227,19 @@ namespace UnityEngine.InputSystem.LowLevel
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
         public float unscaledGameTime => Time.unscaledTime;
 
-        public bool runInBackground => Application.runInBackground;
+        public bool runInBackground => Application.runInBackground ||
+        // certain platforms ignore the runInBackground flag and always run. Make sure we're
+        // not running on one of those.
+        // TODO: Add more platforms here as they're discovered.
+        Application.platform == RuntimePlatform.PS5;
 
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
         private Action<InputUpdateType> m_OnBeforeUpdate;
         private Func<InputUpdateType, bool> m_OnShouldRunUpdate;
+        #if UNITY_EDITOR
+        private Action m_PlayerLoopInitialization;
+        #endif
         private float m_PollingFrequency = 60.0f;
         private bool m_DidCallOnShutdown = false;
         private void OnShutdown()
@@ -219,6 +272,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_FocusChangedMethod(focus);
         }
 
+        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;
 
         public bool isInBatchMode => Application.isBatchMode;
@@ -227,7 +281,54 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public bool isInPlayMode => EditorApplication.isPlaying;
         public bool isPaused => EditorApplication.isPaused;
+        public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
+        public Func<IntPtr, bool> onUnityRemoteMessage
+        {
+            set
+            {
+                if (m_UnityRemoteMessageHandler == value)
+                    return;
+
+                if (m_UnityRemoteMessageHandler != null)
+                {
+                    var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
+                    removeMethod?.Invoke(null, new[] { m_UnityRemoteMessageHandler });
+                    m_UnityRemoteMessageHandler = null;
+                }
+
+                if (value != null)
+                {
+                    var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
+                    addMethod?.Invoke(null, new[] { value });
+                    m_UnityRemoteMessageHandler = value;
+                }
+            }
+        }
+
+        public void SetUnityRemoteGyroEnabled(bool value)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
+            setMethod?.Invoke(null, new object[] { value });
+        }
+
+        public void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
+            setMethod?.Invoke(null, new object[] { interval });
+        }
+
+        private MethodInfo GetUnityRemoteAPIMethod(string methodName)
+        {
+            var editorAssembly = typeof(EditorApplication).Assembly;
+            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
+            if (genericRemoteClass == null)
+                return null;
+
+            return genericRemoteClass.GetMethod(methodName);
+        }
+
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
         private Action<PlayModeStateChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
 
