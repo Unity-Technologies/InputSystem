@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem
     /// <see cref="PlayerInput"/> yourself.
     /// </remarks>
     [AddComponentMenu("Input/Player Input Manager")]
-    [HelpURL(InputSystem.kDocUrl + "/manual/Components.html#playerinputmanager-component")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/PlayerInputManager.html")]
     public class PlayerInputManager : MonoBehaviour
     {
         /// <summary>

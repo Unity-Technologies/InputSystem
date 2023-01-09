@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using HtmlAgilityPack;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -116,32 +117,51 @@ class DocumentationBasedAPIVerficationTests
             !APIVerificationTests.IgnoreTypeForDocsByNamespace(t.Namespace) &&
             typeof(MonoBehaviour).IsAssignableFrom(t));
 
-        var monoBehaviourTypesHelpUrls = monoBehaviourTypes
-            .Where(t => t.GetCustomAttribute<HelpURLAttribute>() != null)
-            .Select(t => t.GetCustomAttribute<HelpURLAttribute>().URL);
+        var monoBehaviourTypesWithHelpUrls = monoBehaviourTypes
+            .Where(t => t.GetCustomAttribute<HelpURLAttribute>() != null);
+
+        var brokenHelpUrlErrors = new StringBuilder();
 
         // Ensure the links are actually valid.
-        var brokenHelpUrls =
-            monoBehaviourTypesHelpUrls.Where(
-                s =>
+        foreach (var monoBehaviorTypeWithHelpUrl in monoBehaviourTypesWithHelpUrls)
+        {
+            // Get url
+            var url = monoBehaviorTypeWithHelpUrl.GetCustomAttribute<HelpURLAttribute>().URL;
+
+            // Parse file path and anchor.
+            var path = url.Substring(InputSystem.kDocUrl.Length);
+            if (path.StartsWith("/"))
+                path = path.Substring(1);
+            var anchorIndex = path.IndexOf('#');
+            var hasAnchor = anchorIndex != -1;
+            var docsFileName = hasAnchor ? path.Substring(0, anchorIndex) : path;
+            var anchorName = hasAnchor ? path.Substring(anchorIndex + 1) : null;
+
+            // Load doc.
+            var docsFilePath = Path.Combine(_docsFolder, docsFileName);
+            var doc = new HtmlDocument();
+            try
+            {
+                doc.Load(docsFilePath);
+            }
+            catch (Exception e)
+            {
+                brokenHelpUrlErrors.AppendLine($"Broken documentation help URL for MonoBehavior \"{monoBehaviorTypeWithHelpUrl.FullName}\". Path \"{path}\" do not exist. Failed with exception: {e}");
+                continue;
+            }
+
+            if (hasAnchor)
+            {
+                // Look up anchor within loaded document.
+                var node = doc.DocumentNode.SelectSingleNode($"//*[@id = '{anchorName}']");
+                if (node == null)
                 {
-                    // Parse file path and anchor.
-                    var path = s.Substring(InputSystem.kDocUrl.Length);
-                    if (path.StartsWith("/"))
-                        path = path.Substring(1);
-                    var docsFileName = path.Substring(0, path.IndexOf('#'));
-                    var anchorName = path.Substring(path.IndexOf('#') + 1);
+                    brokenHelpUrlErrors.AppendLine($"Broken documentation help URL for MonoBehavior \"{monoBehaviorTypeWithHelpUrl.FullName}\". Anchor \"#{anchorName}\" do not exist in referenced document.");
+                }
+            }
+        }
 
-                    // Load doc.
-                    var docsFilePath = Path.Combine(_docsFolder, docsFileName);
-                    var doc = new HtmlDocument();
-                    doc.Load(docsFilePath);
-
-                    // Look up anchor.
-                    return doc.DocumentNode.SelectSingleNode($"//*[@id = '{anchorName}']") == null;
-                });
-
-        Assert.That(brokenHelpUrls, Is.Empty);
+        Assert.That(brokenHelpUrlErrors.Length, Is.Zero, brokenHelpUrlErrors.ToString());
     }
 
     private static string DocsForType(TypeDefinition type, string docsFolder)
