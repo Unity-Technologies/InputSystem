@@ -1272,7 +1272,7 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                throw new NotImplementedException();
+                Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
             }
         }
 
