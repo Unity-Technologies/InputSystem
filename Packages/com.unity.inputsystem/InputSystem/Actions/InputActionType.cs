@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem
     /// which makes them great for just forwarding input from any connected controls but
     /// makes them a poor choice when only one input should be generated from however
     /// many connected controls there are. For more details, see <a
-    /// href="../manual/ActionBindings.html#disambiguation">here</a>.
+    /// href="../manual/ActionBindings.html#conflicting-inputs">here</a>.
     ///
     /// The other two behavior types are <see cref="Button"/> and <see cref="Value"/>.
     ///
@@ -131,7 +131,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// An action that reads a single value from its connected sources. If multiple bindings
         /// actuate at the same time, performs disambiguation (see <see
-        /// href="../manual/ActionBindings.html#disambiguation"/>) to detect the highest value contributor
+        /// href="../manual/ActionBindings.html#conflicting-inputs"/>) to detect the highest value contributor
         /// at any one time.
         ///
         /// A value action starts (<see cref="InputActionPhase.Started"/>) and then performs (<see cref="InputActionPhase.Performed"/>)

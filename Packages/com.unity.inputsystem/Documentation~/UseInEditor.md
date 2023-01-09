@@ -1,4 +1,4 @@
-# Using the Input System in the Editor
+# Using Input in the Editor
 
 Unlike Unity's old Input Manager, you can use the new Input System from within `EditorWindow` code as well. For example, you can gain access to pen pressure information like this:
 
