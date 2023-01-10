@@ -58,6 +58,10 @@ however, it has to be formatted properly to pass verification tests.
 - Readded OnDisable() member to MultiplayerEventSystem which was previously removed from the API
 - Improved performance of HID descriptor parsing by moving json parsing to a simple custom predicitve parser instead of relying on Unity's json parsing. This should improve domain reload times when there are many HID devices connected to a machine.
 
+### Changed
+
+- Documentation improvements: New workflows and concepts pages. Reorganised table of contents. Improved some code samples. Updated screenshots.
+
 ## [1.4.2] - 2022-08-12
 
 ### Changed
