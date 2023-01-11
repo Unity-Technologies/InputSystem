@@ -60,6 +60,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "press", displayName = "Press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
 
+        [InputControl(name = "displayIndex", layout = "Integer", displayName = "Display Index")]
+        public ushort displayIndex;
+
         public FourCC format => kFormat;
     }
 }
@@ -181,6 +184,13 @@ namespace UnityEngine.InputSystem
         public ButtonControl press { get; protected set; }
 
         /// <summary>
+        /// The index of the display the Pointer is currently on. This is useful for multiple screen setups.
+        /// This may not be supported on all platforms. When unsupported, this will always produce the index of the primary display i.e. zero.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
+        /// </summary>
+        public IntegerControl displayIndex { get; protected set; }
+
+        /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
         /// device connected to the system.
         /// </summary>
@@ -210,6 +220,7 @@ namespace UnityEngine.InputSystem
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
             press = GetChildControl<ButtonControl>("press");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
 
             base.FinishSetup();
         }

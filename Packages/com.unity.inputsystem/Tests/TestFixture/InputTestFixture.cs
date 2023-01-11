@@ -577,9 +577,9 @@ namespace UnityEngine.InputSystem
 
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
-            double time = -1, double timeOffset = 0)
+            double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
-            SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
         public void BeginTouch(int touchId, Vector2 position, float pressure, bool queueEventOnly = false, Touchscreen screen = null,
@@ -603,9 +603,9 @@ namespace UnityEngine.InputSystem
 
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
-            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+            Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
-            SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
         public void EndTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
@@ -636,7 +636,7 @@ namespace UnityEngine.InputSystem
         }
 
         public void SetTouch(int touchId, TouchPhase phase, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = true,
-            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+            Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
             if (screen == null)
             {
@@ -652,6 +652,7 @@ namespace UnityEngine.InputSystem
                 position = position,
                 delta = delta,
                 pressure = pressure,
+                displayIndex = displayIndex,
             }, (time >= 0 ? time : InputState.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();
