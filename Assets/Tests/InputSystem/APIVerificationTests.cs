@@ -424,6 +424,14 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public class DualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShockGamepad
     ")]
+    // IMECompositionEvent added unsafe attribute
+    [Property("Exclusions", @"1.0.0
+        public struct IMECompositionEvent : UnityEngine.InputSystem.LowLevel.IInputEventTypeInfo
+    ")]
+    // IMECompositionEvent.compositionString changed from field to property due to hard-to-avoid changes to IMECompositionString struct
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.LowLevel.IMECompositionString compositionString;
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

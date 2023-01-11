@@ -70,7 +70,7 @@ There are three types of Device events:
 There are two types of text events:
 
 * [`TextEvent`](../api/UnityEngine.InputSystem.LowLevel.TextEvent.html) (`'TEXT'`)
-* [`IMECompositionEvent`](../api/UnityEngine.InputSystem.LowLevel.IMECompositionEvent.html) (`'IMES'`)
+* [`IMECompositionEventVariableSize`](../api/UnityEngine.InputSystem.LowLevel.IMECompositionEventVariableSize.html) (`'IMEC'`)
 
 ## Working with events
 
