@@ -1277,7 +1277,7 @@ internal class UITests : CoreTestsFixture
         // the tracked device tests below don't seem to work on Android when run on the build farm. The pointer
         // positions fail the IsWithinRect checks. They work fine locally. Possibly something to do with tracked
         // devices on Shield? The build farm seems to always run them on Shield devices.
-        #if !UNITY_ANDROID
+        #if !UNITY_ANDROID && !UNITY_TVOS
         // Put tracked device #1 over left object and tracked device #2 over right object.
         // Need two updates as otherwise we'd end up with just another pointer of the right object
         // which would not result in an event.
