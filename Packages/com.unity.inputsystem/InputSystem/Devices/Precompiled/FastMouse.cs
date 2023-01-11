@@ -24,10 +24,10 @@ namespace UnityEngine.InputSystem
         public const string metadata = "AutoWindowSpace;Vector2;Delta;Button;Axis;Digital;Integer;Mouse;Pointer";
         public FastMouse()
         {
-            var builder = this.Setup(29, 10, 2)
+            var builder = this.Setup(30, 10, 2)
                 .WithName("Mouse")
                 .WithDisplayName("Mouse")
-                .WithChildren(0, 13)
+                .WithChildren(0, 14)
                 .WithLayout(new InternedString("Mouse"))
                 .WithStateBlock(new InputStateBlock { format = new FourCC(1297044819), sizeInBits = 392 });
 
@@ -73,6 +73,9 @@ namespace UnityEngine.InputSystem
 
             // /Mouse/pointerId
             var ctrlMousepointerId = Initialize_ctrlMousepointerId(kDigitalLayout, this);
+
+            // /Mouse/displayIndex
+            var ctrlMousedisplayIndex = Initialize_ctrlMousedisplayIndex(kIntegerLayout, this);
 
             // /Mouse/clickCount
             var ctrlMouseclickCount = Initialize_ctrlMouseclickCount(kIntegerLayout, this);
@@ -154,6 +157,7 @@ namespace UnityEngine.InputSystem
             this.radius = ctrlMouseradius;
             this.pressure = ctrlMousepressure;
             this.press = ctrlMousepress;
+            this.displayIndex = ctrlMousedisplayIndex;
             ctrlMouseposition.x = ctrlMousepositionx;
             ctrlMouseposition.y = ctrlMousepositiony;
             ctrlMousedelta.up = ctrlMousedeltaup;
@@ -174,9 +178,9 @@ namespace UnityEngine.InputSystem
             // State offset to control index map.
             builder.WithStateOffsetToControlIndexMap(new uint[]
             {
-                32781u, 16809998u, 33587217u, 33587218u, 33587219u, 50364431u, 50364432u, 50364436u, 67141655u, 67141656u
-                , 67141657u, 83918869u, 83918870u, 83918874u, 100664323u, 100664324u, 101188613u, 101712902u, 102237191u, 102761480u
-                , 117456908u, 134250505u, 167804955u, 184582172u, 201327627u
+                32782u, 16809999u, 33587218u, 33587219u, 33587220u, 50364432u, 50364433u, 50364437u, 67141656u, 67141657u
+                , 67141658u, 83918870u, 83918871u, 83918875u, 100664323u, 100664324u, 101188613u, 101712902u, 102237191u, 102761480u
+                , 109068300u, 117456909u, 134250505u, 167804956u, 184582173u, 201327627u
             });
 
             builder.WithControlTree(new byte[]
@@ -188,20 +192,19 @@ namespace UnityEngine.InputSystem
                 , 0, 161, 0, 15, 0, 10, 0, 4, 193, 0, 17, 0, 14, 0, 4, 145, 0, 255, 255, 18, 0, 3, 161, 0, 255, 255, 21, 0, 3, 192
                 , 0, 255, 255, 0, 0, 0, 193, 0, 255, 255, 24, 0, 2, 195, 0, 21, 0, 0, 0, 0, 196, 0, 255, 255, 28, 0, 1, 194, 0, 255
                 , 255, 26, 0, 1, 195, 0, 255, 255, 27, 0, 1, 32, 1, 25, 0, 0, 0, 0, 135, 1, 41, 0, 0, 0, 0, 240, 0, 27, 0, 0
-                , 0, 0, 32, 1, 39, 0, 0, 0, 0, 218, 0, 29, 0, 0, 0, 0, 240, 0, 55, 0, 0, 0, 0, 207, 0, 31, 0, 0, 0, 0
-                , 218, 0, 255, 255, 0, 0, 0, 202, 0, 33, 0, 0, 0, 0, 207, 0, 255, 255, 0, 0, 0, 199, 0, 35, 0, 0, 0, 0, 202, 0
-                , 255, 255, 0, 0, 0, 198, 0, 37, 0, 0, 0, 0, 199, 0, 255, 255, 0, 0, 0, 197, 0, 255, 255, 29, 0, 1, 198, 0, 255, 255
+                , 0, 0, 32, 1, 39, 0, 0, 0, 0, 224, 0, 29, 0, 0, 0, 0, 240, 0, 255, 255, 40, 0, 1, 210, 0, 31, 0, 38, 0, 1
+                , 224, 0, 255, 255, 39, 0, 1, 203, 0, 33, 0, 0, 0, 0, 210, 0, 255, 255, 0, 0, 0, 200, 0, 35, 0, 0, 0, 0, 203, 0
+                , 255, 255, 0, 0, 0, 198, 0, 37, 0, 0, 0, 0, 200, 0, 255, 255, 0, 0, 0, 197, 0, 255, 255, 29, 0, 1, 198, 0, 255, 255
                 , 0, 0, 0, 8, 1, 255, 255, 30, 0, 1, 32, 1, 255, 255, 31, 0, 1, 128, 1, 43, 0, 0, 0, 0, 135, 1, 49, 0, 0, 0
                 , 0, 80, 1, 255, 255, 32, 0, 2, 128, 1, 45, 0, 34, 0, 2, 64, 1, 255, 255, 0, 0, 0, 128, 1, 47, 0, 0, 0, 0, 96
                 , 1, 255, 255, 0, 0, 0, 128, 1, 255, 255, 36, 0, 1, 132, 1, 51, 0, 0, 0, 0, 135, 1, 255, 255, 0, 0, 0, 130, 1, 53
-                , 0, 0, 0, 0, 132, 1, 255, 255, 0, 0, 0, 129, 1, 255, 255, 37, 0, 1, 130, 1, 255, 255, 0, 0, 0, 229, 0, 255, 255, 38
-                , 0, 1, 240, 0, 255, 255, 39, 0, 1
+                , 0, 0, 0, 0, 132, 1, 255, 255, 0, 0, 0, 129, 1, 255, 255, 37, 0, 1, 130, 1, 255, 255, 0, 0, 0
             }, new ushort[]
                 {
                     // Control tree node indicies
 
-                    0, 13, 14, 1, 15, 16, 20, 17, 18, 19, 2, 21, 22, 26, 2, 21, 22, 26, 23, 24, 25, 23, 24, 25, 3, 4, 5, 6, 7, 8
-                    , 9, 9, 10, 27, 10, 27, 28, 11, 12, 12
+                    0, 14, 15, 1, 16, 17, 21, 18, 19, 20, 2, 22, 23, 27, 2, 22, 23, 27, 24, 25, 26, 24, 25, 26, 3, 4, 5, 6, 7, 8
+                    , 9, 9, 10, 28, 10, 28, 29, 11, 12, 12, 13
                 });
 
             builder.Finish();
@@ -213,7 +216,7 @@ namespace UnityEngine.InputSystem
             ctrlMouseposition.Setup()
                 .At(this, 0)
                 .WithParent(parent)
-                .WithChildren(13, 2)
+                .WithChildren(14, 2)
                 .WithName("position")
                 .WithDisplayName("Position")
                 .WithLayout(kVector2Layout)
@@ -239,7 +242,7 @@ namespace UnityEngine.InputSystem
             ctrlMousedelta.Setup()
                 .At(this, 1)
                 .WithParent(parent)
-                .WithChildren(15, 6)
+                .WithChildren(16, 6)
                 .WithName("delta")
                 .WithDisplayName("Delta")
                 .WithLayout(kDeltaLayout)
@@ -261,7 +264,7 @@ namespace UnityEngine.InputSystem
             ctrlMousescroll.Setup()
                 .At(this, 2)
                 .WithParent(parent)
-                .WithChildren(21, 6)
+                .WithChildren(22, 6)
                 .WithName("scroll")
                 .WithDisplayName("Scroll")
                 .WithLayout(kDeltaLayout)
@@ -444,7 +447,7 @@ namespace UnityEngine.InputSystem
             ctrlMouseradius.Setup()
                 .At(this, 10)
                 .WithParent(parent)
-                .WithChildren(27, 2)
+                .WithChildren(28, 2)
                 .WithName("radius")
                 .WithDisplayName("Radius")
                 .WithLayout(kVector2Layout)
@@ -480,11 +483,31 @@ namespace UnityEngine.InputSystem
             return ctrlMousepointerId;
         }
 
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlMousedisplayIndex(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlMousedisplayIndex = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlMousedisplayIndex.Setup()
+                .At(this, 12)
+                .WithParent(parent)
+                .WithName("displayIndex")
+                .WithDisplayName("Display Index")
+                .WithLayout(kIntegerLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1431521364),
+                    byteOffset = 26,
+                    bitOffset = 0,
+                    sizeInBits = 16
+                })
+                .Finish();
+            return ctrlMousedisplayIndex;
+        }
+
         private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlMouseclickCount(InternedString kIntegerLayout, InputControl parent)
         {
             var ctrlMouseclickCount = new UnityEngine.InputSystem.Controls.IntegerControl();
             ctrlMouseclickCount.Setup()
-                .At(this, 12)
+                .At(this, 13)
                 .WithParent(parent)
                 .WithName("clickCount")
                 .WithDisplayName("Click Count")
@@ -505,7 +528,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousepositionx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMousepositionx.Setup()
-                .At(this, 13)
+                .At(this, 14)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Position X")
@@ -527,7 +550,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousepositiony = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMousepositiony.Setup()
-                .At(this, 14)
+                .At(this, 15)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Position Y")
@@ -549,7 +572,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousedeltaup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlMousedeltaup.Setup()
-                .At(this, 15)
+                .At(this, 16)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Delta Up")
@@ -571,7 +594,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousedeltadown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlMousedeltadown.Setup()
-                .At(this, 16)
+                .At(this, 17)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Delta Down")
@@ -593,7 +616,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousedeltaleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlMousedeltaleft.Setup()
-                .At(this, 17)
+                .At(this, 18)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Delta Left")
@@ -615,7 +638,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousedeltaright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlMousedeltaright.Setup()
-                .At(this, 18)
+                .At(this, 19)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Delta Right")
@@ -637,7 +660,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousedeltax = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMousedeltax.Setup()
-                .At(this, 19)
+                .At(this, 20)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Delta X")
@@ -658,7 +681,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousedeltay = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMousedeltay.Setup()
-                .At(this, 20)
+                .At(this, 21)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Delta Y")
@@ -679,7 +702,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousescrollup = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlMousescrollup.Setup()
-                .At(this, 21)
+                .At(this, 22)
                 .WithParent(parent)
                 .WithName("up")
                 .WithDisplayName("Scroll Up")
@@ -701,7 +724,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousescrolldown = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlMousescrolldown.Setup()
-                .At(this, 22)
+                .At(this, 23)
                 .WithParent(parent)
                 .WithName("down")
                 .WithDisplayName("Scroll Down")
@@ -723,7 +746,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousescrollleft = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -3.402823E+38f, invert = true };
             ctrlMousescrollleft.Setup()
-                .At(this, 23)
+                .At(this, 24)
                 .WithParent(parent)
                 .WithName("left")
                 .WithDisplayName("Scroll Left")
@@ -745,7 +768,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousescrollright = new UnityEngine.InputSystem.Controls.AxisControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 3.402823E+38f };
             ctrlMousescrollright.Setup()
-                .At(this, 24)
+                .At(this, 25)
                 .WithParent(parent)
                 .WithName("right")
                 .WithDisplayName("Scroll Right")
@@ -767,7 +790,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousescrollx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMousescrollx.Setup()
-                .At(this, 25)
+                .At(this, 26)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Scroll Left/Right")
@@ -790,7 +813,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMousescrolly = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMousescrolly.Setup()
-                .At(this, 26)
+                .At(this, 27)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Scroll Up/Down")
@@ -813,7 +836,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMouseradiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMouseradiusx.Setup()
-                .At(this, 27)
+                .At(this, 28)
                 .WithParent(parent)
                 .WithName("x")
                 .WithDisplayName("Radius X")
@@ -834,7 +857,7 @@ namespace UnityEngine.InputSystem
         {
             var ctrlMouseradiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMouseradiusy.Setup()
-                .At(this, 28)
+                .At(this, 29)
                 .WithParent(parent)
                 .WithName("y")
                 .WithDisplayName("Radius Y")
