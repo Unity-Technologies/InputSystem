@@ -3798,9 +3798,12 @@ internal class UITests : CoreTestsFixture
     }
 
     #region Multi Display Tests
-// displayIndex is only available in UGUI v1.1.0 which is available from 2023.1 onwards
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2023_1_OR_NEWER // displayIndex is only available from 2023.1 onwards
+
     [UnityTest]
+#if UNITY_TVOS
+    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnScreenSpaceCanvas()
     {
         // Setup the Test Scene
@@ -3898,6 +3901,9 @@ internal class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+#if UNITY_TVOS
+    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnScreenSpaceCanvas()
     {
         // Setup the Test Scene
@@ -3997,6 +4003,9 @@ internal class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+#if UNITY_TVOS
+    [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayMultiplePointers()
     {
         // Setup the Test Scene

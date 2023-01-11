@@ -96,7 +96,6 @@ namespace UnityEngine.InputSystem.UI
             stringBuilder.AppendLine("altitudeAngle: " + altitudeAngle);
             stringBuilder.AppendLine("twist: " + twist);
             #endif
-            // displayIndex is only available in UGUI v1.1.0 which is available from 2023.1 onwards
             #if UNITY_2023_1_OR_NEWER
             stringBuilder.AppendLine("displayIndex: " + displayIndex);
             #endif

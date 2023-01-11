@@ -1766,8 +1766,6 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
-
-// displayIndex is only available in UGUI v1.1.0 which is available from 2023.1 onwards
 #if UNITY_2023_1_OR_NEWER
                     eventData.displayIndex = displayIndex;
 #endif
@@ -1864,11 +1862,9 @@ namespace UnityEngine.InputSystem.UI
                 eventData = new ExtendedPointerEventData(eventSystem);
 
             eventData.pointerId = pointerId;
-
 #if UNITY_2023_1_OR_NEWER
             eventData.displayIndex = displayIndex;
 #endif
-
             eventData.touchId = touchId;
             eventData.pointerType = pointerType;
             eventData.control = control;
