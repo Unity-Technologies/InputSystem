@@ -15,6 +15,7 @@
 		"xr"
 	],
 	"dependencies" : {
-		"com.unity.modules.uielements": "1.0.0"
+		"com.unity.modules.uielements": "1.0.0",
+		"com.unity.inputsystem.forui": "1.0.0"
 	}
 }
