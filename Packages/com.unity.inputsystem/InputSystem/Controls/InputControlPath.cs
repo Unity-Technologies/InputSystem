@@ -901,11 +901,6 @@ namespace UnityEngine.InputSystem
                     TControl lastMatch;
                     if (path[indexInPath] == '{')
                     {
-                        ////TODO: support scavenging a subhierarchy for usages
-                        if (!ReferenceEquals(control.device, control))
-                            throw new NotImplementedException(
-                                "Matching usages inside subcontrols instead of at device root");
-
                         // Usages are kind of like entry points that can route to anywhere else
                         // on a device's control hierarchy and then we keep going from that re-routed
                         // point.

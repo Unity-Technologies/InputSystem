@@ -82,9 +82,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 return;
 
             // Add to list.
-            var numPointers = m_NumPointers;
             ArrayHelpers.AppendWithCapacity(ref m_Pointers, ref m_NumPointers, pointer);
-            ArrayHelpers.AppendWithCapacity(ref m_CurrentPositions, ref numPointers, default);
+            ArrayHelpers.Append(ref m_CurrentPositions, default(Vector2));
+            ArrayHelpers.Append(ref m_CurrentDisplayIndices, default(int));
 
             InputSystem.DisableDevice(pointer, keepSendingEvents: true);
         }
@@ -110,9 +110,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
 
             // Remove from list.
-            var numPointers = m_NumPointers;
             m_Pointers.EraseAtWithCapacity(ref m_NumPointers, pointerIndex);
-            m_CurrentPositions.EraseAtWithCapacity(ref numPointers, pointerIndex);
+            ArrayHelpers.EraseAt(ref m_CurrentPositions, pointerIndex);
+            ArrayHelpers.EraseAt(ref m_CurrentDisplayIndices, pointerIndex);
 
             // Re-enable the device (only in case it's still added to the system).
             if (pointer.added)
@@ -134,11 +134,19 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             ////REVIEW: should we have specialized paths for MouseState and PenState here? (probably can only use for StateEvents)
 
+            Pointer pointer = m_Pointers[pointerIndex];
+
             // Read pointer position.
-            var positionControl = m_Pointers[pointerIndex].position;
+            var positionControl = pointer.position;
             var positionStatePtr = positionControl.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
             if (positionStatePtr != null)
                 m_CurrentPositions[pointerIndex] = positionControl.ReadValueFromState(positionStatePtr);
+
+            // Read display index.
+            var displayIndexControl = pointer.displayIndex;
+            var displayIndexStatePtr = displayIndexControl.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+            if (displayIndexStatePtr != null)
+                m_CurrentDisplayIndices[pointerIndex] = displayIndexControl.ReadValueFromState(displayIndexStatePtr);
 
             // End touches for which buttons are no longer pressed.
             ////REVIEW: There must be a better way to do this
@@ -280,11 +288,15 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         private unsafe void UpdateTouch(int touchIndex, int pointerIndex, TouchPhase phase, InputEventPtr eventPtr = default)
         {
-            var position = m_CurrentPositions[pointerIndex];
+            Vector2 position = m_CurrentPositions[pointerIndex];
+            Debug.Assert(m_CurrentDisplayIndices[pointerIndex] <= byte.MaxValue, "Display index was larger than expected");
+            byte displayIndex = (byte)m_CurrentDisplayIndices[pointerIndex];
+
             var touch = new TouchState
             {
                 phase = phase,
-                position = position
+                position = position,
+                displayIndex = displayIndex
             };
             var time = eventPtr.valid ? eventPtr.time : InputState.currentTime;
 
@@ -335,6 +347,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private int m_NumPointers;
         [NonSerialized] private Pointer[] m_Pointers;
         [NonSerialized] private Vector2[] m_CurrentPositions;
+        [NonSerialized] private int[] m_CurrentDisplayIndices;
         [NonSerialized] private ButtonControl[] m_Touches;
 
         [NonSerialized] private int m_LastTouchId;

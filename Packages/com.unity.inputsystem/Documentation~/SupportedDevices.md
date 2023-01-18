@@ -29,9 +29,9 @@ Support for the following Devices doesn't require specialized support of particu
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
 |PS3/PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 8)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
-|PS5|Yes (10)|Yes (10)|No (10)|Yes (10)|Yes (10)|No (10)|No (10)|No|Yes|No|Sometimes (2)|
-|Switch|Yes (9)|Yes (9)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
-|MFi (such as SteelSeries)|No|Sometimes (11)|No|No|No|Yes|Yes|No|No|No|No|
+|PS5|Yes (11)|Yes (11)|No (11)|Yes (11)|Yes (9, 11)|No (11)|No (11)|No|Yes|No|Sometimes (2)|
+|Switch|Yes (10)|Yes (10)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
+|MFi (such as SteelSeries)|No|Sometimes (12)|No|No|No|Yes|Yes|No|No|No|No|
 
 >__Notes__:
 >1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
@@ -42,10 +42,11 @@ Support for the following Devices doesn't require specialized support of particu
 On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
 >6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
->8. Unity officially supports PS4 controllers only on [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
->9. Switch Joy-Cons are not currently supported on Windows and Mac. Some of official accessories are supported on Windows and Mac: "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Deluxe Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
->10. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
->11. SteelSeries Nimbus+ supported via HID on macOS.
+>8. Unity supports PS4 controllers on Android devices running [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
+>9. Unity supports PS5 controllers on Android devices running [Android 12 or higher](https://playstation.com/en-gb/support/hardware/pair-dualsense-controller-bluetooth/).
+>10. Switch Joy-Cons are not currently supported on Windows and Mac. Some of official accessories are supported on Windows and Mac: "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Deluxe Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
+>11. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
+>12. SteelSeries Nimbus+ supported via HID on macOS.
 On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
 On Android it's expected to be working from Android 12.
 On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.

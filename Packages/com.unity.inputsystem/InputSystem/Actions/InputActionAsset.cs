@@ -833,7 +833,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Enumerate all actions in the asset.
         /// </summary>
-        /// <returns>Enumerate over all actions in the asset.</returns>
+        /// <returns>An enumerator going over the actions in the asset.</returns>
         /// <remarks>
         /// Actions will be enumerated one action map in <see cref="actionMaps"/>
         /// after the other. The actions from each map will be yielded in turn.
@@ -855,6 +855,11 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Enumerate all actions in the asset.
+        /// </summary>
+        /// <returns>An enumerator going over the actions in the asset.</returns>
+        /// <seealso cref="GetEnumerator"/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

@@ -1,20 +1,27 @@
 # Actions
 
-* [Overview](#overview)
-* [Creating Actions](#creating-actions)
-    * [Using the Action editor](#using-the-action-editor)
-    * [Embedding Actions in MonoBehaviours](#embedding-actions-in-monobehaviours)
-    * [Loading Actions from JSON](#loading-actions-from-json)
-    * [Creating Actions in code](#creating-actions-in-code)
-      * [Default Actions](#default-actions)
-* [Using Actions](#using-actions)
-    * [Responding to Actions](#responding-to-actions)
-      * [Action callbacks](#action-callbacks)
-      * [Polling Actions](#polling-actions)
-    * [Action types](#action-types)
-    * [Debugging Actions](#debugging-actions)
-    * [Using Actions with multiple players](#using-actions-with-multiple-players)
-* [Terms and concepts](#terms-and-concepts)
+- [Actions](#actions)
+  - [Overview](#overview)
+  - [Creating Actions](#creating-actions)
+    - [Creating Actions using the Action editor](#creating-actions-using-the-action-editor)
+    - [Creating Actions by embedding them in MonoBehaviours](#creating-actions-by-embedding-them-in-monobehaviours)
+    - [Loading Actions from JSON](#loading-actions-from-json)
+    - [Creating Actions in code](#creating-actions-in-code)
+      - [Default Actions](#default-actions)
+  - [Using Actions](#using-actions)
+    - [Responding to Actions](#responding-to-actions)
+      - [Action callbacks](#action-callbacks)
+        - [`InputActionMap.actionTriggered` callback](#inputactionmapactiontriggered-callback)
+        - [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback)
+      - [Polling Actions](#polling-actions)
+      - [`InputActionTrace`](#inputactiontrace)
+    - [Action types](#action-types)
+      - [Value](#value)
+      - [Button](#button)
+      - [Pass-Through](#pass-through)
+    - [Debugging Actions](#debugging-actions)
+    - [Using Actions with multiple players](#using-actions-with-multiple-players)
+
 
 Related pages:
 
@@ -22,36 +29,34 @@ Related pages:
 * [Bindings](ActionBindings.md)
 * [Interactions](Interactions.md)
 
-Input Actions are designed to separate the logical meaning of an input from the physical means of input (that is, activity on an input device) that generate the input. Instead of writing input code like this:
+**Actions** allow you to separate the logical meaning of an input (the things your user can do in your game or app, such as move, jump, crouch) and the device-specific controls (for example, pressing a button or moving a gamepad stick).
+
+Without Actions, the meaning of your input and the device controls end up hard-coded together in your scripts, which although quick to implement, is not very flexible and therefore not always desirable. For example, here the moveVector variable is hard-coded to read values from the right stick of a gamepad:
 
 ```CSharp
-    var look = new Vector2();
-
-    var gamepad = Gamepad.current;
-    if (gamepad != null)
-        look = gamepad.rightStick.ReadValue();
-
-    var mouse = Mouse.current;
-    if (mouse != null)
-        look = mouse.delta.ReadValue();
+    // without Actions, you end up hard-coding device controls
+    // like this: (not always desirable)
+    moveVector = gamepad.rightStick.ReadValue<Vector2>();
 ```
 
-You can write code that is agnostic to where the input is coming from:
+When you use Actions, you do not need to refer to specific devices or their controls in your code. Instead the Action's binding defines which controls on which device is used to perform the action, and your code becomes simpler. In this example, `moveAction` would contain a reference to an Action, defined either in code, or in an Action Asset:
 
 ```CSharp
-    myControls.gameplay.look.performed +=
-        context => look = context.ReadValue<Vector2>();
+    // using Actions removes the need to refer directly to device controls
+    moveAmount = moveAction.ReadValue<Vector2>();
 ```
 
-You can then use the visual editor to establish the mapping:
 
-![Look Action Binding](Images/LookActionBinding.png)
+
+You can then use the visual editor (either in the inspector, or in the Actions Asset editor) to establish the mapping between the Action and one or more device controls. For example in this screenshot, the "move" action is bound to the left gamepad stick, and the keyboard's arrow keys.
+
+![Actions Bindings](Images/ActionsBinding.png)
 
 This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#interactive-rebinding).
 
->__Note__:
+>!Note
 >* Actions are a game-time only feature. You can't use them in `EditorWindow` code.
->* For an overview of the terms and terminology used on this page, see [Terms and concepts](#terms-and-concepts).
+>* For an overview of the terms and terminology used on this page, see [Concepts](Concepts.md).
 
 ## Overview
 
@@ -71,36 +76,39 @@ Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSyst
 
 ## Creating Actions
 
-You can create Actions in one of the following ways:
+You can create Actions in any of the following ways:
 
-1. Use the dedicated editor for `.inputactions` Assets.
-2. Embed them in MonoBehaviour components.
-3. Manually load them from JSON.
-4. Create them directly in code.
+- Use the dedicated editor for [Input Action Assets](ActionAssets.md).
+- [Embed them](Workflow-Embedded.md) in MonoBehaviour components, then set up bindings in the Inspector.
+- Manually load them from JSON.
+- Create them entirely in code, including setting up the bindings.
 
-### Using the Action editor
+### Creating Actions using the Action editor
 
-For information on how to create and edit Input Action Assets in the dedicated editor, see [Action Assets](ActionAssets.md).
+For information on how to create and edit Input Action Assets in the dedicated editor, see [Action Assets](ActionAssets.md). This is the recommended workflow if you want to organise all your input actions and bindings together into a single Asset, which is often the case for many types of game or app.
 
 ![Action Editor Window](Images/MyGameActions.png)
 
-### Embedding Actions in MonoBehaviours
+### Creating Actions by embedding them in MonoBehaviours
 
-You can embed [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) and [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components.
+As an alternative to using an Action Asset, You can embed individual [Input Action](../api/UnityEngine.InputSystem.InputAction.html) and [Input Action Maps](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components, like this:
 
 ```CSharp
-public MyBehavior : MonoBehaviour
-{
-    public InputAction fireAction;
-    public InputAction lookAction;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
-    public InputActionMap gameplayActions;
+public class ExampleScript : MonoBehaviour
+{
+    public InputAction move;
+    public InputAction jump;
 }
 ```
 
-These fields receive a custom editor UI in the Unity Editor:
+The result is similar to using an Action Asset, except the Actions are defined in the GameObject's properties and saved as Scene or Prefab data, instead of in a dedicated Asset.
 
-![MyBehavior Inspector](Images/MyBehaviorInspector.png)
+When you embed actions in a MonoBehaviour and assign that MonoBehaviour to a GameObject, the GameObject's Inspector window displays an interface similar to the Actions Asset window, which allows you to set up the bindings for those actions. For example:
+
+![MyBehavior Inspector](Images/Workflow-EmbeddedActionsInspector.png)
 
 The visual editors work similarly to the [Action Asset editor](ActionAssets.md).
 
@@ -158,7 +166,7 @@ var asset = InputActionAsset.FromJson(json);
 
 ### Creating Actions in code
 
-You can manually create and configure Actions. This also works at runtime in the Player.
+You can manually create and configure Actions entirely in code, including assigning the bindings. This also works at runtime in the Player. For example:
 
 ```CSharp
 // Create free-standing Actions.
@@ -231,7 +239,7 @@ There are several ways to do this:
 4. You can [poll the current state](#polling-actions) of an Action whenever you need it.
 5. [`InputActionTrace`](#inputactiontrace) can record changes happening on Actions.
 
-There are also two higher-level, more streamlined ways of picking up input from Actions: use [`PlayerInput`](Components.md#notification-behaviors), or [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
+There are also two higher-level, more streamlined ways of picking up input from Actions: use [`PlayerInput`](PlayerInput.md#notification-behaviors), or [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
 
 #### Action callbacks
 
@@ -465,19 +473,4 @@ You can also use the [`InputActionVisualizer`](Debugging.md#inputactionvisualize
 
 ### Using Actions with multiple players
 
-You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, see documentation on the [Player Input Manager](Components.md#playerinputmanager-component) component.
-
-## Terms and concepts
-
-The Input Action system uses the following terms and concepts:
-
-|Concept|Description|
-|-------|-----------|
-|[__Action__](Actions.md)|A logical input such as "Jump" or "Fire". That is, an input action that a player can trigger through one or more input devices and runs a piece of game logic in response.|
-|[__Binding__](ActionBindings.md)|A connection between an Action and one or more Controls represented by a [control path](Controls.md#control-paths). At run time, a Binding is resolved to yield zero or more Controls, which the Input System then connects to the Action.|
-|[__Interaction__](Interactions.md)|A distinct input pattern that can be recognized on a Control. An Interaction only triggers an Action when the Input System recognizes the pattern.<br><br>For example, a "hold" Interaction requires a Control to be actuated and then held for a certain time before it triggers the associated Action.|
-|[__Processor__](Processors.md)|An operation that the Input System applies to an input value. For example, an "invert" Processor inverts a floating-point value.|
-|[__Phase__](Interactions.md#operation)|An enum describing the current state of an Interaction.|
-|[__Control Scheme__](ActionBindings.md#control-schemes)|Allows you to define mappings of Bindings to different Control Schemes, and to switch your Action Maps between different Control Schemes to enable different subsets of Bindings for your Actions. Control Schemes can have associated Device types, so that the game can automatically enable them for [users](UserManagement.md) when using that type of Device.|
-|__Action Map__|A named collection of Actions. You can simultaneously enable or disable all Actions in an action map, so it is useful to group Actions in Action Maps by the context they are relevant in (for example: "gameplay").|
-|[__Action Asset__](ActionAssets.md)|An Asset that contains one or more Action Maps as well as, optionally, a sequence of Control Schemes.|
+You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, see documentation on the [Player Input Manager](PlayerInputManager.md) component.

@@ -917,6 +917,11 @@ namespace UnityEngine.InputSystem
             return clone;
         }
 
+        /// <summary>
+        /// Return an boxed instance of the action.
+        /// </summary>
+        /// <returns>An boxed clone of the action</returns>
+        /// <seealso cref="Clone"/>
         object ICloneable.Clone()
         {
             return Clone();

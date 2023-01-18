@@ -1272,7 +1272,7 @@ namespace UnityEngine.InputSystem
                     }
                 }
 
-                throw new NotImplementedException();
+                Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
             }
         }
 
@@ -2304,9 +2304,6 @@ namespace UnityEngine.InputSystem
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
 
-                    // The control is not explicitly excluded so we suppress the event, if that's enabled.
-                    suppressEvent = true;
-
                     // If controls have to match a certain path, check if this one does.
                     if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
                         continue;
@@ -2347,6 +2344,9 @@ namespace UnityEngine.InputSystem
                         continue;
                     }
 
+                    // At this point the control is a potential candidate for rebinding and therefore the event may need to be suppressed, if that's enabled.
+                    suppressEvent = true;
+
                     var magnitude = control.EvaluateMagnitude(statePtr);
                     if (magnitude >= 0)
                     {
@@ -2355,7 +2355,7 @@ namespace UnityEngine.InputSystem
                         {
                             // Haven't seen this control changing actuation yet. Record its current actuation as its
                             // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
-                            startingMagnitude = control.EvaluateMagnitude();
+                            startingMagnitude = control.magnitude;
                             m_StartingActuations.Add(control, startingMagnitude);
                         }
 

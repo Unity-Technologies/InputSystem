@@ -1152,13 +1152,23 @@ internal partial class CoreTests
         using (new InputActionRebindingExtensions.RebindingOperation()
                .WithAction(action)
                .WithControlsExcluding("<Pointer>/position")
-               .WithMatchingEventsBeingSuppressed().Start())
+               .WithControlsExcluding("<Pointer>/press")
+               .WithControlsExcluding("<Mouse>/leftButton")
+               .WithControlsExcluding("<Gamepad>/buttonEast")
+               .WithMatchingEventsBeingSuppressed()
+               .Start()
+        )
         {
+            // Non-bindable controls should not be suppressed and continue working as normal
             Set(mouse.position, new Vector2(123, 234));
-            Press(gamepad.buttonSouth);
+            Press(mouse.leftButton);
+            Press(gamepad.buttonEast);
 
+            Press(gamepad.buttonSouth);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(mouse.leftButton.isPressed, Is.True);
             Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonEast.isPressed, Is.True);
             Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
         }
     }

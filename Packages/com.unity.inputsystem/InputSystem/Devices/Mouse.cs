@@ -79,17 +79,19 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
         public ushort buttons;
 
-        // Not currently used, but still needed in this struct for padding,
-        // as il2cpp does not implement FieldOffset.
+        /// <summary>
+        /// The index of the display that was moused.
+        /// </summary>
+        [InputControl(name = "displayIndex", layout = "Integer", displayName = "Display Index")]
         [FieldOffset(26)]
-        ushort displayIndex;
+        public ushort displayIndex;
 
         /// <summary>
         /// Number of clicks performed in succession.
         /// </summary>
         /// <value>Successive click count.</value>
         /// <seealso cref="Mouse.clickCount"/>
-        [InputControl(layout = "Integer", displayName = "Click Count", synthetic = true)]
+        [InputControl(name = "clickCount", layout = "Integer", displayName = "Click Count", synthetic = true)]
         [FieldOffset(28)]
         public ushort clickCount;
 
@@ -286,6 +288,7 @@ namespace UnityEngine.InputSystem
             rightButton = GetChildControl<ButtonControl>("rightButton");
             forwardButton = GetChildControl<ButtonControl>("forwardButton");
             backButton = GetChildControl<ButtonControl>("backButton");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             clickCount = GetChildControl<IntegerControl>("clickCount");
             base.FinishSetup();
         }

@@ -36,6 +36,12 @@ namespace UnityEngine.InputSystem.Controls
         public TouchPressControl press { get; set; }
 
         /// <summary>
+        /// Gets the index of the display that was touched.
+        /// <see href="https://docs.unity3d.com/ScriptReference/Display.html"/>
+        /// </summary>
+        public IntegerControl displayIndex { get; set; }
+
+        /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
         /// </summary>
         /// <value>Control reading out the ID of the touch.</value>
@@ -176,7 +182,7 @@ namespace UnityEngine.InputSystem.Controls
         {
             get
             {
-                switch (phase.ReadValue())
+                switch (phase.value)
                 {
                     case TouchPhase.Began:
                     case TouchPhase.Moved:
@@ -202,6 +208,7 @@ namespace UnityEngine.InputSystem.Controls
         protected override void FinishSetup()
         {
             press = GetChildControl<TouchPressControl>("press");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             touchId = GetChildControl<IntegerControl>("touchId");
             position = GetChildControl<Vector2Control>("position");
             delta = GetChildControl<DeltaControl>("delta");

@@ -1596,6 +1596,17 @@ namespace UnityEngine.InputSystem.UI
             return ref m_PointerStates.additionalValues[index - 1];
         }
 
+        private int GetDisplayIndexFor(InputControl control)
+        {
+            int displayIndex = 0;
+            if (control.device is Pointer pointerCast)
+            {
+                displayIndex = pointerCast.displayIndex.ReadValue();
+                Debug.Assert(displayIndex <= byte.MaxValue, "Display index was larger than expected");
+            }
+            return displayIndex;
+        }
+
         private int GetPointerStateIndexFor(ref InputAction.CallbackContext context)
         {
             if (CheckForRemovedDevice(ref context))
@@ -1650,16 +1661,19 @@ namespace UnityEngine.InputSystem.UI
             // Need to check if it's a touch so that we get a correct pointerId.
             if (controlParent is TouchControl touchControl)
             {
-                touchId = touchControl.touchId.ReadValue();
-                touchPosition = touchControl.position.ReadValue();
+                touchId = touchControl.touchId.value;
+                touchPosition = touchControl.position.value;
             }
             // Could be it's a toplevel control on Touchscreen (like "<Touchscreen>/position"). In that case,
             // read the touch ID from primaryTouch.
             else if (controlParent is Touchscreen touchscreen)
             {
-                touchId = touchscreen.primaryTouch.touchId.ReadValue();
-                touchPosition = touchscreen.primaryTouch.position.ReadValue();
+                touchId = touchscreen.primaryTouch.touchId.value;
+                touchPosition = touchscreen.primaryTouch.position.value;
             }
+
+            int displayIndex = GetDisplayIndexFor(control);
+
             if (touchId != 0)
                 pointerId = ExtendedPointerEventData.MakePointerIdForTouch(pointerId, touchId);
 
@@ -1736,7 +1750,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (m_CurrentPointerIndex == -1)
                 {
-                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
+                    m_CurrentPointerIndex = AllocatePointer(pointerId, displayIndex, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
                 }
                 else
                 {
@@ -1752,6 +1766,9 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
+#if UNITY_2023_1_OR_NEWER
+                    eventData.displayIndex = displayIndex;
+#endif
 
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
@@ -1773,7 +1790,7 @@ namespace UnityEngine.InputSystem.UI
             if (pointerType != UIPointerType.None)
             {
                 // Device has an associated position input. Create a new pointer record.
-                index = AllocatePointer(pointerId, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
+                index = AllocatePointer(pointerId, displayIndex, touchId, pointerType, control, device, touchId != 0 ? controlParent : null);
             }
             else
             {
@@ -1795,7 +1812,7 @@ namespace UnityEngine.InputSystem.UI
                 if (pointerDevice != null && !(pointerDevice is Touchscreen)) // Touchscreen only temporarily allocate pointer states.
                 {
                     // Create MouseOrPen style pointer.
-                    index = AllocatePointer(pointerDevice.deviceId, 0, UIPointerType.MouseOrPen, pointControls.Value[0], pointerDevice);
+                    index = AllocatePointer(pointerDevice.deviceId, displayIndex, 0, UIPointerType.MouseOrPen, pointControls.Value[0], pointerDevice);
                 }
                 else
                 {
@@ -1807,13 +1824,13 @@ namespace UnityEngine.InputSystem.UI
                     if (trackedDevice != null)
                     {
                         // Create a Tracked style pointer.
-                        index = AllocatePointer(trackedDevice.deviceId, 0, UIPointerType.Tracked, positionControls.Value[0], trackedDevice);
+                        index = AllocatePointer(trackedDevice.deviceId, displayIndex, 0, UIPointerType.Tracked, positionControls.Value[0], trackedDevice);
                     }
                     else
                     {
                         // We got input from a non-pointer device and apparently there's no pointer we can route the
                         // input into. Just create a pointer state for the device and leave it at that.
-                        index = AllocatePointer(pointerId, 0, UIPointerType.None, control, device);
+                        index = AllocatePointer(pointerId, displayIndex, 0, UIPointerType.None, control, device);
                     }
                 }
             }
@@ -1828,7 +1845,7 @@ namespace UnityEngine.InputSystem.UI
             return index;
         }
 
-        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputControl control, InputDevice device, InputControl touchControl = null)
+        private int AllocatePointer(int pointerId, int displayIndex, int touchId, UIPointerType pointerType, InputControl control, InputDevice device, InputControl touchControl = null)
         {
             // Recover event instance from previous record.
             var eventData = default(ExtendedPointerEventData);
@@ -1845,6 +1862,9 @@ namespace UnityEngine.InputSystem.UI
                 eventData = new ExtendedPointerEventData(eventSystem);
 
             eventData.pointerId = pointerId;
+#if UNITY_2023_1_OR_NEWER
+            eventData.displayIndex = displayIndex;
+#endif
             eventData.touchId = touchId;
             eventData.pointerType = pointerType;
             eventData.control = control;
@@ -1968,6 +1988,9 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         // NOTE: In the click events, we specifically react to the Canceled phase to make sure we do NOT perform
@@ -1996,6 +2019,9 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnRightClickCallback(InputAction.CallbackContext context)
@@ -2010,6 +2036,9 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.rightButton.ignoreNextClick = true;
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnMiddleClickCallback(InputAction.CallbackContext context)
@@ -2024,6 +2053,9 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.middleButton.ignoreNextClick = true;
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
@@ -2052,6 +2084,9 @@ namespace UnityEngine.InputSystem.UI
             // The old input system reported scroll deltas in lines, we report pixels.
             // Need to scale as the UI system expects lines.
             state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnMoveCallback(InputAction.CallbackContext context)
@@ -2068,6 +2103,9 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldOrientation = context.ReadValue<Quaternion>();
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnTrackedDevicePositionCallback(InputAction.CallbackContext context)
@@ -2078,6 +2116,9 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldPosition = context.ReadValue<Vector3>();
+#if UNITY_2023_1_OR_NEWER
+            state.eventData.displayIndex = GetDisplayIndexFor(context.control);
+#endif
         }
 
         private void OnControlsChanged(object obj)
