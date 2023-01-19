@@ -348,11 +348,66 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </summary>
         public static int maxGamepadSlots => s_GamepadSlotEnums.Count;
 
+        /// <summary>
+        /// The pixel position of the pointer in window space.
+        /// </summary>
+        /// <returns>The position of the most recently actuated pointer device.</returns>
+        /// <remarks>
+        /// If there are multiple pointer devices attached to the system, this will return the pointer
+        /// position of the one that was most recently actuated. In window space coordinates, the bottom
+        /// left corner of the window is 0, 0.
+        /// pointerPosition will work for mouse, pen, and touchscreen devices.
+        /// Note that for Touchscreen devices, this will return the position of the primary touch.
+        /// </remarks>
+        public static Vector2 pointerPosition => s_PointerPosition;
+
+        /// <summary>
+        /// Indicates if a pointer device is attached to the system.
+        /// </summary>
+        /// <returns>True if any pointer device is detected.</returns>
+        /// <remarks>
+        /// This will return true for mouse, pen, and touchscreen devices.
+        /// </remarks>
+        public static bool pointerPresent
+        {
+            get
+            {
+                foreach (var inputDevice in InputSystem.devices)
+                {
+                    if (inputDevice is Pointer)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The current mouse scroll delta.
+        /// </summary>
+        /// <returns>A vector2 representing horizontal and vertical scroll values, or Vector2.zero if no mouse is detected.</returns>
+        /// <remarks>
+        /// For a common desktop mouse, this property will store the mouse wheel scroll delta in the Vector2.y property. In
+        /// this case, Input.scrollDelta can be positive (up) or negative (down). For trackpad devices, scrolling is
+        /// emulated using double finger movement, and can represent horizontal scrolling (Vector2.x can be negative (left) or positive
+        /// (right)) or vertical scrolling (Vector2.y can be positive (up) or negative (down)).
+        /// The value returned by scrollDelta will need to be adjusted for sensitivity based on your applications needs and the
+        /// platform. For example, on Windows, mouse wheel scroll deltas are reported in increments of 120 units.
+        /// If there are multiple devices attached to a system that identify as a mouse, the values from the most recently
+        /// actuated device are used.
+        /// Note that scrollDelta is read-only.
+        /// </remarks>
+        public static Vector2 scrollDelta => s_ScrollDelta;
+
         private static Gamepad[] s_Gamepads;
         private static int[] s_GamepadsConnectedFrames;
         private static int[] s_GamepadsDisconnectedFrames;
         private static ReadOnlyArray<GamepadSlot> s_GamepadSlotEnums;
         private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot12 + 1];
+        private static Vector2 s_PointerPosition;
+        private static Vector2 s_ScrollDelta;
+        private static InputAction s_PointerAction;
+        private static InputAction s_ScrollAction;
 
 #if UNITY_EDITOR
         internal static bool s_TimeHasUpdatedThisFrame;
@@ -1171,84 +1226,6 @@ namespace UnityEngine.InputSystem.HighLevel
             return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
         }
 
-        /// <summary>
-        /// The pixel position of the pointer in window space.
-        /// </summary>
-        /// <returns>The position of the first pointer device installed in the system.</returns>
-        /// <remarks>
-        /// If there are multiple pointer devices attached to the system, this will return the pointer
-        /// position of the first one. In window space coordinates, the bottom left corner of
-        /// the window is 0, 0.
-        /// pointerPosition will work for mouse, pen, and touchscreen devices.
-        /// Note that for Touchscreen devices, this will return the position of the primary touch.
-        /// </remarks>
-        public static Vector2 pointerPosition
-        {
-            get
-            {
-                foreach (var inputDevice in InputSystem.devices)
-                {
-                    if (!(inputDevice is Pointer pointer))
-                        continue;
-
-                    return pointer.position.ReadValue();
-                }
-                return Vector2.zero;
-            }
-        }
-
-        /// <summary>
-        /// Indicates if a pointer device is attached to the system.
-        /// </summary>
-        /// <returns>True if any pointer device is detected.</returns>
-        /// <remarks>
-        /// This will return true for mouse, pen, and touchscreen devices.
-        /// </remarks>
-        public static bool pointerPresent
-        {
-            get
-            {
-                foreach (var inputDevice in InputSystem.devices)
-                {
-                    if (inputDevice is Pointer)
-                        return true;
-                }
-
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// The current mouse scroll delta.
-        /// </summary>
-        /// <returns>A vector2 representing horizontal and vertical scroll values, or Vector2.zero if no mouse is detected.</returns>
-        /// <remarks>
-        /// For a common desktop mouse, this property will store the mouse wheel scroll delta in the Vector2.y property. In
-        /// this case, Input.scrollDelta can be positive (up) or negative (down). For trackpad devices, scrolling is
-        /// emulated using double finger movement, and can represent horizontal scrolling (Vector2.x can be negative (left) or positive
-        /// (right)) or vertical scrolling (Vector2.y can be positive (up) or negative (down)).
-        /// The value returned by scrollDelta will need to be adjusted for sensitivity based on your applications needs and the
-        /// platform. For example, on Windows, mouse wheel scroll deltas are reported in increments of 120 units.
-        /// If there are multiple devices attached to a system that identify as a mouse, the values from the first device
-        /// are used.
-        /// Note that scrollDelta is read-only.
-        /// </remarks>
-        public static Vector2 scrollDelta
-        {
-            get
-            {
-                foreach (var inputDevice in InputSystem.devices)
-                {
-                    if (!(inputDevice is Mouse mouse))
-                        continue;
-
-                    return mouse.scroll.ReadValue();
-                }
-
-                return Vector2.zero;
-            }
-        }
-
         private static float GetGamepadTriggerPressPoint(GamepadSlot gamepadSlot)
         {
             switch (gamepadSlot)
@@ -1406,6 +1383,47 @@ namespace UnityEngine.InputSystem.HighLevel
                 () => s_TimeHasUpdatedThisFrame = false);
             UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
 #endif
+            s_PointerPosition = Vector2.zero;
+            s_ScrollDelta = Vector2.zero;
+
+            s_PointerAction = new InputAction("Pointer", InputActionType.PassThrough, expectedControlType: "Vector2");
+            s_PointerAction.AddBinding("<Pointer>/position");
+            s_PointerAction.performed += OnPointerMoved;
+            s_PointerAction.Enable();
+
+            s_ScrollAction = new InputAction("Scroll", InputActionType.PassThrough, expectedControlType: "Vector2");
+            s_ScrollAction.AddBinding("<Mouse>/scroll");
+            s_ScrollAction.performed += OnMouseScrolled;
+            s_ScrollAction.Enable();
+        }
+
+        internal static void Shutdown()
+        {
+            if (s_PointerAction != null)
+            {
+                s_PointerAction.performed -= OnPointerMoved;
+                s_PointerAction.Disable();
+                s_PointerAction = null;
+            }
+
+            if (s_ScrollAction != null)
+            {
+                s_ScrollAction.performed -= OnMouseScrolled;
+                s_ScrollAction.Disable();
+                s_ScrollAction = null;
+            }
+
+            InputSystem.onDeviceChange -= OnDeviceChange;
+        }
+
+        private static void OnPointerMoved(InputAction.CallbackContext context)
+        {
+            s_PointerPosition = context.ReadValue<Vector2>();
+        }
+
+        private static void OnMouseScrolled(InputAction.CallbackContext context)
+        {
+            s_ScrollDelta = context.ReadValue<Vector2>();
         }
 
         private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
