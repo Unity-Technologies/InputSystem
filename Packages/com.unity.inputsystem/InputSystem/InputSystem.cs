@@ -3388,6 +3388,7 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
+                    HighLevel.Input.Initialize();
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
@@ -3409,6 +3410,8 @@ namespace UnityEngine.InputSystem
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
+
+                    HighLevel.Input.Shutdown();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
