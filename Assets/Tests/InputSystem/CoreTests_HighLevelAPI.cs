@@ -414,4 +414,55 @@ internal partial class CoreTests
         Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.13f, 0.13f)).Using(new Vector2EqualityComparer(0.01f)));
         Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.70f, -0.70f)).Using(new Vector2EqualityComparer(0.01f)));
     }
+
+    [Test]
+    [TestCase("Mouse")]
+    [TestCase("Pen")]
+    [TestCase("Touchscreen")]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_PointerPresentReturnsCorrectValue(string deviceName)
+    {
+        var pointer = InputSystem.AddDevice(deviceName);
+
+        Assert.That(Input.pointerPresent, Is.True);
+
+        InputSystem.RemoveDevice(pointer);
+
+        Assert.That(Input.pointerPresent, Is.False);
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_PointerPositionReturnsZeroWhenNoPointerIsAttached()
+    {
+        Assert.That(Input.pointerPosition, Is.EqualTo(Vector2.zero));
+    }
+
+    [Test]
+    [TestCase("Mouse")]
+    [TestCase("Pen")]
+    [TestCase("Touchscreen")]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_PointerPositionReturnsThePointerPositionWhenAnyPointerDeviceIsAttached(string deviceName)
+    {
+        var device = (Pointer)InputSystem.AddDevice(deviceName);
+
+        if (device is Touchscreen)
+            BeginTouch(4, new Vector2(123, 234));
+        else
+            Set(device.position, new Vector2(123, 234));
+
+        Assert.That(Input.pointerPosition, Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_ScrollDeltaReturnsScrollWheelDelta()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Set(mouse.scroll, new Vector2(123, 456));
+
+        Assert.That(Input.scrollDelta, Is.EqualTo(new Vector2(123, 456)));
+    }
 }
