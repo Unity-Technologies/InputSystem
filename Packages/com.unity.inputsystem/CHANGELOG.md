@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.5.0] - 2023-01-24
 
 ### Added
 - Added support for reading Tracking State in [TrackedPoseDriver](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver) to constrain whether the input pose is applied to the Transform. This should be used when the device supports valid flags for the position and rotation values, which is the case for XR poses.
