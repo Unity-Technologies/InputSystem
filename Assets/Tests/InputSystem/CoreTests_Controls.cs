@@ -438,6 +438,93 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public unsafe void Controls_ValueIsReadFromStateMemoryOnlyWhenControlHasBeenMarkedAsStale()
+    {
+        // disable paranoid checks because this test is consciously writing to state memory directly
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, false);
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // read the value once initially so it gets cached
+        var value = gamepad.leftTrigger.value;
+
+        // Note that we have to write a different value here (0.5) to the one we write below, otherwise the
+        // state comparison during the state update won't see any difference between the values and won't
+        // mark the control as stale
+        gamepad.leftTrigger.WriteValueIntoState(0.5f, gamepad.currentStatePtr);
+
+        // because we wrote the state manually into the current state ptr, the stale flag is not set, so calling
+        // value should return whatever was previously cached (0 by default).
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0));
+
+        // calling ApplyParameterChanges should recursively invalidate cached values
+        gamepad.ApplyParameterChanges();
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5f));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.Update();
+
+        // but this time, we updated state through the system which *does* set the stale flag on controls that
+        // have changed.
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // read all values to initially mark everything as cached
+        foreach (var control in keyboard.allControls)
+        {
+            var v = ((ButtonControl)control).value;
+        }
+
+        foreach (var control in keyboard.allControls)
+        {
+            Assert.That(control.m_CachedValueIsStale, Is.False);
+        }
+
+        var keyboardState = new KeyboardState((Key[])Enum.GetValues(typeof(Key)));
+        InputSystem.QueueStateEvent(keyboard, keyboardState);
+        InputSystem.Update();
+
+        foreach (var control in keyboard.allControls)
+        {
+            if (control == keyboard.imeSelected) // not a real key
+                continue;
+
+            Assert.That(control.m_CachedValueIsStale, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ValueIsSetToDefaultStateOnInitialization()
+    {
+        var json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""rightTrigger"",
+                        ""defaultState"" : ""0.5""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var gamepad = InputDevice.Build<Gamepad>("CustomGamepad");
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f));
+    }
+
+    [Test]
+    [Category("Controls")]
     public unsafe void Controls_CanWriteValueFromObjectIntoState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1377,5 +1464,46 @@ partial class CoreTests
 
         Assert.That(UnsafeUtility.SizeOf<TouchState>(), Is.EqualTo(TouchState.kSizeInBytes));
         Assert.That(touchscreen.touches[0].stateBlock.alignedSizeInBytes, Is.EqualTo(TouchState.kSizeInBytes));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_TrivialControlsAreOptimized()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatVector2));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_OptimizedControls_ParentChangesOptimization_IfChildIsNoLongerOptimized()
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        mouse.position.x.invert = true;
+        mouse.position.x.ApplyParameterChanges();
+
+        Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
+        Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
     }
 }

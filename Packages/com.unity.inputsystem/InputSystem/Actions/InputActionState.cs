@@ -140,7 +140,7 @@ namespace UnityEngine.InputSystem
 
             // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
             // in their own group.
-            var disableControlGrouping = InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableShortcutSupport);
+            var disableControlGrouping = !InputSystem.settings.shortcutKeysConsumeInput;
 
             var currentGroup = 1u;
             for (var i = 0; i < totalControlCount; ++i)
@@ -1286,7 +1286,7 @@ namespace UnityEngine.InputSystem
                     if (!control.CheckStateIsAtDefault())
                     {
                         // Update press times.
-                        if (control.IsValueConsideredPressed(control.EvaluateMagnitude()))
+                        if (control.IsValueConsideredPressed(control.magnitude))
                         {
                             // ReSharper disable once CompareOfFloatsByEqualityOperator
                             if (bindingState.pressTime == default || bindingState.pressTime > time)
@@ -1445,7 +1445,7 @@ namespace UnityEngine.InputSystem
 
                     // Store magnitude. We do this once and then only read it from here.
                     var control = controls[controlIndex];
-                    trigger.magnitude = control.CheckStateIsAtDefault() ? 0f : control.EvaluateMagnitude();
+                    trigger.magnitude = control.CheckStateIsAtDefault() ? 0f : control.magnitude;
                     controlMagnitudes[controlIndex] = trigger.magnitude;
 
                     // Update press times.
@@ -2800,7 +2800,7 @@ namespace UnityEngine.InputSystem
                         throw new InvalidOperationException(
                             $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
 
-                    value = controlOfType.ReadValue();
+                    value = controlOfType.value;
                 }
             }
 
@@ -2843,7 +2843,7 @@ namespace UnityEngine.InputSystem
                     // NOTE: We do *NOT* go to controlMagnitudes here. The reason is we may not yet have received the ProcessControlStateChange
                     //       call for a specific control that is part of the composite and thus controlMagnitudes may not yet have been updated
                     //       for a specific control.
-                    currentMagnitude = Mathf.Max(control.EvaluateMagnitude(), currentMagnitude);
+                    currentMagnitude = Mathf.Max(control.magnitude, currentMagnitude);
                 }
             }
 
@@ -3002,7 +3002,7 @@ namespace UnityEngine.InputSystem
                     //       trigger processing of the action and composite. Thus only that one single control would have its value
                     //       refreshed in controlMagnitudes whereas the other control magnitudes would be stale.
                     var control = controls[thisControlIndex];
-                    var magnitude = control.EvaluateMagnitude();
+                    var magnitude = control.magnitude;
                     if (magnitude < currentMagnitude)
                         continue;
 
@@ -3046,7 +3046,7 @@ namespace UnityEngine.InputSystem
                     //       trigger processing of the action and composite. Thus only that one single control would have its value
                     //       refreshed in controlMagnitudes whereas the other control magnitudes would be stale.
                     var control = controls[thisControlIndex];
-                    var magnitude = control.EvaluateMagnitude();
+                    var magnitude = control.magnitude;
                     if (magnitude < currentMagnitude)
                         continue;
 

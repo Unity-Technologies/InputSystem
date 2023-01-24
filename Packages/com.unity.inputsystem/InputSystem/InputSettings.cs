@@ -661,6 +661,32 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Improves shortcut key support by making composite controls consume control input
+        /// </summary>
+        /// <remarks>
+        /// Actions are exclusively triggered and will consume/block other actions sharing the same input.
+        /// E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.
+        /// Please note that enabling this will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls.
+        /// Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first.
+        /// Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls.
+        /// This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered.
+        /// These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys.
+        /// However conflicts would not occur between actions which belong to different Action Assets.
+        /// </remarks>
+        public bool shortcutKeysConsumeInput
+        {
+            get => m_ShortcutKeysConsumeInputs;
+            set
+            {
+                if (m_ShortcutKeysConsumeInputs == value)
+                    return;
+
+                m_ShortcutKeysConsumeInputs = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// Enable or disable an internal feature by its name.
         /// </summary>
         /// <param name="featureName">Name of the feature.</param>
@@ -675,23 +701,27 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
-            // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
-            // existing flag name, as users are aware of that now.
-            if (featureName == InputFeatureNames.kDisableShortcutSupport)
+            switch (featureName)
             {
-                if (m_ShortcutKeysConsumeInputs == !enabled) return;
-                m_ShortcutKeysConsumeInputs = !enabled;
-                OnChange();
-                return;
+                case InputFeatureNames.kUseOptimizedControls:
+                    optimizedControlsFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kUseReadValueCaching:
+                    readValueCachingFeatureEnabled = enabled;
+                    break;
+                case InputFeatureNames.kParanoidReadValueCachingChecks:
+                    paranoidReadValueCachingChecksEnabled = enabled;
+                    break;
+                default:
+                    if (m_FeatureFlags == null)
+                        m_FeatureFlags = new HashSet<string>();
+
+                    if (enabled)
+                        m_FeatureFlags.Add(featureName.ToUpperInvariant());
+                    else
+                        m_FeatureFlags.Remove(featureName.ToUpperInvariant());
+                    break;
             }
-
-            if (m_FeatureFlags == null)
-                m_FeatureFlags = new HashSet<string>();
-
-            if (enabled)
-                m_FeatureFlags.Add(featureName.ToUpperInvariant());
-            else
-                m_FeatureFlags.Remove(featureName.ToUpperInvariant());
 
             OnChange();
         }
@@ -728,12 +758,13 @@ namespace UnityEngine.InputSystem
 
         internal bool IsFeatureEnabled(string featureName)
         {
-            // REMOVE: this is a temporary crutch to disable shortcut support by default but while also preserving the
-            // existing flag name, as some users are aware of that now.
-            if (featureName == InputFeatureNames.kDisableShortcutSupport) return !m_ShortcutKeysConsumeInputs;
-
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
         }
+
+        // Needs a static field because feature check is in the hot path
+        internal static bool optimizedControlsFeatureEnabled = false;
+        internal static bool readValueCachingFeatureEnabled;
+        internal static bool paranoidReadValueCachingChecksEnabled;
 
         internal void OnChange()
         {

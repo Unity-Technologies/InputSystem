@@ -1758,6 +1758,49 @@ partial class CoreTests
         }
     }
 
+    // https://github.com/Unity-Technologies/InputSystem/pull/1024
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCopyPasteCompositeBinding_WithControlSchemes()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+        action1.AddCompositeBinding("Axis")
+            .With("Positive", "<Keyboard>/a", groups: "scheme1")
+            .With("Negative", "<Keyboard>/b", groups: "scheme1");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+        };
+        tree.Reload();
+        tree.bindingGroupForNewBindings = "scheme2";
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+            tree.CopySelectedItemsToClipboard();
+            tree.SelectItem("map/action2");
+            tree.PasteDataFromClipboard();
+
+            Assert.That(tree.FindItemByPath("map/action2"), Is.Not.Null);
+            var c = tree["map/action2"].children;
+            Assert.That(c, Has.Count.EqualTo(1));
+            Assert.That(c[0], Is.TypeOf<CompositeBindingTreeItem>());
+            Assert.That(c[0].As<CompositeBindingTreeItem>().groups, Is.EqualTo(""));
+            Assert.That(c[0].children, Has.Count.EqualTo(2));
+            Assert.That(c[0].children[0].As<PartOfCompositeBindingTreeItem>().path, Is.EqualTo("<Keyboard>/a"));
+            Assert.That(c[0].children[0].As<PartOfCompositeBindingTreeItem>().groups, Is.EqualTo("scheme2"));
+            Assert.That(c[0].children[1].As<PartOfCompositeBindingTreeItem>().path, Is.EqualTo("<Keyboard>/b"));
+            Assert.That(c[0].children[1].As<PartOfCompositeBindingTreeItem>().groups, Is.EqualTo("scheme2"));
+        }
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_ActionTree_CanFilterItems()
@@ -2898,6 +2941,117 @@ partial class CoreTests
 
         var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);
+    }
+
+    [Test]
+    public void InputActionCodeGenerator_ShouldGenerateValidCSharpCode()
+    {
+        // Note that this only tests pre-generated code contents with respect to the code generator.
+        // The intent of this test is to capture changes to the generated source that would not be detected since code currently isn't automatically regenerated.
+        // Hence, one need to regenerate the source file below if code generator is updated to produce different output. This is not ideal and could be improved if dynamic compilation is used.
+
+        var directory = "Assets/Tests/InputSystem";
+        var csFilePath = $"{directory}/InputActionCodeGeneratorActions.cs";
+        var assetPath = $"{directory}/InputActionCodeGeneratorActions.inputactions";
+        var csFileContents = File.ReadAllText(csFilePath);
+        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
+
+        var generatedCode = InputActionCodeGenerator.GenerateWrapperCode(asset);
+
+        Assert.That(generatedCode, Is.EqualTo(csFileContents), $"Unexpected content, likely code generator changed. Regenerate source from {assetPath}.");
+    }
+
+    private sealed class InputActionCodeGeneratorActionsStub : InputActionCodeGeneratorActions.IGameplayActions
+    {
+        public int m_Action1Count = 0;
+        public int m_Action2Count = 0;
+
+        public void OnAction1(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                ++m_Action1Count;
+        }
+
+        public void OnAction2(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                ++m_Action2Count;
+        }
+    }
+
+    [Test]
+    public void InputActionCodeGenerator_ShouldGenerateClassWithSupportForRegisteringAndUnregisteringActions()
+    {
+        // Note that this is only testing pre-generated code. See test above for consistency check on file contents of generated source code.
+
+        var instance1 = new InputActionCodeGeneratorActionsStub();
+        var instance2 = new InputActionCodeGeneratorActionsStub();
+        var actions = new InputActionCodeGeneratorActions();
+
+        // Register using SetCallbacks
+        actions.gameplay.SetCallbacks(instance1);
+        actions.Enable();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(0));
+
+        // Unregister using SetCallbacks(null)
+
+        actions.gameplay.SetCallbacks(null);
+        PressAndRelease(keyboard.enterKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(0));
+
+        // Add using AddCallbacks
+        actions.gameplay.AddCallbacks(instance1);
+        PressAndRelease(keyboard.enterKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(1));
+
+        // Add duplicate using AddCallbacks (Expecting duplicate to be ignored)
+        actions.gameplay.AddCallbacks(instance1);
+        PressAndRelease(keyboard.enterKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+
+        // Remove previously registered instance
+        actions.gameplay.RemoveCallbacks(instance1);
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+
+        // Attempt to remove non-existent instance
+        actions.gameplay.RemoveCallbacks(null);
+        actions.gameplay.RemoveCallbacks(instance2);
+
+        // Add multiple instances and remove single
+        actions.gameplay.AddCallbacks(instance1);
+        actions.gameplay.AddCallbacks(instance2);
+
+        actions.gameplay.RemoveCallbacks(instance1);
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+        Assert.That(instance2.m_Action1Count, Is.EqualTo(1));
+        Assert.That(instance2.m_Action2Count, Is.EqualTo(0));
+
+        // Multiple callbacks
+        actions.gameplay.AddCallbacks(instance1);
+
+        PressAndRelease(keyboard.spaceKey);
+
+        Assert.That(instance1.m_Action1Count, Is.EqualTo(2));
+        Assert.That(instance1.m_Action2Count, Is.EqualTo(2));
+        Assert.That(instance2.m_Action1Count, Is.EqualTo(2));
+        Assert.That(instance2.m_Action2Count, Is.EqualTo(0));
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.

@@ -24,12 +24,14 @@ namespace UnityEngine.InputSystem.XR
     {
         internal const int kSizeInBytes = 60;
 
+        internal static readonly FourCC s_Format = new FourCC('P', 'o', 's', 'e');
+
         /// <summary>
         /// Memory format tag for PoseState.
         /// </summary>
         /// <value>Returns "Pose".</value>
         /// <seealso cref="InputStateBlock.format"/>
-        public FourCC format => new FourCC('P', 'o', 's', 'e');
+        public FourCC format => s_Format;
 
         /// <summary>
         /// Constructor for PoseStates.
@@ -58,7 +60,7 @@ namespace UnityEngine.InputSystem.XR
         /// <remarks>
         /// Fully tracked means that the pose is accurate and not using any simulated or extrapolated positions, and the system tracking this pose is able to confidently track this object.
         /// </remarks>
-        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button")]
+        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button", sizeInBits = 8 /* needed to ensure optimization kicks-in */)]
         public bool isTracked;
 
         /// <summary>
@@ -190,7 +192,7 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
         public PoseControl()
         {
-            m_StateBlock.format = new FourCC('P', 'o', 's', 'e');
+            m_StateBlock.format = PoseState.s_Format;
         }
 
         /// <inheritdoc />
@@ -209,26 +211,62 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new PoseState()
+            switch (m_OptimizedControlDataType)
             {
-                isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
-                trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
-                position = position.ReadUnprocessedValueFromState(statePtr),
-                rotation = rotation.ReadUnprocessedValueFromState(statePtr),
-                velocity = velocity.ReadUnprocessedValueFromState(statePtr),
-                angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
-            };
+                case InputStateBlock.kFormatPose:
+                    return *(PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
+                default:
+                    return new PoseState()
+                    {
+                        isTracked = isTracked.ReadUnprocessedValueFromStateWithCaching(statePtr) > 0.5f,
+                        trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        position = position.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        rotation = rotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        velocity = velocity.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                        angularVelocity = angularVelocity.ReadUnprocessedValueFromStateWithCaching(statePtr),
+                    };
+            }
         }
 
         /// <inheritdoc />
         public override unsafe void WriteValueIntoState(PoseState value, void* statePtr)
         {
-            isTracked.WriteValueIntoState(value.isTracked, statePtr);
-            trackingState.WriteValueIntoState((uint)value.trackingState, statePtr);
-            position.WriteValueIntoState(value.position, statePtr);
-            rotation.WriteValueIntoState(value.rotation, statePtr);
-            velocity.WriteValueIntoState(value.velocity, statePtr);
-            angularVelocity.WriteValueIntoState(value.angularVelocity, statePtr);
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatPose:
+                    *(PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset) = value;
+                    break;
+                default:
+                    isTracked.WriteValueIntoState(value.isTracked, statePtr);
+                    trackingState.WriteValueIntoState((uint)value.trackingState, statePtr);
+                    position.WriteValueIntoState(value.position, statePtr);
+                    rotation.WriteValueIntoState(value.rotation, statePtr);
+                    velocity.WriteValueIntoState(value.velocity, statePtr);
+                    angularVelocity.WriteValueIntoState(value.angularVelocity, statePtr);
+                    break;
+            }
+        }
+
+        protected override FourCC CalculateOptimizedControlDataType()
+        {
+            if (
+                m_StateBlock.sizeInBits == PoseState.kSizeInBytes * 8 &&
+                m_StateBlock.bitOffset == 0 &&
+                isTracked.optimizedControlDataType == InputStateBlock.kFormatByte &&
+                trackingState.optimizedControlDataType == InputStateBlock.kFormatInt &&
+                position.optimizedControlDataType == InputStateBlock.kFormatVector3 &&
+                rotation.optimizedControlDataType == InputStateBlock.kFormatQuaternion &&
+                velocity.optimizedControlDataType == InputStateBlock.kFormatVector3 &&
+                angularVelocity.optimizedControlDataType == InputStateBlock.kFormatVector3 &&
+                trackingState.m_StateBlock.byteOffset == isTracked.m_StateBlock.byteOffset + 4 &&
+                position.m_StateBlock.byteOffset == isTracked.m_StateBlock.byteOffset + 8 &&
+                rotation.m_StateBlock.byteOffset == isTracked.m_StateBlock.byteOffset + 20 &&
+                velocity.m_StateBlock.byteOffset == isTracked.m_StateBlock.byteOffset + 36 &&
+                angularVelocity.m_StateBlock.byteOffset == isTracked.m_StateBlock.byteOffset + 48
+            )
+                return InputStateBlock.kFormatPose;
+
+            return InputStateBlock.kFormatInvalid;
         }
     }
 }

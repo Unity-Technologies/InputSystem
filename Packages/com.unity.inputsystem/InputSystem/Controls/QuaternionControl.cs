@@ -1,5 +1,6 @@
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: expose euler angle subcontrols?
 
@@ -66,17 +67,57 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc/>
         public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Quaternion(x.ReadValueFromState(statePtr), y.ReadValueFromState(statePtr), z.ReadValueFromState(statePtr),
-                w.ReadUnprocessedValueFromState(statePtr));
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatQuaternion:
+                    return *(Quaternion*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
+                default:
+                    return new Quaternion(
+                        x.ReadValueFromStateWithCaching(statePtr),
+                        y.ReadValueFromStateWithCaching(statePtr),
+                        z.ReadValueFromStateWithCaching(statePtr),
+                        w.ReadUnprocessedValueFromStateWithCaching(statePtr));
+            }
         }
 
         /// <inheritdoc/>
         public override unsafe void WriteValueIntoState(Quaternion value, void* statePtr)
         {
-            x.WriteValueIntoState(value.x, statePtr);
-            y.WriteValueIntoState(value.y, statePtr);
-            z.WriteValueIntoState(value.z, statePtr);
-            w.WriteValueIntoState(value.w, statePtr);
+            switch (m_OptimizedControlDataType)
+            {
+                case InputStateBlock.kFormatQuaternion:
+                    *(Quaternion*)((byte*)statePtr + (int)m_StateBlock.byteOffset) = value;
+                    break;
+                default:
+                    x.WriteValueIntoState(value.x, statePtr);
+                    y.WriteValueIntoState(value.y, statePtr);
+                    z.WriteValueIntoState(value.z, statePtr);
+                    w.WriteValueIntoState(value.w, statePtr);
+                    break;
+            }
+        }
+
+        protected override FourCC CalculateOptimizedControlDataType()
+        {
+            if (
+                m_StateBlock.sizeInBits == sizeof(float) * 4 * 8 &&
+                m_StateBlock.bitOffset == 0 &&
+                x.optimizedControlDataType == InputStateBlock.FormatFloat &&
+                y.optimizedControlDataType == InputStateBlock.FormatFloat &&
+                z.optimizedControlDataType == InputStateBlock.FormatFloat &&
+                w.optimizedControlDataType == InputStateBlock.FormatFloat &&
+                y.m_StateBlock.byteOffset == x.m_StateBlock.byteOffset + 4 &&
+                z.m_StateBlock.byteOffset == x.m_StateBlock.byteOffset + 8 &&
+                w.m_StateBlock.byteOffset == x.m_StateBlock.byteOffset + 12 &&
+                // For some unknown reason ReadUnprocessedValueFromState here uses ReadValueFromState on x/y/z (but not w)
+                // which means we can't optimize if there any processors on x/y/z
+                x.m_ProcessorStack.length == 0 &&
+                y.m_ProcessorStack.length == 0 &&
+                z.m_ProcessorStack.length == 0
+            )
+                return InputStateBlock.FormatQuaternion;
+
+            return InputStateBlock.FormatInvalid;
         }
     }
 }

@@ -1,11 +1,14 @@
+{% metadata_file .yamato/config.metadata %}
+---
+
 test_sample_projects:
   name : Publish Sample Projects
   agent:
     type: Unity::VM::osx
-    image: package-ci/mac:stable
+    image: package-ci/macos-12:default
     flavor: m1.mac
   commands:
-    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.4
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=Publish sh ExternalSampleProjects/publish.sh 
