@@ -24,6 +24,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <seealso cref="Input.IsControlDown(Inputs)"/>
     /// <seealso cref="Input.IsControlUp(Inputs)"/>
     /// <seealso cref="Input.IsControlPressed(Inputs)"/>
+    /// <seealso cref="Input.GetAxis(Inputs)"/>
+    /// <seealso cref="Input.GetAxis(Inputs, Inputs)"/>
+    /// <seealso cref="Input.GetAxis(Inputs, Inputs, Inputs, Inputs)"/>
     public enum Inputs
     {
         Key_Space = 10001,
@@ -177,7 +180,32 @@ namespace UnityEngine.InputSystem.HighLevel
         Gamepad_Triangle = Gamepad_North,
         Gamepad_Circle = Gamepad_East,
 
-        Joystick_Trigger = 40001
+        Joystick_Trigger = 40001,
+        Joystick_Button2 = 40002,
+        Joystick_Button3 = 40003,
+        Joystick_Button4 = 40004,
+        Joystick_Button5 = 40005,
+        Joystick_Button6 = 40006,
+        Joystick_Button7 = 40007,
+        Joystick_Button8 = 40008,
+    }
+
+    /// <summary>
+    /// An enum for querying the state of joystick buttons.
+    /// </summary>
+    /// <seealso cref="Input.IsControlDown(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.IsControlUp(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.IsControlPressed(JoystickButton, JoystickSlot)"/>
+    public enum JoystickButton
+    {
+        Trigger, // HID path maps the element named "Button1" as the trigger
+        Button2,
+        Button3,
+        Button4,
+        Button5,
+        Button6,
+        Button7,
+        Button8
     }
 
     /// <summary>
@@ -255,26 +283,30 @@ namespace UnityEngine.InputSystem.HighLevel
         All = Int32.MaxValue
     }
 
+    /// <summary>
+    /// An enum for addressing joystick slots.
+    /// </summary>
+    /// <remarks>
+    /// The Input class maintains a collection of joystick instances that use slot indexing. That is, if a joystick disconnects,
+    /// the next joystick to connect goes in the vacant slot. This makes it easier to abstract joystick or application logic
+    /// from joystick instances.
+    /// </remarks>
+    /// <seealso cref="Input.IsControlDown(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.IsControlUp(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.IsControlPressed(JoystickButton, JoystickSlot)"/>
     public enum JoystickSlot
     {
         Slot1 = 0,
         Slot2,
         Slot3,
         Slot4,
+        Max = Slot4 + 1,
         All = Int32.MaxValue
     }
 
     public static class Input
     {
-// RE-ENABLE ME WHEN YOU GONNA IMPLEMENT ME
-#if false
-
-
-        /// <summary>
-        /// A collection of all joysticks currently connected to the system.
-        /// </summary>
-        public static IReadOnlyList<Joystick> joysticks { get; }
-#endif
+        internal const float kDefaultJoystickDeadzone = 0.125f;
 
         static Input()
         {
@@ -296,6 +328,8 @@ namespace UnityEngine.InputSystem.HighLevel
             s_Gamepads = new Gamepad[maxGamepadSlots];
             s_GamepadsConnectedFrames = new int[maxGamepadSlots];
             s_GamepadsDisconnectedFrames = new int[maxGamepadSlots];
+
+            s_Joysticks = new Joystick[(int)JoystickSlot.Max];
         }
 
         /// <summary>
@@ -310,6 +344,11 @@ namespace UnityEngine.InputSystem.HighLevel
         /// keep the reference to the index and use it to query state from that gamepad.
         /// </remarks>
         public static IReadOnlyList<Gamepad> gamepads => s_Gamepads;
+
+        /// <summary>
+        /// A collection of all joysticks currently connected to the system.
+        /// </summary>
+        public static IReadOnlyList<Joystick> joysticks => s_Joysticks;
 
         /// <summary>
         /// A collection for conveniently looping over all gamepad slot enum values.
@@ -399,11 +438,15 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static Vector2 scrollDelta => s_ScrollDelta;
 
+
         private static Gamepad[] s_Gamepads;
         private static int[] s_GamepadsConnectedFrames;
         private static int[] s_GamepadsDisconnectedFrames;
         private static ReadOnlyArray<GamepadSlot> s_GamepadSlotEnums;
         private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot12 + 1];
+
+        private static Joystick[] s_Joysticks;
+
         private static Vector2 s_PointerPosition;
         private static Vector2 s_ScrollDelta;
         private static InputAction s_PointerAction;
@@ -585,6 +628,13 @@ namespace UnityEngine.InputSystem.HighLevel
                     return InputDeviceType.Gamepad;
 
                 case Inputs.Joystick_Trigger:
+                case Inputs.Joystick_Button2:
+                case Inputs.Joystick_Button3:
+                case Inputs.Joystick_Button4:
+                case Inputs.Joystick_Button5:
+                case Inputs.Joystick_Button6:
+                case Inputs.Joystick_Button7:
+                case Inputs.Joystick_Button8:
                     return InputDeviceType.Joystick;
             }
 
@@ -772,25 +822,106 @@ namespace UnityEngine.InputSystem.HighLevel
             }
         }
 
-        private static ButtonControl GetJoystickButtonControl(Joystick j, Inputs input)
+        private static ButtonControl GetJoystickButtonControl(Joystick joystick, Inputs input)
         {
-            if (j == null)
+            if (joystick == null)
                 return null;
+
+            string buttonName;
             switch (input)
             {
-                case Inputs.Joystick_Trigger: return j.trigger;
-                default: return null;
+                case Inputs.Joystick_Trigger:
+                    return joystick.trigger;
+                case Inputs.Joystick_Button2:
+                    buttonName = "button2";
+                    break;
+                case Inputs.Joystick_Button3:
+                    buttonName = "button3";
+                    break;
+                case Inputs.Joystick_Button4:
+                    buttonName = "button4";
+                    break;
+                case Inputs.Joystick_Button5:
+                    buttonName = "button5";
+                    break;
+                case Inputs.Joystick_Button6:
+                    buttonName = "button6";
+                    break;
+                case Inputs.Joystick_Button7:
+                    buttonName = "button7";
+                    break;
+                case Inputs.Joystick_Button8:
+                    buttonName = "button8";
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException(nameof(input), (int)input, typeof(JoystickButton));
             }
+
+            // do a non-recursive search for the button based on name
+            for (var i = 0; i < joystick.allControls.Count; i++)
+            {
+                var control = joystick.allControls[i];
+                if (control.name == buttonName)
+                    return control as ButtonControl;
+            }
+
+            return null;
+        }
+
+        private static ButtonControl GetJoystickButtonControl(Joystick joystick, JoystickButton joystickButton)
+        {
+            if (joystick == null)
+                return null;
+
+            string buttonName;
+            switch (joystickButton)
+            {
+                case JoystickButton.Trigger:
+                    return joystick.trigger;
+                case JoystickButton.Button2:
+                    buttonName = "button2";
+                    break;
+                case JoystickButton.Button3:
+                    buttonName = "button3";
+                    break;
+                case JoystickButton.Button4:
+                    buttonName = "button4";
+                    break;
+                case JoystickButton.Button5:
+                    buttonName = "button5";
+                    break;
+                case JoystickButton.Button6:
+                    buttonName = "button6";
+                    break;
+                case JoystickButton.Button7:
+                    buttonName = "button7";
+                    break;
+                case JoystickButton.Button8:
+                    buttonName = "button8";
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException(nameof(joystickButton), (int)joystickButton, typeof(JoystickButton));
+            }
+
+            // do a non-recursive search for the button based on name
+            for (var i = 0; i < joystick.allControls.Count; i++)
+            {
+                var control = joystick.allControls[i];
+                if (control.name == buttonName)
+                    return control as ButtonControl;
+            }
+
+            return null;
         }
 
         /// <summary>
-        ///     Is the indicated control currently pressed.
+        /// Is the indicated control currently pressed.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
         /// <returns>True if control is currently pressed, false if control is not pressed or not available (device disconnected, etc).</returns>
         /// <remarks>
-        ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
-        ///     and return true if the control is currently pressed on any of them.
+        /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
+        /// and return true if the control is currently pressed on any of them.
         /// </remarks>
         public static bool IsControlPressed(Inputs input)
         {
@@ -815,9 +946,13 @@ namespace UnityEngine.InputSystem.HighLevel
                     }
                     return false;
                 case InputDeviceType.Joystick:
-                    return InputSystem.devices
-                        .OfType<Joystick>()
-                        .Any(x => GetJoystickButtonControl(x, input).isPressed);
+                    for (var i = 0; i < (int)JoystickSlot.Max; i++)
+                    {
+                        var button = GetJoystickButtonControl(s_Joysticks[i], input);
+                        if (button != null && button.ReadValue() >= InputSystem.settings.defaultButtonPressPoint)
+                            return true;
+                    }
+                    return false;
                 case InputDeviceType.Invalid:
                 default:
                     return false;
@@ -849,13 +984,46 @@ namespace UnityEngine.InputSystem.HighLevel
         }
 
         /// <summary>
-        ///     True in the frame that the input was pressed.
+        /// Is the indicated joystick button pressed.
+        /// </summary>
+        /// <param name="button">A button from the JoystickButton enum.</param>
+        /// <param name="slot">The joystick to read input from.</param>
+        /// <returns>True if the button is currently pressed, and false if it is not, including when
+        /// there is no joystick in the specified slot..</returns>
+        /// <remarks>If JoystickSlot.All is specified for the 'slot' argument, the method will
+        /// return true if the specified button is pressed on any joystick in the available slots.</remarks>
+        public static bool IsControlPressed(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
+        {
+            if (slot != JoystickSlot.All)
+            {
+                var joystick = s_Joysticks[(int)slot];
+                if (joystick == null)
+                    return false;
+
+                var control = GetJoystickButtonControl(joystick, button);
+                return control != null && control.isPressed;
+            }
+
+            for (var i = 0; i < (int)JoystickSlot.Max; i++)
+            {
+                if (s_Joysticks[i] == null) continue;
+
+                var control = GetJoystickButtonControl(s_Joysticks[i], button);
+                if (control != null && control.isPressed)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// True in the frame that the input was pressed.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
         /// <returns>True if control was actuated in the current frame, false if control was not actuated or not available (device disconnected, etc).</returns>
         /// <remarks>
-        ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
-        ///     and return true if the control was actuated in the current frame on any of them.
+        /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
+        /// and return true if the control was actuated in the current frame on any of them.
         /// </remarks>
         public static bool IsControlDown(Inputs input)
         {
@@ -883,9 +1051,13 @@ namespace UnityEngine.InputSystem.HighLevel
                     }
                     return false;
                 case InputDeviceType.Joystick:
-                    return InputSystem.devices
-                        .OfType<Joystick>()
-                        .Any(x => GetJoystickButtonControl(x, input).wasPressedThisFrame);
+                    for (var i = 0; i < (int)JoystickSlot.Max; i++)
+                    {
+                        var button = GetJoystickButtonControl(s_Joysticks[i], input);
+                        if (button != null && button.wasPressedThisFrame)
+                            return true;
+                    }
+                    return false;
                 case InputDeviceType.Invalid:
                 default:
                     return false;
@@ -896,7 +1068,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// Was the specified control pressed in the current frame.
         /// </summary>
         /// <param name="button">A control from the GamepadButton enum.</param>
-        /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
+        /// <param name="slot">Which gamepad to check for input. Default is 'All'.</param>
         /// <returns>True if the input was pressed in the current frame, false if the input is not pressed, was
         /// pressed in a frame previous to the current one, or if 'slot' is specified and no gamepad is connected to that slot.</returns>
         public static bool IsControlDown(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
@@ -917,13 +1089,44 @@ namespace UnityEngine.InputSystem.HighLevel
         }
 
         /// <summary>
-        ///     True in the frame that the input was released.
+        /// Was the specified control pressed in the current frame.
+        /// </summary>
+        /// <param name="button">A control from the JoystickButton enum.</param>
+        /// <param name="slot">Which joystick to check for input. Default is 'All'.</param>
+        /// <returns>True if the input was pressed in the current frame, otherwise false, including
+        /// when 'slot' is specified and no joystick is connected to that slot.</returns>
+        public static bool IsControlDown(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
+        {
+            if (slot != JoystickSlot.All)
+            {
+                var joystick = s_Joysticks[(int)slot];
+                if (joystick == null)
+                    return false;
+
+                var control = GetJoystickButtonControl(joystick, button);
+                return control != null && control.wasPressedThisFrame;
+            }
+
+            for (var i = 0; i < (int)JoystickSlot.Max; i++)
+            {
+                if (s_Joysticks[i] == null) continue;
+
+                var control = GetJoystickButtonControl(s_Joysticks[i], button);
+                if (control != null && control.wasPressedThisFrame)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// True in the frame that the input was released.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
         /// <returns>True if control was released in the current frame, false if control was not released or not available (device disconnected, etc).</returns>
         /// <remarks>
-        ///     This will look at all devices of the appropriate type (which will depend on the specified Inputs)
-        ///     and return true if the control was released in the current frame on any of them.
+        /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
+        /// and return true if the control was released in the current frame on any of them.
         /// </remarks>
         public static bool IsControlUp(Inputs input)
         {
@@ -951,9 +1154,13 @@ namespace UnityEngine.InputSystem.HighLevel
                     }
                     return false;
                 case InputDeviceType.Joystick:
-                    return InputSystem.devices
-                        .OfType<Joystick>()
-                        .Any(x => GetJoystickButtonControl(x, input).wasReleasedThisFrame);
+                    for (var i = 0; i < (int)JoystickSlot.Max; i++)
+                    {
+                        var button = GetJoystickButtonControl(s_Joysticks[i], input);
+                        if (button != null && button.wasReleasedThisFrame)
+                            return true;
+                    }
+                    return false;
                 case InputDeviceType.Invalid:
                 default:
                     return false;
@@ -978,6 +1185,37 @@ namespace UnityEngine.InputSystem.HighLevel
                 if (s_Gamepads[i] == null) continue;
 
                 if (GetGamepadButtonControl(s_Gamepads[i], (Inputs)button).wasReleasedThisFrame)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Was the specified control released in the current frame.
+        /// </summary>
+        /// <param name="button">A control from the JoystickButton enum.</param>
+        /// <param name="slot">Which joystick to check for input. Default is 'All'.</param>
+        /// <returns>True if the input was released in the current frame, otherwise false, including
+        /// when 'slot' is specified and no joystick is connected to that slot.</returns>
+        public static bool IsControlUp(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
+        {
+            if (slot != JoystickSlot.All)
+            {
+                var joystick = s_Joysticks[(int)slot];
+                if (joystick == null)
+                    return false;
+
+                var control = GetJoystickButtonControl(joystick, button);
+                return control != null && control.wasReleasedThisFrame;
+            }
+
+            for (var i = 0; i < (int)JoystickSlot.Max; i++)
+            {
+                if (s_Joysticks[i] == null) continue;
+
+                var control = GetJoystickButtonControl(s_Joysticks[i], button);
+                if (control != null && control.wasReleasedThisFrame)
                     return true;
             }
 
@@ -1013,8 +1251,12 @@ namespace UnityEngine.InputSystem.HighLevel
                     break;
                 case InputDeviceType.Joystick:
                     foreach (var device in InputSystem.devices.OfType<Joystick>())
-                        maxValue = Mathf.Max(maxValue,
-                            Mathf.Clamp01(GetJoystickButtonControl(device, input).ReadValue()));
+                    {
+                        var control = GetJoystickButtonControl(device, input);
+                        if (control == null)
+                            continue;
+                        maxValue = Mathf.Max(maxValue, Mathf.Clamp01(control.ReadValue()));
+                    }
                     break;
                 case InputDeviceType.Invalid:
                 default:
@@ -1035,7 +1277,7 @@ namespace UnityEngine.InputSystem.HighLevel
             return GetAxis(positiveAxis) - GetAxis(negativeAxis);
         }
 
-        private static Vector2 NormalizeAxis(Vector2 axis, float deadzone)
+        internal static Vector2 NormalizeAxis(Vector2 axis, float deadzone)
         {
             var currentMag = axis.magnitude;
             if (currentMag < deadzone)
@@ -1142,42 +1384,43 @@ namespace UnityEngine.InputSystem.HighLevel
             return maxAxis;
         }
 
-        private static StickControl GetJoystickStickControl(Joystick joystick, int joystickAxis)
+        // For most slots returns single device, but if passed JoystickSlot.All should return all joysticks
+        private static IEnumerable<Joystick> GetJoysticksForSlot(JoystickSlot joystickSlot)
         {
-            if (joystick == null)
-                return null;
-
-            // TODO what is supposed to be here?
-            switch (joystickAxis)
+            if (joystickSlot != JoystickSlot.All)
             {
-                case 0: return joystick.stick;
-                default:
-                    throw new ArgumentException($"Unexpected joystickAxis value '{joystickAxis}'");
+                yield return s_Joysticks[(int)joystickSlot];
+            }
+            else
+            {
+                for (var i = 0; i < (int)JoystickSlot.Max; i++)
+                {
+                    yield return s_Joysticks[i];
+                }
             }
         }
 
-        // For most slots returns single device, but if passed JoystickSlot.All should return all joysticks
-        private static IEnumerable<(Joystick joystick, JoystickSlot slot)> GetJoysticksForSlot(JoystickSlot joystickSlot)
-        {
-            // TODO implement me properly
-            return InputSystem.devices.OfType<Joystick>().Select(x => (x, JoystickSlot.Slot1));
-        }
-
         /// <summary>
-        /// Get the value of the main axis on the joystick at index joystickIndex.
-        /// Or maximum magnitude value from all joysticks if joystickSlot is JoystickSlot.All
+        /// Get the value of the main axis from the joystick in the specified slot, or the
+        /// maximum magnitude value from all joysticks if joystickSlot is JoystickSlot.All
         /// </summary>
-        /// <param name="joystickIndex"></param>
-        /// <returns></returns>
-        public static Vector2 GetJoystickAxis(int joystickAxis, JoystickSlot joystickSlot = JoystickSlot.All)
+        /// <param name="joystickSlot">Read the axis value from the joystick in this slot, or specify JoystickSlot.All
+        /// to return the maximum magnitude from all joysticks main axes.</param>
+        /// <param name="deadzone">A deadzone to apply to the joystick axis. Default is 0.125.</param>
+        /// <returns>A normalized Vector2 with the value of the joystick X axis in the Vector2.x component and
+        /// the Y axis in Vector2.y components. Both values are in the range [-1, 1].</returns>
+        public static Vector2 GetAxis(JoystickSlot joystickSlot = JoystickSlot.All, float deadzone = kDefaultJoystickDeadzone)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
-            foreach (var(joystick, slot) in GetJoysticksForSlot(joystickSlot))
+            foreach (var joystick in GetJoysticksForSlot(joystickSlot))
             {
-                var rawAxis = GetJoystickStickControl(joystick, joystickAxis).ReadUnprocessedValue();
-                var deadZone = InputSystem.settings.defaultDeadzoneMin;
-                var axis = NormalizeAxis(rawAxis, deadZone);
+                var control = joystick?.stick;
+                if (control == null)
+                    continue;
+
+                var rawAxis = control.ReadUnprocessedValue();
+                var axis = NormalizeAxis(rawAxis, deadzone);
                 var axisMaxSquared = axis.sqrMagnitude;
                 if (axisMaxSquared >= maxAxisMagSquared)
                 {
@@ -1355,6 +1598,11 @@ namespace UnityEngine.InputSystem.HighLevel
                 s_GamepadsDisconnectedFrames[i] = -1;
             }
 
+            for (var i = 0; i < (int)JoystickSlot.Max; i++)
+            {
+                s_Joysticks[i] = null;
+            }
+
             InputSystem.onDeviceChange -= OnDeviceChange;
             InputSystem.onDeviceChange += OnDeviceChange;
 
@@ -1364,6 +1612,11 @@ namespace UnityEngine.InputSystem.HighLevel
             foreach (var gamepad in Gamepad.all)
             {
                 AddGamepadToFirstFreeSlot(gamepad);
+            }
+
+            foreach (var joystick in Joystick.all)
+            {
+                AddJoystickToFirstFreeSlot(joystick);
             }
 
 #if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
@@ -1431,10 +1684,12 @@ namespace UnityEngine.InputSystem.HighLevel
             if (change == InputDeviceChange.Added)
             {
                 AddGamepadToFirstFreeSlot(device);
+                AddJoystickToFirstFreeSlot(device);
             }
             else if (change == InputDeviceChange.Removed || change == InputDeviceChange.Disconnected)
             {
                 RemoveGamepad(device);
+                RemoveJoystick(device);
             }
         }
 
@@ -1472,6 +1727,29 @@ namespace UnityEngine.InputSystem.HighLevel
 #endif
                 s_GamepadsDisconnectedFrames[i] = frameCount;
                 break;
+            }
+        }
+
+        private static void AddJoystickToFirstFreeSlot(InputDevice device)
+        {
+            if (!(device is Joystick joystick)) return;
+
+            for (var i = 0; i < (int)JoystickSlot.Max; i++)
+            {
+                if (s_Joysticks[i] != null) continue;
+
+                s_Joysticks[i] = joystick;
+                break;
+            }
+        }
+
+        private static void RemoveJoystick(InputDevice device)
+        {
+            for (var i = 0; i < (int)JoystickSlot.Max; i++)
+            {
+                if (s_Joysticks[i] != device) continue;
+
+                s_Joysticks[i] = null;
             }
         }
     }
