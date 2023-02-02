@@ -2,10 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.HighLevel;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.LowLevel;
@@ -14,6 +18,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using GamepadButton = UnityEngine.InputSystem.LowLevel.GamepadButton;
 using Input = UnityEngine.InputSystem.HighLevel.Input;
+using Random = UnityEngine.Random;
 
 internal partial class CoreTests
 {
@@ -37,7 +42,9 @@ internal partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var joystick = InputSystem.AddDevice<Joystick>();
+
+        // add a joystick using the HID path that contains one stick and eight buttons
+        var joystick = AddHidJoystick();
 
         // check that all controls are not actuated
         foreach (var value in typeof(Inputs).GetEnumValues())
@@ -82,10 +89,13 @@ internal partial class CoreTests
         gamepadState.leftTrigger = 1.0f;
         gamepadState.rightTrigger = 1.0f;
         InputSystem.QueueStateEvent(gamepad, gamepadState);
-
-        var joystickState = new JoystickState();
-        joystickState.buttons |= (int)(1U << (int)JoystickState.Button.Trigger);
-        InputSystem.QueueStateEvent(joystick, joystickState);
+        InputSystem.QueueStateEvent(joystick, new HidJoystickState
+        {
+            reportId = 1,
+            x = ushort.MaxValue,
+            y = ushort.MaxValue,
+            buttons = 255 // all 8 buttons pressed
+        });
 
         // check that all buttons are pressed, and control down is true for the first frame
         InputSystem.Update();
@@ -117,7 +127,13 @@ internal partial class CoreTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         InputSystem.QueueStateEvent(mouse, new MouseState());
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.QueueStateEvent(joystick, new JoystickState());
+        InputSystem.QueueStateEvent(joystick, new HidJoystickState
+        {
+            reportId = 1,
+            x = 0,
+            y = 0,
+            buttons = 0 // all 8 buttons released
+        });
 
         // check that all controls are not pressed, and control up became true
         InputSystem.Update();
@@ -141,6 +157,17 @@ internal partial class CoreTests
             Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
             Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
         }
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct HidJoystickState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte reportId;
+        [FieldOffset(1)] public ushort x;
+        [FieldOffset(3)] public ushort y;
+        [FieldOffset(5)] public int buttons;
+
+        public FourCC format => new FourCC('H', 'I', 'D');
     }
 
     [Test]
@@ -214,6 +241,33 @@ internal partial class CoreTests
 
     [Test]
     [Category("HighLevelAPI")]
+    public void HighLevelAPI_CanQuerySpecificJoystick()
+    {
+        var joystickOne = InputSystem.AddDevice<Joystick>();
+        var joystickTwo = AddHidJoystick();
+
+        Set((ButtonControl)joystickTwo["button2"], 1);
+
+        Assert.That(Input.IsControlDown(JoystickButton.Button2, JoystickSlot.Slot1), Is.False);
+        Assert.That(Input.IsControlDown(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(Input.IsControlDown(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+        Assert.That(Input.IsControlPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+
+        Set((ButtonControl)joystickTwo["button2"], 0);
+
+        Assert.That(Input.IsControlPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+        Assert.That(Input.IsControlUp(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(Input.IsControlUp(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
     public void HighLevelAPI_CanQueryGetAxis()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -269,6 +323,14 @@ internal partial class CoreTests
     {
         Assert.That(Input.gamepads.Count, Is.EqualTo(Input.maxGamepadSlots));
         Assert.That(Input.gamepads, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, Input.maxGamepadSlots)));
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_JoysticksCollectionIsInitializedToMaxSlots()
+    {
+        Assert.That(Input.joysticks.Count, Is.EqualTo((int)JoystickSlot.Max));
+        Assert.That(Input.joysticks, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, (int)JoystickSlot.Max)));
     }
 
     [Test]
@@ -464,5 +526,139 @@ internal partial class CoreTests
         Set(mouse.scroll, new Vector2(123, 456));
 
         Assert.That(Input.scrollDelta, Is.EqualTo(new Vector2(123, 456)));
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_JoysticksAreAddedAndRemovedFromCollection()
+    {
+        var joysticks = new List<Joystick>();
+        for (var i = 0; i < (int)JoystickSlot.Max; i++)
+        {
+            joysticks.Add(InputSystem.AddDevice<Joystick>());
+            Assert.That(Input.joysticks[0], Is.Not.Null);
+            Assert.That(Input.joysticks[i], Is.EqualTo(joysticks[i]));
+        }
+
+        // remove a joystick from the middle of the collection and make sure the joysticks array doesn't rearrange
+        InputSystem.RemoveDevice(joysticks[2]);
+
+        Assert.That(Input.joysticks[0], Is.EqualTo(joysticks[0]));
+        Assert.That(Input.joysticks[1], Is.EqualTo(joysticks[1]));
+        Assert.That(Input.joysticks[2], Is.Null);
+        Assert.That(Input.joysticks[3], Is.EqualTo(joysticks[3]));
+
+        // now just clear everything
+        foreach (var joystick in joysticks)
+        {
+            InputSystem.RemoveDevice(joystick);
+        }
+
+        Assert.That(Input.joysticks.All(j => j == null), Is.True);
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_CanQueryJoystickMainAxisValueOnAnyJoystick()
+    {
+        Random.InitState((int)DateTime.Now.Ticks);
+
+        var joysticks = new List<Joystick>();
+        for (var i = 0; i < 3; i++)
+        {
+            joysticks.Add(InputSystem.AddDevice<Joystick>());
+            Set(joysticks[i].stick, Random.insideUnitCircle, queueEventOnly: true);
+        }
+
+        // make sure this works for joysticks added through the HID path
+        joysticks.Add(AddHidJoystick());
+        Set(joysticks[3].stick, Random.insideUnitCircle, queueEventOnly: true);
+
+        InputSystem.Update();
+
+        for (var i = 0; i < joysticks.Count; i++)
+        {
+            var joystick = joysticks[i];
+            var value = joystick.stick.ReadUnprocessedValue();
+            value = Input.NormalizeAxis(value, Input.kDefaultJoystickDeadzone);
+            Assert.That(value, Is.EqualTo(Input.GetAxis((JoystickSlot)i)));
+        }
+    }
+
+    private Joystick AddHidJoystick()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 40,
+            elements = new[]
+            {
+                // 16bit X and Y axes.
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 0, reportSizeInBits = 16
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input, reportId = 1, reportOffsetInBits = 16, reportSizeInBits = 16
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 1, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 32, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 2, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 33, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 3, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 34, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 4, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 35, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 5, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 36, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 6, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 37, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 7, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 38, reportSizeInBits = 1
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = 8, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1,
+                    reportOffsetInBits = 39, reportSizeInBits = 1
+                },
+            }
+        };
+
+        var deviceId = runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+
+        return InputSystem.GetDeviceById(deviceId) as Joystick;
     }
 }
