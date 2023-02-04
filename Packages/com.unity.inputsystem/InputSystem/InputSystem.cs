@@ -3388,7 +3388,7 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
-                    HighLevel.Input.Initialize();
+                    HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
@@ -3495,7 +3495,7 @@ namespace UnityEngine.InputSystem
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
             // TODO: Processing for the high level API isn't free, so allow users to turn it off if they're not using it via input settings and check here.
-            HighLevel.Input.Initialize();
+            HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3510,7 +3510,7 @@ namespace UnityEngine.InputSystem
 
 #endif // UNITY_EDITOR
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake
@@ -3612,7 +3612,7 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
-            HighLevel.Input.Initialize();
+            HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath); 
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
@@ -3777,6 +3777,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal static void SetGlobalActionAssetPaths(string defaultAssetPath, string assetPath)
+        {
+	        s_DefaultGlobalActionsPath = defaultAssetPath;
+	        s_GlobalActionsAssetPath = assetPath;
+        }
 #endif
-    }
+	    private static string s_DefaultGlobalActionsPath = GlobalActionsAsset.kDefaultGlobalActionsPath;
+	    private static string s_GlobalActionsAssetPath = GlobalActionsAsset.kGlobalActionsAssetPath;
+	}
 }

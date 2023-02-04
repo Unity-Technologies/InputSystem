@@ -1,15 +1,13 @@
 using System;
 using System.Linq.Expressions;
+using UnityEditor;
+using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.HighLevel
 {
     public static partial class Input
     {
-        static Input()
-        {
-        }
-
-        public static InputActionAsset globalAsset => s_GlobalAsset;
+	    public static IInputActionCollection2 globalActions => s_GlobalActions;
 
         /// <summary>
         /// True if the specified action is currently pressed.
@@ -17,13 +15,12 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="actionMapName"></param>
         /// <param name="actionName"></param>
         /// <returns></returns>
-        /// <remarks>
-        /// ActionMapName comes second and is optional because A) the system is smart enough to look for
-        /// a uniquely named action if it exists, and B) new users won't know what an action map is.
-        /// </remarks>
-        public static bool IsActionPressed(string actionName, string actionMapName = "")
+        public static bool IsControlPressed(string actionName, string actionMapName = "")
         {
-            throw new NotImplementedException();
+            Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+	        
+            var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
+            return action != null && action.IsPressed();
         }
 
         /// <summary>
@@ -32,10 +29,13 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="actionMapName"></param>
         /// <param name="actionName"></param>
         /// <returns></returns>
-        public static bool IsActionDown(string actionName, string actionMapName = "")
+        public static bool IsControlDown(string actionName, string actionMapName = "")
         {
-            throw new NotImplementedException();
-        }
+			Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+
+			var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
+			return action != null && action.WasPressedThisFrame();
+		}
 
         /// <summary>
         /// True in the frame that the action ended.
@@ -43,18 +43,66 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="actionMapName"></param>
         /// <param name="actionName"></param>
         /// <returns></returns>
-        public static bool IsActionUp(string actionName, string actionMapName = "")
+        public static bool IsControlUp(string actionName, string actionMapName = "")
         {
-            throw new NotImplementedException();
+			Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+
+			var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
+			return action != null && action.WasReleasedThisFrame();
+		}
+
+        public static bool IsControlPressed<TActionType>(Input<TActionType> input) where TActionType : struct
+        {
+	        throw new NotImplementedException();
         }
 
-        private static InputActionAsset s_GlobalAsset;
+        public static bool IsControlDown<TActionType>(Input<TActionType> input) where TActionType : struct
+        {
+	        throw new NotImplementedException();
+        }
+
+        public static bool IsControlUp<TActionType>(Input<TActionType> input) where TActionType : struct
+        {
+	        throw new NotImplementedException();
+        }
+
+        internal static void InitializeGlobalActions(string defaultAssetPath, string assetPath)
+        {
+#if UNITY_EDITOR
+	        if (!EditorApplication.isPlayingOrWillChangePlaymode)
+		        return;
+
+	        s_GlobalActions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
+#else
+			// at build time, a pre-compiled class will be created for the global asset. Be careful that the name doesn't
+			// conflict with any user types!
+			// TODO
+            throw new NotImplementedException();
+#endif
+	        if (s_GlobalActions == null)
+	        {
+		        Debug.LogError($"Couldn't initialize global input actions");
+		        return;
+	        }
+
+            // TODO: Once the source generator is running, only the actions that have actually been used should be enabled
+	        s_GlobalActions.Enable();
+        }
+
+        internal static void ShutdownGlobalActions()
+        {
+	        if (s_GlobalActions == null)
+		        return;
+
+	        s_GlobalActions.Disable();
+	        s_GlobalActions = null;
+        }
+
+		private static InputActionAsset s_GlobalActions;
     }
 
     /// <summary>
-    /// Strongly typed access around an Input Action. At lower levels, it is up to the user to
-    /// provide the correct type in the call to ReadValue, resulting in exceptions being thrown
-    /// if the wrong type is provided. This should never be possible when using this type.
+    /// TODO
     /// </summary>
     /// <typeparam name="TActionType"></typeparam>
     public class Input<TActionType> where TActionType : struct
@@ -64,6 +112,27 @@ namespace UnityEngine.InputSystem.HighLevel
         public bool wasPressedThisFrame => m_Action.WasPressedThisFrame();
         public bool wasReleasedThisFrame => m_Action.WasReleasedThisFrame();
         public TActionType value => m_Action.ReadValue<TActionType>();
+
+        /// <summary>
+        /// Get the index of the binding within this input action that caused it to fire. -1 if the action is not
+        /// currently performing.
+        /// </summary>
+        /// <remarks>
+        /// This property can be useful when an input action exists that has multiple bindings and game logic needs
+        /// to know which of the bindings was the one that actually actuated. For example, in an RTS game where
+        /// game logic often operates on user assigned groups, there might exist an input action called SelectGroup
+        /// that can trigger when any of the number keys on the keyboard are pressed. One way to deal with this would
+        /// be to create ten individual input actions SelectGroupOne to SelectGroupTen, but that is cumbersome to
+        /// deal with. With this API, it is possible to create one input action with ten bindings, one for each
+        /// number key, and then check at runtime which of the bindings is active.
+        /// </remarks>
+        public int activeBindingIndex
+        {
+	        get
+	        {
+                throw new NotImplementedException();
+	        }
+        }
 
         /// <summary>
         ///

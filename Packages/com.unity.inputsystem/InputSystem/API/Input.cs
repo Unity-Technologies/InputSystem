@@ -305,7 +305,7 @@ namespace UnityEngine.InputSystem.HighLevel
         All = Int32.MaxValue
     }
 
-    public static class Input
+    public static partial class Input
     {
         internal const float kDefaultJoystickDeadzone = 0.125f;
 
@@ -1637,7 +1637,16 @@ namespace UnityEngine.InputSystem.HighLevel
         internal struct InputSystemPlayerLoopHighLevelEndFrame{}
 #endif
 
-        internal static void Initialize()
+        /// <summary>
+        /// Initialize the API
+        /// </summary>
+        /// <param name="defaultGlobalActionsPath">The file path to read default global actions from.</param>
+        /// <param name="globalActionsAssetPath">The path to the asset in the asset database containing global actions.</param>
+        /// <remarks>
+        /// If this is the first time global actions have been initialized, a default set of actions is read from the inputactions
+        /// file located at 'defaultGlobalActionsPath' and saved into the asset located at 'globalActionsAssetPath' as sub assets.
+        /// </remarks>
+        internal static void Initialize(string defaultGlobalActionsPath, string globalActionsAssetPath)
         {
             for (var i = 0; i < maxGamepadSlots; i++)
             {
@@ -1696,6 +1705,8 @@ namespace UnityEngine.InputSystem.HighLevel
             s_ScrollAction.AddBinding("<Mouse>/scroll");
             s_ScrollAction.performed += OnMouseScrolled;
             s_ScrollAction.Enable();
+
+			InitializeGlobalActions(defaultGlobalActionsPath, globalActionsAssetPath);
         }
 
         internal static void Shutdown()
@@ -1715,7 +1726,9 @@ namespace UnityEngine.InputSystem.HighLevel
             }
 
             InputSystem.onDeviceChange -= OnDeviceChange;
-        }
+
+            ShutdownGlobalActions();
+		}
 
         private static void OnPointerMoved(InputAction.CallbackContext context)
         {
