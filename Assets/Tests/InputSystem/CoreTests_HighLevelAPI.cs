@@ -15,9 +15,11 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using GamepadButton = UnityEngine.InputSystem.LowLevel.GamepadButton;
 using Input = UnityEngine.InputSystem.HighLevel.Input;
+using Is = NUnit.Framework.Is;
 using Random = UnityEngine.Random;
 
 internal partial class CoreTests
@@ -386,6 +388,29 @@ internal partial class CoreTests
 
     [UnityTest]
     [Category("HighLevelAPI")]
+    public IEnumerator HighLevelAPI_DidAllGamepadsConnectOrDisconnectThisFrame()
+    {
+	    for (var i = 0; i < Input.maxGamepadSlots; i++)
+	    {
+		    runtime.ReportNewInputDevice<Gamepad>();
+	    }
+
+	    yield return null;
+
+        Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.All), Is.True);
+
+        foreach (var inputDevice in InputSystem.devices)
+        {
+	        runtime.ReportInputDeviceRemoved(inputDevice);
+        }
+
+        yield return null;
+
+        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.All), Is.True);
+    }
+
+    [UnityTest]
+    [Category("HighLevelAPI")]
     public IEnumerator HighLevelAPI_DidGamepadDisconnectThisFrame_IsTrueInTheFrameTheGamepadDisconnectedEventIsProcessed()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -583,6 +608,68 @@ internal partial class CoreTests
             value = Input.NormalizeAxis(value, Input.kDefaultJoystickDeadzone);
             Assert.That(value, Is.EqualTo(Input.GetAxis((JoystickSlot)i)));
         }
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_IsGamepadConnectedReturnsTrueWhenAllIsSpecifiedAndAllSlotsAreFilled()
+    {
+	    foreach (var gamepadSlotEnum in Input.gamepadSlotEnums)
+	    {
+		    InputSystem.AddDevice<Gamepad>();
+	    }
+
+        Assert.That(Input.IsGamepadConnected(GamepadSlot.All), Is.True);
+
+        InputSystem.RemoveDevice(InputSystem.devices[0]);
+
+        Assert.That(Input.IsGamepadConnected(GamepadSlot.All), Is.False);
+    }
+
+    [Test]
+    [Category("HighLevelAPI")]
+    public void HighLevelAPI_BasicAPIMethodsDoNotAllocate()
+    {
+        // Warm up all the methods so we don't log jitting and generic type generation as allocations
+	    ExerciseInputMethods();
+
+        Assert.That(ExerciseInputMethods, Is.Not.AllocatingGCMemory());
+    }
+
+    private static void ExerciseInputMethods()
+    {
+	    Input.IsControlDown(Inputs.Key_A);
+	    Input.IsControlDown(Inputs.Mouse_Left);
+	    Input.IsControlDown(Inputs.Gamepad_A);
+	    Input.IsControlDown(Inputs.Joystick_Trigger);
+
+	    Input.IsControlUp(Inputs.Key_A);
+	    Input.IsControlUp(Inputs.Mouse_Left);
+	    Input.IsControlUp(Inputs.Gamepad_A);
+	    Input.IsControlUp(Inputs.Joystick_Trigger);
+	    
+	    Input.IsControlPressed(Inputs.Key_A);
+	    Input.IsControlPressed(Inputs.Mouse_Left);
+	    Input.IsControlPressed(Inputs.Gamepad_A);
+	    Input.IsControlPressed(Inputs.Joystick_Trigger);
+
+	    Input.IsGamepadConnected(GamepadSlot.All);
+	    Input.IsGamepadConnected(GamepadSlot.Slot1);
+	    
+	    Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1);
+	    Input.DidGamepadConnectThisFrame(GamepadSlot.All);
+	    Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1);
+	    Input.DidGamepadDisconnectThisFrame(GamepadSlot.All);
+	    
+	    Input.GetAxis(GamepadAxis.LeftStick, GamepadSlot.All);
+	    Input.GetAxis(GamepadAxis.LeftStick, GamepadSlot.Slot1);
+	    
+	    Input.GetAxis(Inputs.Key_A);
+	    Input.GetAxis(Inputs.Mouse_Left);
+	    Input.GetAxis(Inputs.Gamepad_A);
+	    Input.GetAxis(Inputs.Joystick_Trigger);
+	    
+	    Input.GetAxis(JoystickSlot.All);
     }
 
     private Joystick AddHidJoystick()

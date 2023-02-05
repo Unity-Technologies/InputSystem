@@ -861,7 +861,7 @@ namespace UnityEngine.InputSystem.HighLevel
             for (var i = 0; i < joystick.allControls.Count; i++)
             {
                 var control = joystick.allControls[i];
-                if (control.name == buttonName)
+                if (string.Equals(control.name, buttonName, StringComparison.OrdinalIgnoreCase))
                     return control as ButtonControl;
             }
 
@@ -907,7 +907,7 @@ namespace UnityEngine.InputSystem.HighLevel
             for (var i = 0; i < joystick.allControls.Count; i++)
             {
                 var control = joystick.allControls[i];
-                if (control.name == buttonName)
+                if (string.Equals(control.name, buttonName, StringComparison.OrdinalIgnoreCase))
                     return control as ButtonControl;
             }
 
@@ -930,20 +930,34 @@ namespace UnityEngine.InputSystem.HighLevel
             switch (deviceType)
             {
                 case InputDeviceType.Keyboard:
-                    return InputSystem.devices
-                        .OfType<Keyboard>()
-                        .Any(x => GetKeyboardButtonControl(x, input).isPressed);
-                case InputDeviceType.Mouse:
-                    return InputSystem.devices
-                        .OfType<Mouse>()
-                        .Any(x => GetMouseButtonControl(x, input).isPressed);
-                case InputDeviceType.Gamepad:
-                    foreach (var gamepadSlotTuple in GetGamepadsForSlot(GamepadSlot.All))
+                    foreach (var inputDevice in InputSystem.devices)
                     {
-                        if (GetGamepadButtonControl(gamepadSlotTuple.gamepad, input).ReadValue() >=
-                            GetGamepadTriggerPressPoint(gamepadSlotTuple.slot))
+                        if (inputDevice is Keyboard keyboard &&
+                            GetKeyboardButtonControl(keyboard, input).isPressed)
                             return true;
                     }
+
+                    return false;
+                case InputDeviceType.Mouse:
+                    foreach (var inputDevice in InputSystem.devices)
+                    {
+                        if (inputDevice is Mouse mouse &&
+                            GetMouseButtonControl(mouse, input).isPressed)
+                            return true;
+                    }
+
+                    return false;
+                case InputDeviceType.Gamepad:
+                    for (var i = 0; i < s_Gamepads.Length; i++)
+                    {
+                        var gamepad = s_Gamepads[i];
+                        if (gamepad == null) continue;
+
+                        if (GetGamepadButtonControl(gamepad, input).ReadValue() >= 
+                            GetGamepadTriggerPressPoint((GamepadSlot)i))
+                            return true;
+                    }
+
                     return false;
                 case InputDeviceType.Joystick:
                     for (var i = 0; i < (int)JoystickSlot.Max; i++)
@@ -1032,23 +1046,37 @@ namespace UnityEngine.InputSystem.HighLevel
             switch (deviceType)
             {
                 case InputDeviceType.Keyboard:
-                    return InputSystem.devices
-                        .OfType<Keyboard>()
-                        .Any(x => GetKeyboardButtonControl(x, input).wasPressedThisFrame);
-                case InputDeviceType.Mouse:
-                    return InputSystem.devices
-                        .OfType<Mouse>()
-                        .Any(x => GetMouseButtonControl(x, input).wasPressedThisFrame);
-                case InputDeviceType.Gamepad:
-                    foreach (var gamepadSlotTuple in GetGamepadsForSlot(GamepadSlot.All))
+                    foreach (var inputDevice in InputSystem.devices)
                     {
-                        var ctrl = GetGamepadButtonControl(gamepadSlotTuple.gamepad, input);
-                        var pressPoint = GetGamepadTriggerPressPoint(gamepadSlotTuple.slot);
-                        if (gamepadSlotTuple.gamepad.wasUpdatedThisFrame &&
-                            ctrl.ReadValue() >= pressPoint &&
-                            ctrl.ReadValueFromPreviousFrame() < pressPoint)
+                        if (inputDevice is Keyboard keyboard &&
+                            GetKeyboardButtonControl(keyboard, input).wasPressedThisFrame)
                             return true;
                     }
+
+                    return false;
+                case InputDeviceType.Mouse:
+                    foreach (var inputDevice in InputSystem.devices)
+                    {
+                        if (inputDevice is Mouse mouse &&
+                            GetMouseButtonControl(mouse, input).wasPressedThisFrame)
+                            return true;
+                    }
+
+                    return false;
+                case InputDeviceType.Gamepad:
+                    for (var i = 0; i < s_Gamepads.Length; i++)
+                    {
+                        var gamepad = s_Gamepads[i];
+                        if (gamepad == null) continue;
+
+                        var control = GetGamepadButtonControl(gamepad, input);
+                        var pressPoint = GetGamepadTriggerPressPoint((GamepadSlot)i);
+                        if (gamepad.wasUpdatedThisFrame &&
+                            control.ReadValue() >= pressPoint &&
+                            control.ReadValueFromPreviousFrame() < pressPoint)
+                            return true;
+                    }
+
                     return false;
                 case InputDeviceType.Joystick:
                     for (var i = 0; i < (int)JoystickSlot.Max; i++)
@@ -1135,23 +1163,37 @@ namespace UnityEngine.InputSystem.HighLevel
             switch (deviceType)
             {
                 case InputDeviceType.Keyboard:
-                    return InputSystem.devices
-                        .OfType<Keyboard>()
-                        .Any(x => GetKeyboardButtonControl(x, input).wasReleasedThisFrame);
-                case InputDeviceType.Mouse:
-                    return InputSystem.devices
-                        .OfType<Mouse>()
-                        .Any(x => GetMouseButtonControl(x, input).wasReleasedThisFrame);
-                case InputDeviceType.Gamepad:
-                    foreach (var gamepadSlotTuple in GetGamepadsForSlot(GamepadSlot.All))
+                    foreach (var inputDevice in InputSystem.devices)
                     {
-                        var ctrl = GetGamepadButtonControl(gamepadSlotTuple.gamepad, input);
-                        var pressPoint = GetGamepadTriggerPressPoint(gamepadSlotTuple.slot);
-                        if (gamepadSlotTuple.gamepad.wasUpdatedThisFrame &&
-                            ctrl.ReadValue() < pressPoint &&
-                            ctrl.ReadValueFromPreviousFrame() >= pressPoint)
+                        if (inputDevice is Keyboard keyboard &&
+                            GetKeyboardButtonControl(keyboard, input).wasReleasedThisFrame)
                             return true;
                     }
+
+                    return false;
+                case InputDeviceType.Mouse:
+                    foreach (var inputDevice in InputSystem.devices)
+                    {
+                        if (inputDevice is Mouse mouse &&
+                            GetMouseButtonControl(mouse, input).wasReleasedThisFrame)
+                            return true;
+                    }
+
+                    return false;
+                case InputDeviceType.Gamepad:
+                    for (var i = 0; i < s_Gamepads.Length; i++)
+                    {
+                        var gamepad = s_Gamepads[i];
+                        if (gamepad == null) continue;
+
+                        var control = GetGamepadButtonControl(gamepad, input);
+                        var pressPoint = GetGamepadTriggerPressPoint((GamepadSlot)i);
+                        if (gamepad.wasUpdatedThisFrame &&
+                            control.ReadValue() < pressPoint &&
+                            control.ReadValueFromPreviousFrame() >= pressPoint)
+                            return true;
+                    }
+
                     return false;
                 case InputDeviceType.Joystick:
                     for (var i = 0; i < (int)JoystickSlot.Max; i++)
@@ -1235,26 +1277,40 @@ namespace UnityEngine.InputSystem.HighLevel
             switch (deviceType)
             {
                 case InputDeviceType.Keyboard:
-                    foreach (var device in InputSystem.devices.OfType<Keyboard>())
+                    foreach (var device in InputSystem.devices)
+                    {
+                        if (!(device is Keyboard keyboard)) continue;
+
                         maxValue = Mathf.Max(maxValue,
-                            Mathf.Clamp01(GetKeyboardButtonControl(device, input).ReadValue()));
+                            Mathf.Clamp01(GetKeyboardButtonControl(keyboard, input).ReadValue()));
+                    }
                     break;
                 case InputDeviceType.Mouse:
-                    foreach (var device in InputSystem.devices.OfType<Mouse>())
+                    foreach (var device in InputSystem.devices)
+                    {
+                        if (!(device is Mouse mouse)) continue;
+
                         maxValue = Mathf.Max(maxValue,
-                            Mathf.Clamp01(GetMouseButtonControl(device, input).ReadValue()));
+                            Mathf.Clamp01(GetMouseButtonControl(mouse, input).ReadValue()));
+                    }
                     break;
                 case InputDeviceType.Gamepad:
-                    foreach (var device in s_Gamepads.Where(g => g != null))
-                        maxValue = Mathf.Max(maxValue,
-                            Mathf.Clamp01(GetGamepadButtonControl(device, input).ReadValue()));
+                    foreach (var gamepad in s_Gamepads)
+                    {
+	                    if (gamepad == null) continue;
+
+	                    maxValue = Mathf.Max(maxValue,
+                            Mathf.Clamp01(GetGamepadButtonControl(gamepad, input).ReadValue()));
+                    }
                     break;
                 case InputDeviceType.Joystick:
-                    foreach (var device in InputSystem.devices.OfType<Joystick>())
+                    foreach (var joystick in s_Joysticks)
                     {
-                        var control = GetJoystickButtonControl(device, input);
-                        if (control == null)
-                            continue;
+	                    if (joystick == null) continue;
+
+                        var control = GetJoystickButtonControl(joystick, input);
+                        if (control == null) continue;
+
                         maxValue = Mathf.Max(maxValue, Mathf.Clamp01(control.ReadValue()));
                     }
                     break;
@@ -1327,36 +1383,6 @@ namespace UnityEngine.InputSystem.HighLevel
             throw new ArgumentException($"Unexpected GamepadAxis enum value '{stick}'");
         }
 
-        // For most slots returns single device, but if passed GamepadSlot.All should return all gamepads
-        private static IEnumerable<(Gamepad gamepad, GamepadSlot slot)> GetGamepadsForSlot(GamepadSlot gamepadSlot)
-        {
-            if (gamepadSlot != GamepadSlot.All)
-            {
-                yield return (s_Gamepads[(int)gamepadSlot], gamepadSlot);
-                yield break;
-            }
-
-            for (var i = 0; i < maxGamepadSlots; i++)
-            {
-                if (s_Gamepads[i] == null)
-                    continue;
-
-                yield return (s_Gamepads[i], (GamepadSlot)i);
-            }
-        }
-
-        private static float GetInputSystemDefaultDeadZone()
-        {
-            return Mathf.Max(InputSystem.settings.defaultDeadzoneMin,
-                1.0f - InputSystem.settings.defaultDeadzoneMax);
-        }
-
-        private static float GetGamepadDeadZone(GamepadSlot gamepadSlot)
-        {
-            // TODO implement me!
-            return GetInputSystemDefaultDeadZone();
-        }
-
         /// <summary>
         /// Get the value of either stick on a specific gamepad, or maximum magnitude value from all gamepads if gamepadSlot is GamepadSlot.All.
         /// </summary>
@@ -1368,10 +1394,17 @@ namespace UnityEngine.InputSystem.HighLevel
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
 
-            foreach (var(gamepad, slot) in GetGamepadsForSlot(gamepadSlot))
+            for (var i = 0; i < s_Gamepads.Length; i++)
             {
+                var gamepad = s_Gamepads[i];
+                if (gamepadSlot != GamepadSlot.All && i != (int)gamepadSlot)
+                    continue;
+
+                if (gamepad == null)
+                    continue;
+
                 var rawAxis = GetGamepadStickControl(gamepad, stick).ReadUnprocessedValue();
-                var deadZone = GetGamepadStickDeadZone(slot);
+                var deadZone = GetGamepadStickDeadZone((GamepadSlot)i);
                 var axis = NormalizeAxis(rawAxis, deadZone);
                 var axisMaxSquared = axis.sqrMagnitude;
                 if (axisMaxSquared >= maxAxisMagSquared)
@@ -1384,22 +1417,6 @@ namespace UnityEngine.InputSystem.HighLevel
             return maxAxis;
         }
 
-        // For most slots returns single device, but if passed JoystickSlot.All should return all joysticks
-        private static IEnumerable<Joystick> GetJoysticksForSlot(JoystickSlot joystickSlot)
-        {
-            if (joystickSlot != JoystickSlot.All)
-            {
-                yield return s_Joysticks[(int)joystickSlot];
-            }
-            else
-            {
-                for (var i = 0; i < (int)JoystickSlot.Max; i++)
-                {
-                    yield return s_Joysticks[i];
-                }
-            }
-        }
-
         /// <summary>
         /// Get the value of the main axis from the joystick in the specified slot, or the
         /// maximum magnitude value from all joysticks if joystickSlot is JoystickSlot.All
@@ -1409,12 +1426,16 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="deadzone">A deadzone to apply to the joystick axis. Default is 0.125.</param>
         /// <returns>A normalized Vector2 with the value of the joystick X axis in the Vector2.x component and
         /// the Y axis in Vector2.y components. Both values are in the range [-1, 1].</returns>
-        public static Vector2 GetAxis(JoystickSlot joystickSlot = JoystickSlot.All, float deadzone = kDefaultJoystickDeadzone)
+        public static Vector2 GetAxis(JoystickSlot joystickSlot, float deadzone = kDefaultJoystickDeadzone)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
-            foreach (var joystick in GetJoysticksForSlot(joystickSlot))
+            for (var i = 0; i < s_Joysticks.Length; i++)
             {
+                var joystick = s_Joysticks[i];
+                if (joystickSlot != JoystickSlot.All && i != (int)joystickSlot)
+                    continue;
+
                 var control = joystick?.stick;
                 if (control == null)
                     continue;
@@ -1439,7 +1460,15 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsGamepadConnected(GamepadSlot slot)
         {
-            return s_Gamepads[(int)slot] != null;
+	        if (slot != GamepadSlot.All) 
+		        return s_Gamepads[(int)slot] != null;
+
+	        foreach (var g in s_Gamepads)
+	        {
+		        if (g == null) return false;
+	        }
+
+	        return true;
         }
 
         /// <summary>
@@ -1452,7 +1481,16 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static bool DidGamepadConnectThisFrame(GamepadSlot slot)
         {
-            return s_GamepadsConnectedFrames[(int)slot] == Time.frameCount;
+	        if (slot != GamepadSlot.All) 
+		        return s_GamepadsConnectedFrames[(int)slot] == Time.frameCount;
+
+	        foreach (var frame in s_GamepadsConnectedFrames)
+	        {
+		        if (frame != Time.frameCount)
+			        return false;
+	        }
+
+	        return true;
         }
 
         /// <summary>
@@ -1466,7 +1504,16 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static bool DidGamepadDisconnectThisFrame(GamepadSlot slot)
         {
-            return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
+	        if (slot != GamepadSlot.All) 
+		        return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
+
+	        foreach (var frame in s_GamepadsDisconnectedFrames)
+	        {
+		        if (frame != Time.frameCount)
+			        return false;
+	        }
+
+	        return true;
         }
 
         private static float GetGamepadTriggerPressPoint(GamepadSlot gamepadSlot)
