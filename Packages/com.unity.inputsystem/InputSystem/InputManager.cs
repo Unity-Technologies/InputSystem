@@ -2881,6 +2881,19 @@ namespace UnityEngine.InputSystem
 #endif
                 );
 
+
+	    bool dropStatusEvents = false;
+
+#if UNITY_EDITOR
+	    if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100*1024)))
+	    {
+		// If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
+		// So, in that case, set a flag to say we'd like to drop status events, and do not early out.
+		canEarlyOut = false;
+		dropStatusEvents = true;
+	    }
+#endif
+
             if (canEarlyOut)
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
@@ -2951,6 +2964,19 @@ namespace UnityEngine.InputSystem
 
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
                     var currentEventType = currentEventReadPtr->type;
+
+#if UNITY_EDITOR
+		    if (dropStatusEvents)
+		    {
+			// If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
+			if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
+				m_InputEventStream.Advance(false);
+			else
+				m_InputEventStream.Advance(true);
+
+			continue;
+		    }
+#endif
 
                     // In the editor, we discard all input events that occur in-between exiting edit mode and having
                     // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
