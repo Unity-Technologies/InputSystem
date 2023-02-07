@@ -40,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed define requirements of `Unity.InputSystem.TestFramework`, so that it can be used by other packages without setting the `com.unity.inputsystem` package to be testable in the project manifest.
+- Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
 
 ## [1.4.4] - 2022-11-01
 
