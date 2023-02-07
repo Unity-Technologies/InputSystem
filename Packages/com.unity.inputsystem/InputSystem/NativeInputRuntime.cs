@@ -228,10 +228,15 @@ namespace UnityEngine.InputSystem.LowLevel
         public float unscaledGameTime => Time.unscaledTime;
 
         public bool runInBackground => Application.runInBackground ||
-        // certain platforms ignore the runInBackground flag and always run. Make sure we're
-        // not running on one of those.
+        // certain platforms ignore the runInBackground flag and pump updates even if it is set to false. If we're
+        // running on one of those, just force the runInBackground flag to true. If we ever add a native flag like
+        // ignoresRunInBackground or something similar, we can check that here and remove the specific platform checks.
+        // https://issuetracker.unity3d.com/issues/ps5-inputsystem-devices-are-not-removed-properly-when-pad-turned-off-with-application-in-background
         // TODO: Add more platforms here as they're discovered.
-        Application.platform == RuntimePlatform.PS5;
+        Application.platform == RuntimePlatform.PS5 ||
+        Application.platform == RuntimePlatform.PS4 ||
+        Application.platform == RuntimePlatform.GameCoreXboxOne ||
+        Application.platform == RuntimePlatform.GameCoreXboxSeries;
 
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
