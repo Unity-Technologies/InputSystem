@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
+
 ## [1.5.0] - 2023-01-24
 
 ### Added
