@@ -11,8 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ### Fixed
-
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
+- Fixed InputAction.bindings.count not getting correctly updated after removing bindings with Erase().
 
 ## [1.5.0] - 2023-01-24
 
@@ -81,7 +81,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed DualSense low frequency motor speed being always set to min value.
 - Fixed an issue where `ReadUnprocessedValueFromState` in PoseControl always returning default values.
 - Fix Player 1's UI controls stop working after second player joins ([case ISXB-125](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-125)))
-
 
 ## [1.4.1] - 2022-05-30
 
