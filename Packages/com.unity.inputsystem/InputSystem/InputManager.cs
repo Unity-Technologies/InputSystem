@@ -2882,16 +2882,16 @@ namespace UnityEngine.InputSystem
                 );
 
 
-	    bool dropStatusEvents = false;
+            bool dropStatusEvents = false;
 
 #if UNITY_EDITOR
-	    if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100*1024)))
-	    {
-		// If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
-		// So, in that case, set a flag to say we'd like to drop status events, and do not early out.
-		canEarlyOut = false;
-		dropStatusEvents = true;
-	    }
+            if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
+            {
+                // If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
+                // So, in that case, set a flag to say we'd like to drop status events, and do not early out.
+                canEarlyOut = false;
+                dropStatusEvents = true;
+            }
 #endif
 
             if (canEarlyOut)
@@ -2966,16 +2966,16 @@ namespace UnityEngine.InputSystem
                     var currentEventType = currentEventReadPtr->type;
 
 #if UNITY_EDITOR
-		    if (dropStatusEvents)
-		    {
-			// If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
-			if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
-				m_InputEventStream.Advance(false);
-			else
-				m_InputEventStream.Advance(true);
+                    if (dropStatusEvents)
+                    {
+                        // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
+                        if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
+                            m_InputEventStream.Advance(false);
+                        else
+                            m_InputEventStream.Advance(true);
 
-			continue;
-		    }
+                        continue;
+                    }
 #endif
 
                     // In the editor, we discard all input events that occur in-between exiting edit mode and having
