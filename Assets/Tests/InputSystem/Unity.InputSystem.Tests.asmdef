@@ -6,7 +6,8 @@
         "Unity.ugui",
         "Unity.PackageManagerDocTools.Editor",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.Coding.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

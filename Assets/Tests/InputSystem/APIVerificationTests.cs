@@ -433,6 +433,20 @@ class APIVerificationTests
         return docsFolder;
     }
 
+
+    private const string kAPIDirectory = "Tools/API";
+
+    ////FIXME: The .api-based checks are temporary and don't account for platform-specific APIs. Nuke these tests as soon
+    ////       as we can switch back to API validation performed by the Package Validation Suite (as soon as Adriano's fix
+    ////       for the access modifier false positive has landed).
+
+    [Test]
+    [Category("API")]
+    public void API_RegenerateScrapedFile()
+    {
+        Unity.Coding.Editor.ApiScraping.ApiScraping.Scrape();
+    }
+
     [Test]
     [Category("API")]
 #if UNITY_EDITOR_OSX
