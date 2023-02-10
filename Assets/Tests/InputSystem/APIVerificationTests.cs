@@ -276,75 +276,75 @@ class APIVerificationTests
     // The following properties have setters that changed from being private to being protected.
     // This is not a breaking change as no existing code will fail to compile.
     [Property("Exclusions", @"1.0.0
-        public UnityEngine.InputSystem.Controls.ButtonControl buttonEast { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl buttonNorth { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl buttonSouth { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl buttonWest { get; }
-        public UnityEngine.InputSystem.Controls.DpadControl dpad { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl leftShoulder { get; }
-        public UnityEngine.InputSystem.Controls.StickControl leftStick { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl leftStickButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl leftTrigger { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl rightShoulder { get; }
-        public UnityEngine.InputSystem.Controls.StickControl rightStick { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl rightStickButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl rightTrigger { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl selectButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl startButton { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control hatswitch { get; }
-        public UnityEngine.InputSystem.Controls.StickControl stick { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl trigger { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl twist { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl altKey { get; }
-        public UnityEngine.InputSystem.Controls.AnyKeyControl anyKey { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl ctrlKey { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl imeSelected { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl shiftKey { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl backButton { get; }
-        public UnityEngine.InputSystem.Controls.IntegerControl clickCount { get; }
-        public static UnityEngine.InputSystem.Mouse current { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl forwardButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl leftButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl middleButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl rightButton { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control scroll { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl eraser { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl firstBarrelButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl fourthBarrelButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl inRange { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl secondBarrelButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl thirdBarrelButton { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control tilt { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl tip { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl twist { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control delta { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control position { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl press { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl pressure { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control radius { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control delta { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl indirectTouch { get; }
-        public UnityEngine.InputSystem.Controls.TouchPhaseControl phase { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control position { get; }
-        public UnityEngine.InputSystem.Controls.TouchPressControl press { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl pressure { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control radius { get; }
-        public UnityEngine.InputSystem.Controls.Vector2Control startPosition { get; }
-        public UnityEngine.InputSystem.Controls.DoubleControl startTime { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl tap { get; }
-        public UnityEngine.InputSystem.Controls.IntegerControl tapCount { get; }
-        public UnityEngine.InputSystem.Controls.IntegerControl touchId { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl leftTriggerButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl playStationButton { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl rightTriggerButton { get; }
-        public UnityEngine.InputSystem.Controls.TouchControl primaryTouch { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl down { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl left { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl right { get; }
-        public UnityEngine.InputSystem.Controls.ButtonControl up { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl x { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl y { get; }
-        public UnityEngine.InputSystem.Controls.AxisControl z { get; }
+        public Controls.ButtonControl buttonEast { get; }
+        public Controls.ButtonControl buttonNorth { get; }
+        public Controls.ButtonControl buttonSouth { get; }
+        public Controls.ButtonControl buttonWest { get; }
+        public Controls.DpadControl dpad { get; }
+        public Controls.ButtonControl leftShoulder { get; }
+        public Controls.StickControl leftStick { get; }
+        public Controls.ButtonControl leftStickButton { get; }
+        public Controls.ButtonControl leftTrigger { get; }
+        public Controls.ButtonControl rightShoulder { get; }
+        public Controls.StickControl rightStick { get; }
+        public Controls.ButtonControl rightStickButton { get; }
+        public Controls.ButtonControl rightTrigger { get; }
+        public Controls.ButtonControl selectButton { get; }
+        public Controls.ButtonControl startButton { get; }
+        public Controls.Vector2Control hatswitch { get; }
+        public Controls.StickControl stick { get; }
+        public Controls.ButtonControl trigger { get; }
+        public Controls.AxisControl twist { get; }
+        public Controls.ButtonControl altKey { get; }
+        public Controls.AnyKeyControl anyKey { get; }
+        public Controls.ButtonControl ctrlKey { get; }
+        public Controls.ButtonControl imeSelected { get; }
+        public Controls.ButtonControl shiftKey { get; }
+        public Controls.ButtonControl backButton { get; }
+        public Controls.IntegerControl clickCount { get; }
+        public static Mouse current { get; }
+        public Controls.ButtonControl forwardButton { get; }
+        public Controls.ButtonControl leftButton { get; }
+        public Controls.ButtonControl middleButton { get; }
+        public Controls.ButtonControl rightButton { get; }
+        public Controls.Vector2Control scroll { get; }
+        public Controls.ButtonControl eraser { get; }
+        public Controls.ButtonControl firstBarrelButton { get; }
+        public Controls.ButtonControl fourthBarrelButton { get; }
+        public Controls.ButtonControl inRange { get; }
+        public Controls.ButtonControl secondBarrelButton { get; }
+        public Controls.ButtonControl thirdBarrelButton { get; }
+        public Controls.Vector2Control tilt { get; }
+        public Controls.ButtonControl tip { get; }
+        public Controls.AxisControl twist { get; }
+        public Controls.Vector2Control delta { get; }
+        public Controls.Vector2Control position { get; }
+        public Controls.ButtonControl press { get; }
+        public Controls.AxisControl pressure { get; }
+        public Controls.Vector2Control radius { get; }
+        public Controls.Vector2Control delta { get; }
+        public Controls.ButtonControl indirectTouch { get; }
+        public Controls.TouchPhaseControl phase { get; }
+        public Controls.Vector2Control position { get; }
+        public Controls.TouchPressControl press { get; }
+        public Controls.AxisControl pressure { get; }
+        public Controls.Vector2Control radius { get; }
+        public Controls.Vector2Control startPosition { get; }
+        public Controls.DoubleControl startTime { get; }
+        public Controls.ButtonControl tap { get; }
+        public Controls.IntegerControl tapCount { get; }
+        public Controls.IntegerControl touchId { get; }
+        public Controls.ButtonControl leftTriggerButton { get; }
+        public Controls.ButtonControl playStationButton { get; }
+        public Controls.ButtonControl rightTriggerButton { get; }
+        public Controls.TouchControl primaryTouch { get; }
+        public ButtonControl down { get; }
+        public ButtonControl left { get; }
+        public ButtonControl right { get; }
+        public ButtonControl up { get; }
+        public Controls.AxisControl x { get; }
+        public Controls.AxisControl y { get; }
+        public Controls.AxisControl z { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl L1 { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl L2 { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl L3 { get; }
@@ -354,75 +354,99 @@ class APIVerificationTests
         public UnityEngine.InputSystem.Controls.ButtonControl R3 { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl shareButton { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl touchpadButton { get; }
-        public UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.Controls.TouchControl> touches { get; }
-        public virtual System.Collections.Generic.IEnumerator<TValue> GetEnumerator();
+        public UnityEngine.InputSystem.Utilities.ReadOnlyArray<Controls.TouchControl> touches { get; }
+        public System.Collections.Generic.IEnumerator<TValue> GetEnumerator();
+        public Vector2Control delta { get; }
+        public ButtonControl indirectTouch { get; }
+        public TouchPhaseControl phase { get; }
+        public Vector2Control position { get; }
+        public TouchPressControl press { get; }
+        public AxisControl pressure { get; }
+        public Vector2Control radius { get; }
+        public Vector2Control startPosition { get; }
+        public DoubleControl startTime { get; }
+        public ButtonControl tap { get; }
+        public IntegerControl tapCount { get; }
+        public IntegerControl touchId { get; }
     ")]
     // InputActionAsset and InputActionMap changed from IInputActionCollection to IInputActionCollection2 with
     // the latter just being based on the former.
     [Property("Exclusions", @"1.0.0
-        public class InputActionAsset : UnityEngine.ScriptableObject, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.InputAction>, System.Collections.IEnumerable, UnityEngine.InputSystem.IInputActionCollection
-        public sealed class InputActionMap : System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.InputAction>, System.Collections.IEnumerable, System.ICloneable, System.IDisposable, UnityEngine.InputSystem.IInputActionCollection, UnityEngine.ISerializationCallbackReceiver
+        public class InputActionAsset : ScriptableObject, IInputActionCollection, System.Collections.Generic.IEnumerable<InputAction>, System.Collections.IEnumerable
+        public sealed class InputActionMap : IInputActionCollection, ISerializationCallbackReceiver, System.Collections.Generic.IEnumerable<InputAction>, System.Collections.IEnumerable, System.ICloneable, System.IDisposable
     ")]
     // FindAction is now defined at the IInputActionCollection2 level and thus no longer introduced separately
     // by InputActionMap and InputActionAsset.
     [Property("Exclusions", @"1.0.0
-        public UnityEngine.InputSystem.InputAction FindAction(string actionNameOrId, bool throwIfNotFound = False);
-        public UnityEngine.InputSystem.InputAction FindAction(string nameOrId, bool throwIfNotFound = False);
+        public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false);
+        public InputAction FindAction(string nameOrId, bool throwIfNotFound = false);
     ")]
     // RemoveAllBindingOverrides(InputActionMap) is now RemoveAllBindingOverrides (IInputActionCollection2).
     [Property("Exclusions", @"1.0.0
-        public static void RemoveAllBindingOverrides(UnityEngine.InputSystem.InputActionMap actionMap);
+        public static void RemoveAllBindingOverrides(this InputActionMap actionMap);
     ")]
     // These methods have gained an extra (optional) parameter.
     [Property("Exclusions", @"1.0.0
-        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Canceled(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
-        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Performed(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
-        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Started(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>));
-        public static UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax AddBinding(UnityEngine.InputSystem.InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
-        public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
-        public static void DisableDevice(UnityEngine.InputSystem.InputDevice device);
+        public InputTestFixture.ActionConstraint Canceled(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public InputTestFixture.ActionConstraint Performed(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public InputTestFixture.ActionConstraint Started(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>));
+        public static InputActionSetupExtensions.BindingSyntax AddBinding(this InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
+        public InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
+        public static void DisableDevice(InputDevice device);
         public InputEventBuffer(Unity.Collections.NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1) {}
-        public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
-        public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
+        public void AppendEvent(InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
+        public InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
     // TrackedPose Driver changes
     [Property("Exclusions", @"1.0.0
-         public class TrackedPoseDriver : UnityEngine.MonoBehaviour
+         public class TrackedPoseDriver : MonoBehaviour
     ")]
     // These methods have been superseded and have an Obsolete warning on them.
     [Property("Exclusions", @"1.0.0
-        public static bool TryResetDevice(UnityEngine.InputSystem.InputDevice device);
+        public static bool TryResetDevice(InputDevice device);
     ")]
     // Enum value that was never functional.
     [Property("Exclusions", @"1.0.0
-        public const UnityEngine.InputSystem.InputDeviceChange Destroyed = 8;
+        public const InputDeviceChange Destroyed = 8;
     ")]
     // InputSystem.onEvent has become a property with the Action replaced by the InputEventListener type.
     [Property("Exclusions", @"1.0.0
-        public static event System.Action<UnityEngine.InputSystem.LowLevel.InputEventPtr, UnityEngine.InputSystem.InputDevice> onEvent;
+        public static event System.Action<LowLevel.InputEventPtr, InputDevice> onEvent;
     ")]
     // Mouse and Touchscreen implement internal IEventMerger interface
     [Property("Exclusions", @"1.0.0
-        public class Touchscreen : UnityEngine.InputSystem.Pointer, UnityEngine.InputSystem.LowLevel.IInputStateCallbackReceiver
+        public class Touchscreen : Pointer, LowLevel.IInputStateCallbackReceiver
     ")]
-    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(UnityEngine.Rect rect);")]
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.Editor", "public sealed class InputControlPathEditor : System.IDisposable", "public void OnGUI(Rect rect);")]
     // InputEventTrace.Resize() has a new parameter with a default value.
-    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public sealed class InputEventTrace : System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.LowLevel.InputEventPtr>, System.Collections.IEnumerable, System.IDisposable", "public bool Resize(long newBufferSize);")]
+    [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public sealed class InputEventTrace : System.Collections.Generic.IEnumerable<InputEventPtr>, System.Collections.IEnumerable, System.IDisposable", "public bool Resize(long newBufferSize);")]
     // filterNoiseOnCurrent is Obsolete since 1.3.0
     [Property("Exclusions", @"1.0.0
         public bool filterNoiseOnCurrent { get; set; }
     ")]
     // SwitchProControllerHID inherited from IInputStateCallbackReceiver and IEventPreProcessor, both are internal interfaces
     [Property("Exclusions", @"1.0.0
-        public class SwitchProControllerHID : UnityEngine.InputSystem.Gamepad
+        public class SwitchProControllerHID : Gamepad
     ")]
     // AddChangeMonitor has a new, optional groupIndex argument.
     [Property("Exclusions", @"1.0.0
-        public static void AddChangeMonitor(UnityEngine.InputSystem.InputControl control, UnityEngine.InputSystem.LowLevel.IInputStateChangeMonitor monitor, long monitorIndex = -1);
+        public static void AddChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1);
     ")]
     // DualShock4GamepadHID from IEventPreProcessor, which is an internal interface
     [Property("Exclusions", @"1.0.0
-        public class DualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShockGamepad
+        public class DualShock4GamepadHID : DualShockGamepad
+    ")]
+    // InputDeviceChange.Destroyed was deprecated and not active anymore
+    [Property("Exclusions", @"1.0.0
+        Destroyed = 8,
+    ")]
+    // TestFixture added some arguments over the time
+    [Property("Exclusions", @"1.0.0
+        public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        public InputTestFixture.ActionConstraint Canceled(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public void EndTouch(int touchId, Vector2 position, Vector2 delta = default(Vector2), bool queueEventOnly = false, Touchscreen screen = default(Touchscreen), double time = -1d, double timeOffset = 0d);
+        public InputTestFixture.ActionConstraint Performed(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public InputTestFixture.ActionConstraint Started(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>));
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
@@ -460,6 +484,7 @@ class APIVerificationTests
 
             var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions, scopedExclusions))
                 .ToList();
+            Debug.Log(string.Join("\n", missingLines));
             Assert.That(missingLines, Is.Empty);
         }
     }
