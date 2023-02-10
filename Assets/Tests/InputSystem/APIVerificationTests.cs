@@ -448,6 +448,16 @@ class APIVerificationTests
         public InputTestFixture.ActionConstraint Performed(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
         public InputTestFixture.ActionConstraint Started(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>));
     ")]
+    // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
+    [Property("Exclusions", @"1.0.0
+        public int negative = 0;
+        public int positive = 0;
+        public AxisComposite.WhichSideWins whichSideWins = AxisComposite.WhichSideWins.Neither;
+        public int down = 0;
+        public int left = 0;
+        public int right = 0;
+        public int up = 0;
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
