@@ -803,7 +803,7 @@ namespace UnityEngine.InputSystem
             if (bindingIndexInMap == -1)
                 return default;
 
-            return new BindingSyntax(actionMap, bindingIndexInMap);
+            return new BindingSyntax(actionMap, bindingIndexInMap, action);
         }
 
         /// <summary>
