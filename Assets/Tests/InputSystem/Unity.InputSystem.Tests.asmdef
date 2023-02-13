@@ -32,6 +32,11 @@
         },
         {
             "name": "Unity",
+            "expression": "2021.1",
+            "define": "TEMP_DISABLE_UITOOLKIT_TEST"
+        },
+        {
+            "name": "Unity",
             "expression": "2023.2",
             "define": "TEMP_DISABLE_TVOS_MULTIDISPLAY_TEST"
         }
