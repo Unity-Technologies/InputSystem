@@ -5,6 +5,7 @@ editors:
   - version: 2022.2
   - version: 2023.1
   - version: trunk
+    disable_tvos_run: true
 
 utr_install_win: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
 utr_install_nix: curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr && chmod +x utr
