@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 ////TODO: respect cursor lock mode
 
+////TODO: find a way to automatically turn the gamepad cursor on/off based on gamepad use
+
 ////TODO: investigate how driving the HW cursor behaves when FPS drops low
 ////      (also, maybe we can add support where we turn the gamepad mouse on and off automatically based on whether the system mouse is used)
 
@@ -13,6 +15,8 @@ using UnityEngine.UI;
 ////TODO: automatically scale mouse speed to resolution such that it stays constant regardless of resolution
 
 ////TODO: make it work with PlayerInput such that it will automatically look up actions in the actual PlayerInput instance it is used with (based on the action IDs it has)
+
+////FIXME: make this work with world-space canvases
 
 ////REVIEW: should we default the SW cursor position to the center of the screen?
 
@@ -78,9 +82,10 @@ namespace UnityEngine.InputSystem.UI
         /// that is made to correspond to the position of <see cref="virtualMouse"/>. If this is set to <see
         /// cref="CursorMode.HardwareCursorIfAvailable"/> and there is a native <see cref="Mouse"/> device present,
         /// the component will take over that mouse device and disable it (so as for it to not also generate position
-        /// updates). It will then use <see cref="Mouse.WarpCursorPosition"/> to move the system mouse cursor to
-        /// correspond to the position of the <see cref="virtualMouse"/>. In this case, <see cref="cursorGraphic"/>
-        /// will be disabled and <see cref="cursorTransform"/> will not be updated.
+        /// updates) except when this is explicitly disabled via <see cref="disableSystemMouse"/>. It will then use
+        /// <see cref="Mouse.WarpCursorPosition"/> to move the system mouse cursor to correspond to the position of the
+        /// <see cref="virtualMouse"/>. In this case, <see cref="cursorGraphic"/> will be disabled and
+        /// <see cref="cursorTransform"/> will not be updated.
         /// </summary>
         /// <value>Whether the system mouse cursor (if present) should be made to correspond with the virtual mouse position.</value>
         /// <remarks>
@@ -100,7 +105,8 @@ namespace UnityEngine.InputSystem.UI
                 // If we're turning it off, make sure we re-enable the system mouse.
                 if (m_CursorMode == CursorMode.HardwareCursorIfAvailable && m_SystemMouse != null)
                 {
-                    InputSystem.EnableDevice(m_SystemMouse);
+                    if (m_DisableSystemMouse)
+                        InputSystem.EnableDevice(m_SystemMouse);
                     m_SystemMouse = null;
                 }
 
@@ -158,10 +164,50 @@ namespace UnityEngine.InputSystem.UI
         public Mouse virtualMouse => m_VirtualMouse;
 
         /// <summary>
+        /// If <see cref="cursorMode"/> is set to <see cref="CursorMode.HardwareCursorIfAvailable"/>, whether to
+        /// disable the system mouse, if present. This is on by default.
+        /// </summary>
+        /// <value>If true, the system mouse will be disabled if present and while the VirtualMouseInput component is active.</value>
+        /// <remarks>
+        /// If the component drives the system mouse cursor rather than using a software cursor, the system mouse cursor position will
+        /// get warped around using <see cref="Mouse.WarpCursorPosition"/>. This, however, has the side-effect of generating input
+        /// on the system <see cref="Mouse"/> device. In other words, mouse motion from the gamepad will come in through both
+        /// the VirtualMouse created for the gamepad and the <see cref="Mouse"/> added by the system (with a one frame lag for
+        /// the latter).
+        ///
+        /// To avoid this, the system mouse will by default get disabled while the VirtualMouseInput component is enabled. Thus,
+        /// the system <see cref="Mouse"/> will not receive input while the VirtualMouseInput component is enabled. The idea here
+        /// is that the application should determine when the gamepad is used and only turn on the gamepad cursor while this is
+        /// the case. One possible approach is to set up a control scheme for gamepads and enable the gamepad mouse cursor only
+        /// while the gamepad scheme is active.
+        ///
+        /// However, by setting this property to false, the disabling of the system <see cref="Mouse"/> device can be suppressed.
+        /// This means the system mouse will stay fully functional. You will, however, see concurrent input on both the VirtualMouse
+        /// and the system mouse. This may, for example, interfere with automatic control scheme switching (which is why the disabling
+        /// is on by default).
+        /// </remarks>
+        public bool disableSystemMouse
+        {
+            get => m_DisableSystemMouse;
+            set
+            {
+                if (value == m_DisableSystemMouse)
+                    return;
+                m_DisableSystemMouse = value;
+
+                if (m_SystemMouse != null)
+                {
+                    if (value)
+                        InputSystem.DisableDevice(m_SystemMouse);
+                    else
+                        InputSystem.EnableDevice(m_SystemMouse);
+                }
+            }
+        }
+
+        /// <summary>
         /// The Vector2 stick input that drives the mouse cursor, i.e. <see cref="Pointer.position"/> on
-        /// <see cref="virtualMouse"/> and the <a
-        /// href="https://docs.unity3d.com/ScriptReference/RectTransform-anchoredPosition.html">anchoredPosition</a>
-        /// on <see cref="cursorTransform"/> (if set).
+        /// <see cref="virtualMouse"/> and the position on <see cref="cursorTransform"/> (if set).
         /// </summary>
         /// <value>Stick input that drives cursor position.</value>
         /// <remarks>
@@ -294,7 +340,7 @@ namespace UnityEngine.InputSystem.UI
             // Set initial cursor position.
             if (m_CursorTransform != null)
             {
-                var position = m_CursorTransform.anchoredPosition;
+                var position = m_CursorTransform.position;
                 InputState.Change(m_VirtualMouse.position, position);
                 m_SystemMouse?.WarpCursorPosition(position);
             }
@@ -388,7 +434,8 @@ namespace UnityEngine.InputSystem.UI
                 return;
             }
 
-            InputSystem.DisableDevice(m_SystemMouse);
+            if (m_DisableSystemMouse)
+                InputSystem.DisableDevice(m_SystemMouse);
 
             // Sync position.
             if (m_VirtualMouse != null)
@@ -450,7 +497,7 @@ namespace UnityEngine.InputSystem.UI
                 if (m_CursorTransform != null &&
                     (m_CursorMode == CursorMode.SoftwareCursor ||
                      (m_CursorMode == CursorMode.HardwareCursorIfAvailable && m_SystemMouse == null)))
-                    m_CursorTransform.anchoredPosition = newPosition;
+                    m_CursorTransform.position = newPosition;
 
                 m_LastStickValue = stickValue;
                 m_LastTime = currentTime;
@@ -475,6 +522,11 @@ namespace UnityEngine.InputSystem.UI
         [Tooltip("Whether the component should set the cursor position of the hardware mouse cursor, if one is available. If so, "
             + "the software cursor pointed (to by 'Cursor Graphic') will be hidden.")]
         [SerializeField] private CursorMode m_CursorMode;
+        [Tooltip("With 'Cursor Mode' set to 'Hardware Cursor If Available', whether to disable the system mouse. The cursor warping that is used "
+            + "to drive the HW cursor will generate input on the mouse device which mirrors the input on the virtual mouse. By enabling this flag, "
+            + "this input can be suppressed by disabling the system mouse altogether. Note that this will make *no* input from the system mouse come "
+            + "through while the VirtualMouseInput component is active.")]
+        [SerializeField] private bool m_DisableSystemMouse = true;
         [Tooltip("The graphic that represents the software cursor. This is hidden if a hardware cursor (see 'Cursor Mode') is used.")]
         [SerializeField] private Graphic m_CursorGraphic;
         [Tooltip("The transform for the software cursor. Will only be set if a software cursor is used (see 'Cursor Mode'). Moving the cursor "
