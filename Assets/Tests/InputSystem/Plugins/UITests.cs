@@ -3852,7 +3852,7 @@ internal class UITests : CoreTestsFixture
     }
 
     [UnityTest]
-#if UNITY_TVOS && TEMP_DISABLE_TVOS_MULTIDISPLAY_TEST
+#if UNITY_TVOS
     [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
