@@ -3852,6 +3852,9 @@ internal class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+#if UNITY_TVOS && TEMP_DISABLE_TVOS_MULTIDISPLAY_TEST
+    [Ignore("Crashing on tvOS")]
+#endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
         // Setup the Test Scene
