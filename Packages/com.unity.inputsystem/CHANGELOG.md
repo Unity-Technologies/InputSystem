@@ -14,6 +14,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
 
+### Added
+
+- Added `Erase(onlyRemoveCompositeParts: true)` to be able to remove only binding parts of the composite binding but not the composite binding itself. Based on the user contribution from [steinbitglis](https://github.com/steinbitglis) in [#1360](https://github.com/Unity-Technologies/InputSystem/pull/1360).
+
 ## [1.5.0] - 2023-01-24
 
 ### Added
