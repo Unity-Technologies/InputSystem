@@ -5731,4 +5731,19 @@ partial class CoreTests
                 BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
         }, Throws.Nothing);
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanQueryMouseButtonsViaEnum()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        foreach (MouseButton btn in Enum.GetValues(typeof(MouseButton)))
+        {
+            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(btn));
+            InputSystem.Update();
+
+            Assert.That(mouse[btn].isPressed, Is.True);
+        }
+    }
 }

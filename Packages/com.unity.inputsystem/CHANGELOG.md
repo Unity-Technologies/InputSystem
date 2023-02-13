@@ -14,6 +14,9 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
 
+### Added
+- Ability to query mouse buttons via enum, for example `mouse[MouseButton.Left]`. Based on the user contribution from [Drahsid](https://github.com/Drahsid) in [#1273](https://github.com/Unity-Technologies/InputSystem/pull/1273).
+
 ## [1.5.0] - 2023-01-24
 
 ### Added
