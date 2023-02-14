@@ -13,6 +13,11 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
+- `VirtualMouseInput` not working correctly with `CanvasScaler` settings other than `ConstantPixelSize`. Fix contributed by [ad-walker](https://github.com/ad-walker) in [#1078](https://github.com/Unity-Technologies/InputSystem/pull/1078).
+
+### Added
+
+- Added an explicit `Disable System Mouse` setting to `VirtualMouseInput` to allow toggling the default behavior off which makes the component turn off the system mouse while it is enabled (so as to suppress the system mouse doubling the input activity on the VirtualMouse).
 
 ## [1.5.0] - 2023-01-24
 
