@@ -3644,6 +3644,32 @@ partial class CoreTests
                 .Property("path").EqualTo("<Keyboard>/rightArrow"));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRemovePartBindings_ButNotExistingComposite()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Axis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/d");
+        action.ChangeCompositeBinding("Axis").Erase(onlyRemoveCompositeParts: true);
+
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Count.EqualTo(0));
+
+        try
+        {
+            action.AddBinding("<Keyboard>/a");
+            action.ChangeBinding(1).Erase(onlyRemoveCompositeParts: true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Assert.That(ex.Message, Is.EqualTo("Binding should be a composite binding"));
+        }
+    }
+
     [Serializable]
     public enum Modification
     {

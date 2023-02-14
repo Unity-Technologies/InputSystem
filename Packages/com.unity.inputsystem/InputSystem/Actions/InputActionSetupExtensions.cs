@@ -1564,19 +1564,26 @@ namespace UnityEngine.InputSystem
             /// that got erased was the last one in the array).
             /// </remarks>
             /// <exception cref="InvalidOperationException">The instance is not <see cref="valid"/>.</exception>
-            public void Erase()
+            public void Erase(bool onlyRemoveCompositeParts = false)
             {
                 if (!valid)
                     throw new InvalidOperationException("Instance not valid");
 
                 var isComposite = m_ActionMap.m_Bindings[m_BindingIndexInMap].isComposite;
-                ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndexInMap);
+                if (onlyRemoveCompositeParts && !isComposite)
+                    throw new InvalidOperationException("Binding should be a composite binding");
+                
+                var index = m_BindingIndexInMap;
+                if (!onlyRemoveCompositeParts)
+                    ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, index);
+                else
+                    index++;
 
                 // If it's a composite, also erase part bindings.
                 if (isComposite)
                 {
-                    while (m_BindingIndexInMap < m_ActionMap.m_Bindings.LengthSafe() && m_ActionMap.m_Bindings[m_BindingIndexInMap].isPartOfComposite)
-                        ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndexInMap);
+                    while (index < m_ActionMap.m_Bindings.LengthSafe() && m_ActionMap.m_Bindings[index].isPartOfComposite)
+                        ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, index);
                 }
 
                 m_ActionMap.OnBindingModified();
