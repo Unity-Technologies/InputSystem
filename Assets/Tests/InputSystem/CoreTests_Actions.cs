@@ -3609,6 +3609,40 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanRemoveBindingsFromActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction();
+
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Gamepad>/rightStick");
+
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/Control")
+            .With("Button", "<Keyboard>/a");
+
+        // Total number of bindings should be 5: 2 normal bindings and 3 from the composite
+        // bindings
+        Assert.That(action.bindings, Has.Count.EqualTo(5));
+
+        // Since we have a composite bindings, all bindings will be removed at once
+        action.ChangeBinding(2).Erase();
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+
+        // Remove all remaining bindings
+        action.ChangeBinding(0).Erase();
+        action.ChangeBinding(0).Erase();
+        Assert.That(action.bindings, Has.Count.EqualTo(0));
+
+        // Add a binding to be removed
+        action.AddBinding("<Gamepad>/rightStick");
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        action.ChangeBinding(0).Erase();
+        Assert.That(action.bindings, Has.Count.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanAddBindingsToActions_ToExistingComposite()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
