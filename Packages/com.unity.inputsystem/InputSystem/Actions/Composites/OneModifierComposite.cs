@@ -48,9 +48,9 @@ namespace UnityEngine.InputSystem.Composites
     [DisplayName("Binding With One Modifier")]
     public class OneModifierComposite : InputBindingComposite
     {
-	    internal const int OneModifierCompositeBindingPriority = 3;
+        internal const int OneModifierCompositeBindingPriority = 3;
 
-	    /// <summary>
+        /// <summary>
         /// Binding for the button that acts as a modifier, e.g. <c>&lt;Keyboard/ctrl</c>.
         /// </summary>
         /// <value>Part index to use with <see cref="InputBindingCompositeContext.ReadValue{T}(int)"/>.</value>
@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Composites
 
         public OneModifierComposite()
         {
-	        handleInputEvents = true;
+            handleInputEvents = true;
         }
 
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
@@ -191,13 +191,13 @@ namespace UnityEngine.InputSystem.Composites
 
         internal override void HandleEvent(ref InputEventPtr eventPtr, ref InputBindingCompositeContext context)
         {
-            if(handleInputEvents && ModifierIsPressed(ref context))
-				eventPtr.handled = true;
+            if (handleInputEvents && ModifierIsPressed(ref context))
+                eventPtr.handled = true;
         }
 
         internal override int GetPriority()
         {
-	        return OneModifierCompositeBindingPriority;
+            return OneModifierCompositeBindingPriority;
         }
     }
 }

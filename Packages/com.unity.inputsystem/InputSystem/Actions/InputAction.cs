@@ -1155,12 +1155,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasPerformedThisFrame"/>
         public unsafe bool WasPressedThisFrame()
         {
-	        var state = GetOrCreateActionMap().m_State;
+            var state = GetOrCreateActionMap().m_State;
             if (state != null)
             {
-		        var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-		        var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-		        return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1215,95 +1215,95 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-		////REVIEW: Should we also have WasStartedThisFrame()? (and WasCanceledThisFrame()?)
+        ////REVIEW: Should we also have WasStartedThisFrame()? (and WasCanceledThisFrame()?)
 
-		/// <summary>
-		/// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
-		/// in the current frame without considering conflicting actions.
-		/// </summary>
-		/// <returns>True if the action performed this frame.</returns>
-		/// <remarks>This method does not check if a more specific input has performed already in this frame.
-		/// For example, if there are two input actions, one bound to the Ctrl+C keys and the other bound to
-		/// the C key, this method will return true when called on the input action bound to the C key when
-		/// Ctrl+C is pressed. See <see cref="WasPerformedThisFrame(bool)"/> for a version of the method that
-		/// considers binding conflicts.</remarks>
-		public bool WasPerformedThisFrame()
+        /// <summary>
+        /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
+        /// in the current frame without considering conflicting actions.
+        /// </summary>
+        /// <returns>True if the action performed this frame.</returns>
+        /// <remarks>This method does not check if a more specific input has performed already in this frame.
+        /// For example, if there are two input actions, one bound to the Ctrl+C keys and the other bound to
+        /// the C key, this method will return true when called on the input action bound to the C key when
+        /// Ctrl+C is pressed. See <see cref="WasPerformedThisFrame(bool)"/> for a version of the method that
+        /// considers binding conflicts.</remarks>
+        public bool WasPerformedThisFrame()
         {
-	        return WasPerformedThisFrame(false);
+            return WasPerformedThisFrame(false);
         }
 
-		/// <summary>
-		/// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
-		/// in the current frame.
-		/// </summary>
-		/// <param name="checkConflictingActions">Whether to check if a more specific binding has already
-		/// performed as a result of the control actuations that triggered this action.</param>
-		/// <returns>True if the action performed this frame.</returns>
-		/// <remarks>
-		/// This method is different from <see cref="WasPressedThisFrame"/> in that it depends directly on the
-		/// interaction(s) driving the action (including the default interaction if no specific interaction
-		/// has been added to the action or binding).
-		///
-		/// For example, let's say the action is bound to the space bar and that the binding has a
-		/// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
-		/// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
-		/// but <c>WasPerformedThisFrame</c> will still be false (because the hold has not been performed yet).
-		/// Only after the hold time has expired will <c>WasPerformedThisFrame</c> be true and only in the frame
-		/// where the hold performed.
-		///
-		/// This is different from checking <see cref="phase"/> directly as the action might have already progressed
-		/// to a different phase after performing. In other words, even if an action performed in a frame, <see cref="phase"/>
-		/// might no longer be <see cref="InputActionPhase.Performed"/>, whereas <c>WasPerformedThisFrame</c> will remain
-		/// true for the entirety of the frame regardless of what else the action does.
-		///
-		/// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
-		/// state, this property will stay true for the duration of the current frame (that is, until the next
-		/// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
-		///
-		/// <example>
-		/// <code>
-		/// var warp = playerInput.actions["Warp"];
-		/// if (warp.WasPerformedThisFrame())
-		///     InitiateWarp();
-		/// </code>
-		/// </example>
-		///
-		/// This method will disregard whether the action is currently enabled or disabled. It will keep returning
-		/// true for the duration of the frame even if the action was subsequently disabled in the frame.
-		///
-		/// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
-		/// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
-		///
-		/// This method can be made to check if a more specific binding has performed before this one in the current
-		/// frame. For example, when using shortcut key bindings, pressing Ctrl+C will trigger any actions that are
-		/// bound only to C, as well as any bound to Ctrl+C. Passing true for the 'checkConflictingActions' argument
-		/// will cause this method to return false if this action has been bound to the C key but Ctrl+C has been
-		/// pressed and another action is bound to that key combination.
-		///
-		/// Note that bindings can be made to consume input events, or in other words, prevent less specific bindings
-		/// from even performing in the first place. To enable this, set the <see cref="InputSettings.shortcutKeysConsumeInput"/>
-		/// property to true, and make sure that the 'Consume Input Events' property on the binding is also set to
-		/// true. See <see cref="InputBindingComposite.handleInputEvents"/> for more details.
-		/// </remarks>
-		/// <seealso cref="WasPressedThisFrame"/>
-		/// <seealso cref="phase"/>
-		/// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
-		/// <seealso cref="InputBindingComposite.handleInputEvents"/>
-		public unsafe bool WasPerformedThisFrame(bool checkConflictingActions)
+        /// <summary>
+        /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
+        /// in the current frame.
+        /// </summary>
+        /// <param name="checkConflictingActions">Whether to check if a more specific binding has already
+        /// performed as a result of the control actuations that triggered this action.</param>
+        /// <returns>True if the action performed this frame.</returns>
+        /// <remarks>
+        /// This method is different from <see cref="WasPressedThisFrame"/> in that it depends directly on the
+        /// interaction(s) driving the action (including the default interaction if no specific interaction
+        /// has been added to the action or binding).
+        ///
+        /// For example, let's say the action is bound to the space bar and that the binding has a
+        /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
+        /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
+        /// but <c>WasPerformedThisFrame</c> will still be false (because the hold has not been performed yet).
+        /// Only after the hold time has expired will <c>WasPerformedThisFrame</c> be true and only in the frame
+        /// where the hold performed.
+        ///
+        /// This is different from checking <see cref="phase"/> directly as the action might have already progressed
+        /// to a different phase after performing. In other words, even if an action performed in a frame, <see cref="phase"/>
+        /// might no longer be <see cref="InputActionPhase.Performed"/>, whereas <c>WasPerformedThisFrame</c> will remain
+        /// true for the entirety of the frame regardless of what else the action does.
+        ///
+        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
+        /// state, this property will stay true for the duration of the current frame (that is, until the next
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
+        ///
+        /// <example>
+        /// <code>
+        /// var warp = playerInput.actions["Warp"];
+        /// if (warp.WasPerformedThisFrame())
+        ///     InitiateWarp();
+        /// </code>
+        /// </example>
+        ///
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        ///
+        /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
+        /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        ///
+        /// This method can be made to check if a more specific binding has performed before this one in the current
+        /// frame. For example, when using shortcut key bindings, pressing Ctrl+C will trigger any actions that are
+        /// bound only to C, as well as any bound to Ctrl+C. Passing true for the 'checkConflictingActions' argument
+        /// will cause this method to return false if this action has been bound to the C key but Ctrl+C has been
+        /// pressed and another action is bound to that key combination.
+        ///
+        /// Note that bindings can be made to consume input events, or in other words, prevent less specific bindings
+        /// from even performing in the first place. To enable this, set the <see cref="InputSettings.shortcutKeysConsumeInput"/>
+        /// property to true, and make sure that the 'Consume Input Events' property on the binding is also set to
+        /// true. See <see cref="InputBindingComposite.handleInputEvents"/> for more details.
+        /// </remarks>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="phase"/>
+        /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
+        /// <seealso cref="InputBindingComposite.handleInputEvents"/>
+        public unsafe bool WasPerformedThisFrame(bool checkConflictingActions)
         {
-	        var state = GetOrCreateActionMap().m_State;
+            var state = GetOrCreateActionMap().m_State;
 
-	        if (state == null) return false;
+            if (state == null) return false;
 
-	        var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-	        var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            var currentUpdateStep = InputUpdate.s_UpdateStepCount;
 
-			var wasPerformedThisFrame = actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            var wasPerformedThisFrame = actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
 
-			if (!checkConflictingActions)
-		        return wasPerformedThisFrame;
+            if (!checkConflictingActions)
+                return wasPerformedThisFrame;
 
-	        return !HasHigherPriorityActionAlreadyPerformed() && wasPerformedThisFrame;
+            return !HasHigherPriorityActionAlreadyPerformed() && wasPerformedThisFrame;
         }
 
         /// <summary>
@@ -1920,33 +1920,33 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="InputBindingComposite.handleInputEvents"/>
             public bool eventHandled
             {
-	            get
-	            {
-		            if (m_State == null || m_State.inputEvent == null)
-			            return false;
+                get
+                {
+                    if (m_State == null || m_State.inputEvent == null)
+                        return false;
 
-		            return m_State.inputEvent.handled;
-	            }
+                    return m_State.inputEvent.handled;
+                }
             }
 
-			/// <summary>
-			/// Mark the current input event as handled.
-			/// </summary>
-			/// <remarks>
-			/// Marking an event as handled will prevent it from being processed by any less specific
-			/// bindings, but only if <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled.
-			/// Otherwise all less specific bindings will still have their performed handlers called,
-			/// but the <see cref="eventHandled"/> flag will be true.
-			/// </remarks>
-			/// <seealso cref="InputBindingComposite.handleInputEvents"/>
-			/// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
-			/// <seealso cref="eventHandled"/>
-			public void HandleEvent()
+            /// <summary>
+            /// Mark the current input event as handled.
+            /// </summary>
+            /// <remarks>
+            /// Marking an event as handled will prevent it from being processed by any less specific
+            /// bindings, but only if <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled.
+            /// Otherwise all less specific bindings will still have their performed handlers called,
+            /// but the <see cref="eventHandled"/> flag will be true.
+            /// </remarks>
+            /// <seealso cref="InputBindingComposite.handleInputEvents"/>
+            /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
+            /// <seealso cref="eventHandled"/>
+            public void HandleEvent()
             {
-	            if (m_State == null)
-		            return;
+                if (m_State == null)
+                    return;
 
-	            m_State.inputEvent.handled = true;
+                m_State.inputEvent.handled = true;
                 m_State.SetActionGroupHandledBy(actionIndex, controlIndex);
             }
 
@@ -2075,32 +2075,32 @@ namespace UnityEngine.InputSystem
                 return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
             }
         }
-        
+
         private unsafe bool HasHigherPriorityActionAlreadyPerformed()
         {
-	        var state = GetOrCreateActionMap().m_State;
-	        ref var actionState = ref state.FetchActionState(this);
-            
-	        var groupCount = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex];
-	        for (var j = 0; j < groupCount; j++)
-	        {
-		        var groupIndex = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex + j + 1];
-		        var actionGroup = state.m_ActionGroups[groupIndex];
-                 
-		        if (actionGroup.lastEventHandledByAction == -1)
-			        continue;
+            var state = GetOrCreateActionMap().m_State;
+            ref var actionState = ref state.FetchActionState(this);
 
-		        // if the last action in this group to handle an event didn't perform in the current step count,
-		        // then there is no way it can have run before this action, so early out
-		        var lastActionToHandleAnEvent = state.actionStates[actionGroup.lastEventHandledByAction];
-		        if (lastActionToHandleAnEvent.lastPerformedInUpdate != InputUpdate.s_UpdateStepCount)
-			        continue;
+            var groupCount = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex];
+            for (var j = 0; j < groupCount; j++)
+            {
+                var groupIndex = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex + j + 1];
+                var actionGroup = state.m_ActionGroups[groupIndex];
 
-				if (actionGroup.lastEventHandledByAction != m_ActionIndexInState)
-			        return true;
-	        }
+                if (actionGroup.lastEventHandledByAction == -1)
+                    continue;
 
-	        return false;
+                // if the last action in this group to handle an event didn't perform in the current step count,
+                // then there is no way it can have run before this action, so early out
+                var lastActionToHandleAnEvent = state.actionStates[actionGroup.lastEventHandledByAction];
+                if (lastActionToHandleAnEvent.lastPerformedInUpdate != InputUpdate.s_UpdateStepCount)
+                    continue;
+
+                if (actionGroup.lastEventHandledByAction != m_ActionIndexInState)
+                    return true;
+            }
+
+            return false;
         }
     }
 }

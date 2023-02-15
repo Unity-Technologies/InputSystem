@@ -107,7 +107,7 @@ namespace UnityEngine.InputSystem.Composites
 
         public ButtonWithTwoModifiers()
         {
-	        handleInputEvents = true;
+            handleInputEvents = true;
         }
 
         /// <summary>
@@ -152,13 +152,13 @@ namespace UnityEngine.InputSystem.Composites
 
         internal override int GetPriority()
         {
-	        return TwoModifiersComposite.TwoModifiersCompositeBindingPriority;
+            return TwoModifiersComposite.TwoModifiersCompositeBindingPriority;
         }
 
         internal override void HandleEvent(ref InputEventPtr eventPtr, ref InputBindingCompositeContext context)
         {
-	        if (handleInputEvents && ModifiersArePressed(ref context))
-		        eventPtr.handled = true;
+            if (handleInputEvents && ModifiersArePressed(ref context))
+                eventPtr.handled = true;
         }
 
         protected override void FinishSetup(ref InputBindingCompositeContext context)
