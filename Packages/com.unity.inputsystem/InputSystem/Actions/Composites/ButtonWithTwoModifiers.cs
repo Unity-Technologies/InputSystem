@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
@@ -104,6 +105,11 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         public bool overrideModifiersNeedToBePressedFirst;
 
+        public ButtonWithTwoModifiers()
+        {
+	        handleInputEvents = true;
+        }
+
         /// <summary>
         /// Return the value of the <see cref="button"/> part while both <see cref="modifier1"/> and <see cref="modifier2"/>
         /// are pressed. Otherwise return 0.
@@ -142,6 +148,17 @@ namespace UnityEngine.InputSystem.Composites
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
             return ReadValue(ref context);
+        }
+
+        internal override int GetPriority()
+        {
+	        return TwoModifiersComposite.TwoModifiersCompositeBindingPriority;
+        }
+
+        internal override void HandleEvent(ref InputEventPtr eventPtr, ref InputBindingCompositeContext context)
+        {
+	        if (handleInputEvents && ModifiersArePressed(ref context))
+		        eventPtr.handled = true;
         }
 
         protected override void FinishSetup(ref InputBindingCompositeContext context)

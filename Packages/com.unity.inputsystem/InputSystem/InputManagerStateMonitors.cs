@@ -390,7 +390,7 @@ namespace UnityEngine.InputSystem
                 // If the monitor signalled that it has processed the state change, reset all signalled
                 // state monitors in the same group. This is what causes "SHIFT+B" to prevent "B" from
                 // also triggering.
-                if (eventPtr->handled)
+                if (eventPtr->handled && InputSystem.settings.shortcutKeysConsumeInput)
                 {
                     var groupIndex = listeners[i].groupIndex;
                     for (var n = i + 1; n < signals.length; ++n)

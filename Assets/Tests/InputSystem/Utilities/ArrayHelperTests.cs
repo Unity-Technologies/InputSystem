@@ -1,7 +1,10 @@
+using System;
 using System.Globalization;
+using System.Linq;
 using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 
 internal class ArrayHelperTests
 {
@@ -129,5 +132,30 @@ internal class ArrayHelperTests
         Assert.That(arr.IndexOf(x => x >= 3, 1, 3), Is.EqualTo(3));
         Assert.That(arr.IndexOf(x => x >= 3, 4, 0), Is.EqualTo(-1));
         Assert.That(arr.IndexOf(x => x < 0, 3, 3), Is.EqualTo(-1));
+    }
+
+    [Test]
+    [Category("Utilities")]
+    public void Utilities_CanInsertAtInNativeArray()
+    {
+	    var arrayWithNoElements = new NativeArray<int>(10, Allocator.Persistent);
+		var arrayWithTenElements = new NativeArray<int>(10, Allocator.Persistent);
+
+		try
+		{
+		    ArrayHelpers.InsertAt(ref arrayWithNoElements, 0, 123);
+            Assert.That(arrayWithNoElements[0], Is.EqualTo(123));
+
+            ArrayHelpers.InsertAt(ref arrayWithNoElements, 0, 456);
+            Assert.That(arrayWithNoElements[0], Is.EqualTo(456));
+            Assert.That(arrayWithNoElements[1], Is.EqualTo(123));
+
+            Assert.That(() => { ArrayHelpers.InsertAt(ref arrayWithNoElements, 9, 1234);}, Throws.TypeOf<ArgumentOutOfRangeException>());
+		}
+	    finally
+		{
+			arrayWithNoElements.Dispose();
+            arrayWithTenElements.Dispose();
+		}
     }
 }

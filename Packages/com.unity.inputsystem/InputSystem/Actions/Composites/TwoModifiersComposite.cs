@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Composites
@@ -48,7 +49,9 @@ namespace UnityEngine.InputSystem.Composites
     [DisplayName("Binding With Two Modifiers")]
     public class TwoModifiersComposite : InputBindingComposite
     {
-        /// <summary>
+	    internal const int TwoModifiersCompositeBindingPriority = 4;
+
+	    /// <summary>
         /// Binding for the first button that acts as a modifier, e.g. <c>&lt;Keyboard/leftCtrl</c>.
         /// </summary>
         /// <value>Part index to use with <see cref="InputBindingCompositeContext.ReadValue{T}(int)"/>.</value>
@@ -119,6 +122,11 @@ namespace UnityEngine.InputSystem.Composites
         private Type m_ValueType;
         private bool m_BindingIsButton;
 
+        public TwoModifiersComposite()
+        {
+	        handleInputEvents = true;
+        }
+
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
             if (ModifiersArePressed(ref context))
@@ -167,5 +175,16 @@ namespace UnityEngine.InputSystem.Composites
                 return context.ReadValueAsObject(binding);
             return null;
         }
-    }
+
+        internal override void HandleEvent(ref InputEventPtr eventPtr, ref InputBindingCompositeContext context)
+        {
+			if (handleInputEvents && ModifiersArePressed(ref context))
+				eventPtr.handled = true;
+		}
+
+        internal override int GetPriority()
+        {
+	        return TwoModifiersCompositeBindingPriority;
+        }
+	}
 }

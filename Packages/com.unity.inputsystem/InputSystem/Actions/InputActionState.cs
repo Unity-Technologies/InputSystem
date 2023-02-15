@@ -110,11 +110,12 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public ushort* controlGroupingAndComplexity => memory.controlGroupingAndComplexity;
+        public ControlGroupAndComplexity* controlGroupingAndComplexity => memory.controlGroupingAndComplexity;
         public float* controlMagnitudes => memory.controlMagnitudes;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
         public bool isProcessingControlStateChange => m_InProcessControlStateChange;
+        public ref InputEventPtr inputEvent => ref m_CurrentlyProcessingThisEvent;
 
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
@@ -122,6 +123,14 @@ namespace UnityEngine.InputSystem
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
+
+        // this is a sparse array that we index by control group index
+        internal NativeArray<ActionGroup> m_ActionGroups;
+        
+        // each action (TriggerState) has an index into this array. The element that the the TriggerState
+        // points at is a count of the number of groups that action appears in, and the next n elements
+        // are the indices into the m_ActionGroups where those groups live.
+        internal NativeArray<ushort> m_ActionGroupIndirectionTable;
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
@@ -138,9 +147,8 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
-            // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
-            // in their own group.
-            var disableControlGrouping = !InputSystem.settings.shortcutKeysConsumeInput;
+            // scratch memory to track all the group indexes that an action appears in
+            var tempActionGroupIndexes = stackalloc ushort[8192];
 
             var currentGroup = 1u;
             for (var i = 0; i < totalControlCount; ++i)
@@ -150,47 +158,92 @@ namespace UnityEngine.InputSystem
                 ref var binding = ref bindingStates[bindingIndex];
 
                 ////REVIEW: take processors and interactions into account??
-
+                
                 // Compute complexity.
                 var complexity = 1;
-                if (binding.isPartOfComposite && !disableControlGrouping)
+                if (binding.isPartOfComposite)
                 {
-                    var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
-
-                    for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
-                    {
-                        ref var partBinding = ref bindingStates[n];
-                        if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
-                            break;
-                        ++complexity;
-                    }
+	                var compositeBinding = bindingStates[binding.compositeOrCompositeBindingIndex];
+	                var composite = composites[compositeBinding.compositeOrCompositeBindingIndex];
+	                complexity = composite.GetPriority();
                 }
-                controlGroupingAndComplexity[i * 2 + 1] = (ushort)complexity;
+                controlGroupingAndComplexity[i].complexity = (ushort)complexity;
 
                 // Compute grouping. If already set, skip.
-                if (controlGroupingAndComplexity[i * 2] == 0)
+                if (controlGroupingAndComplexity[i].group == 0)
                 {
-                    if (!disableControlGrouping)
+                    for (var n = 0; n < totalControlCount; ++n)
                     {
-                        for (var n = 0; n < totalControlCount; ++n)
-                        {
-                            // NOTE: We could compute group numbers based on device index + control offsets
-                            //       and thus make them work globally in a stable way. But we'd need a mechanism
-                            //       to then determine ordering of actions globally such that it is clear which
-                            //       action gets a first shot at an input.
+                        // NOTE: We could compute group numbers based on device index + control offsets
+                        //       and thus make them work globally in a stable way. But we'd need a mechanism
+                        //       to then determine ordering of actions globally such that it is clear which
+                        //       action gets a first shot at an input.
 
-                            var otherControl = controls[n];
-                            if (control != otherControl)
-                                continue;
+                        var otherControl = controls[n];
+                        if (control != otherControl)
+                            continue;
 
-                            controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
-                        }
+                        controlGroupingAndComplexity[n].group = (ushort)currentGroup;
                     }
 
-                    controlGroupingAndComplexity[i * 2] = (ushort)currentGroup;
+                    controlGroupingAndComplexity[i].group = (ushort)currentGroup;
 
                     ++currentGroup;
                 }
+
+				// add the action that the current binding belongs to to the relevant group, sorted by complexity
+                if (controlGroupingAndComplexity[i].group >= m_ActionGroups.Length)
+                    ArrayHelpers.Resize(ref m_ActionGroups, Mathf.Max(10, m_ActionGroups.Length + 10), Allocator.Persistent);
+
+                ref var grouping = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
+	                controlGroupingAndComplexity[i].group);
+				if (m_ActionGroups[controlGroupingAndComplexity[i].group].isCreated == false)
+	                grouping = new ActionGroup(5);
+
+				grouping.AddActionIndex(binding.actionIndex);
+            }
+
+            var actionGroupNextFreeIndex = 0;
+
+			// now build the indirection table. Each TriggerState will point to an entry in the m_ActionGroupIndirectionTable
+            // array that stores the number of groups that that action appears in. The following n entries in that array are
+            // the indexes of each group in the m_ActionGroups array that the action appears in.
+			for (var i = 0; i < totalActionCount; i++)
+            {
+	            var action = actionStates[i];
+	            ushort actionCountInGroup = 0;
+
+	            for (var actionGroupIndex = 0; actionGroupIndex < m_ActionGroups.Length; actionGroupIndex++)
+	            {
+		            var actionGroup = m_ActionGroups[actionGroupIndex];
+		            if (actionGroup.isCreated == false)
+			            continue;
+
+                    for (var k = 0; k < actionGroup.actionCount; k++)
+		            {
+			            if (i == actionGroup.actionIndicies[k])
+			            {
+				            tempActionGroupIndexes[actionCountInGroup++] = (ushort)actionGroupIndex;
+                            // we only need an indirection entry to any group once, so it's ok to break here after the first one
+				            break;
+			            }
+		            }
+	            }
+
+                if (actionCountInGroup == 0)
+	            {
+		            action.actionGroupStartIndex = 0;
+		            continue;
+	            }
+
+                if (actionGroupNextFreeIndex + actionCountInGroup + 1 > m_ActionGroupIndirectionTable.Length)
+	                ArrayHelpers.Resize(ref m_ActionGroupIndirectionTable, actionGroupNextFreeIndex + actionCountInGroup + 1, Allocator.Persistent);
+
+				action.actionGroupStartIndex = (ushort)actionGroupNextFreeIndex;
+	            m_ActionGroupIndirectionTable[actionGroupNextFreeIndex++] = actionCountInGroup;
+                UnsafeUtility.MemCpy((ushort*)m_ActionGroupIndirectionTable.GetUnsafePtr() + actionGroupNextFreeIndex, tempActionGroupIndexes, 
+	                actionCountInGroup * UnsafeUtility.SizeOf<ushort>());
+                actionGroupNextFreeIndex += actionCountInGroup;
             }
 
             memory.controlGroupingInitialized = true;
@@ -253,6 +306,18 @@ namespace UnityEngine.InputSystem
                 }
 
                 RemoveMapFromGlobalList();
+
+                if (m_ActionGroups.IsCreated)
+                {
+	                foreach (var actionGrouping in m_ActionGroups)
+	                {
+		                actionGrouping.Dispose();
+	                }
+	                m_ActionGroups.Dispose();
+                }
+
+                if (m_ActionGroupIndirectionTable.IsCreated)
+	                m_ActionGroupIndirectionTable.Dispose();
             }
             memory.Dispose();
         }
@@ -1131,7 +1196,7 @@ namespace UnityEngine.InputSystem
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     SetInitialStateCheckPending(bindingStatePtr, true);
-                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndComplexity[controlIndex * 2]);
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndComplexity[controlIndex].group);
 
                 SetControlEnabled(controlIndex, true);
             }
@@ -1350,7 +1415,7 @@ namespace UnityEngine.InputSystem
         {
             // We have limits on the numbers of maps, controls, and bindings we allow in any single
             // action state (see TriggerState.kMaxNumXXX).
-            var complexity = controlGroupingAndComplexity[controlIndex * 2 + 1];
+            var complexity = controlGroupingAndComplexity[controlIndex].complexity;
             var result = (long)controlIndex;
             result |= (long)bindingIndex << 24;
             result |= (long)mapIndex << 40;
@@ -2399,16 +2464,6 @@ namespace UnityEngine.InputSystem
             {
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
-
-                // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
-                // can then reset state monitors in the same group.
-                // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1 &&
-                    // we can end up switching to performed state from an interaction with a timeout, at which point
-                    // the original event will probably have been removed from memory, so make sure to check
-                    // we still have one
-                    m_CurrentlyProcessingThisEvent.valid)
-                    m_CurrentlyProcessingThisEvent.handled = true;
             }
             else if (newPhase == InputActionPhase.Canceled)
             {
@@ -2426,12 +2481,12 @@ namespace UnityEngine.InputSystem
                 newState.startTime = newState.time;
             *actionState = newState;
 
-            // Let listeners know.
-            var map = maps[trigger.mapIndex];
-            Debug.Assert(actionIndex >= mapIndices[trigger.mapIndex].actionStartIndex,
-                "actionIndex is below actionStartIndex for map that the action belongs to");
-            var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
-            trigger.phase = newPhase;
+			// Let listeners know.
+			var map = maps[trigger.mapIndex];
+			Debug.Assert(actionIndex >= mapIndices[trigger.mapIndex].actionStartIndex,
+				"actionIndex is below actionStartIndex for map that the action belongs to");
+			var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
+			trigger.phase = newPhase;
             switch (newPhase)
             {
                 case InputActionPhase.Started:
@@ -2455,6 +2510,54 @@ namespace UnityEngine.InputSystem
                     break;
                 }
             }
+
+            // now that the callbacks have run, we can let the composite decide whether to set the event as handled.
+            // we have to do this after the callbacks because it's expected that callbacks will check 
+            // CallbackContext.eventHandled to determine if another higher priority input action has already handled
+            // this input event and we don't want it to be true in the handler that is actually handling the event.
+            if (newPhase == InputActionPhase.Performed)
+            {
+				// allow composites to 'handle' events. Handling events can have two different outcomes:
+				//   1) if event consumption is turned off, all input actions that are bound to this control
+				//      will perform as usual. In input action callbacks, the CallbackContext.eventHandled
+				//      flag will be true, and for polling scenarios, code can query the
+				//      InputAction.wasPerformedThisFrame(true) method.
+				//   2) if event consumption is turned on, the FireStateChangeNotifications method will reset
+				//      all state monitors in the same group so no additional input actions will perform
+				ref var binding = ref bindingStates[trigger.bindingIndex];
+				if (
+					// we can end up switching to 'performed' state from an interaction with a timeout, at which point
+					// the original event will probably have been removed from memory, so make sure to check
+					// we still have one
+					m_CurrentlyProcessingThisEvent.valid &&
+					m_CurrentlyProcessingThisEvent.handled == false &&
+					binding.isPartOfComposite)
+				{
+					var compositeBinding = bindingStates[binding.compositeOrCompositeBindingIndex];
+					var composite = composites[compositeBinding.compositeOrCompositeBindingIndex];
+					var context = new InputBindingCompositeContext
+					{
+						m_State = this,
+						m_BindingIndex = binding.compositeOrCompositeBindingIndex
+					};
+					composite.HandleEvent(ref m_CurrentlyProcessingThisEvent, ref context);
+
+					// tell the action group for the current control group that this event has been handled so
+					// all other actions in the group can know
+					if (m_CurrentlyProcessingThisEvent.handled)
+						SetActionGroupHandledBy(actionIndex, trigger.controlIndex);
+				}
+			}
+        }
+
+        internal void SetActionGroupHandledBy(int actionIndex, int controlIndex)
+        {
+            Debug.Assert(m_ActionGroups.IsCreated);
+            
+	        var controlGroupAndComplexity = controlGroupingAndComplexity[controlIndex];
+	        ref var actionGroup = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
+		        controlGroupAndComplexity.group);
+	        actionGroup.lastEventHandledByAction = actionIndex;
         }
 
         private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
@@ -3577,7 +3680,7 @@ namespace UnityEngine.InputSystem
             [FieldOffset(2)] private byte m_MapIndex;
             // One byte available here.
             [FieldOffset(4)] private ushort m_ControlIndex;
-            // Two bytes available here.
+            [FieldOffset(6)] private ushort m_actionGroupStartIndex;
             ////REVIEW: can we condense these to floats? would save us a whopping 8 bytes
             [FieldOffset(8)] private double m_Time;
             [FieldOffset(16)] private double m_StartTime;
@@ -3732,6 +3835,16 @@ namespace UnityEngine.InputSystem
                     }
                 }
             }
+
+            /// <summary>
+            /// Index into actionGroups 
+            /// </summary>
+            public ushort actionGroupStartIndex
+            {
+	            get => m_actionGroupStartIndex;
+	            set => m_actionGroupStartIndex = value;
+            }
+
 
             /// <summary>
             /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action triggered/performed last.
@@ -3907,6 +4020,100 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal struct ControlGroupAndComplexity
+        {
+	        public ushort group;
+	        public ushort complexity;
+        }
+
+		/*
+		 * We use action groups to group actions together based on the control groups calculated in
+		 * ComputeControlGroupingIfNecessary(). This allows us to set a group as a whole as having
+		 * handled an input event, and ultimately allows checking for any action whether another
+		 * action has eaten its lunch (in the form of handling an input event).
+		 *
+		 * Take the following scenario:
+		 *
+		 * Action0
+		 *  - c
+		 *  - Ctrl+Shift+c
+		 *
+		 * Action1
+		 *  - Ctrl+c
+		 *
+		 * This could result in the following control groupings and complexities:
+		 *
+		 *  ID    Group   Control                     Complexity
+		 *  1     1       c(from Ctrl+Shift+c)        3
+		 *  2     1       c(from Ctrl+c)              2
+		 *  3     1       c(from c)                   1
+		 *  4     2       Ctrl(from Ctrl+Shift+c)     3
+		 *  5     2       Ctrl(from Ctrl+c)           2
+		 *  6     3       Shift(from Ctrl+Shift+c)    3
+		 *  
+		 *
+		 * which would result in the following action groupings
+         *
+         *  Group1(c)          Group2(ctrl)         Group3(shift)
+         *  Action0            Action0              Action0
+         *  Action1            Action1
+		 *
+		 * At runtime, lets say Ctrl+c is pressed. We want Action1 to handle this because it has the
+		 * highest priority binding that matches. State monitors will have been sorted by complexity,
+		 * so the first binding to perform will be Id 2 above. We will look up the group from that
+		 * control, group 1 in this case, and then set the 'lastEventHandledByAction' property on
+		 * action group 1 to the index of the action that owns the binding that fired, and set the
+		 * input event to handled so the next binding to match (the c key) knows not to also handle it.
+		 *
+		 * When event consumption is turned off, and when using the InputAction.WasPerformedThisFrame()
+		 * method, it's necessary to check each action group that an action belongs to to see whether that
+		 * action group performed in the current frame and if the action that performed is the action
+		 * we called WasPerformedThisFrame() on. 
+         */
+		internal struct ActionGroup : IDisposable
+        {
+            /// <summary>
+            /// Stores the indexes into the actionStates array for every action that appears in this group.
+            /// </summary>
+            /// <remarks>
+            /// Currently this is just used to support building the action groups, but later can be used
+            /// to allow querying for conflicting actions at editor time or runtime.
+            /// </remarks>
+	        public NativeArray<int> actionIndicies;
+			public int actionCount; 
+			public int lastEventHandledByAction;
+	        
+	        public bool isCreated { get; }
+
+	        public ActionGroup(int capacity)
+	        {
+		        this.actionIndicies = new NativeArray<int>(capacity, Allocator.Persistent);
+		        this.lastEventHandledByAction = -1;
+		        this.actionCount = 0;
+		        isCreated = true;
+	        }
+
+	        public void AddActionIndex(int actionIndex)
+	        {
+		        if (actionCount == actionIndicies.Length)
+                    ArrayHelpers.Resize(ref actionIndicies, Math.Max(10, actionIndicies.Length + 10), Allocator.Persistent);
+
+		        for (int i = 0; i < actionCount; i++)
+		        {
+			        if (actionIndicies[i] == actionIndex)
+				        return;
+		        }
+
+		        actionIndicies[actionCount++] = actionIndex;
+	        }
+
+	        public void Dispose()
+	        {
+                if(actionIndicies.IsCreated)
+					actionIndicies.Dispose();
+	        }
+        }
+        
         /// <summary>
         /// Tells us where the data for a single action map is found in the
         /// various arrays.
@@ -4050,8 +4257,8 @@ namespace UnityEngine.InputSystem
             ////REVIEW: make this an array of shorts rather than ints?
             public int* controlIndexToBindingIndex;
 
-            // Two shorts per control. First one is group number. Second one is complexity count.
-            public ushort* controlGroupingAndComplexity;
+            // Two shorts per control.
+            public ControlGroupAndComplexity* controlGroupingAndComplexity;
             public bool controlGroupingInitialized;
 
             public ActionMapIndices* mapIndices;
@@ -4088,7 +4295,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = (float*)ptr; ptr += controlCount * sizeof(float);
                 compositeMagnitudes = (float*)ptr; ptr += compositeCount * sizeof(float);
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
-                controlGroupingAndComplexity = (ushort*)ptr; ptr += controlCount * sizeof(ushort) * 2;
+                controlGroupingAndComplexity = (ControlGroupAndComplexity*)ptr; ptr += controlCount * sizeof(ControlGroupAndComplexity);
                 actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
                 actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
                 enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);

@@ -3090,7 +3090,9 @@ partial class CoreTests
             action2.Disable();
             Set(gamepad.leftTrigger, 0.234f);
 
-            Assert.That(trace, Performed(action1, value: 0.123f).AndThen(Performed(action2, value: -0.123f)));
+            // action2 is expected first because control sorting will put composite bindings at a higher priority than
+            // non-composite ones
+            Assert.That(trace, Performed(action2, value: -0.123f).AndThen(Performed(action1, value: 0.123f)));
         }
     }
 
@@ -10230,67 +10232,199 @@ partial class CoreTests
         Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
-    // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.
-    // This test should be repurposed once that behaviour is fixed.
     [Test]
     [Category("Actions")]
-    [TestCase(true)]
-    [TestCase(false)]
-    public void Actions_ImprovedShortcutSupport_ConsumesWASD(bool shortcutsEnabled)
+    public void Actions_WithCompositeBindings_WithConsumeInputEventsSetToTrue_HandleInputEvents()
     {
-        InputSystem.settings.shortcutKeysConsumeInput = shortcutsEnabled;
+	    var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var keyboard = InputSystem.AddDevice<Keyboard>();
+	    var map = new InputActionMap("map1");
+		var action1 = map.AddAction(name: "action1");
+        // 1D axis composite doesn't by default consume input events, but by setting consumeInputEvent to true, it should
+		action1.AddCompositeBinding("1DAxis(handleInputEvents=true)")
+			.With("negative", "<Keyboard>/a")
+			.With("positive", "<Keyboard>/d");
+		var action2 = map.AddAction("action2", binding: "<Keyboard>/a");
 
-        var map1 = new InputActionMap("map1");
-        var action1 = map1.AddAction(name: "action1");
-        action1.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/w")
-            .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d");
+	    var wasHandled = false;
+	    action2.performed += ctx =>
+        {
+	        wasHandled = ctx.eventHandled;
+        };
 
-        var map2 = new InputActionMap("map2");
-        var action2 = map2.AddAction(name: "action2");
-        action2.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/w")
-            .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d");
-        var action3 = map2.AddAction(name: "action3", binding: "<Keyboard>/w");
+        map.Enable();
 
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map1);
-        asset.AddActionMap(map2);
+        Press(keyboard.aKey);
 
-        map1.Enable();
-        LogAssert.NoUnexpectedReceived();
+        Assert.That(wasHandled, Is.True);
+    }
+    
+	[Test]
+    [Category("Actions")]
+    public void Actions_ActionCallbacksCanSetEventsAsHandled()
+    {
+	    var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        map2.Enable();
+	    var map = new InputActionMap("map1");
 
-        int action1Count = 0;
-        int action2Count = 0;
-        int action3Count = 0;
-        action1.started += ctx => action1Count++;
-        action2.started += ctx => action2Count++;
-        action3.started += ctx => action3Count++;
+	    var action1 = map.AddAction(name: "action1");
+
+        // add a 1DAxis composite binding that does not by default handle the event
+	    action1.AddCompositeBinding("1DAxis")
+			.With("Positive", "<Keyboard>/w")
+			.With("Negative", "<Keyboard>/s");
+		var action2 = map.AddAction("action2", binding: "<keyboard>/w");
+
+		var wasHandled = false;
+		action1.performed += ctx =>
+		{
+			ctx.HandleEvent();
+		};
+		action2.performed += ctx =>
+		{
+			wasHandled = ctx.eventHandled;
+		};
+        map.Enable();
 
         Press(keyboard.wKey);
-        if (shortcutsEnabled)
-        {
-            // First action with the most bindings is the ONLY one to trigger
-            Assert.That(action1Count, Is.EqualTo(1));
-            Assert.That(action2Count, Is.EqualTo(0));
-            Assert.That(action3Count, Is.EqualTo(0));
-        }
-        else
-        {
-            // All actions were triggered
-            Assert.That(action1Count, Is.EqualTo(1));
-            Assert.That(action2Count, Is.EqualTo(1));
-            Assert.That(action3Count, Is.EqualTo(1));
-        }
+
+        Assert.That(wasHandled, Is.True);
     }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenCallbackHandlesEventsAndInputEventConsumptionIsOn_EventDoesNotPropogateFurther()
+    {
+	    InputSystem.settings.shortcutKeysConsumeInput = true;
+
+	    var keyboard = InputSystem.AddDevice<Keyboard>();
+
+	    var map = new InputActionMap("map1");
+	    var action1 = map.AddAction(name: "action1");
+        action1.AddCompositeBinding("1DAxis")
+		    .With("Positive", "<Keyboard>/w")
+		    .With("Negative", "<Keyboard>/s");
+	    var action2 = map.AddAction("action2", binding: "<keyboard>/w");
+
+	    var wasCalled = false;
+	    action1.performed += ctx =>
+	    {
+		    ctx.HandleEvent();
+	    };
+	    action2.performed += ctx =>
+	    {
+		    wasCalled = true;
+	    };
+	    map.Enable();
+
+	    Press(keyboard.wKey);
+
+	    Assert.That(wasCalled, Is.False);
+	}
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ModifierCompositesMarkEventsAsHandledByDefault()
+    {
+	    var keyboard = InputSystem.AddDevice<Keyboard>();
+
+		var map = new InputActionMap();
+		map.AddAction("action1")
+			.AddCompositeBinding("OneModifier")
+			.With("modifier", "<Keyboard>/leftshift")
+			.With("binding", "<Keyboard>/w");
+		map.AddAction("action2")
+			.AddCompositeBinding("TwoModifiers")
+			.With("modifier1", "<Keyboard>/leftshift")
+			.With("modifier2", "<Keyboard>/leftctrl")
+			.With("binding", "<Keyboard>/s");
+		var wAction = map.AddAction("wAction", binding: "<Keyboard>/w");
+		var sAction = map.AddAction("sAction", binding: "<Keyboard>/s");
+
+		var oneModifierHandledEvent = false;
+        var twoModifierHandledEvent = false;
+		wAction.performed += ctx =>
+		{
+			oneModifierHandledEvent = ctx.eventHandled;
+		};
+		sAction.performed += ctx =>
+		{
+			twoModifierHandledEvent = ctx.eventHandled;
+		};
+        map.Enable();
+
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.wKey);
+        Press(keyboard.sKey);
+
+        Assert.That(oneModifierHandledEvent, Is.True);
+        Assert.That(twoModifierHandledEvent, Is.True);
+	}
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenConsumeInputEventsIsEnabled_LowerPriorityPerformedHandlersAreNotCalled()
+    {
+	    InputSystem.settings.shortcutKeysConsumeInput = true;
+
+
+	    var keyboard = InputSystem.AddDevice<Keyboard>();
+
+	    var map = new InputActionMap();
+	    map.AddAction("action1")
+		    .AddCompositeBinding("OneModifier")
+		    .With("modifier", "<Keyboard>/leftshift")
+		    .With("binding", "<Keyboard>/w");
+	    var wAction = map.AddAction("wAction", binding: "<Keyboard>/w");
+
+	    var wPerformed = false;
+	    wAction.performed += ctx =>
+	    {
+		    wPerformed = true;
+	    };
+
+        map.Enable();
+
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.wKey);
+
+        Assert.That(wPerformed, Is.False);
+	}
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WasPerformedThisFrameReturnsFalse_WhenHigherPriorityConflictingActionHasAlreadyPerformed()
+    {
+	    var keyboard = InputSystem.AddDevice<Keyboard>();
+
+	    var map = new InputActionMap();
+
+	    // action with bindings to Ctrl+Shift+C and C should appear twice in the 'C' group
+	    var action0 = map.AddAction("action1", binding: "<Keyboard>/c");
+	    action0.AddCompositeBinding("TwoModifiers")
+		    .With("modifier1", "<Keyboard>/leftshift")
+		    .With("modifier2", "<Keyboard>/leftctrl")
+		    .With("binding", "<Keyboard>/c");
+	    
+	    var action1 = map.AddAction("action2");
+	    action1.AddCompositeBinding("OneModifier")
+		    .With("modifier", "<Keyboard>/leftctrl")
+		    .With("binding", "<Keyboard>/c");
+
+        map.Enable();
+
+        // we want action1 to perform and block action0 from performing on the binding to the c key.
+        Press(keyboard.leftCtrlKey);
+        Press(keyboard.cKey);
+
+        Assert.That(action0.WasPerformedThisFrame(true), Is.False);
+
+        Release(keyboard.cKey);
+        Press(keyboard.cKey);
+
+        Assert.That(action0.WasPerformedThisFrame(), Is.True);
+	}
 
     [Test]
     [Category("Actions")]

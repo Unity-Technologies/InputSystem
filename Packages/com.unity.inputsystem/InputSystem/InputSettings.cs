@@ -660,25 +660,32 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        /// <summary>
-        /// Improves shortcut key support by making composite controls consume control input
-        /// </summary>
-        /// <remarks>
-        /// Actions are exclusively triggered and will consume/block other actions sharing the same input.
-        /// E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.
-        /// Please note that enabling this will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls.
-        /// Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first.
-        /// Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls.
-        /// This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered.
-        /// These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys.
-        /// However conflicts would not occur between actions which belong to different Action Assets.
-        /// </remarks>
-        public bool shortcutKeysConsumeInput
-        {
-            get => m_ShortcutKeysConsumeInputs;
-            set
-            {
-                if (m_ShortcutKeysConsumeInputs == value)
+		/// <summary>
+		/// Improves shortcut key support by enabling composite bindings to consume input events.
+		/// </summary>
+		/// <remarks>
+		/// Input event consumption means that one binding can prevent input events from being processed
+		/// by another. For example, a binding to 'Shift+B' would prevent a binding to 'B' from performing
+		/// when 'Shift+B' is pressed. Note that input events can only be consumed by composite bindings
+		/// i.e. bindings that bind to more than one control. By default, only the
+		/// <see cref="Composites.OneModifierComposite"/> and <see cref="Composites.TwoModifiersComposite"/>
+		/// bindings consume events, but this can be switched on for any composite type by checking the
+		/// Consume Input Events checkbox for the binding in the Input Action Asset editor, or by setting
+		/// the <see cref="InputBindingComposite.handleInputEvents"/> field to true.
+		///
+		/// Note that input event consumption is currently unreliable when used with multiple Input Action
+		/// Assets simultaneously, or with multiple standalone Input Actions created through code that do
+		/// not belong to the same Input Action Map. This is because input control groupings are created
+		/// in isolation for each Input Action Asset or individual Input Action Map, so group numbers can
+		/// overlap. This is a known issue and will be addressed in a later version.
+		/// </remarks>
+		/// <seealso cref="InputBindingComposite.handleInputEvents"/>
+		public bool shortcutKeysConsumeInput
+		{
+			get => m_ShortcutKeysConsumeInputs;
+			set
+			{
+				if (m_ShortcutKeysConsumeInputs == value)
                     return;
 
                 m_ShortcutKeysConsumeInputs = value;
