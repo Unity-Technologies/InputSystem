@@ -15,6 +15,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed InputAction.bindings.count not getting correctly updated after removing bindings with Erase().
 - Fixed an issue where connecting a gamepad in the editor with certain settings will cause memory and performance to degrade ([case UUM-19480](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-19480)).
 
+### Changed
+- Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
+
 ## [1.5.0] - 2023-01-24
 
 ### Added
@@ -40,7 +43,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed define requirements of `Unity.InputSystem.TestFramework`, so that it can be used by other packages without setting the `com.unity.inputsystem` package to be testable in the project manifest.
-- Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
 
 ## [1.4.4] - 2022-11-01
 
