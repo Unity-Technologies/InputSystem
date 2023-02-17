@@ -10,6 +10,15 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- Improved support for shortcut keys and input event consumption/handling in general.
+  * Composite bindings are now sorted by a priority system that comes from the bindings themselves, rather than as a count of the number of binding parts. In practice this means that for example a Vector2Composite binding does not have a higher priority than a one or two modifier composite binding i.e. pressing W to trigger a WASD action would not by default prevent a binding to Ctrl-W from performing.
+  * Added several APIs to allow application logic to control event handling/consumption. 
+    * CallbackContext.eventHandled can be used to check if a higher priority binding has already handled the current event
+    * CallbackContext.HandleEvent() allows any 'performed' callback to set an input event as handled
+    * InputAction.wasPerformedThisFrame(bool checkConflictingActions) allows polling code to determine if a higher priority binding has performed
+    * InputBindingComposite.handleInputEvents allows applications to decide which composite bindings will handle events
+
 ### Fixed
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
 - Fixed InputAction.bindings.count not getting correctly updated after removing bindings with Erase().
