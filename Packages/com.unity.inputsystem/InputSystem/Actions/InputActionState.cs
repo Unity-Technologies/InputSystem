@@ -191,16 +191,24 @@ namespace UnityEngine.InputSystem
                     ++currentGroup;
                 }
 
-                // add the action that the current binding belongs to to the relevant group, sorted by complexity
+                // add the action that the current binding belongs to to the relevant group
                 if (controlGroupingAndComplexity[i].group >= m_ActionGroups.Length)
                     ArrayHelpers.Resize(ref m_ActionGroups, Mathf.Max(10, m_ActionGroups.Length + 10), Allocator.Persistent);
 
+                #if UNITY_2019_4
+	            var grouping = m_ActionGroups[controlGroupingAndComplexity[i].group];
+                #else
                 ref var grouping = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
                     controlGroupingAndComplexity[i].group);
+				#endif
                 if (m_ActionGroups[controlGroupingAndComplexity[i].group].isCreated == false)
                     grouping = new ActionGroup(5);
 
                 grouping.AddActionIndex(binding.actionIndex);
+
+                #if UNITY_2019_4
+	            m_ActionGroups[controlGroupingAndComplexity[i].group] = grouping;
+				#endif
             }
 
             var actionGroupNextFreeIndex = 0;
@@ -2555,9 +2563,17 @@ namespace UnityEngine.InputSystem
             Debug.Assert(m_ActionGroups.IsCreated);
 
             var controlGroupAndComplexity = controlGroupingAndComplexity[controlIndex];
+            #if UNITY_2019
+	        var actionGroup = m_ActionGroups[controlGroupAndComplexity.group];
+            #else
             ref var actionGroup = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
                 controlGroupAndComplexity.group);
+			#endif
             actionGroup.lastEventHandledByAction = actionIndex;
+
+            #if UNITY_2019
+	        m_ActionGroups[controlGroupAndComplexity.group] = actionGroup;
+			#endif
         }
 
         private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
