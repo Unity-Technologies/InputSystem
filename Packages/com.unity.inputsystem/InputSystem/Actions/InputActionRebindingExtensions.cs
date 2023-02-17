@@ -891,7 +891,6 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-
             foreach (var binding in overrides)
                 ApplyBindingOverride(actionMap, binding);
         }
@@ -902,7 +901,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
-
 
             foreach (var binding in overrides)
                 RemoveBindingOverride(actionMap, binding);
@@ -1145,14 +1143,7 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 action = actions.FindAction(binding.action);
 
-            var @override = new InputActionMap.BindingOverrideJson
-            {
-                action = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : null,
-                id = binding.id.ToString(),
-                path = binding.overridePath,
-                interactions = binding.overrideInteractions,
-                processors = binding.overrideProcessors
-            };
+            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, action);
 
             list.Add(@override);
         }
@@ -1262,16 +1253,10 @@ namespace UnityEngine.InputSystem
                     var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
                     if (bindingIndex != -1)
                     {
-                        action.ApplyBindingOverride(bindingIndex, new InputBinding
-                        {
-                            overridePath = entry.path,
-                            overrideInteractions = entry.interactions,
-                            overrideProcessors = entry.processors,
-                        });
+                        action.ApplyBindingOverride(bindingIndex, InputActionMap.BindingOverrideJson.ToBinding(entry));
                         continue;
                     }
                 }
-
                 Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
             }
         }
