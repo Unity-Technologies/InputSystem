@@ -894,7 +894,7 @@ The way this is handled is that Bindings will be processed in the order of decre
     |[2D Vector](#2d-vector)|2|
     |[3D Vector](#3d-vector)|2|
   The base [`InputBindingComposite`](../api/UnityEngine.InputSystem.Composites.InputBindingComposite.html) class provides the virtual [`GetPriority`](../api/UnityEngine.InputSystem.InputBindingComposite.html#UnityEngine_InputSystem_InputBindingComposite_GetPriority) method so that custom composite class can provide their own priority.
-    
+
 
 In our example, this means that a [`OneModifier`](#one-modifier) composite Binding to `Shift+B` has a higher priority than a Binding to `B` and thus is processed first.
 
@@ -902,7 +902,7 @@ Additionally, the first Binding that results in the Action changing [phase](Acti
 * If it is disabled, input events will be marked as handled by the highest priority binding, but lower priority bindings will still process the input. In this case, application logic can check if a higher priority binding has already processed the event by checking the [`CallbackContext.eventHandled`](api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_eventHandled) flag, or for the polling path, by passing a value of 'true' to the [`InputAction.wasPerformedThisFrame`](api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame_System_Boolean_) method. This will cause that method to return false if a higher priority binding has already performed.
 * If it is enabled, input events will be consumed. This consuming will result in other Bindings to the same input not being processed. So in our example, when `Shift+B` "handles" the `B` input, the Binding to `B` will be skipped.
 
-Note that all composite bindings expose the [`handleInputEvents`](../api/UnityEngine.InputSystem.InputBindingComposite.html#UnityEngine_InputSystem_InputBindingComposite_handleInputEvents) property, which can be set in the Input Action Asset editor, or at runtime. By default, only the [`OneModifier`](#one-modifier) and [`TwoModifiers`](#two-modifiers) composites have this flag set to true. 
+Note that all composite bindings expose the [`handleInputEvents`](../api/UnityEngine.InputSystem.InputBindingComposite.html#UnityEngine_InputSystem_InputBindingComposite_handleInputEvents) property, which can be set in the Input Action Asset editor, or at runtime. By default, only the [`OneModifier`](#one-modifier) and [`TwoModifiers`](#two-modifiers) composites have this flag set to true.
 
 The following example illustrates how this works at the API level.
 

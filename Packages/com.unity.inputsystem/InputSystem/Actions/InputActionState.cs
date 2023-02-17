@@ -196,19 +196,19 @@ namespace UnityEngine.InputSystem
                     ArrayHelpers.Resize(ref m_ActionGroups, Mathf.Max(10, m_ActionGroups.Length + 10), Allocator.Persistent);
 
                 #if UNITY_2019_4
-	            var grouping = m_ActionGroups[controlGroupingAndComplexity[i].group];
+                var grouping = m_ActionGroups[controlGroupingAndComplexity[i].group];
                 #else
                 ref var grouping = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
                     controlGroupingAndComplexity[i].group);
-				#endif
+                #endif
                 if (m_ActionGroups[controlGroupingAndComplexity[i].group].isCreated == false)
                     grouping = new ActionGroup(5);
 
                 grouping.AddActionIndex(binding.actionIndex);
 
                 #if UNITY_2019_4
-	            m_ActionGroups[controlGroupingAndComplexity[i].group] = grouping;
-				#endif
+                m_ActionGroups[controlGroupingAndComplexity[i].group] = grouping;
+                #endif
             }
 
             var actionGroupNextFreeIndex = 0;
@@ -228,7 +228,7 @@ namespace UnityEngine.InputSystem
                         continue;
 
                     if (actionGroup.Contains(actionIndex))
-	                    tempActionGroupIndexes[actionCountInGroup++] = (ushort)actionGroupIndex;
+                        tempActionGroupIndexes[actionCountInGroup++] = (ushort)actionGroupIndex;
                 }
 
                 if (actionCountInGroup == 0)
@@ -311,16 +311,16 @@ namespace UnityEngine.InputSystem
 
             if (m_ActionGroups.IsCreated)
             {
-	            foreach (var actionGrouping in m_ActionGroups)
-	            {
-                    if(actionGrouping.isCreated)
-						actionGrouping.Dispose();
-	            }
-	            m_ActionGroups.Dispose();
+                foreach (var actionGrouping in m_ActionGroups)
+                {
+                    if (actionGrouping.isCreated)
+                        actionGrouping.Dispose();
+                }
+                m_ActionGroups.Dispose();
             }
 
             if (m_ActionGroupIndirectionTable.IsCreated)
-	            m_ActionGroupIndirectionTable.Dispose();
+                m_ActionGroupIndirectionTable.Dispose();
 
             memory.Dispose();
         }
@@ -2559,16 +2559,16 @@ namespace UnityEngine.InputSystem
 
             var controlGroupAndComplexity = controlGroupingAndComplexity[controlIndex];
             #if UNITY_2019
-	        var actionGroup = m_ActionGroups[controlGroupAndComplexity.group];
+            var actionGroup = m_ActionGroups[controlGroupAndComplexity.group];
             #else
             ref var actionGroup = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
                 controlGroupAndComplexity.group);
-			#endif
+            #endif
             actionGroup.lastEventHandledByAction = actionIndex;
 
             #if UNITY_2019
-	        m_ActionGroups[controlGroupAndComplexity.group] = actionGroup;
-			#endif
+            m_ActionGroups[controlGroupAndComplexity.group] = actionGroup;
+            #endif
         }
 
         private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref CallbackArray<InputActionListener> listeners, string callbackName)
@@ -4083,14 +4083,14 @@ namespace UnityEngine.InputSystem
          */
         internal struct ActionGroup : IDisposable
         {
-	        /// <summary>
-			/// Stores the indexes into the actionStates array for every action that appears in this group.
-			/// </summary>
-			/// <remarks>
-			/// Currently this is just used to support building the action groups, but later can be used
-			/// to allow querying for conflicting actions at editor time or runtime.
-			/// </remarks>
-			private int* actionIndicies;
+            /// <summary>
+            /// Stores the indexes into the actionStates array for every action that appears in this group.
+            /// </summary>
+            /// <remarks>
+            /// Currently this is just used to support building the action groups, but later can be used
+            /// to allow querying for conflicting actions at editor time or runtime.
+            /// </remarks>
+            private int* actionIndicies;
             private int actionCount;
 
             public bool isCreated { get; }
@@ -4101,8 +4101,8 @@ namespace UnityEngine.InputSystem
 
             public ActionGroup(int capacity)
             {
-	            actionIndicies = (int*)UnsafeUtility.Malloc(capacity, 8, Allocator.Persistent);
-	            m_Length = capacity;
+                actionIndicies = (int*)UnsafeUtility.Malloc(capacity, 8, Allocator.Persistent);
+                m_Length = capacity;
 
                 lastEventHandledByAction = -1;
                 actionCount = 0;
@@ -4111,38 +4111,38 @@ namespace UnityEngine.InputSystem
 
             public void AddActionIndex(int actionIndex)
             {
-	            for (var i = 0; i < actionCount; i++)
+                for (var i = 0; i < actionCount; i++)
                 {
                     if (actionIndicies[i] == actionIndex)
                         return;
                 }
 
-	            if (actionCount + 1 == m_Length)
-	            {
-		            m_Length = Math.Max(10, m_Length + 10);
-		            var newBuffer = (int*)UnsafeUtility.Malloc(m_Length, 8, Allocator.Persistent);
-		            UnsafeUtility.MemCpy(newBuffer, actionIndicies, actionCount);
-		            UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
-		            actionIndicies = newBuffer;
-	            }
+                if (actionCount + 1 == m_Length)
+                {
+                    m_Length = Math.Max(10, m_Length + 10);
+                    var newBuffer = (int*)UnsafeUtility.Malloc(m_Length, 8, Allocator.Persistent);
+                    UnsafeUtility.MemCpy(newBuffer, actionIndicies, actionCount);
+                    UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
+                    actionIndicies = newBuffer;
+                }
 
-				actionIndicies[actionCount++] = actionIndex;
+                actionIndicies[actionCount++] = actionIndex;
             }
 
             public bool Contains(int actionIndex)
             {
-	            for (var k = 0; k < actionCount; k++)
-	            {
-		            if (actionIndex == actionIndicies[k])
-			            return true;
-	            }
+                for (var k = 0; k < actionCount; k++)
+                {
+                    if (actionIndex == actionIndicies[k])
+                        return true;
+                }
 
-	            return false;
+                return false;
             }
 
             public void Dispose()
             {
-                if(actionIndicies != null)
+                if (actionIndicies != null)
                     UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
 
                 actionIndicies = null;
