@@ -1911,8 +1911,8 @@ namespace UnityEngine.InputSystem
             /// Check if a more specific binding has already handled this event.
             /// </summary>
             /// <remarks>
-            /// Bindings will perform in descending order of complexity. For example, Ctrl+C has a higher
-            /// complexity than C, so Ctrl+C will always be given the chance to perform first. When writing
+            /// Bindings will perform in descending order of priority. For example, Ctrl+C has a higher
+            /// priority than C, so Ctrl+C will always be given the chance to perform first. When writing
             /// event driven input code, it can be useful to check if a more specific binding has already
             /// handled the current event.
             /// </remarks>

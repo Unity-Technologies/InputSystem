@@ -880,22 +880,35 @@ By using the [Pass-Through](Actions.md#pass-through) Action type, conflict resol
 
 #### Multiple input sequences (such as keyboard shortcuts)
 
->__Note__: The mechanism described here only applies to Actions that are part of the same [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) or [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html).
-
 Inputs that are used in combinations with other inputs may also lead to ambiguities. If, for example, the `b` key on the Keyboard is bound both on its own as well as in combination with the `shift` key, then if you first press `shift` and then `b`, the latter key press would be a valid input for either of the Actions.
 
-The way this is handled is that Bindings will be processed in the order of decreasing "complexity". This metric is derived automatically from the Binding:
+The way this is handled is that Bindings will be processed in the order of decreasing "priority". The priority of a binding is provided by the composite:
 
-* A binding that is *not* part of a [composite](#composite-bindings) is assigned a complexity of 1.
-* A binding that *is* part of a [composite](#composite-bindings) is assigned a complexity equal to the number of part bindings in the composite.
+* A binding that is *not* part of a [composite](#composite-bindings) is assigned a priority of 1.
+* A binding that *is* part of a [composite](#composite-bindings) is assigned a priority depending on the type of binding. For the built in composite types, the following, currently hard-coded, priorities apply:
+    |Composite|Priority|
+    |---------|--------|
+    |[`TwoModifiers`](#two-modifiers)|4|
+    |[`OneModifier`](#one-modifier)|3|
+    |[1D Axis](#1d-axis)|2|
+    |[2D Vector](#2d-vector)|2|
+    |[3D Vector](#3d-vector)|2|
+  The base [`InputBindingComposite`](../api/UnityEngine.InputSystem.Composites.InputBindingComposite.html) class provides the virtual [`GetPriority`](../api/UnityEngine.InputSystem.InputBindingComposite.html#UnityEngine_InputSystem_InputBindingComposite_GetPriority) method so that custom composite class can provide their own priority.
+    
 
-In our example, this means that a [`OneModifier`](#one-modifier) composite Binding to `Shift+B` has a higher "complexity" than a Binding to `B` and thus is processed first.
+In our example, this means that a [`OneModifier`](#one-modifier) composite Binding to `Shift+B` has a higher priority than a Binding to `B` and thus is processed first.
 
-Additionally, the first Binding that results in the Action changing [phase](Actions.md#action-callbacks) will "consume" the input. This consuming will result in other Bindings to the same input not being processed. So in our example, when `Shift+B` "consumes" the `B` input, the Binding to `B` will be skipped.
+Additionally, the first Binding that results in the Action changing [phase](Actions.md#action-callbacks) will "handle" the input. Handling input has two possible outcomes, depending on the value of the [`InputSettings.shortcutKeysConsumeInput`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_shortcutKeysConsumeInput) flag:
+* If it is disabled, input events will be marked as handled by the highest priority binding, but lower priority bindings will still process the input. In this case, application logic can check if a higher priority binding has already processed the event by checking the [`CallbackContext.eventHandled`](api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_eventHandled) flag, or for the polling path, by passing a value of 'true' to the [`InputAction.wasPerformedThisFrame`](api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame_System_Boolean_) method. This will cause that method to return false if a higher priority binding has already performed.
+* If it is enabled, input events will be consumed. This consuming will result in other Bindings to the same input not being processed. So in our example, when `Shift+B` "handles" the `B` input, the Binding to `B` will be skipped.
+
+Note that all composite bindings expose the [`handleInputEvents`](../api/UnityEngine.InputSystem.InputBindingComposite.html#UnityEngine_InputSystem_InputBindingComposite_handleInputEvents) property, which can be set in the Input Action Asset editor, or at runtime. By default, only the [`OneModifier`](#one-modifier) and [`TwoModifiers`](#two-modifiers) composites have this flag set to true. 
 
 The following example illustrates how this works at the API level.
 
 ```CSharp
+InputSystem.settings.shortcutKeysConsumeInput = true;
+
 // Create two actions in the same map.
 var map = new InputActionMap();
 var bAction = map.AddAction("B");
@@ -925,6 +938,29 @@ Press(Keyboard.current.leftShiftKey);
 // it will *perform* the action (i.e. we see the `performed` callback being invoked) and
 // thus "consume" the input. bAction will stay silent as it will in turn be skipped over.
 Press(keyboard.bKey);
+```
+
+If an application needs even more control over when input events are consumed, it is possible to completely take over the handling of events by using the [`CallbackContext.HandleEvent`](api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_HandleEvent) method. In the following example, event consumption is turned off for the `Shift+B` binding, and the performed handler only handles the input if the 'inventoryOpen' flag is true. The `B` binding then decides whether to perform some actions based on whether the input has been handled or not.
+
+```CSharp
+bAction.AddBinding("<Keyboard>/b");
+shiftbAction.AddCompositeBinding("OneModifier(handleInputEvents=false)")
+    .With("Modifier", "<Keyboard>/shift")
+    .With("Binding", "<Keyboard>/b");
+bool inventoryOpen;
+
+// Print something to the console when the actions are triggered.
+bAction.performed += ctx =>
+{
+    if(ctx.eventHandled == false)
+        Debug.Log("B action performed");
+};
+shiftbAction.performed += ctx =>
+{
+    if(inventoryOpen)
+        ctx.HandleEvent();
+    Debug.Log("SHIFT+B action performed");
+};
 ```
 
 ### Initial state check

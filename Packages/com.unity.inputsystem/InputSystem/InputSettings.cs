@@ -669,8 +669,8 @@ namespace UnityEngine.InputSystem
         /// when 'Shift+B' is pressed. Note that input events can only be consumed by composite bindings
         /// i.e. bindings that bind to more than one control. By default, only the
         /// <see cref="Composites.OneModifierComposite"/> and <see cref="Composites.TwoModifiersComposite"/>
-        /// bindings consume events, but this can be switched on for any composite type by checking the
-        /// Consume Input Events checkbox for the binding in the Input Action Asset editor, or by setting
+        /// bindings handle events, but this can be switched on for any composite type by checking the
+        /// Handle Input Events checkbox for the binding in the Input Action Asset editor, or by setting
         /// the <see cref="InputBindingComposite.handleInputEvents"/> field to true.
         ///
         /// Note that input event consumption is currently unreliable when used with multiple Input Action

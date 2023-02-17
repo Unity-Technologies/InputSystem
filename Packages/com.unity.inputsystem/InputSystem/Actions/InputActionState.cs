@@ -216,9 +216,9 @@ namespace UnityEngine.InputSystem
             // now build the indirection table. Each TriggerState will point to an entry in the m_ActionGroupIndirectionTable
             // array that stores the number of groups that that action appears in. The following n entries in that array are
             // the indexes of each group in the m_ActionGroups array that the action appears in.
-            for (var i = 0; i < totalActionCount; i++)
+            for (var actionIndex = 0; actionIndex < totalActionCount; actionIndex++)
             {
-                var action = actionStates[i];
+                var action = actionStates[actionIndex];
                 ushort actionCountInGroup = 0;
 
                 for (var actionGroupIndex = 0; actionGroupIndex < m_ActionGroups.Length; actionGroupIndex++)
@@ -227,15 +227,8 @@ namespace UnityEngine.InputSystem
                     if (actionGroup.isCreated == false)
                         continue;
 
-                    for (var k = 0; k < actionGroup.actionCount; k++)
-                    {
-                        if (i == actionGroup.actionIndicies[k])
-                        {
-                            tempActionGroupIndexes[actionCountInGroup++] = (ushort)actionGroupIndex;
-                            // we only need an indirection entry to any group once, so it's ok to break here after the first one
-                            break;
-                        }
-                    }
+                    if (actionGroup.Contains(actionIndex))
+	                    tempActionGroupIndexes[actionCountInGroup++] = (ushort)actionGroupIndex;
                 }
 
                 if (actionCountInGroup == 0)
@@ -314,19 +307,21 @@ namespace UnityEngine.InputSystem
                 }
 
                 RemoveMapFromGlobalList();
-
-                if (m_ActionGroups.IsCreated)
-                {
-                    foreach (var actionGrouping in m_ActionGroups)
-                    {
-                        actionGrouping.Dispose();
-                    }
-                    m_ActionGroups.Dispose();
-                }
-
-                if (m_ActionGroupIndirectionTable.IsCreated)
-                    m_ActionGroupIndirectionTable.Dispose();
             }
+
+            if (m_ActionGroups.IsCreated)
+            {
+	            foreach (var actionGrouping in m_ActionGroups)
+	            {
+                    if(actionGrouping.isCreated)
+						actionGrouping.Dispose();
+	            }
+	            m_ActionGroups.Dispose();
+            }
+
+            if (m_ActionGroupIndirectionTable.IsCreated)
+	            m_ActionGroupIndirectionTable.Dispose();
+
             memory.Dispose();
         }
 
@@ -4088,45 +4083,69 @@ namespace UnityEngine.InputSystem
          */
         internal struct ActionGroup : IDisposable
         {
-            /// <summary>
-            /// Stores the indexes into the actionStates array for every action that appears in this group.
-            /// </summary>
-            /// <remarks>
-            /// Currently this is just used to support building the action groups, but later can be used
-            /// to allow querying for conflicting actions at editor time or runtime.
-            /// </remarks>
-            public NativeArray<int> actionIndicies;
-            public int actionCount;
-            public int lastEventHandledByAction;
+	        /// <summary>
+			/// Stores the indexes into the actionStates array for every action that appears in this group.
+			/// </summary>
+			/// <remarks>
+			/// Currently this is just used to support building the action groups, but later can be used
+			/// to allow querying for conflicting actions at editor time or runtime.
+			/// </remarks>
+			private int* actionIndicies;
+            private int actionCount;
 
             public bool isCreated { get; }
 
+            public int lastEventHandledByAction { get; set; }
+
+            private int m_Length;
+
             public ActionGroup(int capacity)
             {
-                this.actionIndicies = new NativeArray<int>(capacity, Allocator.Persistent);
-                this.lastEventHandledByAction = -1;
-                this.actionCount = 0;
+	            actionIndicies = (int*)UnsafeUtility.Malloc(capacity, 8, Allocator.Persistent);
+	            m_Length = capacity;
+
+                lastEventHandledByAction = -1;
+                actionCount = 0;
                 isCreated = true;
             }
 
             public void AddActionIndex(int actionIndex)
             {
-                if (actionCount == actionIndicies.Length)
-                    ArrayHelpers.Resize(ref actionIndicies, Math.Max(10, actionIndicies.Length + 10), Allocator.Persistent);
-
-                for (int i = 0; i < actionCount; i++)
+	            for (var i = 0; i < actionCount; i++)
                 {
                     if (actionIndicies[i] == actionIndex)
                         return;
                 }
 
-                actionIndicies[actionCount++] = actionIndex;
+	            if (actionCount + 1 == m_Length)
+	            {
+		            m_Length = Math.Max(10, m_Length + 10);
+		            var newBuffer = (int*)UnsafeUtility.Malloc(m_Length, 8, Allocator.Persistent);
+		            UnsafeUtility.MemCpy(newBuffer, actionIndicies, actionCount);
+		            UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
+		            actionIndicies = newBuffer;
+	            }
+
+				actionIndicies[actionCount++] = actionIndex;
+            }
+
+            public bool Contains(int actionIndex)
+            {
+	            for (var k = 0; k < actionCount; k++)
+	            {
+		            if (actionIndex == actionIndicies[k])
+			            return true;
+	            }
+
+	            return false;
             }
 
             public void Dispose()
             {
-                if (actionIndicies.IsCreated)
-                    actionIndicies.Dispose();
+                if(actionIndicies != null)
+                    UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
+
+                actionIndicies = null;
             }
         }
 
