@@ -95,7 +95,11 @@ namespace UnityEngine.InputSystem.Utilities
                 try
                 {
                     if (callbacks[i](argument1, argument2))
+                    {
+                        callbacks.UnlockForChanges();
+                        Profiler.EndSample();
                         return true;
+                    }
                 }
                 catch (Exception exception)
                 {
