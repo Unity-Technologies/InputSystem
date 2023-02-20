@@ -8,7 +8,7 @@ The current version of the Input System requires Unity 2019 LTS, Unity 2020 LTS,
 
 ## Getting Started
 
-For instructions on how to get started using the Input System within Unity see [Input System Manual - Installation](https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/Installation.html) and [Input System Manual - Quick Start Guide](https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/QuickStartGuide.html).
+For instructions on how to get started using the Input System within Unity see [Input System Manual - Installation](https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/index.html?subfolder=/manual/Installation.html).
 
 Tutorials on how to use the Input System are available as part of:
 - [Unity Learn - Using the Input System in Unity](https://learn.unity.com/project/using-the-input-system-in-unity) - Video tutorials on how to use the Input System in Unity.
