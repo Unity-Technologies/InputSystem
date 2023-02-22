@@ -416,7 +416,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Make sure name is unique.
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
-            var uniqueName = FindUniqueName(actionsArrayProperty, newName);
+            var uniqueName = FindUniqueName(actionsArrayProperty, newName, actionProperty.GetIndexOfArrayElement());
 
             // Update all bindings that refer to the action.
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");

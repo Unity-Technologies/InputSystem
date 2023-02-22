@@ -2339,6 +2339,7 @@ partial class CoreTests
         var map = new InputActionMap("set1");
         map.AddAction("actionA", binding: "<Gamepad>/leftStick");
         map.AddAction("actionB");
+        map.AddAction("A");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
 
@@ -2353,6 +2354,14 @@ partial class CoreTests
         Assert.That(map.actions[0].name, Is.EqualTo("actionB1"));
         Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
         Assert.That(map.actions[0].bindings[0].action, Is.EqualTo("actionB1"));
+
+        // now check that unique renaming ignores the action being renamed, so A can be renamed to a and not a1.
+        var actionAProperty = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(2);
+
+        InputActionSerializationHelpers.RenameAction(actionAProperty, mapProperty, "a");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.actions[2].name, Is.EqualTo("a"));
     }
 
     [Test]
