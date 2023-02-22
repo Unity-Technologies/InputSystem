@@ -1138,5 +1138,21 @@ internal class XRTests : CoreTestsFixture
 
         Assert.That((device["posecontrol"] as PoseControl).optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatPose));
     }
+
+    // ISXB-405
+    [Test]
+    public void Devices_AddingUnusualDevice_ShouldntCrashTheSystem()
+    {
+        var deviceDescr =
+            "{\"interface\":\"XRInputV1\",\"type\":\"\",\"product\":\"OpenXR Right Hand\",\"manufacturer\":\"\",\"serial\":\"\",\"version\":\"\",\"capabilities\":\"{\\\"deviceName\\\":\\\"OpenXR Right Hand\\\",\\\"manufacturer\\\":\\\"\\\",\\\"serialNumber\\\":\\\"\\\",\\\"characteristics\\\":620,\\\"deviceId\\\":4294967297,\\\"inputFeatures\\\":[{\\\"name\\\":\\\"Is Tracked\\\",\\\"usageHints\\\":[{\\\"content\\\":\\\"IsTracked\\\",\\\"id\\\":1429429695}],\\\"featureType\\\":1,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Tracking State\\\",\\\"usageHints\\\":[{\\\"content\\\":\\\"TrackingState\\\",\\\"id\\\":1636970542}],\\\"featureType\\\":2,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Hand Palm\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Hand Wrist\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Thumb Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Index Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Middle Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Ring Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Metacarpal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Proximal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Intermediate\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Distal\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Little Tip\\\",\\\"usageHints\\\":[],\\\"featureType\\\":8,\\\"customSize\\\":4294967295},{\\\"name\\\":\\\"Hand Data\\\",\\\"usageHints\\\":[{\\\"content\\\":\\\"HandData\\\",\\\"id\\\":2609730070}],\\\"featureType\\\":7,\\\"customSize\\\":4294967295}],\\\"CanQueryForDeviceStateAtTime\\\":false}\"}";
+
+        runtime.ReportNewInputDevice(deviceDescr);
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        Assert.That(device, Is.Not.Null);
+    }
 }
 #endif
