@@ -48,6 +48,7 @@ namespace UnityEngine.InputSystem
     internal unsafe class InputActionState : IInputStateChangeMonitor, ICloneable, IDisposable
     {
         public const int kInvalidIndex = -1;
+        private const int kActionGroupGrowIncrement = 10;
 
         /// <summary>
         /// Array of all maps added to the state.
@@ -193,7 +194,10 @@ namespace UnityEngine.InputSystem
 
                 // add the action that the current binding belongs to to the relevant group
                 if (controlGroupingAndComplexity[i].group >= m_ActionGroups.Length)
-                    ArrayHelpers.Resize(ref m_ActionGroups, Mathf.Max(10, m_ActionGroups.Length + 10), Allocator.Persistent);
+                    ArrayHelpers.Resize(
+                        ref m_ActionGroups,
+                        Mathf.Max(kActionGroupGrowIncrement, m_ActionGroups.Length + kActionGroupGrowIncrement),
+                        Allocator.Persistent);
 
                 #if UNITY_2019_4
                 var grouping = m_ActionGroups[controlGroupingAndComplexity[i].group];
@@ -4089,6 +4093,9 @@ namespace UnityEngine.InputSystem
             /// <remarks>
             /// Currently this is just used to support building the action groups, but later can be used
             /// to allow querying for conflicting actions at editor time or runtime.
+            ///
+            /// This is a pointer instead of a NativeArray because 2019.4 does not support nesting
+            /// NativeArrays and action group instances themselves live inside a NativeArray.
             /// </remarks>
             private int* actionIndicies;
             private int actionCount;
@@ -4111,6 +4118,7 @@ namespace UnityEngine.InputSystem
 
             public void AddActionIndex(int actionIndex)
             {
+                // return immediately if the actionIndex already exists in this group
                 for (var i = 0; i < actionCount; i++)
                 {
                     if (actionIndicies[i] == actionIndex)
@@ -4119,7 +4127,7 @@ namespace UnityEngine.InputSystem
 
                 if (actionCount + 1 == m_Length)
                 {
-                    m_Length = Math.Max(10, m_Length + 10);
+                    m_Length = Math.Max(kActionGroupGrowIncrement, m_Length + kActionGroupGrowIncrement);
                     var newBuffer = (int*)UnsafeUtility.Malloc(m_Length, 8, Allocator.Persistent);
                     UnsafeUtility.MemCpy(newBuffer, actionIndicies, actionCount);
                     UnsafeUtility.Free(actionIndicies, Allocator.Persistent);

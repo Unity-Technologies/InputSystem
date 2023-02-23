@@ -1222,11 +1222,13 @@ namespace UnityEngine.InputSystem
         /// in the current frame without considering conflicting actions.
         /// </summary>
         /// <returns>True if the action performed this frame.</returns>
-        /// <remarks>This method does not check if a more specific input has performed already in this frame.
+        /// <remarks>This method does not check if an input action with a higher priority binding has performed
+        /// already in this frame.
+        ///
         /// For example, if there are two input actions, one bound to the Ctrl+C keys and the other bound to
         /// the C key, this method will return true when called on the input action bound to the C key when
         /// Ctrl+C is pressed. See <see cref="WasPerformedThisFrame(bool)"/> for a version of the method that
-        /// considers binding conflicts.</remarks>
+        /// considers binding priorities.</remarks>
         public bool WasPerformedThisFrame()
         {
             return WasPerformedThisFrame(false);
@@ -1280,10 +1282,12 @@ namespace UnityEngine.InputSystem
         /// will cause this method to return false if this action has been bound to the C key but Ctrl+C has been
         /// pressed and another action is bound to that key combination.
         ///
-        /// Note that bindings can be made to consume input events, or in other words, prevent less specific bindings
+        /// Note that bindings can be made to consume input events, or in other words, prevent lower priority bindings
         /// from even performing in the first place. To enable this, set the <see cref="InputSettings.shortcutKeysConsumeInput"/>
-        /// property to true, and make sure that the 'Consume Input Events' property on the binding is also set to
-        /// true. See <see cref="InputBindingComposite.handleInputEvents"/> for more details.
+        /// property to true, and make sure that the <see cref="InputBindingComposite.handleInputEvents"/> property on the binding
+        /// is also set to true.
+        ///
+        /// For more in-depth reading on binding priorities, see the <a href="../manual/ActionBindings.html#conflicting-inputs">manual</a>.
         /// </remarks>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
@@ -1908,16 +1912,19 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Check if a more specific binding has already handled this event.
+            /// Check if a higher priority binding has already handled this event.
             /// </summary>
             /// <remarks>
             /// Bindings will perform in descending order of priority. For example, Ctrl+C has a higher
             /// priority than C, so Ctrl+C will always be given the chance to perform first. When writing
-            /// event driven input code, it can be useful to check if a more specific binding has already
+            /// event driven input code, it can be useful to check if a higher priority binding has already
             /// handled the current event.
+            ///
+            /// For more in-depth reading on binding priorities, see the <a href="../manual/ActionBindings.html#conflicting-inputs">manual</a>.
             /// </remarks>
             /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
             /// <seealso cref="InputBindingComposite.handleInputEvents"/>
+            /// <seealso cref="InputBindingComposite.GetPriority" />
             public bool eventHandled
             {
                 get
@@ -2091,7 +2098,7 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 // if the last action in this group to handle an event didn't perform in the current step count,
-                // then there is no way it can have run before this action, so early out
+                // then there is no way it can have run before this action, so skip to the next group
                 var lastActionToHandleAnEvent = state.actionStates[actionGroup.lastEventHandledByAction];
                 if (lastActionToHandleAnEvent.lastPerformedInUpdate != InputUpdate.s_UpdateStepCount)
                     continue;

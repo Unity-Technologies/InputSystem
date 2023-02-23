@@ -940,9 +940,16 @@ Press(Keyboard.current.leftShiftKey);
 Press(keyboard.bKey);
 ```
 
-If an application needs even more control over when input events are consumed, it is possible to completely take over the handling of events by using the [`CallbackContext.HandleEvent`](api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_HandleEvent) method. In the following example, event consumption is turned off for the `Shift+B` binding, and the performed handler only handles the input if the 'inventoryOpen' flag is true. The `B` binding then decides whether to perform some actions based on whether the input has been handled or not.
+If an application needs even more control over when input events are consumed, it is possible to completely take over the handling of events by using the [`CallbackContext.HandleEvent`](api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_HandleEvent) method. In the following example, event handling is turned off for the `Shift+B` binding, and the performed handler only handles the input if the 'inventoryOpen' flag is true. The `B` binding then decides whether to perform some actions based on whether the input has been handled or not.
 
 ```CSharp
+InputSystem.settings.shortcutKeysConsumeInput = false;
+
+// Create two actions in the same map.
+var map = new InputActionMap();
+var bAction = map.AddAction("B");
+var shiftbAction = map.AddAction("ShiftB");
+
 bAction.AddBinding("<Keyboard>/b");
 shiftbAction.AddCompositeBinding("OneModifier(handleInputEvents=false)")
     .With("Modifier", "<Keyboard>/shift")

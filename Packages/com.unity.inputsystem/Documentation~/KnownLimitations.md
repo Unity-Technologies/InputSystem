@@ -2,6 +2,10 @@
 
 The following is a list of known limitations that the Input System currently has.
 
+## Actions
+
+* Input event consumption i.e. the ability to prevent a binding to "A" from triggering when a binding to "SHIFT+A" has already triggered, does not reliably work across multiple Input Action Assets, or multiple `InputActionMap` instances created through code. This is due to the way the runtime state for control grouping and priority is calculated in isolation for each Input Action Asset or standalone `InputActionMap`.
+
 ## Compatibility with other Unity features
 
 * Input processing in the background is tied to `Application.runInBackground` (i.e. the "Run In Background" setting in "Player Preferences") which, however, Unity always forces to `true` in __development__ players. This means that in development players, input will always be processed, even if the app is in the background. Of course, this only pertains to platforms where the player can actually run in the background (iOS and Android are thus unaffected).

@@ -10234,13 +10234,13 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WithCompositeBindings_WithConsumeInputEventsSetToTrue_HandleInputEvents()
+    public void Actions_WithCompositeBindings_WithHandleInputEventsSetToTrue_HandleInputEvents()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var map = new InputActionMap("map1");
         var action1 = map.AddAction(name: "action1");
-        // 1D axis composite doesn't by default consume input events, but by setting consumeInputEvent to true, it should
+        // 1D axis composite doesn't by default handle input events, but by setting handleInputEvent to true, it should
         action1.AddCompositeBinding("1DAxis(handleInputEvents=true)")
             .With("negative", "<Keyboard>/a")
             .With("positive", "<Keyboard>/d");
