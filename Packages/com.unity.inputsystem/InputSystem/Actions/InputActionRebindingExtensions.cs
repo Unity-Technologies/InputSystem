@@ -1143,7 +1143,8 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 action = actions.FindAction(binding.action);
 
-            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, action);
+            string actionName = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : "";
+            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, actionName);
 
             list.Add(@override);
         }
