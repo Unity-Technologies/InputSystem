@@ -1463,15 +1463,25 @@ namespace UnityEngine.InputSystem
             public string interactions;
             public string processors;
 
-            public static BindingOverrideJson FromBinding(InputBinding binding)
+            public static BindingOverrideJson FromBinding(InputBinding binding, InputAction bindingAction = null)
             {
                 return new BindingOverrideJson
                 {
-                    action = binding.action,
-                    id = binding.m_Id,
-                    path = binding.overridePath,
-                    interactions = binding.overrideInteractions,
-                    processors = binding.overrideProcessors,
+                    action = bindingAction != null && !bindingAction.isSingletonAction ? $"{bindingAction.actionMap.name}/{bindingAction.name}" : "",
+                    id = binding.id.ToString() ,
+                    path = binding.overridePath ?? "null",
+                    interactions = binding.overrideInteractions ?? "null",
+                    processors = binding.overrideProcessors ?? "null"
+                };
+            }
+
+            public static InputBinding ToBinding(BindingOverrideJson bindingOverride)
+            {
+                return new InputBinding
+                {
+                    overridePath = bindingOverride.path != "null" ? bindingOverride.path : null,
+                    overrideInteractions = bindingOverride.interactions != "null" ? bindingOverride.interactions : null,
+                    overrideProcessors = bindingOverride.processors != "null" ? bindingOverride.processors : null,
                 };
             }
         }
