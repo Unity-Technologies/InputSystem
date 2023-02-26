@@ -1348,6 +1348,63 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanSaveAndLoadRebindOnlyForOverridesSet()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", processors: "invert");
+        action.AddBinding("<Keyboard>/space", interactions: "tap");
+
+        // Check that the effective paths are correct
+        Assert.That(action.bindings[0].effectivePath, Is.EqualTo("<Gamepad>/buttonSouth"));
+        Assert.That(action.bindings[0].effectiveInteractions, Is.EqualTo(null));
+        Assert.That(action.bindings[0].effectiveProcessors, Is.EqualTo("invert"));
+
+        Assert.That(action.bindings[1].effectivePath, Is.EqualTo("<Keyboard>/space"));
+        Assert.That(action.bindings[1].effectiveInteractions, Is.EqualTo("tap"));
+        Assert.That(action.bindings[1].effectiveProcessors, Is.EqualTo(null));
+
+        action.ApplyBindingOverride(0, "<Gamepad>/buttonWest");
+        action.ApplyBindingOverride(1, new InputBinding
+        {
+            overridePath =  "<Keyboard>/a",
+            overrideInteractions = "",
+            overrideProcessors = "multiply",
+        });
+
+        var actionRebindsJson = action.SaveBindingOverridesAsJson();
+        Debug.Log(actionRebindsJson.ToString());
+
+        action.LoadBindingOverridesFromJson(actionRebindsJson);
+
+        // Check that effective binding path changed
+        Assert.That(action.bindings[0].effectivePath, Is.EqualTo("<Gamepad>/buttonWest"));
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonWest"));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        // Check that effective interaction maintained it's null value
+        Assert.That(action.bindings[0].effectiveInteractions, Is.EqualTo(null));
+        Assert.That(action.bindings[0].overrideInteractions, Is.EqualTo(null));
+        Assert.That(action.bindings[0].interactions, Is.EqualTo(null));
+        // Check that effective interaction maintained it's previously set value
+        Assert.That(action.bindings[0].effectiveProcessors, Is.EqualTo("invert"));
+        Assert.That(action.bindings[0].overrideProcessors, Is.EqualTo(null));
+        Assert.That(action.bindings[0].processors, Is.EqualTo("invert"));
+
+        // Check that effective binding path changed
+        Assert.That(action.bindings[1].effectivePath, Is.EqualTo("<Keyboard>/a"));
+        Assert.That(action.bindings[1].overridePath, Is.EqualTo("<Keyboard>/a"));
+        Assert.That(action.bindings[1].path, Is.EqualTo("<Keyboard>/space"));
+        // Check that effective binding was disabled
+        Assert.That(action.bindings[1].effectiveInteractions, Is.EqualTo(""));
+        Assert.That(action.bindings[1].overrideInteractions, Is.EqualTo(""));
+        Assert.That(action.bindings[1].interactions, Is.EqualTo("tap"));
+        // Check that effective binding which was null before, now has changed
+        Assert.That(action.bindings[1].effectiveProcessors, Is.EqualTo("multiply"));
+        Assert.That(action.bindings[1].overrideProcessors, Is.EqualTo("multiply"));
+        Assert.That(action.bindings[1].processors, Is.EqualTo(null));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ActionMapFindBinding_ShouldReturnNegativeOne_IfEmpty()
     {
         var actionMap = new InputActionMap();
