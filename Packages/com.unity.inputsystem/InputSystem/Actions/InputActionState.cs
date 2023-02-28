@@ -148,9 +148,6 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
-            // scratch memory to track all the group indexes that an action appears in
-            var tempActionGroupIndexes = stackalloc ushort[8192];
-
             var currentGroup = 1u;
             for (var i = 0; i < totalControlCount; ++i)
             {
@@ -191,35 +188,41 @@ namespace UnityEngine.InputSystem
 
                     ++currentGroup;
                 }
-
-                // add the action that the current binding belongs to to the relevant group
-                if (controlGroupingAndComplexity[i].group >= m_ActionGroups.Length)
-                    ArrayHelpers.Resize(
-                        ref m_ActionGroups,
-                        Mathf.Max(kActionGroupGrowIncrement, m_ActionGroups.Length + kActionGroupGrowIncrement),
-                        Allocator.Persistent);
-
-                #if UNITY_2019_4
-                var grouping = m_ActionGroups[controlGroupingAndComplexity[i].group];
-                #else
-                ref var grouping = ref UnsafeUtility.ArrayElementAsRef<ActionGroup>(m_ActionGroups.GetUnsafePtr(),
-                    controlGroupingAndComplexity[i].group);
-                #endif
-                if (m_ActionGroups[controlGroupingAndComplexity[i].group].isCreated == false)
-                    grouping = new ActionGroup(5);
-
-                grouping.AddActionIndex(binding.actionIndex);
-
-                #if UNITY_2019_4
-                m_ActionGroups[controlGroupingAndComplexity[i].group] = grouping;
-                #endif
             }
 
-            var actionGroupNextFreeIndex = 0;
+            if (m_ActionGroups.IsCreated)
+                m_ActionGroups.Dispose();
 
-            // now build the indirection table. Each TriggerState will point to an entry in the m_ActionGroupIndirectionTable
-            // array that stores the number of groups that that action appears in. The following n entries in that array are
+            // now put each action index into the groups that it appears in
+            m_ActionGroups = new NativeArray<ActionGroup>((int)currentGroup, Allocator.Persistent);
+            for (var i = 0; i < totalControlCount; i++)
+            {
+                var bindingIndex = controlIndexToBindingIndex[i];
+                ref var binding = ref bindingStates[bindingIndex];
+
+                // UnsafeUtility has ArrayElementAsRef<T> which is better than this but only available
+                // after 2019.4
+                var actionGroupPtr = (ActionGroup*)m_ActionGroups.GetUnsafeReadOnlyPtr() +
+                    controlGroupingAndComplexity[i].group;
+
+                if (actionGroupPtr->isCreated == false)
+                    *actionGroupPtr = new ActionGroup(kActionGroupGrowIncrement);
+
+                actionGroupPtr->AddActionIndex(binding.actionIndex);
+            }
+
+            // now build the indirection table. The indirection table can be used when you have an input action and
+            // you want to find all of the groups that action belongs to, which you might do if you want to check
+            // if any other input action in a group has already handled an input event.
+            //
+            // Each TriggerState (i.e. Input Action) will point to an entry in the m_ActionGroupIndirectionTable array
+            // that stores the number of groups that that action appears in. The following n entries in that array are
             // the indexes of each group in the m_ActionGroups array that the action appears in.
+
+            var actionGroupNextFreeIndex = 0;
+            // scratch memory to track all the group indexes that an action appears in
+            var tempActionGroupIndexes = stackalloc ushort[8192];
+
             for (var actionIndex = 0; actionIndex < totalActionCount; actionIndex++)
             {
                 var action = actionStates[actionIndex];
@@ -246,9 +249,10 @@ namespace UnityEngine.InputSystem
 
                 action.actionGroupStartIndex = (ushort)actionGroupNextFreeIndex;
                 m_ActionGroupIndirectionTable[actionGroupNextFreeIndex++] = actionCountInGroup;
-                UnsafeUtility.MemCpy((ushort*)m_ActionGroupIndirectionTable.GetUnsafePtr() + actionGroupNextFreeIndex, tempActionGroupIndexes,
-                    actionCountInGroup * UnsafeUtility.SizeOf<ushort>());
-                actionGroupNextFreeIndex += actionCountInGroup;
+                for (var i = 0; i < actionCountInGroup; i++)
+                {
+                    m_ActionGroupIndirectionTable[actionGroupNextFreeIndex++] = tempActionGroupIndexes[i];
+                }
             }
 
             memory.controlGroupingInitialized = true;
@@ -4094,7 +4098,7 @@ namespace UnityEngine.InputSystem
             /// Currently this is just used to support building the action groups, but later can be used
             /// to allow querying for conflicting actions at editor time or runtime.
             ///
-            /// This is a pointer instead of a NativeArray because 2019.4 does not support nesting
+            /// This is a pointer instead of a NativeArray because Unity 2019.4 does not support nesting
             /// NativeArrays and action group instances themselves live inside a NativeArray.
             /// </remarks>
             private int* actionIndicies;
@@ -4106,10 +4110,10 @@ namespace UnityEngine.InputSystem
 
             private int m_Length;
 
-            public ActionGroup(int capacity)
+            public ActionGroup(int defaultCapacity)
             {
-                actionIndicies = (int*)UnsafeUtility.Malloc(capacity, 8, Allocator.Persistent);
-                m_Length = capacity;
+                actionIndicies = (int*)Allocate(defaultCapacity);
+                m_Length = defaultCapacity;
 
                 lastEventHandledByAction = -1;
                 actionCount = 0;
@@ -4119,16 +4123,13 @@ namespace UnityEngine.InputSystem
             public void AddActionIndex(int actionIndex)
             {
                 // return immediately if the actionIndex already exists in this group
-                for (var i = 0; i < actionCount; i++)
-                {
-                    if (actionIndicies[i] == actionIndex)
-                        return;
-                }
+                if (Contains(actionIndex))
+                    return;
 
                 if (actionCount + 1 == m_Length)
                 {
                     m_Length = Math.Max(kActionGroupGrowIncrement, m_Length + kActionGroupGrowIncrement);
-                    var newBuffer = (int*)UnsafeUtility.Malloc(m_Length, 8, Allocator.Persistent);
+                    var newBuffer = (int*)Allocate(m_Length);
                     UnsafeUtility.MemCpy(newBuffer, actionIndicies, actionCount);
                     UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
                     actionIndicies = newBuffer;
@@ -4154,6 +4155,11 @@ namespace UnityEngine.InputSystem
                     UnsafeUtility.Free(actionIndicies, Allocator.Persistent);
 
                 actionIndicies = null;
+            }
+
+            private static void* Allocate(int length)
+            {
+                return UnsafeUtility.Malloc(length, UnsafeUtility.AlignOf<int>(), Allocator.Persistent);
             }
         }
 

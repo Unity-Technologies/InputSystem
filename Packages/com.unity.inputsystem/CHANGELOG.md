@@ -16,7 +16,7 @@ however, it has to be formatted properly to pass verification tests.
   * Added several APIs to allow application logic to control event handling/consumption.
     * CallbackContext.eventHandled can be used to check if a higher priority binding has already handled the current event
     * CallbackContext.HandleEvent() allows any 'performed' callback to set an input event as handled
-    * InputAction.wasPerformedThisFrame(bool checkConflictingActions) allows polling code to determine if a higher priority binding has performed
+    * InputAction.wasPerformedThisFrame(InputAction.EventHandledBehaviour eventHandledBehaviour) allows polling code to determine if a higher priority binding has performed
     * InputBindingComposite.handleInputEvents allows applications to decide which composite bindings will handle events
 
 ### Fixed

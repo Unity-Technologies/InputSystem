@@ -10401,14 +10401,14 @@ partial class CoreTests
         var map = new InputActionMap();
 
         // action with bindings to Ctrl+Shift+C and C should appear twice in the 'C' group
-        var action0 = map.AddAction("action1", binding: "<Keyboard>/c");
-        action0.AddCompositeBinding("TwoModifiers")
+        var action1 = map.AddAction("action1", binding: "<Keyboard>/c");
+        action1.AddCompositeBinding("TwoModifiers")
             .With("modifier1", "<Keyboard>/leftshift")
             .With("modifier2", "<Keyboard>/leftctrl")
             .With("binding", "<Keyboard>/c");
 
-        var action1 = map.AddAction("action2");
-        action1.AddCompositeBinding("OneModifier")
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding("OneModifier")
             .With("modifier", "<Keyboard>/leftctrl")
             .With("binding", "<Keyboard>/c");
 
@@ -10418,12 +10418,12 @@ partial class CoreTests
         Press(keyboard.leftCtrlKey);
         Press(keyboard.cKey);
 
-        Assert.That(action0.WasPerformedThisFrame(true), Is.False);
+        Assert.That(action1.WasPerformedThisFrame(InputAction.EventHandledBehaviour.CheckHigherPriority), Is.False);
 
         Release(keyboard.cKey);
         Press(keyboard.cKey);
 
-        Assert.That(action0.WasPerformedThisFrame(), Is.True);
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
     }
 
     [Test]

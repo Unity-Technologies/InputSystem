@@ -1231,14 +1231,14 @@ namespace UnityEngine.InputSystem
         /// considers binding priorities.</remarks>
         public bool WasPerformedThisFrame()
         {
-            return WasPerformedThisFrame(false);
+            return WasPerformedThisFrame(EventHandledBehaviour.None);
         }
 
         /// <summary>
         /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
         /// in the current frame.
         /// </summary>
-        /// <param name="checkConflictingActions">Whether to check if a more specific binding has already
+        /// <param name="eventHandledBehaviour">Whether to check if a higher priority binding has already
         /// performed as a result of the control actuations that triggered this action.</param>
         /// <returns>True if the action performed this frame.</returns>
         /// <remarks>
@@ -1276,11 +1276,11 @@ namespace UnityEngine.InputSystem
         /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
         /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         ///
-        /// This method can be made to check if a more specific binding has performed before this one in the current
+        /// This method can be made to check if a higher priority binding has performed before this one in the current
         /// frame. For example, when using shortcut key bindings, pressing Ctrl+C will trigger any actions that are
-        /// bound only to C, as well as any bound to Ctrl+C. Passing true for the 'checkConflictingActions' argument
-        /// will cause this method to return false if this action has been bound to the C key but Ctrl+C has been
-        /// pressed and another action is bound to that key combination.
+        /// bound only to C, as well as any bound to Ctrl+C. Passing <see cref="EventHandledBehaviour.CheckHigherPriority"/>
+        /// for the 'eventHandledBehaviour' argument will cause this method to return false if this action has been bound
+        /// to the C key but Ctrl+C has been pressed and another action is bound to that key combination.
         ///
         /// Note that bindings can be made to consume input events, or in other words, prevent lower priority bindings
         /// from even performing in the first place. To enable this, set the <see cref="InputSettings.shortcutKeysConsumeInput"/>
@@ -1293,7 +1293,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="phase"/>
         /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
         /// <seealso cref="InputBindingComposite.handleInputEvents"/>
-        public unsafe bool WasPerformedThisFrame(bool checkConflictingActions)
+        public unsafe bool WasPerformedThisFrame(EventHandledBehaviour eventHandledBehaviour)
         {
             var state = GetOrCreateActionMap().m_State;
 
@@ -1304,7 +1304,7 @@ namespace UnityEngine.InputSystem
 
             var wasPerformedThisFrame = actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
 
-            if (!checkConflictingActions)
+            if (eventHandledBehaviour == EventHandledBehaviour.None)
                 return wasPerformedThisFrame;
 
             return !HasHigherPriorityActionAlreadyPerformed() && wasPerformedThisFrame;
@@ -1659,6 +1659,54 @@ namespace UnityEngine.InputSystem
             }
 
             return bindingIndexOnAction;
+        }
+
+        private unsafe bool HasHigherPriorityActionAlreadyPerformed()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            ref var actionState = ref state.FetchActionState(this);
+
+            var groupCount = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex];
+            for (var j = 0; j < groupCount; j++)
+            {
+                var groupIndex = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex + j + 1];
+                var actionGroup = state.m_ActionGroups[groupIndex];
+
+                if (actionGroup.lastEventHandledByAction == -1)
+                    continue;
+
+                // if the last action in this group to handle an event didn't perform in the current step count,
+                // then there is no way it can have run before this action, so skip to the next group
+                var lastActionToHandleAnEvent = state.actionStates[actionGroup.lastEventHandledByAction];
+                if (lastActionToHandleAnEvent.lastPerformedInUpdate != InputUpdate.s_UpdateStepCount)
+                    continue;
+
+                if (actionGroup.lastEventHandledByAction != m_ActionIndexInState)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Can be used to enable or disable event handled checks when calling
+        /// <see cref="InputAction.WasPerformedThisFrame(EventHandledBehaviour)"/>.
+        /// </summary>
+        /// <seealso cref="InputAction.WasPerformedThisFrame(EventHandledBehaviour)"/>
+        public enum EventHandledBehaviour
+        {
+            /// <summary>
+            /// Return true if the current action has performed in this frame even if an
+            /// action with a higher priority binding has already performed for the same
+            /// input event.
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// Return false if an action with a higher priority binding has already performed
+            /// in this frame for the same input event.
+            /// </summary>
+            CheckHigherPriority
         }
 
         ////TODO: make current event available in some form
@@ -2081,33 +2129,6 @@ namespace UnityEngine.InputSystem
             {
                 return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
             }
-        }
-
-        private unsafe bool HasHigherPriorityActionAlreadyPerformed()
-        {
-            var state = GetOrCreateActionMap().m_State;
-            ref var actionState = ref state.FetchActionState(this);
-
-            var groupCount = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex];
-            for (var j = 0; j < groupCount; j++)
-            {
-                var groupIndex = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex + j + 1];
-                var actionGroup = state.m_ActionGroups[groupIndex];
-
-                if (actionGroup.lastEventHandledByAction == -1)
-                    continue;
-
-                // if the last action in this group to handle an event didn't perform in the current step count,
-                // then there is no way it can have run before this action, so skip to the next group
-                var lastActionToHandleAnEvent = state.actionStates[actionGroup.lastEventHandledByAction];
-                if (lastActionToHandleAnEvent.lastPerformedInUpdate != InputUpdate.s_UpdateStepCount)
-                    continue;
-
-                if (actionGroup.lastEventHandledByAction != m_ActionIndexInState)
-                    return true;
-            }
-
-            return false;
         }
     }
 }
