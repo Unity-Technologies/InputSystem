@@ -1,13 +1,18 @@
 # Debugging
 
-* [Input Debugger](#input-debugger)
-  * [Debugging Devices](#debugging-devices)
-  * [Debugging Actions](#debugging-actions)
-  * [Debugging users and PlayerInput](#debugging-users-and-playerinput)
-  * [Debugging layouts](#debugging-layouts)
-  * [Debugging Remotely](#debugging-remotely)
-* [Device Simulator](#device-simulator)
-* [Unity Remote](#unity-remote)
+- [Debugging](#debugging)
+  - [Input Debugger](#input-debugger)
+    - [Debugging Devices](#debugging-devices)
+    - [Debugging Actions](#debugging-actions)
+    - [Debugging users and PlayerInput](#debugging-users-and-playerinput)
+    - [Debugging layouts](#debugging-layouts)
+    - [Debugging remotely](#debugging-remotely)
+  - [Input visualizers](#input-visualizers)
+    - [`InputControlVisualizer`](#inputcontrolvisualizer)
+    - [`InputActionVisualizer`](#inputactionvisualizer)
+  - [Device Simulator](#device-simulator)
+  - [ Unity Remote (iOS, Android)](#-unity-remote-ios-android)
+  - [Other tips:](#other-tips)
 
 When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players.
 
@@ -125,3 +130,44 @@ The [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html) device 
 The remaining sensors listed above will need to be explicitly enabled via [`InputSystem.EnableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_) just like local sensors. Setting the sampling frequency on these sensors from the Unity Remote using [`Sensor.samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) will be relayed to the device but note that setting the frequency on one of them will set it for all of them.
 
 Touch coordinates from the device will be translated to the screen coordinates of the Game View inside the Editor.
+
+## Other tips:
+
+To record events flowing through the system, use this code:
+
+```C#
+
+    // You can also provide a device ID to only
+    // trace events for a specific device.
+    var trace = new InputEventTrace(); 
+
+    trace.Enable();
+
+    var current = new InputEventPtr();
+    while (trace.GetNextEvent(ref current))
+    {
+        Debug.Log("Got some event: " + current);
+    }
+
+    // Also supports IEnumerable.
+    foreach (var eventPtr in trace)
+        Debug.Log("Got some event: " + eventPtr);
+
+    // Trace consumes unmanaged resources. Make sure you dispose it correctly to avoid memory leaks.
+    trace.Dispose();
+
+```
+
+To see events as they're processed, use this code:
+
+```C#
+
+    InputSystem.onEvent +=
+        (eventPtr, device) =>
+        {
+            // Can handle events yourself, for example, and then stop them
+            // from further processing by marking them as handled.
+            eventPtr.handled = true;
+        };
+
+```

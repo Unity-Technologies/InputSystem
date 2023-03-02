@@ -1,13 +1,15 @@
 # Gamepad Support
 
-* [Controls](#controls)
-* [Polling](#polling)
-* [Rumble](#rumble)
-  * [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
-* [PlayStation controllers](#playstation-controllers)
-* [Xbox controllers](#xbox-controllers)
-* [Switch controller](#switch-controllers)
-* [Cursor Control](#cursor-control)
+- [Gamepad Support](#gamepad-support)
+  - [Controls](#controls)
+    - [Deadzones](#deadzones)
+  - [Polling](#polling)
+  - [Rumble](#rumble)
+    - [Pausing, resuming, and stopping haptics](#pausing-resuming-and-stopping-haptics)
+  - [PlayStation controllers](#playstation-controllers)
+  - [Xbox controllers](#xbox-controllers)
+  - [Switch controllers](#switch-controllers)
+  - [Cursor Control](#cursor-control)
 
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
@@ -57,6 +59,45 @@ Gamepad.current["Y"]
 Gamepad.current[GamepadButton.Triangle]
 Gamepad.current["Triangle"]
 ```
+
+### Deadzones
+
+Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their centre point. They allow a certain small inner area where the input is considered to be zero even if it is slightly off from the zero position.
+
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](Processors.md#stick-deadzone) on the sticks, like this:
+
+```JSON
+     {
+        "name" : "MyGamepad",
+        "extend" : "Gamepad",
+        "controls" : [
+            {
+                "name" : "leftStick",
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
+            },
+            {
+                "name" : "rightStick",
+                "processors" : "stickDeadzone(min=0.125,max=0.925)"
+            }
+        ]
+    }
+```
+
+You can do the same in your C# state structs.
+
+```C#
+    public struct MyDeviceState
+    {
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
+        public StickControl leftStick;
+        [InputControl(processors = "stickDeadzone(min=0.125,max=0.925)"]
+        public StickControl rightStick;
+    }
+```
+
+The gamepad layout already adds stick deadzone processors which take their min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
+
+
 
 ## Polling
 

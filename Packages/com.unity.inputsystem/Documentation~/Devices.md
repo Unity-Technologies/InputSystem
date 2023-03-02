@@ -1,26 +1,39 @@
 # Devices
 
-* [Device descriptions](#device-descriptions)
-    * [Capabilities](#capabilities)
-    * [Matching](#matching)
-    * [Hijacking the matching process](#hijacking-the-matching-process)
-* [Device lifecycle](#device-lifecycle)
-    * [Device creation](#device-creation)
-    * [Device removal](#device-removal)
-    * [Device resets](#device-resets)
-    * [Device syncs](#device-syncs)
-    * [Device enabling and disabling](#device-enabling-and-disabling)
-    * [Background and focus change behavior](#background-and-focus-change-behavior)
-    * [Domain reloads](#domain-reloads-in-the-editor)
-* [Native Devices](#native-devices)
-    * [Disconnected Devices](#disconnected-devices)
-* [Device IDs](#device-ids)
-* [Device usages](#device-usages)
-* [Device commands](#device-commands)
-* [Working with Devices](#working-with-devices)
-    * [Monitoring Devices](#monitoring-devices)
-    * [Adding and removing Devices](#adding-and-removing-devices)
-    * [Creating custom Devices](#creating-custom-devices)
+- [Devices](#devices)
+  - [Device descriptions](#device-descriptions)
+    - [Capabilities](#capabilities)
+    - [Matching](#matching)
+      - [Hijacking the matching process](#hijacking-the-matching-process)
+    - [Device lifecycle](#device-lifecycle)
+      - [Device creation](#device-creation)
+      - [Device removal](#device-removal)
+      - [Device resets](#device-resets)
+      - [Device syncs](#device-syncs)
+      - [Device enabling and disabling](#device-enabling-and-disabling)
+      - [Background and focus change behavior](#background-and-focus-change-behavior)
+      - [Domain reloads in the Editor](#domain-reloads-in-the-editor)
+  - [Native Devices](#native-devices)
+    - [Disconnected Devices](#disconnected-devices)
+  - [Device IDs](#device-ids)
+  - [Device usages](#device-usages)
+  - [Device commands](#device-commands)
+    - [Sending commands to Devices](#sending-commands-to-devices)
+    - [Adding custom device Commands](#adding-custom-device-commands)
+  - [Device state](#device-state)
+    - [State changes](#state-changes)
+      - [Monitoring state changes](#monitoring-state-changes)
+      - [Synthesizing state](#synthesizing-state)
+  - [Working with Devices](#working-with-devices)
+    - [Monitoring Devices](#monitoring-devices)
+    - [Adding and removing Devices](#adding-and-removing-devices)
+    - [Creating custom Devices](#creating-custom-devices)
+      - [Step 1: The state struct](#step-1-the-state-struct)
+      - [Step 2: The Device class](#step-2-the-device-class)
+      - [Step 3: The Update method](#step-3-the-update-method)
+      - [Step 4: Device registration and creation](#step-4-device-registration-and-creation)
+      - [Step 5: `current` and `all` (optional)](#step-5-current-and-all-optional)
+      - [Step 6: Device Commands (Optional)](#step-6-device-commands-optional)
 
 Physically, Input Devices represent devices attached to the computer, which a user can use to control the app. Logically, Input Devices are the top-level container for [Controls](Controls.md). The [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) class is itself a specialization of [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html). See [supported Devices](SupportedDevices.md) to see what kind of Devices the Input System currently supports.
 
@@ -187,6 +200,23 @@ Devices that the [native backend](Architecture.md#native-backend) reports are co
 
 The Input System remembers native Devices. For example, if the system has no matching layout when the Device is first reported, but a layout which matches the device is registered later, the system uses this layout to recreate the Device.
 
+You can force the Input System to use your own [layout](Layouts.md) when the native backend discovers a specific Device, by describing the Device in the layout, like this:
+
+```
+     {
+        "name" : "MyGamepad",
+        "extend" : "Gamepad",
+        "device" : {
+            // All strings in here are regexs and case-insensitive.
+            "product" : "MyController",
+            "manufacturer" : "MyCompany"
+        }
+     }
+```
+
+Note: You don't have to restart Unity in order for changes in your layout to take effect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a layout and your Device is recreated with the most up-to-date version every time scripts are recompiled.
+
+
 ### Disconnected Devices
 
 If you want to get notified when Input Devices disconnect, subscribe to the [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) event, and look for events of type [`InputDeviceChange.Disconnected`](../api/UnityEngine.InputSystem.InputDeviceChange.html).
@@ -250,14 +280,22 @@ InputSystem.onDeviceChange +=
         switch (change)
         {
             case InputDeviceChange.Added:
-                Debug.Log("New device added: " + device);
+                // New Device.
                 break;
-
+            case InputDeviceChange.Disconnected:
+                // Device got unplugged.
+                break;
+            case InputDeviceChange.Connected:
+                // Plugged back in.
+                break;
             case InputDeviceChange.Removed:
-                Debug.Log("Device removed: " + device);
+                // Remove from Input System entirely; by default, Devices stay in the system once discovered.
+                break;
+            default:
+                // See InputDeviceChange reference for other event types.
                 break;
         }
-    };
+    }
 ```
 
 [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) delivers notifications for other device-related changes as well. See the [`InputDeviceChange` enum](../api/UnityEngine.InputSystem.InputDeviceChange.html) for more information.
