@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where connecting a gamepad in the editor with certain settings will cause memory and performance to degrade ([case UUM-19480](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-19480)).
 - Fixed issue leading to a stack overflow crash during device initialization in `InsertControlBitRangeNode` (case ISXB-405).
 - Fixed the issue where saving and loading override bindings to JSON would set unassigned overrides (that were `null`) to assigned overrides (as an empty string `""`).
+- Allow Input Package settings menu to select Background Behavior regardless of the setting "Run in Background". This is useful for XR where the "Run in Background" isn't available ([case UUM-21955](https://issuetracker.unity3d.com/issues/quest-head-tracking-freezes-when-pausing-the-app)).
 
 ## [1.5.0] - 2023-01-24
 
