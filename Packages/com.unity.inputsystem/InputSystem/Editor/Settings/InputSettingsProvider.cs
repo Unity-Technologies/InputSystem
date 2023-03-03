@@ -98,11 +98,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
-                var runInBackground = Application.runInBackground;
-                using (new EditorGUI.DisabledScope(!runInBackground))
-                    EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
-                if (!runInBackground)
-                    EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
+                EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
@@ -293,7 +289,7 @@ namespace UnityEngine.InputSystem.Editor
                 + "'Reset And Disable All Devices' soft-resets and disables *all* devices while the application does not have focus. No device will receive input while the application "
                 + "is running in the background.\n"
                 + "'Ignore Focus' leaves all devices untouched when application focus changes. While running in the background, all input that is received is processed as if "
-                + "running in the foreground.");
+                + "running in the foreground.\n\n");
             m_EditorInputBehaviorInPlayModeContent = new GUIContent("Play Mode Input Behavior", "When in play mode, determines how focus of the Game View is handled with respect to input.\n\n"
                 + "'Pointers And Keyboards Respect Game View Focus' requires Game View focus only for pointers (mice, touch, etc.) and keyboards. Other devices will feed input to the game regardless "
                 + "of whether the Game View is focused or not. Note that this means that input on these devices is not visible in other EditorWindows.\n"
