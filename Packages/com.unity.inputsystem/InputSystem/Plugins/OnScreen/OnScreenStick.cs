@@ -269,24 +269,26 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.matrix = ((RectTransform)transform.parent).localToWorldMatrix;
+            if (m_OriginType == OriginType.Circle) {
+                Gizmos.matrix = ((RectTransform)transform.parent).localToWorldMatrix;
 
-            var startPos = ((RectTransform)transform).anchoredPosition;
-            if (Application.isPlaying)
-                startPos = m_StartPos;
+                var startPos = ((RectTransform)transform).anchoredPosition;
+                if (Application.isPlaying)
+                    startPos = m_StartPos;
 
-            Gizmos.color = new Color32(84, 173, 219, 255);
+                Gizmos.color = new Color32(84, 173, 219, 255);
 
-            var center = startPos;
-            if (Application.isPlaying && m_Behaviour == Behaviour.ExactPositionWithDynamicOrigin)
-                center = m_PointerDownPos;
+                var center = startPos;
+                if (Application.isPlaying && m_Behaviour == Behaviour.ExactPositionWithDynamicOrigin)
+                    center = m_PointerDownPos;
 
-            DrawGizmoCircle(center, m_MovementRange);
+                DrawGizmoCircle(center, m_MovementRange);
 
-            if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
+                if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
 
-            Gizmos.color = new Color32(158, 84, 219, 255);
-            DrawGizmoCircle(startPos, m_dynamicOriginRange);
+                Gizmos.color = new Color32(158, 84, 219, 255);
+                DrawGizmoCircle(startPos, m_dynamicOriginRange);
+            }
         }
 
         private void DrawGizmoCircle(Vector2 center, float radius)
