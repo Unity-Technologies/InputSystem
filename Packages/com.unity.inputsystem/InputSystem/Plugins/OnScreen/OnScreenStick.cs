@@ -118,7 +118,6 @@ namespace UnityEngine.InputSystem.OnScreen
             m_PointerDownPos = m_StartPos;
 
             var dynamicOrigin = new GameObject(kDynamicOriginClickable, typeof(Image));
-            print(dynamicOrigin.transform.localScale);
             var image = dynamicOrigin.GetComponent<Image>();;
             var rectTransform = (RectTransform)dynamicOrigin.transform;
             image.color = new Color(1, 1, 1, 0);
@@ -140,7 +139,6 @@ namespace UnityEngine.InputSystem.OnScreen
                 rectTransform.anchorMax = originTransfrom.anchorMax;
                 rectTransform.anchoredPosition = originTransfrom.anchoredPosition;
                 rectTransform.sizeDelta = originTransfrom.sizeDelta;
-                print(rectTransform.sizeDelta);
                 rectTransform.SetParent(transform); 
  
             }
