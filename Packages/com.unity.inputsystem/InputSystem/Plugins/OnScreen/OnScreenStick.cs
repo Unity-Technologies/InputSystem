@@ -118,15 +118,32 @@ namespace UnityEngine.InputSystem.OnScreen
             m_PointerDownPos = m_StartPos;
 
             var dynamicOrigin = new GameObject(kDynamicOriginClickable, typeof(Image));
-            dynamicOrigin.transform.SetParent(transform);
-            var image = dynamicOrigin.GetComponent<Image>();
-            image.color = new Color(1, 1, 1, 0);
+            print(dynamicOrigin.transform.localScale);
+            var image = dynamicOrigin.GetComponent<Image>();;
             var rectTransform = (RectTransform)dynamicOrigin.transform;
-            rectTransform.sizeDelta = new Vector2(m_DynamicOriginRange * 2, m_DynamicOriginRange * 2);
-            rectTransform.localScale = new Vector3(1, 1, 0);
-            rectTransform.anchoredPosition3D = Vector3.zero;
-
-            image.sprite = SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
+            image.color = new Color(1, 1, 1, 0);
+            if (m_OriginType == OriginType.Circle)
+            {
+                rectTransform.SetParent(transform); 
+                rectTransform.sizeDelta = new Vector2(m_dynamicOriginRange * 2, m_dynamicOriginRange * 2);
+                rectTransform.localScale = new Vector3(1, 1, 0);
+                image.sprite = SpriteUtilities.CreateCircleSprite(16, new Color32(255, 255, 255, 255));
+                rectTransform.anchoredPosition3D = Vector3.zero;
+            }
+            else 
+            {
+                // Use a 1x1 square sprite and align the width, height, and position of the dynamic origin's RectTransform.
+                Texture2D spriteTexture = new Texture2D(1,1);
+                image.sprite = Sprite.Create(spriteTexture,new Rect(0,0,1,1),new Vector2(0.5f,0.5f));
+                rectTransform.SetParent(originTransfrom.gameObject.transform.parent, false);
+                rectTransform.anchorMin = originTransfrom.anchorMin;
+                rectTransform.anchorMax = originTransfrom.anchorMax;
+                rectTransform.anchoredPosition = originTransfrom.anchoredPosition;
+                rectTransform.sizeDelta = originTransfrom.sizeDelta;
+                print(rectTransform.sizeDelta);
+                rectTransform.SetParent(transform); 
+ 
+            }
             image.alphaHitTestMinimumThreshold = 0.5f;
         }
 
@@ -137,6 +154,7 @@ namespace UnityEngine.InputSystem.OnScreen
             {
                 Debug.LogError("OnScreenStick needs to be attached as a child to a UI Canvas to function properly.");
                 return;
+                
             }
 
             switch (m_Behaviour)
@@ -150,7 +168,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     break;
                 case Behaviour.ExactPositionWithDynamicOrigin:
                     RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, pointerPosition, uiCamera, out var pointerDown);
-                    m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
+                        m_PointerDownPos = ((RectTransform)transform).anchoredPosition = pointerDown;
                     break;
             }
         }
@@ -202,7 +220,7 @@ namespace UnityEngine.InputSystem.OnScreen
             var screenPosition = Vector2.zero;
             if (ctx.control?.device is Pointer pointer)
                 screenPosition = pointer.position.ReadValue();
-
+            
             m_PointerEventData.position = screenPosition;
             EventSystem.current.RaycastAll(m_PointerEventData, m_RaycastResults);
             if (m_RaycastResults.Count == 0)
@@ -212,7 +230,7 @@ namespace UnityEngine.InputSystem.OnScreen
             foreach (var result in m_RaycastResults)
             {
                 if (result.gameObject != gameObject) continue;
-
+                
                 stickSelected = true;
                 break;
             }
@@ -270,7 +288,7 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Behaviour != Behaviour.ExactPositionWithDynamicOrigin) return;
 
             Gizmos.color = new Color32(158, 84, 219, 255);
-            DrawGizmoCircle(startPos, m_DynamicOriginRange);
+            DrawGizmoCircle(startPos, m_dynamicOriginRange);
         }
 
         private void DrawGizmoCircle(Vector2 center, float radius)
@@ -291,7 +309,7 @@ namespace UnityEngine.InputSystem.OnScreen
             if (dynamicOriginTransform)
             {
                 var rectTransform = (RectTransform)dynamicOriginTransform;
-                rectTransform.sizeDelta = new Vector2(m_DynamicOriginRange * 2, m_DynamicOriginRange * 2);
+                rectTransform.sizeDelta = new Vector2(m_dynamicOriginRange * 2, m_dynamicOriginRange * 2);
             }
         }
 
@@ -311,20 +329,28 @@ namespace UnityEngine.InputSystem.OnScreen
         /// This only applies if <see cref="behaviour"/> is set to <see cref="Behaviour.ExactPositionWithDynamicOrigin"/>.
         /// When the first press is within this region, then the control will appear at that position and have it's origin of motion placed there.
         /// Otherwise, if pressed outside of this region the control will ignore it.
-        /// This property defines the radius of the circular region. The center point being defined by the component position in the scene.
+        /// This property defines the radius of the circular region. The center point being defined by the pivot of the parent's RectTransform in the scene.
         /// </remarks>
         public float dynamicOriginRange
         {
-            get => m_DynamicOriginRange;
+            get => m_dynamicOriginRange;
             set
             {
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (m_DynamicOriginRange != value)
+                if (m_dynamicOriginRange != value)
                 {
-                    m_DynamicOriginRange = value;
+                    m_dynamicOriginRange = value;
                     UpdateDynamicOriginClickableArea();
                 }
             }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public RectTransform originTransfrom
+        {
+            get => m_originTransform;
+            set => m_originTransform = value;
         }
 
         /// <summary>
@@ -357,7 +383,10 @@ namespace UnityEngine.InputSystem.OnScreen
         [SerializeField]
         [Tooltip("Defines the circular region where the onscreen control may have it's origin placed.")]
         [Min(0)]
-        private float m_DynamicOriginRange = 100;
+        private float m_dynamicOriginRange = 100;
+        [SerializeField]
+        [Tooltip("Alternate dynamic origin Collider2D. Anything inside the Collider2D will be an area where you can place the joystick's origin,.")]
+        private RectTransform m_originTransform;
 
         [InputControl(layout = "Vector2")]
         [SerializeField]
@@ -372,12 +401,16 @@ namespace UnityEngine.InputSystem.OnScreen
             "ExactPositionWithDynamicOrigin: The control's center of origin is determined by the initial press position. " +
             "The stick will begin un-actuated at this center position and then track the current pointer or finger position.")]
         private Behaviour m_Behaviour;
+        [SerializeField]
+        [Tooltip("Choose which origin shape you want to use for the stick.\n\n" +
+                "Circle: Define the radius of the circle around the pivot.\n\n" + 
+                "Rect Transform: Attach a GameObject with a BoxCollider2D. The joystick will begin from anywhere in the collider.")]
+        private OriginType m_OriginType;
 
         [SerializeField]
         [Tooltip("Set this to true to prevent cancellation of pointer events due to device switching. Cancellation " +
             "will appear as the stick jumping back and forth between the pointer position and the stick center.")]
         private bool m_UseIsolatedInputActions;
-
         [SerializeField]
         [Tooltip("The action that will be used to detect pointer down events on the stick control. Note that if no bindings " +
             "are set, default ones will be provided.")]
@@ -401,7 +434,22 @@ namespace UnityEngine.InputSystem.OnScreen
             get => m_ControlPath;
             set => m_ControlPath = value;
         }
-
+        public OriginType originType
+        {
+            get => m_OriginType;
+            set => m_OriginType = value;
+        }
+        public enum OriginType
+        {
+            /// <summary>
+            /// Circle: Define the radius of the circle around the pivot.
+            /// </summary>
+            Circle,
+            /// <summary>
+            /// Rect Transform: Attach a GameObject with a BoxCollider2D. The joystick will begin from anywhere in the collider.
+            /// </summary>
+            RectTransform
+        }
         /// <summary>Defines how the onscreen stick will move relative to it's origin and the press position.</summary>
         public Behaviour behaviour
         {
@@ -429,28 +477,36 @@ namespace UnityEngine.InputSystem.OnScreen
         [CustomEditor(typeof(OnScreenStick))]
         internal class OnScreenStickEditor : UnityEditor.Editor
         {
-            private AnimBool m_ShowDynamicOriginOptions;
+            private AnimBool m_ShowDynamicOriginDropdown;
             private AnimBool m_ShowIsolatedInputActions;
+            private AnimBool m_ShowDynamicBoxOrigin;
+            private AnimBool m_ShowDynamicCircleOrigin;
 
             private SerializedProperty m_UseIsolatedInputActions;
             private SerializedProperty m_Behaviour;
+            private SerializedProperty m_OriginType;
             private SerializedProperty m_ControlPathInternal;
             private SerializedProperty m_MovementRange;
-            private SerializedProperty m_DynamicOriginRange;
+            private SerializedProperty m_dynamicOriginRange;
+            private SerializedProperty m_originTransform;
             private SerializedProperty m_PointerDownAction;
             private SerializedProperty m_PointerMoveAction;
 
             public void OnEnable()
             {
-                m_ShowDynamicOriginOptions = new AnimBool(false);
+                m_ShowDynamicOriginDropdown = new AnimBool(false);
+                m_ShowDynamicBoxOrigin = new AnimBool(false);
+                m_ShowDynamicCircleOrigin = new AnimBool(false);
                 m_ShowIsolatedInputActions = new AnimBool(false);
 
                 m_UseIsolatedInputActions = serializedObject.FindProperty(nameof(OnScreenStick.m_UseIsolatedInputActions));
 
                 m_Behaviour = serializedObject.FindProperty(nameof(OnScreenStick.m_Behaviour));
+                m_OriginType = serializedObject.FindProperty(nameof(OnScreenStick.m_OriginType));
                 m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenStick.m_ControlPath));
                 m_MovementRange = serializedObject.FindProperty(nameof(OnScreenStick.m_MovementRange));
-                m_DynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_DynamicOriginRange));
+                m_dynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_dynamicOriginRange));
+                m_originTransform = serializedObject.FindProperty(nameof(OnScreenStick.m_originTransform));
                 m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
                 m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
             }
@@ -461,17 +517,44 @@ namespace UnityEngine.InputSystem.OnScreen
                 EditorGUILayout.PropertyField(m_ControlPathInternal);
                 EditorGUILayout.PropertyField(m_Behaviour);
 
-                m_ShowDynamicOriginOptions.target = ((OnScreenStick)target).behaviour ==
+                m_ShowDynamicOriginDropdown.target = ((OnScreenStick)target).behaviour ==
                     Behaviour.ExactPositionWithDynamicOrigin;
-                if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicOriginOptions.faded))
+
+                m_ShowDynamicBoxOrigin.target = ((OnScreenStick)target).originType ==
+                OriginType.RectTransform;
+
+                m_ShowDynamicCircleOrigin.target = ((OnScreenStick)target).originType ==
+                OriginType.Circle;
+
+                if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicOriginDropdown.faded))
                 {
                     EditorGUI.indentLevel++;
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(m_DynamicOriginRange);
-                    if (EditorGUI.EndChangeCheck())
+                    EditorGUILayout.PropertyField(m_OriginType);
+                    if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicBoxOrigin.faded))
                     {
-                        ((OnScreenStick)target).UpdateDynamicOriginClickableArea();
+                        
+                        EditorGUI.indentLevel++;
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUILayout.PropertyField(m_originTransform);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            ((OnScreenStick)target).UpdateDynamicOriginClickableArea();
+                        }
+                        EditorGUI.indentLevel--;
                     }
+                    EditorGUILayout.EndFadeGroup();
+                    if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicCircleOrigin.faded))
+                    {
+                        EditorGUI.indentLevel++;
+                        EditorGUI.BeginChangeCheck();
+                        EditorGUILayout.PropertyField(m_dynamicOriginRange);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            ((OnScreenStick)target).UpdateDynamicOriginClickableArea();
+                        }
+                        EditorGUI.indentLevel--;
+                    }
+                    EditorGUILayout.EndFadeGroup();
                     EditorGUI.indentLevel--;
                 }
                 EditorGUILayout.EndFadeGroup();
