@@ -19,6 +19,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue leading to a stack overflow crash during device initialization in `InsertControlBitRangeNode` (case ISXB-405).
 - Fixed the issue where saving and loading override bindings to JSON would set unassigned overrides (that were `null`) to assigned overrides (as an empty string `""`).
 
+### Added
+- Added `InputSystem.customBindingPathValidators` interface to allow showing warnings in the `InputAsset` Editor for specific InputBindings and draw custom UI in the properties panel.
+
 ## [1.5.0] - 2023-01-24
 
 ### Added
