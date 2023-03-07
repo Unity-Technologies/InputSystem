@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue leading to a stack overflow crash during device initialization in `InsertControlBitRangeNode` (case ISXB-405).
 - Fixed the issue where saving and loading override bindings to JSON would set unassigned overrides (that were `null`) to assigned overrides (as an empty string `""`).
 
+
 ## [1.5.0] - 2023-01-24
 
 ### Added
