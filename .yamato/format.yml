@@ -16,3 +16,4 @@ check_formatting:
       - targets:
           only:
             - "develop"
+            - "gh-readonly-queue/{base_branch}"

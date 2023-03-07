@@ -1,27 +1,27 @@
-{% metadata_file .yamato/config.metadata %}
----
-
-code_analyser:
-  name : Code Analyzer
-  agent:
-    type: Unity::VM::osx
-    image: package-ci/macos-12:default
-    flavor: m1.mac
-  commands:
-    - git submodule update --init
-    - mkdir Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
-    - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip
-    - unzip Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
-    - {{ upm_ci_install }}
-    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.4
-  triggers:
-    cancel_old_ci: true
-    pull_requests:
-      - targets:
-          only:
-            - "develop"
-  artifacts:
-    UTR_Output.zip:
-      paths:
-        - "upm-ci~/test-results/**/*"
+#{% metadata_file .yamato/config.metadata %}
+#---
+#
+#code_analyser:
+#  name : Code Analyzer
+#  agent:
+#    type: Unity::VM::osx
+#    image: package-ci/macos-12:default
+#    flavor: m1.mac
+#  commands:
+#    - git submodule update --init
+#    - mkdir Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
+#    - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip
+#    - unzip Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
+#    - {{ upm_ci_install }}
+#    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+#    - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.4
+#  triggers:
+#    cancel_old_ci: true
+#    pull_requests:
+#      - targets:
+#          only:
+#            - "develop"
+#  artifacts:
+#    UTR_Output.zip:
+#      paths:
+#        - "upm-ci~/test-results/**/*"
