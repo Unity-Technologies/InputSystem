@@ -14,11 +14,13 @@ test_sample_projects_{{ editor.version }}:
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
   triggers:
     cancel_old_ci: true
+    branches:
+      only:
+        - "/gh-readonly-queue/develop/.*/"
     pull_requests:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/develop/*"
   artifacts:
     UTR_Output.zip:
       paths:

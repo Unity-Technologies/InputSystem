@@ -224,11 +224,13 @@ all_tests:
     - .yamato/upm-ci.yml#publish_dryrun
   triggers:
     cancel_old_ci: true
+    branches:
+      only:
+        - "/gh-readonly-queue/develop/.*/"
     pull_requests:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/develop/*"
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:

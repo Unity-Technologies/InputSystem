@@ -32,8 +32,11 @@ Windows-Dotnet-SonarScanner:
       paths:
         - "**/*.log"
   triggers:
+    cancel_old_ci: true
+    branches:
+      only:
+        - "/gh-readonly-queue/develop/.*/"
     pull_requests:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/develop/*"

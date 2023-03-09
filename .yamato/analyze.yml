@@ -24,7 +24,6 @@ code_analyser:
       - targets:
           only:
             - "develop"
-
   artifacts:
     UTR_Output.zip:
       paths:
