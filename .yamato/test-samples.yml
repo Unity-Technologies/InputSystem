@@ -18,7 +18,7 @@ test_sample_projects_{{ editor.version }}:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/develop"
+            - "gh-readonly-queue/develop/*"
   artifacts:
     UTR_Output.zip:
       paths:

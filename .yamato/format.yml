@@ -16,4 +16,4 @@ check_formatting:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/develop"
+            - "gh-readonly-queue/develop/*"

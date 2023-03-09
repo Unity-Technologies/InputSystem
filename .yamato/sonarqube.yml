@@ -36,4 +36,4 @@ Windows-Dotnet-SonarScanner:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/develop"
+            - "gh-readonly-queue/develop/*"
