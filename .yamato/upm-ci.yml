@@ -228,7 +228,7 @@ all_tests:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/{base_branch}"
+            - "gh-readonly-queue/develop"
 
 {% for run in (1..2) %}
 publish{% cycle "", "_dryrun" %}:

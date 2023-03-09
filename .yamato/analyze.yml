@@ -21,7 +21,7 @@ code_analyser:
       - targets:
           only:
             - "develop"
-            - "gh-readonly-queue/{base_branch}"
+            - "gh-readonly-queue/develop"
   artifacts:
     UTR_Output.zip:
       paths:
