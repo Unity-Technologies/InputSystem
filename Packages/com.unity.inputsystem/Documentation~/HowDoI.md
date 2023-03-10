@@ -4,12 +4,11 @@ A collection of frequently asked questions, and where to find their answers in t
 
 How do I...?
 
-
-- [check if a key or button was pressed this frame?](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame)
+- [check if a specific key or button was pressed this frame?](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame)
   
-- [find all connected gamepads?](../api/UnityEngine.InputSystem.Gamepad.htmld#UnityEngine_InputSystem_Gamepad_all)
+- [find all connected gamepads?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_all)
 
-- [find the gamepad that the player is currently using?](UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)
+- [find the gamepad that the player is currently using?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)
 
 - [know when a new device was plugged in?](Devices.md#monitoring-devices)
 
@@ -40,5 +39,5 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](W
 
 - [see events as they're processed?](Debugging.md#other-tips)
 
-- [see what Devices I have and what state they're in?](Debugging.md)
+- [see what Devices I have and what state they're in?](Debugging.html#debugging-devices)
 
