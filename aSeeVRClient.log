@@ -1,0 +1,4 @@
+[2023-02-22 11:47:40.349]: An error occurred while calling the ::connect function. remote address: 127.0.0.1:5347 error: 10061
+[2023-02-22 11:47:40.349]: connect server error: -6
+[2023-02-22 11:47:40.349]: 2 socket err: 10038 -1 18446744073709551615
+

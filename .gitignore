@@ -38,3 +38,6 @@ Packages/com.unity.package-manager-doctools/
 .Editor
 .bin
 .download
+
+!**/SourceGenerators/**/*.sln
+!**/SourceGenerators/**/*.csproj

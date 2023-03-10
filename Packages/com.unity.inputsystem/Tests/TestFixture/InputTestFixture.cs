@@ -731,6 +731,10 @@ namespace UnityEngine.InputSystem
         /// Get or set the current time used by the input system.
         /// </summary>
         /// <value>Current time used by the input system.</value>
+        /// <remarks>
+        /// Don't expect this to start at zero! For time-dependent tests, use times relative to
+        /// currentTime, instead of absolute times.
+        /// </remarks>
         public double currentTime
         {
             get => runtime.currentTime - runtime.currentTimeOffsetToRealtimeSinceStartup;

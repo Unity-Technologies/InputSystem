@@ -1644,6 +1644,7 @@ internal partial class CoreTests
         map.Enable();
 
         action.ApplyParameterOverride("scale:factor", 0.25f);
+        action.ApplyParameterOverride("hold:duration", 1.5f);
 
         // Add a completely new binding. This will throw lead to a full re-resolve.
         // NOTE: We don't add a processor to this one.

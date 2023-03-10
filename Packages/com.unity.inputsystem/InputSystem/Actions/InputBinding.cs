@@ -751,7 +751,7 @@ namespace UnityEngine.InputSystem
         internal bool TriggersAction(InputAction action)
         {
             // Match both name and ID on binding.
-            return string.Compare(action.name, this.action, StringComparison.InvariantCultureIgnoreCase) == 0
+            return string.Compare(action.name, this.action, StringComparison.OrdinalIgnoreCase) == 0
                 || this.action == action.m_Id;
         }
 
