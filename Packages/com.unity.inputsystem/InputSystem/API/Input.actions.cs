@@ -1,13 +1,22 @@
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using UnityEditor;
+using UnityEngine.InputSystem.LowLevel;
+#if UNITY_EDITOR
+using System.Reflection;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.HighLevel.Editor;
+#endif
 
 namespace UnityEngine.InputSystem.HighLevel
 {
     public static partial class Input
     {
-	    public static IInputActionCollection2 globalActions => s_GlobalActions;
+	    internal const string kGlobalActionsAssetName = "GlobalInputActions";
+	    internal const string kGlobalActionsAssetConfigKey = "com.unity.inputsystem.globalactionsasset";
+
+        public static IInputActionCollection2 globalActions => s_GlobalActions;
 
         /// <summary>
         /// True if the specified action is currently pressed.
@@ -18,7 +27,7 @@ namespace UnityEngine.InputSystem.HighLevel
         public static bool IsControlPressed(string actionName, string actionMapName = "")
         {
             Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
-	        
+
             var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
             return action != null && action.IsPressed();
         }
@@ -31,11 +40,11 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsControlDown(string actionName, string actionMapName = "")
         {
-			Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+            Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
 
-			var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
-			return action != null && action.WasPressedThisFrame();
-		}
+            var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
+            return action != null && action.WasPressedThisFrame();
+        }
 
         /// <summary>
         /// True in the frame that the action ended.
@@ -45,60 +54,75 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsControlUp(string actionName, string actionMapName = "")
         {
-			Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+            Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
 
-			var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
-			return action != null && action.WasReleasedThisFrame();
-		}
+            var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName) ? actionName : $"{actionMapName}/{actionName}");
+            return action != null && action.WasReleasedThisFrame();
+        }
 
         public static bool IsControlPressed<TActionType>(Input<TActionType> input) where TActionType : struct
         {
-	        throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public static bool IsControlDown<TActionType>(Input<TActionType> input) where TActionType : struct
         {
-	        throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public static bool IsControlUp<TActionType>(Input<TActionType> input) where TActionType : struct
         {
-	        throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        internal static void InitializeGlobalActions(string defaultAssetPath, string assetPath)
+        internal static void InitializeGlobalActions(string defaultAssetPath = null, string assetPath = null)
         {
 #if UNITY_EDITOR
-	        if (!EditorApplication.isPlayingOrWillChangePlaymode)
-		        return;
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
 
-	        s_GlobalActions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
+            s_GlobalActions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
+
 #else
-			// at build time, a pre-compiled class will be created for the global asset. Be careful that the name doesn't
-			// conflict with any user types!
-			// TODO
-            throw new NotImplementedException();
+			// find the source generated global actions runtime file in the users assembly and use it to load the
+			// runtime actions
+			var runtimeAssetLoaderType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetExportedTypes())
+	            .FirstOrDefault(t => t.IsAssignableFrom(typeof(IGlobalActionsRuntimeAsset)));
+            if (runtimeAssetLoaderType == null)
+            {
+                Debug.LogError($"Couldn't load global actions runtime asset.");
+            }
+            else
+            {
+	            var runtimeAssetLoader = (IGlobalActionsRuntimeAsset)Activator.CreateInstance(runtimeAssetLoaderType);
+	            s_GlobalActions = runtimeAssetLoader.Load();
+            }
 #endif
-	        if (s_GlobalActions == null)
-	        {
-		        Debug.LogError($"Couldn't initialize global input actions");
-		        return;
-	        }
+            if (s_GlobalActions == null)
+            {
+                Debug.LogError($"Couldn't initialize global input actions");
+                return;
+            }
 
             // TODO: Once the source generator is running, only the actions that have actually been used should be enabled
-	        s_GlobalActions.Enable();
+            s_GlobalActions.Enable();
         }
 
         internal static void ShutdownGlobalActions()
         {
-	        if (s_GlobalActions == null)
-		        return;
+            if (s_GlobalActions == null)
+                return;
 
-	        s_GlobalActions.Disable();
-	        s_GlobalActions = null;
+            s_GlobalActions.Disable();
+            s_GlobalActions = null;
         }
 
-		private static InputActionAsset s_GlobalActions;
+        private static InputActionAsset s_GlobalActions;
+    }
+
+    public interface IGlobalActionsRuntimeAsset
+    {
+	    InputActionAsset Load();
     }
 
     /// <summary>
@@ -128,10 +152,10 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public int activeBindingIndex
         {
-	        get
-	        {
+            get
+            {
                 throw new NotImplementedException();
-	        }
+            }
         }
 
         /// <summary>

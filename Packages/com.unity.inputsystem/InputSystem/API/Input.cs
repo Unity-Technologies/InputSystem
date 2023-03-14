@@ -7,6 +7,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.PlayerLoop;
 
+#if UNITY_2020_2_OR_NEWER
 // TODO rename HighLevel to something that makes sense
 namespace UnityEngine.InputSystem.HighLevel
 {
@@ -954,7 +955,7 @@ namespace UnityEngine.InputSystem.HighLevel
                         var gamepad = s_Gamepads[i];
                         if (gamepad == null) continue;
 
-                        if (GetGamepadButtonControl(gamepad, input).ReadValue() >= 
+                        if (GetGamepadButtonControl(gamepad, input).ReadValue() >=
                             GetGamepadTriggerPressPoint((GamepadSlot)i))
                             return true;
                     }
@@ -1298,16 +1299,16 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     foreach (var gamepad in s_Gamepads)
                     {
-	                    if (gamepad == null) continue;
+                        if (gamepad == null) continue;
 
-	                    maxValue = Mathf.Max(maxValue,
+                        maxValue = Mathf.Max(maxValue,
                             Mathf.Clamp01(GetGamepadButtonControl(gamepad, input).ReadValue()));
                     }
                     break;
                 case InputDeviceType.Joystick:
                     foreach (var joystick in s_Joysticks)
                     {
-	                    if (joystick == null) continue;
+                        if (joystick == null) continue;
 
                         var control = GetJoystickButtonControl(joystick, input);
                         if (control == null) continue;
@@ -1461,15 +1462,15 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsGamepadConnected(GamepadSlot slot)
         {
-	        if (slot != GamepadSlot.All) 
-		        return s_Gamepads[(int)slot] != null;
+            if (slot != GamepadSlot.All)
+                return s_Gamepads[(int)slot] != null;
 
-	        foreach (var g in s_Gamepads)
-	        {
-		        if (g == null) return false;
-	        }
+            foreach (var g in s_Gamepads)
+            {
+                if (g == null) return false;
+            }
 
-	        return true;
+            return true;
         }
 
         /// <summary>
@@ -1482,16 +1483,16 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static bool DidGamepadConnectThisFrame(GamepadSlot slot)
         {
-	        if (slot != GamepadSlot.All) 
-		        return s_GamepadsConnectedFrames[(int)slot] == Time.frameCount;
+            if (slot != GamepadSlot.All)
+                return s_GamepadsConnectedFrames[(int)slot] == Time.frameCount;
 
-	        foreach (var frame in s_GamepadsConnectedFrames)
-	        {
-		        if (frame != Time.frameCount)
-			        return false;
-	        }
+            foreach (var frame in s_GamepadsConnectedFrames)
+            {
+                if (frame != Time.frameCount)
+                    return false;
+            }
 
-	        return true;
+            return true;
         }
 
         /// <summary>
@@ -1505,16 +1506,16 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </remarks>
         public static bool DidGamepadDisconnectThisFrame(GamepadSlot slot)
         {
-	        if (slot != GamepadSlot.All) 
-		        return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
+            if (slot != GamepadSlot.All)
+                return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
 
-	        foreach (var frame in s_GamepadsDisconnectedFrames)
-	        {
-		        if (frame != Time.frameCount)
-			        return false;
-	        }
+            foreach (var frame in s_GamepadsDisconnectedFrames)
+            {
+                if (frame != Time.frameCount)
+                    return false;
+            }
 
-	        return true;
+            return true;
         }
 
         private static float GetGamepadTriggerPressPoint(GamepadSlot gamepadSlot)
@@ -1632,7 +1633,7 @@ namespace UnityEngine.InputSystem.HighLevel
             }
         }
 
-#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+#if UNITY_EDITOR
         internal struct InputSystemPlayerLoopHighLevelTimeUpdate{}
         internal struct InputSystemPlayerLoopHighLevelEndFrame{}
 #endif
@@ -1640,13 +1641,11 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <summary>
         /// Initialize the API
         /// </summary>
-        /// <param name="defaultGlobalActionsPath">The file path to read default global actions from.</param>
-        /// <param name="globalActionsAssetPath">The path to the asset in the asset database containing global actions.</param>
         /// <remarks>
         /// If this is the first time global actions have been initialized, a default set of actions is read from the inputactions
         /// file located at 'defaultGlobalActionsPath' and saved into the asset located at 'globalActionsAssetPath' as sub assets.
         /// </remarks>
-        internal static void Initialize(string defaultGlobalActionsPath, string globalActionsAssetPath)
+        internal static void Initialize()
         {
             for (var i = 0; i < maxGamepadSlots; i++)
             {
@@ -1676,7 +1675,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 AddJoystickToFirstFreeSlot(joystick);
             }
 
-#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+#if UNITY_EDITOR
             // To support DidGamepadConnectThisFrame and DidGamepadDisconnectThisFrame, we make use of Time.frameCount
             // to record what frame a device was connected or disconnected on. A problem with this is that in the editor,
             // device connected events can come from an editor update that happens before Time.frameCount has been
@@ -1705,8 +1704,6 @@ namespace UnityEngine.InputSystem.HighLevel
             s_ScrollAction.AddBinding("<Mouse>/scroll");
             s_ScrollAction.performed += OnMouseScrolled;
             s_ScrollAction.Enable();
-
-			InitializeGlobalActions(defaultGlobalActionsPath, globalActionsAssetPath);
         }
 
         internal static void Shutdown()
@@ -1728,7 +1725,7 @@ namespace UnityEngine.InputSystem.HighLevel
             InputSystem.onDeviceChange -= OnDeviceChange;
 
             ShutdownGlobalActions();
-		}
+        }
 
         private static void OnPointerMoved(InputAction.CallbackContext context)
         {
@@ -1763,7 +1760,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 if (s_Gamepads[i] != null) continue;
 
                 var frameCount = Time.frameCount;
-#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+#if UNITY_EDITOR
                 if (!s_TimeHasUpdatedThisFrame)
                     frameCount += 1;
 #endif
@@ -1782,7 +1779,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 s_Gamepads[i] = null;
 
                 var frameCount = Time.frameCount;
-#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+#if UNITY_EDITOR
                 if (!s_TimeHasUpdatedThisFrame)
                     frameCount += 1;
 #endif
@@ -1815,3 +1812,4 @@ namespace UnityEngine.InputSystem.HighLevel
         }
     }
 }
+#endif

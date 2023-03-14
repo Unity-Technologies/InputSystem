@@ -1,25 +1,31 @@
-﻿using System;
+#if UNITY_EDITOR
+using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEngine.InputSystem.HighLevel.Editor
 {
 	internal static class GlobalActionsAsset
 	{
 		internal const string kDefaultGlobalActionsPath = "Packages/com.unity.inputsystem/InputSystem/API/GlobalInputActions.inputactions";
 		internal const string kGlobalActionsAssetPath = "ProjectSettings/InputManager.asset";
-		internal const string kGlobalActionsAssetName = "GlobalInputActions";
 
-		internal static InputActionAsset GetOrCreateGlobalActionsAsset(string assetPath = kGlobalActionsAssetPath, 
+		[InitializeOnLoadMethod]
+		internal static void InstallGlobalActions()
+		{
+			GetOrCreateGlobalActionsAsset();
+		}
+
+		internal static InputActionAsset GetOrCreateGlobalActionsAsset(string assetPath = kGlobalActionsAssetPath,
 			string templateAssetPath = kDefaultGlobalActionsPath)
 		{
 			var objects = AssetDatabase.LoadAllAssetsAtPath(assetPath);
 			if (objects == null)
 				throw new InvalidOperationException("Couldn't load global input system actions because the InputManager.asset file is missing or corrupt.");
 
-			var globalInputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kGlobalActionsAssetName) as InputActionAsset;
+			var globalInputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == Input.kGlobalActionsAssetName) as InputActionAsset;
 			if (globalInputActionsAsset != null)
 				return globalInputActionsAsset;
 
@@ -27,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
 
 			var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 			asset.LoadFromJson(json);
-			asset.name = kGlobalActionsAssetName;
+			asset.name = Input.kGlobalActionsAssetName;
 
 			AssetDatabase.AddObjectToAsset(asset, assetPath);
 
@@ -69,7 +75,16 @@ namespace UnityEngine.InputSystem.Editor
 			}
 
 			AssetDatabase.SaveAssets();
+
+			// output the temp file for source generators to pick up
+			var libraryPath = Path.Combine(Application.dataPath, "..", "Library", "com.unity.inputsystem");
+			if (Directory.Exists(libraryPath) == false)
+				Directory.CreateDirectory(libraryPath);
+
+			File.WriteAllText(Path.Combine(libraryPath, "GlobalActionsAsset.json"), asset.ToJson());
+
 			return asset;
 		}
 	}
 }
+#endif

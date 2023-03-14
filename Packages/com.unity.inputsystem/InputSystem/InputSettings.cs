@@ -661,11 +661,30 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// TODO:
+        /// Disable the high level API, including global actions.
         /// </summary>
-        public InputActionAsset globalInputActionsAsset { get; set; }
+        /// <remarks>
+        /// The high-level API (everything under the <see cref="UnityEngine.InputSystem.HighLevel.Input"/>
+        /// class) which includes the global actions functionality does take a very small amount of
+        /// processing time, so if it is not being used, turning it off can win back a small amount of
+        /// performance for free.
+        /// 
+        /// Note that setting this at runtime after the high-level API has already been initialized doesn't
+        /// cause the high-level API to initialize or shutdown. It must be set in the editor on a custom
+        /// <see cref="InputSettings"/> asset.
+        /// </remarks>
+        public bool disableHighLevelAPI
+        {
+	        get => m_DisableHighLevelApi;
+	        set
+	        {
+		        if (m_DisableHighLevelApi == value)
+			        return;
 
-        public bool disableGlobalInputActions { get; set; }
+		        m_DisableHighLevelApi = value;
+                OnChange();
+	        }
+        }
 
         /// <summary>
         /// Improves shortcut key support by making composite controls consume control input
@@ -760,9 +779,11 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
+        [SerializeField] private bool m_DisableHighLevelApi = false;
+        [SerializeField] private InputActionAsset m_GlobalInputActionsAsset;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
-
+        
         internal bool IsFeatureEnabled(string featureName)
         {
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
