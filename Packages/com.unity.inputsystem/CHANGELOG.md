@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.5.1] - 2023-03-15
 
 ### Fixed
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
