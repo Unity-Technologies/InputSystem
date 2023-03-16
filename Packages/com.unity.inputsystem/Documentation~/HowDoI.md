@@ -14,6 +14,8 @@ How do I...?
 
 - [know when a new device was plugged in?](Devices.md#monitoring-devices)
 
+- [create my own custom devices?](HID.md#creating-a-custom-device-layout)
+
 - create a simple "Fire" type action?</br>
 Use the same techniques shown for the "Jump" action in the [Workflows section](Workflows.md)
 
