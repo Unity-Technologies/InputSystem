@@ -6,6 +6,8 @@ How do I...?
 
 - [check if a specific key or button was pressed this frame?](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame)
   
+- [check if any key or button was pressed](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress)
+
 - [find all connected gamepads?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_all)
 
 - [find the gamepad that the player is currently using?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)
