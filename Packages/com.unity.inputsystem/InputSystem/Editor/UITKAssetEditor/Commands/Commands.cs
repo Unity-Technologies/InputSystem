@@ -124,6 +124,33 @@ namespace UnityEngine.InputSystem.Editor
                 return state;
             };
         }
+
+        public static Command SaveAsset()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                InputActionsEditorWindow.SaveAsset(state.serializedObject);
+                return state;
+            };
+        }
+
+        public static Command ToggleAutoSave(bool newValue)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                if (newValue != InputEditorUserSettings.autoSaveInputActionAssets)
+                {
+                    // If it changed from disabled to enabled, perform an initial save.
+                    if (newValue)
+                        InputActionsEditorWindow.SaveAsset(state.serializedObject);
+
+                    InputEditorUserSettings.autoSaveInputActionAssets = newValue;
+                }
+
+                return state;
+            };
+        }
+
     }
 }
 

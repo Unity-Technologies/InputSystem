@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -10,26 +11,42 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorView : ViewBase<InputActionsEditorView.ViewState>
     {
+        private const string saveButtonId = "save-asset-toolbar-button";
+        private const string autoSaveToggleId = "auto-save-toolbar-toggle";
+
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
             m_Root = root;
+            BuildUI();
+        }
+
+        public void BuildUI()
+        {
             var mainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 InputActionsEditorConstants.PackagePath +
                 InputActionsEditorConstants.ResourcesPath +
                 InputActionsEditorConstants.MainEditorViewNameUxml);
 
-            mainEditorAsset.CloneTree(root);
-            CreateChildView(new ActionMapsView(root, stateContainer));
-            CreateChildView(new ActionsListView(root, stateContainer));
-            CreateChildView(new BindingsListView(root, stateContainer));
-            CreateChildView(new PropertiesView(root, stateContainer));
+            mainEditorAsset.CloneTree(m_Root);
+            CreateChildView(new ActionMapsView(m_Root, stateContainer));
+            CreateChildView(new ActionsListView(m_Root, stateContainer));
+            CreateChildView(new BindingsListView(m_Root, stateContainer));
+            CreateChildView(new PropertiesView(m_Root, stateContainer));
 
-            var menuButton = root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
-            menuButton.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(root));
-            menuButton.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(root, true), DropdownMenuAction.Status.Disabled);
-            menuButton.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(root), DropdownMenuAction.Status.Disabled);
+            var menuButton = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
+            menuButton.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));
+            menuButton.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(m_Root, true), DropdownMenuAction.Status.Disabled);
+            menuButton.menu.AppendAction("Duplicate Control Scheme...", _ => DuplicateControlScheme(m_Root), DropdownMenuAction.Status.Disabled);
             menuButton.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme, DropdownMenuAction.Status.Disabled);
+
+            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
+            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            saveButton.clicked += OnSaveButton;
+
+            var autoSaveToggle = m_Root.Q<ToolbarToggle>(name: autoSaveToggleId);
+            autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
+            autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
@@ -45,11 +62,20 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
+        private void OnSaveButton()
+        {
+            Dispatch(Commands.SaveAsset());
+        }
+
+        private void OnAutoSaveToggle(ChangeEvent<bool> evt)
+        {
+            Dispatch(Commands.ToggleAutoSave(evt.newValue));
+        }
+
         public override void RedrawUI(ViewState viewState)
         {
             var toolbarMenu = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
             toolbarMenu.menu.MenuItems().Clear();
-
 
             if (viewState.controlSchemes.Any())
             {
@@ -65,7 +91,6 @@ namespace UnityEngine.InputSystem.Editor
                 toolbarMenu.menu.AppendSeparator();
             }
 
-
             toolbarMenu.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));
             toolbarMenu.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(m_Root, true),
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
@@ -73,6 +98,9 @@ namespace UnityEngine.InputSystem.Editor
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
             toolbarMenu.menu.AppendAction("Delete Control Scheme...", DeleteControlScheme,
                 viewState.selectedControlSchemeIndex != -1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+
+            var saveButton = m_Root.Q<ToolbarButton>(name: saveButtonId);
+            saveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
         }
 
         private void AddOrUpdateControlScheme(VisualElement parent, bool updateExisting = false)

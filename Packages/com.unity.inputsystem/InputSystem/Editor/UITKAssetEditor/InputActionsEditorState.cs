@@ -7,19 +7,26 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal readonly struct InputActionsEditorState
+    [System.Serializable]
+    internal struct InputActionsEditorState
     {
-        public int selectedActionMapIndex { get; }
-        public int selectedActionIndex { get; }
-        public int selectedBindingIndex { get; }
-        public SelectionType selectionType { get; }
+        public int selectedActionMapIndex { get {return m_selectedActionMapIndex; } }
+        public int selectedActionIndex { get {return m_selectedActionIndex; } }
+        public int selectedBindingIndex { get {return m_selectedBindingIndex; } }
+        public SelectionType selectionType { get {return m_selectionType; } }
         public SerializedObject serializedObject { get; }
 
         // Control schemes
-        public int selectedControlSchemeIndex { get; }
-        public int selectedDeviceRequirementIndex { get; }
+        public int selectedControlSchemeIndex { get {return m_selectedControlSchemeIndex; } }
+        public int selectedDeviceRequirementIndex { get {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme;
 
+        [SerializeField] int m_selectedActionMapIndex;
+        [SerializeField] int m_selectedActionIndex;
+        [SerializeField] int m_selectedBindingIndex;
+        [SerializeField] SelectionType m_selectionType;
+        [SerializeField] int m_selectedControlSchemeIndex;
+        [SerializeField] int m_selectedDeviceRequirementIndex;
 
         public InputActionsEditorState(
             SerializedObject inputActionAsset,
@@ -34,17 +41,35 @@ namespace UnityEngine.InputSystem.Editor
         {
             serializedObject = inputActionAsset;
 
-            this.selectedActionMapIndex = selectedActionMapIndex;
-            this.selectedActionIndex = selectedActionIndex;
-            this.selectedBindingIndex = selectedBindingIndex;
-            this.selectionType = selectionType;
+            this.m_selectedActionMapIndex = selectedActionMapIndex;
+            this.m_selectedActionIndex = selectedActionIndex;
+            this.m_selectedBindingIndex = selectedBindingIndex;
+            this.m_selectionType = selectionType;
             m_ControlScheme = selectedControlScheme;
-            this.selectedControlSchemeIndex = selectedControlSchemeIndex;
-            this.selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
+            this.m_selectedControlSchemeIndex = selectedControlSchemeIndex;
+            this.m_selectedDeviceRequirementIndex = selectedDeviceRequirementIndex;
 
             m_ExpandedCompositeBindings = expandedBindingIndices == null ?
                 new Dictionary<(string, string), HashSet<int>>() :
                 new Dictionary<(string, string), HashSet<int>>(expandedBindingIndices);
+        }
+
+        public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
+        {
+            serializedObject = asset;
+
+            m_selectedActionMapIndex = other.m_selectedActionMapIndex;
+            m_selectedActionIndex = other.m_selectedActionIndex;
+            m_selectedBindingIndex = other.m_selectedBindingIndex;
+            m_selectionType = other.m_selectionType;
+            m_ControlScheme = other.m_ControlScheme;
+            m_selectedControlSchemeIndex = other.m_selectedControlSchemeIndex;
+            m_selectedDeviceRequirementIndex = other.m_selectedDeviceRequirementIndex;
+
+            // Editor may leave these as null after domain reloads, so recreate them
+            m_ExpandedCompositeBindings = (other.m_ExpandedCompositeBindings == null)
+                ? new Dictionary<(string, string), HashSet<int>>()
+                : other.m_ExpandedCompositeBindings;
         }
 
         public InputActionsEditorState With(
@@ -173,7 +198,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly Dictionary<(string, string), HashSet<int>> m_ExpandedCompositeBindings;
-        private readonly InputControlScheme m_ControlScheme;
+        [SerializeField] private readonly InputControlScheme m_ControlScheme;
     }
 
     internal enum SelectionType
