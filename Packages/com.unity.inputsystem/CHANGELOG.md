@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+## [1.5.1] - 2023-03-15
+
 ### Fixed
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
 - Fixed InputAction.bindings.count not getting correctly updated after removing bindings with Erase().
