@@ -198,6 +198,7 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
 
         root.Add(slider);
     }
+
 #endif
 
     private GUIContent m_ScaleFactorLabel = new GUIContent("Scale Factor");

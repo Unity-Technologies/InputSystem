@@ -233,6 +233,7 @@ namespace UnityEngine.InputSystem.Interactions
 
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
+
 #endif
 
         private CustomOrDefaultSetting m_PressPointSetting;
