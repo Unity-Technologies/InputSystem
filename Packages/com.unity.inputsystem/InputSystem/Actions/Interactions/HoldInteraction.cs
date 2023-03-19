@@ -134,6 +134,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
         }
+
 #endif
 
         private CustomOrDefaultSetting m_PressPointSetting;
