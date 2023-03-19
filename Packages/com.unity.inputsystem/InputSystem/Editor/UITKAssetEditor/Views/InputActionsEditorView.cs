@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
-using PopupWindow = UnityEngine.UIElements.PopupWindow;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -30,8 +29,7 @@ namespace UnityEngine.InputSystem.Editor
 
             mainEditorAsset.CloneTree(m_Root);
             CreateChildView(new ActionMapsView(m_Root, stateContainer));
-            CreateChildView(new ActionsListView(m_Root, stateContainer));
-            CreateChildView(new BindingsListView(m_Root, stateContainer));
+            CreateChildView(new ActionsTreeView(m_Root, stateContainer));
             CreateChildView(new PropertiesView(m_Root, stateContainer));
 
             var menuButton = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
