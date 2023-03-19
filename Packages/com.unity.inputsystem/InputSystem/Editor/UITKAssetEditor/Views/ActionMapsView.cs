@@ -64,6 +64,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
         }
 
+        private void ShowAddActionMapWindow()
         {
         }
 
