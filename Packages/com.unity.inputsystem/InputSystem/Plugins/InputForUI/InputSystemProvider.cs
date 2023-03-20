@@ -170,6 +170,48 @@ namespace InputSystem.Plugins.InputForUI
                 eventModifiers = _eventModifiers
             }));
         }
+        
+        private void OnLeftClickPerformed(InputAction.CallbackContext ctx)
+        {
+        }
+
+        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx)
+        {
+        }
+
+        private void OnRightClickPerformed(InputAction.CallbackContext ctx)
+        {
+        }
+
+        private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
+        {
+            // TODO
+            var position = Vector2.zero;
+            var delta = Vector2.zero;
+            var scroll = ctx.ReadValue<Vector2>();
+            var targetDisplay = 0;
+
+            DispatchFromCallback(Event.From(new PointerEvent
+            {
+                type = PointerEvent.Type.Scroll,
+                pointerIndex = 0,
+                position = position,
+                deltaPosition = delta,
+                scroll = scroll,
+                displayIndex = targetDisplay,
+                tilt = Vector2.zero,
+                twist = 0.0f,
+                pressure = 0.0f,
+                isInverted = false,
+                button = 0,
+                //buttonsState = _mouseState.ButtonsState,
+                clickCount = 0,
+                timestamp = _currentTime,
+                eventSource = EventSource.Mouse,
+                playerId = kDefaultPlayerId,
+                eventModifiers = _eventModifiers
+            }));
+        }
 
         private void RegisterActions(Configuration cfg)
         {
@@ -184,6 +226,20 @@ namespace InputSystem.Plugins.InputForUI
 
             if (cfg.CancelAction.action != null)
                 cfg.CancelAction.action.performed += OnCancelPerformed;
+
+            if (cfg.LeftClickAction.action != null)
+                cfg.LeftClickAction.action.performed += OnLeftClickPerformed;
+
+            if (cfg.MiddleClickAction.action != null)
+                cfg.MiddleClickAction.action.performed += OnMiddleClickPerformed;
+
+            if (cfg.RightClickAction.action != null)
+                cfg.RightClickAction.action.performed += OnRightClickPerformed;
+
+            if (cfg.ScrollWheelAction.action != null)
+                cfg.ScrollWheelAction.action.performed += OnScrollWheelPerformed;
+            
+            // When adding new one's don't forget to add them to UnregisterActions 
 
             cfg.InputActionAsset.Enable();
         }
@@ -201,7 +257,19 @@ namespace InputSystem.Plugins.InputForUI
 
             if (cfg.CancelAction.action != null)
                 cfg.CancelAction.action.performed -= OnCancelPerformed;
-            
+
+            if (cfg.LeftClickAction.action != null)
+                cfg.LeftClickAction.action.performed -= OnLeftClickPerformed;
+
+            if (cfg.MiddleClickAction.action != null)
+                cfg.MiddleClickAction.action.performed -= OnMiddleClickPerformed;
+
+            if (cfg.RightClickAction.action != null)
+                cfg.RightClickAction.action.performed -= OnRightClickPerformed;
+
+            if (cfg.ScrollWheelAction.action != null)
+                cfg.ScrollWheelAction.action.performed -= OnScrollWheelPerformed;
+
             cfg.InputActionAsset.Disable();
         }
 
