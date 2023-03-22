@@ -3279,6 +3279,20 @@ namespace UnityEngine.InputSystem
         /// <value>Current version of the input system.</value>
         public static Version version => new Version(kAssemblyVersion);
 
+        /// <summary>
+        /// Allows setting the player to run in the background.
+        /// </summary>
+        /// <remarks>
+        /// Some platforms don't care about <see cref="Application.runInBackground"/> and for those we need to
+        /// enable it manually through this propriety.
+        /// </remarks>
+        /// <param name="value">The boolean value to set to <see cref="NativeInputRuntime.runInBackground"/></param>
+        public static bool runInBackground
+        {
+            get => s_Manager.m_Runtime.runInBackground;
+            set => s_Manager.m_Runtime.runInBackground = value;
+        }
+
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
         /// Get various up-to-date metrics about the input system.
