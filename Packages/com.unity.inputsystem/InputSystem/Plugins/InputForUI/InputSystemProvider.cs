@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.IntegerTime;
 using UnityEngine;
@@ -32,6 +33,10 @@ namespace InputSystem.Plugins.InputForUI
         private InputActionReference _scrollWheelAction;
 
         private List<Event> _events = new List<Event>();
+        
+        private PointerState _mouseState;
+        private PointerState _penState;
+        private PointerState _touchState;
 
         static InputSystemProvider()
         {
@@ -99,6 +104,34 @@ namespace InputSystem.Plugins.InputForUI
 
         public uint playerCount => 1; // TODO
         
+        private EventSource GetEventSourceForCallback(InputAction.CallbackContext ctx)
+        {
+            var device = ctx.control.device;
+
+            if (device is Touchscreen)
+                return EventSource.Touch;
+            if (device is Pen)
+                return EventSource.Pen;
+            if (device is Mouse)
+                return EventSource.Mouse;
+            if (device is Keyboard)
+                return EventSource.Keyboard;
+            return EventSource.Unspecified;
+        }
+
+        private ref PointerState GetPointerStateForSource(EventSource eventSource)
+        {
+            switch (eventSource)
+            {
+                case EventSource.Touch:
+                    return ref _touchState;
+                case EventSource.Pen:
+                    return ref _penState;
+                default:
+                    return ref _mouseState;
+            }
+        }
+        
         private void DispatchFromCallback(in Event ev)
         {
             _events.Add(ev);
@@ -106,29 +139,31 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnPointerPerformed(InputAction.CallbackContext ctx)
         {
-            // Debug.Log($"Pointer performed {ctx.control.name}");
+            var eventSource = GetEventSourceForCallback(ctx);
+            ref var pointerState = ref GetPointerStateForSource(eventSource);
 
             var position = ctx.ReadValue<Vector2>();
-            var delta = Vector2.zero;
-            var targetDisplay = 0;
+            var targetDisplay = 0; // TODO
+            var delta = pointerState.LastPositionValid ? position - pointerState.LastPosition : Vector2.zero;
+            pointerState.OnMove(_currentTime, position, targetDisplay);
 
             DispatchFromCallback(Event.From(new PointerEvent
             {
                 type = PointerEvent.Type.PointerMoved,
-                pointerIndex = 0,
+                pointerIndex = 0, // TODO
                 position = position,
                 deltaPosition = delta,
                 scroll = Vector2.zero,
                 displayIndex = targetDisplay,
-                tilt = Vector2.zero,
-                twist = 0.0f,
-                pressure = 0.0f,
-                isInverted = false,
+                tilt = Vector2.zero, // TODO
+                twist = 0.0f, // TODO
+                pressure = 0.0f, // TODO
+                isInverted = false, // TODO
                 button = 0,
-                //buttonsState = _mouseState.ButtonsState,
+                buttonsState = pointerState.ButtonsState,
                 clickCount = 0,
                 timestamp = _currentTime,
-                eventSource = EventSource.Mouse,
+                eventSource = eventSource,
                 playerId = kDefaultPlayerId,
                 eventModifiers = _eventModifiers
             }));
@@ -180,9 +215,38 @@ namespace InputSystem.Plugins.InputForUI
                 eventModifiers = _eventModifiers
             }));
         }
-        
-        private void OnLeftClickPerformed(InputAction.CallbackContext ctx)
+
+        private void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
+            ref var state = ref GetPointerStateForSource(eventSource);
+
+            var wasPressed = state.ButtonsState.Get(button);
+            var isPressed = ctx.ReadValueAsButton();
+            state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
+            
+            // TODO ignore events and reset state based on order (touch->pen->mouse)
+            // TODO figure out pointer index for touch
+
+            DispatchFromCallback(Event.From(new PointerEvent
+            {
+                type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
+                pointerIndex = 0, // TODO
+                position = state.LastPosition,
+                deltaPosition = Vector2.zero,
+                scroll = Vector2.zero,
+                displayIndex = state.LastDisplayIndex,
+                tilt = Vector2.zero,
+                twist = 0.0f,
+                pressure = 0.0f,
+                isInverted = false,
+                button = button,
+                buttonsState = state.ButtonsState,
+                clickCount = state.ClickCount,
+                timestamp = _currentTime,
+                eventSource = eventSource,
+                playerId = kDefaultPlayerId,
+                eventModifiers = _eventModifiers
+            }));
             
 //             var index = GetPointerStateIndexFor(ref context);
 //             if (index == -1)
@@ -198,15 +262,14 @@ namespace InputSystem.Plugins.InputForUI
 //             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 // #endif
 //             
+
         }
 
-        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx)
-        {
-        }
+        private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
 
-        private void OnRightClickPerformed(InputAction.CallbackContext ctx)
-        {
-        }
+        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseMiddle);
+
+        private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseRight);
 
         private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
