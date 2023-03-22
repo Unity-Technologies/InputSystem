@@ -4,6 +4,7 @@ using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.InputForUI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using Event = UnityEngine.InputForUI.Event;
 using EventModifiers = UnityEngine.InputForUI.EventModifiers;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
@@ -142,23 +143,31 @@ namespace InputSystem.Plugins.InputForUI
             var eventSource = GetEventSourceForCallback(ctx);
             ref var pointerState = ref GetPointerStateForSource(eventSource);
 
+            // Overall I'm not happy how leaky this is, we're using input actions to have flexibility to bind to different controls,
+            // but instead we just kinda abuse it to bind to different devices ...
+            var asPointerDevice = ctx.control.device is Pointer ? (Pointer)ctx.control.device : null;
+            var asPenDevice = ctx.control.device is Pen ? (Pen)ctx.control.device : null;
+            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
+
             var position = ctx.ReadValue<Vector2>();
-            var targetDisplay = 0; // TODO
+            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : 0; 
             var delta = pointerState.LastPositionValid ? position - pointerState.LastPosition : Vector2.zero;
             pointerState.OnMove(_currentTime, position, targetDisplay);
+
+            // TODO ignore events and reset state based on order (touch->pen->mouse)
 
             DispatchFromCallback(Event.From(new PointerEvent
             {
                 type = PointerEvent.Type.PointerMoved,
-                pointerIndex = 0, // TODO
+                pointerIndex = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0,
                 position = position,
                 deltaPosition = delta,
                 scroll = Vector2.zero,
                 displayIndex = targetDisplay,
-                tilt = Vector2.zero, // TODO
-                twist = 0.0f, // TODO
-                pressure = 0.0f, // TODO
-                isInverted = false, // TODO
+                tilt = asPenDevice != null ? asPenDevice.tilt.ReadValue() : Vector2.zero,
+                twist = asPenDevice != null ? asPenDevice.twist.ReadValue() : 0.0f,
+                pressure = asPenDevice != null ? asPenDevice.pressure.ReadValue() : (asTouchControl != null ? asTouchControl.pressure.ReadValue() : 0.0f),
+                isInverted = asPenDevice != null ? asPenDevice.eraser.isPressed : false, // TODO any way to detect that pen is inverted but not touching?
                 button = 0,
                 buttonsState = pointerState.ButtonsState,
                 clickCount = 0,
@@ -247,22 +256,6 @@ namespace InputSystem.Plugins.InputForUI
                 playerId = kDefaultPlayerId,
                 eventModifiers = _eventModifiers
             }));
-            
-//             var index = GetPointerStateIndexFor(ref context);
-//             if (index == -1)
-//                 return;
-//
-//             ref var state = ref GetPointerStateForIndex(index);
-//             bool wasPressed = state.leftButton.isPressed;
-//             state.leftButton.isPressed = context.ReadValueAsButton();
-//             state.changedThisFrame = true;
-//             if (IgnoreNextClick(ref context, wasPressed))
-//                 state.leftButton.ignoreNextClick = true;
-// #if UNITY_2023_1_OR_NEWER
-//             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
-// #endif
-//             
-
         }
 
         private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
