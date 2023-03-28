@@ -63,6 +63,9 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void DrawGeneralProperties()
         {
+            var currentPath = m_PathProperty.stringValue;
+            InputSystem.OnDrawCustomWarningForBindingPath(currentPath);
+
             if (m_IsComposite)
             {
                 if (m_CompositeParameters == null)

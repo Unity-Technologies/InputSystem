@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Added `InputSystem.customBindingPathValidators` interface to allow showing warnings in the `InputAsset` Editor for specific InputBindings and draw custom UI in the properties panel.
+
 ## [1.5.1] - 2023-03-15
 
 ### Fixed

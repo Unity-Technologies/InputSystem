@@ -1313,8 +1313,14 @@ namespace UnityEngine.InputSystem.Editor
                 var textRect = GetTextRect(args.rowRect, item);
 
                 var style = args.selected ? Styles.selectedText : Styles.text;
-                style.Draw(textRect, text, false, false, args.selected,
-                    args.focused);
+
+                if (item.showWarningIcon)
+                {
+                    var content = new GUIContent(text, EditorGUIUtility.FindTexture("console.warnicon.sml"));
+                    style.Draw(textRect, content, false, false, args.selected, args.focused);
+                }
+                else
+                    style.Draw(textRect, text, false, false, args.selected, args.focused);
             }
 
             // Bottom line.
