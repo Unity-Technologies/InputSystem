@@ -425,26 +425,46 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
-            // TODO
+            var scrollDelta = ctx.ReadValue<Vector2>();
+            if (scrollDelta.sqrMagnitude < kSmallestReportedMovementSqrDist)
+                return;
+
+            var eventSource = GetEventSourceForCallback(ctx);
+            ref var state = ref GetPointerStateForSource(eventSource);
+
             var position = Vector2.zero;
-            var delta = Vector2.zero;
-            var scroll = ctx.ReadValue<Vector2>();
             var targetDisplay = 0;
+
+            if (state.LastPositionValid)
+            {
+                position = state.LastPosition;
+                targetDisplay = state.LastDisplayIndex;
+            }
+            else if (eventSource == EventSource.Mouse && Mouse.current != null)
+            {
+                position = Mouse.current.position.ReadValue();
+                targetDisplay = Mouse.current.displayIndex.ReadValue();
+            }
+            
+            // Make it look similar to IMGUI event scroll values.
+            // TODO check how it behaves on macOS
+            scrollDelta.x /= 40.0f;
+            scrollDelta.y /= -40.0f;
 
             DispatchFromCallback(Event.From(new PointerEvent
             {
                 type = PointerEvent.Type.Scroll,
                 pointerIndex = 0,
                 position = position,
-                deltaPosition = delta,
-                scroll = scroll,
+                deltaPosition = Vector2.zero,
+                scroll = scrollDelta,
                 displayIndex = targetDisplay,
                 tilt = Vector2.zero,
                 twist = 0.0f,
                 pressure = 0.0f,
                 isInverted = false,
                 button = 0,
-                //buttonsState = _mouseState.ButtonsState,
+                buttonsState = state.ButtonsState,
                 clickCount = 0,
                 timestamp = _currentTime,
                 eventSource = EventSource.Mouse,
