@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Added `InputSystem.customBindingPathValidators` interface to allow showing warnings in the `InputAsset` Editor for specific InputBindings and draw custom UI in the properties panel.
+
 ## [1.5.1] - 2023-03-15
 
 ### Fixed
@@ -18,9 +21,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where connecting a gamepad in the editor with certain settings will cause memory and performance to degrade ([case UUM-19480](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-19480)).
 - Fixed issue leading to a stack overflow crash during device initialization in `InsertControlBitRangeNode` (case ISXB-405).
 - Fixed the issue where saving and loading override bindings to JSON would set unassigned overrides (that were `null`) to assigned overrides (as an empty string `""`).
-
-### Added
-- Added `InputSystem.customBindingPathValidators` interface to allow showing warnings in the `InputAsset` Editor for specific InputBindings and draw custom UI in the properties panel.
 
 ## [1.5.0] - 2023-01-24
 
