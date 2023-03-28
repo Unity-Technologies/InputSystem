@@ -41,6 +41,9 @@ namespace InputSystem.Plugins.InputForUI
         private PointerState _penState;
         private bool _seenPenEvents;
 
+        private Dictionary<int, int> _touchFingerIdToFingerIndex = new();
+        private int _touchNextFingerIndex;
+        private int _aliveTouchesCount;
         private PointerState _touchState;
         private bool _seenTouchEvents;
 
@@ -69,6 +72,20 @@ namespace InputSystem.Plugins.InputForUI
         {
             _inputEventPartialProvider ??= new InputEventPartialProvider();
             _inputEventPartialProvider.Initialize();
+            
+            _events.Clear();
+            
+            _mouseState.Reset();
+            _seenMouseEvents = false;
+
+            _penState.Reset();
+            _seenPenEvents = false;
+            
+            _touchFingerIdToFingerIndex.Clear();
+            _touchNextFingerIndex = 0;
+            _aliveTouchesCount = 0;
+            _touchState.Reset();
+            _seenTouchEvents = false;
             
             // TODO should UITK somehow override this?
             _cfg = Configuration.GetDefaultConfiguration();
@@ -102,6 +119,16 @@ namespace InputSystem.Plugins.InputForUI
             }
 
             _events.Clear();
+
+            // it's very difficult to calculate is all touches are released to reset the counter
+            // so we proactively guarding for worst cases when either we get more cancellations then we expect,
+            // or something gets stuck and alive touches get increment beyond any reasonable values
+            if (_aliveTouchesCount <= 0 || _aliveTouchesCount >= 16) // safety guard
+            {
+                _touchNextFingerIndex = 0;
+                _aliveTouchesCount = 0;
+                _touchFingerIdToFingerIndex.Clear();
+            }
         }
 
         private static int SortEvents(Event a, Event b)
@@ -121,7 +148,27 @@ namespace InputSystem.Plugins.InputForUI
 
             switch (type)
             {
+                case Event.Type.PointerEvent:
+                {
+                    if (_touchState.LastPositionValid)
+                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(_currentTime, _touchState, EventSource.Touch)));
+                    if (_penState.LastPositionValid)
+                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(_currentTime, _penState, EventSource.Pen)));
+                    if (_mouseState.LastPositionValid)
+                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(_currentTime, _mouseState, EventSource.Mouse)));
+                    else
+                    {
+                        // TODO maybe it's reasonable to poll and dispatch mouse state here anyway?
+                    }
+
+                    return _touchState.LastPositionValid ||
+                           _penState.LastPositionValid ||
+                           _mouseState.LastPositionValid;
+                }
                 // TODO
+                case Event.Type.IMECompositionEvent:
+                    //EventProvider.Dispatch(Event.From(ToIMECompositionEvent(currentTime, _compositionString)));
+                    //return true;
                 default:
                     return false;
             }
@@ -138,6 +185,31 @@ namespace InputSystem.Plugins.InputForUI
                 screenHeight = Display.displays[targetDisplay].systemHeight;
             position.y = screenHeight - position.y;
             return position;
+        }
+        
+        private PointerEvent ToPointerStateEvent(DiscreteTime currentTime, in PointerState state, EventSource eventSource)
+        {
+            return new PointerEvent
+            {
+                type = PointerEvent.Type.State,
+                pointerIndex = 0,
+                position = state.LastPosition,
+                deltaPosition = Vector2.zero,
+                scroll = Vector2.zero,
+                displayIndex = state.LastDisplayIndex,
+                // TODO
+                // tilt = eventSource == EventSource.Pen ? _lastPenData.tilt : Vector2.zero,
+                // twist = eventSource == EventSource.Pen ? _lastPenData.twist : 0.0f,
+                // pressure = eventSource == EventSource.Pen ? _lastPenData.pressure : 0.0f,
+                // isInverted = eventSource == EventSource.Pen && ((_lastPenData.penStatus & PenStatus.Inverted) != 0),
+                button = 0,
+                buttonsState = state.ButtonsState,
+                clickCount = 0,
+                timestamp = currentTime,
+                eventSource = eventSource,
+                playerId = kDefaultPlayerId,
+                eventModifiers = _eventModifiers
+            };
         }
         
         private EventSource GetEventSourceForCallback(InputAction.CallbackContext ctx)
@@ -285,42 +357,71 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
-            // ref var state = ref GetPointerStateForSource(eventSource);
-            //
-            // var wasPressed = state.ButtonsState.Get(button);
-            // var isPressed = ctx.ReadValueAsButton();
-            // state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
-            //
-            // // TODO ignore events and reset state based on order (touch->pen->mouse)
-            // // TODO figure out pointer index for touch
-            //
-            // DispatchFromCallback(Event.From(new PointerEvent
-            // {
-            //     type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
-            //     pointerIndex = 0, // TODO
-            //     position = state.LastPosition,
-            //     deltaPosition = Vector2.zero,
-            //     scroll = Vector2.zero,
-            //     displayIndex = state.LastDisplayIndex,
-            //     tilt = Vector2.zero,
-            //     twist = 0.0f,
-            //     pressure = 0.0f,
-            //     isInverted = false,
-            //     button = button,
-            //     buttonsState = state.ButtonsState,
-            //     clickCount = state.ClickCount,
-            //     timestamp = _currentTime,
-            //     eventSource = eventSource,
-            //     playerId = kDefaultPlayerId,
-            //     eventModifiers = _eventModifiers
-            // }));
+            ref var state = ref GetPointerStateForSource(eventSource);
+
+            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
+            var touchId = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0;
+
+            var pointerIndex = 0;
+            if (asTouchControl != null && !_touchFingerIdToFingerIndex.TryGetValue(touchId, out pointerIndex))
+            {
+                pointerIndex = _touchNextFingerIndex++;
+                _aliveTouchesCount++;
+                _touchFingerIdToFingerIndex.Add(touchId, pointerIndex);
+            }
+
+            var wasPressed = state.ButtonsState.Get(button);
+            var isPressed = ctx.ReadValueAsButton();
+            state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
+
+            if (asTouchControl != null && wasPressed && !isPressed)
+                _aliveTouchesCount--;
+
+            DispatchFromCallback(Event.From(new PointerEvent
+            {
+                type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
+                pointerIndex = pointerIndex,
+                position = state.LastPosition,
+                deltaPosition = Vector2.zero,
+                scroll = Vector2.zero,
+                displayIndex = state.LastDisplayIndex,
+                tilt = Vector2.zero,
+                twist = 0.0f,
+                pressure = 0.0f,
+                isInverted = false,
+                button = button,
+                buttonsState = state.ButtonsState,
+                clickCount = state.ClickCount,
+                timestamp = _currentTime,
+                eventSource = eventSource,
+                playerId = kDefaultPlayerId,
+                eventModifiers = _eventModifiers
+            }));
+        }
+
+        private void OnClickCancelled(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
+        {
+            ref var state = ref GetPointerStateForSource(eventSource);
+
+            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
+            var touchId = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0;
+
+            var wasPressed = state.ButtonsState.Get(button);
+            var isPressed = ctx.ReadValueAsButton();
+            
+            if (asTouchControl != null && wasPressed && !isPressed && _touchFingerIdToFingerIndex.ContainsKey(touchId))
+                _aliveTouchesCount--;
         }
 
         private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
+        
+        private void OnLeftClickCancelled(InputAction.CallbackContext ctx) => OnClickCancelled(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
 
         private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseMiddle);
+        private void OnMiddleClickCancelled(InputAction.CallbackContext ctx) => OnClickCancelled(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
 
         private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseRight);
+        private void OnRightClickCancelled(InputAction.CallbackContext ctx) => OnClickCancelled(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
 
         private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
@@ -378,13 +479,22 @@ namespace InputSystem.Plugins.InputForUI
                 _cancelAction.action.performed += OnCancelPerformed;
 
             if (_leftClickAction.action != null)
+            {
                 _leftClickAction.action.performed += OnLeftClickPerformed;
+                _leftClickAction.action.canceled += OnLeftClickCancelled;
+            }
 
             if (_middleClickAction.action != null)
+            {
                 _middleClickAction.action.performed += OnMiddleClickPerformed;
+                _middleClickAction.action.canceled += OnMiddleClickCancelled;
+            }
 
             if (_rightClickAction.action != null)
+            {
                 _rightClickAction.action.performed += OnRightClickPerformed;
+                _rightClickAction.action.canceled += OnRightClickCancelled;
+            }
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed += OnScrollWheelPerformed;
@@ -409,13 +519,22 @@ namespace InputSystem.Plugins.InputForUI
                 _cancelAction.action.performed -= OnCancelPerformed;
 
             if (_leftClickAction.action != null)
+            {
                 _leftClickAction.action.performed -= OnLeftClickPerformed;
+                _leftClickAction.action.canceled -= OnLeftClickCancelled;
+            }
 
             if (_middleClickAction.action != null)
+            {
                 _middleClickAction.action.performed -= OnMiddleClickPerformed;
+                _middleClickAction.action.canceled -= OnMiddleClickCancelled;
+            }
 
             if (_rightClickAction.action != null)
+            {
                 _rightClickAction.action.performed -= OnRightClickPerformed;
+                _rightClickAction.action.canceled -= OnRightClickCancelled;
+            }
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed -= OnScrollWheelPerformed;
