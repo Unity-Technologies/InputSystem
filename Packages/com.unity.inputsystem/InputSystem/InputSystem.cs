@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -74,10 +75,12 @@ namespace UnityEngine.InputSystem
     /// be called on the main thread. However, select APIs like <see cref="QueueEvent"/> can be
     /// called from threads. Where this is the case, it is stated in the documentation.
     /// </remarks>
+
     [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
+
     public static partial class InputSystem
     {
         #region Layouts
@@ -3280,7 +3283,7 @@ namespace UnityEngine.InputSystem
         public static Version version => new Version(kAssemblyVersion);
 
         /// <summary>
-        /// Allows setting the player to run in the background.
+        /// Property for internal use that allows setting the player to run in the background.
         /// </summary>
         /// <remarks>
         /// Some platforms don't care about <see cref="Application.runInBackground"/> and for those we need to
