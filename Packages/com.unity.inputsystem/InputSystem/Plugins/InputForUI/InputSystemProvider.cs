@@ -34,10 +34,17 @@ namespace InputSystem.Plugins.InputForUI
         private InputActionReference _scrollWheelAction;
 
         private List<Event> _events = new List<Event>();
-        
+
         private PointerState _mouseState;
+        private bool _seenMouseEvents;
+
         private PointerState _penState;
+        private bool _seenPenEvents;
+
         private PointerState _touchState;
+        private bool _seenTouchEvents;
+
+        private const float kSmallestReportedMovementSqrDist = 0.01f;
 
         static InputSystemProvider()
         {
@@ -79,10 +86,27 @@ namespace InputSystem.Plugins.InputForUI
         public void Update()
         {
             _inputEventPartialProvider.Update();
+            
+            _events.Sort(SortEvents);
 
-            foreach (var ev in _events) // TODO sort them
-                EventProvider.Dispatch(ev);
+            foreach (var ev in _events)
+            {
+                // we need to ignore some pointer events based on priority (touch->pen->mouse)
+                // this is mostly used to filter out simulated input, e.g. when pen is active it also generates mouse input
+                if (_seenTouchEvents && ev.type == Event.Type.PointerEvent && ev.eventSource == EventSource.Pen)
+                    _penState.Reset();
+                else if ((_seenTouchEvents || _seenPenEvents) && ev.type == Event.Type.PointerEvent && (ev.eventSource == EventSource.Mouse || ev.eventSource == EventSource.Unspecified))
+                    _mouseState.Reset();
+                else
+                    EventProvider.Dispatch(ev);
+            }
+
             _events.Clear();
+        }
+
+        private static int SortEvents(Event a, Event b)
+        {
+            return Event.Compare(a, b);
         }
 
         public void OnFocusChanged(bool focus)
@@ -104,6 +128,17 @@ namespace InputSystem.Plugins.InputForUI
         }
 
         public uint playerCount => 1; // TODO
+        
+        // copied from UIElementsRuntimeUtility.cs
+        private static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
+        {
+            // Flip positions Y axis between input and UITK
+            var screenHeight = Screen.height;
+            if (targetDisplay > 0 && targetDisplay < Display.displays.Length)
+                screenHeight = Display.displays[targetDisplay].systemHeight;
+            position.y = screenHeight - position.y;
+            return position;
+        }
         
         private EventSource GetEventSourceForCallback(InputAction.CallbackContext ctx)
         {
@@ -142,40 +177,63 @@ namespace InputSystem.Plugins.InputForUI
         {
             var eventSource = GetEventSourceForCallback(ctx);
             ref var pointerState = ref GetPointerStateForSource(eventSource);
-
+            
             // Overall I'm not happy how leaky this is, we're using input actions to have flexibility to bind to different controls,
             // but instead we just kinda abuse it to bind to different devices ...
             var asPointerDevice = ctx.control.device is Pointer ? (Pointer)ctx.control.device : null;
             var asPenDevice = ctx.control.device is Pen ? (Pen)ctx.control.device : null;
+            var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
 
-            var position = ctx.ReadValue<Vector2>();
-            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : 0; 
+            if (asTouchControl != null)
+                _seenTouchEvents = true;
+            else if (asPenDevice != null)
+                _seenPenEvents = true;
+            else
+                _seenMouseEvents = true;
+
+            var positionISX = ctx.ReadValue<Vector2>();
+            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : 0);
+            var position = ScreenBottomLeftToPanelPosition(positionISX, targetDisplay);
             var delta = pointerState.LastPositionValid ? position - pointerState.LastPosition : Vector2.zero;
-            pointerState.OnMove(_currentTime, position, targetDisplay);
 
-            // TODO ignore events and reset state based on order (touch->pen->mouse)
+            var tilt = asPenDevice != null ? asPenDevice.tilt.ReadValue() : Vector2.zero;
+            var twist = asPenDevice != null ? asPenDevice.twist.ReadValue() : 0.0f;
+            var pressure = asPenDevice != null
+                ? asPenDevice.pressure.ReadValue()
+                : (asTouchControl != null ? asTouchControl.pressure.ReadValue() : 0.0f);
+            var isInverted = asPenDevice != null
+                ? asPenDevice.eraser.isPressed
+                : false; // TODO any way to detect that pen is inverted but not touching?
 
-            DispatchFromCallback(Event.From(new PointerEvent
+            if (delta.sqrMagnitude >= kSmallestReportedMovementSqrDist)
             {
-                type = PointerEvent.Type.PointerMoved,
-                pointerIndex = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0,
-                position = position,
-                deltaPosition = delta,
-                scroll = Vector2.zero,
-                displayIndex = targetDisplay,
-                tilt = asPenDevice != null ? asPenDevice.tilt.ReadValue() : Vector2.zero,
-                twist = asPenDevice != null ? asPenDevice.twist.ReadValue() : 0.0f,
-                pressure = asPenDevice != null ? asPenDevice.pressure.ReadValue() : (asTouchControl != null ? asTouchControl.pressure.ReadValue() : 0.0f),
-                isInverted = asPenDevice != null ? asPenDevice.eraser.isPressed : false, // TODO any way to detect that pen is inverted but not touching?
-                button = 0,
-                buttonsState = pointerState.ButtonsState,
-                clickCount = 0,
-                timestamp = _currentTime,
-                eventSource = eventSource,
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
-            }));
+                DispatchFromCallback(Event.From(new PointerEvent
+                {
+                    type = PointerEvent.Type.PointerMoved,
+                    pointerIndex = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0,
+                    position = position,
+                    deltaPosition = delta,
+                    scroll = Vector2.zero,
+                    displayIndex = targetDisplay,
+                    tilt = tilt,
+                    twist = twist,
+                    pressure = pressure,
+                    isInverted = isInverted,
+                    button = 0,
+                    buttonsState = pointerState.ButtonsState,
+                    clickCount = 0,
+                    timestamp = _currentTime,
+                    eventSource = eventSource,
+                    playerId = kDefaultPlayerId,
+                    eventModifiers = _eventModifiers
+                }));
+
+                // only record if we send an event
+                pointerState.OnMove(_currentTime, position, targetDisplay);
+            }
+            else if(!pointerState.LastPositionValid)
+                pointerState.OnMove(_currentTime, position, targetDisplay);
         }
 
         private void OnMovePerformed(InputAction.CallbackContext ctx)
@@ -227,35 +285,35 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
-            ref var state = ref GetPointerStateForSource(eventSource);
-
-            var wasPressed = state.ButtonsState.Get(button);
-            var isPressed = ctx.ReadValueAsButton();
-            state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
-            
-            // TODO ignore events and reset state based on order (touch->pen->mouse)
-            // TODO figure out pointer index for touch
-
-            DispatchFromCallback(Event.From(new PointerEvent
-            {
-                type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
-                pointerIndex = 0, // TODO
-                position = state.LastPosition,
-                deltaPosition = Vector2.zero,
-                scroll = Vector2.zero,
-                displayIndex = state.LastDisplayIndex,
-                tilt = Vector2.zero,
-                twist = 0.0f,
-                pressure = 0.0f,
-                isInverted = false,
-                button = button,
-                buttonsState = state.ButtonsState,
-                clickCount = state.ClickCount,
-                timestamp = _currentTime,
-                eventSource = eventSource,
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
-            }));
+            // ref var state = ref GetPointerStateForSource(eventSource);
+            //
+            // var wasPressed = state.ButtonsState.Get(button);
+            // var isPressed = ctx.ReadValueAsButton();
+            // state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
+            //
+            // // TODO ignore events and reset state based on order (touch->pen->mouse)
+            // // TODO figure out pointer index for touch
+            //
+            // DispatchFromCallback(Event.From(new PointerEvent
+            // {
+            //     type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
+            //     pointerIndex = 0, // TODO
+            //     position = state.LastPosition,
+            //     deltaPosition = Vector2.zero,
+            //     scroll = Vector2.zero,
+            //     displayIndex = state.LastDisplayIndex,
+            //     tilt = Vector2.zero,
+            //     twist = 0.0f,
+            //     pressure = 0.0f,
+            //     isInverted = false,
+            //     button = button,
+            //     buttonsState = state.ButtonsState,
+            //     clickCount = state.ClickCount,
+            //     timestamp = _currentTime,
+            //     eventSource = eventSource,
+            //     playerId = kDefaultPlayerId,
+            //     eventModifiers = _eventModifiers
+            // }));
         }
 
         private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
