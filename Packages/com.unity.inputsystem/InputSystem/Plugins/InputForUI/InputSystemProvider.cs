@@ -129,6 +129,10 @@ namespace InputSystem.Plugins.InputForUI
                 _aliveTouchesCount = 0;
                 _touchFingerIdToFingerIndex.Clear();
             }
+            
+            _seenTouchEvents = false;
+            _seenPenEvents = false;
+            _seenMouseEvents = false;
         }
 
         private static int SortEvents(Event a, Event b)
