@@ -63,7 +63,7 @@ When there are [`InputUser`](UserManagement.md) instances (if you use `PlayerInp
 
 ### Debugging layouts
 
-The [__Layouts__](Layouts.md) list in the Input Debugger window displays a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. It's useful when you want to [create a new Device mapping](HowDoI.md#create-my-own-custom-devices) and see how the Input System represents it.
+The [__Layouts__](Layouts.md) list in the Input Debugger window displays a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. It's useful when you want to [create a new Device mapping](HID.md#creating-a-custom-device-layout) and see how the Input System represents it.
 
 ![Layouts in Input Debugger](Images/LayoutsInDebugger.png)
 

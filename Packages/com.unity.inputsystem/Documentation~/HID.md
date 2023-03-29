@@ -21,7 +21,7 @@ When the Input System automatically creates a layout for an HID, it always repor
 
 The auto-generated layouts represent a "best effort" on the part of the Input System. The way Human Interface Devices describe themselves in accordance with the HID standard is too ambiguous in practice, so generated layouts might lead to Controls that don't work as expected. For example, while the layout builder can identify hat switches and D-pads, it can often only make guesses as to which direction represents which. The same goes for individual buttons, which generally aren't assigned any meaning in HID.
 
-The best way to resolve the situation of HIDs not working as expected is to add a custom layout, which bypasses auto-generation altogether. See [Overriding the HID fallback](#creating-a-custom-device-layout) for details.
+The best way to resolve the situation of HIDs not working as expected is to add a custom layout, which bypasses auto-generation altogether. See [Creating a custom device layout](#creating-a-custom-device-layout) for details.
 
 ## HID output
 

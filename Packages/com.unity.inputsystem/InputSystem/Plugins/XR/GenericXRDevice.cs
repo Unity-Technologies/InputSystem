@@ -79,6 +79,7 @@ namespace UnityEngine.InputSystem.XR
         /// 
         /// var action = new InputAction(binding: "/&lt;XRController&gt;{leftHand}/position");
         /// </code>
+        /// </example>
         /// 
         /// <example>
         /// <code>
