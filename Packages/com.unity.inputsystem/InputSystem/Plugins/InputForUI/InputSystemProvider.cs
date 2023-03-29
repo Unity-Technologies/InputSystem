@@ -390,19 +390,9 @@ namespace InputSystem.Plugins.InputForUI
             }));
         }
 
-        private void OnClickCancelled(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
-        {
-        }
-
         private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
-        
-        private void OnLeftClickCancelled(InputAction.CallbackContext ctx) => OnClickCancelled(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
-
         private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseMiddle);
-        private void OnMiddleClickCancelled(InputAction.CallbackContext ctx) => OnClickCancelled(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
-
         private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseRight);
-        private void OnRightClickCancelled(InputAction.CallbackContext ctx) => OnClickCancelled(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
 
         private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
@@ -480,22 +470,13 @@ namespace InputSystem.Plugins.InputForUI
                 _cancelAction.action.performed += OnCancelPerformed;
 
             if (_leftClickAction.action != null)
-            {
                 _leftClickAction.action.performed += OnLeftClickPerformed;
-                _leftClickAction.action.canceled += OnLeftClickCancelled;
-            }
 
             if (_middleClickAction.action != null)
-            {
                 _middleClickAction.action.performed += OnMiddleClickPerformed;
-                _middleClickAction.action.canceled += OnMiddleClickCancelled;
-            }
 
             if (_rightClickAction.action != null)
-            {
                 _rightClickAction.action.performed += OnRightClickPerformed;
-                _rightClickAction.action.canceled += OnRightClickCancelled;
-            }
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed += OnScrollWheelPerformed;
@@ -520,22 +501,13 @@ namespace InputSystem.Plugins.InputForUI
                 _cancelAction.action.performed -= OnCancelPerformed;
 
             if (_leftClickAction.action != null)
-            {
                 _leftClickAction.action.performed -= OnLeftClickPerformed;
-                _leftClickAction.action.canceled -= OnLeftClickCancelled;
-            }
 
             if (_middleClickAction.action != null)
-            {
                 _middleClickAction.action.performed -= OnMiddleClickPerformed;
-                _middleClickAction.action.canceled -= OnMiddleClickCancelled;
-            }
 
             if (_rightClickAction.action != null)
-            {
                 _rightClickAction.action.performed -= OnRightClickPerformed;
-                _rightClickAction.action.canceled -= OnRightClickCancelled;
-            }
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed -= OnScrollWheelPerformed;
