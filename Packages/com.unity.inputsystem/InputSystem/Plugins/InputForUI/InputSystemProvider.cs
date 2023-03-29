@@ -41,9 +41,6 @@ namespace InputSystem.Plugins.InputForUI
         private PointerState _penState;
         private bool _seenPenEvents;
 
-        private Dictionary<int, int> _touchFingerIdToFingerIndex = new();
-        private int _touchNextFingerIndex;
-        private int _aliveTouchesCount;
         private PointerState _touchState;
         private bool _seenTouchEvents;
 
@@ -81,9 +78,6 @@ namespace InputSystem.Plugins.InputForUI
             _penState.Reset();
             _seenPenEvents = false;
             
-            _touchFingerIdToFingerIndex.Clear();
-            _touchNextFingerIndex = 0;
-            _aliveTouchesCount = 0;
             _touchState.Reset();
             _seenTouchEvents = false;
             
@@ -119,16 +113,6 @@ namespace InputSystem.Plugins.InputForUI
             }
 
             _events.Clear();
-
-            // it's very difficult to calculate is all touches are released to reset the counter
-            // so we proactively guarding for worst cases when either we get more cancellations then we expect,
-            // or something gets stuck and alive touches get increment beyond any reasonable values
-            if (_aliveTouchesCount <= 0 || _aliveTouchesCount >= 16) // safety guard
-            {
-                _touchNextFingerIndex = 0;
-                _aliveTouchesCount = 0;
-                _touchFingerIdToFingerIndex.Clear();
-            }
             
             _seenTouchEvents = false;
             _seenPenEvents = false;
@@ -260,6 +244,7 @@ namespace InputSystem.Plugins.InputForUI
             var asPenDevice = ctx.control.device is Pen ? (Pen)ctx.control.device : null;
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
+            var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
 
             if (asTouchControl != null)
                 _seenTouchEvents = true;
@@ -287,7 +272,7 @@ namespace InputSystem.Plugins.InputForUI
                 DispatchFromCallback(Event.From(new PointerEvent
                 {
                     type = PointerEvent.Type.PointerMoved,
-                    pointerIndex = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0,
+                    pointerIndex = pointerIndex,
                     position = position,
                     deltaPosition = delta,
                     scroll = Vector2.zero,
@@ -359,27 +344,29 @@ namespace InputSystem.Plugins.InputForUI
             }));
         }
 
+        private int FindPointerIndex(Touchscreen touchscreen, TouchControl touchControl)
+        {
+            if (touchscreen == null || touchControl == null)
+                return 0;
+
+            for (var i = 0; i < touchscreen.touches.Count; ++i)
+                if (touchscreen.touches[i] == touchControl)
+                    return i;
+
+            return 0;
+        }
+
         private void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
             ref var state = ref GetPointerStateForSource(eventSource);
 
+            var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            var touchId = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0;
-
-            var pointerIndex = 0;
-            if (asTouchControl != null && !_touchFingerIdToFingerIndex.TryGetValue(touchId, out pointerIndex))
-            {
-                pointerIndex = _touchNextFingerIndex++;
-                _aliveTouchesCount++;
-                _touchFingerIdToFingerIndex.Add(touchId, pointerIndex);
-            }
+            var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
 
             var wasPressed = state.ButtonsState.Get(button);
             var isPressed = ctx.ReadValueAsButton();
             state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
-
-            if (asTouchControl != null && wasPressed && !isPressed)
-                _aliveTouchesCount--;
 
             DispatchFromCallback(Event.From(new PointerEvent
             {
@@ -405,16 +392,6 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnClickCancelled(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
-            ref var state = ref GetPointerStateForSource(eventSource);
-
-            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            var touchId = asTouchControl != null ? asTouchControl.touchId.ReadValue() : 0;
-
-            var wasPressed = state.ButtonsState.Get(button);
-            var isPressed = ctx.ReadValueAsButton();
-            
-            if (asTouchControl != null && wasPressed && !isPressed && _touchFingerIdToFingerIndex.ContainsKey(touchId))
-                _aliveTouchesCount--;
         }
 
         private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
