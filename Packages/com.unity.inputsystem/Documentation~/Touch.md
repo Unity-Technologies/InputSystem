@@ -53,7 +53,7 @@ Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)
 |[`tap`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_tap)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|A button Control that reports whether the OS recognizes a tap gesture from this touch.|
 |[`tapCount`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_tapCount)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Reports the number of consecutive [`tap`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_tap) reports from the OS. You can use this to detect double- and multi-tap gestures.|
 
-### Using touch with [Actions](Actions.md)
+### Using touch with Actions
 
 You can use touch input with Actions, like any other [`Pointer`](Pointers.md) Device. To do this, [bind](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This gets input from the primary touch, and any other non-touch pointer Devices.
 
