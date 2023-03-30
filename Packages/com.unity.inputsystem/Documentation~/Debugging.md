@@ -11,7 +11,7 @@
     - [`InputControlVisualizer`](#inputcontrolvisualizer)
     - [`InputActionVisualizer`](#inputactionvisualizer)
   - [Device Simulator](#device-simulator)
-  - [ Unity Remote (iOS, Android)](#-unity-remote-ios-android)
+  - [Unity Remote (iOS, Android)](#unity-remote)
   - [Other tips:](#other-tips)
 
 When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players.
@@ -101,15 +101,15 @@ When Device Simulator window is in use, mouse and pen inputs on the simulated de
 
 To prevent conflicts between simulated touchscreen inputs and native mouse and pen inputs, Device Simulator disables all native mouse and pen devices.
 
-## <a name="unity-remote"></a> Unity Remote (iOS, Android)
-
->__Note__: Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.
-
->__Note__: This requires Unity 2021.2.18 or later.
+## Unity Remote
 
 The Unity Remote is an app available for iOS and Android which allows using a mobile device for input while running in the Unity Editor. You can find details about the app and how to install it in the [Unity manual](https://docs.unity3d.com/Manual/UnityRemote5.html).
 
 If you would like to try out the Unity Remote app, you can [install](Installation.md#installing-samples) the "Unity Remote" sample that is provided with the Input System package.
+
+>__Note__: Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.
+
+>__Note__: This requires Unity 2021.2.18 or later.
 
 When in play mode in the Editor and connected to the Unity Remote app, you will see a number of Devices have been added with the [`InputDevice.remote`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_remote) flag set to true:
 
