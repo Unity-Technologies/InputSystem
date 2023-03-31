@@ -26,11 +26,11 @@ namespace UnityEngine.InputSystem.LowLevel
     /// their data in different formats. This means that <see cref="GamepadState"/> will often <em>not</em>
     /// be the format in which a particular gamepad (such as <see cref="XInput.XInputController"/>,
     /// for example) stores its data.
-    /// 
+    ///
     /// If your gamepad data is arriving in a different format, you should extend the "Gamepad" layout and customize its Controls.
-    /// 
+    ///
     /// A real-world example of this is the Xbox Controller on macOS, which is supported through HID. Its layout looks like this:
-    /// 
+    ///
     /// <example>
     /// <code>
     /// {
@@ -67,12 +67,12 @@ namespace UnityEngine.InputSystem.LowLevel
     /// }
     /// </code>
     /// </example>
-    /// 
+    ///
     /// The same principle applies if some buttons on your Device are swapped, for example. In this case, you can remap their offsets.
-    /// 
-    /// 
-    /// 
-    /// 
+    ///
+    ///
+    ///
+    ///
     /// </remarks>
     /// <seealso cref="Gamepad"/>
     // NOTE: Must match GamepadInputState in native.

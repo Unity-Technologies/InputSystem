@@ -139,7 +139,7 @@ To record events flowing through the system, use this code:
 
     // You can also provide a device ID to only
     // trace events for a specific device.
-    var trace = new InputEventTrace(); 
+    var trace = new InputEventTrace();
 
     trace.Enable();
 

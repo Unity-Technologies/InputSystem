@@ -37,12 +37,12 @@ namespace UnityEngine.InputSystem
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
     /// actuated by the user.
-    /// 
+    ///
     /// To implement user-controlled rebinding, create a UI with a button to trigger rebinding.
     /// If the user clicks the button to bind a control to an action, use `InputAction.PerformInteractiveRebinding`
     /// to handle the rebinding, as in the following example:
     /// <example>
-    /// <code>    
+    /// <code>
     /// void RemapButtonClicked(InputAction actionToRebind)
     /// {
     ///   var rebindOperation = actionToRebind.PerformInteractiveRebinding()
