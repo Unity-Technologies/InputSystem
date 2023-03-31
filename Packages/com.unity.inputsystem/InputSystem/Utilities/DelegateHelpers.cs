@@ -114,5 +114,82 @@ namespace UnityEngine.InputSystem.Utilities
             Profiler.EndSample();
             return false;
         }
+
+        /// <summary>
+        /// Invokes the given callbacks and also invokes any callback returned from the result of the first.
+        /// </summary>
+        /// <seealso cref="System.Action"/>
+        /// <remarks>
+        /// Allows an chaining up an additional, optional block of code to the original callback
+        /// and allow the external code make the decision about whether this code should be executed.
+        /// </remarks>
+        public static void InvokeCallbacksSafe_AndInvokeReturnedActions<TValue>(
+            ref CallbackArray<Func<TValue, Action>> callbacks, TValue argument,
+            string callbackName, object context = null)
+        {
+            if (callbacks.length == 0)
+                return;
+
+            Profiler.BeginSample(callbackName);
+            callbacks.LockForChanges();
+            for (var i = 0; i < callbacks.length; ++i)
+            {
+                try
+                {
+                    callbacks[i](argument)?.Invoke();
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                    if (context != null)
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                    else
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                }
+            }
+            callbacks.UnlockForChanges();
+            Profiler.EndSample();
+        }
+
+        /// <summary>
+        /// Invokes the given callbacks and returns true if any of them returned a non-null result.
+        /// </summary>
+        /// <remarks>
+        /// Returns false if every callback invocation returned null.
+        /// </remarks>
+        public static bool InvokeCallbacksSafe_AnyCallbackReturnsObject<TValue, TReturn>(
+            ref CallbackArray<Func<TValue, TReturn>> callbacks, TValue argument,
+            string callbackName, object context = null)
+        {
+            if (callbacks.length == 0)
+                return false;
+
+            Profiler.BeginSample(callbackName);
+            callbacks.LockForChanges();
+            for (var i = 0; i < callbacks.length; ++i)
+            {
+                try
+                {
+                    var ret = callbacks[i](argument);
+                    if (ret != null)
+                    {
+                        callbacks.UnlockForChanges();
+                        Profiler.EndSample();
+                        return true;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                    if (context != null)
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                    else
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                }
+            }
+            callbacks.UnlockForChanges();
+            Profiler.EndSample();
+            return false;
+        }
     }
 }
