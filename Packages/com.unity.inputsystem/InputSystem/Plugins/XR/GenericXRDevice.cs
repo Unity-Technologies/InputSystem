@@ -7,33 +7,35 @@ using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
-    /// <summary>
-    /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
-    /// </summary>
-    /// 
-    /// <remarks>
-    /// 
-    /// To give your head tracking an extra update before rendering:
-    /// First, enable before render updates on your Device.
-    /// 
-    /// <sample>
-    /// <code>
-    ///     // JSON
-    ///     {
-    ///         "name" : "MyHMD",
-    ///         "extend" : "HMD",
-    ///         "beforeRender" : "Update"
-    ///     }
-    /// </code>
-    /// </sample>
-    /// 
-    /// Then, make sure you put extra `StateEvents` for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking by sending a delta event instead of a full state event.
-    /// 
-    /// </remarks>
 
     [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD", canRunInBackground = true)]
     public class XRHMD : TrackedDevice
     {
+
+        /// <summary>
+        /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// 
+        /// To give your head tracking an extra update before rendering:
+        /// First, enable before render updates on your Device.
+        /// 
+        /// <sample>
+        /// <code>
+        ///     // JSON
+        ///     {
+        ///         "name" : "MyHMD",
+        ///         "extend" : "HMD",
+        ///         "beforeRender" : "Update"
+        ///     }
+        /// </code>
+        /// </sample>
+        /// 
+        /// Then, make sure you put extra `StateEvents` for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking by sending a delta event instead of a full state event.
+        /// 
+        /// </remarks>
+
         [InputControl(noisy = true)]
         public Vector3Control leftEyePosition { get; private set; }
         [InputControl(noisy = true)]
