@@ -70,8 +70,6 @@ namespace UnityEngine.InputSystem
         public const char Separator = ';';
 
         internal const string kSeparatorString = ";";
-        
-        internal const string wildcard = "/*";
 
         /// <summary>
         /// Optional name for the binding.
@@ -846,14 +844,7 @@ namespace UnityEngine.InputSystem
         
         internal bool MatchesMask(ref InputBinding binding)
         {
-            var appendix = path.Substring(path.Length-2,path.Length-(path.Length-2));
-            if (appendix == wildcard)
-            {
-                var before = path.Substring(0, path.Length - 2);
-                if (binding.path != null && binding.path.Contains(before))
-                    return true;
-            }
-            return Matches(binding);
+            return InputControlPath.BindingPathMatchesMask(path, binding.path);
         }
 
         // Internally we pass by reference to not unnecessarily copy the struct.
