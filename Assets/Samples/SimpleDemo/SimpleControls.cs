@@ -258,6 +258,7 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
 
         private void UnregisterCallbacks(IGameplayActions instance)
         {
+            if (instance == null) return;
             @fire.started -= instance.OnFire;
             @fire.performed -= instance.OnFire;
             @fire.canceled -= instance.OnFire;
