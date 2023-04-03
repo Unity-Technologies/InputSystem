@@ -1046,7 +1046,8 @@ namespace UnityEngine.InputSystem.Layouts
                 }
 
                 if (Math.Abs(stateBlock.effectiveBitOffset - (int)absoluteMidPoint) <
-                    Math.Abs(closestControlStartPointToMidPoint - absoluteMidPoint))
+                    Math.Abs(closestControlStartPointToMidPoint - absoluteMidPoint) &&
+                    stateBlock.effectiveBitOffset >= startOffset)
                 {
                     closestControlStartPointToMidPoint = (ushort)stateBlock.effectiveBitOffset;
                 }
@@ -1078,13 +1079,20 @@ namespace UnityEngine.InputSystem.Layouts
             if (closestControlEndPointToMidPoint != ushort.MaxValue &&
                 controlEndMidPointCollisions <= controlStartMidPointCollisions &&
                 controlEndMidPointCollisions <= absoluteMidPointCollisions)
+            {
+                Debug.Assert(closestControlEndPointToMidPoint >= startOffset && closestControlEndPointToMidPoint <= startOffset + parent.endBitOffset);
                 return closestControlEndPointToMidPoint;
+            }
 
             if (closestControlStartPointToMidPoint != ushort.MaxValue &&
                 controlStartMidPointCollisions <= controlEndMidPointCollisions &&
                 controlStartMidPointCollisions <= absoluteMidPointCollisions)
+            {
+                Debug.Assert(closestControlStartPointToMidPoint >= startOffset && closestControlStartPointToMidPoint <= startOffset + parent.endBitOffset);
                 return closestControlStartPointToMidPoint;
+            }
 
+            Debug.Assert(absoluteMidPoint >= startOffset && absoluteMidPoint <= startOffset + parent.endBitOffset);
             return absoluteMidPoint;
         }
 
