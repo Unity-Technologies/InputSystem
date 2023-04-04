@@ -841,7 +841,7 @@ namespace UnityEngine.InputSystem
         {
             return Matches(ref binding);
         }
-        
+
         internal bool MatchesMask(ref InputBinding binding)
         {
             return InputControlPath.BindingPathMatchesMask(path, binding.path);

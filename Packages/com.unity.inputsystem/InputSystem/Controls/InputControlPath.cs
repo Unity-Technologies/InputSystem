@@ -481,10 +481,10 @@ namespace UnityEngine.InputSystem
             return currentResult;
         }
 
-        public static bool BindingPathMatchesMask(string mask,string bindingPath)
+        public static bool BindingPathMatchesMask(string mask, string bindingPath)
         {
             var bindingPathString = new InternedString(bindingPath);
-            return StringMatches(mask,bindingPathString);
+            return StringMatches(mask, bindingPathString);
         }
 
         private static bool ControlLayoutMatchesPathComponent(ref InputControlLayout.ControlItem controlItem, ref PathParser parser)
