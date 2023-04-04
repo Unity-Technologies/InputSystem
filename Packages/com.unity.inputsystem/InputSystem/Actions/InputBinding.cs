@@ -844,7 +844,9 @@ namespace UnityEngine.InputSystem
 
         internal bool MatchesMask(ref InputBinding binding)
         {
-            return InputControlPath.BindingPathMatchesMask(path, binding.path);
+            if (path != null)
+                return InputControlPath.BindingPathMatchesMask(path, binding.path);
+            return Matches(ref binding, MatchOptions.EmptyGroupMatchesAny);
         }
 
         // Internally we pass by reference to not unnecessarily copy the struct.
