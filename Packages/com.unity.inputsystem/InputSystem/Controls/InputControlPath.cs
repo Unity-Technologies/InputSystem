@@ -480,7 +480,7 @@ namespace UnityEngine.InputSystem
 
             return currentResult;
         }
-        
+
         internal static bool BindingPathMatchesMask(string mask, string bindingPath)
         {
             var bindingPathString = new InternedString(bindingPath);
