@@ -1121,6 +1121,34 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_MatchingPathToMask()
+    {
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/e", "<Keyboard>/e"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/d", "<Keyboard>/e"), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPathToMaskWithWildcardAtBeginning()
+    {
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/e", "<Keyboard>/e"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/d", "<Keyboard>/e"), Is.False);
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/d", "<Keyboard>/d"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("*/leftButton", "<Mouse>/leftButton"), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingPathToMaskWithWildcardAtEnd()
+    {
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/*", "<Keyboard>/e"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/*", "<Mouse>/leftButton"), Is.False);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Keyboard>/*", "<Keyboard>/d"), Is.True);
+        Assert.That(InputControlPath.BindingPathMatchesMask("<Mouse>/*", "<Mouse>/leftButton"), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanDetermineIfControlIsPressed()
     {
         InputSystem.settings.defaultButtonPressPoint = 0.5f;
