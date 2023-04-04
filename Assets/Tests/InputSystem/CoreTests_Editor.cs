@@ -2245,6 +2245,40 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CustomBindingWarningIconsShown()
+    {
+        InputSystem.customBindingPathValidators += (string bindingPath) => {
+            // Mark <Gamepad> bindings with a warning
+            if (!bindingPath.StartsWith("<Gamepad>"))
+                return null;
+
+            return () => {}; // Any non-null Action is enough to indicate a warning
+        };
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action = map.AddAction(name: "action", binding: "<Gamepad>/leftStick");
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/b");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so)
+        };
+        tree.Reload();
+
+        Assert.That(tree["map/action"].children, Has.Count.EqualTo(2));
+        Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(tree["map/action"].children[1].As<BindingTreeItem>().path, Is.EqualTo("1DAxis"));
+
+        Assert.That(tree["map/action"].children[0].As<BindingTreeItem>().showWarningIcon, Is.True);
+        Assert.That(tree["map/action"].children[1].As<BindingTreeItem>().showWarningIcon, Is.False);
+    }
+
 #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
     // still affected by the current platform.
 #if !NET_STANDARD_2_0 // Not possible to run when using .NET standard at the moment.

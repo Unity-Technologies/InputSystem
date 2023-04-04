@@ -1,20 +1,21 @@
 # Interactions
 
-* [Operation](#operation)
-    * [Multiple Controls on an Action](#multiple-controls-on-an-action)
-    * [Multiple Interactios on a Binding](#multiple-interactions-on-a-binding)
-    * [Timeouts](#timeouts)
-* [Using Interactions](#using-interactions)
-    * [Interactions applied to Bindings](#interactions-applied-to-bindings)
-    * [Interactions applied to Actions](#interactions-applied-to-actions)
-* [Predefined Interactions](#predefined-interactions)
-    * [Default Interaction](#default-interaction)
-    * [Press](#press)
-    * [Hold](#hold)
-    * [Tap](#tap)
-    * [SlowTap](#slowtap)
-    * [MultiTap](#multitap)
-* [Custom Interactions](#writing-custom-interactions)
+- [Interactions](#interactions)
+  - [Operation](#operation)
+    - [Multiple Controls on an Action](#multiple-controls-on-an-action)
+    - [Multiple Interactions on a Binding](#multiple-interactions-on-a-binding)
+    - [Timeouts](#timeouts)
+  - [Using Interactions](#using-interactions)
+    - [Interactions applied to Bindings](#interactions-applied-to-bindings)
+    - [Interactions applied to Actions](#interactions-applied-to-actions)
+  - [Predefined Interactions](#predefined-interactions)
+    - [Default Interaction](#default-interaction)
+    - [Press](#press)
+    - [Hold](#hold)
+    - [Tap](#tap)
+    - [SlowTap](#slowtap)
+    - [MultiTap](#multitap)
+  - [Writing custom Interactions](#writing-custom-interactions)
 
 An Interaction represents a specific input pattern. For example, a [hold](#hold) is an Interaction that requires a Control to be held for at least a minimum amount of time.
 
@@ -187,6 +188,17 @@ A [`HoldInteraction`](../api/UnityEngine.InputSystem.Interactions.HoldInteractio
 |---|---|---|
 |[`duration`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_duration)|`float`|[`InputSettings.defaultHoldTime`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultHoldTime)|
 |[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
+
+
+To display UI feedback when a button starts being held, use the [`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) callback.
+
+```C#
+
+    action.started += _ => ShowGunChargeUI();
+    action.performed += _ => FinishGunChargingAndHideChargeUI();
+    action.cancelled += _ => HideChargeUI();
+
+```
 
 |__Callbacks__||
 |---|---|

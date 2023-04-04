@@ -17,6 +17,10 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+#if UNITY_EDITOR
+using CustomBindingPathValidator = System.Func<string, System.Action>;
+#endif
+
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
 
 ////TODO: work towards InputManager having no direct knowledge of actions
@@ -229,6 +233,55 @@ namespace UnityEngine.InputSystem
         }
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Callback that can be used to display a warning and draw additional custom Editor UI for bindings.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal event CustomBindingPathValidator customBindingPathValidators
+        {
+            add => m_customBindingPathValidators.AddCallback(value);
+            remove => m_customBindingPathValidators.RemoveCallback(value);
+        }
+
+        /// <summary>
+        /// Invokes any custom UI rendering code for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.OnDrawCustomWarningForBindingPath"/> instead.
+        /// </remarks>
+        internal void OnDrawCustomWarningForBindingPath(string bindingPath)
+        {
+            DelegateHelpers.InvokeCallbacksSafe_AndInvokeReturnedActions(
+                ref m_customBindingPathValidators,
+                bindingPath,
+                "InputSystem.OnDrawCustomWarningForBindingPath");
+        }
+
+        /// <summary>
+        /// Determines if any warning icon is to be displayed for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.OnDrawCustomWarningForBindingPath"/> instead.
+        /// </remarks>
+        internal bool ShouldDrawWarningIconForBinding(string bindingPath)
+        {
+            return DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsObject(
+                ref m_customBindingPathValidators,
+                bindingPath,
+                "InputSystem.ShouldDrawWarningIconForBinding");
+        }
+
+#endif // UNITY_EDITOR
 
 #if UNITY_EDITOR
         private bool m_RunPlayerUpdatesInEditMode;
@@ -1975,6 +2028,11 @@ namespace UnityEngine.InputSystem
         // callback for this so we have to poll this state.
         #if UNITY_EDITOR
         private bool m_EditorIsActive;
+        #endif
+
+        // Allow external users to hook in validators and draw custom UI in the binding path editor
+        #if UNITY_EDITOR
+        private Utilities.CallbackArray<CustomBindingPathValidator> m_customBindingPathValidators;
         #endif
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
