@@ -66,25 +66,25 @@ namespace InputSystem.Plugins.InputForUI
         private EventModifiers _eventModifiers => _inputEventPartialProvider._eventModifiers;
 
         private DiscreteTime _currentTime => (DiscreteTime)Time.timeAsRational;
-        
+
         private const uint kDefaultPlayerId = 0u;
 
         public void Initialize()
         {
             _inputEventPartialProvider ??= new InputEventPartialProvider();
             _inputEventPartialProvider.Initialize();
-            
+
             _events.Clear();
-            
+
             _mouseState.Reset();
             _seenMouseEvents = false;
 
             _penState.Reset();
             _seenPenEvents = false;
-            
+
             _touchState.Reset();
             _seenTouchEvents = false;
-            
+
             // TODO should UITK somehow override this?
             _cfg = Configuration.GetDefaultConfiguration();
             RegisterActions(_cfg);
@@ -116,7 +116,7 @@ namespace InputSystem.Plugins.InputForUI
         public void Update()
         {
             _inputEventPartialProvider.Update();
-            
+
             _events.Sort(SortEvents);
 
             var currentTime = (DiscreteTime)Time.timeAsRational;
@@ -136,7 +136,7 @@ namespace InputSystem.Plugins.InputForUI
             }
 
             _events.Clear();
-            
+
             _seenTouchEvents = false;
             _seenPenEvents = false;
             _seenMouseEvents = false;
@@ -144,8 +144,6 @@ namespace InputSystem.Plugins.InputForUI
 
         private void DirectionNavigation(DiscreteTime currentTime)
         {
-            //WIP
-            //TODO: base implementation of IM provider for now and learn stuff
             //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
             var(move, axesButtonWerePressed) = ReadCurrentNavigationMoveVector();
 
@@ -175,9 +173,8 @@ namespace InputSystem.Plugins.InputForUI
         private (Vector2, bool) ReadCurrentNavigationMoveVector()
         {
             var move = _moveAction.action.ReadValue<Vector2>();
-
+            // Check if the action was "pressed" this frame to deal with repeating events
             var axisWasPressed = _moveAction.action.WasPressedThisFrame();
-
             return (move, axisWasPressed);
         }
 
@@ -227,20 +224,20 @@ namespace InputSystem.Plugins.InputForUI
                     }
 
                     return _touchState.LastPositionValid ||
-                           _penState.LastPositionValid ||
-                           _mouseState.LastPositionValid;
+                        _penState.LastPositionValid ||
+                        _mouseState.LastPositionValid;
                 }
                 // TODO
                 case Event.Type.IMECompositionEvent:
-                    //EventProvider.Dispatch(Event.From(ToIMECompositionEvent(currentTime, _compositionString)));
-                    //return true;
+                //EventProvider.Dispatch(Event.From(ToIMECompositionEvent(currentTime, _compositionString)));
+                //return true;
                 default:
                     return false;
             }
         }
 
         public uint playerCount => 1; // TODO
-        
+
         // copied from UIElementsRuntimeUtility.cs
         private static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
         {
@@ -251,7 +248,7 @@ namespace InputSystem.Plugins.InputForUI
             position.y = screenHeight - position.y;
             return position;
         }
-        
+
         private PointerEvent ToPointerStateEvent(DiscreteTime currentTime, in PointerState state, EventSource eventSource)
         {
             return new PointerEvent
@@ -276,7 +273,7 @@ namespace InputSystem.Plugins.InputForUI
                 eventModifiers = _eventModifiers
             };
         }
-        
+
         private EventSource GetEventSourceForCallback(InputAction.CallbackContext ctx)
         {
             var device = ctx.control.device;
@@ -304,7 +301,7 @@ namespace InputSystem.Plugins.InputForUI
                     return ref _mouseState;
             }
         }
-        
+
         private void DispatchFromCallback(in Event ev)
         {
             _events.Add(ev);
@@ -314,7 +311,7 @@ namespace InputSystem.Plugins.InputForUI
         {
             var eventSource = GetEventSourceForCallback(ctx);
             ref var pointerState = ref GetPointerStateForSource(eventSource);
-            
+
             // Overall I'm not happy how leaky this is, we're using input actions to have flexibility to bind to different controls,
             // but instead we just kinda abuse it to bind to different devices ...
             var asPointerDevice = ctx.control.device is Pointer ? (Pointer)ctx.control.device : null;
@@ -370,7 +367,7 @@ namespace InputSystem.Plugins.InputForUI
                 // only record if we send an event
                 pointerState.OnMove(_currentTime, position, targetDisplay);
             }
-            else if(!pointerState.LastPositionValid)
+            else if (!pointerState.LastPositionValid)
                 pointerState.OnMove(_currentTime, position, targetDisplay);
         }
 
@@ -474,7 +471,7 @@ namespace InputSystem.Plugins.InputForUI
                 position = Mouse.current.position.ReadValue();
                 targetDisplay = Mouse.current.displayIndex.ReadValue();
             }
-            
+
             // Make it look similar to IMGUI event scroll values.
             // TODO check how it behaves on macOS
             scrollDelta.x /= 40.0f;
@@ -539,9 +536,6 @@ namespace InputSystem.Plugins.InputForUI
             if (_pointAction.action != null)
                 _pointAction.action.performed += OnPointerPerformed;
 
-            if (_moveAction.action != null)
-                _moveAction.action.performed += OnMovePerformed;
-            
             if (_submitAction.action != null)
                 _submitAction.action.performed += OnSubmitPerformed;
 
@@ -559,8 +553,8 @@ namespace InputSystem.Plugins.InputForUI
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed += OnScrollWheelPerformed;
-            
-            // When adding new one's don't forget to add them to UnregisterActions 
+
+            // When adding new one's don't forget to add them to UnregisterActions
 
             _inputActionAsset.Enable();
 
@@ -573,10 +567,7 @@ namespace InputSystem.Plugins.InputForUI
         {
             if (_pointAction.action != null)
                 _pointAction.action.performed -= OnPointerPerformed;
-            
-            if (_moveAction.action != null)
-                _moveAction.action.performed -= OnMovePerformed;
-            
+
             if (_submitAction.action != null)
                 _submitAction.action.performed -= OnSubmitPerformed;
 
@@ -594,7 +585,7 @@ namespace InputSystem.Plugins.InputForUI
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed -= OnScrollWheelPerformed;
-            
+
             _pointAction = null;
             _moveAction = null;
             _submitAction = null;
@@ -636,7 +627,7 @@ namespace InputSystem.Plugins.InputForUI
                 var json = asset.asset.ToJson();
                 UnityEngine.Object.DestroyImmediate(asset.asset); // TODO just Dispose doesn't work in edit mode
                 // asset.Dispose();
-                
+
                 return new Configuration
                 {
                     InputActionAssetAsJson = json,
