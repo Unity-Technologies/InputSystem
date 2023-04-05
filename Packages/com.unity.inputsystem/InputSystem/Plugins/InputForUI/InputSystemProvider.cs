@@ -94,8 +94,9 @@ namespace InputSystem.Plugins.InputForUI
         {
             if (ctx.control.device is Keyboard)
             {
+                //TODO repeat rate
                 var keyboard = ctx.control.device as Keyboard;
-                EventProvider.Dispatch(Event.From(new NavigationEvent
+                DispatchFromCallback(Event.From(new NavigationEvent
                 {
                     type = NavigationEvent.Type.Move,
                     direction = keyboard.shiftKey.isPressed ? NavigationEvent.Direction.Previous : NavigationEvent.Direction.Next,
@@ -365,7 +366,6 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnSubmitPerformed(InputAction.CallbackContext ctx)
         {
-            // TODO repeat rate
             DispatchFromCallback(Event.From(new NavigationEvent
             {
                 type = NavigationEvent.Type.Submit,
@@ -379,7 +379,6 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnCancelPerformed(InputAction.CallbackContext ctx)
         {
-            // TODO repeat rate
             DispatchFromCallback(Event.From(new NavigationEvent
             {
                 type = NavigationEvent.Type.Cancel,
