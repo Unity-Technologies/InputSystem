@@ -21,6 +21,7 @@ namespace UnityEngine.InputSystem.Editor
         public abstract GUIStyle colorTagStyle { get; }
         public string name { get; }
         public Guid guid { get; }
+        public virtual bool showWarningIcon => false;
 
         // For some operations (like copy-paste), we want to include information that we have filtered out.
         internal List<ActionTreeItemBase> m_HiddenChildren;
@@ -382,6 +383,7 @@ namespace UnityEngine.InputSystem.Editor
         public string path { get; }
         public string groups { get; }
         public string action { get; }
+        public override bool showWarningIcon => InputSystem.ShouldDrawWarningIconForBinding(path);
 
         public override bool canRename => false;
         public override GUIStyle colorTagStyle => Styles.blueRect;
