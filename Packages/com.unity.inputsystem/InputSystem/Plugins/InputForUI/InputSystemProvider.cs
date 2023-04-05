@@ -33,7 +33,9 @@ namespace InputSystem.Plugins.InputForUI
         private InputActionReference _rightClickAction;
         private InputActionReference _scrollWheelAction;
 
-        private List<Event> _events = new List<Event>();
+        InputAction _nextPreviousAction;
+
+        List<Event> _events = new List<Event>();
 
         private PointerState _mouseState;
         private bool _seenMouseEvents;
@@ -45,6 +47,8 @@ namespace InputSystem.Plugins.InputForUI
         private bool _seenTouchEvents;
 
         private const float kSmallestReportedMovementSqrDist = 0.01f;
+
+        private NavigationEventRepeatHelper repeatHelper = new();
 
         static InputSystemProvider()
         {
@@ -62,28 +66,44 @@ namespace InputSystem.Plugins.InputForUI
         private EventModifiers _eventModifiers => _inputEventPartialProvider._eventModifiers;
 
         private DiscreteTime _currentTime => (DiscreteTime)Time.timeAsRational;
-        
+
         private const uint kDefaultPlayerId = 0u;
 
         public void Initialize()
         {
             _inputEventPartialProvider ??= new InputEventPartialProvider();
             _inputEventPartialProvider.Initialize();
-            
+
             _events.Clear();
-            
+
             _mouseState.Reset();
             _seenMouseEvents = false;
 
             _penState.Reset();
             _seenPenEvents = false;
-            
+
             _touchState.Reset();
             _seenTouchEvents = false;
-            
+
             // TODO should UITK somehow override this?
             _cfg = Configuration.GetDefaultConfiguration();
             RegisterActions(_cfg);
+        }
+
+        private void OnNextPreviousPerformed(InputAction.CallbackContext ctx)
+        {
+            if (ctx.control.device is Keyboard)
+            {
+                //TODO repeat rate
+                var keyboard = ctx.control.device as Keyboard;
+                DispatchFromCallback(Event.From(new NavigationEvent
+                {
+                    type = NavigationEvent.Type.Move,
+                    direction = keyboard.shiftKey.isPressed ? NavigationEvent.Direction.Previous : NavigationEvent.Direction.Next,
+                    timestamp = _currentTime,
+                    eventSource = EventSource.Keyboard,
+                }));
+            }
         }
 
         public void Shutdown()
@@ -97,8 +117,12 @@ namespace InputSystem.Plugins.InputForUI
         public void Update()
         {
             _inputEventPartialProvider.Update();
-            
+
             _events.Sort(SortEvents);
+
+            var currentTime = (DiscreteTime)Time.timeAsRational;
+
+            DirectionNavigation(currentTime);
 
             foreach (var ev in _events)
             {
@@ -113,10 +137,46 @@ namespace InputSystem.Plugins.InputForUI
             }
 
             _events.Clear();
-            
+
             _seenTouchEvents = false;
             _seenPenEvents = false;
             _seenMouseEvents = false;
+        }
+
+        private void DirectionNavigation(DiscreteTime currentTime)
+        {
+            //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
+            var(move, axesButtonWerePressed) = ReadCurrentNavigationMoveVector();
+
+            var direction = NavigationEvent.DetermineMoveDirection(move);
+
+            if (direction == NavigationEvent.Direction.None)
+            {
+                repeatHelper.Reset();
+            }
+            else
+            {
+                if (repeatHelper.ShouldSendMoveEvent(currentTime, direction, axesButtonWerePressed))
+                {
+                    EventProvider.Dispatch(Event.From(new NavigationEvent
+                    {
+                        type = NavigationEvent.Type.Move,
+                        direction = direction,
+                        timestamp = currentTime,
+                        eventSource = GetEventSource(_moveAction.action.activeControl.device),
+                        playerId = kDefaultPlayerId,
+                        eventModifiers = _eventModifiers
+                    }));
+                }
+            }
+        }
+
+        private (Vector2, bool) ReadCurrentNavigationMoveVector()
+        {
+            var move = _moveAction.action.ReadValue<Vector2>();
+            // Check if the action was "pressed" this frame to deal with repeating events
+            var axisWasPressed = _moveAction.action.WasPressedThisFrame();
+            return (move, axisWasPressed);
         }
 
         private static int SortEvents(Event a, Event b)
@@ -150,20 +210,20 @@ namespace InputSystem.Plugins.InputForUI
                     }
 
                     return _touchState.LastPositionValid ||
-                           _penState.LastPositionValid ||
-                           _mouseState.LastPositionValid;
+                        _penState.LastPositionValid ||
+                        _mouseState.LastPositionValid;
                 }
                 // TODO
                 case Event.Type.IMECompositionEvent:
-                    //EventProvider.Dispatch(Event.From(ToIMECompositionEvent(currentTime, _compositionString)));
-                    //return true;
+                //EventProvider.Dispatch(Event.From(ToIMECompositionEvent(currentTime, _compositionString)));
+                //return true;
                 default:
                     return false;
             }
         }
 
         public uint playerCount => 1; // TODO
-        
+
         // copied from UIElementsRuntimeUtility.cs
         private static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
         {
@@ -174,7 +234,7 @@ namespace InputSystem.Plugins.InputForUI
             position.y = screenHeight - position.y;
             return position;
         }
-        
+
         private PointerEvent ToPointerStateEvent(DiscreteTime currentTime, in PointerState state, EventSource eventSource)
         {
             return new PointerEvent
@@ -199,11 +259,15 @@ namespace InputSystem.Plugins.InputForUI
                 eventModifiers = _eventModifiers
             };
         }
-        
-        private EventSource GetEventSourceForCallback(InputAction.CallbackContext ctx)
+
+        private EventSource GetEventSource(InputAction.CallbackContext ctx)
         {
             var device = ctx.control.device;
+            return GetEventSource(device);
+        }
 
+        private EventSource GetEventSource(InputDevice device)
+        {
             if (device is Touchscreen)
                 return EventSource.Touch;
             if (device is Pen)
@@ -212,6 +276,9 @@ namespace InputSystem.Plugins.InputForUI
                 return EventSource.Mouse;
             if (device is Keyboard)
                 return EventSource.Keyboard;
+            if (device is Gamepad)
+                return EventSource.Gamepad;
+
             return EventSource.Unspecified;
         }
 
@@ -227,7 +294,7 @@ namespace InputSystem.Plugins.InputForUI
                     return ref _mouseState;
             }
         }
-        
+
         private void DispatchFromCallback(in Event ev)
         {
             _events.Add(ev);
@@ -235,9 +302,9 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnPointerPerformed(InputAction.CallbackContext ctx)
         {
-            var eventSource = GetEventSourceForCallback(ctx);
+            var eventSource = GetEventSource(ctx);
             ref var pointerState = ref GetPointerStateForSource(eventSource);
-            
+
             // Overall I'm not happy how leaky this is, we're using input actions to have flexibility to bind to different controls,
             // but instead we just kinda abuse it to bind to different devices ...
             var asPointerDevice = ctx.control.device is Pointer ? (Pointer)ctx.control.device : null;
@@ -293,38 +360,18 @@ namespace InputSystem.Plugins.InputForUI
                 // only record if we send an event
                 pointerState.OnMove(_currentTime, position, targetDisplay);
             }
-            else if(!pointerState.LastPositionValid)
+            else if (!pointerState.LastPositionValid)
                 pointerState.OnMove(_currentTime, position, targetDisplay);
-        }
-
-        private void OnMovePerformed(InputAction.CallbackContext ctx)
-        {
-            var direction = NavigationEvent.DetermineMoveDirection(ctx.ReadValue<Vector2>());
-            if (direction == NavigationEvent.Direction.None)
-                return;
-            //     _navigationEventRepeatHelper.Reset();
-
-            // TODO repeat rate
-            DispatchFromCallback(Event.From(new NavigationEvent
-            {
-                type = NavigationEvent.Type.Move,
-                direction = direction,
-                timestamp = _currentTime,
-                eventSource = EventSource.Unspecified, // TODO
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
-            }));
         }
 
         private void OnSubmitPerformed(InputAction.CallbackContext ctx)
         {
-            // TODO repeat rate
             DispatchFromCallback(Event.From(new NavigationEvent
             {
                 type = NavigationEvent.Type.Submit,
                 direction = NavigationEvent.Direction.None,
                 timestamp = _currentTime,
-                eventSource = EventSource.Unspecified, // TODO
+                eventSource = GetEventSource(ctx),
                 playerId = kDefaultPlayerId,
                 eventModifiers = _eventModifiers
             }));
@@ -332,13 +379,12 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnCancelPerformed(InputAction.CallbackContext ctx)
         {
-            // TODO repeat rate
             DispatchFromCallback(Event.From(new NavigationEvent
             {
                 type = NavigationEvent.Type.Cancel,
                 direction = NavigationEvent.Direction.None,
                 timestamp = _currentTime,
-                eventSource = EventSource.Unspecified, // TODO
+                eventSource = GetEventSource(ctx),
                 playerId = kDefaultPlayerId,
                 eventModifiers = _eventModifiers
             }));
@@ -390,9 +436,9 @@ namespace InputSystem.Plugins.InputForUI
             }));
         }
 
-        private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
-        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseMiddle);
-        private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseRight);
+        private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseLeft);
+        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseMiddle);
+        private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseRight);
 
         private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
@@ -400,7 +446,7 @@ namespace InputSystem.Plugins.InputForUI
             if (scrollDelta.sqrMagnitude < kSmallestReportedMovementSqrDist)
                 return;
 
-            var eventSource = GetEventSourceForCallback(ctx);
+            var eventSource = GetEventSource(ctx);
             ref var state = ref GetPointerStateForSource(eventSource);
 
             var position = Vector2.zero;
@@ -416,7 +462,7 @@ namespace InputSystem.Plugins.InputForUI
                 position = Mouse.current.position.ReadValue();
                 targetDisplay = Mouse.current.displayIndex.ReadValue();
             }
-            
+
             // Make it look similar to IMGUI event scroll values.
             // TODO check how it behaves on macOS
             scrollDelta.x /= 40.0f;
@@ -444,6 +490,27 @@ namespace InputSystem.Plugins.InputForUI
             }));
         }
 
+        private void RegisterNextPreviousAction()
+        {
+            _nextPreviousAction = new InputAction(name: "nextPreviousAction");
+            // TODO add more default bindings, or make them configurable
+            _nextPreviousAction.AddBinding("<Keyboard>/tab");
+            if (_nextPreviousAction != null)
+                _nextPreviousAction.performed += OnNextPreviousPerformed;
+
+            _nextPreviousAction.Enable();
+        }
+
+        private void UnregisterNextPreviousAction()
+        {
+            if (_nextPreviousAction != null)
+            {
+                _nextPreviousAction.performed -= OnNextPreviousPerformed;
+                _nextPreviousAction.Disable();
+                _nextPreviousAction = null;
+            }
+        }
+
         private void RegisterActions(Configuration cfg)
         {
             _inputActionAsset = InputActionAsset.FromJson(cfg.InputActionAssetAsJson);
@@ -460,9 +527,6 @@ namespace InputSystem.Plugins.InputForUI
             if (_pointAction.action != null)
                 _pointAction.action.performed += OnPointerPerformed;
 
-            if (_moveAction.action != null)
-                _moveAction.action.performed += OnMovePerformed;
-            
             if (_submitAction.action != null)
                 _submitAction.action.performed += OnSubmitPerformed;
 
@@ -480,20 +544,21 @@ namespace InputSystem.Plugins.InputForUI
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed += OnScrollWheelPerformed;
-            
-            // When adding new one's don't forget to add them to UnregisterActions 
+
+            // When adding new one's don't forget to add them to UnregisterActions
 
             _inputActionAsset.Enable();
+
+            // TODO make it configurable as it is not part of default config
+            // The Next/Previous action is not part of the input actions asset
+            RegisterNextPreviousAction();
         }
 
         private void UnregisterActions(Configuration cfg)
         {
             if (_pointAction.action != null)
                 _pointAction.action.performed -= OnPointerPerformed;
-            
-            if (_moveAction.action != null)
-                _moveAction.action.performed -= OnMovePerformed;
-            
+
             if (_submitAction.action != null)
                 _submitAction.action.performed -= OnSubmitPerformed;
 
@@ -511,7 +576,7 @@ namespace InputSystem.Plugins.InputForUI
 
             if (_scrollWheelAction.action != null)
                 _scrollWheelAction.action.performed -= OnScrollWheelPerformed;
-            
+
             _pointAction = null;
             _moveAction = null;
             _submitAction = null;
@@ -522,6 +587,10 @@ namespace InputSystem.Plugins.InputForUI
             _scrollWheelAction = null;
 
             _inputActionAsset.Disable();
+
+            // The Next/Previous action is not part of the input actions asset
+            UnregisterNextPreviousAction();
+
             UnityEngine.Object.Destroy(_inputActionAsset); // TODO check if this is ok
         }
 
@@ -549,7 +618,7 @@ namespace InputSystem.Plugins.InputForUI
                 var json = asset.asset.ToJson();
                 UnityEngine.Object.DestroyImmediate(asset.asset); // TODO just Dispose doesn't work in edit mode
                 // asset.Dispose();
-                
+
                 return new Configuration
                 {
                     InputActionAssetAsJson = json,
