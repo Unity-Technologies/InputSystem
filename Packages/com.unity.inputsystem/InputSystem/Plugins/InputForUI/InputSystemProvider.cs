@@ -162,7 +162,7 @@ namespace InputSystem.Plugins.InputForUI
                         type = NavigationEvent.Type.Move,
                         direction = direction,
                         timestamp = currentTime,
-                        eventSource = GetEventSourceFromDevice(_moveAction.action.activeControl.device),
+                        eventSource = GetEventSource(_moveAction.action.activeControl.device),
                         playerId = kDefaultPlayerId,
                         eventModifiers = _eventModifiers
                     }));
@@ -176,21 +176,6 @@ namespace InputSystem.Plugins.InputForUI
             // Check if the action was "pressed" this frame to deal with repeating events
             var axisWasPressed = _moveAction.action.WasPressedThisFrame();
             return (move, axisWasPressed);
-        }
-
-        private EventSource GetEventSourceFromDevice(InputDevice device)
-        {
-            var eventSource = EventSource.Unspecified;
-            switch (_moveAction.action.activeControl.device)
-            {
-                case Gamepad:
-                    eventSource = EventSource.Gamepad;
-                    break;
-                case Keyboard:
-                    eventSource = EventSource.Keyboard;
-                    break;
-            }
-            return eventSource;
         }
 
         private static int SortEvents(Event a, Event b)
@@ -274,10 +259,14 @@ namespace InputSystem.Plugins.InputForUI
             };
         }
 
-        private EventSource GetEventSourceForCallback(InputAction.CallbackContext ctx)
+        private EventSource GetEventSource(InputAction.CallbackContext ctx)
         {
             var device = ctx.control.device;
+            return GetEventSource(device);
+        }
 
+        private EventSource GetEventSource(InputDevice device)
+        {
             if (device is Touchscreen)
                 return EventSource.Touch;
             if (device is Pen)
@@ -286,6 +275,9 @@ namespace InputSystem.Plugins.InputForUI
                 return EventSource.Mouse;
             if (device is Keyboard)
                 return EventSource.Keyboard;
+            if (device is Gamepad)
+                return EventSource.Gamepad;
+
             return EventSource.Unspecified;
         }
 
@@ -309,7 +301,7 @@ namespace InputSystem.Plugins.InputForUI
 
         private void OnPointerPerformed(InputAction.CallbackContext ctx)
         {
-            var eventSource = GetEventSourceForCallback(ctx);
+            var eventSource = GetEventSource(ctx);
             ref var pointerState = ref GetPointerStateForSource(eventSource);
 
             // Overall I'm not happy how leaky this is, we're using input actions to have flexibility to bind to different controls,
@@ -379,7 +371,7 @@ namespace InputSystem.Plugins.InputForUI
                 type = NavigationEvent.Type.Submit,
                 direction = NavigationEvent.Direction.None,
                 timestamp = _currentTime,
-                eventSource = EventSource.Unspecified, // TODO
+                eventSource = GetEventSource(ctx),
                 playerId = kDefaultPlayerId,
                 eventModifiers = _eventModifiers
             }));
@@ -393,7 +385,7 @@ namespace InputSystem.Plugins.InputForUI
                 type = NavigationEvent.Type.Cancel,
                 direction = NavigationEvent.Direction.None,
                 timestamp = _currentTime,
-                eventSource = EventSource.Unspecified, // TODO
+                eventSource = GetEventSource(ctx),
                 playerId = kDefaultPlayerId,
                 eventModifiers = _eventModifiers
             }));
@@ -445,9 +437,9 @@ namespace InputSystem.Plugins.InputForUI
             }));
         }
 
-        private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseLeft);
-        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseMiddle);
-        private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSourceForCallback(ctx), PointerEvent.Button.MouseRight);
+        private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseLeft);
+        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseMiddle);
+        private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseRight);
 
         private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
@@ -455,7 +447,7 @@ namespace InputSystem.Plugins.InputForUI
             if (scrollDelta.sqrMagnitude < kSmallestReportedMovementSqrDist)
                 return;
 
-            var eventSource = GetEventSourceForCallback(ctx);
+            var eventSource = GetEventSource(ctx);
             ref var state = ref GetPointerStateForSource(eventSource);
 
             var position = Vector2.zero;
