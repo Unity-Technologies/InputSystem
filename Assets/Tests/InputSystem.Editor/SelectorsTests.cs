@@ -1,3 +1,6 @@
+// UITK TreeView is not supported in earlier versions
+// Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
+#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -39,3 +42,4 @@ internal class SelectorsTests
         Assert.That(treeViewData[1].children.ElementAt(0).data.name, Is.EqualTo(InputControlPath.ToHumanReadableString(actionTwo.bindings[0].path)));
     }
 }
+#endif
