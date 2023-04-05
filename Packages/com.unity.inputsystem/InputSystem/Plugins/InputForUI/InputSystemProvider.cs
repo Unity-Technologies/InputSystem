@@ -33,7 +33,9 @@ namespace InputSystem.Plugins.InputForUI
         private InputActionReference _rightClickAction;
         private InputActionReference _scrollWheelAction;
 
-        private List<Event> _events = new List<Event>();
+        InputAction _nextPreviousAction;
+
+        List<Event> _events = new List<Event>();
 
         private PointerState _mouseState;
         private bool _seenMouseEvents;
@@ -45,6 +47,8 @@ namespace InputSystem.Plugins.InputForUI
         private bool _seenTouchEvents;
 
         private const float kSmallestReportedMovementSqrDist = 0.01f;
+
+        private NavigationEventRepeatHelper repeatHelper = new();
 
         static InputSystemProvider()
         {
@@ -86,6 +90,21 @@ namespace InputSystem.Plugins.InputForUI
             RegisterActions(_cfg);
         }
 
+        private void OnNextPreviousPerformed(InputAction.CallbackContext ctx)
+        {
+            if (ctx.control.device is Keyboard)
+            {
+                var keyboard = ctx.control.device as Keyboard;
+                EventProvider.Dispatch(Event.From(new NavigationEvent
+                {
+                    type = NavigationEvent.Type.Move,
+                    direction = keyboard.shiftKey.isPressed ? NavigationEvent.Direction.Previous : NavigationEvent.Direction.Next,
+                    timestamp = _currentTime,
+                    eventSource = EventSource.Keyboard,
+                }));
+            }
+        }
+
         public void Shutdown()
         {
             UnregisterActions(_cfg);
@@ -99,6 +118,10 @@ namespace InputSystem.Plugins.InputForUI
             _inputEventPartialProvider.Update();
             
             _events.Sort(SortEvents);
+
+            var currentTime = (DiscreteTime)Time.timeAsRational;
+
+            DirectionNavigation(currentTime);
 
             foreach (var ev in _events)
             {
@@ -117,6 +140,60 @@ namespace InputSystem.Plugins.InputForUI
             _seenTouchEvents = false;
             _seenPenEvents = false;
             _seenMouseEvents = false;
+        }
+
+        private void DirectionNavigation(DiscreteTime currentTime)
+        {
+            //WIP
+            //TODO: base implementation of IM provider for now and learn stuff
+            //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
+            var(move, axesButtonWerePressed) = ReadCurrentNavigationMoveVector();
+
+            var direction = NavigationEvent.DetermineMoveDirection(move);
+
+            if (direction == NavigationEvent.Direction.None)
+            {
+                repeatHelper.Reset();
+            }
+            else
+            {
+                if (repeatHelper.ShouldSendMoveEvent(currentTime, direction, axesButtonWerePressed))
+                {
+                    EventProvider.Dispatch(Event.From(new NavigationEvent
+                    {
+                        type = NavigationEvent.Type.Move,
+                        direction = direction,
+                        timestamp = currentTime,
+                        eventSource = GetEventSourceFromDevice(_moveAction.action.activeControl.device),
+                        playerId = kDefaultPlayerId,
+                        eventModifiers = _eventModifiers
+                    }));
+                }
+            }
+        }
+
+        private (Vector2, bool) ReadCurrentNavigationMoveVector()
+        {
+            var move = _moveAction.action.ReadValue<Vector2>();
+
+            var axisWasPressed = _moveAction.action.WasPressedThisFrame();
+
+            return (move, axisWasPressed);
+        }
+
+        private EventSource GetEventSourceFromDevice(InputDevice device)
+        {
+            var eventSource = EventSource.Unspecified;
+            switch (_moveAction.action.activeControl.device)
+            {
+                case Gamepad:
+                    eventSource = EventSource.Gamepad;
+                    break;
+                case Keyboard:
+                    eventSource = EventSource.Keyboard;
+                    break;
+            }
+            return eventSource;
         }
 
         private static int SortEvents(Event a, Event b)
@@ -297,25 +374,6 @@ namespace InputSystem.Plugins.InputForUI
                 pointerState.OnMove(_currentTime, position, targetDisplay);
         }
 
-        private void OnMovePerformed(InputAction.CallbackContext ctx)
-        {
-            var direction = NavigationEvent.DetermineMoveDirection(ctx.ReadValue<Vector2>());
-            if (direction == NavigationEvent.Direction.None)
-                return;
-            //     _navigationEventRepeatHelper.Reset();
-
-            // TODO repeat rate
-            DispatchFromCallback(Event.From(new NavigationEvent
-            {
-                type = NavigationEvent.Type.Move,
-                direction = direction,
-                timestamp = _currentTime,
-                eventSource = EventSource.Unspecified, // TODO
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
-            }));
-        }
-
         private void OnSubmitPerformed(InputAction.CallbackContext ctx)
         {
             // TODO repeat rate
@@ -444,6 +502,27 @@ namespace InputSystem.Plugins.InputForUI
             }));
         }
 
+        private void RegisterNextPreviousAction()
+        {
+            _nextPreviousAction = new InputAction(name: "nextPreviousAction");
+            // TODO add more default bindings, or make them configurable
+            _nextPreviousAction.AddBinding("<Keyboard>/tab");
+            if (_nextPreviousAction != null)
+                _nextPreviousAction.performed += OnNextPreviousPerformed;
+
+            _nextPreviousAction.Enable();
+        }
+
+        private void UnregisterNextPreviousAction()
+        {
+            if (_nextPreviousAction != null)
+            {
+                _nextPreviousAction.performed -= OnNextPreviousPerformed;
+                _nextPreviousAction.Disable();
+                _nextPreviousAction = null;
+            }
+        }
+
         private void RegisterActions(Configuration cfg)
         {
             _inputActionAsset = InputActionAsset.FromJson(cfg.InputActionAssetAsJson);
@@ -484,6 +563,10 @@ namespace InputSystem.Plugins.InputForUI
             // When adding new one's don't forget to add them to UnregisterActions 
 
             _inputActionAsset.Enable();
+
+            // TODO make it configurable as it is not part of default config
+            // The Next/Previous action is not part of the input actions asset
+            RegisterNextPreviousAction();
         }
 
         private void UnregisterActions(Configuration cfg)
@@ -522,6 +605,10 @@ namespace InputSystem.Plugins.InputForUI
             _scrollWheelAction = null;
 
             _inputActionAsset.Disable();
+
+            // The Next/Previous action is not part of the input actions asset
+            UnregisterNextPreviousAction();
+
             UnityEngine.Object.Destroy(_inputActionAsset); // TODO check if this is ok
         }
 
