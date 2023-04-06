@@ -1120,6 +1120,63 @@ partial class CoreTests
     }
 
     [Test]
+    [Category("Actions")]
+    public void Actions_BindingMask_HandlesWildcards()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeTo(action);
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey }));
+
+            // Enable only keyboards via mask
+            action.bindingMask = new InputBinding(path: "<Keyboard>/*");
+
+            Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.aKey }));
+
+            Press(keyboard.aKey);
+            Release(keyboard.aKey);
+
+            Assert.That(trace,
+                Started(action, keyboard.aKey)
+                    .AndThen(Performed(action, keyboard.aKey))
+                    .AndThen(Canceled(action, keyboard.aKey)));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchingBindingToMask()
+    {
+        var mask = new InputBinding("<Keyboard>/e");
+        var binding = new InputBinding("<Keyboard>/e");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+        mask.path = "<Keyboard>/d";
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+        mask.path = "<Keyboard>/*";
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+        mask.path = null;
+        binding.path = null;
+        mask.name = "A";
+        binding.name = "A";
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+        mask.name = null;
+        binding.name = "A";
+        mask.groups = "B";
+        binding.groups = "B";
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+        mask.path = "<Keyboard>/*";
+        binding.path = "<Mouse>/leftButton";
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_MatchingPathToMask()
     {
