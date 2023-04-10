@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public static class VisualElementExtensions
+    internal static class VisualElementExtensions
     {
         public static TElement Q<TElement>(this VisualElement visualElement, string name) where TElement : VisualElement
         {

@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     /// <summary>
     /// A visual element that supports renaming of items.
     /// </summary>
-    public class InputActionsTreeViewItem : VisualElement
+    internal class InputActionsTreeViewItem : VisualElement
     {
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
