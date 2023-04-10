@@ -21,19 +21,108 @@ When the Input System automatically creates a layout for an HID, it always repor
 
 The auto-generated layouts represent a "best effort" on the part of the Input System. The way Human Interface Devices describe themselves in accordance with the HID standard is too ambiguous in practice, so generated layouts might lead to Controls that don't work as expected. For example, while the layout builder can identify hat switches and D-pads, it can often only make guesses as to which direction represents which. The same goes for individual buttons, which generally aren't assigned any meaning in HID.
 
-The best way to resolve the situation of HIDs not working as expected is to add a custom layout, which bypasses auto-generation altogether. See [Overriding the HID fallback](#overriding-the-hid-fallback) for details.
+The best way to resolve the situation of HIDs not working as expected is to add a custom layout, which bypasses auto-generation altogether. See [Creating a custom device layout](#creating-a-custom-device-layout) for details.
 
 ## HID output
 
 HIDs can support output (for example, to toggle lights or force feedback motors on a gamepad). Unity controls output by sending HID Output Report commands to a Device. Output reports use Device-specific data formats. To use HID Output Reports, call [`InputDevice.ExecuteCommand`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__) to send a command struct with the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#properties) property set as `"HIDO"` to a Device. The command struct contains the Device-specific data sent out to the HID.
 
-## Overriding the HID fallback
+## Creating a custom device layout
 
 Often, when using the layouts auto-generated for HIDs, the result isn't ideal. Controls don't receive proper names specific to the Device, some Controls might not work as expected, and some Controls that use vendor-specific formats might not appear altogether.
 
-The best way to deal with this is to set up a custom Device layout specifically for your Device. This overrides the default auto-generation and gives you full control over how the Device is exposed.
+The best way to deal with this is to override the HID fallback and set up a custom Device layout specifically for your Device. This overrides the default auto-generation and gives you full control over how the Device is exposed.
 
-### Example workflow
+Below are three example workflows showing different ways to achieve this.
+
+- [Example 1 - Use an existing C# InputDevice](#custom-device-workflow-example-1---use-an-existing-c-inputdevice)
+- [Example 2 - Create your own InputDevice class](#custom-device-workflow-example-2---create-your-own-inputdevice-class)
+- [Example 3 - A more complex example using the PS4 DualShock Controller](#custom-device-workflow-example-3---ps4-dualshock-controller)
+
+### Custom Device Workflow Example 1 - Use an existing C# InputDevice
+
+If you want to use one of the existing C# [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) classes in code to interface with your Device, you can build on an existing layout using JSON:
+
+```
+    {
+        "name" : "MyDevice",
+        "extend" : "Gamepad", // Or some other thing
+        "controls" : [
+            {
+                "name" : "firstButton",
+                "layout" : "Button",
+                "offset" : 0,
+                "bit": 0,
+                "format" : "BIT",
+            },
+            {
+                "name" : "secondButton",
+                "layout" : "Button",
+                "offset" : 0,
+                "bit": 1,
+                "format" : "BIT",
+            },
+            {
+                "name" : "axis",
+                "layout" : "Axis",
+                "offset" : 4,
+                "format" : "FLT",
+                "parameters" : "clamp=true,clampMin=0,clampMax=1"
+            }
+        ]
+    }
+```
+You then register your layout with the system and then instantiate it:
+
+```C#
+    InputSystem.RegisterControlLayout(myDeviceJson);
+    var device = InputSystem.AddDevice("MyDevice");
+```
+
+### Custom Device Workflow Example 2 - Create your own InputDevice class
+
+Alternatively, you can create your own [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) class and state layouts in C#.
+
+```C#
+    public struct MyDeviceState : IInputStateTypeInfo
+    {
+        // FourCC type codes are used to identify the memory layouts of state blocks.
+        public FourCC format => new FourCC('M', 'D', 'E', 'V');
+
+        [InputControl(name = "firstButton", layout = "Button", bit = 0)]
+        [InputControl(name = "secondButton", layout = "Button", bit = 1)]
+        public int buttons;
+        [InputControl(layout = "Analog", parameters="clamp=true,clampMin=0,clampMax=1")]
+        public float axis;
+    }
+
+    [InputState(typeof(MyDeviceState)]
+    public class MyDevice : InputDevice
+    {
+        public ButtonControl firstButton { get; private set; }
+        public ButtonControl secondButton { get; private set; }
+        public AxisControl axis { get; private set; }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+             firstButton = setup.GetControl<ButtonControl>(this, "firstButton");
+             secondButton = setup.GetControl<ButtonControl>(this, "secondButton");
+             axis = setup.GetControl<AxisControl>(this, "axis");
+             base.FinishSetup(setup);
+        }
+    }
+```
+
+To create an instance of your Device, register it as a layout and then instantiate it:
+
+```C#
+    InputSystem.RegisterControlLayout("MyDevice", typeof(MyDevice));
+    InputSystem.AddDevice("MyDevice");
+```
+
+### Custom Device Workflow Example 3 - PS4 DualShock Controller
+
+This example workflow uses the same technique as the previous example, but provides more detail by using the PS4 DualShock controller as a more complex device to set up.
 
 The following example assumes that the Input System doesn't already have a custom layout for the PS4 DualShock controller, and that you want to add such a layout.
 
