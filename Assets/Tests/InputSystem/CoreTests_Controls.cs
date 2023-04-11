@@ -1152,27 +1152,100 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_MatchingBindingToMask()
+    public void Controls_BindingMaskGroup_MatchesEqualGroups()
+    {
+        var mask = new InputBinding(null, groups: "D");
+        var binding = new InputBinding(null, groups: "D");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroupNullName_MatchesIgnoringBindingName()
+    {
+        var mask = new InputBinding(null, name: null, groups: "B");
+        var binding = new InputBinding(null, name: "A", groups: "B");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroup_DoesNotMatchDifferentGroups()
+    {
+        var mask = new InputBinding(null, groups: "B");
+        var binding = new InputBinding(null, groups: "C");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskGroupDifferentGroups_DoesNotMatchIgnoresEqualName()
+    {
+        var mask = new InputBinding(null, name: "A", groups: "B");
+        var binding = new InputBinding(null, name: "A", groups: "C");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskName_DoesMatchSameName()
+    {
+        var mask = new InputBinding(null, name: "A");
+        var binding = new InputBinding(null, name: "A");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskName_DoesNotMatchDifferentNames()
+    {
+        var mask = new InputBinding(null, name: "A");
+        var binding = new InputBinding(null, name: "B");
+        Assert.That(mask.MatchesMask(ref binding), Is.False);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskNameNullGroup_DoesMatchNamesIgnoringGroup()
+    {
+        var mask = new InputBinding(null, name: "A");
+        var binding = new InputBinding(null, name: "A", groups: "C");
+        Assert.That(mask.MatchesMask(ref binding), Is.True);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesMatchPath()
     {
         var mask = new InputBinding("<Keyboard>/e");
         var binding = new InputBinding("<Keyboard>/e");
         Assert.That(mask.MatchesMask(ref binding), Is.True);
-        mask.path = "<Keyboard>/d";
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesNotMatchDifferentPaths()
+    {
+        var mask = new InputBinding("<Keyboard>/d");
+        var binding = new InputBinding("<Keyboard>/e");
         Assert.That(mask.MatchesMask(ref binding), Is.False);
-        mask.path = "<Keyboard>/*";
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesMatchWildcardToPath()
+    {
+        var mask = new InputBinding("<Keyboard>/*");
+        var binding = new InputBinding("<Keyboard>/e");
         Assert.That(mask.MatchesMask(ref binding), Is.True);
-        mask.path = null;
-        binding.path = null;
-        mask.name = "A";
-        binding.name = "A";
-        Assert.That(mask.MatchesMask(ref binding), Is.True);
-        mask.name = null;
-        binding.name = "A";
-        mask.groups = "B";
-        binding.groups = "B";
-        Assert.That(mask.MatchesMask(ref binding), Is.True);
-        mask.path = "<Keyboard>/*";
-        binding.path = "<Mouse>/leftButton";
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_BindingMaskPath_DoesNotMatchWildcardToDifferentPath()
+    {
+        var mask = new InputBinding("<Keyboard>/*");
+        var binding = new InputBinding("<Mouse>/leftButton");
         Assert.That(mask.MatchesMask(ref binding), Is.False);
     }
 
