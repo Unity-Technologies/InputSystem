@@ -207,6 +207,9 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
             }
+
+            // Refresh editors.
+            InputActionEditorWindow.RefreshAllOnAssetReimport();
         }
 
         ////REVIEW: actually pre-populate with some stuff?
