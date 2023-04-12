@@ -181,7 +181,7 @@ namespace InputSystem.Plugins.InputForUI
 
         private static int SortEvents(Event a, Event b)
         {
-            return Event.Compare(a, b);
+            return Event.CompareType(a, b);
         }
 
         public void OnFocusChanged(bool focus)
