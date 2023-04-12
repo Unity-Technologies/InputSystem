@@ -90,22 +90,6 @@ namespace InputSystem.Plugins.InputForUI
             RegisterActions(_cfg);
         }
 
-        private void OnNextPreviousPerformed(InputAction.CallbackContext ctx)
-        {
-            if (ctx.control.device is Keyboard)
-            {
-                //TODO repeat rate
-                var keyboard = ctx.control.device as Keyboard;
-                DispatchFromCallback(Event.From(new NavigationEvent
-                {
-                    type = NavigationEvent.Type.Move,
-                    direction = keyboard.shiftKey.isPressed ? NavigationEvent.Direction.Previous : NavigationEvent.Direction.Next,
-                    timestamp = _currentTime,
-                    eventSource = EventSource.Keyboard,
-                }));
-            }
-        }
-
         public void Shutdown()
         {
             UnregisterActions(_cfg);
@@ -143,12 +127,18 @@ namespace InputSystem.Plugins.InputForUI
             _seenMouseEvents = false;
         }
 
+        //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
         private void DirectionNavigation(DiscreteTime currentTime)
         {
-            //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
             var(move, axesButtonWerePressed) = ReadCurrentNavigationMoveVector();
-
             var direction = NavigationEvent.DetermineMoveDirection(move);
+
+            // Checks for next/previous directions if no movement was detected
+            if (direction == NavigationEvent.Direction.None)
+            {
+                direction = ReadNextPreviousDirection();
+                axesButtonWerePressed = _nextPreviousAction.WasPressedThisFrame();
+            }
 
             if (direction == NavigationEvent.Direction.None)
             {
@@ -163,11 +153,29 @@ namespace InputSystem.Plugins.InputForUI
                         type = NavigationEvent.Type.Move,
                         direction = direction,
                         timestamp = currentTime,
-                        eventSource = GetEventSource(_moveAction.action.activeControl.device),
+                        eventSource = GetEventSource(GetActiveDeviceFromDirection(direction)),
                         playerId = kDefaultPlayerId,
                         eventModifiers = _eventModifiers
                     }));
                 }
+            }
+        }
+
+        private InputDevice GetActiveDeviceFromDirection(NavigationEvent.Direction direction)
+        {
+            switch (direction)
+            {
+                case NavigationEvent.Direction.Left:
+                case NavigationEvent.Direction.Up:
+                case NavigationEvent.Direction.Right:
+                case NavigationEvent.Direction.Down:
+                    return _moveAction.action.activeControl.device;
+                case NavigationEvent.Direction.Next:
+                case NavigationEvent.Direction.Previous:
+                    return _nextPreviousAction.activeControl.device;
+                case NavigationEvent.Direction.None:
+                default:
+                    return Keyboard.current;
             }
         }
 
@@ -177,6 +185,25 @@ namespace InputSystem.Plugins.InputForUI
             // Check if the action was "pressed" this frame to deal with repeating events
             var axisWasPressed = _moveAction.action.WasPressedThisFrame();
             return (move, axisWasPressed);
+        }
+
+        private NavigationEvent.Direction ReadNextPreviousDirection()
+        {
+            if (_nextPreviousAction.IsPressed())
+            {
+                //TODO: For now it only deals with Keyboard, needs to deal with other devices if we can add bindings
+                //      for Gamepad, etc
+                //TODO: An alternative could be to have an action for next and for previous since shortcut support does
+                //      not work properly
+                if (_nextPreviousAction.activeControl.device is Keyboard)
+                {
+                    var keyboard = _nextPreviousAction.activeControl.device as Keyboard;
+                    // Return direction based on whether shift is pressed or not
+                    return keyboard.shiftKey.isPressed ? NavigationEvent.Direction.Previous : NavigationEvent.Direction.Next;
+                }
+            }
+
+            return NavigationEvent.Direction.None;
         }
 
         private static int SortEvents(Event a, Event b)
@@ -492,12 +519,9 @@ namespace InputSystem.Plugins.InputForUI
 
         private void RegisterNextPreviousAction()
         {
-            _nextPreviousAction = new InputAction(name: "nextPreviousAction");
+            _nextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Button);
             // TODO add more default bindings, or make them configurable
             _nextPreviousAction.AddBinding("<Keyboard>/tab");
-            if (_nextPreviousAction != null)
-                _nextPreviousAction.performed += OnNextPreviousPerformed;
-
             _nextPreviousAction.Enable();
         }
 
@@ -505,7 +529,6 @@ namespace InputSystem.Plugins.InputForUI
         {
             if (_nextPreviousAction != null)
             {
-                _nextPreviousAction.performed -= OnNextPreviousPerformed;
                 _nextPreviousAction.Disable();
                 _nextPreviousAction = null;
             }
