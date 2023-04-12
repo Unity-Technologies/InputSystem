@@ -418,7 +418,7 @@ namespace UnityEngine.InputSystem.Utilities
                             var first = firstList[startIndexInFirst + i];
                             var second = secondList[startIndexInSecond + i];
 
-                            if (char.ToLower(first) != char.ToLower(second))
+                            if (char.ToLowerInvariant(first) != char.ToLowerInvariant(second))
                             {
                                 isMatch = false;
                                 break;
