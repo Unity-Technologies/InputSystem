@@ -15,6 +15,9 @@ however, it has to be formatted properly to pass verification tests.
 - Added `InputSystem.runInBackground` to be used internally by specific platforms packages. Allows telling the input system that a specific platform runs in background. It allows fixing of [case UUM-6744](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744).
 - Added new UIToolkit version of the `InputActionsAsset` editor. Currently this is incomplete (view-only) and the existing editor is still used by default.
 
+### Changed
+- Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
+
 ## [1.5.1] - 2023-03-15
 
 ### Fixed
