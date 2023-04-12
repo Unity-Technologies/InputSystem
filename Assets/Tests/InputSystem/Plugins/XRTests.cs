@@ -255,7 +255,7 @@ internal class XRTests : CoreTestsFixture
         var vec2Control = generatedLayout["Vector2"];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.offset, Is.EqualTo(12));
-        Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
+        Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Stick")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
