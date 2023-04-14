@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Utilities
                 table.Remove(internedName);
             }
             else
-            { 
+            {
                 if (table.ContainsValue(type))
                     aliases.Add(internedName);
             }

@@ -4504,6 +4504,7 @@ partial class CoreTests
         }
     }
 
+#if UNITY_EDITOR
     [Test]
     [Category("Actions")]
     public void Actions_AddingSameProcessorTwice_DoesntImpactUIHideState()
@@ -4519,6 +4520,8 @@ partial class CoreTests
         hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
         Assert.That(hide, Is.EqualTo(false));
     }
+
+#endif
 
     [Test]
     [Category("Actions")]
@@ -4536,10 +4539,10 @@ partial class CoreTests
         float? receivedValue = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedValue, Is.Null);
-                receivedValue = ctx.ReadValue<float>();
-            };
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValue<float>();
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
         InputSystem.Update();
