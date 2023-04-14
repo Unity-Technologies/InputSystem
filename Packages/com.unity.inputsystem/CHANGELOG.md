@@ -18,6 +18,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
 
+### Fixed
+- Fixed BindingPath String-Comparison to be culture and case insensitive (case ISXB-449).
+
 ## [1.5.1] - 2023-03-15
 
 ### Fixed
