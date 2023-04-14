@@ -131,7 +131,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (usageAndLayouts.Item2.Any(LayoutMatchesExpectedControlLayoutFilter))
                 {
-                    var child = new UsageDropdownItem(usageAndLayouts.Item1, device);
+                    var child = new UsageDropdownItem(device, usageAndLayouts.Item1);
                     usageRoot.AddChild(child);
                 }
             }
@@ -183,22 +183,14 @@ namespace UnityEngine.InputSystem.Editor
 
             var defaultControlPickerLayout = new DefaultInputControlPickerLayout();
 
-            // Add control usages for the device
-            var deviceControlUsages = BuildTreeForControlUsages(layout.name);
-            if (deviceControlUsages.children.Any())
-            {
-                deviceItem.AddChild(deviceControlUsages);
-                deviceItem.AddSeparator();
-            }
-
-            // Add common device usage variants.
+            // Add common usage variants of the device
             if (layout.commonUsages.Count > 0)
             {
                 foreach (var usage in layout.commonUsages)
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
 
-                    // Add control usages for the device sub-variant
+                    // Add control usages to the device variants
                     var deviceVariantControlUsages = BuildTreeForControlUsages(usageItem.name);
                     if (deviceVariantControlUsages.children.Any())
                     {
@@ -210,6 +202,14 @@ namespace UnityEngine.InputSystem.Editor
                         AddControlTreeItemsRecursive(defaultControlPickerLayout, layout, usageItem, layout.name, usage, searchable);
                     deviceItem.AddChild(usageItem);
                 }
+                deviceItem.AddSeparator();
+            }
+
+            // Add control usages
+            var deviceControlUsages = BuildTreeForControlUsages(layout.name);
+            if (deviceControlUsages.children.Any())
+            {
+                deviceItem.AddChild(deviceControlUsages);
                 deviceItem.AddSeparator();
             }
 

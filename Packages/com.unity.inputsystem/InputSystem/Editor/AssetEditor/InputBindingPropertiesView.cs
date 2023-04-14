@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlPathEditor?.Dispose();
         }
 
-        bool showPaths = false;
+        private static bool showPaths = false;
         protected override void DrawGeneralProperties()
         {
             var currentPath = m_PathProperty.stringValue;
@@ -104,12 +104,12 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
-                showPaths = EditorGUILayout.Toggle("Show full paths", showPaths);
+                showPaths = EditorGUILayout.Toggle("Show all matched control paths", showPaths);
                 // Show the specific layouts that implement the control on this path
                 if (showPaths)
                 {
                     // Control scheme matrix.
-                    DrawFullPathInfo();
+                    DrawMatchingControlPaths();
                 }
                 // Control scheme matrix.
                 DrawUseInControlSchemes();
@@ -117,48 +117,46 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         /// <summary>
-        /// Draw control scheme matrix that allows selecting which control schemes a particular
-        /// binding appears in.
+        /// Finds all registered control paths implemented by concrete classes which match the current binding path and renders it.
         /// </summary>
-        private void DrawFullPathInfo()
+        private void DrawMatchingControlPaths()
         {
-
             var path = m_ControlPathEditor.pathProperty.stringValue;
             var layout = InputControlPath.TryGetDeviceLayout(path);
             var parsedPath = InputControlPath.Parse(path).ToArray();
 
-            // Try to find all relevant full paths
             if(parsedPath.Length == 2)
             {
-                var usages = parsedPath[1].usages;
-                var name = parsedPath[1].name;
-
                 EditorGUILayout.BeginVertical();
-                DrawPathInfoForLayout(new InternedString(layout), usages, name);
+                DrawMatchingControlPathsForLayout(new InternedString(layout), ref parsedPath[1]);
                 EditorGUILayout.EndVertical();
             }
-            // Otherwise skip
         }
 
-        private void DrawPathInfoForLayout(InternedString rootLayout, IEnumerable<string> usages, string name)
+        /// <summary>
+        /// Finds all registered control paths implemented by concrete classes under a given device layout which match the current binding path and renders it.
+        /// </summary>
+        /// <param name="deviceLayout">The device layout to draw control paths for</param>
+        /// <param name="pathControlComponent">The parsed path component containing details of the Input Controls that can be matched</param>
+        private void DrawMatchingControlPathsForLayout(InternedString deviceLayout, ref InputControlPath.ParsedPathComponent pathControlComponent)
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
-            var childLayouts = EditorInputControlLayoutCache.allLayouts
-                   .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(rootLayout)).OrderBy(x => x.displayName);
+            var matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
+                   .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(deviceLayout)).OrderBy(x => x.displayName);
 
-            if (rootLayout == InputControlPath.Wildcard)
+            if (deviceLayout == InputControlPath.Wildcard)
             {
-                childLayouts = EditorInputControlLayoutCache.allLayouts
+                matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
                    .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
             }
 
-            if (childLayouts.Count() > 0)
+            if (matchedChildLayouts.Count() > 0)
             {
-                foreach (var childLayout in childLayouts)
+                foreach (var childLayout in matchedChildLayouts)
                 {
                     for(int i = 0; i < childLayout.m_Controls.Length;i++)
                     {
-                        if (InputControlPath.Matches(usages, name, ref childLayout.m_Controls[i]))
+                        if (InputControlPath.MatchControlComponent(ref pathControlComponent, ref childLayout.m_Controls[i]))
                         {
                             EditorGUILayout.LabelField(childLayout.displayName + "/" + childLayout.m_Controls[i].displayName);
                             continue;
@@ -166,7 +164,7 @@ namespace UnityEngine.InputSystem.Editor
                     }
 
                     EditorGUI.indentLevel++;
-                    DrawPathInfoForLayout(childLayout.name, usages, name);
+                    DrawMatchingControlPathsForLayout(childLayout.name, ref pathControlComponent);
                     EditorGUI.indentLevel--;
                 }
             }

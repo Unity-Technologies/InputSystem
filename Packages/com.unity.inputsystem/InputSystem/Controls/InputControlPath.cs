@@ -720,36 +720,33 @@ namespace UnityEngine.InputSystem
             return MatchesRecursive(ref parser, control);
         }
 
-        internal static bool Matches(IEnumerable<string> usages, string name, ref InputControlLayout.ControlItem controlItem)
+        internal static bool MatchControlComponent(ref ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem)
         {
-            if (usages.Count() > 0)
+            // All of usages should match to the one of usage in the control
+            foreach (var usage in expectedControlComponent.m_Usages)
             {
-                // All of usages should match to the one of usage in the control
-                foreach (var usage in usages)
+                if (!usage.isEmpty)
                 {
-                    if (usage.Length > 0)
+                    var usageCount = controlItem.usages.Count;
+                    var anyUsageMatches = false;
+                    for (var i = 0; i < usageCount; ++i)
                     {
-                        var usageCount = controlItem.usages.Count;
-                        var anyUsageMatches = false;
-                        for (var i = 0; i < usageCount; ++i)
+                        if (StringMatches(usage, controlItem.usages[i]))
                         {
-                            if (StringMatches(usage, controlItem.usages[i]))
-                            {
-                                anyUsageMatches = true;
-                                break;
-                            }
+                            anyUsageMatches = true;
+                            break;
                         }
-
-                        if (!anyUsageMatches)
-                            return false;
                     }
+
+                    if (!anyUsageMatches)
+                        return false;
                 }
             }
 
             // Match name.
-            if (name.Length > 0)
+            if (!expectedControlComponent.m_Name.isEmpty)
             {
-                if (!StringMatches(name, controlItem.name))
+                if (!StringMatches(expectedControlComponent.m_Name, controlItem.name))
                     return false;
             }
 
