@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
         public ControlUsageDropdownItem(string device, string usage, string controlUsage)
             : base(usage)
         {
-            m_Device = device;
+            m_Device = string.IsNullOrEmpty(device) ? "*" : device;
             m_Usage = usage;
             m_ControlPath = $"{{{ controlUsage }}}";
             name = controlUsage;

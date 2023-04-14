@@ -122,18 +122,45 @@ namespace UnityEngine.InputSystem.Editor
         private void DrawMatchingControlPaths()
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
-            var layout = InputControlPath.TryGetDeviceLayout(path);
+            var deviceLayout = new InternedString(InputControlPath.TryGetDeviceLayout(path));
             var parsedPath = InputControlPath.Parse(path).ToArray();
 
-            if(parsedPath.Length == 2)
+            bool matchExists = false;
+            EditorGUILayout.BeginVertical();
+            if (parsedPath.Length == 2)
             {
-                EditorGUILayout.BeginVertical();
-                if(!DrawMatchingControlPathsForLayout(new InternedString(layout), ref parsedPath[1]))
+                if (deviceLayout != InputControlPath.Wildcard)
                 {
-                    EditorGUILayout.LabelField("No registered control paths match this current binding");
+                    var rootLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.name == deviceLayout);
+                    if (rootLayout != null)
+                    {
+                        for (int i = 0; i < rootLayout.m_Controls.Length; i++)
+                        {
+                            if (InputControlPath.MatchControlComponent(ref parsedPath[1], ref rootLayout.m_Controls[i]))
+                            {
+                                EditorGUILayout.LabelField($"{rootLayout.displayName}/{rootLayout.m_Controls[i].displayName}");
+                                matchExists = true;
+                                continue;
+                            }
+                        }
+
+                        EditorGUI.indentLevel++;
+                        matchExists |= DrawMatchingControlPathsForLayout(deviceLayout, ref parsedPath[1]);
+                        EditorGUI.indentLevel--;
+                    }
                 }
-                EditorGUILayout.EndVertical();
+                else
+                {
+                    matchExists |= DrawMatchingControlPathsForLayout(deviceLayout, ref parsedPath[1]);
+                }
             }
+
+            if (!matchExists)
+            {
+                EditorGUILayout.LabelField("No registered control paths match this current binding");
+            }
+
+            EditorGUILayout.EndVertical();
         }
 
         /// <summary>
@@ -164,7 +191,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         if (InputControlPath.MatchControlComponent(ref pathControlComponent, ref childLayout.m_Controls[i]))
                         {
-                            EditorGUILayout.LabelField(childLayout.displayName + "/" + childLayout.m_Controls[i].displayName);
+                            EditorGUILayout.LabelField($"{childLayout.displayName}/{childLayout.m_Controls[i].displayName}");
                             matchExists = true;
                             continue;
                         }
