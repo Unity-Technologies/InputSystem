@@ -720,6 +720,42 @@ namespace UnityEngine.InputSystem
             return MatchesRecursive(ref parser, control);
         }
 
+        internal static bool Matches(IEnumerable<string> usages, string name, ref InputControlLayout.ControlItem controlItem)
+        {
+            if (usages.Count() > 0)
+            {
+                // All of usages should match to the one of usage in the control
+                foreach (var usage in usages)
+                {
+                    if (usage.Length > 0)
+                    {
+                        var usageCount = controlItem.usages.Count;
+                        var anyUsageMatches = false;
+                        for (var i = 0; i < usageCount; ++i)
+                        {
+                            if (StringMatches(usage, controlItem.usages[i]))
+                            {
+                                anyUsageMatches = true;
+                                break;
+                            }
+                        }
+
+                        if (!anyUsageMatches)
+                            return false;
+                    }
+                }
+            }
+
+            // Match name.
+            if (name.Length > 0)
+            {
+                if (!StringMatches(name, controlItem.name))
+                    return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Check whether the given path matches <paramref name="control"/> or any of its parents.
         /// </summary>

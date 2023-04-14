@@ -72,12 +72,13 @@ namespace UnityEngine.InputSystem.Editor
 
     internal sealed class UsageDropdownItem : InputControlDropdownItem
     {
-        public override string controlPathWithDevice => $"{m_Device}/{{{m_ControlPath}}}";
+        public override string controlPathWithDevice => string.IsNullOrEmpty(m_Device) ? $"*/{{{m_ControlPath}}}" 
+                                                        : $"<{m_Device}>/{{{m_ControlPath}}}";
 
-        public UsageDropdownItem(string usage)
+        public UsageDropdownItem(string usage, string device)
             : base(usage)
         {
-            m_Device = "*";
+            m_Device = device;
             m_ControlPath = usage;
             id = controlPathWithDevice.GetHashCode();
             m_Searchable = true;

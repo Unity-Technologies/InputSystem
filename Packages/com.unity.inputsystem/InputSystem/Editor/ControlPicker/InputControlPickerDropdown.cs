@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Editor
             // Usages.
             if (m_Mode != InputControlPicker.Mode.PickDevice)
             {
-                var usages = BuildTreeForUsages();
+                var usages = BuildTreeForControlUsages();
                 if (usages.children.Any())
                 {
                     root.AddChild(usages);
@@ -124,14 +124,14 @@ namespace UnityEngine.InputSystem.Editor
             m_OnPickCallback(path);
         }
 
-        private AdvancedDropdownItem BuildTreeForUsages()
+        private AdvancedDropdownItem BuildTreeForControlUsages(string device = "")
         {
             var usageRoot = new AdvancedDropdownItem("Usages");
             foreach (var usageAndLayouts in EditorInputControlLayoutCache.allUsages)
             {
                 if (usageAndLayouts.Item2.Any(LayoutMatchesExpectedControlLayoutFilter))
                 {
-                    var child = new UsageDropdownItem(usageAndLayouts.Item1);
+                    var child = new UsageDropdownItem(usageAndLayouts.Item1, device);
                     usageRoot.AddChild(child);
                 }
             }
@@ -183,12 +183,29 @@ namespace UnityEngine.InputSystem.Editor
 
             var defaultControlPickerLayout = new DefaultInputControlPickerLayout();
 
-            // Add common usage variants.
+            // Add control usages for the device
+            var deviceControlUsages = BuildTreeForControlUsages(layout.name);
+            if (deviceControlUsages.children.Any())
+            {
+                deviceItem.AddChild(deviceControlUsages);
+                deviceItem.AddSeparator();
+            }
+
+            // Add common device usage variants.
             if (layout.commonUsages.Count > 0)
             {
                 foreach (var usage in layout.commonUsages)
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
+
+                    // Add control usages for the device sub-variant
+                    var deviceVariantControlUsages = BuildTreeForControlUsages(usageItem.name);
+                    if (deviceVariantControlUsages.children.Any())
+                    {
+                        usageItem.AddChild(deviceVariantControlUsages);
+                        usageItem.AddSeparator();
+                    }
+
                     if (m_Mode == InputControlPicker.Mode.PickControl)
                         AddControlTreeItemsRecursive(defaultControlPickerLayout, layout, usageItem, layout.name, usage, searchable);
                     deviceItem.AddChild(usageItem);

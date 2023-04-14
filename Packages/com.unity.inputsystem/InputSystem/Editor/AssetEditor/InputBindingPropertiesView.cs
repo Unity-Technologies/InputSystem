@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
 using UnityEngine.InputSystem.Layouts;
@@ -61,6 +62,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlPathEditor?.Dispose();
         }
 
+        bool showPaths = false;
         protected override void DrawGeneralProperties()
         {
             var currentPath = m_PathProperty.stringValue;
@@ -102,10 +104,75 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
+                showPaths = EditorGUILayout.Toggle("Show full paths", showPaths);
+                // Show the specific layouts that implement the control on this path
+                if (showPaths)
+                {
+                    // Control scheme matrix.
+                    DrawFullPathInfo();
+                }
                 // Control scheme matrix.
                 DrawUseInControlSchemes();
             }
         }
+
+        /// <summary>
+        /// Draw control scheme matrix that allows selecting which control schemes a particular
+        /// binding appears in.
+        /// </summary>
+        private void DrawFullPathInfo()
+        {
+
+            var path = m_ControlPathEditor.pathProperty.stringValue;
+            var layout = InputControlPath.TryGetDeviceLayout(path);
+            var parsedPath = InputControlPath.Parse(path).ToArray();
+
+            // Try to find all relevant full paths
+            if(parsedPath.Length == 2)
+            {
+                var usages = parsedPath[1].usages;
+                var name = parsedPath[1].name;
+
+                EditorGUILayout.BeginVertical();
+                DrawPathInfoForLayout(new InternedString(layout), usages, name);
+                EditorGUILayout.EndVertical();
+            }
+            // Otherwise skip
+        }
+
+        private void DrawPathInfoForLayout(InternedString rootLayout, IEnumerable<string> usages, string name)
+        {
+            var path = m_ControlPathEditor.pathProperty.stringValue;
+            var childLayouts = EditorInputControlLayoutCache.allLayouts
+                   .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(rootLayout)).OrderBy(x => x.displayName);
+
+            if (rootLayout == InputControlPath.Wildcard)
+            {
+                childLayouts = EditorInputControlLayoutCache.allLayouts
+                   .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+            }
+
+            if (childLayouts.Count() > 0)
+            {
+                foreach (var childLayout in childLayouts)
+                {
+                    for(int i = 0; i < childLayout.m_Controls.Length;i++)
+                    {
+                        if (InputControlPath.Matches(usages, name, ref childLayout.m_Controls[i]))
+                        {
+                            EditorGUILayout.LabelField(childLayout.displayName + "/" + childLayout.m_Controls[i].displayName);
+                            continue;
+                        }
+                    }
+
+                    EditorGUI.indentLevel++;
+                    DrawPathInfoForLayout(childLayout.name, usages, name);
+                    EditorGUI.indentLevel--;
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// Draw control scheme matrix that allows selecting which control schemes a particular
