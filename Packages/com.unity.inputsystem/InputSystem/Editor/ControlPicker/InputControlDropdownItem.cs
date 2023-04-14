@@ -70,15 +70,31 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 
-    internal sealed class UsageDropdownItem : InputControlDropdownItem
+    internal sealed class ControlUsageDropdownItem : InputControlDropdownItem
     {
-        public override string controlPathWithDevice => string.IsNullOrEmpty(m_Device) ? $"*/{{{m_ControlPath}}}" : $"<{m_Device}>/{{{m_ControlPath}}}";
+        public override string controlPathWithDevice => BuildControlPath();
+        private string BuildControlPath()
+        {
+            if (m_Device == "*")
+            {
+                var path = new StringBuilder(m_Device);
+                if (!string.IsNullOrEmpty(m_Usage))
+                    path.Append($"{{{m_Usage}}}");
+                if (!string.IsNullOrEmpty(m_ControlPath))
+                    path.Append($"/{m_ControlPath}");
+                return path.ToString();
+            }
+            else
+                return base.controlPathWithDevice;
+        }
 
-        public UsageDropdownItem(string device, string usage)
+        public ControlUsageDropdownItem(string device, string usage, string controlUsage)
             : base(usage)
         {
             m_Device = device;
-            m_ControlPath = usage;
+            m_Usage = usage;
+            m_ControlPath = $"{{{ controlUsage }}}";
+            name = controlUsage;
             id = controlPathWithDevice.GetHashCode();
             m_Searchable = true;
         }

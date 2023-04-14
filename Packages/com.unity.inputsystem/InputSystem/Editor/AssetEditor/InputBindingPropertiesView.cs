@@ -104,7 +104,7 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
-                showPaths = EditorGUILayout.Toggle("Show all matched control paths", showPaths);
+                showPaths = EditorGUILayout.Toggle("Show Matching Paths", showPaths);
                 // Show the specific layouts that implement the control on this path
                 if (showPaths)
                 {
@@ -128,17 +128,21 @@ namespace UnityEngine.InputSystem.Editor
             if(parsedPath.Length == 2)
             {
                 EditorGUILayout.BeginVertical();
-                DrawMatchingControlPathsForLayout(new InternedString(layout), ref parsedPath[1]);
+                if(!DrawMatchingControlPathsForLayout(new InternedString(layout), ref parsedPath[1]))
+                {
+                    EditorGUILayout.LabelField("No registered control paths match this current binding");
+                }
                 EditorGUILayout.EndVertical();
             }
         }
 
         /// <summary>
         /// Finds all registered control paths implemented by concrete classes under a given device layout which match the current binding path and renders it.
+        /// Return true if there exist matching registered control paths, false otherwise.
         /// </summary>
         /// <param name="deviceLayout">The device layout to draw control paths for</param>
         /// <param name="pathControlComponent">The parsed path component containing details of the Input Controls that can be matched</param>
-        private void DrawMatchingControlPathsForLayout(InternedString deviceLayout, ref InputControlPath.ParsedPathComponent pathControlComponent)
+        private bool DrawMatchingControlPathsForLayout(InternedString deviceLayout, ref InputControlPath.ParsedPathComponent pathControlComponent)
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
             var matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
@@ -150,6 +154,8 @@ namespace UnityEngine.InputSystem.Editor
                    .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
             }
 
+            bool matchExists = false;
+
             if (matchedChildLayouts.Count() > 0)
             {
                 foreach (var childLayout in matchedChildLayouts)
@@ -159,15 +165,18 @@ namespace UnityEngine.InputSystem.Editor
                         if (InputControlPath.MatchControlComponent(ref pathControlComponent, ref childLayout.m_Controls[i]))
                         {
                             EditorGUILayout.LabelField(childLayout.displayName + "/" + childLayout.m_Controls[i].displayName);
+                            matchExists = true;
                             continue;
                         }
                     }
 
                     EditorGUI.indentLevel++;
-                    DrawMatchingControlPathsForLayout(childLayout.name, ref pathControlComponent);
+                    matchExists |= DrawMatchingControlPathsForLayout(childLayout.name, ref pathControlComponent);
                     EditorGUI.indentLevel--;
                 }
             }
+
+            return matchExists;
         }
 
 
