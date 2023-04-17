@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
-        bool runInBackground { get; }
+        bool runInBackground { get; set; }
 
         Vector2 screenSize { get; }
         ScreenOrientation screenOrientation { get; }

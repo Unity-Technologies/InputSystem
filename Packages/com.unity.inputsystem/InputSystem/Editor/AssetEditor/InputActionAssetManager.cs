@@ -63,7 +63,8 @@ namespace UnityEngine.InputSystem.Editor
         public InputActionAssetManager(InputActionAsset inputActionAsset)
         {
             m_ImportedAssetObject = inputActionAsset;
-            Debug.Assert(AssetDatabase.TryGetGUIDAndLocalFileIdentifier(importedAsset, out m_AssetGUID, out long _), $"Failed to get asset {inputActionAsset.name} GUID");
+            bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(importedAsset, out m_AssetGUID, out long _);
+            Debug.Assert(isGUIDObtained, $"Failed to get asset {inputActionAsset.name} GUID");
         }
 
         public SerializedObject serializedObject => m_SerializedObject;

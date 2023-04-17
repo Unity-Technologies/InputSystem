@@ -108,8 +108,8 @@ internal class UITests : CoreTestsFixture
         {
             var fromPosition = from.GetComponent<RectTransform>().position;
             var toPosition = to.GetComponent<RectTransform>().position;
-            var angle = Mathf.Asin((fromPosition - toPosition).magnitude / (position - fromPosition).magnitude);
-            return Quaternion.Euler(0, angle * Mathf.Rad2Deg, 0);
+            var angle = Vector3.Angle(fromPosition - position, toPosition - position);
+            return Quaternion.Euler(0, angle, 0);
         }
     }
 
