@@ -340,7 +340,7 @@ namespace InputSystem.Plugins.InputForUI
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
 
-            if (asTouchControl != null)
+            if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
             else if (asPenDevice != null)
                 _seenPenEvents = true;
@@ -436,6 +436,11 @@ namespace InputSystem.Plugins.InputForUI
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
+            
+            if (asTouchControl != null || asTouchscreenDevice != null)
+                _seenTouchEvents = true;
+            else
+                _seenMouseEvents = true;
 
             var wasPressed = state.ButtonsState.Get(button);
             var isPressed = ctx.ReadValueAsButton();
