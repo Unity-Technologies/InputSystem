@@ -160,6 +160,11 @@ namespace UnityEngine.InputSystem.Editor
                 selectedActionIndex: 0);
         }
 
+        public InputActionsEditorState SelectBinding(int index)
+        {
+            return With(selectedBindingIndex: index);
+        }
+
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
         {
             return new ReadOnlyCollection<int>(GetOrCreateExpandedStateInternal().ToList());

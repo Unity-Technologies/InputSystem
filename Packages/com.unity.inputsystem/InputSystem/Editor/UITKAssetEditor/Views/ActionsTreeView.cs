@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly VisualElement m_Root;
         private readonly TreeView m_ActionsTreeView;
+        private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
@@ -31,6 +32,14 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
 
                 e.Q<Label>("name").text = item.name;
+                var addBindingButton = e.Q<Button>("add-new-binding-button");
+                if (item.isAction)
+                {
+                    addBindingButton.style.display = DisplayStyle.Flex;
+                    addBindingButton.clicked += () => AddBinding(item.name);
+                }
+                else
+                    addBindingButton.style.display = DisplayStyle.None;
 
                 if (!string.IsNullOrEmpty(item.controlLayout))
                     e.Q<VisualElement>("icon").style.backgroundImage =
@@ -49,19 +58,69 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap,
-                (_, state) => new ViewState {treeViewData = Selectors.GetActionsAsTreeViewData(state)});
+                (_, state) =>
+                {
+                    var treeData = Selectors.GetActionsAsTreeViewData(state);
+                    return new ViewState
+                    {
+                        treeViewData = treeData,
+                        newElementID = state.selectionType == SelectionType.Action ? treeData[state.selectedActionIndex].id : GetComponentOrBindingID(treeData, state.selectedBindingIndex)
+                    };
+                });
+
+            addActionButton.clicked += AddAction;
+        }
+
+        private int GetComponentOrBindingID(List<TreeViewItemData<ActionOrBindingData>> treeList, int selectedBindingIndex)
+        {
+            var i = -1;
+            foreach (var action in treeList)
+            {
+                foreach (var bindingOrComponent in action.children)
+                {
+                    i++;
+                    if (i == selectedBindingIndex) return bindingOrComponent.id;
+                    if (bindingOrComponent.hasChildren)
+                    {
+                        foreach (var binding in bindingOrComponent.children)
+                        {
+                            i++;
+                            if (i == selectedBindingIndex) return binding.id;
+                        }
+                    }
+                }
+            }
+            return -1;
+        }
+
+        public override void DestroyView()
+        {
+            addActionButton.clicked -= AddAction;
         }
 
         public override void RedrawUI(ViewState viewState)
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
+            m_ActionsTreeView.SetSelectionById(viewState.newElementID);
             m_ActionsTreeView.Rebuild();
+        }
+
+        private void AddAction()
+        {
+            Dispatch(Commands.AddAction());
+        }
+
+        private void AddBinding(string actionName)
+        {
+            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.AddBinding());
         }
 
         internal class ViewState
         {
             public List<TreeViewItemData<ActionOrBindingData>> treeViewData;
+            public int newElementID;
         }
     }
 
