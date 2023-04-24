@@ -21,6 +21,43 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) => state.SelectActionMap(actionMapName);
         }
 
+        public static Command AddActionMap()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var newMap = InputActionSerializationHelpers.AddActionMap(state.serializedObject);
+                var actionProperty = InputActionSerializationHelpers.AddAction(newMap);
+                InputActionSerializationHelpers.AddBinding(actionProperty, newMap);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectActionMap(newMap);
+            };
+        }
+
+        public static Command AddAction()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
+                var newAction = InputActionSerializationHelpers.AddAction(actionMap);
+                InputActionSerializationHelpers.AddBinding(newAction, actionMap);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectAction(newAction);
+            };
+        }
+
+        public static Command AddBinding()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var action = Selectors.GetSelectedAction(state).wrappedProperty;
+                var map = Selectors.GetSelectedActionMap(state).wrappedProperty;
+                var binding = InputActionSerializationHelpers.AddBinding(action, map);
+                var bindingIndex = new SerializedInputBinding(binding).indexOfBinding;
+                state.serializedObject.ApplyModifiedProperties();
+                return state.With(selectedBindingIndex: bindingIndex, selectionType: SelectionType.Binding);
+            };
+        }
+
         public static Command ExpandCompositeBinding(SerializedInputBinding binding)
         {
             return (in InputActionsEditorState state) => state.ExpandCompositeBinding(binding);
