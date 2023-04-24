@@ -193,7 +193,7 @@ namespace UnityEngine.InputSystem.Editor
                         i--;
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
                             new ActionOrBindingData(false, serializedInputBinding.name, action.expectedControlType, serializedInputBinding.indexOfBinding),
-                            compositeItems));
+                            compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
                     {
@@ -202,9 +202,8 @@ namespace UnityEngine.InputSystem.Editor
                                 GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
                     }
                 }
-
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                    new ActionOrBindingData(true, action.name, action.expectedControlType), bindingItems));
+                    new ActionOrBindingData(true, action.name, action.expectedControlType), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }
