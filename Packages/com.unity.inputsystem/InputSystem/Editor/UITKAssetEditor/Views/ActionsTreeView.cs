@@ -73,19 +73,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private int GetComponentOrBindingID(List<TreeViewItemData<ActionOrBindingData>> treeList, int selectedBindingIndex)
         {
-            var i = -1;
+            var currentBindingIndex = -1;
             foreach (var action in treeList)
             {
                 foreach (var bindingOrComponent in action.children)
                 {
-                    i++;
-                    if (i == selectedBindingIndex) return bindingOrComponent.id;
+                    currentBindingIndex++;
+                    if (currentBindingIndex == selectedBindingIndex) return bindingOrComponent.id;
                     if (bindingOrComponent.hasChildren)
                     {
                         foreach (var binding in bindingOrComponent.children)
                         {
-                            i++;
-                            if (i == selectedBindingIndex) return binding.id;
+                            currentBindingIndex++;
+                            if (currentBindingIndex == selectedBindingIndex) return binding.id;
                         }
                     }
                 }
