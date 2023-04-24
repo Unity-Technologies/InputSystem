@@ -152,6 +152,18 @@ namespace UnityEngine.InputSystem.Editor
             throw new InvalidOperationException($"Couldn't find an action map with name '{actionName}'.");
         }
 
+        public InputActionsEditorState SelectAction(SerializedProperty state)
+        {
+            var index = state.GetIndexOfArrayElement();
+            return With(selectedActionIndex: index, selectionType: SelectionType.Action);
+        }
+
+        public InputActionsEditorState SelectActionMap(SerializedProperty state)
+        {
+            var index = state.GetIndexOfArrayElement();
+            return With(selectedBindingIndex: 0, selectedActionMapIndex: index, selectedActionIndex: 0);
+        }
+
         public InputActionsEditorState SelectActionMap(string actionMapName)
         {
             var actionMap = GetActionMapByName(actionMapName);

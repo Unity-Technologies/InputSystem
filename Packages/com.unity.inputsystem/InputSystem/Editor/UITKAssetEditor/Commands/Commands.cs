@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionProperty = InputActionSerializationHelpers.AddAction(newMap);
                 InputActionSerializationHelpers.AddBinding(actionProperty, newMap);
                 state.serializedObject.ApplyModifiedProperties();
-                return state.SelectActionMap(newMap.FindPropertyRelative(nameof(InputActionMap.m_Name)).stringValue);
+                return state.SelectActionMap(newMap);
             };
         }
 
@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Editor
                 var newAction = InputActionSerializationHelpers.AddAction(actionMap);
                 InputActionSerializationHelpers.AddBinding(newAction, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
-                return state.SelectAction(newAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue);
+                return state.SelectAction(newAction);
             };
         }
 
