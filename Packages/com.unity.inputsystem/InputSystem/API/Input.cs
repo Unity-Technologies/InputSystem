@@ -1659,7 +1659,7 @@ namespace UnityEngine.InputSystem.HighLevel
 		/// If this is the first time global actions have been initialized, a default set of actions is read from the inputactions
 		/// file located at 'defaultGlobalActionsPath' and saved into the asset located at 'globalActionsAssetPath' as sub assets.
 		/// </remarks>
-		internal static void Initialize(string defaultGlobalActionsPath, string globalActionsAssetPath)
+		internal static void Initialize(string defaultGlobalActionsPath = null, string globalActionsAssetPath = null)
 		{
 			for (var i = 0; i < maxGamepadSlots; i++)
 			{

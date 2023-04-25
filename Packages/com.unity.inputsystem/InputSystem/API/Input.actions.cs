@@ -15,6 +15,9 @@ namespace UnityEngine.InputSystem.HighLevel
 {
 	public static partial class Input
 	{
+        internal const string kGlobalActionsAssetName = "GlobalInputActions";
+        internal const string kGlobalActionsAssetConfigKey = "com.unity.inputsystem.globalactionsasset";
+
 		public static IInputActionCollection2 globalActions => s_GlobalActions;
 
 		/// <summary>
@@ -169,12 +172,11 @@ namespace UnityEngine.InputSystem.HighLevel
 				catch (InvalidOperationException ex)
 				{
 					Debug.LogWarning(ex.Message);
-            }
-
-					return m_Action.ReadDefaultValue<TActionType>(
-						new BindingIndex(m_Action, m_Action.activeBindingIndex, BindingIndex.IndexType.IncludeCompositeParts)
-							.ToIndexWithoutCompositeParts().value);
 				}
+
+                return m_Action.ReadDefaultValue<TActionType>(
+                    new BindingIndex(m_Action, m_Action.activeBindingIndex, BindingIndex.IndexType.IncludeCompositeParts)
+                        .ToIndexWithoutCompositeParts().value);
 			}
 		}
 
