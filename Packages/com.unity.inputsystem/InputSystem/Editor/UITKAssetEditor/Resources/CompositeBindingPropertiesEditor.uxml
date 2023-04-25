@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <ui:DropdownField label="Composite Type" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="composite-type-dropdown" tooltip="Type of composite. Allows changing the composite type retroactively. Doing so will modify the bindings that are part of the composite." />
+    </ui:VisualElement>
+</ui:UXML>
