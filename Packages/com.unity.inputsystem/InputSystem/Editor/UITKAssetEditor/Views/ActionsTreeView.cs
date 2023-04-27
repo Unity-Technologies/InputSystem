@@ -30,6 +30,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.bindItem = (e, i) =>
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
+                ((InputActionsTreeViewItem)e).EditTextFinished += ChangeActionOrBindingName;
 
                 e.Q<Label>("name").text = item.name;
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
@@ -49,6 +50,11 @@ namespace UnityEngine.InputSystem.Editor
                     e.Q<VisualElement>("icon").style.backgroundImage =
                         new StyleBackground(
                             EditorInputControlLayoutCache.GetIconForLayout("Control"));
+            };
+
+            m_ActionsTreeView.unbindItem = (element, i) =>
+            {
+                ((InputActionsTreeViewItem)element).EditTextFinished -= ChangeActionOrBindingName;
             };
 
             m_ActionsTreeView.selectedIndicesChanged += indicies =>
@@ -115,6 +121,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.SelectAction(actionName));
             Dispatch(Commands.AddBinding());
+        }
+
+        private void ChangeActionOrBindingName(string newName)
+        {
+            Dispatch(Commands.ChangeActionOrBindingName(newName));
         }
 
         internal class ViewState

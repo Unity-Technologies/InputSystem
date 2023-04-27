@@ -1,6 +1,9 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+using System;
+using System.Collections;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -14,6 +17,8 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
+
+        private bool isEditing;
 
         public InputActionsTreeViewItem()
         {
@@ -32,28 +37,18 @@ namespace UnityEngine.InputSystem.Editor
             // TODO: The rename functionality is currently disabled due to focus issues. The text field doesn't
             // focus correctly when calling Focus() on it (it needs to be subsequently clicked) and on losing focus,
             // we're getting two focus out events, one for the TextField and one for the contained TextElement.
-            // RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            // RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
-            //
-            // renameTextfield.RegisterCallback<KeyUpEvent>(e =>
-            // {
-            //  if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Escape)
-            //  {
-            //   (e.currentTarget as VisualElement)?.Blur();
-            //   return;
-            //  }
-            //
-            //  e.StopImmediatePropagation();
-            // });
-            //
-            // renameTextfield.RegisterCallback<FocusOutEvent>(e =>
-            // {
-            //  OnEditTextFinished(renameTextfield);
-            // });
+
+            RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
+            RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
+
+            renameTextfield.RegisterCallback<BlurEvent>(e =>
+            {
+                OnEditTextFinished(renameTextfield);
+            });
         }
 
         public Label label => this.Q<Label>();
-        public TextField renameTextfield => this.Q<TextField>(kRenameTextField);
+        private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
 
         private void OnKeyDownEventForRename(KeyDownEvent e)
         {
@@ -61,7 +56,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             FocusOnRenameTextField();
-            e.PreventDefault();
+            e.StopImmediatePropagation();
         }
 
         private void OnMouseDownEventForRename(MouseDownEvent e)
@@ -70,11 +65,10 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             FocusOnRenameTextField();
-
-            e.StopPropagation();
+            e.StopImmediatePropagation();
         }
 
-        private void FocusOnRenameTextField()
+        public void FocusOnRenameTextField()
         {
             delegatesFocus = true;
 
@@ -82,12 +76,24 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label?.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
 
-            renameTextfield.Q<TextElement>().Focus();
+            //a bit hacky - e.StopImmediatePropagation() for events does not work like expected on ListViewItems or TreeViewItems because
+            //the listView/treeView reclaims the focus - this is a workaround with less overhead than rewriting the events
+            DelayCall();
             renameTextfield.SelectAll();
+
+            isEditing = true;
         }
 
-        public void OnEditTextFinished(TextField renameTextField)
+        async void DelayCall()
         {
+            await Task.Delay(120);
+            renameTextfield.Q<TextField>().Focus();
+        }
+
+        private void OnEditTextFinished(TextField renameTextField)
+        {
+            if (!isEditing)
+                return;
             delegatesFocus = false;
 
             var text = renameTextField.value?.Trim();
@@ -106,6 +112,7 @@ namespace UnityEngine.InputSystem.Editor
             label.text = renameTextField.text;
 
             EditTextFinished?.Invoke(text);
+            isEditing = false;
         }
     }
 }

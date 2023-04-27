@@ -46,11 +46,21 @@ namespace UnityEngine.InputSystem.Editor
             var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.name);
             m_ListView.SetSelection(indexOf);
             m_ListView.Rebuild();
+            RenameNewActionMaps();
         }
 
         public override void DestroyView()
         {
             addActionMapButton.clicked -= AddActionMap;
+        }
+
+        private void RenameNewActionMaps()
+        {
+            if (!mapAdded)
+                return;
+            var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
+            mapAdded = false;
         }
 
         private void ChangeActionMapName(string newName)
@@ -66,8 +76,10 @@ namespace UnityEngine.InputSystem.Editor
         private void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
+            mapAdded = true;
         }
 
+        private bool mapAdded;
         private readonly VisualElement m_Root;
         private ListView m_ListView;
 

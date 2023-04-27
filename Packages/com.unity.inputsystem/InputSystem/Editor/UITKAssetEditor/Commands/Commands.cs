@@ -198,6 +198,18 @@ namespace UnityEngine.InputSystem.Editor
                 return state;
             };
         }
+
+        public static Command ChangeActionOrBindingName(string newName)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
+                var action = Selectors.GetSelectedAction(state).wrappedProperty;
+                InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
     }
 }
 
