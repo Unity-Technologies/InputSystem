@@ -173,12 +173,12 @@ namespace UnityEngine.InputSystem.Editor
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
             var matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
-                   .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(deviceLayout)).OrderBy(x => x.displayName);
+                .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(deviceLayout)).OrderBy(x => x.displayName);
 
             if (deviceLayout == InputControlPath.Wildcard)
             {
                 matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
-                   .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+                    .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
             }
 
             bool matchExists = false;
@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 foreach (var childLayout in matchedChildLayouts)
                 {
-                    for(int i = 0; i < childLayout.m_Controls.Length;i++)
+                    for (int i = 0; i < childLayout.m_Controls.Length; i++)
                     {
                         if (InputControlPath.MatchControlComponent(ref pathControlComponent, ref childLayout.m_Controls[i]))
                         {
