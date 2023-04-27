@@ -206,8 +206,6 @@ namespace UnityEngine.InputSystem.Editor
             return matchExists;
         }
 
-
-
         /// <summary>
         /// Draw control scheme matrix that allows selecting which control schemes a particular
         /// binding appears in.
