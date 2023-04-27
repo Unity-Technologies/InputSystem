@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -914,6 +916,22 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_FindControl_FindsControlDespiteTurkishCulture()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls("/gamePAD/LEFTSTICK"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+        Thread.CurrentThread.CurrentCulture = culture;
     }
 
     [Test]
