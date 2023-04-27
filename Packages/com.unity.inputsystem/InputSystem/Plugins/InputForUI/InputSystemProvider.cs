@@ -1,3 +1,4 @@
+#if UNITY_2023_2_OR_NEWER // UnityEngine.InputForUI Module unavailable in earlier releases
 using System.Collections.Generic;
 using Unity.IntegerTime;
 using UnityEngine.InputSystem.Controls;
@@ -663,3 +664,4 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         }
     }
 }
+#endif // UNITY_2023_2_OR_NEWER
