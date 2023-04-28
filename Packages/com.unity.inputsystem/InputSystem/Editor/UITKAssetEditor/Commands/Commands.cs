@@ -199,7 +199,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command ChangeActionOrBindingName(string newName)
+        public static Command ChangeActionName(string newName)
         {
             return (in InputActionsEditorState state) =>
             {

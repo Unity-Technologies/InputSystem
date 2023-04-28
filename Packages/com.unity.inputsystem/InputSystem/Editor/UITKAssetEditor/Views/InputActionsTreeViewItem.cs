@@ -50,6 +50,16 @@ namespace UnityEngine.InputSystem.Editor
         public Label label => this.Q<Label>();
         private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
 
+
+        public void UnregisterInputField()
+        {
+            renameTextfield.SetEnabled(false);
+            renameTextfield.selectAllOnFocus = false;
+            UnregisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
+            UnregisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
+            renameTextfield.UnregisterCallback<BlurEvent>(e => OnEditTextFinished(renameTextfield));
+        }
+
         private void OnKeyDownEventForRename(KeyDownEvent e)
         {
             if (e.keyCode != KeyCode.F2)
