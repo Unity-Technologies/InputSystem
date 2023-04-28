@@ -125,6 +125,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!actionAdded || id == -1)
                 return;
+            m_ActionsTreeView.ScrollToItemById(id);
             var treeViewItem = m_ActionsTreeView.GetRootElementForId(id).Q<InputActionsTreeViewItem>();
             treeViewItem.FocusOnRenameTextField();
             actionAdded = false;
