@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using Unity.IntegerTime;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputForUI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace UnityEngine.InputSystem.Plugins.InputForUI
 {
@@ -13,9 +10,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
     using EventModifiers = UnityEngine.InputForUI.EventModifiers;
     using EventProvider = UnityEngine.InputForUI.EventProvider;
 
-#if UNITY_EDITOR
-    [InitializeOnLoad]
-#endif
     internal class InputSystemProvider : IEventProviderImpl
     {
         private InputEventPartialProvider _inputEventPartialProvider;
