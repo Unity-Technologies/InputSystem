@@ -51,16 +51,15 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         static InputSystemProvider()
         {
-            // TODO check if input system is enabled before doing this
-            // enable me to test!
+            // Only if InputSystem is enabled in the PlayerSettings do we set it as the provider.
+            // This includes situations where both InputManager and InputSystem are enabled.
+#if ENABLE_INPUT_SYSTEM
             EventProvider.SetInputSystemProvider(new InputSystemProvider());
+#endif
         }
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Bootstrap()
-        {
-            // will invoke static class constructor
-        }
+        private static void Bootstrap() {} // Empty function. Exists only to invoke the static class constructor in Runtime Players
 
         private EventModifiers _eventModifiers => _inputEventPartialProvider._eventModifiers;
 
