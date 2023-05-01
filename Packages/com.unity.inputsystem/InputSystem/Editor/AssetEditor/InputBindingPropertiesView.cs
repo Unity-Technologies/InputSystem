@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlPathEditor?.Dispose();
         }
 
-        private static bool showPaths = false;
+        private static bool showMatchingControls = false;
         protected override void DrawGeneralProperties()
         {
             var currentPath = m_PathProperty.stringValue;
@@ -104,12 +104,13 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
-                showPaths = EditorGUILayout.Toggle("Show Matching Paths", showPaths);
-                // Show the specific layouts that implement the control on this path
-                if (showPaths)
+                showMatchingControls = EditorGUILayout.Foldout(showMatchingControls, "Matching Controls");
+                // Show the specific controls which match the current path
+                if (showMatchingControls)
                 {
-                    // Control scheme matrix.
+                    EditorGUI.indentLevel++;
                     DrawMatchingControlPaths();
+                    EditorGUI.indentLevel--;
                 }
                 // Control scheme matrix.
                 DrawUseInControlSchemes();
