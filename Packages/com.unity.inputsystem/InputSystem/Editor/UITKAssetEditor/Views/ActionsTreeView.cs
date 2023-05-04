@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
                     addBindingButton.clicked += () => AddBinding(item.name);
-                    ((InputActionsTreeViewItem)e).EditTextFinished += ChangeActionName;
+                    ((InputActionsTreeViewItem)e).EditTextFinished += newName => ChangeActionName(item, newName);
                 }
                 else
                 {
@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 if (item.isAction || item.isComposite)
-                    ((InputActionsTreeViewItem)element).EditTextFinished -= ChangeActionName;
+                    ((InputActionsTreeViewItem)element).EditTextFinished -= newName => ChangeActionName(item, newName);
             };
 
             m_ActionsTreeView.selectedIndicesChanged += indicies =>
@@ -143,9 +143,9 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.AddBinding());
         }
 
-        private void ChangeActionName(string newName)
+        private void ChangeActionName(ActionOrBindingData data, string newName)
         {
-            Dispatch(Commands.ChangeActionName(newName));
+            Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
         }
 
         internal class ViewState
@@ -157,10 +157,11 @@ namespace UnityEngine.InputSystem.Editor
 
     internal struct ActionOrBindingData
     {
-        public ActionOrBindingData(bool isAction, string name, bool isComposite = false, string controlLayout = "", int bindingIndex = -1)
+        public ActionOrBindingData(bool isAction, string name, int actionMapIndex, bool isComposite = false, string controlLayout = "", int bindingIndex = -1)
         {
             this.name = name;
             this.isComposite = isComposite;
+            this.actionMapIndex = actionMapIndex;
             this.controlLayout = controlLayout;
             this.bindingIndex = bindingIndex;
             this.isAction = isAction;
@@ -168,6 +169,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public string name { get; }
         public bool isAction { get; }
+        public int actionMapIndex { get; }
         public bool isComposite { get; }
         public string controlLayout { get; }
         public int bindingIndex { get; }
@@ -216,7 +218,7 @@ namespace UnityEngine.InputSystem.Editor
                             var name = GetHumanReadableCompositeName(nextBinding);
 
                             compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                                new ActionOrBindingData(false, name, false, GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
+                                new ActionOrBindingData(false, name, actionMapIndex, false, GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
 
                             if (++i >= actionBindings.Count)
                                 break;
@@ -225,18 +227,18 @@ namespace UnityEngine.InputSystem.Editor
                         }
                         i--;
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                            new ActionOrBindingData(false, serializedInputBinding.name, true, action.expectedControlType, serializedInputBinding.indexOfBinding),
+                            new ActionOrBindingData(false, serializedInputBinding.name, actionMapIndex, true, action.expectedControlType, serializedInputBinding.indexOfBinding),
                             compositeItems.Count > 0 ? compositeItems : null));
                     }
                     else
                     {
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                            new ActionOrBindingData(false, InputControlPath.ToHumanReadableString(serializedInputBinding.path),
+                            new ActionOrBindingData(false, InputControlPath.ToHumanReadableString(serializedInputBinding.path), actionMapIndex,
                                 false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
                     }
                 }
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                    new ActionOrBindingData(true, action.name, false, action.expectedControlType), bindingItems.Count > 0 ? bindingItems : null));
+                    new ActionOrBindingData(true, action.name, actionMapIndex, false, action.expectedControlType), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
         }

@@ -188,23 +188,23 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command ChangeActionMapName(string newName)
+        public static Command ChangeActionMapName(int index, string newName)
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, index).wrappedProperty;
                 InputActionSerializationHelpers.RenameActionMap(actionMap, newName);
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
             };
         }
 
-        public static Command ChangeActionName(string newName)
+        public static Command ChangeActionName(int actionMapIndex, string oldName, string newName)
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
-                var action = Selectors.GetSelectedAction(state).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var action = Selectors.GetActionInMap(state, actionMapIndex, oldName).wrappedProperty;
                 InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
                 state.serializedObject.ApplyModifiedProperties();
                 return state;

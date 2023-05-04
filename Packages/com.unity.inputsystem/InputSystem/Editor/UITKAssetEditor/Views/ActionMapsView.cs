@@ -24,12 +24,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var treeViewItem = (InputActionsTreeViewItem)element;
                 treeViewItem.label.text = (string)m_ListView.itemsSource[i];
-                treeViewItem.EditTextFinished += ChangeActionMapName;
+                treeViewItem.EditTextFinished += newName => ChangeActionMapName(i, newName);
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
-                ((InputActionsTreeViewItem)element).EditTextFinished -= ChangeActionMapName;
+                ((InputActionsTreeViewItem)element).EditTextFinished -= newName => ChangeActionMapName(i, newName);
             };
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
@@ -63,9 +63,9 @@ namespace UnityEngine.InputSystem.Editor
             mapAdded = false;
         }
 
-        private void ChangeActionMapName(string newName)
+        private void ChangeActionMapName(int index, string newName)
         {
-            Dispatch(Commands.ChangeActionMapName(newName));
+            Dispatch(Commands.ChangeActionMapName(index, newName));
         }
 
         private void SelectActionMap()

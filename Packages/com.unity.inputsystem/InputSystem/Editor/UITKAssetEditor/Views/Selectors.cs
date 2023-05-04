@@ -39,9 +39,22 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedInputActionMap GetSelectedActionMap(InputActionsEditorState state)
         {
+            return GetActionMapAtIndex(state, state.selectedActionMapIndex);
+        }
+        
+        public static SerializedInputActionMap GetActionMapAtIndex(InputActionsEditorState state, int index)
+        {
             return new SerializedInputActionMap(state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
-                ?.GetArrayElementAtIndex(state.selectedActionMapIndex));
+                ?.GetArrayElementAtIndex(index));
+        }
+        
+        public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
+        {
+            return new SerializedInputAction(state.serializedObject
+                ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.GetArrayElementAtIndex(mapIndex)
+                ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
+                ?.FirstOrDefault(p => p.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue == name));
         }
 
         public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
