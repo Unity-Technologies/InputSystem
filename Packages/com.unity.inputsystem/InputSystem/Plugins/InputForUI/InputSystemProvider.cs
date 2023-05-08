@@ -42,6 +42,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         private const float kSmallestReportedMovementSqrDist = 0.01f;
 
         private NavigationEventRepeatHelper repeatHelper = new();
+        private bool _doNotResetSeenEventsOnUpdate;
 
         static InputSystemProvider()
         {
@@ -106,14 +107,33 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 // this is mostly used to filter out simulated input, e.g. when pen is active it also generates mouse input
                 if (_seenTouchEvents && ev.type == Event.Type.PointerEvent && ev.eventSource == EventSource.Pen)
                     _penState.Reset();
-                else if ((_seenTouchEvents || _seenPenEvents) && ev.type == Event.Type.PointerEvent && (ev.eventSource == EventSource.Mouse || ev.eventSource == EventSource.Unspecified))
+                else if ((_seenTouchEvents || _seenPenEvents) && 
+                         ev.type == Event.Type.PointerEvent && (ev.eventSource == EventSource.Mouse || ev.eventSource == EventSource.Unspecified))
                     _mouseState.Reset();
                 else
+                {
+                   if(ev.eventSource == EventSource.Mouse) 
+                       Debug.Log("Mouse event triggered");
                     EventProvider.Dispatch(ev);
+                }
             }
 
+            // Sometimes single lower priority events can be received when using Touch or Pen, on a different frame.
+            // To avoid dispatching them, the seen event flags aren't reset in between calls to OnPointerPerformed.
+            // Essentially, if we're moving with Touch or Pen, lower priority events aren't dispatch as well.
+            // Once OnClickPerformed is called, the seen flags are reset
+            if (!_doNotResetSeenEventsOnUpdate)
+            {
+                ResetSeenEvents();
+                _doNotResetSeenEventsOnUpdate = false;
+            }
+            
             _events.Clear();
 
+        }
+
+        private void ResetSeenEvents()
+        {
             _seenTouchEvents = false;
             _seenPenEvents = false;
             _seenMouseEvents = false;
@@ -332,6 +352,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
 
+            
+            _doNotResetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
             else if (asPenDevice != null)
@@ -428,7 +450,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
-            
+
+            _doNotResetSeenEventsOnUpdate = false;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
             else
