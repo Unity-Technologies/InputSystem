@@ -34,14 +34,9 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnFocus = true;
             renameTextfield.selectAllOnMouseUp = false;
 
-            // TODO: The rename functionality is currently disabled due to focus issues. The text field doesn't
-            // focus correctly when calling Focus() on it (it needs to be subsequently clicked) and on losing focus,
-            // we're getting two focus out events, one for the TextField and one for the contained TextElement.
-
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
             RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
-
-            renameTextfield.RegisterCallback<BlurEvent>(e =>
+            renameTextfield.RegisterCallback<FocusOutEvent>(e =>
             {
                 OnEditTextFinished(renameTextfield);
             });
@@ -69,13 +64,22 @@ namespace UnityEngine.InputSystem.Editor
             e.StopImmediatePropagation();
         }
 
+        private float lastSingleClick;
+        private static InputActionsTreeViewItem selected;
+
         private void OnMouseDownEventForRename(MouseDownEvent e)
         {
-            if (e.clickCount != 2 || e.button != (int)MouseButton.LeftMouse || e.target == null)
+            if (e.clickCount != 1 || e.button != (int)MouseButton.LeftMouse || e.target == null)
                 return;
 
-            FocusOnRenameTextField();
-            e.StopImmediatePropagation();
+            if (selected == this && Time.time - lastSingleClick < 3f)
+            {
+                FocusOnRenameTextField();
+                e.StopImmediatePropagation();
+                lastSingleClick = 0;
+            }
+            lastSingleClick = Time.time;
+            selected = this;
         }
 
         public void FocusOnRenameTextField()
@@ -104,6 +108,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!isEditing)
                 return;
+            lastSingleClick = 0;
             delegatesFocus = false;
 
             var text = renameTextField.value?.Trim();

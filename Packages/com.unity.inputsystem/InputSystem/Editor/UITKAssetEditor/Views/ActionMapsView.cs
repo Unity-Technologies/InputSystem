@@ -32,6 +32,12 @@ namespace UnityEngine.InputSystem.Editor
                 ((InputActionsTreeViewItem)element).EditTextFinished -= newName => ChangeActionMapName(i, newName);
             };
 
+            m_ListView.itemsChosen += objects =>
+            {
+                var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionsTreeViewItem>();
+                item.FocusOnRenameTextField();
+            };
+
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
 

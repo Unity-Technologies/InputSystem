@@ -58,6 +58,15 @@ namespace UnityEngine.InputSystem.Editor
                             EditorInputControlLayoutCache.GetIconForLayout("Control"));
             };
 
+            m_ActionsTreeView.itemsChosen += objects =>
+            {
+                var data = (ActionOrBindingData)objects.First();
+                if (!data.isAction && !data.isComposite)
+                    return;
+                var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex).Q<InputActionsTreeViewItem>();
+                item.FocusOnRenameTextField();
+            };
+
             m_ActionsTreeView.unbindItem = (element, i) =>
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
