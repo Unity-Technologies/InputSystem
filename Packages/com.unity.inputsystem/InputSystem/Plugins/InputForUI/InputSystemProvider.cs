@@ -111,11 +111,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                          ev.type == Event.Type.PointerEvent && (ev.eventSource == EventSource.Mouse || ev.eventSource == EventSource.Unspecified))
                     _mouseState.Reset();
                 else
-                {
-                   if(ev.eventSource == EventSource.Mouse) 
-                       Debug.Log("Mouse event triggered");
                     EventProvider.Dispatch(ev);
-                }
             }
 
             // Sometimes single lower priority events can be received when using Touch or Pen, on a different frame.
