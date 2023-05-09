@@ -35,7 +35,6 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnMouseUp = false;
 
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
             renameTextfield.RegisterCallback<FocusOutEvent>(e =>
             {
                 OnEditTextFinished(renameTextfield);
@@ -51,18 +50,10 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.SetEnabled(false);
             renameTextfield.selectAllOnFocus = false;
             UnregisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            UnregisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
             renameTextfield.UnregisterCallback<BlurEvent>(e => OnEditTextFinished(renameTextfield));
         }
 
-        private void OnKeyDownEventForRename(KeyDownEvent e)
-        {
-            if (e.keyCode != KeyCode.F2)
-                return;
-
-            FocusOnRenameTextField();
-            e.StopImmediatePropagation();
-        }
+        
 
         private float lastSingleClick;
         private static InputActionsTreeViewItem selected;

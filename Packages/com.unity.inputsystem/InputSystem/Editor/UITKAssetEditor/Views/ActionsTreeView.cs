@@ -79,6 +79,8 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(indicies.First());
                 Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
             };
+            
+            m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap,
                 (_, state) =>
@@ -155,6 +157,17 @@ namespace UnityEngine.InputSystem.Editor
         private void ChangeActionName(ActionOrBindingData data, string newName)
         {
             Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
+        }
+        
+        private void OnKeyDownEventForRename(KeyDownEvent e)
+        {
+            if (e.keyCode != KeyCode.F2)
+                return;
+
+            var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
+            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
+            if(item!=null && (data.isAction || data.isComposite))
+                item.FocusOnRenameTextField();
         }
 
         internal class ViewState

@@ -37,6 +37,8 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionsTreeViewItem>();
                 item.FocusOnRenameTextField();
             };
+            
+            m_ListView.RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
@@ -83,6 +85,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.AddActionMap());
             mapAdded = true;
+        }
+        
+        private void OnKeyDownEventForRename(KeyDownEvent e)
+        {
+            if (e.keyCode != KeyCode.F2)
+                return;
+
+            var item = (InputActionsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            item.FocusOnRenameTextField();
         }
 
         private bool mapAdded;
