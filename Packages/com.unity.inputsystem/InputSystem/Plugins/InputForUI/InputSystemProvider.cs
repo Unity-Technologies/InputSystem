@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         private const float kSmallestReportedMovementSqrDist = 0.01f;
 
         private NavigationEventRepeatHelper repeatHelper = new();
-        private bool _doNotResetSeenEventsOnUpdate;
+        private bool _resetSeenEventsOnUpdate;
 
         static InputSystemProvider()
         {
@@ -122,10 +122,10 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             // To avoid dispatching them, the seen event flags aren't reset in between calls to OnPointerPerformed.
             // Essentially, if we're moving with Touch or Pen, lower priority events aren't dispatch as well.
             // Once OnClickPerformed is called, the seen flags are reset
-            if (!_doNotResetSeenEventsOnUpdate)
+            if (_resetSeenEventsOnUpdate)
             {
                 ResetSeenEvents();
-                _doNotResetSeenEventsOnUpdate = false;
+                _resetSeenEventsOnUpdate = false;
             }
             
             _events.Clear();
@@ -353,7 +353,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
 
             
-            _doNotResetSeenEventsOnUpdate = true;
+            _resetSeenEventsOnUpdate = false;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
             else if (asPenDevice != null)
@@ -451,7 +451,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
 
-            _doNotResetSeenEventsOnUpdate = false;
+            _resetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
             else
