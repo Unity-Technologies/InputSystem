@@ -46,6 +46,8 @@ namespace UnityEngine.InputSystem.Editor
                     addBindingButton.style.display = DisplayStyle.None;
                     if (!item.isComposite)
                         ((InputActionsTreeViewItem)e).UnregisterInputField();
+                    else
+                        ((InputActionsTreeViewItem)e).EditTextFinished += newName => ChangeCompositeName(item, newName);
                 }
 
                 if (!string.IsNullOrEmpty(item.controlLayout))
@@ -159,6 +161,11 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
         }
         
+        private void ChangeCompositeName(ActionOrBindingData data, string newName)
+        {
+            Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
+        }
+
         private void OnKeyDownEventForRename(KeyDownEvent e)
         {
             if (e.keyCode != KeyCode.F2)

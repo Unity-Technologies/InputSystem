@@ -57,6 +57,13 @@ namespace UnityEngine.InputSystem.Editor
                 ?.FirstOrDefault(p => p.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue == name));
         }
 
+        public static SerializedInputBinding GetCompositeOrBindingInMap(SerializedProperty actionMap, int bindingIndex)
+        {
+            return new SerializedInputBinding(actionMap
+                ?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
+                ?.GetArrayElementAtIndex(bindingIndex));
+        }
+
         public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
         {
             var actionMapSO = state.serializedObject

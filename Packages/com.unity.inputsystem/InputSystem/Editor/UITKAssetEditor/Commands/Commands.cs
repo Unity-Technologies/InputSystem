@@ -210,6 +210,18 @@ namespace UnityEngine.InputSystem.Editor
                 return state;
             };
         }
+
+        public static Command ChangeCompositeName(int actionMapIndex, int bindingIndex, string newName)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
+                InputActionSerializationHelpers.RenameComposite(binding, newName);
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
     }
 }
 
