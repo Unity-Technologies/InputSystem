@@ -2580,7 +2580,7 @@ partial class CoreTests
         var layout = InputSystem.LoadLayout("DerivedLayout");
         var parsedPath = InputControlPath.Parse("<BaseLayout>/ControlWithExplicitDefaultVariant").ToArray()[1];
 
-        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(ref parsedPath, ref x)), Is.True);
+        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(in parsedPath, ref x)), Is.True);
     }
 
     [Test]

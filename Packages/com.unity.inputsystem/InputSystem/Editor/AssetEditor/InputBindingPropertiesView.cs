@@ -137,11 +137,11 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         for (int i = 0; i < rootLayout.m_Controls.Length; i++)
                         {
-                            if (InputControlPath.MatchControlComponent(ref parsedPath[1], ref rootLayout.m_Controls[i]))
+                            if (InputControlPath.MatchControlComponent(in parsedPath[1], ref rootLayout.m_Controls[i]))
                             {
                                 EditorGUILayout.LabelField($"{rootLayout.displayName}/{rootLayout.m_Controls[i].displayName}");
                                 matchExists = true;
-                                continue;
+                                break;
                             }
                         }
 
@@ -190,11 +190,11 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     for (int i = 0; i < childLayout.m_Controls.Length; i++)
                     {
-                        if (InputControlPath.MatchControlComponent(ref pathControlComponent, ref childLayout.m_Controls[i]))
+                        if (InputControlPath.MatchControlComponent(in pathControlComponent, ref childLayout.m_Controls[i]))
                         {
                             EditorGUILayout.LabelField($"{childLayout.displayName}/{childLayout.m_Controls[i].displayName}");
                             matchExists = true;
-                            continue;
+                            break;
                         }
                     }
 
