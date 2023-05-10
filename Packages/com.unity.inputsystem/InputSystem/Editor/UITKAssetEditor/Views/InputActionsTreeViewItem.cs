@@ -35,10 +35,7 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnMouseUp = false;
 
             RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.RegisterCallback<FocusOutEvent>(e =>
-            {
-                OnEditTextFinished(renameTextfield);
-            });
+            renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
 
         public Label label => this.Q<Label>();
@@ -50,10 +47,8 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.SetEnabled(false);
             renameTextfield.selectAllOnFocus = false;
             UnregisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.UnregisterCallback<BlurEvent>(e => OnEditTextFinished(renameTextfield));
+            renameTextfield.UnregisterCallback<BlurEvent>(e => OnEditTextFinished());
         }
-
-        
 
         private float lastSingleClick;
         private static InputActionsTreeViewItem selected;
@@ -95,27 +90,27 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.Q<TextField>().Focus();
         }
 
-        private void OnEditTextFinished(TextField renameTextField)
+        private void OnEditTextFinished()
         {
             if (!isEditing)
                 return;
             lastSingleClick = 0;
             delegatesFocus = false;
 
-            var text = renameTextField.value?.Trim();
+            var text = renameTextfield.text?.Trim();
             if (string.IsNullOrEmpty(text))
             {
-                renameTextField.schedule.Execute(() =>
+                renameTextfield.schedule.Execute(() =>
                 {
                     FocusOnRenameTextField();
-                    renameTextField.SetValueWithoutNotify(text);
+                    renameTextfield.SetValueWithoutNotify(text);
                 });
                 return;
             }
 
-            renameTextField.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
-            label.text = renameTextField.text;
+            label.text = renameTextfield.text;
 
             EditTextFinished?.Invoke(text);
             isEditing = false;
