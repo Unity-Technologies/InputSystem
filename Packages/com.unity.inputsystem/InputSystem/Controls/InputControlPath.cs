@@ -721,7 +721,7 @@ namespace UnityEngine.InputSystem
             return MatchesRecursive(ref parser, control);
         }
 
-        internal static bool MatchControlComponent(ref ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem)
+        internal static bool MatchControlComponent(in ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem)
         {
             // All of usages should match to the one of usage in the control
             foreach (var usage in expectedControlComponent.m_Usages)
