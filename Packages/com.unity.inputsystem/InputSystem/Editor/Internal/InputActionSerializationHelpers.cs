@@ -439,7 +439,7 @@ namespace UnityEngine.InputSystem.Editor
             // Make sure name is unique in InputActionAsset.
             var assetObject = actionMapProperty.serializedObject;
             var mapsArrayProperty = assetObject.FindProperty("m_ActionMaps");
-            var uniqueName = FindUniqueName(mapsArrayProperty, newName);
+            var uniqueName = FindUniqueName(mapsArrayProperty, newName, actionMapProperty.GetIndexOfArrayElement());
 
             // Assign to map.
             var nameProperty = actionMapProperty.FindPropertyRelative("m_Name");
