@@ -110,7 +110,6 @@ namespace UnityEngine.InputSystem.Editor
 
             renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
-            label.text = renameTextfield.text;
 
             EditTextFinished?.Invoke(text);
             isEditing = false;
