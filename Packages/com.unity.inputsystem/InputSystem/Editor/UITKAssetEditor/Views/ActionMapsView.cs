@@ -66,6 +66,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!mapAdded)
                 return;
+            m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
             mapAdded = false;
