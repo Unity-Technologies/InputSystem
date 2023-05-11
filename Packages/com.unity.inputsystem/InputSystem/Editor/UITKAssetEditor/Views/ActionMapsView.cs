@@ -25,6 +25,7 @@ namespace UnityEngine.InputSystem.Editor
                 var treeViewItem = (InputActionsTreeViewItem)element;
                 treeViewItem.label.text = (string)m_ListView.itemsSource[i];
                 treeViewItem.EditTextFinished += newName => ChangeActionMapName(i, newName);
+                ContextMenu.GetContextMenuForActionMapItem(treeViewItem, m_ListView);
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>

@@ -34,20 +34,26 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 e.Q<Label>("name").text = item.name;
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
+                var treeViewItem = (InputActionsTreeViewItem)e;
+
+                if (item.isAction || item.isComposite)
+                    ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
+                else
+                    ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
                 if (item.isAction)
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
                     addBindingButton.clicked += () => AddBinding(item.name);
-                    ((InputActionsTreeViewItem)e).EditTextFinished += newName => ChangeActionName(item, newName);
+                    treeViewItem.EditTextFinished += newName => ChangeActionName(item, newName);
                 }
                 else
                 {
                     addBindingButton.style.display = DisplayStyle.None;
                     if (!item.isComposite)
-                        ((InputActionsTreeViewItem)e).UnregisterInputField();
+                        treeViewItem.UnregisterInputField();
                     else
-                        ((InputActionsTreeViewItem)e).EditTextFinished += newName => ChangeCompositeName(item, newName);
+                        treeViewItem.EditTextFinished += newName => ChangeCompositeName(item, newName);
                 }
 
                 if (!string.IsNullOrEmpty(item.controlLayout))
@@ -81,7 +87,7 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(indicies.First());
                 Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
             };
-            
+
             m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap,
@@ -160,7 +166,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
         }
-        
+
         private void ChangeCompositeName(ActionOrBindingData data, string newName)
         {
             Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
@@ -173,7 +179,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
             var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
-            if(item!=null && (data.isAction || data.isComposite))
+            if (item != null && (data.isAction || data.isComposite))
                 item.FocusOnRenameTextField();
         }
 

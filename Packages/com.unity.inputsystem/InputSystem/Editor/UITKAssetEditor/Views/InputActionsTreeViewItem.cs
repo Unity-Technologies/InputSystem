@@ -90,6 +90,11 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.Q<TextField>().Focus();
         }
 
+        public void OnDeleteItem()
+        {
+            
+        }
+
         private void OnEditTextFinished()
         {
             if (!isEditing)
