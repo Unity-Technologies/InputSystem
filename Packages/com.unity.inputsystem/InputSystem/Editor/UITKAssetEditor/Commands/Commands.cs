@@ -58,6 +58,18 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command DeleteActionMap(int actionMapIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var actionMapID = InputActionSerializationHelpers.GetId(actionMap);
+                InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, actionMapID);
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
+
         public static Command DeleteAction(int actionMapIndex, string actionName)
         {
             return (in InputActionsEditorState state) =>

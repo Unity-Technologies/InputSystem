@@ -25,6 +25,7 @@ namespace UnityEngine.InputSystem.Editor
                 var treeViewItem = (InputActionsTreeViewItem)element;
                 treeViewItem.label.text = (string)m_ListView.itemsSource[i];
                 treeViewItem.EditTextFinished += newName => ChangeActionMapName(i, newName);
+                treeViewItem.DeleteItem += _ => DeleteActionMap(i);
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem, m_ListView);
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
@@ -71,6 +72,11 @@ namespace UnityEngine.InputSystem.Editor
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
             mapAdded = false;
+        }
+        
+        private void DeleteActionMap(int index)
+        {
+            Dispatch(Commands.DeleteActionMap(index));
         }
 
         private void ChangeActionMapName(int index, string newName)
