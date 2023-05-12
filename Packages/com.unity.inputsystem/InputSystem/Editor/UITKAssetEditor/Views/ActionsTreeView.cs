@@ -166,8 +166,7 @@ namespace UnityEngine.InputSystem.Editor
         private void DeleteItem(ActionOrBindingData data)
         {
             if (data.isAction)
-            {
-            }
+                Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
             else
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
         }
