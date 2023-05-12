@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
+        public event EventCallback<int> DeleteItem;
 
         private bool isEditing;
 
@@ -92,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void OnDeleteItem()
         {
-            
+            DeleteItem?.Invoke(0);
         }
 
         private void OnEditTextFinished()

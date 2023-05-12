@@ -58,6 +58,18 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command DeleteBinding(int actionMapIndex, int bindingIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
+                InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
+                state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
+
         public static Command ExpandCompositeBinding(SerializedInputBinding binding)
         {
             return (in InputActionsEditorState state) => state.ExpandCompositeBinding(binding);

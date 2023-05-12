@@ -35,6 +35,7 @@ namespace UnityEngine.InputSystem.Editor
                 e.Q<Label>("name").text = item.name;
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
+                treeViewItem.DeleteItem += _ => DeleteItem(item);
 
                 if (item.isAction || item.isComposite)
                     ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
@@ -160,6 +161,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.SelectAction(actionName));
             Dispatch(Commands.AddBinding());
+        }
+
+        private void DeleteItem(ActionOrBindingData data)
+        {
+            if (data.isAction)
+            {
+            }
+            else
+                Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
