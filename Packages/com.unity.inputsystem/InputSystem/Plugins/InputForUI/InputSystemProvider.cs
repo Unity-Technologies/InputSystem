@@ -335,6 +335,27 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             _events.Add(ev);
         }
 
+        private static int FindTouchFingerIndex(Touchscreen touchscreen, InputAction.CallbackContext ctx)
+        {
+            var asVector2Control = ctx.control is Vector2Control ? (Vector2Control)ctx.control : null;
+            var asTouchPressControl = ctx.control is TouchPressControl ? (TouchPressControl)ctx.control : null;
+            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
+            if (touchscreen == null)
+                return 0;
+
+			// Finds the index of the matching control type in the Touchscreen device lost of touch controls (touches)
+            for (var i = 0; i < touchscreen.touches.Count; ++i)
+            {
+                if (asVector2Control != null && asVector2Control == touchscreen.touches[i].position)
+                    return i;
+                if (asTouchPressControl != null && asTouchPressControl == touchscreen.touches[i].press)
+                    return i;
+                if (asTouchControl != null && asTouchControl == touchscreen.touches[i])
+                    return i;
+            }
+            return 0;
+        }
+
         private void OnPointerPerformed(InputAction.CallbackContext ctx)
         {
             var eventSource = GetEventSource(ctx);
@@ -346,9 +367,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asPenDevice = ctx.control.device is Pen ? (Pen)ctx.control.device : null;
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
+            var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
 
-            
             _resetSeenEventsOnUpdate = false;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
@@ -427,26 +447,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }));
         }
 
-        private int FindPointerIndex(Touchscreen touchscreen, TouchControl touchControl)
-        {
-            if (touchscreen == null || touchControl == null)
-                return 0;
-
-            for (var i = 0; i < touchscreen.touches.Count; ++i)
-                if (touchscreen.touches[i] == touchControl)
-                    return i;
-
-            return 0;
-        }
-
         private void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
             ref var state = ref GetPointerStateForSource(eventSource);
 
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            var pointerIndex = FindPointerIndex(asTouchscreenDevice, asTouchControl);
-
+            var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
+            
             _resetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
