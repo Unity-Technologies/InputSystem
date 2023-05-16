@@ -79,8 +79,19 @@ namespace UnityEngine.InputSystem.Editor
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
+                if (state.selectedActionIndex == action.GetIndexOfArrayElement())
+                    return SelectPrevAction(state, actionMap);
                 return state;
             };
+        }
+
+        private static InputActionsEditorState SelectPrevAction(InputActionsEditorState state, SerializedProperty actionMap)
+        {
+            var count = Selectors.GetActionCount(actionMap);
+            int? index = null;
+            if (count != null && count.Value > 0)
+                index = Mathf.Clamp(state.selectedActionIndex - 1, 0, int.MaxValue);
+            return state.SelectAction(index);
         }
 
         public static Command DeleteBinding(int actionMapIndex, int bindingIndex)
@@ -91,8 +102,19 @@ namespace UnityEngine.InputSystem.Editor
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
-                return state;
+                if (state.selectedBindingIndex == bindingIndex)
+                    return SelectPrevBinding(state, actionMap);
+                return state.SelectBinding(state.selectedBindingIndex > bindingIndex ? state.selectedBindingIndex - 1 : state.selectedBindingIndex);
             };
+        }
+
+        private static InputActionsEditorState SelectPrevBinding(InputActionsEditorState state, SerializedProperty actionMap)
+        {
+            var count = Selectors.GetBindingCount(actionMap);
+            var index = -1;
+            if (count != null && count.Value > 0)
+                index = Mathf.Clamp(state.selectedBindingIndex - 1, 0, int.MaxValue);
+            return state.SelectBinding(index);
         }
 
         public static Command ExpandCompositeBinding(SerializedInputBinding binding)

@@ -64,20 +64,22 @@ namespace UnityEngine.InputSystem.Editor
 
     internal static partial class Selectors
     {
-        public static CompositePartBindingPropertiesView.ViewState GetCompositePartBindingViewState(SerializedInputBinding binding,
+        public static CompositePartBindingPropertiesView.ViewState GetCompositePartBindingViewState(SerializedInputBinding? binding,
             InputActionsEditorState state)
         {
-            var compositeParts = GetCompositePartOptions(binding.name, binding.compositePath).ToList();
+            if (!binding.HasValue)
+                return null;
+            var compositeParts = GetCompositePartOptions(binding.Value.name, binding.Value.compositePath).ToList();
             var selectedCompositePartName = ObjectNames.NicifyVariableName(
-                compositeParts.First(str => string.Equals(str, binding.name, StringComparison.OrdinalIgnoreCase)));
+                compositeParts.First(str => string.Equals(str, binding.Value.name, StringComparison.OrdinalIgnoreCase)));
 
             var compositePartBindingViewState = new CompositePartBindingPropertiesView.ViewState
             {
-                selectedBinding = binding,
+                selectedBinding = binding.Value,
                 selectedBindingPath = GetSelectedBindingPath(state),
                 selectedCompositePartName = selectedCompositePartName,
                 compositePartNames = compositeParts.Select(ObjectNames.NicifyVariableName).ToList(),
-                expectedControlLayoutName = InputBindingComposite.GetExpectedControlLayoutName(binding.compositePath, binding.name) ?? ""
+                expectedControlLayoutName = InputBindingComposite.GetExpectedControlLayoutName(binding.Value.compositePath, binding.Value.name) ?? ""
             };
             return compositePartBindingViewState;
         }

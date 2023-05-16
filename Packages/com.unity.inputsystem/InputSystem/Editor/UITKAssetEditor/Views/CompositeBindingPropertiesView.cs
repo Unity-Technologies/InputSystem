@@ -78,10 +78,12 @@ namespace UnityEngine.InputSystem.Editor
     internal static partial class Selectors
     {
         public static CompositeBindingPropertiesView.ViewState GetCompositeBindingViewState(in InputActionsEditorState state,
-            SerializedInputBinding binding)
+            SerializedInputBinding? binding)
         {
+            if (!binding.HasValue)
+                return null;
             var inputAction = GetSelectedAction(state);
-            var compositeNameAndParameters = NameAndParameters.Parse(binding.path);
+            var compositeNameAndParameters = NameAndParameters.Parse(binding.Value.path);
             var compositeName = compositeNameAndParameters.name;
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
 
@@ -89,14 +91,14 @@ namespace UnityEngine.InputSystem.Editor
             if (compositeType != null)
                 parameterListView.Initialize(compositeType, compositeNameAndParameters.parameters);
 
-            var compositeTypes = GetCompositeTypes(binding.path, inputAction.expectedControlType).ToList();
+            var compositeTypes = GetCompositeTypes(binding.Value.path, inputAction.expectedControlType).ToList();
             var compositeNames = compositeTypes.Select(ObjectNames.NicifyVariableName).ToList();
             var selectedCompositeName = compositeNames[compositeTypes.FindIndex(str =>
                 InputBindingComposite.s_Composites.LookupTypeRegistration(str) == compositeType)];
 
             return new CompositeBindingPropertiesView.ViewState
             {
-                selectedBinding = binding,
+                selectedBinding = binding.Value,
                 selectedBindingPath = GetSelectedBindingPath(state),
                 compositeTypes = compositeTypes,
                 compositeNames = compositeNames,
