@@ -219,6 +219,8 @@ namespace UnityEngine.InputSystem.UI
                 }
             }
 
+            public PointerEventData.FramePressState framePressState => m_FramePressState;
+
             /// <summary>
             /// When we "release" a button other than through user interaction (e.g. through focus switching),
             /// we don't want this to count as an actual release that ends up clicking. This flag will cause

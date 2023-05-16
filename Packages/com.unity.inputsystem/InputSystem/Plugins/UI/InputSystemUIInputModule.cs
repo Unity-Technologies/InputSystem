@@ -341,7 +341,7 @@ namespace UnityEngine.InputSystem.UI
             if (!state.changedThisFrame && (xrTrackingOrigin == null || state.pointerType != UIPointerType.Tracked))
                 return;
 
-            ProcessPointerButton(ref state.leftButton, eventData);
+            ProcessPointerButton(ref state.leftButton, state, eventData);
             ProcessPointerButtonDrag(ref state.leftButton, eventData);
             ProcessPointerScroll(ref state, eventData);
 
@@ -349,14 +349,14 @@ namespace UnityEngine.InputSystem.UI
             eventData.button = PointerEventData.InputButton.Right;
             state.rightButton.CopyPressStateTo(eventData);
 
-            ProcessPointerButton(ref state.rightButton, eventData);
+            ProcessPointerButton(ref state.rightButton, state, eventData);
             ProcessPointerButtonDrag(ref state.rightButton, eventData);
 
             // Middle mouse button.
             eventData.button = PointerEventData.InputButton.Middle;
             state.middleButton.CopyPressStateTo(eventData);
 
-            ProcessPointerButton(ref state.middleButton, eventData);
+            ProcessPointerButton(ref state.middleButton, state, eventData);
             ProcessPointerButtonDrag(ref state.middleButton, eventData);
         }
 
@@ -449,8 +449,25 @@ namespace UnityEngine.InputSystem.UI
 
         private const float kClickSpeed = 0.3f;
 
-        private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerEventData eventData)
+        private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerModel state, PointerEventData eventData)
         {
+            for (int i = 0; i < m_PointerStates.length; i++)
+            {
+                if (m_PointerStates[i].pointerType == state.pointerType)
+                    continue;
+                var buttonState = eventData.button switch
+                {
+                    PointerEventData.InputButton.Left => m_PointerStates[i].leftButton,
+                    PointerEventData.InputButton.Middle => m_PointerStates[i].middleButton,
+                    PointerEventData.InputButton.Right => m_PointerStates[i].rightButton,
+                    _ => throw new ArgumentOutOfRangeException($"Unknown mouse button id: {eventData.button}")
+                };
+
+                // If another pointer state has a button press event in progress, ignore this button
+                // It means two different pointer types try to perform the same button action
+                if (buttonState.framePressState != PointerEventData.FramePressState.NotChanged)
+                    return;
+            }
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
 
             if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
@@ -1713,35 +1730,6 @@ namespace UnityEngine.InputSystem.UI
             else if (HaveControlForDevice(device, trackedDevicePosition))
                 pointerType = UIPointerType.Tracked;
 
-            // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
-            // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
-            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType != UIPointerType.None)
-            {
-                if (pointerType == UIPointerType.MouseOrPen)
-                {
-                    // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
-                        }
-                    }
-                }
-                else
-                {
-                    // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
-                        }
-                    }
-                }
-            }
             ////REVIEW: For touch, probably makes sense to force-ignore any input other than from primaryTouch.
             // If the behavior is SingleUnifiedPointer, we only ever create a single pointer state
             // and use that for all pointer input that is coming in.
