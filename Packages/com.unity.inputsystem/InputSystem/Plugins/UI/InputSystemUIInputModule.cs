@@ -455,13 +455,21 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (m_PointerStates[i].pointerType == state.pointerType)
                     continue;
-                var buttonState = eventData.button switch
+                PointerModel.ButtonState buttonState;
+                switch (eventData.button)
                 {
-                    PointerEventData.InputButton.Left => m_PointerStates[i].leftButton,
-                    PointerEventData.InputButton.Middle => m_PointerStates[i].middleButton,
-                    PointerEventData.InputButton.Right => m_PointerStates[i].rightButton,
-                    _ => throw new ArgumentOutOfRangeException($"Unknown mouse button id: {eventData.button}")
-                };
+                    case PointerEventData.InputButton.Left:
+                        buttonState = m_PointerStates[i].leftButton;
+                        break;
+                    case PointerEventData.InputButton.Middle:
+                        buttonState = m_PointerStates[i].middleButton;
+                        break;
+                    case PointerEventData.InputButton.Right:
+                        buttonState = m_PointerStates[i].rightButton;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"Unknown mouse button id: {eventData.button}");
+                }
 
                 // If another pointer state has a button press event in progress, ignore this button
                 // It means two different pointer types try to perform the same button action
