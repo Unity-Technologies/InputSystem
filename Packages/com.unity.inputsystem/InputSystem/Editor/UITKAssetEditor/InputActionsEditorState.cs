@@ -181,6 +181,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState SelectAction(int? index)
         {
+            if (index == -1)
+                return With(selectedActionIndex: index, selectionType: SelectionType.None);
             return With(selectedActionIndex: index);
         }
 
@@ -233,6 +235,7 @@ namespace UnityEngine.InputSystem.Editor
 
     internal enum SelectionType
     {
+        None,
         Action,
         Binding
     }

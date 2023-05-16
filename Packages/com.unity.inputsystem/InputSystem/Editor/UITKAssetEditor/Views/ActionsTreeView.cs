@@ -85,7 +85,10 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.selectedIndicesChanged += indicies =>
             {
-                var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(indicies.First());
+                var index = indicies.First();
+                if (index == -1)
+                    return;
+                var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
                 Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
             };
 
@@ -98,11 +101,24 @@ namespace UnityEngine.InputSystem.Editor
                     return new ViewState
                     {
                         treeViewData = treeData,
-                        newElementID = state.selectionType == SelectionType.Action ? treeData[state.selectedActionIndex].id : GetComponentOrBindingID(treeData, state.selectedBindingIndex)
+                        newElementID = GetSelectedElementId(state, treeData)
                     };
                 });
 
             addActionButton.clicked += AddAction;
+        }
+
+        private int GetSelectedElementId(InputActionsEditorState state, List<TreeViewItemData<ActionOrBindingData>> treeData)
+        {
+            var id = -1;
+            if (state.selectionType == SelectionType.Action)
+            {
+                if (treeData.Count > state.selectedActionIndex && state.selectedActionIndex >= 0)
+                    id = treeData[state.selectedActionIndex].id;
+            }
+            else
+                id = GetComponentOrBindingID(treeData, state.selectedBindingIndex);
+            return id;
         }
 
         private int GetComponentOrBindingID(List<TreeViewItemData<ActionOrBindingData>> treeList, int selectedBindingIndex)

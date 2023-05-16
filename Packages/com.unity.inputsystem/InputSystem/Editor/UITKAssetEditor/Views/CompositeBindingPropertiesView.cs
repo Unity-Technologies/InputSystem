@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
             if (compositeType != null)
                 parameterListView.Initialize(compositeType, compositeNameAndParameters.parameters);
 
-            var compositeTypes = GetCompositeTypes(binding.Value.path, inputAction.expectedControlType).ToList();
+            var compositeTypes = GetCompositeTypes(binding.Value.path, inputAction?.expectedControlType).ToList();
             var compositeNames = compositeTypes.Select(ObjectNames.NicifyVariableName).ToList();
             var selectedCompositeName = compositeNames[compositeTypes.FindIndex(str =>
                 InputBindingComposite.s_Composites.LookupTypeRegistration(str) == compositeType)];

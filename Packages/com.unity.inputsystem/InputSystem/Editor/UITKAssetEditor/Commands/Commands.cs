@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var action = Selectors.GetSelectedAction(state).wrappedProperty;
+                var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
                 var map = Selectors.GetSelectedActionMap(state).wrappedProperty;
                 var binding = InputActionSerializationHelpers.AddBinding(action, map);
                 var bindingIndex = new SerializedInputBinding(binding).indexOfBinding;
@@ -76,19 +76,20 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
                 var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
+                var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
-                if (state.selectedActionIndex == action.GetIndexOfArrayElement())
+                if (state.selectedActionIndex == actionIndex)
                     return SelectPrevAction(state, actionMap);
-                return state;
+                return state.SelectAction(state.selectedActionIndex > actionIndex ? state.selectedActionIndex - 1 : state.selectedActionIndex);
             };
         }
 
         private static InputActionsEditorState SelectPrevAction(InputActionsEditorState state, SerializedProperty actionMap)
         {
             var count = Selectors.GetActionCount(actionMap);
-            int? index = null;
+            int index = -1;
             if (count != null && count.Value > 0)
                 index = Mathf.Clamp(state.selectedActionIndex - 1, 0, int.MaxValue);
             return state.SelectAction(index);

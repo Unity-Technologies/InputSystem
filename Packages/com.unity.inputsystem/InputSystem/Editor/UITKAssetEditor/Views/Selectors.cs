@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return GetActionMapAtIndex(state, state.selectedActionMapIndex);
         }
-        
+
         public static SerializedInputActionMap GetActionMapAtIndex(InputActionsEditorState state, int index)
         {
             return new SerializedInputActionMap(state.serializedObject
@@ -53,12 +53,12 @@ namespace UnityEngine.InputSystem.Editor
         {
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings))?.arraySize;
         }
-        
+
         public static int? GetActionCount(SerializedProperty actionMap)
         {
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions))?.arraySize;
         }
-        
+
         public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
         {
             return new SerializedInputAction(state.serializedObject
@@ -148,13 +148,15 @@ namespace UnityEngine.InputSystem.Editor
                 yield return bindingName;
         }
 
-        public static SerializedInputAction GetSelectedAction(InputActionsEditorState state)
+        public static SerializedInputAction? GetSelectedAction(InputActionsEditorState state)
         {
-            return new SerializedInputAction(state.serializedObject
+            var actions = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))
                 ?.GetArrayElementAtIndex(state.selectedActionMapIndex)
-                ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-                ?.GetArrayElementAtIndex(state.selectedActionIndex));
+                ?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            if (actions?.arraySize - 1 < state.selectedActionIndex || state.selectedActionIndex < 0)
+                return null;
+            return new SerializedInputAction(actions?.GetArrayElementAtIndex(state.selectedActionIndex));
         }
 
         public static IEnumerable<string> BuildSortedControlList(InputActionType selectedActionType)
@@ -190,12 +192,12 @@ namespace UnityEngine.InputSystem.Editor
             var inputAction = GetSelectedAction(state);
 
             Type expectedValueType = null;
-            if (!string.IsNullOrEmpty(inputAction.expectedControlType))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.expectedControlType);
+            if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
+                expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
 
             var interactions = string.Empty;
-            if (state.selectionType == SelectionType.Action)
-                interactions = inputAction.interactions;
+            if (inputAction.HasValue && state.selectionType == SelectionType.Action)
+                interactions = inputAction.Value.interactions;
             else if (state.selectionType == SelectionType.Binding && GetSelectedBinding(state).HasValue)
                 interactions = GetSelectedBinding(state)?.interactions;
 
@@ -213,11 +215,11 @@ namespace UnityEngine.InputSystem.Editor
 
             var inputAction = GetSelectedAction(state);
 
-            if (!string.IsNullOrEmpty(inputAction.expectedControlType))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.expectedControlType);
+            if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
+                expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
 
-            if (state.selectionType == SelectionType.Action)
-                processors = inputAction.processors;
+            if (inputAction.HasValue && state.selectionType == SelectionType.Action)
+                processors = inputAction.Value.processors;
             else if (state.selectionType == SelectionType.Binding && GetSelectedBinding(state).HasValue)
                 processors = GetSelectedBinding(state)?.processors;
 

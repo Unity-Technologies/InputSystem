@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
             m_Root.Clear();
 
             var binding = viewState.selectedBinding;
-            if(!binding.HasValue)
+            if (!binding.HasValue)
                 return;
             if (binding.Value.isComposite)
             {
@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
                     () => { Dispatch(Commands.ApplyModifiedProperties()); });
 
                 var inputAction = viewState.selectedInputAction;
-                controlPathEditor.SetExpectedControlLayout(inputAction.expectedControlType ?? "");
+                controlPathEditor.SetExpectedControlLayout(inputAction?.expectedControlType ?? "");
 
                 var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
                 m_Root.Add(controlPathContainer);
@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem.Editor
             public SerializedInputBinding? selectedBinding;
             public ViewStateCollection<InputControlScheme> controlSchemes;
             public SerializedProperty selectedBindingPath;
-            public SerializedInputAction selectedInputAction;
+            public SerializedInputAction? selectedInputAction;
         }
     }
 }
