@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
-                ((InputActionsTreeViewItem)element).EditTextFinished -= newName => ChangeActionMapName(i, newName);
+                ((InputActionsTreeViewItem)element).Reset();
             };
 
             m_ListView.itemsChosen += objects =>
