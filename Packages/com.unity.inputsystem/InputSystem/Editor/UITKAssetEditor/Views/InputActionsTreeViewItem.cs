@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.SetEnabled(false);
             renameTextfield.selectAllOnFocus = false;
             UnregisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            renameTextfield.UnregisterCallback<BlurEvent>(e => OnEditTextFinished());
+            renameTextfield.UnregisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
 
         private float lastSingleClick;
@@ -69,8 +69,16 @@ namespace UnityEngine.InputSystem.Editor
             selected = this;
         }
 
+        public void Reset()
+        {
+            EditTextFinished = null;
+            isEditing = false;
+        }
+
         public void FocusOnRenameTextField()
         {
+            if (isEditing)
+                return;
             delegatesFocus = true;
 
             renameTextfield.SetValueWithoutNotify(label.text);

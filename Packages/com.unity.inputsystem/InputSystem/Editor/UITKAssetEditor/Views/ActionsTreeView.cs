@@ -46,7 +46,11 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
                     addBindingButton.clicked += () => AddBinding(item.name);
-                    treeViewItem.EditTextFinished += newName => ChangeActionName(item, newName);
+                    treeViewItem.EditTextFinished += newName =>
+                    {
+                        actionAdded = false;
+                        ChangeActionName(item, newName);
+                    };
                 }
                 else
                 {
@@ -54,7 +58,13 @@ namespace UnityEngine.InputSystem.Editor
                     if (!item.isComposite)
                         treeViewItem.UnregisterInputField();
                     else
-                        treeViewItem.EditTextFinished += newName => ChangeCompositeName(item, newName);
+                    {
+                        treeViewItem.EditTextFinished += newName =>
+                        {
+                            actionAdded = false;
+                            ChangeCompositeName(item, newName);
+                        };
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(item.controlLayout))
@@ -80,7 +90,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 if (item.isAction || item.isComposite)
-                    ((InputActionsTreeViewItem)element).EditTextFinished -= newName => ChangeActionName(item, newName);
+                    ((InputActionsTreeViewItem)element).Reset();
             };
 
             m_ActionsTreeView.selectedIndicesChanged += indicies =>
@@ -164,7 +174,6 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.ScrollToItemById(id);
             var treeViewItem = m_ActionsTreeView.GetRootElementForId(id).Q<InputActionsTreeViewItem>();
             treeViewItem.FocusOnRenameTextField();
-            actionAdded = false;
         }
 
         private void AddAction()
@@ -189,11 +198,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
         {
+            actionAdded = false;
             Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
         }
 
         private void ChangeCompositeName(ActionOrBindingData data, string newName)
         {
+            actionAdded = false;
             Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
 
