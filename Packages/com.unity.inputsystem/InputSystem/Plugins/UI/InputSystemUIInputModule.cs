@@ -451,31 +451,6 @@ namespace UnityEngine.InputSystem.UI
 
         private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerModel state, PointerEventData eventData)
         {
-            for (int i = 0; i < m_PointerStates.length; i++)
-            {
-                if (m_PointerStates[i].pointerType == state.pointerType)
-                    continue;
-                PointerModel.ButtonState buttonState;
-                switch (eventData.button)
-                {
-                    case PointerEventData.InputButton.Left:
-                        buttonState = m_PointerStates[i].leftButton;
-                        break;
-                    case PointerEventData.InputButton.Middle:
-                        buttonState = m_PointerStates[i].middleButton;
-                        break;
-                    case PointerEventData.InputButton.Right:
-                        buttonState = m_PointerStates[i].rightButton;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException($"Unknown mouse button id: {eventData.button}");
-                }
-
-                // If another pointer state has a button press event in progress, ignore this button
-                // It means two different pointer types try to perform the same button action
-                if (buttonState.framePressState != PointerEventData.FramePressState.NotChanged)
-                    return;
-            }
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
 
             if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
@@ -2138,13 +2113,56 @@ namespace UnityEngine.InputSystem.UI
                 // Navigation input.
                 ProcessNavigation(ref m_NavigationState);
 
+                var pointerTypeToProcess = UIPointerType.None;
+                // Read all pointers device states
+                // Find first pointer that has changed this frame to be processed later
+                if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack)
+                {
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        ref var state = ref GetPointerStateForIndex(i);
+                        state.eventData.ReadDeviceState();
+                        state.CopyTouchOrPenStateFrom(state.eventData);
+                        if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
+                            pointerTypeToProcess = state.pointerType;
+                    }
+                }
+
+                // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
+                // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
+                if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerTypeToProcess != UIPointerType.None)
+                {
+                    // var pointerTypeToProcess = m_PointerStates.firstValue.pointerType;
+                    if (pointerTypeToProcess == UIPointerType.MouseOrPen)
+                    {
+                        // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
+                        for (var i = 0; i < m_PointerStates.length; ++i)
+                        {
+                            if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
+                            {
+                                SendPointerExitEventsAndRemovePointer(i);
+                                --i;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
+                        for (var i = 0; i < m_PointerStates.length; ++i)
+                        {
+                            if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
+                            {
+                                SendPointerExitEventsAndRemovePointer(i);
+                                --i;
+                            }
+                        }
+                    }
+                }
+
                 // Pointer input.
                 for (var i = 0; i < m_PointerStates.length; i++)
                 {
                     ref var state = ref GetPointerStateForIndex(i);
-
-                    state.eventData.ReadDeviceState();
-                    state.CopyTouchOrPenStateFrom(state.eventData);
 
                     ProcessPointer(ref state);
 
