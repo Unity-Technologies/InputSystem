@@ -1413,7 +1413,7 @@ internal class UITests : CoreTestsFixture
         switch (pointerBehavior)
         {
             case UIPointerBehavior.SingleUnifiedPointer:
-                //// TODO: Getting "Drop" event, probably should be investigated
+                //// TODO: Getting "Drop" event even if using only one type if input device for Press/Release.
                 break;
             case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
             case UIPointerBehavior.AllPointersAsIs:
