@@ -2116,16 +2116,13 @@ namespace UnityEngine.InputSystem.UI
                 var pointerTypeToProcess = UIPointerType.None;
                 // Read all pointers device states
                 // Find first pointer that has changed this frame to be processed later
-                if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack)
+                for (var i = 0; i < m_PointerStates.length; ++i)
                 {
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        ref var state = ref GetPointerStateForIndex(i);
-                        state.eventData.ReadDeviceState();
-                        state.CopyTouchOrPenStateFrom(state.eventData);
-                        if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
-                            pointerTypeToProcess = state.pointerType;
-                    }
+                    ref var state = ref GetPointerStateForIndex(i);
+                    state.eventData.ReadDeviceState();
+                    state.CopyTouchOrPenStateFrom(state.eventData);
+                    if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
+                        pointerTypeToProcess = state.pointerType;
                 }
 
                 // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
