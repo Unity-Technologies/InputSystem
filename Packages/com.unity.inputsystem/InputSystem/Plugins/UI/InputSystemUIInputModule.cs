@@ -341,7 +341,7 @@ namespace UnityEngine.InputSystem.UI
             if (!state.changedThisFrame && (xrTrackingOrigin == null || state.pointerType != UIPointerType.Tracked))
                 return;
 
-            ProcessPointerButton(ref state.leftButton, state, eventData);
+            ProcessPointerButton(ref state.leftButton, eventData);
             ProcessPointerButtonDrag(ref state.leftButton, eventData);
             ProcessPointerScroll(ref state, eventData);
 
@@ -349,14 +349,14 @@ namespace UnityEngine.InputSystem.UI
             eventData.button = PointerEventData.InputButton.Right;
             state.rightButton.CopyPressStateTo(eventData);
 
-            ProcessPointerButton(ref state.rightButton, state, eventData);
+            ProcessPointerButton(ref state.rightButton, eventData);
             ProcessPointerButtonDrag(ref state.rightButton, eventData);
 
             // Middle mouse button.
             eventData.button = PointerEventData.InputButton.Middle;
             state.middleButton.CopyPressStateTo(eventData);
 
-            ProcessPointerButton(ref state.middleButton, state, eventData);
+            ProcessPointerButton(ref state.middleButton, eventData);
             ProcessPointerButtonDrag(ref state.middleButton, eventData);
         }
 
@@ -449,7 +449,7 @@ namespace UnityEngine.InputSystem.UI
 
         private const float kClickSpeed = 0.3f;
 
-        private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerModel state, PointerEventData eventData)
+        private void ProcessPointerButton(ref PointerModel.ButtonState button, PointerEventData eventData)
         {
             var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
 
