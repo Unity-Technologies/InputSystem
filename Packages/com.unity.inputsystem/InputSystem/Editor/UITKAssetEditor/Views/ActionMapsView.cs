@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -33,25 +34,23 @@ namespace UnityEngine.InputSystem.Editor
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
+
+            addActionMapButton.clicked += AddActionMap;
         }
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
 
         public override void RedrawUI(ViewState viewState)
         {
-            m_ListView.bindItem = (element, i) =>
-            {
-                var treeViewItem = (InputActionsTreeViewItem)element;
-                treeViewItem.label.text = (string)m_ListView.itemsSource[i];
-            };
-            m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
-            addActionMapButton.clicked += ShowAddActionMapWindow;
+            var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.name);
+            m_ListView.SetSelection(indexOf);
+            m_ListView.Rebuild();
         }
 
         public override void DestroyView()
         {
-            addActionMapButton.clicked -= ShowAddActionMapWindow;
+            addActionMapButton.clicked -= AddActionMap;
         }
 
         private void ChangeActionMapName(string newName)
@@ -64,8 +63,9 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
         }
 
-        private void ShowAddActionMapWindow()
+        private void AddActionMap()
         {
+            Dispatch(Commands.AddActionMap());
         }
 
         private readonly VisualElement m_Root;

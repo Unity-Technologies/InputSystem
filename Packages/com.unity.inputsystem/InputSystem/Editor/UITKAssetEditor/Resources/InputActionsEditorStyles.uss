@@ -29,6 +29,11 @@
     border-width: 0;
 }
 
+#add-new-action-button {
+    background-color: transparent;
+    border-width: 0;
+}
+
 #bindings-container {
     min-width: 225px;
     border-left-width: 0;
