@@ -22,7 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Fixed BindingPath String-Comparison to be culture and case insensitive (case ISXB-449).
 - Fixed custom processor display in the input action asset UI after entering/exiting play mode (previously they got hidden) ([case ISXB-445](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-445)).
-- Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416).
+- Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416, ISXB-342).
 
 ## [1.5.1] - 2023-03-15
 

@@ -1413,7 +1413,12 @@ internal class UITests : CoreTestsFixture
         switch (pointerBehavior)
         {
             case UIPointerBehavior.SingleUnifiedPointer:
-                //// Getting "Drop" event even if using only one type if input device for Press/Release.
+                //// Getting "Drop" event even if using only one type of input device for Press/Release.
+                //// E.g. the following test would also produce only a Drop event:
+                ////     Press(mouse1.leftButton);
+                ////     yield return null;
+                ////     Release(mouse1.leftButton);
+                ////     yield return null;
                 break;
             case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
             case UIPointerBehavior.AllPointersAsIs:
