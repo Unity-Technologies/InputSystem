@@ -12,36 +12,36 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
     internal class InputSystemProvider : IEventProviderImpl
     {
-        private InputEventPartialProvider _inputEventPartialProvider;
+        InputEventPartialProvider m_InputEventPartialProvider;
 
-        private Configuration _cfg;
+        Configuration m_Cfg;
 
-        private InputActionAsset _inputActionAsset;
-        private InputActionReference _pointAction;
-        private InputActionReference _moveAction;
-        private InputActionReference _submitAction;
-        private InputActionReference _cancelAction;
-        private InputActionReference _leftClickAction;
-        private InputActionReference _middleClickAction;
-        private InputActionReference _rightClickAction;
-        private InputActionReference _scrollWheelAction;
+        InputActionAsset m_InputActionAsset;
+        InputActionReference m_PointAction;
+        InputActionReference m_MoveAction;
+        InputActionReference m_SubmitAction;
+        InputActionReference m_CancelAction;
+        InputActionReference m_LeftClickAction;
+        InputActionReference m_MiddleClickAction;
+        InputActionReference m_RightClickAction;
+        InputActionReference m_ScrollWheelAction;
 
-        InputAction _nextPreviousAction;
+        InputAction m_NextPreviousAction;
 
-        List<Event> _events = new List<Event>();
+        List<Event> m_Events = new List<Event>();
 
-        private PointerState _mouseState;
+        PointerState m_MouseState;
 
-        private PointerState _penState;
-        private bool _seenPenEvents;
+        PointerState m_PenState;
+        bool m_SeenPenEvents;
 
-        private PointerState _touchState;
-        private bool _seenTouchEvents;
+        PointerState m_TouchState;
+        bool m_SeenTouchEvents;
 
-        private const float kSmallestReportedMovementSqrDist = 0.01f;
+        const float k_SmallestReportedMovementSqrDist = 0.01f;
 
-        private NavigationEventRepeatHelper repeatHelper = new();
-        private bool _resetSeenEventsOnUpdate;
+        NavigationEventRepeatHelper m_RepeatHelper = new();
+        bool m_ResetSeenEventsOnUpdate;
 
         static InputSystemProvider()
         {
@@ -53,61 +53,61 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         }
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Bootstrap() {} // Empty function. Exists only to invoke the static class constructor in Runtime Players
+        static void Bootstrap() {} // Empty function. Exists only to invoke the static class constructor in Runtime Players
 
-        private EventModifiers _eventModifiers => _inputEventPartialProvider._eventModifiers;
+        EventModifiers m_EventModifiers => m_InputEventPartialProvider._eventModifiers;
 
-        private DiscreteTime _currentTime => (DiscreteTime)Time.timeAsRational;
+        DiscreteTime m_CurrentTime => (DiscreteTime)Time.timeAsRational;
 
-        private const uint kDefaultPlayerId = 0u;
+        const uint k_DefaultPlayerId = 0u;
 
         public void Initialize()
         {
-            _inputEventPartialProvider ??= new InputEventPartialProvider();
-            _inputEventPartialProvider.Initialize();
+            m_InputEventPartialProvider ??= new InputEventPartialProvider();
+            m_InputEventPartialProvider.Initialize();
 
-            _events.Clear();
+            m_Events.Clear();
 
-            _mouseState.Reset();
+            m_MouseState.Reset();
 
-            _penState.Reset();
-            _seenPenEvents = false;
+            m_PenState.Reset();
+            m_SeenPenEvents = false;
 
-            _touchState.Reset();
-            _seenTouchEvents = false;
+            m_TouchState.Reset();
+            m_SeenTouchEvents = false;
 
             // TODO should UITK somehow override this?
-            _cfg = Configuration.GetDefaultConfiguration();
-            RegisterActions(_cfg);
+            m_Cfg = Configuration.GetDefaultConfiguration();
+            RegisterActions(m_Cfg);
         }
 
         public void Shutdown()
         {
-            UnregisterActions(_cfg);
+            UnregisterActions(m_Cfg);
 
-            _inputEventPartialProvider.Shutdown();
-            _inputEventPartialProvider = null;
+            m_InputEventPartialProvider.Shutdown();
+            m_InputEventPartialProvider = null;
         }
 
         public void Update()
         {
-            _inputEventPartialProvider.Update();
+            m_InputEventPartialProvider.Update();
 
-            _events.Sort(SortEvents);
+            m_Events.Sort(SortEvents);
 
             var currentTime = (DiscreteTime)Time.timeAsRational;
 
             DirectionNavigation(currentTime);
 
-            foreach (var ev in _events)
+            foreach (var ev in m_Events)
             {
                 // we need to ignore some pointer events based on priority (touch->pen->mouse)
                 // this is mostly used to filter out simulated input, e.g. when pen is active it also generates mouse input
-                if (_seenTouchEvents && ev.type == Event.Type.PointerEvent && ev.eventSource == EventSource.Pen)
-                    _penState.Reset();
-                else if ((_seenTouchEvents || _seenPenEvents) &&
+                if (m_SeenTouchEvents && ev.type == Event.Type.PointerEvent && ev.eventSource == EventSource.Pen)
+                    m_PenState.Reset();
+                else if ((m_SeenTouchEvents || m_SeenPenEvents) &&
                          ev.type == Event.Type.PointerEvent && (ev.eventSource == EventSource.Mouse || ev.eventSource == EventSource.Unspecified))
-                    _mouseState.Reset();
+                    m_MouseState.Reset();
                 else
                     EventProvider.Dispatch(ev);
             }
@@ -116,23 +116,23 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             // To avoid dispatching them, the seen event flags aren't reset in between calls to OnPointerPerformed.
             // Essentially, if we're moving with Touch or Pen, lower priority events aren't dispatch as well.
             // Once OnClickPerformed is called, the seen flags are reset
-            if (_resetSeenEventsOnUpdate)
+            if (m_ResetSeenEventsOnUpdate)
             {
                 ResetSeenEvents();
-                _resetSeenEventsOnUpdate = false;
+                m_ResetSeenEventsOnUpdate = false;
             }
 
-            _events.Clear();
+            m_Events.Clear();
         }
 
-        private void ResetSeenEvents()
+        void ResetSeenEvents()
         {
-            _seenTouchEvents = false;
-            _seenPenEvents = false;
+            m_SeenTouchEvents = false;
+            m_SeenPenEvents = false;
         }
 
         //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
-        private void DirectionNavigation(DiscreteTime currentTime)
+        void DirectionNavigation(DiscreteTime currentTime)
         {
             var(move, axesButtonWerePressed) = ReadCurrentNavigationMoveVector();
             var direction = NavigationEvent.DetermineMoveDirection(move);
@@ -141,16 +141,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (direction == NavigationEvent.Direction.None)
             {
                 direction = ReadNextPreviousDirection();
-                axesButtonWerePressed = _nextPreviousAction.WasPressedThisFrame();
+                axesButtonWerePressed = m_NextPreviousAction.WasPressedThisFrame();
             }
 
             if (direction == NavigationEvent.Direction.None)
             {
-                repeatHelper.Reset();
+                m_RepeatHelper.Reset();
             }
             else
             {
-                if (repeatHelper.ShouldSendMoveEvent(currentTime, direction, axesButtonWerePressed))
+                if (m_RepeatHelper.ShouldSendMoveEvent(currentTime, direction, axesButtonWerePressed))
                 {
                     EventProvider.Dispatch(Event.From(new NavigationEvent
                     {
@@ -158,14 +158,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                         direction = direction,
                         timestamp = currentTime,
                         eventSource = GetEventSource(GetActiveDeviceFromDirection(direction)),
-                        playerId = kDefaultPlayerId,
-                        eventModifiers = _eventModifiers
+                        playerId = k_DefaultPlayerId,
+                        eventModifiers = m_EventModifiers
                     }));
                 }
             }
         }
 
-        private InputDevice GetActiveDeviceFromDirection(NavigationEvent.Direction direction)
+        InputDevice GetActiveDeviceFromDirection(NavigationEvent.Direction direction)
         {
             switch (direction)
             {
@@ -173,35 +173,35 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 case NavigationEvent.Direction.Up:
                 case NavigationEvent.Direction.Right:
                 case NavigationEvent.Direction.Down:
-                    return _moveAction.action.activeControl.device;
+                    return m_MoveAction.action.activeControl.device;
                 case NavigationEvent.Direction.Next:
                 case NavigationEvent.Direction.Previous:
-                    return _nextPreviousAction.activeControl.device;
+                    return m_NextPreviousAction.activeControl.device;
                 case NavigationEvent.Direction.None:
                 default:
                     return Keyboard.current;
             }
         }
 
-        private (Vector2, bool) ReadCurrentNavigationMoveVector()
+        (Vector2, bool) ReadCurrentNavigationMoveVector()
         {
-            var move = _moveAction.action.ReadValue<Vector2>();
+            var move = m_MoveAction.action.ReadValue<Vector2>();
             // Check if the action was "pressed" this frame to deal with repeating events
-            var axisWasPressed = _moveAction.action.WasPressedThisFrame();
+            var axisWasPressed = m_MoveAction.action.WasPressedThisFrame();
             return (move, axisWasPressed);
         }
 
-        private NavigationEvent.Direction ReadNextPreviousDirection()
+        NavigationEvent.Direction ReadNextPreviousDirection()
         {
-            if (_nextPreviousAction.IsPressed())
+            if (m_NextPreviousAction.IsPressed())
             {
                 //TODO: For now it only deals with Keyboard, needs to deal with other devices if we can add bindings
                 //      for Gamepad, etc
                 //TODO: An alternative could be to have an action for next and for previous since shortcut support does
                 //      not work properly
-                if (_nextPreviousAction.activeControl.device is Keyboard)
+                if (m_NextPreviousAction.activeControl.device is Keyboard)
                 {
-                    var keyboard = _nextPreviousAction.activeControl.device as Keyboard;
+                    var keyboard = m_NextPreviousAction.activeControl.device as Keyboard;
                     // Return direction based on whether shift is pressed or not
                     return keyboard.shiftKey.isPressed ? NavigationEvent.Direction.Previous : NavigationEvent.Direction.Next;
                 }
@@ -210,39 +210,39 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             return NavigationEvent.Direction.None;
         }
 
-        private static int SortEvents(Event a, Event b)
+        static int SortEvents(Event a, Event b)
         {
             return Event.CompareType(a, b);
         }
 
         public void OnFocusChanged(bool focus)
         {
-            _inputEventPartialProvider.OnFocusChanged(focus);
+            m_InputEventPartialProvider.OnFocusChanged(focus);
         }
 
         public bool RequestCurrentState(Event.Type type)
         {
-            if (_inputEventPartialProvider.RequestCurrentState(type))
+            if (m_InputEventPartialProvider.RequestCurrentState(type))
                 return true;
 
             switch (type)
             {
                 case Event.Type.PointerEvent:
                 {
-                    if (_touchState.LastPositionValid)
-                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(_currentTime, _touchState, EventSource.Touch)));
-                    if (_penState.LastPositionValid)
-                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(_currentTime, _penState, EventSource.Pen)));
-                    if (_mouseState.LastPositionValid)
-                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(_currentTime, _mouseState, EventSource.Mouse)));
+                    if (m_TouchState.LastPositionValid)
+                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(m_CurrentTime, m_TouchState, EventSource.Touch)));
+                    if (m_PenState.LastPositionValid)
+                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(m_CurrentTime, m_PenState, EventSource.Pen)));
+                    if (m_MouseState.LastPositionValid)
+                        EventProvider.Dispatch(Event.From(ToPointerStateEvent(m_CurrentTime, m_MouseState, EventSource.Mouse)));
                     else
                     {
                         // TODO maybe it's reasonable to poll and dispatch mouse state here anyway?
                     }
 
-                    return _touchState.LastPositionValid ||
-                        _penState.LastPositionValid ||
-                        _mouseState.LastPositionValid;
+                    return m_TouchState.LastPositionValid ||
+                        m_PenState.LastPositionValid ||
+                        m_MouseState.LastPositionValid;
                 }
                 // TODO
                 case Event.Type.IMECompositionEvent:
@@ -256,7 +256,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public uint playerCount => 1; // TODO
 
         // copied from UIElementsRuntimeUtility.cs
-        private static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
+        static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
         {
             // Flip positions Y axis between input and UITK
             var screenHeight = Screen.height;
@@ -266,7 +266,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             return position;
         }
 
-        private PointerEvent ToPointerStateEvent(DiscreteTime currentTime, in PointerState state, EventSource eventSource)
+        PointerEvent ToPointerStateEvent(DiscreteTime currentTime, in PointerState state, EventSource eventSource)
         {
             return new PointerEvent
             {
@@ -286,18 +286,18 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 clickCount = 0,
                 timestamp = currentTime,
                 eventSource = eventSource,
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
             };
         }
 
-        private EventSource GetEventSource(InputAction.CallbackContext ctx)
+        EventSource GetEventSource(InputAction.CallbackContext ctx)
         {
             var device = ctx.control.device;
             return GetEventSource(device);
         }
 
-        private EventSource GetEventSource(InputDevice device)
+        EventSource GetEventSource(InputDevice device)
         {
             if (device is Touchscreen)
                 return EventSource.Touch;
@@ -313,25 +313,25 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             return EventSource.Unspecified;
         }
 
-        private ref PointerState GetPointerStateForSource(EventSource eventSource)
+        ref PointerState GetPointerStateForSource(EventSource eventSource)
         {
             switch (eventSource)
             {
                 case EventSource.Touch:
-                    return ref _touchState;
+                    return ref m_TouchState;
                 case EventSource.Pen:
-                    return ref _penState;
+                    return ref m_PenState;
                 default:
-                    return ref _mouseState;
+                    return ref m_MouseState;
             }
         }
 
-        private void DispatchFromCallback(in Event ev)
+        void DispatchFromCallback(in Event ev)
         {
-            _events.Add(ev);
+            m_Events.Add(ev);
         }
 
-        private static int FindTouchFingerIndex(Touchscreen touchscreen, InputAction.CallbackContext ctx)
+        static int FindTouchFingerIndex(Touchscreen touchscreen, InputAction.CallbackContext ctx)
         {
             var asVector2Control = ctx.control is Vector2Control ? (Vector2Control)ctx.control : null;
             var asTouchPressControl = ctx.control is TouchPressControl ? (TouchPressControl)ctx.control : null;
@@ -352,7 +352,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             return 0;
         }
 
-        private void OnPointerPerformed(InputAction.CallbackContext ctx)
+        void OnPointerPerformed(InputAction.CallbackContext ctx)
         {
             var eventSource = GetEventSource(ctx);
             ref var pointerState = ref GetPointerStateForSource(eventSource);
@@ -365,11 +365,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
 
-            _resetSeenEventsOnUpdate = false;
+            m_ResetSeenEventsOnUpdate = false;
             if (asTouchControl != null || asTouchscreenDevice != null)
-                _seenTouchEvents = true;
+                m_SeenTouchEvents = true;
             else if (asPenDevice != null)
-                _seenPenEvents = true;
+                m_SeenPenEvents = true;
 
             var positionISX = ctx.ReadValue<Vector2>();
             var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : 0);
@@ -385,7 +385,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 ? asPenDevice.eraser.isPressed
                 : false; // TODO any way to detect that pen is inverted but not touching?
 
-            if (delta.sqrMagnitude >= kSmallestReportedMovementSqrDist)
+            if (delta.sqrMagnitude >= k_SmallestReportedMovementSqrDist)
             {
                 DispatchFromCallback(Event.From(new PointerEvent
                 {
@@ -402,46 +402,46 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     button = 0,
                     buttonsState = pointerState.ButtonsState,
                     clickCount = 0,
-                    timestamp = _currentTime,
+                    timestamp = m_CurrentTime,
                     eventSource = eventSource,
-                    playerId = kDefaultPlayerId,
-                    eventModifiers = _eventModifiers
+                    playerId = k_DefaultPlayerId,
+                    eventModifiers = m_EventModifiers
                 }));
 
                 // only record if we send an event
-                pointerState.OnMove(_currentTime, position, targetDisplay);
+                pointerState.OnMove(m_CurrentTime, position, targetDisplay);
             }
             else if (!pointerState.LastPositionValid)
-                pointerState.OnMove(_currentTime, position, targetDisplay);
+                pointerState.OnMove(m_CurrentTime, position, targetDisplay);
         }
 
-        private void OnSubmitPerformed(InputAction.CallbackContext ctx)
+        void OnSubmitPerformed(InputAction.CallbackContext ctx)
         {
             DispatchFromCallback(Event.From(new NavigationEvent
             {
                 type = NavigationEvent.Type.Submit,
                 direction = NavigationEvent.Direction.None,
-                timestamp = _currentTime,
+                timestamp = m_CurrentTime,
                 eventSource = GetEventSource(ctx),
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
             }));
         }
 
-        private void OnCancelPerformed(InputAction.CallbackContext ctx)
+        void OnCancelPerformed(InputAction.CallbackContext ctx)
         {
             DispatchFromCallback(Event.From(new NavigationEvent
             {
                 type = NavigationEvent.Type.Cancel,
                 direction = NavigationEvent.Direction.None,
-                timestamp = _currentTime,
+                timestamp = m_CurrentTime,
                 eventSource = GetEventSource(ctx),
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
             }));
         }
 
-        private void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
+        void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
         {
             ref var state = ref GetPointerStateForSource(eventSource);
 
@@ -449,13 +449,13 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
 
-            _resetSeenEventsOnUpdate = true;
+            m_ResetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
-                _seenTouchEvents = true;
+                m_SeenTouchEvents = true;
 
             var wasPressed = state.ButtonsState.Get(button);
             var isPressed = ctx.ReadValueAsButton();
-            state.OnButtonChange(_currentTime, button, wasPressed, isPressed);
+            state.OnButtonChange(m_CurrentTime, button, wasPressed, isPressed);
 
             DispatchFromCallback(Event.From(new PointerEvent
             {
@@ -472,21 +472,21 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 button = button,
                 buttonsState = state.ButtonsState,
                 clickCount = state.ClickCount,
-                timestamp = _currentTime,
+                timestamp = m_CurrentTime,
                 eventSource = eventSource,
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
             }));
         }
 
-        private void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseLeft);
-        private void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseMiddle);
-        private void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseRight);
+        void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseLeft);
+        void OnMiddleClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseMiddle);
+        void OnRightClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseRight);
 
-        private void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
+        void OnScrollWheelPerformed(InputAction.CallbackContext ctx)
         {
             var scrollDelta = ctx.ReadValue<Vector2>();
-            if (scrollDelta.sqrMagnitude < kSmallestReportedMovementSqrDist)
+            if (scrollDelta.sqrMagnitude < k_SmallestReportedMovementSqrDist)
                 return;
 
             var eventSource = GetEventSource(ctx);
@@ -526,111 +526,111 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 button = 0,
                 buttonsState = state.ButtonsState,
                 clickCount = 0,
-                timestamp = _currentTime,
+                timestamp = m_CurrentTime,
                 eventSource = EventSource.Mouse,
-                playerId = kDefaultPlayerId,
-                eventModifiers = _eventModifiers
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
             }));
         }
 
-        private void RegisterNextPreviousAction()
+        void RegisterNextPreviousAction()
         {
-            _nextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Button);
+            m_NextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Button);
             // TODO add more default bindings, or make them configurable
-            _nextPreviousAction.AddBinding("<Keyboard>/tab");
-            _nextPreviousAction.Enable();
+            m_NextPreviousAction.AddBinding("<Keyboard>/tab");
+            m_NextPreviousAction.Enable();
         }
 
-        private void UnregisterNextPreviousAction()
+        void UnregisterNextPreviousAction()
         {
-            if (_nextPreviousAction != null)
+            if (m_NextPreviousAction != null)
             {
-                _nextPreviousAction.Disable();
-                _nextPreviousAction = null;
+                m_NextPreviousAction.Disable();
+                m_NextPreviousAction = null;
             }
         }
 
-        private void RegisterActions(Configuration cfg)
+        void RegisterActions(Configuration cfg)
         {
-            _inputActionAsset = InputActionAsset.FromJson(cfg.InputActionAssetAsJson);
+            m_InputActionAsset = InputActionAsset.FromJson(cfg.InputActionAssetAsJson);
 
-            _pointAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.PointAction));
-            _moveAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.MoveAction));
-            _submitAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.SubmitAction));
-            _cancelAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.CancelAction));
-            _leftClickAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.LeftClickAction));
-            _middleClickAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.MiddleClickAction));
-            _rightClickAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.RightClickAction));
-            _scrollWheelAction = InputActionReference.Create(_inputActionAsset.FindAction(_cfg.ScrollWheelAction));
+            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
+            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
+            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
+            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
+            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
+            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
+            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
+            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
 
-            if (_pointAction.action != null)
-                _pointAction.action.performed += OnPointerPerformed;
+            if (m_PointAction.action != null)
+                m_PointAction.action.performed += OnPointerPerformed;
 
-            if (_submitAction.action != null)
-                _submitAction.action.performed += OnSubmitPerformed;
+            if (m_SubmitAction.action != null)
+                m_SubmitAction.action.performed += OnSubmitPerformed;
 
-            if (_cancelAction.action != null)
-                _cancelAction.action.performed += OnCancelPerformed;
+            if (m_CancelAction.action != null)
+                m_CancelAction.action.performed += OnCancelPerformed;
 
-            if (_leftClickAction.action != null)
-                _leftClickAction.action.performed += OnLeftClickPerformed;
+            if (m_LeftClickAction.action != null)
+                m_LeftClickAction.action.performed += OnLeftClickPerformed;
 
-            if (_middleClickAction.action != null)
-                _middleClickAction.action.performed += OnMiddleClickPerformed;
+            if (m_MiddleClickAction.action != null)
+                m_MiddleClickAction.action.performed += OnMiddleClickPerformed;
 
-            if (_rightClickAction.action != null)
-                _rightClickAction.action.performed += OnRightClickPerformed;
+            if (m_RightClickAction.action != null)
+                m_RightClickAction.action.performed += OnRightClickPerformed;
 
-            if (_scrollWheelAction.action != null)
-                _scrollWheelAction.action.performed += OnScrollWheelPerformed;
+            if (m_ScrollWheelAction.action != null)
+                m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
 
             // When adding new one's don't forget to add them to UnregisterActions
 
-            _inputActionAsset.Enable();
+            m_InputActionAsset.Enable();
 
             // TODO make it configurable as it is not part of default config
             // The Next/Previous action is not part of the input actions asset
             RegisterNextPreviousAction();
         }
 
-        private void UnregisterActions(Configuration cfg)
+        void UnregisterActions(Configuration cfg)
         {
-            if (_pointAction.action != null)
-                _pointAction.action.performed -= OnPointerPerformed;
+            if (m_PointAction.action != null)
+                m_PointAction.action.performed -= OnPointerPerformed;
 
-            if (_submitAction.action != null)
-                _submitAction.action.performed -= OnSubmitPerformed;
+            if (m_SubmitAction.action != null)
+                m_SubmitAction.action.performed -= OnSubmitPerformed;
 
-            if (_cancelAction.action != null)
-                _cancelAction.action.performed -= OnCancelPerformed;
+            if (m_CancelAction.action != null)
+                m_CancelAction.action.performed -= OnCancelPerformed;
 
-            if (_leftClickAction.action != null)
-                _leftClickAction.action.performed -= OnLeftClickPerformed;
+            if (m_LeftClickAction.action != null)
+                m_LeftClickAction.action.performed -= OnLeftClickPerformed;
 
-            if (_middleClickAction.action != null)
-                _middleClickAction.action.performed -= OnMiddleClickPerformed;
+            if (m_MiddleClickAction.action != null)
+                m_MiddleClickAction.action.performed -= OnMiddleClickPerformed;
 
-            if (_rightClickAction.action != null)
-                _rightClickAction.action.performed -= OnRightClickPerformed;
+            if (m_RightClickAction.action != null)
+                m_RightClickAction.action.performed -= OnRightClickPerformed;
 
-            if (_scrollWheelAction.action != null)
-                _scrollWheelAction.action.performed -= OnScrollWheelPerformed;
+            if (m_ScrollWheelAction.action != null)
+                m_ScrollWheelAction.action.performed -= OnScrollWheelPerformed;
 
-            _pointAction = null;
-            _moveAction = null;
-            _submitAction = null;
-            _cancelAction = null;
-            _leftClickAction = null;
-            _middleClickAction = null;
-            _rightClickAction = null;
-            _scrollWheelAction = null;
+            m_PointAction = null;
+            m_MoveAction = null;
+            m_SubmitAction = null;
+            m_CancelAction = null;
+            m_LeftClickAction = null;
+            m_MiddleClickAction = null;
+            m_RightClickAction = null;
+            m_ScrollWheelAction = null;
 
-            _inputActionAsset.Disable();
+            m_InputActionAsset.Disable();
 
             // The Next/Previous action is not part of the input actions asset
             UnregisterNextPreviousAction();
 
-            UnityEngine.Object.Destroy(_inputActionAsset); // TODO check if this is ok
+            UnityEngine.Object.Destroy(m_InputActionAsset); // TODO check if this is ok
         }
 
         public struct Configuration
