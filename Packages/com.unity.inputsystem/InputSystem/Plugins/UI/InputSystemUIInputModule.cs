@@ -2097,6 +2097,52 @@ namespace UnityEngine.InputSystem.UI
             m_NeedToPurgeStalePointers = true;
         }
 
+        private void FilterPointerStatesByType()
+        {
+            var pointerTypeToProcess = UIPointerType.None;
+            // Read all pointers device states
+            // Find first pointer that has changed this frame to be processed later
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                ref var state = ref GetPointerStateForIndex(i);
+                state.eventData.ReadDeviceState();
+                state.CopyTouchOrPenStateFrom(state.eventData);
+                if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
+                    pointerTypeToProcess = state.pointerType;
+            }
+
+            // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
+            // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
+            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerTypeToProcess != UIPointerType.None)
+            {
+                // var pointerTypeToProcess = m_PointerStates.firstValue.pointerType;
+                if (pointerTypeToProcess == UIPointerType.MouseOrPen)
+                {
+                    // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
+                        {
+                            SendPointerExitEventsAndRemovePointer(i);
+                            --i;
+                        }
+                    }
+                }
+                else
+                {
+                    // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
+                        {
+                            SendPointerExitEventsAndRemovePointer(i);
+                            --i;
+                        }
+                    }
+                }
+            }
+        }
+
         public override void Process()
         {
             if (m_NeedToPurgeStalePointers)
@@ -2113,48 +2159,7 @@ namespace UnityEngine.InputSystem.UI
                 // Navigation input.
                 ProcessNavigation(ref m_NavigationState);
 
-                var pointerTypeToProcess = UIPointerType.None;
-                // Read all pointers device states
-                // Find first pointer that has changed this frame to be processed later
-                for (var i = 0; i < m_PointerStates.length; ++i)
-                {
-                    ref var state = ref GetPointerStateForIndex(i);
-                    state.eventData.ReadDeviceState();
-                    state.CopyTouchOrPenStateFrom(state.eventData);
-                    if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
-                        pointerTypeToProcess = state.pointerType;
-                }
-
-                // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
-                // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
-                if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerTypeToProcess != UIPointerType.None)
-                {
-                    // var pointerTypeToProcess = m_PointerStates.firstValue.pointerType;
-                    if (pointerTypeToProcess == UIPointerType.MouseOrPen)
-                    {
-                        // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
-                        for (var i = 0; i < m_PointerStates.length; ++i)
-                        {
-                            if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
-                            {
-                                SendPointerExitEventsAndRemovePointer(i);
-                                --i;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
-                        for (var i = 0; i < m_PointerStates.length; ++i)
-                        {
-                            if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
-                            {
-                                SendPointerExitEventsAndRemovePointer(i);
-                                --i;
-                            }
-                        }
-                    }
-                }
+                FilterPointerStatesByType();
 
                 // Pointer input.
                 for (var i = 0; i < m_PointerStates.length; i++)
