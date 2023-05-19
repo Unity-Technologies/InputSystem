@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 // this is mostly used to filter out simulated input, e.g. when pen is active it also generates mouse input
                 if (_seenTouchEvents && ev.type == Event.Type.PointerEvent && ev.eventSource == EventSource.Pen)
                     _penState.Reset();
-                else if ((_seenTouchEvents || _seenPenEvents) && 
+                else if ((_seenTouchEvents || _seenPenEvents) &&
                          ev.type == Event.Type.PointerEvent && (ev.eventSource == EventSource.Mouse || ev.eventSource == EventSource.Unspecified))
                     _mouseState.Reset();
                 else
@@ -121,9 +121,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 ResetSeenEvents();
                 _resetSeenEventsOnUpdate = false;
             }
-            
-            _events.Clear();
 
+            _events.Clear();
         }
 
         private void ResetSeenEvents()
@@ -449,7 +448,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
             var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
-            
+
             _resetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
