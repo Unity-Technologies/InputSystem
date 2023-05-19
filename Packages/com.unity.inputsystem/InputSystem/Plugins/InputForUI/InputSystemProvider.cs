@@ -31,7 +31,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         List<Event> _events = new List<Event>();
 
         private PointerState _mouseState;
-        private bool _seenMouseEvents;
 
         private PointerState _penState;
         private bool _seenPenEvents;
@@ -70,7 +69,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             _events.Clear();
 
             _mouseState.Reset();
-            _seenMouseEvents = false;
 
             _penState.Reset();
             _seenPenEvents = false;
@@ -132,7 +130,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         {
             _seenTouchEvents = false;
             _seenPenEvents = false;
-            _seenMouseEvents = false;
         }
 
         //TODO: Refactor as there is no need for having almost the same implementation in the IM and ISX?
@@ -343,7 +340,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (touchscreen == null)
                 return 0;
 
-			// Finds the index of the matching control type in the Touchscreen device lost of touch controls (touches)
+            // Finds the index of the matching control type in the Touchscreen device lost of touch controls (touches)
             for (var i = 0; i < touchscreen.touches.Count; ++i)
             {
                 if (asVector2Control != null && asVector2Control == touchscreen.touches[i].position)
@@ -374,8 +371,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 _seenTouchEvents = true;
             else if (asPenDevice != null)
                 _seenPenEvents = true;
-            else
-                _seenMouseEvents = true;
 
             var positionISX = ctx.ReadValue<Vector2>();
             var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : 0);
@@ -458,8 +453,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             _resetSeenEventsOnUpdate = true;
             if (asTouchControl != null || asTouchscreenDevice != null)
                 _seenTouchEvents = true;
-            else
-                _seenMouseEvents = true;
 
             var wasPressed = state.ButtonsState.Get(button);
             var isPressed = ctx.ReadValueAsButton();
