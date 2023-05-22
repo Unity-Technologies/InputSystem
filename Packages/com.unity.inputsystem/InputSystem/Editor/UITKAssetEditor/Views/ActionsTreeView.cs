@@ -169,9 +169,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
+            m_ActionsTreeView.Rebuild();
             if (viewState.newElementID != -1)
                 m_ActionsTreeView.SetSelectionById(viewState.newElementID);
-            m_ActionsTreeView.Rebuild();
             RenameNewAction(viewState.newElementID);
         }
 
