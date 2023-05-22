@@ -91,6 +91,14 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         public void Update()
         {
+#if UNITY_EDITOR
+            // Ensure we are in a good (initialized) state before running updates.
+            // This could be in a bad state for a duration while the build pipeline is running
+            // when building tests to run in the Standalone Player.
+            if (m_InputActionAsset == null)
+                return;
+#endif
+
             m_InputEventPartialProvider.Update();
 
             m_Events.Sort(SortEvents);
