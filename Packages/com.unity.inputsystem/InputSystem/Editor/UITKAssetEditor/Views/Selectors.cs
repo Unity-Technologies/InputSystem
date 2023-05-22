@@ -78,11 +78,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
         {
-            var actionMapSO = GetSelectedActionMap(state);
-
-            return actionMapSO?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings))
-                ?.GetArrayElementAtIndex(state.selectedBindingIndex)
-                ?.FindPropertyRelative("m_Path");
+            var selectedBinding = GetSelectedBinding(state);
+            return selectedBinding?.wrappedProperty.FindPropertyRelative("m_Path");
         }
 
         public static SerializedInputBinding? GetSelectedBinding(InputActionsEditorState state)
