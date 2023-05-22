@@ -28,40 +28,40 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI((SerializedInputAction ? , List<string>) viewState)
         {
-            var inputAction = viewState.Item1;
-            if (!inputAction.HasValue)
+            if (!viewState.Item1.HasValue)
                 return;
+            var inputAction = viewState.Item1.Value;
 
             m_Root.Clear();
 
-            var actionType = new EnumField("Action Type", inputAction.Value.type)
+            var actionType = new EnumField("Action Type", inputAction.type)
             {
-                tooltip = inputAction.Value.actionTypeTooltip
+                tooltip = inputAction.actionTypeTooltip
             };
             actionType.RegisterValueChangedCallback(evt =>
             {
-                Dispatch(Commands.ChangeActionType(inputAction.Value, (InputActionType)evt.newValue));
+                Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
             });
             m_Root.Add(actionType);
 
-            if (inputAction.Value.type != InputActionType.Button)
+            if (inputAction.type != InputActionType.Button)
             {
                 var controlTypes = viewState.Item2;
                 var controlType = new DropdownField("Control Type");
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
-                var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.Value.expectedControlType);
+                var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
                 controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
-                controlType.tooltip = inputAction.Value.expectedControlTypeTooltip;
+                controlType.tooltip = inputAction.expectedControlTypeTooltip;
 
                 controlType.RegisterValueChangedCallback(evt =>
                 {
-                    Dispatch(Commands.ChangeActionControlType(inputAction.Value, controlType.index));
+                    Dispatch(Commands.ChangeActionControlType(inputAction, controlType.index));
                 });
                 m_Root.Add(controlType);
             }
 
-            if (inputAction.Value.type != InputActionType.Value)
+            if (inputAction.type != InputActionType.Value)
             {
                 var initialStateCheck = new Toggle("Initial State Check")
                 {
@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem.Editor
                 };
                 initialStateCheck.RegisterValueChangedCallback(evt =>
                 {
-                    Dispatch(Commands.ChangeInitialStateCheck(inputAction.Value, evt.newValue));
+                    Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));
                 });
                 m_Root.Add(initialStateCheck);
             }

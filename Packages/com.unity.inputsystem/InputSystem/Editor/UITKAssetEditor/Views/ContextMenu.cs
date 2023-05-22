@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
                     listView.SetSelection(listView.itemsSource.IndexOf(targetElement.label.text));
                     targetElement.FocusOnRenameTextField();
                 });
-                menuEvent.menu.AppendAction(delete_String, action => {targetElement.OnDeleteItem();});
+                AppendDeleteAction(menuEvent, targetElement);
             }) { target = targetElement };
         }
 
@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
                     treeView.SetSelection(index);
                     targetElement.FocusOnRenameTextField();
                 });
-                menuEvent.menu.AppendAction(delete_String, action => {targetElement.OnDeleteItem();});
+                AppendDeleteAction(menuEvent, targetElement);
             }) { target = targetElement };
         }
 
@@ -41,8 +41,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
-                menuEvent.menu.AppendAction("Delete", action => {targetElement.OnDeleteItem();});
+                AppendDeleteAction(menuEvent, targetElement);
             }) { target = targetElement };
+        }
+
+        private static void AppendDeleteAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem targetElement)
+        {
+            menuEvent.menu.AppendAction(delete_String, action => {targetElement.OnDeleteItem();});
         }
     }
 }
