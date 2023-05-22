@@ -158,9 +158,9 @@ namespace UnityEngine.InputSystem.Editor
             return With(selectedActionIndex: index, selectionType: SelectionType.Action);
         }
 
-        public InputActionsEditorState SelectActionMap(SerializedProperty state)
+        public InputActionsEditorState SelectActionMap(SerializedProperty actionMap)
         {
-            var index = state.GetIndexOfArrayElement();
+            var index = actionMap.GetIndexOfArrayElement();
             return With(selectedBindingIndex: 0, selectedActionMapIndex: index, selectedActionIndex: 0);
         }
 
@@ -184,6 +184,15 @@ namespace UnityEngine.InputSystem.Editor
             if (index == -1)
                 return With(selectedActionIndex: index, selectionType: SelectionType.None);
             return With(selectedActionIndex: index);
+        }
+
+        public InputActionsEditorState SelectActionMap(int index)
+        {
+            if (index == -1)
+                return With(selectedActionMapIndex: index, selectionType: SelectionType.None);
+            return With(selectedBindingIndex: 0,
+                selectedActionMapIndex: index,
+                selectedActionIndex: 0, selectionType: SelectionType.Action);
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()

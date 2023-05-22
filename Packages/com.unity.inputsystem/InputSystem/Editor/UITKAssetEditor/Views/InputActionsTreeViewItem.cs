@@ -15,6 +15,9 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class InputActionsTreeViewItem : VisualElement
     {
+        public EventCallback<string> EditTextFinishedCallback;
+        public EventCallback<int> DeleteCallback;
+
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
         public event EventCallback<int> DeleteItem;

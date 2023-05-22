@@ -35,7 +35,8 @@ namespace UnityEngine.InputSystem.Editor
                 e.Q<Label>("name").text = item.name;
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
-                treeViewItem.DeleteItem += _ => DeleteItem(item);
+                treeViewItem.DeleteCallback = _ => DeleteItem(item);
+                treeViewItem.DeleteItem += treeViewItem.DeleteCallback;
 
                 if (item.isAction || item.isComposite)
                     ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
@@ -46,11 +47,12 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
                     addBindingButton.clicked += () => AddBinding(item.name);
-                    treeViewItem.EditTextFinished += newName =>
+                    treeViewItem.EditTextFinishedCallback = newName =>
                     {
                         actionAdded = false;
                         ChangeActionName(item, newName);
                     };
+                    treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 }
                 else
                 {
@@ -59,11 +61,12 @@ namespace UnityEngine.InputSystem.Editor
                         treeViewItem.UnregisterInputField();
                     else
                     {
-                        treeViewItem.EditTextFinished += newName =>
+                        treeViewItem.EditTextFinishedCallback = newName =>
                         {
                             actionAdded = false;
                             ChangeCompositeName(item, newName);
                         };
+                        treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                     }
                 }
 
@@ -89,8 +92,12 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.unbindItem = (element, i) =>
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
+                var treeViewItem = (InputActionsTreeViewItem)element;
                 if (item.isAction || item.isComposite)
-                    ((InputActionsTreeViewItem)element).Reset();
+                    treeViewItem.Reset();
+
+                treeViewItem.DeleteItem -= treeViewItem.DeleteCallback;
+                treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
             m_ActionsTreeView.selectedIndicesChanged += indicies =>
@@ -126,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (treeData.Count > state.selectedActionIndex && state.selectedActionIndex >= 0)
                     id = treeData[state.selectedActionIndex].id;
             }
-            else
+            else if (state.selectionType == SelectionType.Binding)
                 id = GetComponentOrBindingID(treeData, state.selectedBindingIndex);
             return id;
         }
@@ -162,7 +169,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
-            m_ActionsTreeView.SetSelectionById(viewState.newElementID);
+            if (viewState.newElementID != -1)
+                m_ActionsTreeView.SetSelectionById(viewState.newElementID);
             m_ActionsTreeView.Rebuild();
             RenameNewAction(viewState.newElementID);
         }
@@ -253,9 +261,8 @@ namespace UnityEngine.InputSystem.Editor
             var actionMapIndex = state.selectedActionMapIndex;
             var actionMaps = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
 
-            var actionMap = actionMapIndex == -1 ?
-                actionMaps.GetArrayElementAtIndex(0) :
-                actionMaps.GetArrayElementAtIndex(actionMapIndex);
+            var actionMap = actionMapIndex == -1 || actionMaps.arraySize <= 0 ?
+                null : actionMaps.GetArrayElementAtIndex(actionMapIndex);
 
             if (actionMap == null)
                 return new List<TreeViewItemData<ActionOrBindingData>>();

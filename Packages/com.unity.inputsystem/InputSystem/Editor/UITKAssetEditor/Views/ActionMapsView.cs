@@ -24,14 +24,20 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var treeViewItem = (InputActionsTreeViewItem)element;
                 treeViewItem.label.text = (string)m_ListView.itemsSource[i];
-                treeViewItem.EditTextFinished += newName => ChangeActionMapName(i, newName);
-                treeViewItem.DeleteItem += _ => DeleteActionMap(i);
+                treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
+                treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
+                treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
+                treeViewItem.DeleteItem += treeViewItem.DeleteCallback;
+
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem, m_ListView);
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
-                ((InputActionsTreeViewItem)element).Reset();
+                var treeViewElement = (InputActionsTreeViewItem)element;
+                treeViewElement.Reset();
+                treeViewElement.DeleteItem -= treeViewElement.DeleteCallback;
+                treeViewElement.EditTextFinished -= treeViewElement.EditTextFinishedCallback;
             };
 
             m_ListView.itemsChosen += objects =>
@@ -39,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionsTreeViewItem>();
                 item.FocusOnRenameTextField();
             };
-            
+
             m_ListView.RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
@@ -53,8 +59,11 @@ namespace UnityEngine.InputSystem.Editor
         public override void RedrawUI(ViewState viewState)
         {
             m_ListView.itemsSource = viewState.actionMapNames?.ToList() ?? new List<string>();
-            var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.name);
-            m_ListView.SetSelection(indexOf);
+            if (viewState.selectedActionMap.HasValue)
+            {
+                var indexOf = viewState.actionMapNames.IndexOf(viewState.selectedActionMap.Value.name);
+                m_ListView.SetSelection(indexOf);
+            }
             m_ListView.Rebuild();
             RenameNewActionMaps();
         }
@@ -73,7 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
             mapAdded = false;
         }
-        
+
         private void DeleteActionMap(int index)
         {
             Dispatch(Commands.DeleteActionMap(index));
@@ -94,7 +103,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.AddActionMap());
             mapAdded = true;
         }
-        
+
         private void OnKeyDownEventForRename(KeyDownEvent e)
         {
             if (e.keyCode != KeyCode.F2)
@@ -110,10 +119,10 @@ namespace UnityEngine.InputSystem.Editor
 
         internal class ViewState
         {
-            public SerializedInputActionMap selectedActionMap;
+            public SerializedInputActionMap? selectedActionMap;
             public IEnumerable<string> actionMapNames;
 
-            public ViewState(SerializedInputActionMap selectedActionMap, IEnumerable<string> actionMapNames)
+            public ViewState(SerializedInputActionMap? selectedActionMap, IEnumerable<string> actionMapNames)
             {
                 this.selectedActionMap = selectedActionMap;
                 this.actionMapNames = actionMapNames;

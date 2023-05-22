@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetSelectedActionMap(state).wrappedProperty;
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 var newAction = InputActionSerializationHelpers.AddAction(actionMap);
                 InputActionSerializationHelpers.AddBinding(newAction, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
-                var map = Selectors.GetSelectedActionMap(state).wrappedProperty;
+                var map = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 var binding = InputActionSerializationHelpers.AddBinding(action, map);
                 var bindingIndex = new SerializedInputBinding(binding).indexOfBinding;
                 state.serializedObject.ApplyModifiedProperties();
@@ -62,19 +62,30 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var actionMapID = InputActionSerializationHelpers.GetId(actionMap);
                 InputActionSerializationHelpers.DeleteActionMap(state.serializedObject, actionMapID);
                 state.serializedObject.ApplyModifiedProperties();
-                return state;
+                if (state.selectedActionMapIndex == actionMapIndex)
+                    return SelectPrevActionMap(state);
+                return state.SelectActionMap(state.selectedActionMapIndex > actionMapIndex ? state.selectedActionMapIndex - 1 : state.selectedActionMapIndex);
             };
+        }
+
+        private static InputActionsEditorState SelectPrevActionMap(InputActionsEditorState state)
+        {
+            var count = Selectors.GetActionMapCount(state.serializedObject);
+            int index = -1;
+            if (count != null && count.Value > 0)
+                index = Mathf.Clamp(state.selectedActionMapIndex - 1, 0, count.Value - 1);
+            return state.SelectActionMap(index);
         }
 
         public static Command DeleteAction(int actionMapIndex, string actionName)
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
                 var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
@@ -91,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
             var count = Selectors.GetActionCount(actionMap);
             int index = -1;
             if (count != null && count.Value > 0)
-                index = Mathf.Clamp(state.selectedActionIndex - 1, 0, int.MaxValue);
+                index = Mathf.Clamp(state.selectedActionIndex - 1, 0, count.Value - 1);
             return state.SelectAction(index);
         }
 
@@ -99,7 +110,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
@@ -114,7 +125,7 @@ namespace UnityEngine.InputSystem.Editor
             var count = Selectors.GetBindingCount(actionMap);
             var index = -1;
             if (count != null && count.Value > 0)
-                index = Mathf.Clamp(state.selectedBindingIndex - 1, 0, int.MaxValue);
+                index = Mathf.Clamp(state.selectedBindingIndex - 1, 0, count.Value - 1);
             return state.SelectBinding(index);
         }
 
@@ -252,7 +263,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, index).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, index)?.wrappedProperty;
                 InputActionSerializationHelpers.RenameActionMap(actionMap, newName);
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
@@ -263,7 +274,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var action = Selectors.GetActionInMap(state, actionMapIndex, oldName).wrappedProperty;
                 InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
                 state.serializedObject.ApplyModifiedProperties();
@@ -275,7 +286,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex).wrappedProperty;
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
                 InputActionSerializationHelpers.RenameComposite(binding, newName);
                 state.serializedObject.ApplyModifiedProperties();
