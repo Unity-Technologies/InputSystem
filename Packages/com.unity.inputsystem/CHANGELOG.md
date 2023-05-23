@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.6.0] - 2023-05-25
 
 ### Added
 - Added internal `InputSystemProvider` class for the new `InputForUI` internal module. `InputForUI` allows the UIToolkit to have a single dependency for input events, regardless of using the new input system or the legacy input system.
