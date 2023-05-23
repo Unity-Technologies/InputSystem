@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             FocusOnRenameTextField();
-            e.PreventDefault();
+            e.StopPropagation();
         }
 
         private void OnMouseDownEventForRename(MouseDownEvent e)
@@ -70,7 +70,6 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             FocusOnRenameTextField();
-
             e.StopPropagation();
         }
 
