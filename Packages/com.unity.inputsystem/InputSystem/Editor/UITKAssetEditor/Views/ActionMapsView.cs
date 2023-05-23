@@ -106,9 +106,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnKeyDownEvent(KeyDownEvent e)
         {
-            if(e.keyCode == KeyCode.F2)
+            if (e.keyCode == KeyCode.F2)
                 OnKeyDownEventForRename();
-            else if(e.keyCode == KeyCode.Delete)
+            else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
         }
 
