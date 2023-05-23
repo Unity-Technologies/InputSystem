@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
-                treeViewItem.DeleteItem += treeViewItem.DeleteCallback;
+                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
 
                 if (item.isAction || item.isComposite)
                     ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
 
-                treeViewItem.DeleteItem -= treeViewItem.DeleteCallback;
+                treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
             };
 
-            m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
+            m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap,
                 (_, state) =>
@@ -215,16 +215,27 @@ namespace UnityEngine.InputSystem.Editor
             actionAdded = false;
             Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
-
-        private void OnKeyDownEventForRename(KeyDownEvent e)
+        
+        private void OnKeyDownEvent(KeyDownEvent e)
         {
-            if (e.keyCode != KeyCode.F2)
-                return;
+            if(e.keyCode == KeyCode.F2)
+                OnKeyDownEventForRename();
+            else if(e.keyCode == KeyCode.Delete)
+                OnKeyDownEventForDelete();
+        }
 
+        private void OnKeyDownEventForRename()
+        {
             var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
             var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
             if (item != null && (data.isAction || data.isComposite))
                 item.FocusOnRenameTextField();
+        }
+
+        private void OnKeyDownEventForDelete()
+        {
+            var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
+            item?.DeleteItem();
         }
 
         internal class ViewState

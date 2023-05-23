@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
-        public event EventCallback<int> DeleteItem;
+        public event EventCallback<int> OnDeleteItem;
 
         private bool isEditing;
 
@@ -102,9 +102,9 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.Q<TextField>().Focus();
         }
 
-        public void OnDeleteItem()
+        public void DeleteItem()
         {
-            DeleteItem?.Invoke(0);
+            OnDeleteItem?.Invoke(0);
         }
 
         private void OnEditTextFinished()

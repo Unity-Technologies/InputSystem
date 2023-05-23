@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void AppendDeleteAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem targetElement)
         {
-            menuEvent.menu.AppendAction(delete_String, action => {targetElement.OnDeleteItem();});
+            menuEvent.menu.AppendAction(delete_String, action => {targetElement.DeleteItem();});
         }
     }
 }
