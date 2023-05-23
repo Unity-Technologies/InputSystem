@@ -128,17 +128,25 @@ namespace UnityEngine.InputSystem.Editor
 
             bool matchExists = false;
             EditorGUILayout.BeginVertical();
-            if (parsedPath.Length == 2)
+            if (parsedPath.Length >= 2)
             {
                 if (deviceLayout != InputControlPath.Wildcard)
                 {
-                    var rootLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.name == deviceLayout);
+                    var rootLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => !x.isOverride && !x.hideInUI && x.name == deviceLayout);
                     if (rootLayout != null)
                     {
                         for (int i = 0; i < rootLayout.m_Controls.Length; i++)
                         {
                             if (InputControlPath.MatchControlComponent(in parsedPath[1], ref rootLayout.m_Controls[i]))
                             {
+                                // Need to include edge case where we go over the control's controllayout and ensure that the subvariant is written accordingly
+                                // i.e. Dpad/south
+                                // Alternatively, just use the parsePath display name since it'll match
+
+                                // **** TODO ****
+                                // Create (and cache) a dependency tree for the input control layouts and then use it to quickly fetch the child classes for a layout
+                                // This should remove linq's in many places and generally smooth out lookup
+
                                 EditorGUILayout.LabelField($"{rootLayout.displayName}/{rootLayout.m_Controls[i].displayName}");
                                 matchExists = true;
                                 break;
@@ -173,17 +181,14 @@ namespace UnityEngine.InputSystem.Editor
         private bool DrawMatchingControlPathsForLayout(InternedString deviceLayout, ref InputControlPath.ParsedPathComponent pathControlComponent)
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
-            var matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
-                .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(deviceLayout)).OrderBy(x => x.displayName);
-
-            if (deviceLayout == InputControlPath.Wildcard)
+            var matchedChildLayouts = deviceLayout.ToLiteral() switch
             {
-                matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
-                    .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
-            }
+                InputControlPath.Wildcard => EditorInputControlLayoutCache.allLayouts
+                    .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName),
+                _ => EditorInputControlLayoutCache.TryGetDerivedLayouts(deviceLayout)
+            };
 
             bool matchExists = false;
-
             if (matchedChildLayouts.Count() > 0)
             {
                 foreach (var childLayout in matchedChildLayouts)
