@@ -101,6 +101,10 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             m_InputEventPartialProvider.Update();
 
+            // Sort events added by input actions callbacks, based on type.
+            // This is necessary to ensure that events are dispatched in the correct order.
+            // If all events are of the PointerEvents type, sorting is based on reverse order of the EventSource enum.
+            // Touch -> Pen -> Mouse.
             m_Events.Sort(SortEvents);
 
             var currentTime = (DiscreteTime)Time.timeAsRational;
@@ -109,8 +113,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             foreach (var ev in m_Events)
             {
-                // we need to ignore some pointer events based on priority (touch->pen->mouse)
-                // this is mostly used to filter out simulated input, e.g. when pen is active it also generates mouse input
+                // We need to ignore some pointer events based on priority (Touch->Pen->Mouse)
+                // This is mostly used to filter out simulated input, e.g. when pen is active it also generates mouse input
                 if (m_SeenTouchEvents && ev.type == Event.Type.PointerEvent && ev.eventSource == EventSource.Pen)
                     m_PenState.Reset();
                 else if ((m_SeenTouchEvents || m_SeenPenEvents) &&
@@ -254,8 +258,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 }
                 // TODO
                 case Event.Type.IMECompositionEvent:
-                //EventProvider.Dispatch(Event.From(ToIMECompositionEvent(currentTime, _compositionString)));
-                //return true;
                 default:
                     return false;
             }
@@ -341,11 +343,12 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         static int FindTouchFingerIndex(Touchscreen touchscreen, InputAction.CallbackContext ctx)
         {
+            if (touchscreen == null)
+                return 0;
+
             var asVector2Control = ctx.control is Vector2Control ? (Vector2Control)ctx.control : null;
             var asTouchPressControl = ctx.control is TouchPressControl ? (TouchPressControl)ctx.control : null;
             var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            if (touchscreen == null)
-                return 0;
 
             // Finds the index of the matching control type in the Touchscreen device lost of touch controls (touches)
             for (var i = 0; i < touchscreen.touches.Count; ++i)
@@ -652,11 +655,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             public string MiddleClickAction;
             public string RightClickAction;
             public string ScrollWheelAction;
-            //public string TrackedDevicePositionAction;
-            //public string TrackedDeviceOrientationAction;
-
-            // public float InputActionsPerSecond;
-            // public float RepeatDelay;
 
             public static Configuration GetDefaultConfiguration()
             {
@@ -664,7 +662,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 var asset = new DefaultInputActions();
                 var json = asset.asset.ToJson();
                 UnityEngine.Object.DestroyImmediate(asset.asset); // TODO just Dispose doesn't work in edit mode
-                // asset.Dispose();
 
                 return new Configuration
                 {
@@ -677,8 +674,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     MiddleClickAction = "UI/MiddleClick",
                     RightClickAction = "UI/RightClick",
                     ScrollWheelAction = "UI/ScrollWheel",
-                    // InputActionsPerSecond = 10,
-                    // RepeatDelay = 0.5f,
                 };
             }
         }
