@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+#if UNITY_EDITOR && UNITY_2022_2_OR_NEWER
 using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;

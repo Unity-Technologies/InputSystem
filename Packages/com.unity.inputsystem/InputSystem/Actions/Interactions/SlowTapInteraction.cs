@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.OnGUI();
         }
 
-#if UNITY_2022_1_OR_NEWER
+#if UNITY_2022_2_OR_NEWER
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
