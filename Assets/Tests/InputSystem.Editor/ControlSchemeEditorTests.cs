@@ -1,4 +1,4 @@
-#if UNITY_2022_1_OR_NEWER
+#if UNITY_2022_2_OR_NEWER
 using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;

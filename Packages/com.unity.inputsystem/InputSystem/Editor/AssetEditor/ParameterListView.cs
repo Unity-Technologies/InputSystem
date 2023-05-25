@@ -247,7 +247,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
             m_ParameterEditor = null;
         }
 
-#if UNITY_2022_1_OR_NEWER
+#if UNITY_2022_2_OR_NEWER
         public void OnDrawVisualElements(VisualElement root)
         {
             if (m_ParameterEditor != null)

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER // We use some UITK controls that are only available in 2022.1 or later (MultiColumnListView for example)
+#if UNITY_EDITOR && UNITY_2022_2_OR_NEWER // We use some UITK controls that are only available in 2022.2 or later (MultiColumnListView for example)
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.UIElements;
