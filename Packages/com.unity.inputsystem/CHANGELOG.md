@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.6.0] - 2023-05-25
+
+### Added
+- Added internal `InputSystemProvider` class for the new `InputForUI` internal module. `InputForUI` allows the UIToolkit to have a single dependency for input events, regardless of using the new input system or the legacy input system.
+- Added `InputSystem.customBindingPathValidators` interface to allow showing warnings in the `InputAsset` Editor for specific InputBindings and draw custom UI in the properties panel.
+- Added `InputSystem.runInBackground` to be used internally by specific platforms packages. Allows telling the input system that a specific platform runs in background. It allows fixing of [case UUM-6744](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744).
+- Added new UIToolkit version of the `InputActionsAsset` editor. Currently this is incomplete (view-only) and the existing editor is still used by default.
+- Added `displayIndex` field to the Touch struct to expose the index of the display that was touched.
+
+### Changed
+- Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
+
+### Fixed
+- Fixed BindingPath String-Comparison to be culture and case insensitive (case ISXB-449).
+- Fixed custom processor display in the input action asset UI after entering/exiting play mode (previously they got hidden) ([case ISXB-445](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-445)).
+
 ## [1.5.1] - 2023-03-15
 
 ### Fixed

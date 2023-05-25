@@ -236,6 +236,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         public bool isTap => state.isTap;
 
         /// <summary>
+        /// The index of the display containing the touch.
+        /// </summary>
+        /// <value>A zero based number representing the display index containing the touch.</value>
+        /// <seealso cref="TouchControl.displayIndex"/>
+        /// <seealso cref="Display"/>
+        public int displayIndex => state.displayIndex;
+
+        /// <summary>
         /// Whether the touch is currently in progress, i.e. has a <see cref="phase"/> of
         /// <see cref="TouchPhase.Began"/>, <see cref="TouchPhase.Moved"/>, or <see cref="TouchPhase.Stationary"/>.
         /// </summary>

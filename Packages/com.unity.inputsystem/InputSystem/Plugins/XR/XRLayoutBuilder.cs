@@ -282,7 +282,7 @@ namespace UnityEngine.InputSystem.XR
                     case FeatureType.Axis2D:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Vector2")
+                            .WithLayout("Stick")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);

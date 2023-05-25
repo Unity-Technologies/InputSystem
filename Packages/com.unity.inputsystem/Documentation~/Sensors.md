@@ -113,6 +113,8 @@ This Input Device represents the atmospheric pressure measured by the device whi
 
 This Input Device measures how close the device which is running the content is to the user. Phones typically use the proximity sensor to determine if the user is holding the phone to their ear or not. Values represent distance measured in centimeters.
 
+>NOTE: The Samsung devices' proximity sensor is only enabled during calls and not when using speakerphone or Bluetooth earphones. This means the lock screen function won't work, allowing the user to use the display during the call. It is important to note that the proximity sensor only works during non-speakerphone or non-Bluetooth calls, as it is designed to prevent accidental touches during calls. However, the proximity sensor can work slightly differently on different Samsung phones.
+
 ## <a name="humiditysensor"></a>[`HumiditySensor`](../api/UnityEngine.InputSystem.HumiditySensor.html)
 
 This Input Device represents the ambient air humidity measured by the device which is running the content. Values represent the relative ambient air humidity in percent.
