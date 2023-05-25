@@ -104,18 +104,18 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
-                showMatchingControls = EditorGUILayout.Foldout(showMatchingControls, "Matching Controls");
                 // Show the specific controls which match the current path
-                if (showMatchingControls)
-                {
-                    EditorGUI.indentLevel++;
-                    DrawMatchingControlPaths();
-                    EditorGUI.indentLevel--;
-                }
+                DrawMatchingControlPaths();
+
                 // Control scheme matrix.
                 DrawUseInControlSchemes();
             }
         }
+
+        /// <summary>
+        /// Used to keep track of which foldouts are expanded.
+        /// </summary>
+        private Dictionary<string, bool> showMatchingChildLayouts = new Dictionary<string, bool>();
 
         /// <summary>
         /// Finds all registered control paths implemented by concrete classes which match the current binding path and renders it.
@@ -123,47 +123,38 @@ namespace UnityEngine.InputSystem.Editor
         private void DrawMatchingControlPaths()
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
-            var deviceLayout = new InternedString(InputControlPath.TryGetDeviceLayout(path));
+            var deviceLayoutPath = new InternedString(InputControlPath.TryGetDeviceLayout(path));
             var parsedPath = InputControlPath.Parse(path).ToArray();
 
-            bool matchExists = false;
             EditorGUILayout.BeginVertical();
+
+            // If the provided path is parseable into device and control components, draw UI which shows all control layouts that match the path.
+            bool matchExists = false;
+            EditorGUILayout.LabelField("Matching Controls: ");
+
             if (parsedPath.Length >= 2)
             {
-                if (deviceLayout != InputControlPath.Wildcard)
+                if (deviceLayoutPath != InputControlPath.Wildcard)
                 {
-                    var rootLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => !x.isOverride && !x.hideInUI && x.name == deviceLayout);
-                    if (rootLayout != null)
+                    var deviceLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => !x.isOverride && !x.hideInUI && x.name == deviceLayoutPath);
+                    if (deviceLayout != null)
                     {
-                        for (int i = 0; i < rootLayout.m_Controls.Length; i++)
-                        {
-                            if (InputControlPath.MatchControlComponent(in parsedPath[1], ref rootLayout.m_Controls[i]))
-                            {
-                                // Need to include edge case where we go over the control's controllayout and ensure that the subvariant is written accordingly
-                                // i.e. Dpad/south
-                                // Alternatively, just use the parsePath display name since it'll match
-
-                                // **** TODO ****
-                                // Create (and cache) a dependency tree for the input control layouts and then use it to quickly fetch the child classes for a layout
-                                // This should remove linq's in many places and generally smooth out lookup
-
-                                EditorGUILayout.LabelField($"{rootLayout.displayName}/{rootLayout.m_Controls[i].displayName}");
-                                matchExists = true;
-                                break;
-                            }
-                        }
-
-                        EditorGUI.indentLevel++;
-                        matchExists |= DrawMatchingControlPathsForLayout(deviceLayout, ref parsedPath[1]);
-                        EditorGUI.indentLevel--;
+                        matchExists |= DrawMatchingControlPathsForLayout(deviceLayout, in parsedPath);
                     }
                 }
                 else
                 {
-                    matchExists |= DrawMatchingControlPathsForLayout(deviceLayout, ref parsedPath[1]);
+                    var rootLayouts = EditorInputControlLayoutCache.allLayouts
+                            .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+                            
+                    foreach(var rootDeviceLayout in rootLayouts)
+                    {
+                        matchExists |= DrawMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath);
+                    }
                 }
             }
 
+            // Otherwise, indicate that no layouts match the current path.
             if (!matchExists)
             {
                 EditorGUILayout.LabelField("No registered control paths match this current binding");
@@ -173,40 +164,92 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         /// <summary>
-        /// Finds all registered control paths implemented by concrete classes under a given device layout which match the current binding path and renders it.
-        /// Return true if there exist matching registered control paths, false otherwise.
+        /// Returns true if the deviceLayout or any of its children has controls which match the provided parsed path. exist matching registered control paths.
         /// </summary>
         /// <param name="deviceLayout">The device layout to draw control paths for</param>
-        /// <param name="pathControlComponent">The parsed path component containing details of the Input Controls that can be matched</param>
-        private bool DrawMatchingControlPathsForLayout(InternedString deviceLayout, ref InputControlPath.ParsedPathComponent pathControlComponent)
+        /// <param name="parsedPath">The parsed path containing details of the Input Controls that can be matched</param>
+        private bool DrawMatchingControlPathsForLayout(InputControlLayout deviceLayout, in InputControlPath.ParsedPathComponent[] parsedPath)
         {
-            var path = m_ControlPathEditor.pathProperty.stringValue;
+            string deviceName = deviceLayout.displayName;
+            string controlName = string.Empty;
+            bool matchExists = false;
+
+            for (int i = 0; i < deviceLayout.m_Controls.Length; i++)
+            {
+                ref InputControlLayout.ControlItem controlItem = ref deviceLayout.m_Controls[i];
+                if (InputControlPath.MatchControlComponent(in parsedPath[1], ref controlItem))
+                {
+                    // If we've already located a match, append a ", " to the control name
+                    // This is to accomodate cases where multiple control items match the same path within a single device layout
+                    // Note, some controlItems have names but invalid displayNames (i.e. the Dualsense HID > leftTriggerButton)
+                    // There are instance where there are 2 control items with the same name inside a layout definition, however they are not
+                    // labeled significantly differently.
+                    // The notable example is that the Android Xbox and Android Dualshock layouts have 2 d-pad definitions, one is a "button"
+                    // while the other is an axis.
+                    controlName += matchExists ? $", {controlItem.displayName}" : controlItem.displayName;
+
+                    // if the parsePath has a 3rd component, try to match it with items in the controlItem's layout definition.
+                    if (parsedPath.Length == 3)
+                    {
+                        var controlLayout = EditorInputControlLayoutCache.TryGetLayout(controlItem.layout);
+                        if (controlLayout.isControlLayout && !controlLayout.hideInUI)
+                        {
+                            for (int j = 0; j < controlLayout.m_Controls.Count(); j++)
+                            {
+                                ref InputControlLayout.ControlItem controlLayoutItem = ref controlLayout.m_Controls[j];
+                                if (InputControlPath.MatchControlComponent(in parsedPath[2], ref controlLayoutItem))
+                                {
+                                    controlName += $"/{controlLayoutItem.displayName}";
+                                    matchExists = true;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        matchExists = true;
+                    }
+                }
+            }
+
             var matchedChildLayouts = deviceLayout.ToLiteral() switch
             {
                 InputControlPath.Wildcard => EditorInputControlLayoutCache.allLayouts
                     .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName),
-                _ => EditorInputControlLayoutCache.TryGetDerivedLayouts(deviceLayout)
+                _ => EditorInputControlLayoutCache.TryGetDerivedLayouts(deviceLayout.name)
             };
 
-            bool matchExists = false;
-            if (matchedChildLayouts.Count() > 0)
+            // If this layout does not have a match, skip over trying to draw any items for it, and immdiately try processing the child layouts
+            if (!matchExists)
             {
                 foreach (var childLayout in matchedChildLayouts)
                 {
-                    for (int i = 0; i < childLayout.m_Controls.Length; i++)
-                    {
-                        if (InputControlPath.MatchControlComponent(in pathControlComponent, ref childLayout.m_Controls[i]))
-                        {
-                            EditorGUILayout.LabelField($"{childLayout.displayName}/{childLayout.m_Controls[i].displayName}");
-                            matchExists = true;
-                            break;
-                        }
-                    }
-
-                    EditorGUI.indentLevel++;
-                    matchExists |= DrawMatchingControlPathsForLayout(childLayout.name, ref pathControlComponent);
-                    EditorGUI.indentLevel--;
+                    matchExists |= DrawMatchingControlPathsForLayout(childLayout, in parsedPath);
                 }
+            }
+            // Otherwise, draw the items for it, and then only process the child layouts if the foldout is expanded.
+            else
+            {
+                bool showLayout = false;
+                EditorGUI.indentLevel++;
+                if (matchedChildLayouts.Count() > 0)
+                {
+                    showMatchingChildLayouts.TryGetValue(deviceName, out showLayout);
+                    showMatchingChildLayouts[deviceName] = EditorGUILayout.Foldout(showLayout, $"{deviceName} > {controlName}");
+                }
+                else
+                {
+                    EditorGUILayout.LabelField($"{deviceName} > {controlName}");
+                }
+
+                if (showLayout)
+                {
+                    foreach (var childLayout in matchedChildLayouts)
+                    {
+                        DrawMatchingControlPathsForLayout(childLayout, in parsedPath);
+                    }
+                }
+                EditorGUI.indentLevel--;
             }
 
             return matchExists;
