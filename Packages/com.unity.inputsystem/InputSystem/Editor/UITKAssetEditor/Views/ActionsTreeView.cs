@@ -322,7 +322,7 @@ namespace UnityEngine.InputSystem.Editor
                     else
                     {
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                            new ActionOrBindingData(false, InputControlPath.ToHumanReadableString(serializedInputBinding.path), actionMapIndex,
+                            new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding), actionMapIndex,
                                 false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
                     }
                 }
@@ -330,6 +330,14 @@ namespace UnityEngine.InputSystem.Editor
                     new ActionOrBindingData(true, action.name, actionMapIndex, false, action.expectedControlType), bindingItems.Count > 0 ? bindingItems : null));
             }
             return actionItems;
+        }
+
+        private static string GetHumanReadableBindingName(SerializedInputBinding serializedInputBinding)
+        {
+            var name = InputControlPath.ToHumanReadableString(serializedInputBinding.path);
+            if (String.IsNullOrEmpty(name))
+                name = "<No Binding>";
+            return name;
         }
 
         internal static string GetHumanReadableCompositeName(SerializedInputBinding binding)
