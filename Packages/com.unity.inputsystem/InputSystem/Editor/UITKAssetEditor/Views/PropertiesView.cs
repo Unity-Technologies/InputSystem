@@ -14,6 +14,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private Foldout interactionsFoldout => m_Root.Q<Foldout>("interactions-foldout");
         private Foldout processorsFoldout => m_Root.Q<Foldout>("processors-foldout");
+
+        private TextElement addInteractionButton;
+        private TextElement addProcessorButton;
+
         public PropertiesView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -27,19 +31,58 @@ namespace UnityEngine.InputSystem.Editor
 
             var interactionsToggle = interactionsFoldout.Q<Toggle>();
             interactionsToggle.AddToClassList("properties-foldout-toggle");
-            var addInteractionButton = new Button();
-            addInteractionButton.text = "+";
-            addInteractionButton.name = "add-new-interaction-button";
-            addInteractionButton.AddToClassList("properties-foldout name-and-parameters-list-view");
-            interactionsToggle.Add(addInteractionButton);
-
+            if (addInteractionButton == null)
+            {
+                addInteractionButton = CreateAddButton(interactionsToggle, "add-new-interaction-button");
+                CreatContextMenuInteraction(addInteractionButton, AddInteraction);
+            }
             var processorToggle = processorsFoldout.Q<Toggle>();
             processorToggle.AddToClassList("properties-foldout-toggle");
-            var addProcessorButton = new Button();
+            if (addProcessorButton == null)
+            {
+                addProcessorButton = CreateAddButton(processorToggle, "add-new-processor-button");
+                CreatContextMenuProcessor(addProcessorButton, AddProcessor);
+            }
+        }
+
+        private TextElement CreateAddButton(Toggle toggle, string name)
+        {
+            var addProcessorButton = new TextElement();
             addProcessorButton.text = "+";
-            addProcessorButton.name = "add-new-processor-button";
-            addProcessorButton.AddToClassList("properties-foldout name-and-parameters-list-view");
-            processorToggle.Add(addProcessorButton);
+            addProcessorButton.name = name;
+            addProcessorButton.AddToClassList("add-interaction-processor-button");
+            toggle.Add(addProcessorButton);
+            return addProcessorButton;
+        }
+
+        private void CreatContextMenuProcessor(VisualElement targetElement, Action onClick)
+        {
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendAction("do", action =>
+                {
+                    onClick.Invoke();
+                });
+            }) { target = targetElement, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
+        }
+
+        private void CreatContextMenuInteraction(VisualElement targetElement, Action onClick)
+        {
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendAction("do", action =>
+                {
+                    onClick.Invoke();
+                });
+            }) { target = targetElement, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
+        }
+
+        private void AddInteraction()
+        {
+        }
+
+        private void AddProcessor()
+        {
         }
 
         public override void RedrawUI(SelectionType selectionType)
