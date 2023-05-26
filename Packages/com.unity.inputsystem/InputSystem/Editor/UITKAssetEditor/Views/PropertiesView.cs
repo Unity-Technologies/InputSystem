@@ -12,6 +12,8 @@ namespace UnityEngine.InputSystem.Editor
         private NameAndParametersListView m_InteractionsListView;
         private NameAndParametersListView m_ProcessorsListView;
 
+        private Foldout interactionsFoldout => m_Root.Q<Foldout>("interactions-foldout");
+        private Foldout processorsFoldout => m_Root.Q<Foldout>("processors-foldout");
         public PropertiesView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -22,6 +24,22 @@ namespace UnityEngine.InputSystem.Editor
                 Selectors.GetSelectedAction,
                 state => state.selectionType,
                 (_, _, selectionType, _) => selectionType);
+
+            var interactionsToggle = interactionsFoldout.Q<Toggle>();
+            interactionsToggle.AddToClassList("properties-foldout-toggle");
+            var addInteractionButton = new Button();
+            addInteractionButton.text = "+";
+            addInteractionButton.name = "add-new-interaction-button";
+            addInteractionButton.AddToClassList("properties-foldout name-and-parameters-list-view");
+            interactionsToggle.Add(addInteractionButton);
+
+            var processorToggle = processorsFoldout.Q<Toggle>();
+            processorToggle.AddToClassList("properties-foldout-toggle");
+            var addProcessorButton = new Button();
+            addProcessorButton.text = "+";
+            addProcessorButton.name = "add-new-processor-button";
+            addProcessorButton.AddToClassList("properties-foldout name-and-parameters-list-view");
+            processorToggle.Add(addProcessorButton);
         }
 
         public override void RedrawUI(SelectionType selectionType)
@@ -53,15 +71,12 @@ namespace UnityEngine.InputSystem.Editor
                     break;
             }
 
-            var interactionsFoldout = m_Root.Q<Foldout>("interactions-foldout");
-            interactionsFoldout.Q<Toggle>().AddToClassList("properties-foldout-toggle");
             m_InteractionsListView = CreateChildView(new NameAndParametersListView(
                 interactionsFoldout,
                 stateContainer,
                 Selectors.GetInteractionsAsParameterListViews));
 
-            var processorsFoldout = m_Root.Q<Foldout>("processors-foldout");
-            processorsFoldout.Q<Toggle>().AddToClassList("properties-foldout-toggle");
+
             m_ProcessorsListView = CreateChildView(new NameAndParametersListView(
                 processorsFoldout,
                 stateContainer,

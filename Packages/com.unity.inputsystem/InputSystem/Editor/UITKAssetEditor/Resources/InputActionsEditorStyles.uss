@@ -29,7 +29,12 @@
     border-width: 0;
 }
 
-#add-new-action-button {
+#add-new-processor-button, #add-new-interaction-button {
+    background-color: var(--input-editor-colors-properties-foldout);
+    border-width: 0;
+}
+
+#add-new-action-button  {
     background-color: transparent;
     border-width: 0;
 }
