@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
-#if UNITY_2022_2_OR_NEWER
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
             if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor))
                 return false;
 #endif
