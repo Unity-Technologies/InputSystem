@@ -1,6 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             FocusOnRenameTextField();
-            e.PreventDefault();
+            e.StopPropagation();
         }
 
         private void OnMouseDownEventForRename(MouseDownEvent e)
@@ -70,7 +70,6 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             FocusOnRenameTextField();
-
             e.StopPropagation();
         }
 
