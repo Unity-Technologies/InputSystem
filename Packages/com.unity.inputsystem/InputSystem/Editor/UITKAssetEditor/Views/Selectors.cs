@@ -91,6 +91,15 @@ namespace UnityEngine.InputSystem.Editor
             return new SerializedInputBinding(bindings.GetArrayElementAtIndex(state.selectedBindingIndex));
         }
 
+        public static SerializedInputAction? GetRelatedInputAction(InputActionsEditorState state)
+        {
+            var binding = GetSelectedBinding(state);
+            if (binding == null)
+                return null;
+            var actionName = binding.Value.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
+            return GetActionInMap(state, state.selectedActionMapIndex, actionName);
+        }
+
         public static IEnumerable<string> GetCompositeTypes(string path, string expectedControlLayout)
         {
             // Find name of current composite.

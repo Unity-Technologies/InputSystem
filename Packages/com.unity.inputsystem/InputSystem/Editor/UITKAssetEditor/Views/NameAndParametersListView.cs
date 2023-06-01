@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -22,6 +23,28 @@ namespace UnityEngine.InputSystem.Editor
             m_ParameterListViewSelector = parameterListViewSelector;
 
             CreateSelector(state => state);
+        }
+
+        public void OnAddElement(string name, SerializedProperty listProperty, string stringList)
+        {
+            if (listProperty == null)
+                return;
+
+            var interactionsList = NameAndParameters.ParseMultiple(stringList).ToList();
+            var newElement = new NameAndParameters() { name = name};
+            interactionsList.Add(newElement);
+
+            listProperty.stringValue = ToSerializableString(interactionsList);
+            listProperty.serializedObject.ApplyModifiedProperties();
+        }
+
+        private static string ToSerializableString(IEnumerable<NameAndParameters> parametersForEachListItem)
+        {
+            if (parametersForEachListItem == null)
+                return string.Empty;
+
+            return string.Join(NamedValue.Separator,
+                parametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
         public override void RedrawUI(InputActionsEditorState state)
