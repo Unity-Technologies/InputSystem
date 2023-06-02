@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static IEnumerable<InputControlLayout> TryGetDerivedLayouts(string layoutName)
+        public static IEnumerable<InputControlLayout> TryGetChildLayouts(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
                 throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var internedLayout = new InternedString(layoutName);
             // return nothing is the layout does not have any derivations
-            if (!s_DeviceDerivations.TryGetValue(internedLayout, out var derivations))
+            if (!s_DeviceChildLayouts.TryGetValue(internedLayout, out var derivations))
                 yield break;
             else
             {
@@ -329,7 +329,7 @@ namespace UnityEngine.InputSystem.Editor
             new Dictionary<InternedString, Texture2D>();
 
         // We keep a map of the devices which a derived from a base device.
-        private static readonly Dictionary<InternedString, HashSet<InternedString>> s_DeviceDerivations =
+        private static readonly Dictionary<InternedString, HashSet<InternedString>> s_DeviceChildLayouts =
             new Dictionary<InternedString, HashSet<InternedString>>();
 
 
@@ -350,7 +350,9 @@ namespace UnityEngine.InputSystem.Editor
                 //
                 // NOTE: We're looking at layouts post-merging here. Means we have already picked up all the
                 //       controls present on the base.
-                if (control.isFirstDefinedInThisLayout && !control.isModifyingExistingControl && !control.layout.IsEmpty())
+                // Only controls which belong to UI-facing layouts are included, as optional controls are used solely by
+                // the InputControlPickerDropdown UI
+                if (control.isFirstDefinedInThisLayout && !control.isModifyingExistingControl && !control.layout.IsEmpty() && !layout.hideInUI)
                 {
                     foreach (var baseLayout in layout.baseLayouts)
                         AddOptionalControlRecursive(baseLayout, ref control);
@@ -377,18 +379,16 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
-
-
-                // Create a dependency tree of each concrete device
-                // layout and all of the layouts that are directly derived from it.
+                // Create a dependency tree matching each concrete device layout exposed in the UI
+                // to all of the layouts that are directly derived from it.
                 if (layout.isDeviceLayout && !layout.hideInUI)
                 {
                     foreach (var baseLayoutName in layout.baseLayouts)
                     {
-                        if (!s_DeviceDerivations.TryGetValue(baseLayoutName, out var derivedSet))
+                        if (!s_DeviceChildLayouts.TryGetValue(baseLayoutName, out var derivedSet))
                         {
                             derivedSet = new HashSet<InternedString> { layout.name };
-                            s_DeviceDerivations[baseLayoutName] = derivedSet;
+                            s_DeviceChildLayouts[baseLayoutName] = derivedSet;
                         }
                         else
                         {

@@ -62,7 +62,6 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlPathEditor?.Dispose();
         }
 
-        private static bool showMatchingControls = false;
         protected override void DrawGeneralProperties()
         {
             var currentPath = m_PathProperty.stringValue;
@@ -115,7 +114,8 @@ namespace UnityEngine.InputSystem.Editor
         /// <summary>
         /// Used to keep track of which foldouts are expanded.
         /// </summary>
-        private Dictionary<string, bool> showMatchingChildLayouts = new Dictionary<string, bool>();
+        private static bool showMatchingLayouts = false;
+        private static Dictionary<string, bool> showMatchingChildLayouts = new Dictionary<string, bool>();
 
         /// <summary>
         /// Finds all registered control paths implemented by concrete classes which match the current binding path and renders it.
@@ -130,34 +130,37 @@ namespace UnityEngine.InputSystem.Editor
 
             // If the provided path is parseable into device and control components, draw UI which shows all control layouts that match the path.
             bool matchExists = false;
-            EditorGUILayout.LabelField("Matching Controls: ");
+            showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Matching Control Paths:");
 
-            if (parsedPath.Length >= 2)
+            if (showMatchingLayouts)
             {
-                if (deviceLayoutPath != InputControlPath.Wildcard)
+                if (parsedPath.Length >= 2)
                 {
-                    var deviceLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => !x.isOverride && !x.hideInUI && x.name == deviceLayoutPath);
-                    if (deviceLayout != null)
+                    if (deviceLayoutPath != InputControlPath.Wildcard)
                     {
-                        matchExists |= DrawMatchingControlPathsForLayout(deviceLayout, in parsedPath);
+                        var rootDeviceLayout = EditorInputControlLayoutCache.allLayouts.FirstOrDefault(x => !x.isOverride && !x.hideInUI && x.name == deviceLayoutPath);
+                        if (rootDeviceLayout != null)
+                        {
+                            matchExists |= DrawMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath, true);
+                        }
+                    }
+                    else
+                    {
+                        var genericDeviceLayouts = EditorInputControlLayoutCache.allLayouts
+                                .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+
+                        foreach (var genericDeviceLayout in genericDeviceLayouts)
+                        {
+                            matchExists |= DrawMatchingControlPathsForLayout(genericDeviceLayout, in parsedPath);
+                        }
                     }
                 }
-                else
-                {
-                    var rootLayouts = EditorInputControlLayoutCache.allLayouts
-                            .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
-                            
-                    foreach(var rootDeviceLayout in rootLayouts)
-                    {
-                        matchExists |= DrawMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath);
-                    }
-                }
-            }
 
-            // Otherwise, indicate that no layouts match the current path.
-            if (!matchExists)
-            {
-                EditorGUILayout.LabelField("No registered control paths match this current binding");
+                // Otherwise, indicate that no layouts match the current path.
+                if (!matchExists)
+                {
+                    EditorGUILayout.LabelField("No registered control paths match this current binding");
+                }
             }
 
             EditorGUILayout.EndVertical();
@@ -168,7 +171,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         /// <param name="deviceLayout">The device layout to draw control paths for</param>
         /// <param name="parsedPath">The parsed path containing details of the Input Controls that can be matched</param>
-        private bool DrawMatchingControlPathsForLayout(InputControlLayout deviceLayout, in InputControlPath.ParsedPathComponent[] parsedPath)
+        private bool DrawMatchingControlPathsForLayout(InputControlLayout deviceLayout, in InputControlPath.ParsedPathComponent[] parsedPath, bool isRoot = false)
         {
             string deviceName = deviceLayout.displayName;
             string controlName = string.Empty;
@@ -186,7 +189,7 @@ namespace UnityEngine.InputSystem.Editor
                     // labeled significantly differently.
                     // The notable example is that the Android Xbox and Android Dualshock layouts have 2 d-pad definitions, one is a "button"
                     // while the other is an axis.
-                    controlName += matchExists ? $", {controlItem.displayName}" : controlItem.displayName;
+                    controlName += matchExists ? $", {controlItem.name}" : controlItem.name;
 
                     // if the parsePath has a 3rd component, try to match it with items in the controlItem's layout definition.
                     if (parsedPath.Length == 3)
@@ -199,7 +202,7 @@ namespace UnityEngine.InputSystem.Editor
                                 ref InputControlLayout.ControlItem controlLayoutItem = ref controlLayout.m_Controls[j];
                                 if (InputControlPath.MatchControlComponent(in parsedPath[2], ref controlLayoutItem))
                                 {
-                                    controlName += $"/{controlLayoutItem.displayName}";
+                                    controlName += $"/{controlLayoutItem.name}";
                                     matchExists = true;
                                 }
                             }
@@ -216,10 +219,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 InputControlPath.Wildcard => EditorInputControlLayoutCache.allLayouts
                     .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName),
-                _ => EditorInputControlLayoutCache.TryGetDerivedLayouts(deviceLayout.name)
+                _ => EditorInputControlLayoutCache.TryGetChildLayouts(deviceLayout.name)
             };
 
-            // If this layout does not have a match, skip over trying to draw any items for it, and immdiately try processing the child layouts
+            // If this layout does not have a match, or is the top level root layout,
+            // skip over trying to draw any items for it, and immdiately try processing the child layouts
             if (!matchExists)
             {
                 foreach (var childLayout in matchedChildLayouts)
@@ -232,7 +236,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 bool showLayout = false;
                 EditorGUI.indentLevel++;
-                if (matchedChildLayouts.Count() > 0)
+                if (matchedChildLayouts.Count() > 0 && !isRoot)
                 {
                     showMatchingChildLayouts.TryGetValue(deviceName, out showLayout);
                     showMatchingChildLayouts[deviceName] = EditorGUILayout.Foldout(showLayout, $"{deviceName} > {controlName}");
@@ -241,6 +245,8 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     EditorGUILayout.LabelField($"{deviceName} > {controlName}");
                 }
+
+                showLayout |= isRoot;
 
                 if (showLayout)
                 {
