@@ -123,6 +123,9 @@ namespace UnityEngine.InputSystem.Editor
         private void DrawMatchingControlPaths()
         {
             var path = m_ControlPathEditor.pathProperty.stringValue;
+            if (path == string.Empty)
+                return;
+
             var deviceLayoutPath = new InternedString(InputControlPath.TryGetDeviceLayout(path));
             var parsedPath = InputControlPath.Parse(path).ToArray();
 
@@ -130,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // If the provided path is parseable into device and control components, draw UI which shows all control layouts that match the path.
             bool matchExists = false;
-            showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Matching Control Paths:");
+            showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Matched Controls");
 
             if (showMatchingLayouts)
             {
