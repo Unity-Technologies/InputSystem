@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Editor
                     else
                     {
                         var genericDeviceLayouts = EditorInputControlLayoutCache.allLayouts
-                                .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+                            .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
 
                         foreach (var genericDeviceLayout in genericDeviceLayouts)
                         {
@@ -218,12 +218,17 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            var matchedChildLayouts = deviceLayout.ToLiteral() switch
+            IEnumerable<InputControlLayout> matchedChildLayouts = default;
+            switch (deviceLayout.ToLiteral())
             {
-                InputControlPath.Wildcard => EditorInputControlLayoutCache.allLayouts
-                    .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName),
-                _ => EditorInputControlLayoutCache.TryGetChildLayouts(deviceLayout.name)
-            };
+                case InputControlPath.Wildcard:
+                    matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
+                        .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+                    break;
+                default:
+                    matchedChildLayouts = EditorInputControlLayoutCache.TryGetChildLayouts(deviceLayout.name);
+                    break;
+            }
 
             // If this layout does not have a match, or is the top level root layout,
             // skip over trying to draw any items for it, and immdiately try processing the child layouts
