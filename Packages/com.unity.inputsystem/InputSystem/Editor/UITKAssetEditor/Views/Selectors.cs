@@ -189,10 +189,8 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(InputActionsEditorState state)
+        public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(InputActionsEditorState state, SerializedInputAction? inputAction)
         {
-            var inputAction = GetSelectedAction(state);
-
             Type expectedValueType = null;
             if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
@@ -210,12 +208,10 @@ namespace UnityEngine.InputSystem.Editor
                 InputInteraction.GetValueType);
         }
 
-        public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(InputActionsEditorState state)
+        public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(InputActionsEditorState state, SerializedInputAction? inputAction)
         {
             var processors = string.Empty;
             Type expectedValueType = null;
-
-            var inputAction = GetSelectedAction(state);
 
             if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);

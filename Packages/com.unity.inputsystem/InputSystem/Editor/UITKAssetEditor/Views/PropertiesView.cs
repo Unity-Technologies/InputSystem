@@ -20,6 +20,9 @@ namespace UnityEngine.InputSystem.Editor
         private TextElement addInteractionButton;
         private TextElement addProcessorButton;
 
+        private ContextualMenuManipulator interactionMenu;
+        private ContextualMenuManipulator processorMenu;
+
         public PropertiesView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -41,12 +44,14 @@ namespace UnityEngine.InputSystem.Editor
             if (addInteractionButton == null)
             {
                 addInteractionButton = CreateAddButton(interactionsToggle, "add-new-interaction-button");
+                interactionMenu = new ContextualMenuManipulator(menuEvent => {}){target = addInteractionButton, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
             }
             var processorToggle = processorsFoldout.Q<Toggle>();
             processorToggle.AddToClassList("properties-foldout-toggle");
             if (addProcessorButton == null)
             {
                 addProcessorButton = CreateAddButton(processorToggle, "add-new-processor-button");
+                processorMenu = new ContextualMenuManipulator(menuEvent => {}){target = addProcessorButton, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
             }
         }
 
@@ -67,8 +72,9 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(inputAction?.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
 
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            addProcessorButton.RegisterCallback<ContextualMenuPopulateEvent>(evt =>
             {
+                evt.menu.ClearItems();
                 foreach (var name in processors.internedNames.Where(x => !processors.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
                 {
                     // Skip if not compatible with value type.
@@ -80,10 +86,10 @@ namespace UnityEngine.InputSystem.Editor
                             continue;
                     }
                     var niceName = ObjectNames.NicifyVariableName(name);
-                    var oldProcessors = inputAction?.wrappedProperty.FindPropertyRelative("m_Processors");
-                    menuEvent.menu.AppendAction(niceName, _ => m_ProcessorsListView.OnAddElement(name.ToString(), oldProcessors, inputAction?.processors));
+                    var oldProcessors = inputAction?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Processors));
+                    evt.menu.AppendAction(niceName, _ => m_ProcessorsListView.OnAddElement(name.ToString(), oldProcessors, inputAction?.processors));
                 }
-            }) { target = addProcessorButton, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
+            });
         }
 
         private void CreateContextMenuInteraction(SerializedInputAction? inputAction)
@@ -92,8 +98,9 @@ namespace UnityEngine.InputSystem.Editor
             Type expectedValueType = null;
             if (!string.IsNullOrEmpty(inputAction?.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            addInteractionButton.RegisterCallback<ContextualMenuPopulateEvent>(evt =>
             {
+                evt.menu.ClearItems();
                 foreach (var name in interactions.internedNames.Where(x => !interactions.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
                 {
                     // Skip if not compatible with value type.
@@ -106,10 +113,10 @@ namespace UnityEngine.InputSystem.Editor
                     }
 
                     var niceName = ObjectNames.NicifyVariableName(name);
-                    var oldInteractions = inputAction?.wrappedProperty.FindPropertyRelative("m_Interactions");
-                    menuEvent.menu.AppendAction(niceName, _ => m_InteractionsListView.OnAddElement(name.ToString(), oldInteractions, inputAction?.interactions));
+                    var oldInteractions = inputAction?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Interactions));
+                    evt.menu.AppendAction(niceName, _ => m_InteractionsListView.OnAddElement(name.ToString(), oldInteractions, inputAction?.interactions));
                 }
-            }) { target = addInteractionButton, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
+            });
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -128,33 +135,34 @@ namespace UnityEngine.InputSystem.Editor
             foldout.Add(visualElement);
             foldout.Q<Toggle>().AddToClassList("properties-foldout-toggle");
 
+            var inputAction = viewState.serializedInputAction;
             switch (viewState.selectionType)
             {
                 case SelectionType.Action:
                     m_Root.Q<Label>("properties-header-label").text = "Action Properties";
                     m_ActionPropertyView = CreateChildView(new ActionPropertiesView(visualElement, stateContainer));
-                    CreateContextMenuProcessor(viewState.serializedInputAction);
-                    CreateContextMenuInteraction(viewState.serializedInputAction);
                     break;
 
                 case SelectionType.Binding:
                     m_Root.Q<Label>("properties-header-label").text = "Binding Properties";
                     m_BindingPropertyView = CreateChildView(new BindingPropertiesView(visualElement, foldout, stateContainer));
-                    CreateContextMenuProcessor(viewState.relatedInputAction);
-                    CreateContextMenuInteraction(viewState.relatedInputAction);
+                    inputAction = viewState.relatedInputAction;
                     break;
             }
+
+            CreateContextMenuProcessor(inputAction);
+            CreateContextMenuInteraction(inputAction);
 
             m_InteractionsListView = CreateChildView(new NameAndParametersListView(
                 interactionsFoldout,
                 stateContainer,
-                Selectors.GetInteractionsAsParameterListViews));
+                state => Selectors.GetInteractionsAsParameterListViews(state, inputAction)));
 
 
             m_ProcessorsListView = CreateChildView(new NameAndParametersListView(
                 processorsFoldout,
                 stateContainer,
-                Selectors.GetProcessorsAsParameterListViews));
+                state => Selectors.GetProcessorsAsParameterListViews(state, inputAction)));
         }
 
         internal class ViewState
