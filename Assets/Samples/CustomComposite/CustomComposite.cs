@@ -177,7 +177,7 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
         target.scaleFactor = EditorGUILayout.Slider(m_ScaleFactorLabel, currentValue, 0, 2);
     }
 
-#if UNITY_2022_1_OR_NEWER
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
     public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
     {
         var slider = new Slider(m_ScaleFactorLabel.text, 0, 2)
