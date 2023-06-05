@@ -174,13 +174,15 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState SelectBinding(int index)
         {
+            //if no binding selected (due to no bindings in list) set selection type to action
             if (index == -1)
                 return With(selectedBindingIndex: index, selectionType: SelectionType.Action);
             return With(selectedBindingIndex: index);
         }
 
-        public InputActionsEditorState SelectAction(int? index)
+        public InputActionsEditorState SelectAction(int index)
         {
+            //if no action selected (no actions available) set selection type to none
             if (index == -1)
                 return With(selectedActionIndex: index, selectionType: SelectionType.None);
             return With(selectedActionIndex: index);

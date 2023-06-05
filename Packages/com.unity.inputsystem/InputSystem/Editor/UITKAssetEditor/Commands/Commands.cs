@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -38,6 +39,11 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+                if (actionMap == null)
+                {
+                    Debug.LogError("Cannot add action without an action map selected");
+                    return state;
+                }
                 var newAction = InputActionSerializationHelpers.AddAction(actionMap);
                 InputActionSerializationHelpers.AddBinding(newAction, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
@@ -51,6 +57,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
                 var map = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+                if (action == null || map == null)
+                {
+                    Debug.LogError("Cannot add binding without an action and action map selected");
+                    return state;
+                }
                 var binding = InputActionSerializationHelpers.AddBinding(action, map);
                 var bindingIndex = new SerializedInputBinding(binding).indexOfBinding;
                 state.serializedObject.ApplyModifiedProperties();
@@ -77,7 +88,7 @@ namespace UnityEngine.InputSystem.Editor
             var count = Selectors.GetActionMapCount(state.serializedObject);
             int index = -1;
             if (count != null && count.Value > 0)
-                index = Mathf.Clamp(state.selectedActionMapIndex - 1, 0, count.Value - 1);
+                index = Math.Max(state.selectedActionMapIndex - 1, 0);
             return state.SelectActionMap(index);
         }
 
@@ -91,9 +102,9 @@ namespace UnityEngine.InputSystem.Editor
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
-                if (state.selectedActionIndex == actionIndex)
+                if (state.selectedActionIndex >= actionIndex)
                     return SelectPrevAction(state, actionMap);
-                return state.SelectAction(state.selectedActionIndex > actionIndex ? state.selectedActionIndex - 1 : state.selectedActionIndex);
+                return state.SelectAction(state.selectedActionIndex);
             };
         }
 
@@ -102,7 +113,7 @@ namespace UnityEngine.InputSystem.Editor
             var count = Selectors.GetActionCount(actionMap);
             int index = -1;
             if (count != null && count.Value > 0)
-                index = Mathf.Clamp(state.selectedActionIndex - 1, 0, count.Value - 1);
+                index = Math.Max(state.selectedActionIndex - 1, 0);
             return state.SelectAction(index);
         }
 
@@ -114,9 +125,9 @@ namespace UnityEngine.InputSystem.Editor
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
-                if (state.selectedBindingIndex == bindingIndex)
+                if (state.selectedBindingIndex >= bindingIndex)
                     return SelectPrevBinding(state, actionMap);
-                return state.SelectBinding(state.selectedBindingIndex > bindingIndex ? state.selectedBindingIndex - 1 : state.selectedBindingIndex);
+                return state.SelectBinding(state.selectedBindingIndex);
             };
         }
 
@@ -125,7 +136,7 @@ namespace UnityEngine.InputSystem.Editor
             var count = Selectors.GetBindingCount(actionMap);
             var index = -1;
             if (count != null && count.Value > 0)
-                index = Mathf.Clamp(state.selectedBindingIndex - 1, 0, count.Value - 1);
+                index = Math.Max(state.selectedBindingIndex - 1, 0);
             return state.SelectBinding(index);
         }
 

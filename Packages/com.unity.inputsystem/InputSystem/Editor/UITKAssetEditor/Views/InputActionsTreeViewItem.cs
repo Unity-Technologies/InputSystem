@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Editor
         public event EventCallback<string> EditTextFinished;
         public event EventCallback<int> OnDeleteItem;
 
-        private bool isEditing;
+        private bool m_IsEditing;
 
         public InputActionsTreeViewItem()
         {
@@ -75,12 +75,12 @@ namespace UnityEngine.InputSystem.Editor
         public void Reset()
         {
             EditTextFinished = null;
-            isEditing = false;
+            m_IsEditing = false;
         }
 
         public void FocusOnRenameTextField()
         {
-            if (isEditing)
+            if (m_IsEditing)
                 return;
             delegatesFocus = true;
 
@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
             DelayCall();
             renameTextfield.SelectAll();
 
-            isEditing = true;
+            m_IsEditing = true;
         }
 
         async void DelayCall()
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnEditTextFinished()
         {
-            if (!isEditing)
+            if (!m_IsEditing)
                 return;
             lastSingleClick = 0;
             delegatesFocus = false;
@@ -129,7 +129,7 @@ namespace UnityEngine.InputSystem.Editor
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
 
             EditTextFinished?.Invoke(text);
-            isEditing = false;
+            m_IsEditing = false;
         }
     }
 }

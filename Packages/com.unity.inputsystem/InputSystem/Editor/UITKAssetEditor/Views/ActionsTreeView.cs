@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly TreeView m_ActionsTreeView;
         private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
 
-        private bool actionAdded;
+        private bool m_RenameOnActionAdded;
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Editor
                     addBindingButton.clicked += () => AddBinding(item.name);
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
-                        actionAdded = false;
+                        m_RenameOnActionAdded = false;
                         ChangeActionName(item, newName);
                     };
                     treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         treeViewItem.EditTextFinishedCallback = newName =>
                         {
-                            actionAdded = false;
+                            m_RenameOnActionAdded = false;
                             ChangeCompositeName(item, newName);
                         };
                         treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
@@ -93,6 +93,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 var treeViewItem = (InputActionsTreeViewItem)element;
+                //reset the editing variable before reassigning visual elements
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
 
@@ -177,7 +178,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void RenameNewAction(int id)
         {
-            if (!actionAdded || id == -1)
+            if (!m_RenameOnActionAdded || id == -1)
                 return;
             m_ActionsTreeView.ScrollToItemById(id);
             var treeViewItem = m_ActionsTreeView.GetRootElementForId(id).Q<InputActionsTreeViewItem>();
@@ -187,7 +188,7 @@ namespace UnityEngine.InputSystem.Editor
         private void AddAction()
         {
             Dispatch(Commands.AddAction());
-            actionAdded = true;
+            m_RenameOnActionAdded = true;
         }
 
         private void AddBinding(string actionName)
@@ -206,13 +207,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
         {
-            actionAdded = false;
+            m_RenameOnActionAdded = false;
             Dispatch(Commands.ChangeActionName(data.actionMapIndex, data.name, newName));
         }
 
         private void ChangeCompositeName(ActionOrBindingData data, string newName)
         {
-            actionAdded = false;
+            m_RenameOnActionAdded = false;
             Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
 
