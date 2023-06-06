@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Editor
                     else
                     {
                         var genericDeviceLayouts = EditorInputControlLayoutCache.allLayouts
-                            .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice).OrderBy(x => x.displayName);
+                            .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice && x.baseLayouts.Count() == 0).OrderBy(x => x.displayName);
 
                         foreach (var genericDeviceLayout in genericDeviceLayouts)
                         {
