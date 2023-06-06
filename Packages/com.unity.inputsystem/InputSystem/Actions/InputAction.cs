@@ -610,38 +610,38 @@ namespace UnityEngine.InputSystem
             }
         }
 
-		/// <summary>
-		/// Get the index of the binding within this input action that last caused it to fire.
-		/// </summary>
-		/// <remarks>
-		/// Note that this index is relative to the Input Action bindings.
-		///
-		/// TODO: Describe relative indexing and ignoring of composite part bindings, and also suggest using callbacks
-		/// if you want to know what composite part binding fired using CallbackContext
-		/// </remarks>
-		/// <exception cref="InvalidOperationException"></exception>
-		public unsafe int activeBindingIndex
+        /// <summary>
+        /// Get the index of the binding within this input action that last caused it to fire.
+        /// </summary>
+        /// <remarks>
+        /// Note that this index is relative to the Input Action bindings.
+        ///
+        /// TODO: Describe relative indexing and ignoring of composite part bindings, and also suggest using callbacks
+        /// if you want to know what composite part binding fired using CallbackContext
+        /// </remarks>
+        /// <exception cref="InvalidOperationException"></exception>
+        public unsafe int activeBindingIndex
         {
-	        get
-	        {
-		        var state = GetOrCreateActionMap().m_State;
-		        if (state == null) return InputActionState.kInvalidIndex;
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state == null) return InputActionState.kInvalidIndex;
 
-		        var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-		        var bindingIndex = actionStatePtr->bindingIndex;
-                
-                if (bindingIndex == InputActionState.kInvalidIndex) 
-	                return InputActionState.kInvalidIndex;
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var bindingIndex = actionStatePtr->bindingIndex;
 
-				var bindingIndexInMap = state.GetBindingIndexInMap(bindingIndex);
-				var indexInActionBindings = BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
-                
-				if (indexInActionBindings == -1) 
-					throw new InvalidOperationException($"Binding at index '{bindingIndex}' in action map '{actionMap.name}' not found in bindings array of action '{name}'");
-                
+                if (bindingIndex == InputActionState.kInvalidIndex)
+                    return InputActionState.kInvalidIndex;
+
+                var bindingIndexInMap = state.GetBindingIndexInMap(bindingIndex);
+                var indexInActionBindings = BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
+
+                if (indexInActionBindings == -1)
+                    throw new InvalidOperationException($"Binding at index '{bindingIndex}' in action map '{actionMap.name}' not found in bindings array of action '{name}'");
+
                 return indexInActionBindings;
-			}
-		}
+            }
+        }
 
         /// <summary>
         /// Whether the action wants a state check on its bound controls as soon as it is enabled. This is always
@@ -1035,10 +1035,10 @@ namespace UnityEngine.InputSystem
         /// <typeparam name="TValue"></typeparam>
         /// <returns>The default value with all processors applied.</returns>
         public unsafe TValue ReadDefaultValue<TValue>(int bindingIndex)
-			where TValue : struct
+            where TValue : struct
         {
-	        var state = GetOrCreateActionMap().m_State;
-            if(state == null) return default(TValue);
+            var state = GetOrCreateActionMap().m_State;
+            if (state == null) return default(TValue);
 
             var actionStatePtr = &state.actionStates[m_ActionIndexInState];
             return state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));

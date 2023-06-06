@@ -6081,9 +6081,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanRemoveExistingInteractionOnBinding()
     {
-	    var action = new InputAction();
-	    action.AddBinding("<Gamepad>/buttonSouth", interactions: "hold,tap(duration=0.5),hold(duration=0.5)");
-	    
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", interactions: "hold,tap(duration=0.5),hold(duration=0.5)");
+
         action.Enable();
 
         action.ChangeBinding(0).RemoveInteraction<HoldInteraction>();
@@ -6100,7 +6100,7 @@ partial class CoreTests
         Assert.That(action.bindings[0].interactions, Is.Empty);
     }
 
-	[Test]
+    [Test]
     [Category("Actions")]
     public void Actions_DestroyingAssetClearsCallbacks()
     {
@@ -10285,18 +10285,18 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_ActiveBindingIndex_PointsAtRelativeIndexInActionBindingsArray()
     {
-	    var keyboard = InputSystem.AddDevice<Keyboard>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
-	    var actionMap = new InputActionMap("ActionMap");
-	    var actionOne = actionMap.AddAction("ActionOne");
-	    var actionTwo = actionMap.AddAction("ActionTwo");
+        var actionMap = new InputActionMap("ActionMap");
+        var actionOne = actionMap.AddAction("ActionOne");
+        var actionTwo = actionMap.AddAction("ActionTwo");
 
-	    actionOne.AddBinding("<keyboard>/a");
-	    actionOne.AddBinding("<keyboard>/b");
-	    actionTwo.AddBinding("<keyboard>/c");
-        
+        actionOne.AddBinding("<keyboard>/a");
+        actionOne.AddBinding("<keyboard>/b");
+        actionTwo.AddBinding("<keyboard>/c");
+
         actionMap.Enable();
-        
+
         PressAndRelease(keyboard.cKey);
 
         Assert.That(actionTwo.bindings[actionTwo.activeBindingIndex], Is.EqualTo(actionTwo.bindings[0]));
@@ -10305,17 +10305,17 @@ partial class CoreTests
         // of indexing, so pressing any of the controls from the parts of these composites should set the active binding
         // index to be the composite itself
         actionTwo.AddCompositeBinding("OneModifier")
-	        .With("modifier", "<Keyboard>/leftShift")
-	        .With("binding", "<Keyboard>/1");
+            .With("modifier", "<Keyboard>/leftShift")
+            .With("binding", "<Keyboard>/1");
         actionTwo.AddCompositeBinding("OneModifier")
-	        .With("modifier", "<Keyboard>/leftShift")
-	        .With("binding", "<Keyboard>/2");
+            .With("modifier", "<Keyboard>/leftShift")
+            .With("binding", "<Keyboard>/2");
 
         Press(keyboard.leftShiftKey);
-		PressAndRelease(keyboard.digit2Key);
+        PressAndRelease(keyboard.digit2Key);
 
         Assert.That(actionTwo.bindings[actionTwo.activeBindingIndex], Is.EqualTo(actionTwo.bindings[4]));
-	}
+    }
 
     [Test]
     [Category("Actions")]

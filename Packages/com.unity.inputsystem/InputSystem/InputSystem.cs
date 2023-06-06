@@ -3495,8 +3495,8 @@ namespace UnityEngine.InputSystem
                 return;
 
             s_TrackedDirtyAssets.Add(assetGuid);
-            
         }
+
 #else
         private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
         {
@@ -3508,11 +3508,11 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
-            if(!InputSystem.settings.disableHighLevelAPI)
+            if (!InputSystem.settings.disableHighLevelAPI)
             {
-				HighLevel.Input.Initialize();
-				HighLevel.Input.InitializeGlobalActions();
-			}
+                HighLevel.Input.Initialize();
+                HighLevel.Input.InitializeGlobalActions();
+            }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3791,16 +3791,17 @@ namespace UnityEngine.InputSystem
                 device.MakeCurrent();
             }
         }
+
 #endif
 #if UNITY_EDITOR
-	    internal static void SetGlobalActionAssetPaths(string defaultAssetPath, string assetPath)
-	    {
-		    s_DefaultGlobalActionsPath = defaultAssetPath;
-		    s_GlobalActionsAssetPath = assetPath;
-	    }
+        internal static void SetGlobalActionAssetPaths(string defaultAssetPath, string assetPath)
+        {
+            s_DefaultGlobalActionsPath = defaultAssetPath;
+            s_GlobalActionsAssetPath = assetPath;
+        }
 
-	    private static string s_DefaultGlobalActionsPath = GlobalActionsAsset.kDefaultGlobalActionsPath;
-	    private static string s_GlobalActionsAssetPath = GlobalActionsAsset.kGlobalActionsAssetPath;
+        private static string s_DefaultGlobalActionsPath = GlobalActionsAsset.kDefaultGlobalActionsPath;
+        private static string s_GlobalActionsAssetPath = GlobalActionsAsset.kGlobalActionsAssetPath;
 #endif
     }
 }

@@ -1126,7 +1126,7 @@ namespace UnityEngine.InputSystem
                     // we had to allocate a separate array where the bindings are sorted.
                     m_BindingsForEachAction = newBindingsArray;
                     m_BindingsAreContiguous = false;
-				}
+                }
             }
 
             controlsForEachActionInitialized = true;

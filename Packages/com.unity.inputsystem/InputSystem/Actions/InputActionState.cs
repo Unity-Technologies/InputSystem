@@ -2174,7 +2174,7 @@ namespace UnityEngine.InputSystem
             interactionState.triggerControlIndex = trigger.controlIndex;
             interactionState.startTime = trigger.startTime;
             if (newPhase == InputActionPhase.Performed)
-	            interactionState.performedTime = trigger.time;
+                interactionState.performedTime = trigger.time;
 
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
@@ -2399,10 +2399,10 @@ namespace UnityEngine.InputSystem
             {
                 newState.lastPerformedInUpdate = InputUpdate.s_UpdateStepCount;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
-                
+
                 // if we're being driven by an interaction, also update the last performed count for it
                 if (newState.interactionIndex != kInvalidIndex)
-	                interactionStates[newState.interactionIndex].lastPerformedInUpdate = newState.lastPerformedInUpdate;
+                    interactionStates[newState.interactionIndex].lastPerformedInUpdate = newState.lastPerformedInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group.
@@ -2420,7 +2420,7 @@ namespace UnityEngine.InputSystem
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
                 if (newState.interactionIndex != kInvalidIndex)
                     interactionStates[newState.interactionIndex].lastCanceledInUpdate = InputUpdate.s_UpdateStepCount;
-			}
+            }
             else
             {
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
@@ -2430,9 +2430,9 @@ namespace UnityEngine.InputSystem
             newState.releasedInUpdate = actionState->releasedInUpdate;
             if (newPhase == InputActionPhase.Started)
             {
-	            newState.startTime = newState.time;
-	            if (newState.interactionIndex != kInvalidIndex)
-		            interactionStates[newState.interactionIndex].lastStartedInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.startTime = newState.time;
+                if (newState.interactionIndex != kInvalidIndex)
+                    interactionStates[newState.interactionIndex].lastStartedInUpdate = InputUpdate.s_UpdateStepCount;
             }
             *actionState = newState;
 
@@ -3170,7 +3170,7 @@ namespace UnityEngine.InputSystem
             // have to pad out to multiple of 8 for correct alignment in unmanaged action state memory
             [FieldOffset(60)] private int m_padding;
 
-			public int triggerControlIndex
+            public int triggerControlIndex
             {
                 get
                 {
@@ -3256,20 +3256,20 @@ namespace UnityEngine.InputSystem
 
             public uint lastStartedInUpdate
             {
-	            get => m_LastStartedInUpdate;
-	            set => m_LastStartedInUpdate = value;
+                get => m_LastStartedInUpdate;
+                set => m_LastStartedInUpdate = value;
             }
 
             public uint lastPerformedInUpdate
             {
-	            get => m_LastPerformedInUpdate;
-	            set => m_LastPerformedInUpdate = value;
+                get => m_LastPerformedInUpdate;
+                set => m_LastPerformedInUpdate = value;
             }
 
             public uint lastCanceledInUpdate
             {
-	            get => m_LastCanceledInUpdate;
-	            set => m_LastCanceledInUpdate = value;
+                get => m_LastCanceledInUpdate;
+                set => m_LastCanceledInUpdate = value;
             }
 
             [Flags]

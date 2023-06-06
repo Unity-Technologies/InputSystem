@@ -668,22 +668,22 @@ namespace UnityEngine.InputSystem
         /// class) which includes the global actions functionality does take a very small amount of
         /// processing time, so if it is not being used, turning it off can win back a small amount of
         /// performance for free.
-        /// 
+        ///
         /// Note that setting this at runtime after the high-level API has already been initialized doesn't
         /// cause the high-level API to initialize or shutdown. It must be set in the editor on a custom
         /// <see cref="InputSettings"/> asset.
         /// </remarks>
         public bool disableHighLevelAPI
         {
-	        get => m_DisableHighLevelApi;
-	        set
-	        {
-		        if (m_DisableHighLevelApi == value)
-			        return;
+            get => m_DisableHighLevelApi;
+            set
+            {
+                if (m_DisableHighLevelApi == value)
+                    return;
 
-		        m_DisableHighLevelApi = value;
+                m_DisableHighLevelApi = value;
                 OnChange();
-	        }
+            }
         }
 
         /// <summary>
@@ -783,7 +783,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private InputActionAsset m_GlobalInputActionsAsset;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
-        
+
         internal bool IsFeatureEnabled(string featureName)
         {
             return m_FeatureFlags != null && m_FeatureFlags.Contains(featureName.ToUpperInvariant());
