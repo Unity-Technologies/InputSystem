@@ -1398,6 +1398,37 @@ internal class UITests : CoreTestsFixture
                 Assert.That(scene.rightChildReceiver.events, Has.None.With.Property("type").EqualTo(EventType.Dragging));
                 break;
         }
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Test if creating Pointer events from different devices at the same time results in only one event
+        BeginTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
+        Press(mouse1.leftButton);
+        yield return null;
+        EndTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
+        Release(mouse1.leftButton);
+        yield return null;
+
+        switch (pointerBehavior)
+        {
+            case UIPointerBehavior.SingleUnifiedPointer:
+                //// Getting "Drop" event even if using only one type of input device for Press/Release.
+                //// E.g. the following test would also produce only a Drop event:
+                ////     Press(mouse1.leftButton);
+                ////     yield return null;
+                ////     Release(mouse1.leftButton);
+                ////     yield return null;
+                break;
+            case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
+            case UIPointerBehavior.AllPointersAsIs:
+                // Single pointer click on the left object
+                Assert.That(scene.leftChildReceiver.events,
+                    Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerClick).And
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse1).And
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+                break;
+        }
     }
 
     [UnityTest]
