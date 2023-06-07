@@ -422,6 +422,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         protected void OnEnable()
         {
+            Application.onBeforeRender += PerformBeforeRenderUpdate;
             InputSystem.onAfterUpdate += UpdateCallback;
             BindActions();
 
@@ -437,6 +438,7 @@ namespace UnityEngine.InputSystem.XR
         {
             UnbindActions();
             InputSystem.onAfterUpdate -= UpdateCallback;
+            Application.onBeforeRender -= PerformBeforeRenderUpdate;
         }
 
         /// <summary>
@@ -451,6 +453,8 @@ namespace UnityEngine.InputSystem.XR
             }
 #endif
         }
+
+        void PerformBeforeRenderUpdate() => InputSystem.Update(InputUpdateType.BeforeRender);
 
         /// <summary>
         /// The callback method called after the Input System has completed an update and processed all pending events.
