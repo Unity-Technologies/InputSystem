@@ -723,6 +723,13 @@ namespace UnityEngine.InputSystem
 
         internal static bool MatchControlComponent(in ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem)
         {
+            // Match name.
+            if (!expectedControlComponent.m_Name.isEmpty)
+            {
+                if (!StringMatches(expectedControlComponent.m_Name, controlItem.name))
+                    return false;
+            }
+
             // All of usages should match to the one of usage in the control
             foreach (var usage in expectedControlComponent.m_Usages)
             {
@@ -742,13 +749,6 @@ namespace UnityEngine.InputSystem
                     if (!anyUsageMatches)
                         return false;
                 }
-            }
-
-            // Match name.
-            if (!expectedControlComponent.m_Name.isEmpty)
-            {
-                if (!StringMatches(expectedControlComponent.m_Name, controlItem.name))
-                    return false;
             }
 
             return true;

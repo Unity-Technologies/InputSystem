@@ -231,7 +231,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // If this layout does not have a match, or is the top level root layout,
-            // skip over trying to draw any items for it, and immdiately try processing the child layouts
+            // skip over trying to draw any items for it, and immediately try processing the child layouts
             if (!matchExists)
             {
                 foreach (var childLayout in matchedChildLayouts)
