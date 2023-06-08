@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.Editor
                 // Otherwise, indicate that no layouts match the current path.
                 if (!matchExists)
                 {
-                    EditorGUILayout.LabelField("No registered control paths match this current binding");
+                    EditorGUILayout.LabelField("No registered control paths match this current binding. Some control paths are only registered at runtime.", EditorStyles.wordWrappedLabel);
                 }
             }
 
