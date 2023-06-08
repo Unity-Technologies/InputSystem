@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -1217,8 +1219,27 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
+        /// in the current frame without considering conflicting actions.
+        /// </summary>
+        /// <returns>True if the action performed this frame.</returns>
+        /// <remarks>This method does not check if an input action with a higher priority binding has performed
+        /// already in this frame.
+        ///
+        /// For example, if there are two input actions, one bound to the Ctrl+C keys and the other bound to
+        /// the C key, this method will return true when called on the input action bound to the C key when
+        /// Ctrl+C is pressed. See <see cref="WasPerformedThisFrame(bool)"/> for a version of the method that
+        /// considers binding priorities.</remarks>
+        public bool WasPerformedThisFrame()
+        {
+            return WasPerformedThisFrame(EventHandledBehaviour.None);
+        }
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
         /// in the current frame.
         /// </summary>
+        /// <param name="eventHandledBehaviour">Whether to check if a higher priority binding has already
+        /// performed as a result of the control actuations that triggered this action.</param>
         /// <returns>True if the action performed this frame.</returns>
         /// <remarks>
         /// This method is different from <see cref="WasPressedThisFrame"/> in that it depends directly on the
@@ -1254,21 +1275,39 @@ namespace UnityEngine.InputSystem
         ///
         /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
         /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
+        ///
+        /// This method can be made to check if a higher priority binding has performed before this one in the current
+        /// frame. For example, when using shortcut key bindings, pressing Ctrl+C will trigger any actions that are
+        /// bound only to C, as well as any bound to Ctrl+C. Passing <see cref="EventHandledBehaviour.CheckHigherPriority"/>
+        /// for the 'eventHandledBehaviour' argument will cause this method to return false if this action has been bound
+        /// to the C key but Ctrl+C has been pressed and another action is bound to that key combination.
+        ///
+        /// Note that bindings can be made to consume input events, or in other words, prevent lower priority bindings
+        /// from even performing in the first place. To enable this, set the <see cref="InputSettings.shortcutKeysConsumeInput"/>
+        /// property to true, and make sure that the <see cref="InputBindingComposite.handleInputEvents"/> property on the binding
+        /// is also set to true.
+        ///
+        /// For more in-depth reading on binding priorities, see the <a href="../manual/ActionBindings.html#conflicting-inputs">manual</a>.
         /// </remarks>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
-        public unsafe bool WasPerformedThisFrame()
+        /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
+        /// <seealso cref="InputBindingComposite.handleInputEvents"/>
+        public unsafe bool WasPerformedThisFrame(EventHandledBehaviour eventHandledBehaviour)
         {
             var state = GetOrCreateActionMap().m_State;
 
-            if (state != null)
-            {
-                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
-            }
+            if (state == null) return false;
 
-            return false;
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+
+            var wasPerformedThisFrame = actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+
+            if (eventHandledBehaviour == EventHandledBehaviour.None)
+                return wasPerformedThisFrame;
+
+            return !HasHigherPriorityActionAlreadyPerformed() && wasPerformedThisFrame;
         }
 
         /// <summary>
@@ -1622,6 +1661,54 @@ namespace UnityEngine.InputSystem
             return bindingIndexOnAction;
         }
 
+        private unsafe bool HasHigherPriorityActionAlreadyPerformed()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            ref var actionState = ref state.FetchActionState(this);
+
+            var groupCount = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex];
+            for (var j = 0; j < groupCount; j++)
+            {
+                var groupIndex = state.m_ActionGroupIndirectionTable[actionState.actionGroupStartIndex + j + 1];
+                var actionGroup = state.m_ActionGroups[groupIndex];
+
+                if (actionGroup.lastEventHandledByAction == -1)
+                    continue;
+
+                // if the last action in this group to handle an event didn't perform in the current step count,
+                // then there is no way it can have run before this action, so skip to the next group
+                var lastActionToHandleAnEvent = state.actionStates[actionGroup.lastEventHandledByAction];
+                if (lastActionToHandleAnEvent.lastPerformedInUpdate != InputUpdate.s_UpdateStepCount)
+                    continue;
+
+                if (actionGroup.lastEventHandledByAction != m_ActionIndexInState)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Can be used to enable or disable event handled checks when calling
+        /// <see cref="InputAction.WasPerformedThisFrame(EventHandledBehaviour)"/>.
+        /// </summary>
+        /// <seealso cref="InputAction.WasPerformedThisFrame(EventHandledBehaviour)"/>
+        public enum EventHandledBehaviour
+        {
+            /// <summary>
+            /// Return true if the current action has performed in this frame even if an
+            /// action with a higher priority binding has already performed for the same
+            /// input event.
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// Return false if an action with a higher priority binding has already performed
+            /// in this frame for the same input event.
+            /// </summary>
+            CheckHigherPriority
+        }
+
         ////TODO: make current event available in some form
         ////TODO: make source binding info available (binding index? binding instance?)
 
@@ -1870,6 +1957,52 @@ namespace UnityEngine.InputSystem
 
                     return m_State.GetValueSizeInBytes(bindingIndex, controlIndex);
                 }
+            }
+
+            /// <summary>
+            /// Check if a higher priority binding has already handled this event.
+            /// </summary>
+            /// <remarks>
+            /// Bindings will perform in descending order of priority. For example, Ctrl+C has a higher
+            /// priority than C, so Ctrl+C will always be given the chance to perform first. When writing
+            /// event driven input code, it can be useful to check if a higher priority binding has already
+            /// handled the current event.
+            ///
+            /// For more in-depth reading on binding priorities, see the <a href="../manual/ActionBindings.html#conflicting-inputs">manual</a>.
+            /// </remarks>
+            /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
+            /// <seealso cref="InputBindingComposite.handleInputEvents"/>
+            /// <seealso cref="InputBindingComposite.GetPriority" />
+            public bool eventHandled
+            {
+                get
+                {
+                    if (m_State == null || m_State.inputEvent == null)
+                        return false;
+
+                    return m_State.inputEvent.handled;
+                }
+            }
+
+            /// <summary>
+            /// Mark the current input event as handled.
+            /// </summary>
+            /// <remarks>
+            /// Marking an event as handled will prevent it from being processed by any less specific
+            /// bindings, but only if <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled.
+            /// Otherwise all less specific bindings will still have their performed handlers called,
+            /// but the <see cref="eventHandled"/> flag will be true.
+            /// </remarks>
+            /// <seealso cref="InputBindingComposite.handleInputEvents"/>
+            /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
+            /// <seealso cref="eventHandled"/>
+            public void HandleEvent()
+            {
+                if (m_State == null)
+                    return;
+
+                m_State.inputEvent.handled = true;
+                m_State.SetActionGroupHandledBy(actionIndex, controlIndex);
             }
 
             ////TODO: need ability to read as button

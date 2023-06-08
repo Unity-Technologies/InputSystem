@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
@@ -31,6 +32,8 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.isComposite"/>
     public abstract class InputBindingComposite
     {
+        private const int kDefaultCompositeBindingPriority = 2;
+
         /// <summary>
         /// The type of value returned by the composite.
         /// </summary>
@@ -239,6 +242,35 @@ namespace UnityEngine.InputSystem
 
             return displayFormatAttribute.formatString;
         }
+
+        internal virtual int GetPriority()
+        {
+            // TODO: Make this instance state and expose it to the UI and API in a sensible way so that users can control
+            // the priority of bindings on a case by case basis.
+            return kDefaultCompositeBindingPriority;
+        }
+
+        internal virtual void HandleEvent(ref InputEventPtr eventPtr, ref InputBindingCompositeContext context)
+        {
+            if (handleInputEvents)
+                eventPtr.handled = true;
+        }
+
+        /// <summary>
+        /// Controls whether composite bindings mark input events as handled.
+        /// </summary>
+        /// <remarks>
+        /// By default, only OneModifierComposite and TwoModifiersComposite composite bindings handle
+        /// input events, but this option is exposed in the Input Action Asset editor for all composite
+        /// bindings.
+        /// </remarks>
+        /// <seealso cref="InputSettings.shortcutKeysConsumeInput"/>
+        [Tooltip("Indicates if this composite binding should mark input events as handled. For example, given two input " +
+            "actions, one bound to the 'C' key and one to 'Ctrl+C', when 'Ctrl+C' is pressed, " +
+            "if the event is handled, the input action bound to 'C' will not fire.\n\n" +
+            "Note that the global 'Enable Input Event Consumption' option must be switched on " +
+            "in Input System Project Settings for event consumption to work. ")]
+        public bool handleInputEvents;
     }
 
     /// <summary>

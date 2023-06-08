@@ -240,7 +240,6 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 if (array.IsCreated)
                     array.Dispose();
-                array = new NativeArray<TValue>();
                 return;
             }
 
@@ -401,6 +400,30 @@ namespace UnityEngine.InputSystem.Utilities
             // Make room for element.
             if (index != oldLength)
                 Array.Copy(array, index, array, index + 1, oldLength - index);
+
+            array[index] = value;
+        }
+
+        /// <summary>
+        /// Insert an element at the specified index.
+        /// </summary>
+        /// <typeparam name="TValue">A struct type.</typeparam>
+        /// <param name="array">The array to insert into.</param>
+        /// <param name="index">The index to insert at.</param>
+        /// <param name="value">The value to insert.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if index is less than zero or past the end of the array.</exception>
+        public static unsafe void InsertAt<TValue>(ref NativeArray<TValue> array, int index, TValue value) where TValue : struct
+        {
+            Debug.Assert(array.IsCreated, "Array has not been created. Use 'new NativeArray<TValue>()' before calling InsertAt.");
+
+            if (index < 0 || index + 1 >= array.Length)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            var sizeOfElement = UnsafeUtility.SizeOf<TValue>();
+            UnsafeUtility.MemMove(
+                (byte*)array.GetUnsafePtr() + sizeOfElement * (index + 1),
+                (byte*)array.GetUnsafePtr() + sizeOfElement * index,
+                sizeOfElement * (array.Length - index - 1));
 
             array[index] = value;
         }

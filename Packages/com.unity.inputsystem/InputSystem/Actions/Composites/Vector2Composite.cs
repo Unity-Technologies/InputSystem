@@ -202,6 +202,7 @@ namespace UnityEngine.InputSystem.Composites
         public override void OnGUI()
         {
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+            target.handleInputEvents = EditorGUILayout.Toggle("Handle Input Events", target.handleInputEvents);
         }
 
 #if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
