@@ -3829,7 +3829,7 @@ internal class UITests : CoreTestsFixture
     }
 
     #region Multi Display Tests
-#if UNITY_2023_1_OR_NEWER // displayIndex is only available from 2023.1 onwards
+#if UNITY_2022_3_OR_NEWER // displayIndex is only available from 2022.3 onwards
 
     [UnityTest]
 #if UNITY_TVOS
@@ -4377,7 +4377,7 @@ internal class UITests : CoreTestsFixture
                 radius = eventData.radius,
                 radiusVariance = eventData.radiusVariance,
 #endif
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
                 displayIndex = eventData.displayIndex,
 #endif
             };

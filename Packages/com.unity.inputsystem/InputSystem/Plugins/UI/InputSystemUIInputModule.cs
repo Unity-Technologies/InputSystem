@@ -1737,7 +1737,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
                     eventData.displayIndex = displayIndex;
 #endif
 
@@ -1833,7 +1833,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData = new ExtendedPointerEventData(eventSystem);
 
             eventData.pointerId = pointerId;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             eventData.displayIndex = displayIndex;
 #endif
             eventData.touchId = touchId;
@@ -1959,7 +1959,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -1990,7 +1990,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2007,7 +2007,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.rightButton.ignoreNextClick = true;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2024,7 +2024,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.middleButton.ignoreNextClick = true;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2055,7 +2055,7 @@ namespace UnityEngine.InputSystem.UI
             // The old input system reported scroll deltas in lines, we report pixels.
             // Need to scale as the UI system expects lines.
             state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2074,7 +2074,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldOrientation = context.ReadValue<Quaternion>();
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2087,7 +2087,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldPosition = context.ReadValue<Vector3>();
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
