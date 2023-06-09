@@ -721,14 +721,33 @@ namespace UnityEngine.InputSystem
             return MatchesRecursive(ref parser, control);
         }
 
-        internal static bool MatchControlComponent(in ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem)
+        internal static bool MatchControlComponent(in ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem, bool matchAlias = false)
         {
-            // Match name.
-            if (!expectedControlComponent.m_Name.isEmpty)
+            // Check to see that there is a match with the name or alias if specified
+            // Exit early if we can't create a match.
+            if (!StringMatches(expectedControlComponent.m_Name, controlItem.name))
             {
-                if (!StringMatches(expectedControlComponent.m_Name, controlItem.name))
+                if (matchAlias)
+                {
+                    bool hasMatchingAlias = false;
+
+                    var aliases = controlItem.aliases;
+                    for (var i = 0; i < aliases.Count; i++)
+                    {
+                        if (StringMatches(expectedControlComponent.m_Name, aliases[i]))
+                        {
+                            hasMatchingAlias = true;
+                            break;
+                        }
+                    }
+
+                    if(!hasMatchingAlias)
+                        return false;
+                }
+                else
                     return false;
             }
+                   
 
             // All of usages should match to the one of usage in the control
             foreach (var usage in expectedControlComponent.m_Usages)

@@ -183,7 +183,7 @@ namespace UnityEngine.InputSystem.Editor
             for (int i = 0; i < deviceLayout.m_Controls.Length; i++)
             {
                 ref InputControlLayout.ControlItem controlItem = ref deviceLayout.m_Controls[i];
-                if (InputControlPath.MatchControlComponent(in parsedPath[1], ref controlItem))
+                if (InputControlPath.MatchControlComponent(in parsedPath[1], ref controlItem, true))
                 {
                     // If we've already located a match, append a ", " to the control name
                     // This is to accomodate cases where multiple control items match the same path within a single device layout
