@@ -158,9 +158,9 @@ namespace UnityEngine.InputSystem.Editor
             return With(selectedActionIndex: index, selectionType: SelectionType.Action);
         }
 
-        public InputActionsEditorState SelectActionMap(SerializedProperty state)
+        public InputActionsEditorState SelectActionMap(SerializedProperty actionMap)
         {
-            var index = state.GetIndexOfArrayElement();
+            var index = actionMap.GetIndexOfArrayElement();
             return With(selectedBindingIndex: 0, selectedActionMapIndex: index, selectedActionIndex: 0);
         }
 
@@ -169,12 +169,32 @@ namespace UnityEngine.InputSystem.Editor
             var actionMap = GetActionMapByName(actionMapName);
             return With(selectedBindingIndex: 0,
                 selectedActionMapIndex: actionMap.GetIndexOfArrayElement(),
-                selectedActionIndex: 0);
+                selectedActionIndex: 0, selectionType: SelectionType.Action);
         }
 
         public InputActionsEditorState SelectBinding(int index)
         {
+            //if no binding selected (due to no bindings in list) set selection type to action
+            if (index == -1)
+                return With(selectedBindingIndex: index, selectionType: SelectionType.Action);
             return With(selectedBindingIndex: index);
+        }
+
+        public InputActionsEditorState SelectAction(int index)
+        {
+            //if no action selected (no actions available) set selection type to none
+            if (index == -1)
+                return With(selectedActionIndex: index, selectionType: SelectionType.None);
+            return With(selectedActionIndex: index);
+        }
+
+        public InputActionsEditorState SelectActionMap(int index)
+        {
+            if (index == -1)
+                return With(selectedActionMapIndex: index, selectionType: SelectionType.None);
+            return With(selectedBindingIndex: 0,
+                selectedActionMapIndex: index,
+                selectedActionIndex: 0, selectionType: SelectionType.Action);
         }
 
         public ReadOnlyCollection<int> GetOrCreateExpandedState()
@@ -226,6 +246,7 @@ namespace UnityEngine.InputSystem.Editor
 
     internal enum SelectionType
     {
+        None,
         Action,
         Binding
     }

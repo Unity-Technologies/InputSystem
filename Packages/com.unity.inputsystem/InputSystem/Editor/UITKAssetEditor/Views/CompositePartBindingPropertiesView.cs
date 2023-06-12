@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");
 
             CreateSelector(Selectors.GetSelectedBinding,
-                Selectors.GetCompositePartBindingViewState);
+                (b, s) => !b.HasValue ? null : Selectors.GetCompositePartBindingViewState(b.Value, s));
         }
 
         public override void RedrawUI(ViewState viewState)

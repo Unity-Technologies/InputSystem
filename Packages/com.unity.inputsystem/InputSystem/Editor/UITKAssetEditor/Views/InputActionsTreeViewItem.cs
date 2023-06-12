@@ -1,6 +1,7 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -12,8 +13,14 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class InputActionsTreeViewItem : VisualElement
     {
+        public EventCallback<string> EditTextFinishedCallback;
+        public EventCallback<int> DeleteCallback;
+
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
+        public event EventCallback<int> OnDeleteItem;
+
+        private bool m_IsEditing;
 
         public InputActionsTreeViewItem()
         {
@@ -29,82 +36,98 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnFocus = true;
             renameTextfield.selectAllOnMouseUp = false;
 
-            // TODO: The rename functionality is currently disabled due to focus issues. The text field doesn't
-            // focus correctly when calling Focus() on it (it needs to be subsequently clicked) and on losing focus,
-            // we're getting two focus out events, one for the TextField and one for the contained TextElement.
-            // RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            // RegisterCallback<KeyDownEvent>(OnKeyDownEventForRename);
-            //
-            // renameTextfield.RegisterCallback<KeyUpEvent>(e =>
-            // {
-            //  if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Escape)
-            //  {
-            //   (e.currentTarget as VisualElement)?.Blur();
-            //   return;
-            //  }
-            //
-            //  e.StopImmediatePropagation();
-            // });
-            //
-            // renameTextfield.RegisterCallback<FocusOutEvent>(e =>
-            // {
-            //  OnEditTextFinished(renameTextfield);
-            // });
+            RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
+            renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
 
         public Label label => this.Q<Label>();
-        public TextField renameTextfield => this.Q<TextField>(kRenameTextField);
+        private TextField renameTextfield => this.Q<TextField>(kRenameTextField);
 
-        private void OnKeyDownEventForRename(KeyDownEvent e)
+
+        public void UnregisterInputField()
         {
-            if (e.keyCode != KeyCode.F2)
-                return;
-
-            FocusOnRenameTextField();
-            e.StopPropagation();
+            renameTextfield.SetEnabled(false);
+            renameTextfield.selectAllOnFocus = false;
+            UnregisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
+            renameTextfield.UnregisterCallback<FocusOutEvent>(e => OnEditTextFinished());
         }
+
+        private float lastSingleClick;
+        private static InputActionsTreeViewItem selected;
 
         private void OnMouseDownEventForRename(MouseDownEvent e)
         {
-            if (e.clickCount != 2 || e.button != (int)MouseButton.LeftMouse || e.target == null)
+            if (e.clickCount != 1 || e.button != (int)MouseButton.LeftMouse || e.target == null)
                 return;
 
-            FocusOnRenameTextField();
-            e.StopPropagation();
+            if (selected == this && Time.time - lastSingleClick < 3f)
+            {
+                FocusOnRenameTextField();
+                e.StopImmediatePropagation();
+                lastSingleClick = 0;
+            }
+            lastSingleClick = Time.time;
+            selected = this;
         }
 
-        private void FocusOnRenameTextField()
+        public void Reset()
         {
+            EditTextFinished = null;
+            m_IsEditing = false;
+        }
+
+        public void FocusOnRenameTextField()
+        {
+            if (m_IsEditing)
+                return;
             delegatesFocus = true;
 
             renameTextfield.SetValueWithoutNotify(label.text);
             renameTextfield.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label?.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
 
-            renameTextfield.Q<TextElement>().Focus();
+            //a bit hacky - e.StopImmediatePropagation() for events does not work like expected on ListViewItems or TreeViewItems because
+            //the listView/treeView reclaims the focus - this is a workaround with less overhead than rewriting the events
+            DelayCall();
             renameTextfield.SelectAll();
+
+            m_IsEditing = true;
         }
 
-        public void OnEditTextFinished(TextField renameTextField)
+        async void DelayCall()
         {
+            await Task.Delay(120);
+            renameTextfield.Q<TextField>().Focus();
+        }
+
+        public void DeleteItem()
+        {
+            OnDeleteItem?.Invoke(0);
+        }
+
+        private void OnEditTextFinished()
+        {
+            if (!m_IsEditing)
+                return;
+            lastSingleClick = 0;
             delegatesFocus = false;
 
-            var text = renameTextField.value?.Trim();
+            var text = renameTextfield.text?.Trim();
             if (string.IsNullOrEmpty(text))
             {
-                renameTextField.schedule.Execute(() =>
+                renameTextfield.schedule.Execute(() =>
                 {
                     FocusOnRenameTextField();
-                    renameTextField.SetValueWithoutNotify(text);
+                    renameTextfield.SetValueWithoutNotify(text);
                 });
                 return;
             }
 
-            renameTextField.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
-            label.text = renameTextField.text;
 
             EditTextFinished?.Invoke(text);
+            m_IsEditing = false;
         }
     }
 }
