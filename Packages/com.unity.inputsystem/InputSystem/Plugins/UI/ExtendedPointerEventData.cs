@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.UI
             stringBuilder.AppendLine("altitudeAngle: " + altitudeAngle);
             stringBuilder.AppendLine("twist: " + twist);
             #endif
-            #if UNITY_2023_1_OR_NEWER
+            #if UNITY_2022_3_OR_NEWER
             stringBuilder.AppendLine("displayIndex: " + displayIndex);
             #endif
             return stringBuilder.ToString();
@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.UI
                 altitudeAngle = (pen.tilt.value.y + 1) * Mathf.PI / 2;
                 twist = pen.twist.value * Mathf.PI * 2;
                 #endif
-                #if UNITY_2023_1_OR_NEWER
+                #if UNITY_2022_3_OR_NEWER
                 displayIndex = pen.displayIndex.ReadValue();
                 #endif
             }
@@ -153,7 +153,7 @@ namespace UnityEngine.InputSystem.UI
                 pressure = touchControl.pressure.magnitude;
                 radius = touchControl.radius.value;
                 #endif
-                #if UNITY_2023_1_OR_NEWER
+                #if UNITY_2022_3_OR_NEWER
                 displayIndex = touchControl.displayIndex.ReadValue();
                 #endif
             }
@@ -164,7 +164,7 @@ namespace UnityEngine.InputSystem.UI
                 pressure = touchscreen.pressure.magnitude;
                 radius = touchscreen.radius.value;
                 #endif
-                #if UNITY_2023_1_OR_NEWER
+                #if UNITY_2022_3_OR_NEWER
                 displayIndex = touchscreen.displayIndex.ReadValue();
                 #endif
             }

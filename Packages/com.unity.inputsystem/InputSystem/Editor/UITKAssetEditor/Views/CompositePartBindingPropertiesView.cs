@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");
 
             CreateSelector(Selectors.GetSelectedBinding,
-                Selectors.GetCompositePartBindingViewState);
+                (b, s) => !b.HasValue ? null : Selectors.GetCompositePartBindingViewState(b.Value, s));
         }
 
         public override void RedrawUI(ViewState viewState)

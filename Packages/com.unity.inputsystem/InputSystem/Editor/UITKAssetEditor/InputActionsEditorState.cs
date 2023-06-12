@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -174,13 +174,15 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState SelectBinding(int index)
         {
+            //if no binding selected (due to no bindings in list) set selection type to action
             if (index == -1)
                 return With(selectedBindingIndex: index, selectionType: SelectionType.Action);
             return With(selectedBindingIndex: index);
         }
 
-        public InputActionsEditorState SelectAction(int? index)
+        public InputActionsEditorState SelectAction(int index)
         {
+            //if no action selected (no actions available) set selection type to none
             if (index == -1)
                 return With(selectedActionIndex: index, selectionType: SelectionType.None);
             return With(selectedActionIndex: index);

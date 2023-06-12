@@ -345,6 +345,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var bindingFlags = (InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue;
             var isComposite = (bindingFlags & InputBinding.Flags.Composite) != 0;
+            // If it's a composite, delete all its parts first.
             if (isComposite)
             {
                 for (var partIndex = bindingIndex + 1; partIndex < bindingArrayProperty.arraySize;)
@@ -362,7 +363,6 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void DeleteBinding(SerializedProperty bindingArrayProperty, Guid id)
         {
-            // If it's a composite, delete all its parts first.
             var bindingIndex = GetIndex(bindingArrayProperty, id);
             var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
             DeleteBinding(bindingProperty, bindingArrayProperty, bindingIndex);

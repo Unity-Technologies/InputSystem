@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -75,12 +75,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void RenameNewActionMaps()
         {
-            if (!mapAdded)
+            if (!m_EnterRenamingMode)
                 return;
             m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
-            mapAdded = false;
+            m_EnterRenamingMode = false;
         }
 
         private void DeleteActionMap(int index)
@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem.Editor
         private void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
-            mapAdded = true;
+            m_EnterRenamingMode = true;
         }
 
         private void OnKeyDownEvent(KeyDownEvent e)
@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem.Editor
             item.DeleteItem();
         }
 
-        private bool mapAdded;
+        private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
         private ListView m_ListView;
 

@@ -1,8 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_2022_1_OR_NEWER
-using System;
-using System.Collections;
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -22,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
         public event EventCallback<string> EditTextFinished;
         public event EventCallback<int> OnDeleteItem;
 
-        private bool isEditing;
+        private bool m_IsEditing;
 
         public InputActionsTreeViewItem()
         {
@@ -75,12 +73,12 @@ namespace UnityEngine.InputSystem.Editor
         public void Reset()
         {
             EditTextFinished = null;
-            isEditing = false;
+            m_IsEditing = false;
         }
 
         public void FocusOnRenameTextField()
         {
-            if (isEditing)
+            if (m_IsEditing)
                 return;
             delegatesFocus = true;
 
@@ -93,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
             DelayCall();
             renameTextfield.SelectAll();
 
-            isEditing = true;
+            m_IsEditing = true;
         }
 
         async void DelayCall()
@@ -109,7 +107,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnEditTextFinished()
         {
-            if (!isEditing)
+            if (!m_IsEditing)
                 return;
             lastSingleClick = 0;
             delegatesFocus = false;
@@ -129,7 +127,7 @@ namespace UnityEngine.InputSystem.Editor
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
 
             EditTextFinished?.Invoke(text);
-            isEditing = false;
+            m_IsEditing = false;
         }
     }
 }
