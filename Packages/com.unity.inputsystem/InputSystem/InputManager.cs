@@ -2940,9 +2940,8 @@ namespace UnityEngine.InputSystem
                 );
 
 
-            bool dropStatusEvents = false;
-
 #if UNITY_EDITOR
+            var dropStatusEvents = false;
             if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
             {
                 // If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
