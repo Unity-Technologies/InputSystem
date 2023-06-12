@@ -725,7 +725,7 @@ namespace UnityEngine.InputSystem
         {
             // Check to see that there is a match with the name or alias if specified
             // Exit early if we can't create a match.
-            if (!StringMatches(expectedControlComponent.m_Name, controlItem.name))
+            if (!expectedControlComponent.m_Name.isEmpty && !StringMatches(expectedControlComponent.m_Name, controlItem.name))
             {
                 if (matchAlias)
                 {
@@ -741,7 +741,7 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
-                    if(!hasMatchingAlias)
+                    if (!hasMatchingAlias)
                         return false;
                 }
                 else
