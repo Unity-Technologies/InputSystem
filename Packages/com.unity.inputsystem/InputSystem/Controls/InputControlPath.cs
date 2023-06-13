@@ -747,7 +747,7 @@ namespace UnityEngine.InputSystem
                 else
                     return false;
             }
-                   
+
 
             // All of usages should match to the one of usage in the control
             foreach (var usage in expectedControlComponent.m_Usages)

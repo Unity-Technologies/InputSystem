@@ -2588,7 +2588,6 @@ partial class CoreTests
         // Verify that we match usages when it is the only control path component provided
         var parsedUsagesPath = InputControlPath.Parse("<BaseLayout>/{Submit}").ToArray()[1];
         Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(in parsedUsagesPath, ref x)), Is.True);
-
     }
 
     [Test]
