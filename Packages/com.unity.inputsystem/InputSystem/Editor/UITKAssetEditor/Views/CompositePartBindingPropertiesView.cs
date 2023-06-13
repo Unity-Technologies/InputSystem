@@ -29,11 +29,13 @@ namespace UnityEngine.InputSystem.Editor
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");
 
             CreateSelector(Selectors.GetSelectedBinding,
-                (b, s) => !b.HasValue ? null : Selectors.GetCompositePartBindingViewState(b.Value, s));
+                (b, s) => b.HasValue && b.Value.isPartOfComposite ? Selectors.GetCompositePartBindingViewState(b.Value, s) : null);
         }
 
         public override void RedrawUI(ViewState viewState)
         {
+            if (viewState == null)
+                return;
             // TODO: Persist control picker state
             var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                 () => { Dispatch(Commands.ApplyModifiedProperties()); });
@@ -64,22 +66,20 @@ namespace UnityEngine.InputSystem.Editor
 
     internal static partial class Selectors
     {
-        public static CompositePartBindingPropertiesView.ViewState GetCompositePartBindingViewState(SerializedInputBinding? binding,
+        public static CompositePartBindingPropertiesView.ViewState GetCompositePartBindingViewState(SerializedInputBinding binding,
             InputActionsEditorState state)
         {
-            if (!binding.HasValue)
-                return null;
-            var compositeParts = GetCompositePartOptions(binding.Value.name, binding.Value.compositePath).ToList();
+            var compositeParts = GetCompositePartOptions(binding.name, binding.compositePath).ToList();
             var selectedCompositePartName = ObjectNames.NicifyVariableName(
-                compositeParts.First(str => string.Equals(str, binding.Value.name, StringComparison.OrdinalIgnoreCase)));
+                compositeParts.First(str => string.Equals(str, binding.name, StringComparison.OrdinalIgnoreCase)));
 
             var compositePartBindingViewState = new CompositePartBindingPropertiesView.ViewState
             {
-                selectedBinding = binding.Value,
+                selectedBinding = binding,
                 selectedBindingPath = GetSelectedBindingPath(state),
                 selectedCompositePartName = selectedCompositePartName,
                 compositePartNames = compositeParts.Select(ObjectNames.NicifyVariableName).ToList(),
-                expectedControlLayoutName = InputBindingComposite.GetExpectedControlLayoutName(binding.Value.compositePath, binding.Value.name) ?? ""
+                expectedControlLayoutName = InputBindingComposite.GetExpectedControlLayoutName(binding.compositePath, binding.name) ?? ""
             };
             return compositePartBindingViewState;
         }
