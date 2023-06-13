@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class ActionPropertiesView : ViewBase<(SerializedInputAction, List<string>)>
+    internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
         private readonly VisualElement m_Root;
 
@@ -18,12 +18,19 @@ namespace UnityEngine.InputSystem.Editor
 
             // TODO: Consider IEquatable<T> and how to compare selector data
             CreateSelector(Selectors.GetSelectedAction,
-                (inputAction, _) => (inputAction, Selectors.BuildSortedControlList(inputAction.type).ToList()));
+                (inputAction, _) =>
+                {
+                    if (!inputAction.HasValue)
+                        return (null, new List<string>());
+                    return (inputAction.Value, Selectors.BuildSortedControlList(inputAction.Value.type).ToList());
+                });
         }
 
-        public override void RedrawUI((SerializedInputAction, List<string>) viewState)
+        public override void RedrawUI((SerializedInputAction ? , List<string>) viewState)
         {
-            var inputAction = viewState.Item1;
+            if (!viewState.Item1.HasValue)
+                return;
+            var inputAction = viewState.Item1.Value;
 
             m_Root.Clear();
 
