@@ -335,13 +335,18 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static void DeleteBinding(SerializedProperty bindingArrayProperty, Guid id)
+        public static void DeleteBinding(SerializedProperty binding, SerializedProperty actionMap)
         {
-            // If it's a composite, delete all its parts first.
-            var bindingIndex = GetIndex(bindingArrayProperty, id);
-            var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
+            var bindingsProperty = actionMap.FindPropertyRelative("m_Bindings");
+            DeleteBinding(binding, bindingsProperty, binding.GetIndexOfArrayElement());
+        }
+
+        private static void DeleteBinding(SerializedProperty bindingProperty, SerializedProperty bindingArrayProperty, int bindingIndex)
+        {
             var bindingFlags = (InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue;
-            if ((bindingFlags & InputBinding.Flags.Composite) != 0)
+            var isComposite = (bindingFlags & InputBinding.Flags.Composite) != 0;
+            // If it's a composite, delete all its parts first.
+            if (isComposite)
             {
                 for (var partIndex = bindingIndex + 1; partIndex < bindingArrayProperty.arraySize;)
                 {
@@ -354,6 +359,13 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             bindingArrayProperty.DeleteArrayElementAtIndex(bindingIndex);
+        }
+
+        public static void DeleteBinding(SerializedProperty bindingArrayProperty, Guid id)
+        {
+            var bindingIndex = GetIndex(bindingArrayProperty, id);
+            var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
+            DeleteBinding(bindingProperty, bindingArrayProperty, bindingIndex);
         }
 
         public static void AssignUniqueIDs(SerializedProperty element)
@@ -439,7 +451,7 @@ namespace UnityEngine.InputSystem.Editor
             // Make sure name is unique in InputActionAsset.
             var assetObject = actionMapProperty.serializedObject;
             var mapsArrayProperty = assetObject.FindProperty("m_ActionMaps");
-            var uniqueName = FindUniqueName(mapsArrayProperty, newName);
+            var uniqueName = FindUniqueName(mapsArrayProperty, newName, actionMapProperty.GetIndexOfArrayElement());
 
             // Assign to map.
             var nameProperty = actionMapProperty.FindPropertyRelative("m_Name");

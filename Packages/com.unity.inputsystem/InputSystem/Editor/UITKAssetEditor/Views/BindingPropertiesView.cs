@@ -39,15 +39,17 @@ namespace UnityEngine.InputSystem.Editor
             m_Root.Clear();
 
             var binding = viewState.selectedBinding;
-            if (binding.isComposite)
+            if (!binding.HasValue)
+                return;
+            if (binding.Value.isComposite)
             {
                 m_ParentFoldout.text = "Composite";
                 m_CompositeBindingPropertiesView = CreateChildView(new CompositeBindingPropertiesView(m_Root, stateContainer));
             }
-            else if (binding.isPartOfComposite)
+            else if (binding.Value.isPartOfComposite)
             {
                 m_CompositePartBindingPropertiesView = CreateChildView(new CompositePartBindingPropertiesView(m_Root, stateContainer));
-                DrawControlSchemeToggles(viewState, binding);
+                DrawControlSchemeToggles(viewState, binding.Value);
             }
             else
             {
@@ -57,12 +59,12 @@ namespace UnityEngine.InputSystem.Editor
                     () => { Dispatch(Commands.ApplyModifiedProperties()); });
 
                 var inputAction = viewState.selectedInputAction;
-                controlPathEditor.SetExpectedControlLayout(inputAction.expectedControlType ?? "");
+                controlPathEditor.SetExpectedControlLayout(inputAction?.expectedControlType ?? "");
 
                 var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
                 m_Root.Add(controlPathContainer);
 
-                DrawControlSchemeToggles(viewState, binding);
+                DrawControlSchemeToggles(viewState, binding.Value);
             }
         }
 
@@ -96,10 +98,10 @@ namespace UnityEngine.InputSystem.Editor
         internal class ViewState
         {
             public int selectedBindingIndex;
-            public SerializedInputBinding selectedBinding;
+            public SerializedInputBinding? selectedBinding;
             public ViewStateCollection<InputControlScheme> controlSchemes;
             public SerializedProperty selectedBindingPath;
-            public SerializedInputAction selectedInputAction;
+            public SerializedInputAction? selectedInputAction;
         }
     }
 }
