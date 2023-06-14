@@ -154,10 +154,19 @@ namespace UnityEngine.InputSystem.Editor
             CreateContextMenuProcessor(inputAction?.expectedControlType, inputActionOrBinding);
             CreateContextMenuInteraction(inputAction?.expectedControlType, inputActionOrBinding);
 
-            m_InteractionsListView = CreateChildView(new NameAndParametersListView(
-                interactionsFoldout,
-                stateContainer,
-                state => Selectors.GetInteractionsAsParameterListViews(state, inputAction)));
+            var isPartOfComposite = viewState.selectionType == SelectionType.Binding &&
+                viewState.inputBinding?.isPartOfComposite == true;
+            //don't show for Bindings in Composites
+            if (!isPartOfComposite)
+            {
+                interactionsFoldout.style.display = DisplayStyle.Flex;
+                m_InteractionsListView = CreateChildView(new NameAndParametersListView(
+                    interactionsFoldout,
+                    stateContainer,
+                    state => Selectors.GetInteractionsAsParameterListViews(state, inputAction)));
+            }
+            else
+                interactionsFoldout.style.display = DisplayStyle.None;
 
 
             m_ProcessorsListView = CreateChildView(new NameAndParametersListView(
