@@ -27,14 +27,14 @@ namespace UnityEngine.InputSystem.Editor
 
             CreateSelector(
                 Selectors.GetSelectedAction,
-                Selectors.GetRelatedInputAction,
+                Selectors.GetSelectedBinding,
                 state => state.selectionType,
-                (inputAction, relatedInputAction, selectionType, s) => new ViewState()
+                (inputAction, inputBinding, selectionType, s) => new ViewState()
                 {
                     selectionType = selectionType,
                     serializedInputAction = inputAction,
-                    inputBinding = Selectors.GetSelectedBinding(s),
-                    relatedInputAction = relatedInputAction
+                    inputBinding = inputBinding,
+                    relatedInputAction = Selectors.GetRelatedInputAction(s)
                 });
 
             var interactionsToggle = interactionsFoldout.Q<Toggle>();
