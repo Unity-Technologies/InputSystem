@@ -74,6 +74,18 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public static bool HasChildLayouts(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
+            Refresh();
+
+            var internedLayout = new InternedString(layoutName);
+            // return nothing is the layout does not have any derivations
+            return s_DeviceChildLayouts.TryGetValue(internedLayout, out var derivations) && derivations.Count > 0;
+        }
+
         public static IEnumerable<InputControlLayout> TryGetChildLayouts(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
