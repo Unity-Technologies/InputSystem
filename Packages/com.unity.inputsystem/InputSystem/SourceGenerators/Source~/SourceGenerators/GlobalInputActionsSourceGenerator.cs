@@ -34,11 +34,15 @@ namespace Unity.InputSystem.SourceGenerators
             if (!IsBuildTime)
                 return;
 
+            // TODO(JIM): Disabling this for now as it creates a chicken and egg scenario. Types are not available if not used,
+            // but then how could you begin to use them if the SourceGenerator didn't run first?
+            // Also note the mention about InputActions needing to be internal - it really needs to be public.
+
             // only generate the InputActions class for assemblies that have references to it. This means the class
             // might end up in multiple user assemblies, which is why they're all internal.
-            if (context.SyntaxReceiver is not InputActionsSyntaxReceiver syntaxReceiver ||
-                syntaxReceiver.InputActionsReferences.Count == 0)
-                return;
+            //if (context.SyntaxReceiver is not InputActionsSyntaxReceiver syntaxReceiver ||
+            //    syntaxReceiver.InputActionsReferences.Count == 0)
+            //    return;
 
             context.CancellationToken.ThrowIfCancellationRequested();
 
