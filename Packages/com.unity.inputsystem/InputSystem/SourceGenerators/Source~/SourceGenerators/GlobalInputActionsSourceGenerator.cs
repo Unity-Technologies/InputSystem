@@ -153,10 +153,14 @@ using Input=UnityEngine.InputSystem.HighLevel.Input;
 
         private string GetInputActionWrapperType(InputAction inputAction)
         {
-            if (string.IsNullOrEmpty(inputAction.Interactions))
-                return $"Input<{GetTypeFromExpectedType(inputAction.ExpectedControlType)}>";
+            // TODO(JIM): what was the alternative (with Interactions) path supposed to do?
+            //if (string.IsNullOrEmpty(inputAction.Interactions))
+            return $"Input<{GetTypeFromExpectedType(inputAction.ExpectedControlType)}>";
 
-            return $"{inputAction.Name}Input";
+            // TODO(JIM): InteractiveInput type doesn't exist - Should it, is it required?
+            // interact = new InteractInput(Input.globalActions.FindAction("FPS/Interact")); -> This unknown type ???
+            // jump = new Input<Single>(Input.globalActions.FindAction("FPS/Jump"));   -> normal action
+            //return $"{inputAction.Name}Input";
         }
 
         private string GenerateInputActionProperties(ActionMap actionMap)
