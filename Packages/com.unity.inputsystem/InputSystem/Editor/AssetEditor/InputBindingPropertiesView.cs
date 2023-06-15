@@ -136,7 +136,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 var rootDeviceLayout = EditorInputControlLayoutCache.TryGetLayout(deviceLayoutPath);
                 bool isValidDeviceLayout = deviceLayoutPath != InputControlPath.Wildcard && rootDeviceLayout != null && !rootDeviceLayout.isOverride && !rootDeviceLayout.hideInUI;
-                // Exit early if a malformed device layout was provided, 
+                // Exit early if a malformed device layout was provided,
                 if (!isValidDeviceLayout)
                     return;
 
@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!controlPathUsagePresent && !hasChildDeviceLayouts)
                     return;
 
-                // Otherwise, we will show either all controls that match the current binding (if control usages are used) 
+                // Otherwise, we will show either all controls that match the current binding (if control usages are used)
                 // or all controls in derived device layouts (if a no control usages are used).
                 EditorGUILayout.BeginVertical();
                 if (controlPathUsagePresent)
