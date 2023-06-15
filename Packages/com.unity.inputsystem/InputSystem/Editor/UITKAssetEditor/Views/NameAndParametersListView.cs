@@ -66,6 +66,14 @@ namespace UnityEngine.InputSystem.Editor
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
+        private void OnParametersChanged(ParameterListView listView, int index)
+        {
+            var interactionsOrProcessorsList = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToList();
+            interactionsOrProcessorsList[index] = new NameAndParameters { name = interactionsOrProcessorsList[index].name, parameters = listView.GetParameters() };
+            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessorsList);
+            m_ListProperty.serializedObject.ApplyModifiedProperties();
+        }
+
         private static string ToSerializableString(IEnumerable<NameAndParameters> parametersForEachListItem)
         {
             if (parametersForEachListItem == null)
@@ -98,6 +106,7 @@ namespace UnityEngine.InputSystem.Editor
                 void OnSwap(bool b) => MoveElement(index, b);
                 void OnDelete() => DeleteElement(index);
                 new NameAndParametersListViewItem(m_ContentContainer, parameterListViews[i], OnSwap, OnDelete);
+                parameterListViews[i].onChange += () => OnParametersChanged(parameterListViews[index], index);
             }
         }
 
