@@ -84,8 +84,7 @@ namespace UnityEngine.InputSystem.Editor
                             continue;
                     }
                     var niceName = ObjectNames.NicifyVariableName(name);
-                    var oldProcessors = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Processors));
-                    evt.menu.AppendAction(niceName, _ => m_ProcessorsListView.OnAddElement(name.ToString(), oldProcessors, oldProcessors.stringValue));
+                    evt.menu.AppendAction(niceName, _ => m_ProcessorsListView.OnAddElement(name.ToString()));
                 }
             });
         }
@@ -111,8 +110,7 @@ namespace UnityEngine.InputSystem.Editor
                     }
 
                     var niceName = ObjectNames.NicifyVariableName(name);
-                    var oldInteractions = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Interactions));
-                    evt.menu.AppendAction(niceName, _ => m_InteractionsListView.OnAddElement(name.ToString(), oldInteractions, oldInteractions.stringValue));
+                    evt.menu.AppendAction(niceName, _ => m_InteractionsListView.OnAddElement(name.ToString()));
                 }
             });
         }
@@ -163,6 +161,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_InteractionsListView = CreateChildView(new NameAndParametersListView(
                     interactionsFoldout,
                     stateContainer,
+                    inputActionOrBinding?.FindPropertyRelative(nameof(InputAction.m_Interactions)),
                     state => Selectors.GetInteractionsAsParameterListViews(state, inputAction)));
             }
             else
@@ -172,6 +171,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ProcessorsListView = CreateChildView(new NameAndParametersListView(
                 processorsFoldout,
                 stateContainer,
+                inputActionOrBinding?.FindPropertyRelative(nameof(InputAction.m_Processors)),
                 state => Selectors.GetProcessorsAsParameterListViews(state, inputAction)));
         }
 
