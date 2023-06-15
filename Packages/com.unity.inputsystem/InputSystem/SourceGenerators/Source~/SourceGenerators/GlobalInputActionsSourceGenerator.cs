@@ -95,7 +95,7 @@ using UnityEngine.InputSystem.HighLevel;
 using Input=UnityEngine.InputSystem.HighLevel.Input;
 
 
-    internal static partial class InputActions
+    public static partial class InputActions
     {
 
 """;
