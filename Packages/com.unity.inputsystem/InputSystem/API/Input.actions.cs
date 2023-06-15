@@ -18,8 +18,6 @@ namespace UnityEngine.InputSystem.HighLevel
         internal const string kGlobalActionsAssetName = "GlobalInputActions";
         internal const string kGlobalActionsAssetConfigKey = "com.unity.inputsystem.globalactionsasset";
 
-        public static IInputActionCollection2 globalActions => s_GlobalActions;
-
         /// <summary>
         /// True if the specified action is currently pressed.
         /// </summary>
@@ -28,9 +26,9 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsControlPressed(string actionName, string actionMapName = "")
         {
-            Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+            Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
 
-            var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName)
+            var action = InputSystem.actions?.FindAction(string.IsNullOrEmpty(actionMapName)
                 ? actionName
                 : $"{actionMapName}/{actionName}");
             return action != null && action.IsPressed();
@@ -44,9 +42,9 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsControlDown(string actionName, string actionMapName = "")
         {
-            Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+            Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
 
-            var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName)
+            var action = InputSystem.actions?.FindAction(string.IsNullOrEmpty(actionMapName)
                 ? actionName
                 : $"{actionMapName}/{actionName}");
             return action != null && action.WasPressedThisFrame();
@@ -60,9 +58,9 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <returns></returns>
         public static bool IsControlUp(string actionName, string actionMapName = "")
         {
-            Debug.Assert(s_GlobalActions != null, "Global actions have not been correctly initialized");
+            Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
 
-            var action = s_GlobalActions?.FindAction(string.IsNullOrEmpty(actionMapName)
+            var action = InputSystem.actions?.FindAction(string.IsNullOrEmpty(actionMapName)
                 ? actionName
                 : $"{actionMapName}/{actionName}");
             return action != null && action.WasReleasedThisFrame();
@@ -89,9 +87,7 @@ namespace UnityEngine.InputSystem.HighLevel
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
 
-            s_GlobalActions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
-
-            s_GlobalActions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
+            InputSystem.actions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
 #else
             // find the source generated global actions runtime file in the users assembly and use it to load the
             // runtime actions
@@ -104,29 +100,27 @@ namespace UnityEngine.InputSystem.HighLevel
             else
             {
                 var runtimeAssetLoader = (IGlobalActionsRuntimeAsset)Activator.CreateInstance(runtimeAssetLoaderType);
-                s_GlobalActions = runtimeAssetLoader.Load();
+                InputSystem.actions = runtimeAssetLoader.Load();
             }
 #endif
-            if (s_GlobalActions == null)
+            if (InputSystem.actions == null)
             {
                 Debug.LogError($"Couldn't initialize global input actions");
                 return;
             }
 
             // TODO: Once the source generator is running, only the actions that have actually been used should be enabled
-            s_GlobalActions.Enable();
+            InputSystem.actions.Enable();
         }
 
         internal static void ShutdownGlobalActions()
         {
-            if (s_GlobalActions == null)
+            if (InputSystem.actions == null)
                 return;
 
-            s_GlobalActions.Disable();
-            s_GlobalActions = null;
+            InputSystem.actions.Disable();
+            InputSystem.actions = null;
         }
-
-        private static InputActionAsset s_GlobalActions;
     }
 
     public interface IGlobalActionsRuntimeAsset

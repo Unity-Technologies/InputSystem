@@ -1,11 +1,9 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEditorInternal;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
-using UnityEngine.UIElements;
 
 ////TODO: add way to retrieve the binding correspond to a control
 

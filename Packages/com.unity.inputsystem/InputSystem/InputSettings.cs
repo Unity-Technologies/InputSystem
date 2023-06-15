@@ -713,6 +713,24 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// The global set of actions.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        /// <seealso cref="InputSystem.actions"/>
+        public InputActionAsset actions
+        {
+            get => m_GlobalInputActionsAsset;
+            set
+            {
+                m_GlobalInputActionsAsset?.Disable();
+                m_GlobalInputActionsAsset = value;
+                m_GlobalInputActionsAsset?.Enable();
+            }
+        }
+
+        /// <summary>
         /// Enable or disable an internal feature by its name.
         /// </summary>
         /// <param name="featureName">Name of the feature.</param>

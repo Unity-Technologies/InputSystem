@@ -110,7 +110,7 @@ using Input=UnityEngine.InputSystem.HighLevel.Input;
                         public {{GenerateInputActionMapClassName(actionMap)}}()
                         {
                             {{actionMap.Actions.Render(a =>
-                                $"{FormatFieldName(a.Name)} = new {GetInputActionWrapperType(a)}(Input.globalActions.FindAction(\"{actionMap.Name}/{a.Name}\"));{Environment.NewLine}")}}
+                                $"{FormatFieldName(a.Name)} = new {GetInputActionWrapperType(a)}(InputSystem.actions.FindAction(\"{actionMap.Name}/{a.Name}\"));{Environment.NewLine}")}}
                         }
 
                         {{GenerateInputActionProperties(actionMap)}}

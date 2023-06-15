@@ -65,7 +65,7 @@ internal partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        Input.globalActions.FindAction("ActionOne").AddBinding("<keyboard>/w");
+        InputSystem.actions.FindAction("ActionOne").AddBinding("<keyboard>/w");
 
         Set(keyboard.wKey, 1);
 

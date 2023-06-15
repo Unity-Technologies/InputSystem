@@ -2923,6 +2923,19 @@ namespace UnityEngine.InputSystem
         #region Actions
 
         /// <summary>
+        /// The set of globally active input actions.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        /// <seealso cref="InputSettings.actions"/>
+        public static InputActionAsset actions
+        {
+            get => settings.actions;
+            set => settings.actions = value;
+        }
+
+        /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
         /// </summary>
@@ -3394,8 +3407,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_2020_2_OR_NEWER
                     if (!settings.disableHighLevelAPI)
                     {
-                        HighLevel.Input.Initialize();
-                        HighLevel.Input.InitializeGlobalActions(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
+                        HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
                     }
 #endif
                     break;
