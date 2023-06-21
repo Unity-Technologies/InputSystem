@@ -250,16 +250,20 @@ namespace UnityEngine.InputSystem.Editor
                 };
                 m_OpenInputSettingsButton = new Button(InputSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
                 m_OpenInputSettingsButton.AddToClassList("open-settings-button");
-                buttonContainer.Add(m_OpenInputSettingsButton);
 
                 settingsContainer.Add(m_FloatField);
                 settingsContainer.Add(m_DefaultToggle);
                 container.Add(settingsContainer);
-                container.Add(m_HelpBox);
+
+                //only add inputSettingsButton and help box if default is enabled
+                if (m_UseDefaultValue)
+                {
+                    buttonContainer.Add(m_OpenInputSettingsButton);
+                    container.Add(m_HelpBox);
+                }
+
                 container.Add(buttonContainer);
 
-                m_HelpBox.visible = m_UseDefaultValue;
-                m_OpenInputSettingsButton.visible = m_UseDefaultValue;
                 root.Add(container);
             }
 
@@ -295,10 +299,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 m_UseDefaultValue = evt.newValue;
-
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
-                m_HelpBox.visible = m_UseDefaultValue;
-                m_OpenInputSettingsButton.visible = m_UseDefaultValue;
             }
 
 #endif
