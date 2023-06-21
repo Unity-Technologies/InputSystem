@@ -258,6 +258,8 @@ namespace UnityEngine.InputSystem.Editor
                 container.Add(m_HelpBox);
                 container.Add(buttonContainer);
 
+                m_HelpBox.visible = m_UseDefaultValue;
+                m_OpenInputSettingsButton.visible = m_UseDefaultValue;
                 root.Add(container);
             }
 
