@@ -3886,6 +3886,7 @@ internal class UITests : CoreTestsFixture
 #if UNITY_TVOS
     [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
 #endif
+    [Ignore("Failing on 2023.3.3f1 https://jira.unity3d.com/browse/ISX-1462")]
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
         // Setup the Test Scene
@@ -3987,6 +3988,7 @@ internal class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+    [Ignore("Failing on 2023.3.3f1 https://jira.unity3d.com/browse/ISX-1462")]
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnOverlayCanvas()
     {
         // Setup the Test Scene
