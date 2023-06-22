@@ -142,12 +142,20 @@
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
 }
 
+.name-and-parameters-list-view .upActive {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronUp.png');
+}
+
 .name-and-parameters-list-view .down {
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronDown.png');
 }
 
+.name-and-parameters-list-view .downActive {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronDown.png');
+}
+
 .name-and-parameters-list-view .delete {
-    background-image: resource('Toolbar Minus.png');
+    background-image: resource('d_Toolbar Minus.png');
 }
 
 .search-field {

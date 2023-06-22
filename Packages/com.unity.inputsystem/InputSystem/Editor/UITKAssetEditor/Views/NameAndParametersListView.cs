@@ -103,9 +103,15 @@ namespace UnityEngine.InputSystem.Editor
             for (int i = 0; i < parameterListViews.Count; i++)
             {
                 var index = i;
-                void OnSwap(bool b) => MoveElement(index, b);
-                void OnDelete() => DeleteElement(index);
-                new NameAndParametersListViewItem(m_ContentContainer, parameterListViews[i], OnSwap, OnDelete);
+                var buttonProperties = new ButtonProperties()
+                {
+                    onClickDown = () => MoveElement(index, false),
+                    onClickUp = () => MoveElement(index, true),
+                    onDelete = () => DeleteElement(index),
+                    isDownButtonActive = index < parameterListViews.Count - 1,
+                    isUpButtonActive = index > 0
+                };
+                new NameAndParametersListViewItem(m_ContentContainer, parameterListViews[i], buttonProperties);
                 parameterListViews[i].onChange += () => OnParametersChanged(parameterListViews[index], index);
             }
         }
@@ -120,9 +126,18 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 
+    internal struct ButtonProperties
+    {
+        public Action onClickUp;
+        public Action onClickDown;
+        public Action onDelete;
+        public bool isUpButtonActive;
+        public bool isDownButtonActive;
+    }
+
     internal class NameAndParametersListViewItem
     {
-        public NameAndParametersListViewItem(VisualElement root, ParameterListView parameterListView, Action<bool> onSwap, Action onDelete)
+        public NameAndParametersListViewItem(VisualElement root, ParameterListView parameterListView, ButtonProperties buttonProperties)
         {
             var itemTemplate = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 InputActionsEditorConstants.PackagePath +
@@ -135,19 +150,19 @@ namespace UnityEngine.InputSystem.Editor
             var header = container.Q<Toggle>();
 
             var moveItemUpButton = new Button();
-            moveItemUpButton.AddToClassList("up");
+            moveItemUpButton.AddToClassList(buttonProperties.isUpButtonActive ? "upActive" : "up");
             moveItemUpButton.AddToClassList("name-and-parameters-list-foldout-button");
-            moveItemUpButton.clicked += () => onSwap.Invoke(true);
+            moveItemUpButton.clicked += buttonProperties.onClickUp;
 
             var moveItemDownButton = new Button();
-            moveItemDownButton.AddToClassList("down");
+            moveItemDownButton.AddToClassList(buttonProperties.isDownButtonActive ? "downActive" : "down");
             moveItemDownButton.AddToClassList("name-and-parameters-list-foldout-button");
-            moveItemDownButton.clicked += () => onSwap.Invoke(false);
+            moveItemDownButton.clicked += buttonProperties.onClickDown;
 
             var deleteItemButton = new Button();
             deleteItemButton.AddToClassList("delete");
             deleteItemButton.AddToClassList("name-and-parameters-list-foldout-button");
-            deleteItemButton.clicked += onDelete.Invoke;
+            deleteItemButton.clicked += buttonProperties.onDelete;
 
             header.Add(moveItemUpButton);
             header.Add(moveItemDownButton);
