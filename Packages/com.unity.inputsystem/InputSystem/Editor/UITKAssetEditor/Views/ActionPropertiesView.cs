@@ -67,6 +67,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
                 };
+                initialStateCheck.SetValueWithoutNotify(inputAction.initialStateCheck);
                 initialStateCheck.RegisterValueChangedCallback(evt =>
                 {
                     Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));
