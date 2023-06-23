@@ -68,6 +68,22 @@ public class IntegrationTests
         var dummy = new System.ComponentModel.StringConverter();
     }
 
+    [SetUp]
+    public virtual void Setup()
+    {
+        // The standalone player can go out of focus when running tests. This makes the devices added during tests set
+        // as disabled. Which in turn makes the InputSystem update not process input state changes for devices.
+        // By ignoring focus, we can protect ourselves against this and always update the device state in the standalone
+        // test players
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+    }
+
+    [TearDown]
+    public virtual void TearDown()
+    {
+        InputSystem.settings.backgroundBehavior = default;
+    }
+
     [Test]
     [Category("Integration")]
     public void Integration_CanSendAndReceiveEvents()
