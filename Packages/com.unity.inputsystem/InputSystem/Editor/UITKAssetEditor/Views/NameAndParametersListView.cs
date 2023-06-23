@@ -155,17 +155,19 @@ namespace UnityEngine.InputSystem.Editor
             var header = container.Q<Toggle>();
 
             var moveItemUpButton = new Button();
-            moveItemUpButton.AddToClassList(buttonProperties.isUpButtonActive ? "upActive" : "up");
+            moveItemUpButton.AddToClassList(EditorGUIUtility.isProSkin ? "upDarkTheme" : "up");
             moveItemUpButton.AddToClassList("name-and-parameters-list-foldout-button");
+            moveItemUpButton.SetEnabled(buttonProperties.isUpButtonActive);
             moveItemUpButton.clicked += buttonProperties.onClickUp;
 
             var moveItemDownButton = new Button();
-            moveItemDownButton.AddToClassList(buttonProperties.isDownButtonActive ? "downActive" : "down");
+            moveItemDownButton.AddToClassList(EditorGUIUtility.isProSkin ? "downDarkTheme" : "down");
             moveItemDownButton.AddToClassList("name-and-parameters-list-foldout-button");
+            moveItemDownButton.SetEnabled(buttonProperties.isDownButtonActive);
             moveItemDownButton.clicked += buttonProperties.onClickDown;
 
             var deleteItemButton = new Button();
-            deleteItemButton.AddToClassList("delete");
+            deleteItemButton.AddToClassList(EditorGUIUtility.isProSkin ? "deleteDarkTheme" : "delete");
             deleteItemButton.AddToClassList("name-and-parameters-list-foldout-button");
             deleteItemButton.clicked += buttonProperties.onDelete;
 

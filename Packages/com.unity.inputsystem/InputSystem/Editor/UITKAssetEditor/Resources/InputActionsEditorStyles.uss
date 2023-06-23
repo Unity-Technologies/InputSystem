@@ -142,7 +142,7 @@
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
 }
 
-.name-and-parameters-list-view .upActive {
+.name-and-parameters-list-view .upDarkTheme {
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronUp.png');
 }
 
@@ -150,11 +150,14 @@
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronDown.png');
 }
 
-.name-and-parameters-list-view .downActive {
+.name-and-parameters-list-view .downDarkTheme {
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronDown.png');
 }
 
 .name-and-parameters-list-view .delete {
+    background-image: resource('Toolbar Minus.png');
+}
+.name-and-parameters-list-view .deleteDarkTheme {
     background-image: resource('d_Toolbar Minus.png');
 }
 
