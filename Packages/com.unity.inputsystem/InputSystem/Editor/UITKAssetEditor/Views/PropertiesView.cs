@@ -63,56 +63,60 @@ namespace UnityEngine.InputSystem.Editor
             return addProcessorButton;
         }
 
-        private void CreateContextMenuProcessor(string expectedControlType, SerializedProperty serializedProperty)
+        private void CreateContextMenuProcessor(string expectedControlType)
         {
             var processors = InputProcessor.s_Processors;
-            Type expectedValueType = null;
-            if (!string.IsNullOrEmpty(expectedControlType))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(expectedControlType);
-
+            Type expectedValueType = string.IsNullOrEmpty(expectedControlType) ? null : EditorInputControlLayoutCache.GetValueType(expectedControlType);
             addProcessorButton.RegisterCallback<ContextualMenuPopulateEvent>(evt =>
             {
                 evt.menu.ClearItems();
                 foreach (var name in processors.internedNames.Where(x => !processors.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
                 {
                     // Skip if not compatible with value type.
-                    if (expectedValueType != null)
-                    {
-                        var type = processors.LookupTypeRegistration(name);
-                        var valueType = InputProcessor.GetValueTypeFromType(type);
-                        if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
-                            continue;
-                    }
+                    if (!IsValidProcessorForControl(expectedValueType, name))
+                        continue;
                     var niceName = ObjectNames.NicifyVariableName(name);
                     evt.menu.AppendAction(niceName, _ => m_ProcessorsListView.OnAddElement(name.ToString()));
                 }
             });
         }
 
-        private void CreateContextMenuInteraction(string expectedControlType, SerializedProperty serializedProperty)
+        private bool IsValidProcessorForControl(Type expectedValueType, string name)
+        {
+            if (expectedValueType == null) return true;
+            var type = InputProcessor.s_Processors.LookupTypeRegistration(name);
+            var valueType = InputProcessor.GetValueTypeFromType(type);
+            if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
+                return false;
+            return true;
+        }
+
+        private void CreateContextMenuInteraction(string expectedControlType)
         {
             var interactions = InputInteraction.s_Interactions;
-            Type expectedValueType = null;
-            if (!string.IsNullOrEmpty(expectedControlType))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(expectedControlType);
+            Type expectedValueType = string.IsNullOrEmpty(expectedControlType) ? null : EditorInputControlLayoutCache.GetValueType(expectedControlType);
             addInteractionButton.RegisterCallback<ContextualMenuPopulateEvent>(evt =>
             {
                 evt.menu.ClearItems();
                 foreach (var name in interactions.internedNames.Where(x => !interactions.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
                 {
                     // Skip if not compatible with value type.
-                    if (expectedValueType != null)
-                    {
-                        var type = interactions.LookupTypeRegistration(name);
-                        var valueType = InputInteraction.GetValueType(type);
-                        if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
-                            continue;
-                    }
-
+                    if (!IsValidInteractionForControl(expectedValueType, name))
+                        continue;
                     var niceName = ObjectNames.NicifyVariableName(name);
                     evt.menu.AppendAction(niceName, _ => m_InteractionsListView.OnAddElement(name.ToString()));
                 }
             });
+        }
+
+        private bool IsValidInteractionForControl(Type expectedValueType, string name)
+        {
+            if (expectedValueType == null) return true;
+            var type = InputInteraction.s_Interactions.LookupTypeRegistration(name);
+            var valueType = InputInteraction.GetValueType(type);
+            if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
+                return false;
+            return true;
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -149,8 +153,8 @@ namespace UnityEngine.InputSystem.Editor
                     break;
             }
 
-            CreateContextMenuProcessor(inputAction?.expectedControlType, inputActionOrBinding);
-            CreateContextMenuInteraction(inputAction?.expectedControlType, inputActionOrBinding);
+            CreateContextMenuProcessor(inputAction?.expectedControlType);
+            CreateContextMenuInteraction(inputAction?.expectedControlType);
 
             var isPartOfComposite = viewState.selectionType == SelectionType.Binding &&
                 viewState.inputBinding?.isPartOfComposite == true;

@@ -232,7 +232,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_FloatField = new FloatField(m_ValueLabel.text) { value = value };
                 m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
-                m_FloatField.RegisterCallback<BlurEvent>(_ => BlurFloatField(onChangedCallback));
+                m_FloatField.RegisterCallback<BlurEvent>(_ => OnEditEnd(onChangedCallback));
                 m_FloatField.SetEnabled(!m_UseDefaultValue);
 
                 m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
@@ -255,7 +255,6 @@ namespace UnityEngine.InputSystem.Editor
                 settingsContainer.Add(m_DefaultToggle);
                 container.Add(settingsContainer);
 
-                //only add inputSettingsButton and help box if default is enabled
                 if (m_UseDefaultValue)
                 {
                     buttonContainer.Add(m_OpenInputSettingsButton);
@@ -285,7 +284,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            private void BlurFloatField(Action onChangedCallback)
+            private void OnEditEnd(Action onChangedCallback)
             {
                 onChangedCallback.Invoke();
             }

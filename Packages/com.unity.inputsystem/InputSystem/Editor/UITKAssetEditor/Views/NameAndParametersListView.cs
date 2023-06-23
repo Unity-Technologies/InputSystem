@@ -41,20 +41,25 @@ namespace UnityEngine.InputSystem.Editor
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
-        private void MoveElement(int index, bool up)
+        private void MoveElementUp(int index)
         {
             var newIndex = index - 1;
-            if (!up)
-                newIndex = index + 1;
+            SwapElement(index, newIndex);
+        }
+
+        private void MoveElementDown(int index)
+        {
+            var newIndex = index + 1;
             SwapElement(index, newIndex);
         }
 
         private void SwapElement(int oldIndex, int newIndex)
         {
-            var interactionsOrProcessorsList = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToArray();
-            newIndex = Math.Clamp(newIndex, 0, interactionsOrProcessorsList.Length - 1);
-            MemoryHelpers.Swap(ref interactionsOrProcessorsList[oldIndex], ref interactionsOrProcessorsList[newIndex]);
-            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessorsList);
+            var interactionsOrProcessors = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToArray();
+            if (interactionsOrProcessors.Length == 0 || newIndex < 0 || newIndex >= interactionsOrProcessors.Length)
+                return;
+            MemoryHelpers.Swap(ref interactionsOrProcessors[oldIndex], ref interactionsOrProcessors[newIndex]);
+            m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessors);
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 
@@ -105,8 +110,8 @@ namespace UnityEngine.InputSystem.Editor
                 var index = i;
                 var buttonProperties = new ButtonProperties()
                 {
-                    onClickDown = () => MoveElement(index, false),
-                    onClickUp = () => MoveElement(index, true),
+                    onClickDown = () => MoveElementDown(index),
+                    onClickUp = () => MoveElementUp(index),
                     onDelete = () => DeleteElement(index),
                     isDownButtonActive = index < parameterListViews.Count - 1,
                     isUpButtonActive = index > 0
