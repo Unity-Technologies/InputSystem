@@ -118,10 +118,11 @@ public class InputForUITests : InputTestFixture
     [Category("InputForUI")]
     public void SendWheelEvent()
     {
-        var kScrollUGUIScaleFactor = 40f; // See InputSystemProvider OnScrollWheelPerformed() callback
+        var kScrollUGUIScaleFactor = 3.0f; // See InputSystemProvider OnScrollWheelPerformed() callback
         var mouse = InputSystem.AddDevice<Mouse>();
         Update();
-        Set(mouse.scroll.y, -1f * kScrollUGUIScaleFactor);
+        // Make the minimum step of scroll delta to be ±1.0f
+        Set(mouse.scroll.y, -1f / kScrollUGUIScaleFactor);
         Update();
         Assert.IsTrue(m_InputForUIEvents.Count == 1);
         Assert.That(m_InputForUIEvents[0].asPointerEvent.scroll, Is.EqualTo(new Vector2(0, 1)));
