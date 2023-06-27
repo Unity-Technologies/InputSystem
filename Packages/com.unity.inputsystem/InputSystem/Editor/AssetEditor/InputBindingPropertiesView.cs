@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Editor
                 // Otherwise, we will show either all controls that match the current binding (if control usages are used)
                 // or all controls in derived device layouts (if a no control usages are used).
                 EditorGUILayout.BeginVertical();
-                showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Derived Controls");
+                showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Derived Bindings");
 
                 if (showMatchingLayouts)
                 {
