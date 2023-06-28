@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed unstable integration test `Integration_CanSendAndReceiveEvents` by ignoring application focus on integration tests. (case ISX-1381)
 - Fixed broken "Listen" button in Input actions editor window with Unity dark skin (case ISXB-536).
 - Fixed an issue where some controls like `QuaternionControl` could not be included in a Precompiled Layout because the generated code could not access a setter on child control properties.
+- Fixed issues with generating Precompiled Layouts for devices which are not defined in a namespace
 
 ## [1.6.1] - 2023-05-26
 
