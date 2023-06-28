@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
-        [InputControl(name = "dpad", layout = "Dpad", bit = (uint)AndroidKeyCode.DpadUp, sizeInBits = 4, variants = Variants.DPadButtons)]
+        [InputControl(name = "dpad", layout = "Dpad", bit = (uint)AndroidKeyCode.DpadUp, sizeInBits = 4)] //, variants = Variants.DPadButtons)]
         [InputControl(name = "dpad/up", bit = (uint)AndroidKeyCode.DpadUp, variants = Variants.DPadButtons)]
         [InputControl(name = "dpad/down", bit = (uint)AndroidKeyCode.DpadDown, variants = Variants.DPadButtons)]
         [InputControl(name = "dpad/left", bit = (uint)AndroidKeyCode.DpadLeft, variants = Variants.DPadButtons)]
