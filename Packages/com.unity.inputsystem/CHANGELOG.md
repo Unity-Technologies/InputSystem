@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416, ISXB-342).
 - Fixed unstable integration test `Integration_CanSendAndReceiveEvents` by ignoring application focus on integration tests. (case ISX-1381)
 - Fixed broken "Listen" button in Input actions editor window with Unity dark skin (case ISXB-536).
+- Fixed issues with generating Precompiled Layouts for devices which are not defined in a namespace
 
 ## [1.6.1] - 2023-05-26
 
