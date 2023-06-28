@@ -17,6 +17,10 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+#if UNITY_EDITOR
+using CustomBindingPathValidator = System.Func<string, System.Action>;
+#endif
+
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
 
 ////TODO: work towards InputManager having no direct knowledge of actions
@@ -229,6 +233,55 @@ namespace UnityEngine.InputSystem
         }
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Callback that can be used to display a warning and draw additional custom Editor UI for bindings.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal event CustomBindingPathValidator customBindingPathValidators
+        {
+            add => m_customBindingPathValidators.AddCallback(value);
+            remove => m_customBindingPathValidators.RemoveCallback(value);
+        }
+
+        /// <summary>
+        /// Invokes any custom UI rendering code for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.OnDrawCustomWarningForBindingPath"/> instead.
+        /// </remarks>
+        internal void OnDrawCustomWarningForBindingPath(string bindingPath)
+        {
+            DelegateHelpers.InvokeCallbacksSafe_AndInvokeReturnedActions(
+                ref m_customBindingPathValidators,
+                bindingPath,
+                "InputSystem.OnDrawCustomWarningForBindingPath");
+        }
+
+        /// <summary>
+        /// Determines if any warning icon is to be displayed for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.OnDrawCustomWarningForBindingPath"/> instead.
+        /// </remarks>
+        internal bool ShouldDrawWarningIconForBinding(string bindingPath)
+        {
+            return DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsObject(
+                ref m_customBindingPathValidators,
+                bindingPath,
+                "InputSystem.ShouldDrawWarningIconForBinding");
+        }
+
+#endif // UNITY_EDITOR
 
 #if UNITY_EDITOR
         private bool m_RunPlayerUpdatesInEditMode;
@@ -1977,6 +2030,11 @@ namespace UnityEngine.InputSystem
         private bool m_EditorIsActive;
         #endif
 
+        // Allow external users to hook in validators and draw custom UI in the binding path editor
+        #if UNITY_EDITOR
+        private Utilities.CallbackArray<CustomBindingPathValidator> m_customBindingPathValidators;
+        #endif
+
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
         // only once to avoid creating garbage.
         private InputDeviceExecuteCommandDelegate m_DeviceFindExecuteCommandDelegate;
@@ -2881,6 +2939,18 @@ namespace UnityEngine.InputSystem
 #endif
                 );
 
+
+#if UNITY_EDITOR
+            var dropStatusEvents = false;
+            if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
+            {
+                // If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
+                // So, in that case, set a flag to say we'd like to drop status events, and do not early out.
+                canEarlyOut = false;
+                dropStatusEvents = true;
+            }
+#endif
+
             if (canEarlyOut)
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
@@ -2951,6 +3021,19 @@ namespace UnityEngine.InputSystem
 
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
                     var currentEventType = currentEventReadPtr->type;
+
+#if UNITY_EDITOR
+                    if (dropStatusEvents)
+                    {
+                        // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
+                        if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
+                            m_InputEventStream.Advance(false);
+                        else
+                            m_InputEventStream.Advance(true);
+
+                        continue;
+                    }
+#endif
 
                     // In the editor, we discard all input events that occur in-between exiting edit mode and having
                     // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the

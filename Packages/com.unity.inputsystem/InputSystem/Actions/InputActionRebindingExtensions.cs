@@ -37,6 +37,23 @@ namespace UnityEngine.InputSystem
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
     /// actuated by the user.
+    ///
+    /// To implement user-controlled rebinding, create a UI with a button to trigger rebinding.
+    /// If the user clicks the button to bind a control to an action, use `InputAction.PerformInteractiveRebinding`
+    /// to handle the rebinding, as in the following example:
+    /// <example>
+    /// <code>
+    /// void RemapButtonClicked(InputAction actionToRebind)
+    /// {
+    ///   var rebindOperation = actionToRebind.PerformInteractiveRebinding()
+    ///   // To avoid accidental input from mouse motion
+    ///   .WithControlsExcluding("Mouse")
+    ///   .OnMatchWaitForAnother(0.1f)
+    ///   .Start();
+    /// }
+    /// </code>
+    /// </example>
+    /// You can install the Tanks Demo sample from the Input System package using the Package Manager window, which has an example of an interactive rebinding UI.
     /// </remarks>
     /// <seealso cref="InputActionSetupExtensions"/>
     /// <seealso cref="InputBinding"/>
@@ -891,7 +908,6 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-
             foreach (var binding in overrides)
                 ApplyBindingOverride(actionMap, binding);
         }
@@ -902,7 +918,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
-
 
             foreach (var binding in overrides)
                 RemoveBindingOverride(actionMap, binding);
@@ -1145,14 +1160,8 @@ namespace UnityEngine.InputSystem
             if (action == null)
                 action = actions.FindAction(binding.action);
 
-            var @override = new InputActionMap.BindingOverrideJson
-            {
-                action = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : null,
-                id = binding.id.ToString(),
-                path = binding.overridePath,
-                interactions = binding.overrideInteractions,
-                processors = binding.overrideProcessors
-            };
+            string actionName = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : "";
+            var @override = InputActionMap.BindingOverrideJson.FromBinding(binding, actionName);
 
             list.Add(@override);
         }
@@ -1262,16 +1271,10 @@ namespace UnityEngine.InputSystem
                     var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
                     if (bindingIndex != -1)
                     {
-                        action.ApplyBindingOverride(bindingIndex, new InputBinding
-                        {
-                            overridePath = entry.path,
-                            overrideInteractions = entry.interactions,
-                            overrideProcessors = entry.processors,
-                        });
+                        action.ApplyBindingOverride(bindingIndex, InputActionMap.BindingOverrideJson.ToBinding(entry));
                         continue;
                     }
                 }
-
                 Debug.LogWarning("Could not override binding as no existing binding was found with the id: " + entry.id);
             }
         }

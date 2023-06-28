@@ -3609,6 +3609,40 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanRemoveBindingsFromActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction();
+
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Gamepad>/rightStick");
+
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/Control")
+            .With("Button", "<Keyboard>/a");
+
+        // Total number of bindings should be 5: 2 normal bindings and 3 from the composite
+        // bindings
+        Assert.That(action.bindings, Has.Count.EqualTo(5));
+
+        // Since we have a composite bindings, all bindings will be removed at once
+        action.ChangeBinding(2).Erase();
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+
+        // Remove all remaining bindings
+        action.ChangeBinding(0).Erase();
+        action.ChangeBinding(0).Erase();
+        Assert.That(action.bindings, Has.Count.EqualTo(0));
+
+        // Add a binding to be removed
+        action.AddBinding("<Gamepad>/rightStick");
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        action.ChangeBinding(0).Erase();
+        Assert.That(action.bindings, Has.Count.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanAddBindingsToActions_ToExistingComposite()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -4276,7 +4310,6 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(interactions: "Tap(duration=0.123)");
         action.AddBinding("<Gamepad>/buttonSouth");
         action.Enable();
@@ -4454,6 +4487,68 @@ partial class CoreTests
         Assert.That(receivedValues, Has.Count.EqualTo(2));
         Assert.That(receivedValues, Has.Exactly(1).EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f)) * new Vector2(2, 3)));
         Assert.That(receivedValues, Has.Exactly(1).EqualTo(0.5f * 2));
+    }
+
+    private class ConstantFloat1TestProcessor : InputProcessor<float>
+    {
+        public override float Process(float value, InputControl control)
+        {
+            return 1.0f;
+        }
+    }
+    private class ConstantFloat2TestProcessor : InputProcessor<float>
+    {
+        public override float Process(float value, InputControl control)
+        {
+            return 2.0f;
+        }
+    }
+
+#if UNITY_EDITOR
+    [Test]
+    [Category("Actions")]
+    public void Actions_AddingSameProcessorTwice_DoesntImpactUIHideState()
+    {
+        InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>();
+        Assert.That(InputSystem.TryGetProcessor("ConstantFloat1Test"), Is.Not.EqualTo(null));
+
+        bool hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
+        Assert.That(hide, Is.EqualTo(false));
+
+        InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>();
+        // Check we haven't caused this to alias with itself and cause it to be hidden in the UI
+        hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
+        Assert.That(hide, Is.EqualTo(false));
+    }
+
+#endif
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_AddingSameNamedProcessorWithDifferentResult_OverridesOriginal()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>("ConstantFloatTest");
+        InputSystem.RegisterProcessor<ConstantFloat2TestProcessor>("ConstantFloatTest");
+
+        var action = new InputAction(processors: "ConstantFloatTest");
+        action.AddBinding("<Gamepad>/leftTrigger");
+        action.Enable();
+
+        float? receivedValue = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValue<float>();
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        Assert.That(receivedValue, Is.Not.Null);
+        Assert.That(receivedValue.Value, Is.EqualTo(2.0).Within(0.00001));
     }
 
     [Test]

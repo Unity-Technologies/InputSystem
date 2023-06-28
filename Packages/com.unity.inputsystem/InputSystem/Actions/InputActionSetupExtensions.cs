@@ -806,7 +806,7 @@ namespace UnityEngine.InputSystem
             if (bindingIndexInMap == -1)
                 return default;
 
-            return new BindingSyntax(actionMap, bindingIndexInMap);
+            return new BindingSyntax(actionMap, bindingIndexInMap, action);
         }
 
         /// <summary>
@@ -1622,9 +1622,12 @@ namespace UnityEngine.InputSystem
                 if (isComposite)
                 {
                     while (m_BindingIndexInMap < m_ActionMap.m_Bindings.LengthSafe() && m_ActionMap.m_Bindings[m_BindingIndexInMap].isPartOfComposite)
+                    {
                         ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndexInMap);
+                    }
                 }
 
+                m_Action.m_BindingsCount = m_ActionMap.m_Bindings.LengthSafe();
                 m_ActionMap.OnBindingModified();
 
                 // We have switched to a different binding array. For singleton actions, we need to
