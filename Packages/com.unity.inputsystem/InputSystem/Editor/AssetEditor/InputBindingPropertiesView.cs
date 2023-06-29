@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
                 bool matchExists = false;
 
                 var rootDeviceLayout = EditorInputControlLayoutCache.TryGetLayout(deviceLayoutPath);
-                bool isValidDeviceLayout = deviceLayoutPath != InputControlPath.Wildcard && rootDeviceLayout != null && !rootDeviceLayout.isOverride && !rootDeviceLayout.hideInUI;
+                bool isValidDeviceLayout = deviceLayoutPath == InputControlPath.Wildcard || (rootDeviceLayout != null && !rootDeviceLayout.isOverride && !rootDeviceLayout.hideInUI);
                 // Exit early if a malformed device layout was provided,
                 if (!isValidDeviceLayout)
                     return;
