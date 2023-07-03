@@ -83,6 +83,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine("using UnityEngine.InputSystem;");
             writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
+            writer.WriteLine("using UnityEngine;");
             writer.WriteLine("");
 
             // Begin namespace.
@@ -117,6 +118,16 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
                 }
+            }
+            writer.EndBlock();
+            writer.WriteLine();
+            
+            writer.WriteLine($"~@{options.className}()");
+            writer.BeginBlock();
+            foreach (var map in maps)
+            {
+                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                writer.WriteLine($"Debug.Assert(!m_{mapName}.enabled, \"This will cause a leak and performance issues, {options.className}.{mapName}.Disable() has not been called.\");");
             }
             writer.EndBlock();
             writer.WriteLine();
