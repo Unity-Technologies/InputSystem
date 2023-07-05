@@ -56,7 +56,9 @@ namespace UnityEngine.InputSystem.Editor
         private void SwapElement(int oldIndex, int newIndex)
         {
             var interactionsOrProcessors = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToArray();
-            if (interactionsOrProcessors.Length == 0 || newIndex < 0 || newIndex >= interactionsOrProcessors.Length)
+            var oldIndexIsValid = oldIndex >= 0 && oldIndex < interactionsOrProcessors.Length;
+            var newIndexIsValid = newIndex >= 0 && newIndex < interactionsOrProcessors.Length;
+            if (interactionsOrProcessors.Length == 0 || !newIndexIsValid || !oldIndexIsValid)
                 return;
             MemoryHelpers.Swap(ref interactionsOrProcessors[oldIndex], ref interactionsOrProcessors[newIndex]);
             m_ListProperty.stringValue = ToSerializableString(interactionsOrProcessors);
