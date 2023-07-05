@@ -55,12 +55,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private TextElement CreateAddButton(Toggle toggle, string name)
         {
-            var addProcessorButton = new TextElement();
-            addProcessorButton.text = "+";
-            addProcessorButton.name = name;
-            addProcessorButton.AddToClassList("add-interaction-processor-button");
-            toggle.Add(addProcessorButton);
-            return addProcessorButton;
+            var addButton = new TextElement();
+            addButton.text = "+";
+            addButton.name = name;
+            addButton.AddToClassList("add-interaction-processor-button");
+            toggle.Add(addButton);
+            return addButton;
         }
 
         private void CreateContextMenuProcessor(string expectedControlType)
