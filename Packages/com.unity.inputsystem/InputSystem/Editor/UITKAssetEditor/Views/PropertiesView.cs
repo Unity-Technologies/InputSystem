@@ -55,9 +55,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private TextElement CreateAddButton(Toggle toggle, string name)
         {
-            var addButton = new TextElement();
+            var addButton = new Button();
             addButton.text = "+";
             addButton.name = name;
+            addButton.focusable = false;
             addButton.AddToClassList("add-interaction-processor-button");
             toggle.Add(addButton);
             return addButton;
