@@ -59,6 +59,9 @@ namespace UnityEngine.InputSystem.Editor
             addButton.text = "+";
             addButton.name = name;
             addButton.focusable = false;
+            #if UNITY_EDITOR_OSX
+            addButton.clickable.activators.Clear();
+            #endif
             addButton.AddToClassList("add-interaction-processor-button");
             toggle.Add(addButton);
             return addButton;
