@@ -34,16 +34,16 @@ platforms_win:
 platforms_nix:
   - name: mac
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:4.9.0
     flavor: m1.mac
   - name: mac_standalone
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:4.9.0
     flavor: m1.mac
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: package-ci/macos-13:default
+    image: package-ci/macos-13:4.9.0
     flavor: m1.mac
     runtime: StandaloneOSX
     scripting-backend: Il2Cpp
