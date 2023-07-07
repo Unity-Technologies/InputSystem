@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -15,6 +16,7 @@ namespace UnityEngine.InputSystem.Editor
         internal const string kDefaultGlobalActionsPath = "Packages/com.unity.inputsystem/InputSystem/API/GlobalInputActions.inputactions";
         [SerializeField] private InputActionsEditorState m_State;
         private VisualElement m_RootVisualElement;
+        private StateContainer m_StateContainer;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
@@ -38,12 +40,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void BuildUI()
         {
-            var stateContainer = new StateContainer(m_RootVisualElement, m_State);
-            stateContainer.StateChanged += OnStateChanged;
-
+            m_RootVisualElement.Unbind();
+            m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
+            m_StateContainer.StateChanged += OnStateChanged;
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            new InputActionsEditorView(m_RootVisualElement, stateContainer);
-            stateContainer.Initialize();
+            new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
+            m_StateContainer.Initialize();
         }
 
         private InputActionAsset LoadGlobalActionAsset()
