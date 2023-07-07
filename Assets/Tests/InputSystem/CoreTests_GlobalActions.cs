@@ -69,17 +69,17 @@ internal partial class CoreTests
 
         Set(keyboard.wKey, 1);
 
-        Assert.That(Input.IsControlDown("ActionOne"), Is.True);
-        Assert.That(Input.IsControlPressed("ActionOne"), Is.True);
+        Assert.That(Input.WasPressedThisFrame("ActionOne"), Is.True);
+        Assert.That(Input.IsPressed("ActionOne"), Is.True);
 
         Set(keyboard.wKey, 0);
 
-        Assert.That(Input.IsControlPressed("ActionOne"), Is.False);
-        Assert.That(Input.IsControlUp("ActionOne"), Is.True);
+        Assert.That(Input.IsPressed("ActionOne"), Is.False);
+        Assert.That(Input.WasReleasedThisFrame("ActionOne"), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.IsControlUp("ActionOne"), Is.False);
+        Assert.That(Input.WasReleasedThisFrame("ActionOne"), Is.False);
     }
 
     [Test]

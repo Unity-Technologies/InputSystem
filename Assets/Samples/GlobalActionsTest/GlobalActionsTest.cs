@@ -15,11 +15,11 @@ public class NewBehaviourScript : MonoBehaviour
     void Update()
     {
         // BASIC API
-        if (Input.IsControlDown(Inputs.Mouse_Left))
+        if (Input.WasPressedThisFrame(Inputs.Mouse_Left))
         {
             cube.GetComponent<Renderer>().material.color = Color.red;
         }
-        else if (Input.IsControlUp(Inputs.Mouse_Left))
+        else if (Input.WasReleasedThisFrame(Inputs.Mouse_Left))
         {
             cube.GetComponent<Renderer>().material.color = Color.green;
         }
