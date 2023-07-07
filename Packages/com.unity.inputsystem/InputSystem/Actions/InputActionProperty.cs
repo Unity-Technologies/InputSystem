@@ -157,8 +157,8 @@ namespace UnityEngine.InputSystem
             return !left.Equals(right);
         }
 
-        [SerializeField] private bool m_UseReference;
-        [SerializeField] private InputAction m_Action;
-        [SerializeField] private InputActionReference m_Reference;
+        [SerializeField] internal bool m_UseReference;
+        [SerializeField] internal InputAction m_Action;
+        [SerializeField] internal InputActionReference m_Reference;
     }
 }
