@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -51,6 +52,8 @@ namespace UnityEngine.InputSystem.Editor
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
+                //if type changed and index is -1 clamp to 0, prevent overflowing indices
+                controlTypeIndex = Math.Clamp(controlTypeIndex, 0, controlTypes.Count - 1);
                 controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
                 controlType.tooltip = inputAction.expectedControlTypeTooltip;
 
@@ -67,6 +70,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
                 };
+                initialStateCheck.SetValueWithoutNotify(inputAction.initialStateCheck);
                 initialStateCheck.RegisterValueChangedCallback(evt =>
                 {
                     Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));
