@@ -25,19 +25,19 @@ public class NewBehaviourScript : MonoBehaviour
         }
 
         // GLOBAL API
-        if (InputActions.FPS.move.value.x < 0.0f)
+        if (InputActions.player.move.value.x < 0.0f)
         {
             cube.transform.Translate(new Vector3 (-10 * Time.deltaTime, 0, 0));
         }
-        else if (InputActions.FPS.move.value.x > 0.0f)
+        else if (InputActions.player.move.value.x > 0.0f)
         {
             cube.transform.Translate(new Vector3 (10 * Time.deltaTime, 0, 0));
         }
-        if (InputActions.FPS.move.value.y < 0.0f)
+        if (InputActions.player.move.value.y < 0.0f)
         {
             cube.transform.Translate(new Vector3 (0, -10 * Time.deltaTime, 0));
         }
-        else if (InputActions.FPS.move.value.y > 0.0f)
+        else if (InputActions.player.move.value.y > 0.0f)
         {
             cube.transform.Translate(new Vector3 (0, 10 * Time.deltaTime, 0));
         }
