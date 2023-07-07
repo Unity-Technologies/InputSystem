@@ -232,12 +232,13 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_FloatField = new FloatField(m_ValueLabel.text) { value = value };
                 m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
+                m_FloatField.RegisterCallback<BlurEvent>(_ => OnEditEnd(onChangedCallback));
                 m_FloatField.SetEnabled(!m_UseDefaultValue);
 
                 m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
 
                 m_DefaultToggle = new Toggle("Default") { value = m_UseDefaultValue };
-                m_DefaultToggle.RegisterValueChangedCallback(ToggleUseDefaultValue);
+                m_DefaultToggle.RegisterValueChangedCallback(evt => ToggleUseDefaultValue(evt, onChangedCallback));
 
 
                 var buttonContainer = new VisualElement
@@ -249,12 +250,17 @@ namespace UnityEngine.InputSystem.Editor
                 };
                 m_OpenInputSettingsButton = new Button(InputSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
                 m_OpenInputSettingsButton.AddToClassList("open-settings-button");
-                buttonContainer.Add(m_OpenInputSettingsButton);
 
                 settingsContainer.Add(m_FloatField);
                 settingsContainer.Add(m_DefaultToggle);
                 container.Add(settingsContainer);
-                container.Add(m_HelpBox);
+
+                if (m_UseDefaultValue)
+                {
+                    buttonContainer.Add(m_OpenInputSettingsButton);
+                    container.Add(m_HelpBox);
+                }
+
                 container.Add(buttonContainer);
 
                 root.Add(container);
@@ -278,18 +284,21 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            private void ToggleUseDefaultValue(ChangeEvent<bool> evt)
+            private void OnEditEnd(Action onChangedCallback)
+            {
+                onChangedCallback.Invoke();
+            }
+
+            private void ToggleUseDefaultValue(ChangeEvent<bool> evt, Action onChangedCallback)
             {
                 if (evt.newValue != m_UseDefaultValue)
                 {
                     m_SetValue(!evt.newValue ? m_GetDefaultValue() : m_DefaultInitializedValue);
+                    onChangedCallback.Invoke();
                 }
 
                 m_UseDefaultValue = evt.newValue;
-
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
-                m_HelpBox.visible = m_UseDefaultValue;
-                m_OpenInputSettingsButton.visible = m_UseDefaultValue;
             }
 
 #endif

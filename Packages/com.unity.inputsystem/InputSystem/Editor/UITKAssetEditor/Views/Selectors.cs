@@ -91,6 +91,15 @@ namespace UnityEngine.InputSystem.Editor
             return new SerializedInputBinding(bindings.GetArrayElementAtIndex(state.selectedBindingIndex));
         }
 
+        public static SerializedInputAction? GetRelatedInputAction(InputActionsEditorState state)
+        {
+            var binding = GetSelectedBinding(state);
+            if (binding == null)
+                return null;
+            var actionName = binding.Value.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
+            return GetActionInMap(state, state.selectedActionMapIndex, actionName);
+        }
+
         public static IEnumerable<string> GetCompositeTypes(string path, string expectedControlLayout)
         {
             // Find name of current composite.
@@ -180,10 +189,8 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(InputActionsEditorState state)
+        public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(InputActionsEditorState state, SerializedInputAction? inputAction)
         {
-            var inputAction = GetSelectedAction(state);
-
             Type expectedValueType = null;
             if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
@@ -201,12 +208,10 @@ namespace UnityEngine.InputSystem.Editor
                 InputInteraction.GetValueType);
         }
 
-        public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(InputActionsEditorState state)
+        public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(InputActionsEditorState state, SerializedInputAction? inputAction)
         {
             var processors = string.Empty;
             Type expectedValueType = null;
-
-            var inputAction = GetSelectedAction(state);
 
             if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
                 expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
