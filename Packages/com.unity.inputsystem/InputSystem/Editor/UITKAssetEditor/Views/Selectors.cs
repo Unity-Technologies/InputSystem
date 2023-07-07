@@ -56,9 +56,9 @@ namespace UnityEngine.InputSystem.Editor
             return actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions))?.arraySize;
         }
 
-        public static int? GetActionMapCount(SerializedObject serializedObject)
+        public static int? GetActionMapCount(InputActionsEditorState state)
         {
-            return serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.arraySize;
+            return state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.arraySize;
         }
 
         public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
