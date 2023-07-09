@@ -37,6 +37,11 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor))
+                return false;
+#endif
+
             var path = AssetDatabase.GetAssetPath(instanceId);
             if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                 return false;
@@ -871,7 +876,7 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
-            #pragma warning disable CA1801 // unused parameters
+#pragma warning disable CA1801 // unused parameters
 
             // Handle .inputactions asset being moved.
             // ReSharper disable once UnusedMember.Local
@@ -890,7 +895,7 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
-            #pragma warning restore CA1801
+#pragma warning restore CA1801
         }
     }
 }
