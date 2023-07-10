@@ -1713,35 +1713,6 @@ namespace UnityEngine.InputSystem.UI
             else if (HaveControlForDevice(device, trackedDevicePosition))
                 pointerType = UIPointerType.Tracked;
 
-            // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
-            // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
-            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType != UIPointerType.None)
-            {
-                if (pointerType == UIPointerType.MouseOrPen)
-                {
-                    // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
-                        }
-                    }
-                }
-                else
-                {
-                    // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
-                        {
-                            SendPointerExitEventsAndRemovePointer(i);
-                            --i;
-                        }
-                    }
-                }
-            }
             ////REVIEW: For touch, probably makes sense to force-ignore any input other than from primaryTouch.
             // If the behavior is SingleUnifiedPointer, we only ever create a single pointer state
             // and use that for all pointer input that is coming in.
@@ -1766,7 +1737,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
                     eventData.displayIndex = displayIndex;
 #endif
 
@@ -1862,7 +1833,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData = new ExtendedPointerEventData(eventSystem);
 
             eventData.pointerId = pointerId;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             eventData.displayIndex = displayIndex;
 #endif
             eventData.touchId = touchId;
@@ -1988,7 +1959,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.screenPosition = context.ReadValue<Vector2>();
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2019,7 +1990,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2036,7 +2007,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.rightButton.ignoreNextClick = true;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2053,7 +2024,7 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.middleButton.ignoreNextClick = true;
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2084,7 +2055,7 @@ namespace UnityEngine.InputSystem.UI
             // The old input system reported scroll deltas in lines, we report pixels.
             // Need to scale as the UI system expects lines.
             state.scrollDelta = context.ReadValue<Vector2>() * (1 / kPixelPerLine);
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2103,7 +2074,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldOrientation = context.ReadValue<Quaternion>();
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2116,7 +2087,7 @@ namespace UnityEngine.InputSystem.UI
 
             ref var state = ref GetPointerStateForIndex(index);
             state.worldPosition = context.ReadValue<Vector3>();
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif
         }
@@ -2124,6 +2095,52 @@ namespace UnityEngine.InputSystem.UI
         private void OnControlsChanged(object obj)
         {
             m_NeedToPurgeStalePointers = true;
+        }
+
+        private void FilterPointerStatesByType()
+        {
+            var pointerTypeToProcess = UIPointerType.None;
+            // Read all pointers device states
+            // Find first pointer that has changed this frame to be processed later
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                ref var state = ref GetPointerStateForIndex(i);
+                state.eventData.ReadDeviceState();
+                state.CopyTouchOrPenStateFrom(state.eventData);
+                if (state.changedThisFrame && pointerTypeToProcess == UIPointerType.None)
+                    pointerTypeToProcess = state.pointerType;
+            }
+
+            // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
+            // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
+            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerTypeToProcess != UIPointerType.None)
+            {
+                // var pointerTypeToProcess = m_PointerStates.firstValue.pointerType;
+                if (pointerTypeToProcess == UIPointerType.MouseOrPen)
+                {
+                    // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
+                        {
+                            SendPointerExitEventsAndRemovePointer(i);
+                            --i;
+                        }
+                    }
+                }
+                else
+                {
+                    // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
+                    for (var i = 0; i < m_PointerStates.length; ++i)
+                    {
+                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
+                        {
+                            SendPointerExitEventsAndRemovePointer(i);
+                            --i;
+                        }
+                    }
+                }
+            }
         }
 
         public override void Process()
@@ -2142,13 +2159,12 @@ namespace UnityEngine.InputSystem.UI
                 // Navigation input.
                 ProcessNavigation(ref m_NavigationState);
 
+                FilterPointerStatesByType();
+
                 // Pointer input.
                 for (var i = 0; i < m_PointerStates.length; i++)
                 {
                     ref var state = ref GetPointerStateForIndex(i);
-
-                    state.eventData.ReadDeviceState();
-                    state.CopyTouchOrPenStateFrom(state.eventData);
 
                     ProcessPointer(ref state);
 

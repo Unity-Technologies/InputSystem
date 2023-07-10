@@ -1398,6 +1398,37 @@ internal class UITests : CoreTestsFixture
                 Assert.That(scene.rightChildReceiver.events, Has.None.With.Property("type").EqualTo(EventType.Dragging));
                 break;
         }
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Test if creating Pointer events from different devices at the same time results in only one event
+        BeginTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
+        Press(mouse1.leftButton);
+        yield return null;
+        EndTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
+        Release(mouse1.leftButton);
+        yield return null;
+
+        switch (pointerBehavior)
+        {
+            case UIPointerBehavior.SingleUnifiedPointer:
+                //// Getting "Drop" event even if using only one type of input device for Press/Release.
+                //// E.g. the following test would also produce only a Drop event:
+                ////     Press(mouse1.leftButton);
+                ////     yield return null;
+                ////     Release(mouse1.leftButton);
+                ////     yield return null;
+                break;
+            case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
+            case UIPointerBehavior.AllPointersAsIs:
+                // Single pointer click on the left object
+                Assert.That(scene.leftChildReceiver.events,
+                    Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerClick).And
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse1).And
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+                break;
+        }
     }
 
     [UnityTest]
@@ -3798,7 +3829,7 @@ internal class UITests : CoreTestsFixture
     }
 
     #region Multi Display Tests
-#if UNITY_2023_1_OR_NEWER // displayIndex is only available from 2023.1 onwards
+#if UNITY_2022_3_OR_NEWER // displayIndex is only available from 2022.3 onwards
 
     [UnityTest]
 #if UNITY_TVOS
@@ -3854,6 +3885,8 @@ internal class UITests : CoreTestsFixture
     [UnityTest]
 #if UNITY_TVOS
     [Ignore("Failing on tvOS https://jira.unity3d.com/browse/ISX-448")]
+#else
+    [Ignore("Failing on 2023.3.3f1 https://jira.unity3d.com/browse/ISX-1462")]
 #endif
     public IEnumerator UI_DisplayIndexMatchesDisplayWithTouchscreenOnOverlayCanvas()
     {
@@ -3956,6 +3989,7 @@ internal class UITests : CoreTestsFixture
     }
 
     [UnityTest]
+    [Ignore("Failing on 2023.3.3f1 https://jira.unity3d.com/browse/ISX-1462")]
     public IEnumerator UI_DisplayIndexMatchesDisplayWithMouseOnOverlayCanvas()
     {
         // Setup the Test Scene
@@ -4346,7 +4380,7 @@ internal class UITests : CoreTestsFixture
                 radius = eventData.radius,
                 radiusVariance = eventData.radiusVariance,
 #endif
-#if UNITY_2023_1_OR_NEWER
+#if UNITY_2022_3_OR_NEWER
                 displayIndex = eventData.displayIndex,
 #endif
             };

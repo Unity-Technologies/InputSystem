@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -7,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class ActionPropertiesView : ViewBase<(SerializedInputAction, List<string>)>
+    internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
         private readonly VisualElement m_Root;
 
@@ -18,12 +19,19 @@ namespace UnityEngine.InputSystem.Editor
 
             // TODO: Consider IEquatable<T> and how to compare selector data
             CreateSelector(Selectors.GetSelectedAction,
-                (inputAction, _) => (inputAction, Selectors.BuildSortedControlList(inputAction.type).ToList()));
+                (inputAction, _) =>
+                {
+                    if (!inputAction.HasValue)
+                        return (null, new List<string>());
+                    return (inputAction.Value, Selectors.BuildSortedControlList(inputAction.Value.type).ToList());
+                });
         }
 
-        public override void RedrawUI((SerializedInputAction, List<string>) viewState)
+        public override void RedrawUI((SerializedInputAction ? , List<string>) viewState)
         {
-            var inputAction = viewState.Item1;
+            if (!viewState.Item1.HasValue)
+                return;
+            var inputAction = viewState.Item1.Value;
 
             m_Root.Clear();
 
@@ -44,6 +52,8 @@ namespace UnityEngine.InputSystem.Editor
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
+                //if type changed and index is -1 clamp to 0, prevent overflowing indices
+                controlTypeIndex = Math.Clamp(controlTypeIndex, 0, controlTypes.Count - 1);
                 controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
                 controlType.tooltip = inputAction.expectedControlTypeTooltip;
 
@@ -60,6 +70,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
                 };
+                initialStateCheck.SetValueWithoutNotify(inputAction.initialStateCheck);
                 initialStateCheck.RegisterValueChangedCallback(evt =>
                 {
                     Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));

@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+## [1.6.2] - 2023-07-10
+
+### Added
+- Enabled `displayIndex` support for Unity 2022.3.
+
+### Fixed
+- Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416, ISXB-342).
+- Fixed unstable integration test `Integration_CanSendAndReceiveEvents` by ignoring application focus on integration tests. (case ISX-1381)
+- Fixed broken "Listen" button in Input actions editor window with Unity dark skin (case ISXB-536).
+
 ## [1.6.1] - 2023-05-26
 
 ### Fixed

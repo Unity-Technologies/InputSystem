@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
             m_CompositeTypeField = container.Q<DropdownField>("composite-type-dropdown");
 
             CreateSelector(Selectors.GetSelectedBinding,
-                (binding, state) => Selectors.GetCompositeBindingViewState(state, binding));
+                (binding, state) => binding == null ? null : Selectors.GetCompositeBindingViewState(state, binding.Value));
         }
 
         public override void RedrawUI(ViewState viewState)
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Editor
             if (compositeType != null)
                 parameterListView.Initialize(compositeType, compositeNameAndParameters.parameters);
 
-            var compositeTypes = GetCompositeTypes(binding.path, inputAction.expectedControlType).ToList();
+            var compositeTypes = GetCompositeTypes(binding.path, inputAction?.expectedControlType).ToList();
             var compositeNames = compositeTypes.Select(ObjectNames.NicifyVariableName).ToList();
             var selectedCompositeName = compositeNames[compositeTypes.FindIndex(str =>
                 InputBindingComposite.s_Composites.LookupTypeRegistration(str) == compositeType)];

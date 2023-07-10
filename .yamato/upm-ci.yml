@@ -78,7 +78,7 @@ build_ios_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on ios
   agent:
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-12:v4.19.0
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -97,7 +97,7 @@ run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
       type: Unity::mobile::iPhone
-      image: package-ci/macos-12:default
+      image: package-ci/macos-12:v4.19.0
       model: SE
       flavor: b1.medium
   skip_checkout: true
@@ -115,7 +115,7 @@ build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-12:v4.19.0
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -134,7 +134,7 @@ run_tvos_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on tvos
   agent:
       type: Unity::mobile::appletv
-      image: package-ci/macos-12:default
+      image: package-ci/macos-12:v4.19.0
       flavor: b1.medium
   skip_checkout: true
   dependencies:

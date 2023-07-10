@@ -43,6 +43,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         NavigationEventRepeatHelper m_RepeatHelper = new();
         bool m_ResetSeenEventsOnUpdate;
 
+        const float kScrollUGUIScaleFactor = 3.0f;
+
         static InputSystemProvider()
         {
             // Only if InputSystem is enabled in the PlayerSettings do we set it as the provider.
@@ -518,9 +520,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
 
             // Make it look similar to IMGUI event scroll values.
-            // TODO check how it behaves on macOS
-            scrollDelta.x /= 40.0f;
-            scrollDelta.y /= -40.0f;
+            scrollDelta.x *= kScrollUGUIScaleFactor;
+            scrollDelta.y *= -kScrollUGUIScaleFactor;
 
             DispatchFromCallback(Event.From(new PointerEvent
             {
