@@ -12,18 +12,20 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.6.2] - 2023-07-10
 
-### Added
-- Enabled `displayIndex` support for Unity 2022.3.
-
 ### Changed
 - Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
+
+### Fixed
+- Fixed serialization migration in the Tracked Pose Driver component causing bindings to clear when prefabs are used in some cases ([case ISXB-512](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-512), [case ISXB-521](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-521)).
+- Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
+
+### Added
+- Enabled `displayIndex` support for Unity 2022.3.
 
 ### Fixed
 - Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416, ISXB-342).
 - Fixed unstable integration test `Integration_CanSendAndReceiveEvents` by ignoring application focus on integration tests. (case ISX-1381)
 - Fixed broken "Listen" button in Input actions editor window with Unity dark skin (case ISXB-536).
-- Fixed serialization migration in the Tracked Pose Driver component causing bindings to clear when prefabs are used in some cases ([case ISXB-512](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-512), [case ISXB-521](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-521)).
-- Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
 
 ## [1.6.1] - 2023-05-26
 
