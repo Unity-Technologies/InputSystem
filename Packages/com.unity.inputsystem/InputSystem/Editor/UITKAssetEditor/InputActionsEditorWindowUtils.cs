@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem.HighLevel.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -18,10 +19,14 @@ namespace UnityEngine.InputSystem.Editor
         public static void SaveAsset(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
+            if (asset.name == HighLevel.Input.kGlobalActionsAssetName)
+            {
+                AssetDatabase.SaveAssets();
+                return;
+            }
             var assetPath = AssetDatabase.GetAssetPath(asset);
             var assetJson = asset.ToJson();
-
-            var existingJson = File.ReadAllText(assetPath);
+            var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : "";
             if (assetJson != existingJson)
             {
                 EditorHelpers.CheckOut(assetPath);

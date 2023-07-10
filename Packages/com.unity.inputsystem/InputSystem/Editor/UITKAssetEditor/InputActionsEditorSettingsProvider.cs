@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine.InputSystem.HighLevel.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -12,8 +13,6 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
         public const string kSettingsPath = "Project/Input System Package/Actions";
-        internal const string kGlobalActionsAssetPath = "ProjectSettings/InputManager.asset";
-        internal const string kDefaultGlobalActionsPath = "Packages/com.unity.inputsystem/InputSystem/API/GlobalInputActions.inputactions";
         [SerializeField] private InputActionsEditorState m_State;
         private VisualElement m_RootVisualElement;
         private StateContainer m_StateContainer;
@@ -26,7 +25,7 @@ namespace UnityEngine.InputSystem.Editor
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             m_RootVisualElement = rootElement;
-            var asset = LoadGlobalActionAsset();
+            var asset = GlobalActionsAsset.GetOrCreateGlobalActionsAsset();
             var serializedAsset = new SerializedObject(asset);
             m_State = new InputActionsEditorState(serializedAsset);
             BuildUI();
@@ -46,23 +45,6 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
             m_StateContainer.Initialize();
-        }
-
-        private InputActionAsset LoadGlobalActionAsset()
-        {
-            var objects = AssetDatabase.LoadAllAssetsAtPath(kGlobalActionsAssetPath);
-            if (objects == null)
-                throw new InvalidOperationException("Couldn't load global input system actions because the InputManager.asset file is missing or corrupt.");
-
-            var globalInputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == "GlobalInputActions") as InputActionAsset;
-            if (globalInputActionsAsset != null)
-                return globalInputActionsAsset;
-
-            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, kDefaultGlobalActionsPath));
-
-            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.LoadFromJson(json);
-            return asset;
         }
 
         [SettingsProvider]
