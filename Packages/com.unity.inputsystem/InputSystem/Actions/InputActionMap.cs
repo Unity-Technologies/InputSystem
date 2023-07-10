@@ -596,6 +596,7 @@ namespace UnityEngine.InputSystem
                         m_Interactions = original.m_Interactions,
                         m_Processors = original.m_Processors,
                         m_ExpectedControlType = original.m_ExpectedControlType,
+                        m_Flags = original.m_Flags,
                     };
                 }
                 clone.m_Actions = actions;
