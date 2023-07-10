@@ -609,6 +609,39 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Get the index of the binding within this input action that last caused it to fire.
+        /// </summary>
+        /// <remarks>
+        /// Note that this index is relative to the Input Action bindings.
+        ///
+        /// TODO: Describe relative indexing and ignoring of composite part bindings, and also suggest using callbacks
+        /// if you want to know what composite part binding fired using CallbackContext
+        /// </remarks>
+        /// <exception cref="InvalidOperationException"></exception>
+        public unsafe int activeBindingIndex
+        {
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state == null) return InputActionState.kInvalidIndex;
+
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var bindingIndex = actionStatePtr->bindingIndex;
+
+                if (bindingIndex == InputActionState.kInvalidIndex)
+                    return InputActionState.kInvalidIndex;
+
+                var bindingIndexInMap = state.GetBindingIndexInMap(bindingIndex);
+                var indexInActionBindings = BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
+
+                if (indexInActionBindings == -1)
+                    throw new InvalidOperationException($"Binding at index '{bindingIndex}' in action map '{actionMap.name}' not found in bindings array of action '{name}'");
+
+                return indexInActionBindings;
+            }
+        }
+
+        /// <summary>
         /// Whether the action wants a state check on its bound controls as soon as it is enabled. This is always
         /// true for <see cref="InputActionType.Value"/> actions but can optionally be enabled for <see cref="InputActionType.Button"/>
         /// or <see cref="InputActionType.PassThrough"/> actions.
@@ -992,6 +1025,21 @@ namespace UnityEngine.InputSystem
             return actionStatePtr->phase.IsInProgress()
                 ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
                 : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
+        }
+
+        /// <summary>
+        /// Read the default value of the Input Action.
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <returns>The default value with all processors applied.</returns>
+        public unsafe TValue ReadDefaultValue<TValue>(int bindingIndex)
+            where TValue : struct
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state == null) return default(TValue);
+
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            return state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
         }
 
         /// <summary>
@@ -1614,7 +1662,7 @@ namespace UnityEngine.InputSystem
             {
                 ref var binding = ref bindingsInMap[i];
 
-                if (string.Compare(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                if (string.Compare(binding.action, actionName, StringComparison.OrdinalIgnoreCase) == 0 ||
                     binding.action == m_Id)
                     ++bindingIndexOnAction;
             }
@@ -1758,7 +1806,7 @@ namespace UnityEngine.InputSystem
             /// callback but rather the time at which the input was generated that triggered
             /// the action.
             /// </remarks>
-            /// <seealso cref="InputEvent.time"/>
+            /// <seealso cref="LowLevel.InputEvent.time"/>
             public unsafe double time
             {
                 get

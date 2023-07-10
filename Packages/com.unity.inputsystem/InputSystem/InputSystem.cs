@@ -19,6 +19,7 @@ using UnityEngine.Profiling;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
+using UnityEngine.InputSystem.HighLevel.Editor;
 #else
 using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
@@ -3010,6 +3011,19 @@ namespace UnityEngine.InputSystem
         #region Actions
 
         /// <summary>
+        /// The set of globally active input actions.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        /// <seealso cref="InputSettings.actions"/>
+        public static InputActionAsset actions
+        {
+            get => settings.actions;
+            set => settings.actions = value;
+        }
+
+        /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
         /// </summary>
@@ -3491,6 +3505,13 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
+
+#if UNITY_2020_2_OR_NEWER
+                    if (!settings.disableHighLevelAPI)
+                    {
+                        HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
+                    }
+#endif
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
@@ -3512,6 +3533,13 @@ namespace UnityEngine.InputSystem
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
+
+#if UNITY_2020_2_OR_NEWER
+                    if (!settings.disableHighLevelAPI)
+                    {
+                        HighLevel.Input.Shutdown();
+                    }
+#endif
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
@@ -3593,6 +3621,12 @@ namespace UnityEngine.InputSystem
             // instances.
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+
+            if (!InputSystem.settings.disableHighLevelAPI)
+            {
+                HighLevel.Input.Initialize();
+                HighLevel.Input.InitializeGlobalActions();
+            }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3872,6 +3906,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#endif
+#if UNITY_EDITOR
+        internal static void SetGlobalActionAssetPaths(string defaultAssetPath, string assetPath)
+        {
+            s_DefaultGlobalActionsPath = defaultAssetPath;
+            s_GlobalActionsAssetPath = assetPath;
+        }
+
+        private static string s_DefaultGlobalActionsPath = GlobalActionsAsset.kDefaultGlobalActionsPath;
+        private static string s_GlobalActionsAssetPath = GlobalActionsAsset.kGlobalActionsAssetPath;
 #endif
     }
 }

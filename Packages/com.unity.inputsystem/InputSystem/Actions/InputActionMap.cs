@@ -313,6 +313,10 @@ namespace UnityEngine.InputSystem
             remove => m_ActionCallbacks.RemoveCallback(value);
         }
 
+        // if bindings are stored in the bindings array contiguously for all actions then we can do
+        // faster action index to map index conversions.
+        internal bool bindingsAreContiguous => m_BindingsAreContiguous;
+
         /// <summary>
         /// Construct an action map with default values.
         /// </summary>
@@ -716,6 +720,8 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="SetUpPerActionControlAndBindingArrays"/>
         [NonSerialized] private InputBinding[] m_BindingsForEachAction;
 
+        [NonSerialized] private bool m_BindingsAreContiguous;
+
         [NonSerialized] private InputControl[] m_ControlsForEachAction;
 
         /// <summary>
@@ -1112,12 +1118,14 @@ namespace UnityEngine.InputSystem
                     // Bindings are already clustered by action in m_Bindings
                     // so we can just stick to having one array only.
                     m_BindingsForEachAction = m_Bindings;
+                    m_BindingsAreContiguous = true;
                 }
                 else
                 {
                     // Bindings are not clustered by action in m_Bindings so
                     // we had to allocate a separate array where the bindings are sorted.
                     m_BindingsForEachAction = newBindingsArray;
+                    m_BindingsAreContiguous = false;
                 }
             }
 

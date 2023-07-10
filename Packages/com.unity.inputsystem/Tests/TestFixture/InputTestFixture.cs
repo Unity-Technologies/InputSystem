@@ -90,6 +90,10 @@ namespace UnityEngine.InputSystem
 
                 runtime = new InputTestRuntime();
 
+                // we want to run most tests without the high level API being enabled because it interferes with
+                // global states. The specific high level tests will re-enable this flag
+                InputSystem.settings.disableHighLevelAPI = true;
+
                 // Push current input system state on stack.
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
 
@@ -727,6 +731,10 @@ namespace UnityEngine.InputSystem
         /// Get or set the current time used by the input system.
         /// </summary>
         /// <value>Current time used by the input system.</value>
+        /// <remarks>
+        /// Don't expect this to start at zero! For time-dependent tests, use times relative to
+        /// currentTime, instead of absolute times.
+        /// </remarks>
         public double currentTime
         {
             get => runtime.currentTime - runtime.currentTimeOffsetToRealtimeSinceStartup;
