@@ -29,6 +29,11 @@ namespace UnityEngine.InputSystem.HighLevel.Editor
             if (globalInputActionsAsset != null)
                 return globalInputActionsAsset;
 
+            return CreateNewGlobalActionAsset(templateAssetPath, assetPath);
+        }
+
+        private static InputActionAsset CreateNewGlobalActionAsset(string templateAssetPath, string assetPath)
+        {
             var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, templateAssetPath));
 
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();

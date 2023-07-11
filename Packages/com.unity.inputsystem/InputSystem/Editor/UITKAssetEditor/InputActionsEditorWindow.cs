@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.Editor
         private void OnStateChanged(InputActionsEditorState newState)
         {
             if (InputEditorUserSettings.autoSaveInputActionAssets)
-                SaveAsset(m_State.serializedObject);
+                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
         }
 
         private InputActionAsset GetAssetFromDatabase()
@@ -110,21 +110,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
-
-        public static void SaveAsset(SerializedObject serializedAsset)
-        {
-            var asset = (InputActionAsset)serializedAsset.targetObject;
-            var assetPath = AssetDatabase.GetAssetPath(asset);
-            var assetJson = asset.ToJson();
-
-            var existingJson = File.ReadAllText(assetPath);
-            if (assetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(assetPath);
-                File.WriteAllText(assetPath, assetJson);
-                AssetDatabase.ImportAsset(assetPath);
-            }
-        }
     }
 }
 
