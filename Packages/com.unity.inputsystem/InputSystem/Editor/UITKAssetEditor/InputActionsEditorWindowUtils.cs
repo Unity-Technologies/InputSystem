@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Editor
         public static void SaveAsset(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
+            // for the global actions asset: save differently (as it is a yaml file and not a json)
             if (asset.name == HighLevel.Input.kGlobalActionsAssetName)
             {
                 AssetDatabase.SaveAssets();
