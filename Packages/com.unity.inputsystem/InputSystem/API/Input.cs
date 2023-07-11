@@ -22,9 +22,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <summary>
     /// An enum for all controls that have button-like behaviour on keyboard, gamepad, mouse, and joystick devices.
     /// </summary>
-    /// <seealso cref="Input.IsControlDown(Inputs)"/>
-    /// <seealso cref="Input.IsControlUp(Inputs)"/>
-    /// <seealso cref="Input.IsControlPressed(Inputs)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(Inputs)"/>
+    /// <seealso cref="Input.WasReleasedThisFrame(Inputs)"/>
+    /// <seealso cref="Input.IsPressed(Inputs)"/>
     /// <seealso cref="Input.GetAxis(Inputs)"/>
     /// <seealso cref="Input.GetAxis(Inputs, Inputs)"/>
     /// <seealso cref="Input.GetAxis(Inputs, Inputs, Inputs, Inputs)"/>
@@ -194,9 +194,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <summary>
     /// An enum for querying the state of joystick buttons.
     /// </summary>
-    /// <seealso cref="Input.IsControlDown(JoystickButton, JoystickSlot)"/>
-    /// <seealso cref="Input.IsControlUp(JoystickButton, JoystickSlot)"/>
-    /// <seealso cref="Input.IsControlPressed(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.WasReleasedThisFrame(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.IsPressed(JoystickButton, JoystickSlot)"/>
     public enum JoystickButton
     {
         Trigger, // HID path maps the element named "Button1" as the trigger
@@ -222,7 +222,7 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <summary>
     /// An enum for all buttons on a generic gamepad.
     /// </summary>
-    /// <seealso cref="Input.IsControlDown(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(GamepadButton,GamepadSlot)"/>
     public enum GamepadButton
     {
         DpadUp = Inputs.Gamepad_DpadUp,
@@ -259,9 +259,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// the next gamepad to connect goes in the vacant slot. This makes it easier to abstract gameplay or application logic
     /// from gamepad instances.
     /// </remarks>
-    /// <seealso cref="Input.IsControlDown(GamepadButton,GamepadSlot)"/>
-    /// <seealso cref="Input.IsControlUp(GamepadButton,GamepadSlot)"/>
-    /// <seealso cref="Input.IsControlPressed(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.WasReleasedThisFrame(GamepadButton,GamepadSlot)"/>
+    /// <seealso cref="Input.IsPressed(GamepadButton,GamepadSlot)"/>
     /// <seealso cref="Input.IsGamepadConnected(GamepadSlot)"/>
     /// <seealso cref="Input.DidGamepadConnectThisFrame(GamepadSlot)"/>
     /// <seealso cref="Input.DidGamepadDisconnectThisFrame(GamepadSlot)"/>
@@ -292,9 +292,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// the next joystick to connect goes in the vacant slot. This makes it easier to abstract joystick or application logic
     /// from joystick instances.
     /// </remarks>
-    /// <seealso cref="Input.IsControlDown(JoystickButton, JoystickSlot)"/>
-    /// <seealso cref="Input.IsControlUp(JoystickButton, JoystickSlot)"/>
-    /// <seealso cref="Input.IsControlPressed(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.WasReleasedThisFrame(JoystickButton, JoystickSlot)"/>
+    /// <seealso cref="Input.IsPressed(JoystickButton, JoystickSlot)"/>
     public enum JoystickSlot
     {
         Slot1 = 0,
@@ -925,7 +925,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         /// and return true if the control is currently pressed on any of them.
         /// </remarks>
-        public static bool IsControlPressed(Inputs input)
+        public static bool IsPressed(Inputs input)
         {
             var deviceType = GetDeviceTypeForInput(input);
 
@@ -983,7 +983,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
         /// <returns>True if the input is currently held down, false if the input is not pressed,
         /// or if 'slot' is specified and no gamepad exists in that slot.</returns>
-        public static bool IsControlPressed(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
+        public static bool IsPressed(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
         {
             if (slot != GamepadSlot.All)
                 return s_Gamepads[(int)slot] != null &&
@@ -1001,7 +1001,7 @@ namespace UnityEngine.InputSystem.HighLevel
         }
 
         /// <summary>
-        /// Is the indicated joystick button pressed.
+        /// Is the indicated joystick button currently pressed.
         /// </summary>
         /// <param name="button">A button from the JoystickButton enum.</param>
         /// <param name="slot">The joystick to read input from.</param>
@@ -1009,7 +1009,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// there is no joystick in the specified slot..</returns>
         /// <remarks>If JoystickSlot.All is specified for the 'slot' argument, the method will
         /// return true if the specified button is pressed on any joystick in the available slots.</remarks>
-        public static bool IsControlPressed(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
+        public static bool IsPressed(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
         {
             if (slot != JoystickSlot.All)
             {
@@ -1042,7 +1042,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         /// and return true if the control was actuated in the current frame on any of them.
         /// </remarks>
-        public static bool IsControlDown(Inputs input)
+        public static bool WasPressedThisFrame(Inputs input)
         {
             var deviceType = GetDeviceTypeForInput(input);
 
@@ -1103,7 +1103,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="slot">Which gamepad to check for input. Default is 'All'.</param>
         /// <returns>True if the input was pressed in the current frame, false if the input is not pressed, was
         /// pressed in a frame previous to the current one, or if 'slot' is specified and no gamepad is connected to that slot.</returns>
-        public static bool IsControlDown(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
+        public static bool WasPressedThisFrame(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
         {
             if (slot != GamepadSlot.All)
                 return s_Gamepads[(int)slot] != null &&
@@ -1127,7 +1127,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="slot">Which joystick to check for input. Default is 'All'.</param>
         /// <returns>True if the input was pressed in the current frame, otherwise false, including
         /// when 'slot' is specified and no joystick is connected to that slot.</returns>
-        public static bool IsControlDown(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
+        public static bool WasPressedThisFrame(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
         {
             if (slot != JoystickSlot.All)
             {
@@ -1160,7 +1160,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         /// and return true if the control was released in the current frame on any of them.
         /// </remarks>
-        public static bool IsControlUp(Inputs input)
+        public static bool WasReleasedThisFrame(Inputs input)
         {
             var deviceType = GetDeviceTypeForInput(input);
 
@@ -1221,7 +1221,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
         /// <returns>True if the input was released in the current frame, otherwise false.
         /// Also returns false if 'slot' is specified and no gamepad is connected to that slot.</returns>
-        public static bool IsControlUp(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
+        public static bool WasReleasedThisFrame(GamepadButton button, GamepadSlot slot = GamepadSlot.All)
         {
             if (slot != GamepadSlot.All)
                 return s_Gamepads[(int)slot] != null &&
@@ -1245,7 +1245,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="slot">Which joystick to check for input. Default is 'All'.</param>
         /// <returns>True if the input was released in the current frame, otherwise false, including
         /// when 'slot' is specified and no joystick is connected to that slot.</returns>
-        public static bool IsControlUp(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
+        public static bool WasReleasedThisFrame(JoystickButton button, JoystickSlot slot = JoystickSlot.All)
         {
             if (slot != JoystickSlot.All)
             {
