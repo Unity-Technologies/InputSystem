@@ -42,10 +42,10 @@
 
 .add-interaction-processor-button {
     padding-top: 0;
-    font-size: 12;
+    font-size: 12px;
     border-width: 0;
     background-color: transparent;
-    margin-right: 5;
+    margin-right: 5px;
 }
 
 .header-label {

@@ -52,9 +52,9 @@ internal partial class CoreTests
         foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
-            Assert.That(Input.IsControlPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
-            Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
-            Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
+            Assert.That(Input.IsPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
+            Assert.That(Input.WasPressedThisFrame(input), Is.False, $"Input '{input}' should be 'not down'");
+            Assert.That(Input.WasReleasedThisFrame(input), Is.False, $"Input '{input}' should be 'not up'");
         }
 
         // press all buttons
@@ -107,12 +107,12 @@ internal partial class CoreTests
             if (buttonsToIgnore.Contains(input))
                 continue;
 
-            Assert.That(Input.IsControlPressed(input), Is.True, $"Input '{input}' should be 'pressed'");
-            Assert.That(Input.IsControlDown(input), Is.True, $"Input '{input}' should be 'down'");
-            Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
+            Assert.That(Input.IsPressed(input), Is.True, $"Input '{input}' should be 'pressed'");
+            Assert.That(Input.WasPressedThisFrame(input), Is.True, $"Input '{input}' should be 'down'");
+            Assert.That(Input.WasReleasedThisFrame(input), Is.False, $"Input '{input}' should be 'not up'");
         }
 
-        // check that IsControlDown became false after one frame
+        // check that WasPressedThisFrame became false after one frame
         InputSystem.Update();
         foreach (var value in typeof(Inputs).GetEnumValues())
         {
@@ -120,9 +120,9 @@ internal partial class CoreTests
             if (buttonsToIgnore.Contains(input))
                 continue;
 
-            Assert.That(Input.IsControlPressed(input), Is.True, $"Input '{input}' should be 'pressed'");
-            Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
-            Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
+            Assert.That(Input.IsPressed(input), Is.True, $"Input '{input}' should be 'pressed'");
+            Assert.That(Input.WasPressedThisFrame(input), Is.False, $"Input '{input}' should be 'not down'");
+            Assert.That(Input.WasReleasedThisFrame(input), Is.False, $"Input '{input}' should be 'not up'");
         }
 
         // release everything
@@ -145,9 +145,9 @@ internal partial class CoreTests
             if (buttonsToIgnore.Contains(input))
                 continue;
 
-            Assert.That(Input.IsControlPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
-            Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
-            Assert.That(Input.IsControlUp(input), Is.True, $"Input '{input}' should be 'up'");
+            Assert.That(Input.IsPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
+            Assert.That(Input.WasPressedThisFrame(input), Is.False, $"Input '{input}' should be 'not down'");
+            Assert.That(Input.WasReleasedThisFrame(input), Is.True, $"Input '{input}' should be 'up'");
         }
 
         // check control up became false after one frame
@@ -155,9 +155,9 @@ internal partial class CoreTests
         foreach (var value in typeof(Inputs).GetEnumValues())
         {
             var input = (Inputs)value;
-            Assert.That(Input.IsControlPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
-            Assert.That(Input.IsControlDown(input), Is.False, $"Input '{input}' should be 'not down'");
-            Assert.That(Input.IsControlUp(input), Is.False, $"Input '{input}' should be 'not up'");
+            Assert.That(Input.IsPressed(input), Is.False, $"Input '{input}' should be 'not pressed'");
+            Assert.That(Input.WasPressedThisFrame(input), Is.False, $"Input '{input}' should be 'not down'");
+            Assert.That(Input.WasReleasedThisFrame(input), Is.False, $"Input '{input}' should be 'not up'");
         }
     }
 
@@ -235,9 +235,9 @@ internal partial class CoreTests
         void AssertControlStates(UnityEngine.InputSystem.HighLevel.GamepadButton gamepadButton,
             bool controlDown, bool controlPressed, bool controlUp, GamepadSlot gamepadSlot)
         {
-            Assert.That(Input.IsControlDown(gamepadButton, gamepadSlot), Is.EqualTo(controlDown));
-            Assert.That(Input.IsControlPressed(gamepadButton, gamepadSlot), Is.EqualTo(controlPressed));
-            Assert.That(Input.IsControlUp(gamepadButton, gamepadSlot), Is.EqualTo(controlUp));
+            Assert.That(Input.WasPressedThisFrame(gamepadButton, gamepadSlot), Is.EqualTo(controlDown));
+            Assert.That(Input.IsPressed(gamepadButton, gamepadSlot), Is.EqualTo(controlPressed));
+            Assert.That(Input.WasReleasedThisFrame(gamepadButton, gamepadSlot), Is.EqualTo(controlUp));
         }
     }
 
@@ -250,22 +250,22 @@ internal partial class CoreTests
 
         Set((ButtonControl)joystickTwo["button2"], 1);
 
-        Assert.That(Input.IsControlDown(JoystickButton.Button2, JoystickSlot.Slot1), Is.False);
-        Assert.That(Input.IsControlDown(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, JoystickSlot.Slot1), Is.False);
+        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.IsControlDown(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
-        Assert.That(Input.IsControlPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+        Assert.That(Input.IsPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
 
         Set((ButtonControl)joystickTwo["button2"], 0);
 
-        Assert.That(Input.IsControlPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
-        Assert.That(Input.IsControlUp(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+        Assert.That(Input.IsPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.IsControlUp(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
     }
 
     [Test]
@@ -471,15 +471,15 @@ internal partial class CoreTests
         InputSystem.Update();
 
         Input.SetGamepadTriggerPressPoint(0.5f);
-        Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.False);
+        Assert.That(Input.IsPressed(Inputs.Gamepad_LeftTrigger), Is.False);
 
         Input.SetGamepadTriggerPressPoint(0.3f);
-        Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.True);
+        Assert.That(Input.IsPressed(Inputs.Gamepad_LeftTrigger), Is.True);
 
         gamepadState.leftTrigger = 0.1f;
         InputSystem.QueueStateEvent(gamepad, gamepadState);
         InputSystem.Update();
-        Assert.That(Input.IsControlPressed(Inputs.Gamepad_LeftTrigger), Is.False);
+        Assert.That(Input.IsPressed(Inputs.Gamepad_LeftTrigger), Is.False);
     }
 
     [Test]
@@ -638,20 +638,20 @@ internal partial class CoreTests
 
     private static void ExerciseInputMethods()
     {
-        Input.IsControlDown(Inputs.Key_A);
-        Input.IsControlDown(Inputs.Mouse_Left);
-        Input.IsControlDown(Inputs.Gamepad_A);
-        Input.IsControlDown(Inputs.Joystick_Trigger);
+        Input.WasPressedThisFrame(Inputs.Key_A);
+        Input.WasPressedThisFrame(Inputs.Mouse_Left);
+        Input.WasPressedThisFrame(Inputs.Gamepad_A);
+        Input.WasPressedThisFrame(Inputs.Joystick_Trigger);
 
-        Input.IsControlUp(Inputs.Key_A);
-        Input.IsControlUp(Inputs.Mouse_Left);
-        Input.IsControlUp(Inputs.Gamepad_A);
-        Input.IsControlUp(Inputs.Joystick_Trigger);
+        Input.WasReleasedThisFrame(Inputs.Key_A);
+        Input.WasReleasedThisFrame(Inputs.Mouse_Left);
+        Input.WasReleasedThisFrame(Inputs.Gamepad_A);
+        Input.WasReleasedThisFrame(Inputs.Joystick_Trigger);
 
-        Input.IsControlPressed(Inputs.Key_A);
-        Input.IsControlPressed(Inputs.Mouse_Left);
-        Input.IsControlPressed(Inputs.Gamepad_A);
-        Input.IsControlPressed(Inputs.Joystick_Trigger);
+        Input.IsPressed(Inputs.Key_A);
+        Input.IsPressed(Inputs.Mouse_Left);
+        Input.IsPressed(Inputs.Gamepad_A);
+        Input.IsPressed(Inputs.Joystick_Trigger);
 
         Input.IsGamepadConnected(GamepadSlot.All);
         Input.IsGamepadConnected(GamepadSlot.Slot1);

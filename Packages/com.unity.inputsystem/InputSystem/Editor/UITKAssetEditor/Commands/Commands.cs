@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static InputActionsEditorState SelectPrevActionMap(InputActionsEditorState state)
         {
-            var count = Selectors.GetActionMapCount(state.serializedObject);
+            var count = Selectors.GetActionMapCount(state);
             int index = -1;
             if (count != null && count.Value > 0)
                 index = Math.Max(state.selectedActionMapIndex - 1, 0);

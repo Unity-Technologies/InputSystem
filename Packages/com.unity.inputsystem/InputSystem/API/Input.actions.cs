@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="actionMapName"></param>
         /// <param name="actionName"></param>
         /// <returns></returns>
-        public static bool IsControlPressed(string actionName, string actionMapName = "")
+        public static bool IsPressed(string actionName, string actionMapName = "")
         {
             Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
 
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="actionMapName"></param>
         /// <param name="actionName"></param>
         /// <returns></returns>
-        public static bool IsControlDown(string actionName, string actionMapName = "")
+        public static bool WasPressedThisFrame(string actionName, string actionMapName = "")
         {
             Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
 
@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="actionMapName"></param>
         /// <param name="actionName"></param>
         /// <returns></returns>
-        public static bool IsControlUp(string actionName, string actionMapName = "")
+        public static bool WasReleasedThisFrame(string actionName, string actionMapName = "")
         {
             Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
 
@@ -66,17 +66,17 @@ namespace UnityEngine.InputSystem.HighLevel
             return action != null && action.WasReleasedThisFrame();
         }
 
-        public static bool IsControlPressed<TActionType>(Input<TActionType> input) where TActionType : struct
+        public static bool IsPressed<TActionType>(Input<TActionType> input) where TActionType : struct
         {
             return input.isPressed;
         }
 
-        public static bool IsControlDown<TActionType>(Input<TActionType> input) where TActionType : struct
+        public static bool WasPressedThisFrame<TActionType>(Input<TActionType> input) where TActionType : struct
         {
             return input.wasPressedThisFrame;
         }
 
-        public static bool IsControlUp<TActionType>(Input<TActionType> input) where TActionType : struct
+        public static bool WasReleasedThisFrame<TActionType>(Input<TActionType> input) where TActionType : struct
         {
             return input.wasReleasedThisFrame;
         }
