@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.6.3] - 2023-07-11
+
+### Fixed
+- Fixed warning in USS file
 
 ## [1.6.2] - 2023-07-10
 
@@ -397,7 +400,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `HoldInteraction` getting stuck when hold and release happens in same event ([case 1346786](https://issuetracker.unity3d.com/issues/input-system-the-canceled-event-is-not-fired-when-clicking-a-button-for-a-precise-amount-of-time)).
 - Fixed adding an action in the `.inputactions` editor automatically duplicating interactions and processors from the first action in the map.
 - Fixed `InputActionSetupExtensions.ChangeBinding` when modifying binding from a different action than specified. Contribution by [Fredrik Ludvigsen](https://github.com/steinbitglis) in [#1348](https://github.com/Unity-Technologies/InputSystem/pull/1352).
-- Fixed right stick and trigger controls on gamepads not receiving proper input on Android.
 
 ### Added
 
@@ -468,7 +470,6 @@ however, it has to be formatted properly to pass verification tests.
   * UI updates *after* input and consumes input through `InputAction`s as they are processed. Thus, querying UI state from within `InputAction` callbacks will query outdated UI state.
 - Changed `TrackedPoseDriver` to use properties of type `InputActionProperty` rather than `InputAction` to allow more flexibility.
 - Changed quickstart documentation sample to use the Update method instead of FixedUpdate to show a more correct usage of the `wasPressedThisFrame` API.
-- PS4 and Xbox controllers on Android are now based on `DualShockGamepad` and `XInputController` respectively instead of the generic `AndroidGamepad`.
 
 ## [1.1.0-pre.5] - 2021-05-11
 
@@ -593,6 +594,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed Right stick to use AXIS.Z and AXIS.RZ for Android gamepads.
+- Fixed triggers to always use Axis.Gas and Axis.Brake for Android gamepads.
 - Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
 - Fixed `InputDevice.canRunInBackground` not being correctly set for VR devices (thus not allowing them to receive input while the application is not focused).
 - Fixed `InputUser.OnEvent` and `RebindingOperation.OnEvent` exhibiting bad performance profiles and leading to multi-millisecond input update times (case 1253371).
@@ -623,6 +626,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
+- Added DualShock4GamepadAndroid and XboxOneGamepadAndroid layout for Android
 - Added a new high-performance way to iterate over changed controls in an event.
   ```CSharp
   // Can optionally specify a magnitude threshold that controls must cross.
