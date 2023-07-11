@@ -29,7 +29,7 @@
     border-width: 0;
 }
 
-#add-new-action-button {
+#add-new-action-button  {
     background-color: transparent;
     border-width: 0;
 }
@@ -38,6 +38,14 @@
     min-width: 225px;
     border-left-width: 0;
     margin-left: 0;
+}
+
+.add-interaction-processor-button {
+    padding-top: 0;
+    font-size: 12px;
+    border-width: 0;
+    background-color: transparent;
+    margin-right: 5px;
 }
 
 .header-label {
@@ -136,12 +144,23 @@
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
 }
 
+.name-and-parameters-list-view .upDarkTheme {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronUp.png');
+}
+
 .name-and-parameters-list-view .down {
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronDown.png');
 }
 
+.name-and-parameters-list-view .downDarkTheme {
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronDown.png');
+}
+
 .name-and-parameters-list-view .delete {
     background-image: resource('Toolbar Minus.png');
+}
+.name-and-parameters-list-view .deleteDarkTheme {
+    background-image: resource('d_Toolbar Minus.png');
 }
 
 .search-field {
