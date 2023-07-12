@@ -1,0 +1,53 @@
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+using System;
+using UnityEngine.UIElements;
+
+namespace UnityEngine.InputSystem.Editor
+{
+    internal static class InputActionViewsControlsHolder
+    {
+        private static TreeView m_TreeView;
+        private static ActionsTreeView m_ActionsTreeView;
+        private static ListView m_ListView;
+        internal static Action<int, InputActionsTreeViewItem> RenameAction => RenameActionItem;
+        internal static Action<int, InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
+        internal static Action<InputActionsTreeViewItem> DeleteAction => Delete;
+        internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
+        internal static Action<int> CreateAction => CreateNewAction;
+
+        internal static void Initialize(VisualElement root, ActionsTreeView actionsTreeView)
+        {
+            m_TreeView = root?.Q<TreeView>("actions-tree-view");
+            m_ActionsTreeView = actionsTreeView;
+            m_ListView = root?.Q<ListView>("action-maps-list-view");
+        }
+
+        private static void RenameActionItem(int index, InputActionsTreeViewItem treeViewItem)
+        {
+            m_TreeView.SetSelection(index);
+            treeViewItem.FocusOnRenameTextField();
+        } 
+        private static void RenameActionMapItem(int index, InputActionsTreeViewItem treeViewItem)
+        {
+            m_ListView.SetSelection(index);
+            treeViewItem.FocusOnRenameTextField();
+        }
+        private static void Delete(InputActionsTreeViewItem treeViewItem)
+        {
+            treeViewItem.DeleteItem();
+        }
+
+        private static void CreateNewAction(int index)
+        { 
+            m_ListView.SetSelection(index); 
+            m_ActionsTreeView.AddAction();
+        }
+
+        private static void AddNewBinding(InputActionsTreeViewItem inputActionsTreeViewItem)
+        {
+            var action = inputActionsTreeViewItem.label.name; 
+            m_ActionsTreeView.AddBinding(action);
+        }
+    }
+}
+#endif
