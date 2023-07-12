@@ -270,7 +270,8 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <seealso cref="Input.GetGamepadDeadZone(GamepadSlot)"/>
     public enum GamepadSlot
     {
-        Slot1 = 0,
+        Slot0 = 0,
+        Slot1,
         Slot2,
         Slot3,
         Slot4,
@@ -281,7 +282,6 @@ namespace UnityEngine.InputSystem.HighLevel
         Slot9,
         Slot10,
         Slot11,
-        Slot12,
         All = Int32.MaxValue
     }
 
@@ -298,11 +298,11 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <seealso cref="Input.IsPressed(JoystickButton, JoystickSlot)"/>
     public enum JoystickSlot
     {
-        Slot1 = 0,
+        Slot0 = 0,
+        Slot1,
         Slot2,
         Slot3,
-        Slot4,
-        Max = Slot4 + 1,
+        Max = Slot3 + 1,
         All = Int32.MaxValue
     }
 
@@ -314,6 +314,7 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             s_GamepadSlotEnums = new ReadOnlyArray<GamepadSlot>(new[]
             {
+                GamepadSlot.Slot0,
                 GamepadSlot.Slot1,
                 GamepadSlot.Slot2,
                 GamepadSlot.Slot3,
@@ -324,8 +325,7 @@ namespace UnityEngine.InputSystem.HighLevel
                 GamepadSlot.Slot8,
                 GamepadSlot.Slot9,
                 GamepadSlot.Slot10,
-                GamepadSlot.Slot11,
-                GamepadSlot.Slot12
+                GamepadSlot.Slot11
             });
             s_Gamepads = new Gamepad[maxGamepadSlots];
             s_GamepadsConnectedFrames = new int[maxGamepadSlots];
@@ -445,7 +445,7 @@ namespace UnityEngine.InputSystem.HighLevel
         private static int[] s_GamepadsConnectedFrames;
         private static int[] s_GamepadsDisconnectedFrames;
         private static ReadOnlyArray<GamepadSlot> s_GamepadSlotEnums;
-        private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot12 + 1];
+        private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)GamepadSlot.Slot11 + 1];
 
         private static Joystick[] s_Joysticks;
 
@@ -1530,6 +1530,7 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             switch (gamepadSlot)
             {
+                case GamepadSlot.Slot0:
                 case GamepadSlot.Slot1:
                 case GamepadSlot.Slot2:
                 case GamepadSlot.Slot3:
@@ -1541,7 +1542,6 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot9:
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
-                case GamepadSlot.Slot12:
                     return s_GamepadConfigs[(int)gamepadSlot].TriggerPressPoint;
                 case GamepadSlot.All:
                     throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
@@ -1562,6 +1562,7 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             switch (gamepadSlot)
             {
+                case GamepadSlot.Slot0:
                 case GamepadSlot.Slot1:
                 case GamepadSlot.Slot2:
                 case GamepadSlot.Slot3:
@@ -1573,7 +1574,6 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot9:
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
-                case GamepadSlot.Slot12:
                     s_GamepadConfigs[(int)gamepadSlot].TriggerPressPoint = pressPoint;
                     break;
                 case GamepadSlot.All:
@@ -1589,6 +1589,7 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             switch (gamepadSlot)
             {
+                case GamepadSlot.Slot0:
                 case GamepadSlot.Slot1:
                 case GamepadSlot.Slot2:
                 case GamepadSlot.Slot3:
@@ -1600,7 +1601,6 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot9:
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
-                case GamepadSlot.Slot12:
                     return s_GamepadConfigs[(int)gamepadSlot].DeadZone;
                 case GamepadSlot.All:
                     throw new ArgumentException("Passing GamepadSlot.All is not valid for this operation");
@@ -1618,6 +1618,7 @@ namespace UnityEngine.InputSystem.HighLevel
         {
             switch (gamepadSlot)
             {
+                case GamepadSlot.Slot0:
                 case GamepadSlot.Slot1:
                 case GamepadSlot.Slot2:
                 case GamepadSlot.Slot3:
@@ -1629,7 +1630,6 @@ namespace UnityEngine.InputSystem.HighLevel
                 case GamepadSlot.Slot9:
                 case GamepadSlot.Slot10:
                 case GamepadSlot.Slot11:
-                case GamepadSlot.Slot12:
                     s_GamepadConfigs[(int)gamepadSlot].DeadZone = deadzone;
                     break;
                 case GamepadSlot.All:
