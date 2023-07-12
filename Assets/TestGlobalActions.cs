@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -77,3 +79,4 @@ public class TestGlobalActions : MonoBehaviour
 //      m_Interaction = interaction;
 //  }
 // }
+#endif

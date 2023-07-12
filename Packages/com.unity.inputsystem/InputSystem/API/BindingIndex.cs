@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+
 using System;
 
 namespace UnityEngine.InputSystem.HighLevel
@@ -236,3 +238,4 @@ namespace UnityEngine.InputSystem.HighLevel
         }
     }
 }
+#endif

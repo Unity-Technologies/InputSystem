@@ -19,7 +19,11 @@ using UnityEngine.Profiling;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
 using UnityEngine.InputSystem.HighLevel.Editor;
+#endif
+
 #else
 using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
@@ -3010,6 +3014,8 @@ namespace UnityEngine.InputSystem
 
         #region Actions
 
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
         /// <summary>
         /// The set of globally active input actions.
         /// </summary>
@@ -3022,6 +3028,7 @@ namespace UnityEngine.InputSystem
             get => settings.actions;
             set => settings.actions = value;
         }
+#endif
 
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
@@ -3506,7 +3513,7 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
 
-#if UNITY_2020_2_OR_NEWER
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
                     if (!settings.disableHighLevelAPI)
                     {
                         HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
@@ -3534,7 +3541,7 @@ namespace UnityEngine.InputSystem
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
 
-#if UNITY_2020_2_OR_NEWER
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
                     if (!settings.disableHighLevelAPI)
                     {
                         HighLevel.Input.Shutdown();
@@ -3622,11 +3629,13 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
             if (!InputSystem.settings.disableHighLevelAPI)
             {
                 HighLevel.Input.Initialize();
                 HighLevel.Input.InitializeGlobalActions();
             }
+#endif
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3907,7 +3916,7 @@ namespace UnityEngine.InputSystem
         }
 
 #endif
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
         internal static void SetGlobalActionAssetPaths(string defaultAssetPath, string assetPath)
         {
             s_DefaultGlobalActionsPath = defaultAssetPath;

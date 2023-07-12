@@ -10,8 +10,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [     
-         {
+    "versionDefines": [
+        {
             "name": "com.unity.xr.oculus",
             "expression": "1.0.3",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
@@ -55,6 +55,11 @@
             "name": "com.unity.ugui",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_UI"
+        },
+        {
+            "name": "Unity",
+            "expression": "2020.2",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API"
         }
     ],
     "noEngineReferences": false

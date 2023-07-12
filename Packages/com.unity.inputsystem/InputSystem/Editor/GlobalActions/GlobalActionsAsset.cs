@@ -1,4 +1,7 @@
-#if UNITY_EDITOR
+// Global Actions cannot be edited without the new UITK based editor
+// which only works for Unity 2020.2+
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+
 using System;
 using System.IO;
 using System.Linq;

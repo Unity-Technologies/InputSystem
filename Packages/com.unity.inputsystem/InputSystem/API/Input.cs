@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -6,7 +8,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.PlayerLoop;
 
-#if UNITY_2020_2_OR_NEWER
 // TODO rename HighLevel to something that makes sense
 namespace UnityEngine.InputSystem.HighLevel
 {

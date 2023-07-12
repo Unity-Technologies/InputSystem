@@ -90,9 +90,11 @@ namespace UnityEngine.InputSystem
 
                 runtime = new InputTestRuntime();
 
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
                 // we want to run most tests without the high level API being enabled because it interferes with
                 // global states. The specific high level tests will re-enable this flag
                 InputSystem.settings.disableHighLevelAPI = true;
+#endif
 
                 // Push current input system state on stack.
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);

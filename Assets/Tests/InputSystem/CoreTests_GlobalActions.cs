@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+
 using System;
 using System.IO;
 using System.Linq;
@@ -496,3 +498,4 @@ internal partial class CoreTests
             Assert.That(collection[0].index.type, Is.EqualTo(BindingIndex.IndexType.SkipCompositeParts));
     }
 }
+#endif

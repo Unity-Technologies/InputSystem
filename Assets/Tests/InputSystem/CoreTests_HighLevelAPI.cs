@@ -1,3 +1,5 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -427,7 +429,7 @@ internal partial class CoreTests
         Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.False);
     }
 
-    #if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+    #if UNITY_EDITOR
     [UnityTest]
     [Category("HighLevelAPI")]
     public IEnumerator HighLevelAPI_DidGamepadConnectThisFrame_WorksWhenEventArrivesBeforeEditorUpdate()
@@ -749,3 +751,4 @@ internal partial class CoreTests
         return InputSystem.GetDeviceById(deviceId) as Joystick;
     }
 }
+#endif

@@ -660,6 +660,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
         /// <summary>
         /// Disable the high level API, including global actions.
         /// </summary>
@@ -687,6 +688,25 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// The global set of actions.
+        /// </summary>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
+        /// <seealso cref="InputSystem.actions"/>
+        public InputActionAsset actions
+        {
+            get => m_GlobalInputActionsAsset;
+            set
+            {
+                m_GlobalInputActionsAsset?.Disable();
+                m_GlobalInputActionsAsset = value;
+                m_GlobalInputActionsAsset?.Enable();
+            }
+        }
+#endif
+
+        /// <summary>
         /// Improves shortcut key support by making composite controls consume control input
         /// </summary>
         /// <remarks>
@@ -709,24 +729,6 @@ namespace UnityEngine.InputSystem
 
                 m_ShortcutKeysConsumeInputs = value;
                 OnChange();
-            }
-        }
-
-        /// <summary>
-        /// The global set of actions.
-        /// </summary>
-        /// <remarks>
-        /// TODO
-        /// </remarks>
-        /// <seealso cref="InputSystem.actions"/>
-        public InputActionAsset actions
-        {
-            get => m_GlobalInputActionsAsset;
-            set
-            {
-                m_GlobalInputActionsAsset?.Disable();
-                m_GlobalInputActionsAsset = value;
-                m_GlobalInputActionsAsset?.Enable();
             }
         }
 
