@@ -9,7 +9,6 @@ using UnityEngine.InputSystem.LowLevel;
 using System.Reflection;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Interactions;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.HighLevel.Editor;
 #endif
 
