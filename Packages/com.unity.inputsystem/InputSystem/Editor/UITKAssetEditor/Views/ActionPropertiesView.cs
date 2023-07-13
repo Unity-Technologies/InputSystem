@@ -11,11 +11,13 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
         private readonly VisualElement m_Root;
+        private readonly Foldout m_ParentFoldout;
 
-        public ActionPropertiesView(VisualElement root, StateContainer stateContainer)
+        public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
             : base(stateContainer)
         {
             m_Root = root;
+            m_ParentFoldout = foldout;
 
             // TODO: Consider IEquatable<T> and how to compare selector data
             CreateSelector(Selectors.GetSelectedAction,
@@ -31,6 +33,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!viewState.Item1.HasValue)
                 return;
+            
+            m_ParentFoldout.text = "Action";
             var inputAction = viewState.Item1.Value;
 
             m_Root.Clear();
