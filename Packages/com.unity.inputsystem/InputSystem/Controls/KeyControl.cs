@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Controls
     /// so that pressing a key in the same location on different keyboards should result in the same action
     /// regardless of what is printed on a key or what current system language is set.
     /// 
-    /// This means, for example, that <see cref="A"/> is always the key to the right of <see cref="CapsLock"/>,
+    /// This means, for example, that <see cref="Key.A"/> is always the key to the right of <see cref="Key.CapsLock"/>,
     /// regardless of which key (if any) produces the "a" character on the current keyboard layout.
     /// 
     /// Unity relies on physical hardware in the keyboards to report same USB HID "usage" for the keys in
@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// This property must be initialized by <see cref="InputControl.FinishSetup"/> of
         /// the device owning the control.
-        /// You should not use `keyCode` to read text input. For more information, <see cref="see Controls.KeyControl"/>
+        /// You should not use `keyCode` to read text input. For more information, <see cref="KeyControl"/>
         /// </remarks>
         public Key keyCode { get; set; }
 
