@@ -198,6 +198,12 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.SelectAction(actionName));
             Dispatch(Commands.AddBinding());
+        } 
+        
+        internal void AddComposite(string actionName, string compositeType)
+        {
+            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.AddComposite(compositeType));
         }
 
         private void DeleteItem(ActionOrBindingData data)

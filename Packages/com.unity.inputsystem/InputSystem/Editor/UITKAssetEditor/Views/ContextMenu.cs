@@ -29,15 +29,9 @@ namespace UnityEngine.InputSystem.Editor
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
-                menuEvent.menu.AppendAction(add_positiveNegative_Binding_String, _ =>
-                {
-                });
-                menuEvent.menu.AppendAction(add_oneModifier_Binding_String, _ =>
-                {
-                });
-                menuEvent.menu.AppendAction(add_twoModifier_Binding_String, _ =>
-                {
-                });
+                menuEvent.menu.AppendAction(add_positiveNegative_Binding_String, _ => InputActionViewsControlsHolder.AddCompositePositivNegativModifier.Invoke(treeViewItem));
+                menuEvent.menu.AppendAction(add_oneModifier_Binding_String, _ => InputActionViewsControlsHolder.AddCompositeOneModifier.Invoke(treeViewItem));
+                menuEvent.menu.AppendAction(add_twoModifier_Binding_String, _ => InputActionViewsControlsHolder.AddCompositeTwoModifier.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
                 AppendRenameAction(menuEvent, index, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);

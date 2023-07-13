@@ -13,6 +13,9 @@ namespace UnityEngine.InputSystem.Editor
         internal static Action<int, InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
         internal static Action<InputActionsTreeViewItem> DeleteAction => Delete;
         internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
+        internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier => AddNewPositiveNegativeComposite;
+        internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
+        internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
         internal static Action<int> CreateAction => CreateNewAction;
 
         internal static void Initialize(VisualElement root, ActionsTreeView actionsTreeView)
@@ -45,8 +48,24 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void AddNewBinding(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
-            var action = inputActionsTreeViewItem.label.name; 
+            var action = inputActionsTreeViewItem.label.text;
             m_ActionsTreeView.AddBinding(action);
+        }
+        
+        private static void AddNewPositiveNegativeComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
+        {
+            var action = inputActionsTreeViewItem.label.text;
+            m_ActionsTreeView.AddComposite(action, "1DAxis");
+        }
+        private static void AddNewOneModifierComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
+        {
+            var action = inputActionsTreeViewItem.label.text;
+            m_ActionsTreeView.AddComposite(action, "OneModifier");
+        }
+        private static void AddNewTwoModifierComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
+        {
+            var action = inputActionsTreeViewItem.label.text;
+            m_ActionsTreeView.AddComposite(action, "TwoModifiers");
         }
     }
 }
