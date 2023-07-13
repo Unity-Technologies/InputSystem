@@ -23,9 +23,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <summary>
     /// An enum for all controls that have button-like behaviour on keyboard, gamepad, mouse, and joystick devices.
     /// </summary>
-    /// <seealso cref="Input.WasPressedThisFrame(Inputs)"/>
-    /// <seealso cref="Input.WasReleasedThisFrame(Inputs)"/>
-    /// <seealso cref="Input.IsPressed(Inputs)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(Inputs, InputSlot)"/>
+    /// <seealso cref="Input.WasReleasedThisFrame(Inputs, InputSlot)"/>
+    /// <seealso cref="Input.IsPressed(Inputs, InputSlot)"/>
     /// <seealso cref="Input.GetAxis(Inputs)"/>
     /// <seealso cref="Input.GetAxis(Inputs, Inputs)"/>
     /// <seealso cref="Input.GetAxis(Inputs, Inputs, Inputs, Inputs)"/>
@@ -238,6 +238,14 @@ namespace UnityEngine.InputSystem.HighLevel
         RightStickButton = Inputs.Gamepad_RightStickButton, // right stick pressed
         LeftShoulder = Inputs.Gamepad_LeftShoulder,
         RightShoulder = Inputs.Gamepad_RightShoulder,
+        LeftStickUp = Inputs.Gamepad_LeftStickUp,
+        LeftStickDown = Inputs.Gamepad_LeftStickDown,
+        LeftStickLeft = Inputs.Gamepad_LeftStickLeft,
+        LeftStickRight = Inputs.Gamepad_LeftStickRight,
+        RightStickUp = Inputs.Gamepad_RightStickUp,
+        RightStickDown = Inputs.Gamepad_RightStickDown,
+        RightStickLeft = Inputs.Gamepad_RightStickLeft,
+        RightStickRight = Inputs.Gamepad_RightStickRight,
         LeftTrigger = Inputs.Gamepad_LeftTrigger,
         RightTrigger = Inputs.Gamepad_RightTrigger,
         Start = Inputs.Gamepad_Start,
@@ -902,12 +910,20 @@ namespace UnityEngine.InputSystem.HighLevel
         /// Is the indicated control currently pressed.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns>True if control is currently pressed, false if control is not pressed or not available (device disconnected, etc).</returns>
         /// <remarks>
         /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         /// and return true if the control is currently pressed on any of them.
         /// </remarks>
-        public static bool IsPressed(Inputs input)
+        public static bool IsPressed(Inputs input, InputSlot slot = InputSlot.All)
         {
             var deviceType = GetDeviceTypeForInput(input);
 
@@ -934,6 +950,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     for (var i = 0; i < s_Gamepads.Length; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
                         var gamepad = s_Gamepads[i];
                         if (gamepad == null) continue;
 
@@ -946,6 +964,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Joystick:
                     for (var i = 0; i < (int)InputSlot.Joystick_Max; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
                         var button = GetJoystickButtonControl(s_Joysticks[i], input);
                         if (button != null && button.ReadValue() >= InputSystem.settings.defaultButtonPressPoint)
                             return true;
@@ -1019,12 +1039,20 @@ namespace UnityEngine.InputSystem.HighLevel
         /// True in the frame that the input was pressed.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns>True if control was actuated in the current frame, false if control was not actuated or not available (device disconnected, etc).</returns>
         /// <remarks>
         /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         /// and return true if the control was actuated in the current frame on any of them.
         /// </remarks>
-        public static bool WasPressedThisFrame(Inputs input)
+        public static bool WasPressedThisFrame(Inputs input, InputSlot slot = InputSlot.All)
         {
             var deviceType = GetDeviceTypeForInput(input);
 
@@ -1051,6 +1079,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     for (var i = 0; i < s_Gamepads.Length; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
                         var gamepad = s_Gamepads[i];
                         if (gamepad == null) continue;
 
@@ -1066,6 +1096,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Joystick:
                     for (var i = 0; i < (int)InputSlot.Joystick_Max; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
                         var button = GetJoystickButtonControl(s_Joysticks[i], input);
                         if (button != null && button.wasPressedThisFrame)
                             return true;
@@ -1137,12 +1169,20 @@ namespace UnityEngine.InputSystem.HighLevel
         /// True in the frame that the input was released.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns>True if control was released in the current frame, false if control was not released or not available (device disconnected, etc).</returns>
         /// <remarks>
         /// This will look at all devices of the appropriate type (which will depend on the specified Inputs)
         /// and return true if the control was released in the current frame on any of them.
         /// </remarks>
-        public static bool WasReleasedThisFrame(Inputs input)
+        public static bool WasReleasedThisFrame(Inputs input, InputSlot slot = InputSlot.All)
         {
             var deviceType = GetDeviceTypeForInput(input);
 
@@ -1169,6 +1209,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Gamepad:
                     for (var i = 0; i < s_Gamepads.Length; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
                         var gamepad = s_Gamepads[i];
                         if (gamepad == null) continue;
 
@@ -1184,6 +1226,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 case InputDeviceType.Joystick:
                     for (var i = 0; i < (int)InputSlot.Joystick_Max; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
                         var button = GetJoystickButtonControl(s_Joysticks[i], input);
                         if (button != null && button.wasReleasedThisFrame)
                             return true;
