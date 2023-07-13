@@ -176,13 +176,13 @@ internal partial class CoreTests
 
     [Test]
     [Category("HighLevelAPI")]
-    [TestCase(GamepadSlot.Slot1)]
-    [TestCase(GamepadSlot.Slot2)]
-    public void HighLevelAPI_CanQueryGamepadControl(GamepadSlot slot)
+    [TestCase(InputSlot.Slot1)]
+    [TestCase(InputSlot.Slot2)]
+    public void HighLevelAPI_CanQueryGamepadControl(InputSlot slot)
     {
         var gamepadOne = InputSystem.AddDevice<Gamepad>();
         var gamepadTwo = InputSystem.AddDevice<Gamepad>();
-        var expectedUnusedSlot = slot == GamepadSlot.Slot2 ? GamepadSlot.Slot1 : GamepadSlot.Slot2;
+        var expectedUnusedSlot = slot == InputSlot.Slot2 ? InputSlot.Slot1 : InputSlot.Slot2;
         var gamepadButtons = Enum.GetValues(typeof(UnityEngine.InputSystem.HighLevel.GamepadButton))
             .Cast<UnityEngine.InputSystem.HighLevel.GamepadButton>()
             .ToList();
@@ -208,7 +208,7 @@ internal partial class CoreTests
             leftTrigger = 1.0f,
             rightTrigger = 1.0f
         };
-        InputSystem.QueueStateEvent(slot == GamepadSlot.Slot1 ? gamepadOne : gamepadTwo, gamepadState);
+        InputSystem.QueueStateEvent(slot == InputSlot.Slot1 ? gamepadOne : gamepadTwo, gamepadState);
         InputSystem.Update();
 
         foreach (var buttonValue in gamepadButtons)
@@ -225,7 +225,7 @@ internal partial class CoreTests
             AssertControlStates(buttonValue, false, false, false, expectedUnusedSlot);
         }
 
-        InputSystem.QueueStateEvent(slot == GamepadSlot.Slot1 ? gamepadOne : gamepadTwo, new GamepadState());
+        InputSystem.QueueStateEvent(slot == InputSlot.Slot1 ? gamepadOne : gamepadTwo, new GamepadState());
         InputSystem.Update();
 
         foreach (var buttonValue in gamepadButtons)
@@ -235,7 +235,7 @@ internal partial class CoreTests
         }
 
         void AssertControlStates(UnityEngine.InputSystem.HighLevel.GamepadButton gamepadButton,
-            bool controlDown, bool controlPressed, bool controlUp, GamepadSlot gamepadSlot)
+            bool controlDown, bool controlPressed, bool controlUp, InputSlot gamepadSlot)
         {
             Assert.That(Input.WasPressedThisFrame(gamepadButton, gamepadSlot), Is.EqualTo(controlDown));
             Assert.That(Input.IsPressed(gamepadButton, gamepadSlot), Is.EqualTo(controlPressed));
@@ -252,22 +252,22 @@ internal partial class CoreTests
 
         Set((ButtonControl)joystickTwo["button2"], 1);
 
-        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, JoystickSlot.Slot1), Is.False);
-        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, InputSlot.Slot1), Is.False);
+        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
-        Assert.That(Input.IsPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.False);
+        Assert.That(Input.IsPressed(JoystickButton.Button2, InputSlot.Slot2), Is.True);
 
         Set((ButtonControl)joystickTwo["button2"], 0);
 
-        Assert.That(Input.IsPressed(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
-        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.True);
+        Assert.That(Input.IsPressed(JoystickButton.Button2, InputSlot.Slot2), Is.False);
+        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, JoystickSlot.Slot2), Is.False);
+        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.False);
     }
 
     [Test]
@@ -325,16 +325,16 @@ internal partial class CoreTests
     [Category("HighLevelAPI")]
     public void HighLevelAPI_GamepadsCollectionIsInitializedToMaxSlots()
     {
-        Assert.That(Input.gamepads.Count, Is.EqualTo(Input.maxGamepadSlots));
-        Assert.That(Input.gamepads, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, Input.maxGamepadSlots)));
+        Assert.That(Input.gamepads.Count, Is.EqualTo(Input.maxInputSlots));
+        Assert.That(Input.gamepads, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, Input.maxInputSlots)));
     }
 
     [Test]
     [Category("HighLevelAPI")]
     public void HighLevelAPI_JoysticksCollectionIsInitializedToMaxSlots()
     {
-        Assert.That(Input.joysticks.Count, Is.EqualTo((int)JoystickSlot.Max));
-        Assert.That(Input.joysticks, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, (int)JoystickSlot.Max)));
+        Assert.That(Input.joysticks.Count, Is.EqualTo((int)InputSlot.Max));
+        Assert.That(Input.joysticks, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, (int)InputSlot.Max)));
     }
 
     [Test]
@@ -361,16 +361,16 @@ internal partial class CoreTests
     public void HighLevelAPI_IsGamepadConnected_ReturnsTrueForOccupiedSlots(
         [NUnit.Framework.Range(0, 11)] int disconnectedSlot)
     {
-        for (var i = 0; i < Input.maxGamepadSlots; i++)
+        for (var i = 0; i < Input.maxInputSlots; i++)
         {
             InputSystem.AddDevice<Gamepad>();
 
-            Assert.That(Input.IsGamepadConnected((GamepadSlot)i), Is.True);
+            Assert.That(Input.IsGamepadConnected((InputSlot)i), Is.True);
         }
 
         InputSystem.RemoveDevice(Gamepad.all[disconnectedSlot]);
 
-        Assert.That(Input.IsGamepadConnected((GamepadSlot)disconnectedSlot), Is.False);
+        Assert.That(Input.IsGamepadConnected((InputSlot)disconnectedSlot), Is.False);
     }
 
     [UnityTest]
@@ -382,24 +382,24 @@ internal partial class CoreTests
         runtime.ReportNewInputDevice<Gamepad>();
         yield return null;
 
-        Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1), Is.True);
+        Assert.That(Input.DidGamepadConnectThisFrame(InputSlot.Slot1), Is.True);
 
         yield return null;
-        Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1), Is.False);
+        Assert.That(Input.DidGamepadConnectThisFrame(InputSlot.Slot1), Is.False);
     }
 
     [UnityTest]
     [Category("HighLevelAPI")]
     public IEnumerator HighLevelAPI_DidAllGamepadsConnectOrDisconnectThisFrame()
     {
-        for (var i = 0; i < Input.maxGamepadSlots; i++)
+        for (var i = 0; i < Input.maxInputSlots; i++)
         {
             runtime.ReportNewInputDevice<Gamepad>();
         }
 
         yield return null;
 
-        Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.All), Is.True);
+        Assert.That(Input.DidGamepadConnectThisFrame(InputSlot.All), Is.True);
 
         foreach (var inputDevice in InputSystem.devices)
         {
@@ -408,7 +408,7 @@ internal partial class CoreTests
 
         yield return null;
 
-        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.All), Is.True);
+        Assert.That(Input.DidGamepadDisconnectThisFrame(InputSlot.All), Is.True);
     }
 
     [UnityTest]
@@ -417,16 +417,16 @@ internal partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         yield return null;
-        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.False);
+        Assert.That(Input.DidGamepadDisconnectThisFrame(InputSlot.Slot1), Is.False);
 
         // can't use RemoveDevice here because that immediately raises the onDeviceChanged event, so the
         // frame count will be one too early.
         runtime.ReportInputDeviceRemoved(gamepad);
         yield return null;
-        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.True);
+        Assert.That(Input.DidGamepadDisconnectThisFrame(InputSlot.Slot1), Is.True);
 
         yield return null;
-        Assert.That(Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1), Is.False);
+        Assert.That(Input.DidGamepadDisconnectThisFrame(InputSlot.Slot1), Is.False);
     }
 
     #if UNITY_EDITOR
@@ -450,7 +450,7 @@ internal partial class CoreTests
         yield return null;
         try
         {
-            Assert.That(Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1), Is.True);
+            Assert.That(Input.DidGamepadConnectThisFrame(InputSlot.Slot1), Is.True);
         }
         finally
         {
@@ -560,7 +560,7 @@ internal partial class CoreTests
     public void HighLevelAPI_JoysticksAreAddedAndRemovedFromCollection()
     {
         var joysticks = new List<Joystick>();
-        for (var i = 0; i < (int)JoystickSlot.Max; i++)
+        for (var i = 0; i < (int)InputSlot.Max; i++)
         {
             joysticks.Add(InputSystem.AddDevice<Joystick>());
             Assert.That(Input.joysticks[0], Is.Not.Null);
@@ -608,7 +608,7 @@ internal partial class CoreTests
             var joystick = joysticks[i];
             var value = joystick.stick.ReadUnprocessedValue();
             value = Input.NormalizeAxis(value, Input.kDefaultJoystickDeadzone);
-            Assert.That(value, Is.EqualTo(Input.GetAxis((JoystickSlot)i)));
+            Assert.That(value, Is.EqualTo(Input.GetAxis((InputSlot)i)));
         }
     }
 
@@ -621,11 +621,11 @@ internal partial class CoreTests
             InputSystem.AddDevice<Gamepad>();
         }
 
-        Assert.That(Input.IsGamepadConnected(GamepadSlot.All), Is.True);
+        Assert.That(Input.IsGamepadConnected(InputSlot.All), Is.True);
 
         InputSystem.RemoveDevice(InputSystem.devices[0]);
 
-        Assert.That(Input.IsGamepadConnected(GamepadSlot.All), Is.False);
+        Assert.That(Input.IsGamepadConnected(InputSlot.All), Is.False);
     }
 
     [Test]
@@ -655,23 +655,23 @@ internal partial class CoreTests
         Input.IsPressed(Inputs.Gamepad_A);
         Input.IsPressed(Inputs.Joystick_Trigger);
 
-        Input.IsGamepadConnected(GamepadSlot.All);
-        Input.IsGamepadConnected(GamepadSlot.Slot1);
+        Input.IsGamepadConnected(InputSlot.All);
+        Input.IsGamepadConnected(InputSlot.Slot1);
 
-        Input.DidGamepadConnectThisFrame(GamepadSlot.Slot1);
-        Input.DidGamepadConnectThisFrame(GamepadSlot.All);
-        Input.DidGamepadDisconnectThisFrame(GamepadSlot.Slot1);
-        Input.DidGamepadDisconnectThisFrame(GamepadSlot.All);
+        Input.DidGamepadConnectThisFrame(InputSlot.Slot1);
+        Input.DidGamepadConnectThisFrame(InputSlot.All);
+        Input.DidGamepadDisconnectThisFrame(InputSlot.Slot1);
+        Input.DidGamepadDisconnectThisFrame(InputSlot.All);
 
-        Input.GetAxis(GamepadAxis.LeftStick, GamepadSlot.All);
-        Input.GetAxis(GamepadAxis.LeftStick, GamepadSlot.Slot1);
+        Input.GetAxis(GamepadAxis.LeftStick, InputSlot.All);
+        Input.GetAxis(GamepadAxis.LeftStick, InputSlot.Slot1);
 
         Input.GetAxis(Inputs.Key_A);
         Input.GetAxis(Inputs.Mouse_Left);
         Input.GetAxis(Inputs.Gamepad_A);
         Input.GetAxis(Inputs.Joystick_Trigger);
 
-        Input.GetAxis(JoystickSlot.All);
+        Input.GetAxis(InputSlot.All);
     }
 
     private Joystick AddHidJoystick()
