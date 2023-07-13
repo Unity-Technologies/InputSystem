@@ -354,7 +354,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static string GetHumanReadableCompositeName(SerializedInputBinding binding)
         {
             return $"{ObjectNames.NicifyVariableName(binding.name)}: " +
-                $"{InputControlPath.ToHumanReadableString(binding.path)}";
+                $"{GetHumanReadableBindingName(binding)}";
         }
 
         private static string GetControlLayout(string path)
