@@ -10,6 +10,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+
+## [1.6.3] - 2023-07-11
+
+### Fixed
+- Fixed warning in USS file
+
+## [1.6.2] - 2023-07-10
+
 ### Added
 - Enabled `displayIndex` support for Unity 2022.3.
 
