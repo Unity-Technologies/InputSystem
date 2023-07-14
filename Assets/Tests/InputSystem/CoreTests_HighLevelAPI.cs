@@ -333,8 +333,8 @@ internal partial class CoreTests
     [Category("HighLevelAPI")]
     public void HighLevelAPI_JoysticksCollectionIsInitializedToMaxSlots()
     {
-        Assert.That(Input.joysticks.Count, Is.EqualTo((int)InputSlot.Max));
-        Assert.That(Input.joysticks, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, (int)InputSlot.Max)));
+        Assert.That(Input.joysticks.Count, Is.EqualTo((int)InputSlot.Joystick_Max));
+        Assert.That(Input.joysticks, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, (int)InputSlot.Joystick_Max)));
     }
 
     [Test]
@@ -560,7 +560,7 @@ internal partial class CoreTests
     public void HighLevelAPI_JoysticksAreAddedAndRemovedFromCollection()
     {
         var joysticks = new List<Joystick>();
-        for (var i = 0; i < (int)InputSlot.Max; i++)
+        for (var i = 0; i < (int)InputSlot.Joystick_Max; i++)
         {
             joysticks.Add(InputSystem.AddDevice<Joystick>());
             Assert.That(Input.joysticks[0], Is.Not.Null);

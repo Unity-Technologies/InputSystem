@@ -40,6 +40,11 @@
             "name": "Unity",
             "expression": "2022.1",
             "define": "TEMP_DISABLE_STANDALONE_OSX_XINPUT_TEST"
+        },
+        {
+            "name": "Unity",
+            "expression": "2020.2",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API"
         }
     ],
     "noEngineReferences": false
