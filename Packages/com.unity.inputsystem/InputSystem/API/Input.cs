@@ -313,9 +313,9 @@ namespace UnityEngine.InputSystem
                 InputSlot.Slot10,
                 InputSlot.Slot11
             });
-            s_Gamepads = new Gamepad[maxInputSlots];
-            s_GamepadsConnectedFrames = new int[maxInputSlots];
-            s_GamepadsDisconnectedFrames = new int[maxInputSlots];
+            s_Gamepads = new Gamepad[maxGamepadSlots];
+            s_GamepadsConnectedFrames = new int[maxGamepadSlots];
+            s_GamepadsDisconnectedFrames = new int[maxGamepadSlots];
 
             s_Joysticks = new Joystick[(int)InputSlot.Joystick_Max];
         }
@@ -373,7 +373,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The maximum number of supported gamepad slots.
         /// </summary>
-        public static int maxInputSlots => s_InputSlotEnums.Count;
+        public static int maxGamepadSlots => (int)InputSlot.Gamepad_Max;
 
         /// <summary>
         /// The pixel position of the pointer in window space.
@@ -988,7 +988,7 @@ namespace UnityEngine.InputSystem
                 return s_Gamepads[(int)slot] != null &&
                     GetGamepadButtonControl(s_Gamepads[(int)slot], (Inputs)button).isPressed;
 
-            for (var i = 0; i < maxInputSlots; i++)
+            for (var i = 0; i < maxGamepadSlots; i++)
             {
                 if (s_Gamepads[i] == null) continue;
 
@@ -1120,7 +1120,7 @@ namespace UnityEngine.InputSystem
                 return s_Gamepads[(int)slot] != null &&
                     GetGamepadButtonControl(s_Gamepads[(int)slot], (Inputs)button).wasPressedThisFrame;
 
-            for (var i = 0; i < maxInputSlots; i++)
+            for (var i = 0; i < maxGamepadSlots; i++)
             {
                 if (s_Gamepads[i] == null) continue;
 
@@ -1250,7 +1250,7 @@ namespace UnityEngine.InputSystem
                 return s_Gamepads[(int)slot] != null &&
                     GetGamepadButtonControl(s_Gamepads[(int)slot], (Inputs)button).wasReleasedThisFrame;
 
-            for (var i = 0; i < maxInputSlots; i++)
+            for (var i = 0; i < maxGamepadSlots; i++)
             {
                 if (s_Gamepads[i] == null) continue;
 
@@ -1690,7 +1690,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static void Initialize(string defaultGlobalActionsPath = null, string globalActionsAssetPath = null)
         {
-            for (var i = 0; i < maxInputSlots; i++)
+            for (var i = 0; i < maxGamepadSlots; i++)
             {
                 s_Gamepads[i] = null;
                 s_GamepadsConnectedFrames[i] = -1;
@@ -1800,7 +1800,7 @@ namespace UnityEngine.InputSystem
         {
             if (!(device is Gamepad gamepad)) return;
 
-            for (var i = 0; i < maxInputSlots; i++)
+            for (var i = 0; i < maxGamepadSlots; i++)
             {
                 if (s_Gamepads[i] != null) continue;
 
@@ -1817,7 +1817,7 @@ namespace UnityEngine.InputSystem
 
         private static void RemoveGamepad(InputDevice device)
         {
-            for (var i = 0; i < maxInputSlots; i++)
+            for (var i = 0; i < maxGamepadSlots; i++)
             {
                 if (s_Gamepads[i] != device) continue;
 

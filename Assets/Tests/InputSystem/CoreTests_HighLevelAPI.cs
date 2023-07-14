@@ -324,8 +324,8 @@ internal partial class CoreTests
     [Category("HighLevelAPI")]
     public void HighLevelAPI_GamepadsCollectionIsInitializedToMaxSlots()
     {
-        Assert.That(Input.gamepads.Count, Is.EqualTo(Input.maxInputSlots));
-        Assert.That(Input.gamepads, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, Input.maxInputSlots)));
+        Assert.That(Input.gamepads.Count, Is.EqualTo(Input.maxGamepadSlots));
+        Assert.That(Input.gamepads, Is.EquivalentTo(Enumerable.Repeat<InputDevice>(null, Input.maxGamepadSlots)));
     }
 
     [Test]
@@ -360,7 +360,7 @@ internal partial class CoreTests
     public void HighLevelAPI_IsGamepadConnected_ReturnsTrueForOccupiedSlots(
         [NUnit.Framework.Range(0, 11)] int disconnectedSlot)
     {
-        for (var i = 0; i < Input.maxInputSlots; i++)
+        for (var i = 0; i < Input.maxGamepadSlots; i++)
         {
             InputSystem.AddDevice<Gamepad>();
 
@@ -391,7 +391,7 @@ internal partial class CoreTests
     [Category("HighLevelAPI")]
     public IEnumerator HighLevelAPI_DidAllGamepadsConnectOrDisconnectThisFrame()
     {
-        for (var i = 0; i < Input.maxInputSlots; i++)
+        for (var i = 0; i < Input.maxGamepadSlots; i++)
         {
             runtime.ReportNewInputDevice<Gamepad>();
         }
