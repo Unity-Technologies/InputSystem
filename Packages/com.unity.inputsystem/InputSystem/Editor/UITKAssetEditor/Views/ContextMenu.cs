@@ -13,13 +13,13 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string add_positiveNegative_Binding_String = "Add Positive\\Negative Binding";
         private static readonly string add_oneModifier_Binding_String = "Add Binding With One Modifier";
         private static readonly string add_twoModifier_Binding_String = "Add Binding With Two Modifiers";
-        public static void GetContextMenuForActionMapItem(InputActionsTreeViewItem treeViewItem, int index)
+        public static void GetContextMenuForActionMapItem(InputActionsTreeViewItem treeViewItem)
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
-                menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateAction.Invoke(index));
+                menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateAction.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
-                menuEvent.menu.AppendAction(rename_String, _ => InputActionViewsControlsHolder.RenameActionMap.Invoke(index,treeViewItem));
+                menuEvent.menu.AppendAction(rename_String, _ => InputActionViewsControlsHolder.RenameActionMap.Invoke(treeViewItem));
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }

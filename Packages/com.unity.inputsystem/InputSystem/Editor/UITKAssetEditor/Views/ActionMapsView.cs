@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
 
-                ContextMenu.GetContextMenuForActionMapItem(treeViewItem,i);
+                ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
             m_ListView.makeItem = () => new InputActionsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>

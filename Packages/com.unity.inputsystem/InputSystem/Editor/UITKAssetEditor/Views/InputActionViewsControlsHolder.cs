@@ -10,13 +10,13 @@ namespace UnityEngine.InputSystem.Editor
         private static ActionsTreeView m_ActionsTreeView;
         private static ListView m_ListView;
         internal static Action<int, InputActionsTreeViewItem> RenameAction => RenameActionItem;
-        internal static Action<int, InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
+        internal static Action<InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
         internal static Action<InputActionsTreeViewItem> DeleteAction => Delete;
         internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
         internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier => AddNewPositiveNegativeComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
-        internal static Action<int> CreateAction => CreateNewAction;
+        internal static Action<InputActionsTreeViewItem> CreateAction => CreateNewAction;
 
         internal static void Initialize(VisualElement root, ActionsTreeView actionsTreeView)
         {
@@ -30,8 +30,11 @@ namespace UnityEngine.InputSystem.Editor
             m_TreeView.SetSelection(index);
             treeViewItem.FocusOnRenameTextField();
         } 
-        private static void RenameActionMapItem(int index, InputActionsTreeViewItem treeViewItem)
+        private static void RenameActionMapItem(InputActionsTreeViewItem treeViewItem)
         {
+            var index = m_ListView.itemsSource.IndexOf(treeViewItem.label.text);
+            if(index < 0 || index >= m_ListView.itemsSource.Count)
+                return;
             m_ListView.SetSelection(index);
             treeViewItem.FocusOnRenameTextField();
         }
@@ -40,8 +43,11 @@ namespace UnityEngine.InputSystem.Editor
             treeViewItem.DeleteItem();
         }
 
-        private static void CreateNewAction(int index)
+        private static void CreateNewAction(InputActionsTreeViewItem item)
         { 
+            var index = m_ListView.itemsSource.IndexOf(item.label.text);
+            if(index < 0 || index >= m_ListView.itemsSource.Count)
+                return;
             m_ListView.SetSelection(index); 
             m_ActionsTreeView.AddAction();
         }
