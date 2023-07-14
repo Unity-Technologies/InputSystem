@@ -77,7 +77,7 @@ namespace Unity.InputSystem.SourceGenerators
                         }
                     });
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     new DiagnosticDescriptor("ISGEN002", "", $"Couldn't parse global input actions asset.", "InputSystemSourceGenerator",
@@ -137,7 +137,6 @@ using Input=UnityEngine.InputSystem.HighLevel.Input;
         private string GenerateInputActionWrapper(InputAction inputAction)
         {
             var interactionFields = "";
-            var ctorBody = "";
             return $$"""
                 public class {{FormatClassName(inputAction.Name)}}Input
                 {
