@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem.HighLevel.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -20,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
             // for the global actions asset: save differently (as it is a yaml file and not a json)
-            if (asset.name == HighLevel.Input.kGlobalActionsAssetName)
+            if (asset.name == Input.kGlobalActionsAssetName)
             {
                 AssetDatabase.SaveAssets();
                 return;

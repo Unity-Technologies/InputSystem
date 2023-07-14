@@ -2,7 +2,7 @@
 
 using System;
 
-namespace UnityEngine.InputSystem.HighLevel
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A type to encapsulate and simplify access to input bindings by index.

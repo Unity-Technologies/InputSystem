@@ -10,7 +10,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.HID;
-using UnityEngine.InputSystem.HighLevel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -20,7 +19,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using GamepadButton = UnityEngine.InputSystem.LowLevel.GamepadButton;
-using Input = UnityEngine.InputSystem.HighLevel.Input;
+using Input = UnityEngine.InputSystem.Input;
 using Is = NUnit.Framework.Is;
 using Random = UnityEngine.Random;
 
@@ -183,8 +182,8 @@ internal partial class CoreTests
         var gamepadOne = InputSystem.AddDevice<Gamepad>();
         var gamepadTwo = InputSystem.AddDevice<Gamepad>();
         var expectedUnusedSlot = slot == InputSlot.Slot2 ? InputSlot.Slot1 : InputSlot.Slot2;
-        var gamepadButtons = Enum.GetValues(typeof(UnityEngine.InputSystem.HighLevel.GamepadButton))
-            .Cast<UnityEngine.InputSystem.HighLevel.GamepadButton>()
+        var gamepadButtons = Enum.GetValues(typeof(UnityEngine.InputSystem.InputGamepadButton))
+            .Cast<UnityEngine.InputSystem.InputGamepadButton>()
             .ToList();
 
         var gamepadState = new GamepadState(
@@ -234,7 +233,7 @@ internal partial class CoreTests
             AssertControlStates(buttonValue, false, false, false, expectedUnusedSlot);
         }
 
-        void AssertControlStates(UnityEngine.InputSystem.HighLevel.GamepadButton gamepadButton,
+        void AssertControlStates(UnityEngine.InputSystem.InputGamepadButton gamepadButton,
             bool controlDown, bool controlPressed, bool controlUp, InputSlot gamepadSlot)
         {
             Assert.That(Input.WasPressedThisFrame(gamepadButton, gamepadSlot), Is.EqualTo(controlDown));

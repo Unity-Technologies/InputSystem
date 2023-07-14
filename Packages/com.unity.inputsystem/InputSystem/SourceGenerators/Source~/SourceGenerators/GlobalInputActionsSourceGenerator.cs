@@ -91,8 +91,7 @@ namespace Unity.InputSystem.SourceGenerators
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.HighLevel;
-using Input=UnityEngine.InputSystem.HighLevel.Input;
+using Input=UnityEngine.InputSystem.Input;
 
 
     public static partial class InputActions

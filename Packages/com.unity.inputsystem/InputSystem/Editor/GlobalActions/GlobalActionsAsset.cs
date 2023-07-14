@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.HighLevel.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal static class GlobalActionsAsset
     {

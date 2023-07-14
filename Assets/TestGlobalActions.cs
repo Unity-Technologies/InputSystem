@@ -3,9 +3,8 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.HighLevel;
 using UnityEngine.InputSystem.Interactions;
-using Input = UnityEngine.InputSystem.HighLevel.Input;
+using Input = UnityEngine.InputSystem.Input;
 
 public class TestGlobalActions : MonoBehaviour
 {

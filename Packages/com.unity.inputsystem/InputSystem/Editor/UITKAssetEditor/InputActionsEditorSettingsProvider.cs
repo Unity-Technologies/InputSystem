@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine.InputSystem.HighLevel.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor

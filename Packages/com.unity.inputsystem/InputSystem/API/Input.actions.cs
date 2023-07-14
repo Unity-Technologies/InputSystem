@@ -9,10 +9,10 @@ using UnityEngine.InputSystem.LowLevel;
 using System.Reflection;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Interactions;
-using UnityEngine.InputSystem.HighLevel.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.InputSystem.HighLevel
+namespace UnityEngine.InputSystem
 {
     public static partial class Input
     {

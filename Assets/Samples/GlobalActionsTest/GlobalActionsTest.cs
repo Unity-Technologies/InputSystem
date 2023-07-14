@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.InputSystem.HighLevel;
-using Input = UnityEngine.InputSystem.HighLevel.Input;
+using UnityEngine.InputSystem;
+using Input = UnityEngine.InputSystem.Input;
 
 public class NewBehaviourScript : MonoBehaviour
 {

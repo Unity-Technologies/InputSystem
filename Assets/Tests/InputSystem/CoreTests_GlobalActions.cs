@@ -8,12 +8,11 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.HighLevel;
-using UnityEngine.InputSystem.HighLevel.Editor;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
-using Input = UnityEngine.InputSystem.HighLevel.Input;
+using Input = UnityEngine.InputSystem.Input;
 
 internal partial class CoreTests
 {

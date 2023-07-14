@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.HighLevel
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A collection that can intelligently iterate over the bindings of an input action.

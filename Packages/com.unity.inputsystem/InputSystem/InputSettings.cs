@@ -665,7 +665,7 @@ namespace UnityEngine.InputSystem
         /// Disable the high level API, including global actions.
         /// </summary>
         /// <remarks>
-        /// The high-level API (everything under the <see cref="UnityEngine.InputSystem.HighLevel.Input"/>
+        /// The high-level API (everything under the <see cref="UnityEngine.InputSystem.Input"/>
         /// class) which includes the global actions functionality does take a very small amount of
         /// processing time, so if it is not being used, turning it off can win back a small amount of
         /// performance for free.

@@ -19,11 +19,6 @@ using UnityEngine.Profiling;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEditor.Networking.PlayerConnection;
-
-#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
-using UnityEngine.InputSystem.HighLevel.Editor;
-#endif
-
 #else
 using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
@@ -3516,7 +3511,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
                     if (!settings.disableHighLevelAPI)
                     {
-                        HighLevel.Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
+                        Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
                     }
 #endif
                     break;
@@ -3544,7 +3539,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
                     if (!settings.disableHighLevelAPI)
                     {
-                        HighLevel.Input.Shutdown();
+                        Input.Shutdown();
                     }
 #endif
 
@@ -3632,8 +3627,8 @@ namespace UnityEngine.InputSystem
 #if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
             if (!InputSystem.settings.disableHighLevelAPI)
             {
-                HighLevel.Input.Initialize();
-                HighLevel.Input.InitializeGlobalActions();
+                Input.Initialize();
+                Input.InitializeGlobalActions();
             }
 #endif
 

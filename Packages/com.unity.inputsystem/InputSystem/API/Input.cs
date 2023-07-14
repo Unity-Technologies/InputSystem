@@ -3,23 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.PlayerLoop;
 
-// TODO rename HighLevel to something that makes sense
-namespace UnityEngine.InputSystem.HighLevel
+namespace UnityEngine.InputSystem
 {
-    internal enum InputDeviceType
-    {
-        Invalid,
-        Keyboard,
-        Mouse,
-        Gamepad,
-        Joystick
-    }
-
     /// <summary>
     /// An enum for all controls that have button-like behaviour on keyboard, gamepad, mouse, and joystick devices.
     /// </summary>
@@ -223,8 +212,8 @@ namespace UnityEngine.InputSystem.HighLevel
     /// <summary>
     /// An enum for all buttons on a generic gamepad.
     /// </summary>
-    /// <seealso cref="Input.WasPressedThisFrame(GamepadButton,InputSlot)"/>
-    public enum GamepadButton
+    /// <seealso cref="Input.WasPressedThisFrame(InputGamepadButton,InputSlot)"/>
+    public enum InputGamepadButton
     {
         DpadUp = Inputs.Gamepad_DpadUp,
         DpadDown = Inputs.Gamepad_DpadDown,
@@ -268,9 +257,9 @@ namespace UnityEngine.InputSystem.HighLevel
     /// the next gamepad to connect goes in the vacant slot. This makes it easier to abstract gameplay or application logic
     /// from gamepad instances.
     /// </remarks>
-    /// <seealso cref="Input.WasPressedThisFrame(GamepadButton,InputSlot)"/>
-    /// <seealso cref="Input.WasReleasedThisFrame(GamepadButton,InputSlot)"/>
-    /// <seealso cref="Input.IsPressed(GamepadButton,InputSlot)"/>
+    /// <seealso cref="Input.WasPressedThisFrame(InputGamepadButton,InputSlot)"/>
+    /// <seealso cref="Input.WasReleasedThisFrame(InputGamepadButton,InputSlot)"/>
+    /// <seealso cref="Input.IsPressed(InputGamepadButton,InputSlot)"/>
     /// <seealso cref="Input.IsGamepadConnected(InputSlot)"/>
     /// <seealso cref="Input.DidGamepadConnectThisFrame(InputSlot)"/>
     /// <seealso cref="Input.DidGamepadDisconnectThisFrame(InputSlot)"/>
@@ -298,6 +287,14 @@ namespace UnityEngine.InputSystem.HighLevel
     public static partial class Input
     {
         internal const float kDefaultJoystickDeadzone = 0.125f;
+        internal enum InputDeviceType
+        {
+            Invalid,
+            Keyboard,
+            Mouse,
+            Gamepad,
+            Joystick
+        }
 
         static Input()
         {
@@ -981,11 +978,11 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <summary>
         /// Is the indicated gamepad button currently pressed.
         /// </summary>
-        /// <param name="button">A control from the GamepadButton enum.</param>
+        /// <param name="button">A control from the InputGamepadButton enum.</param>
         /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
         /// <returns>True if the input is currently held down, false if the input is not pressed,
         /// or if 'slot' is specified and no gamepad exists in that slot.</returns>
-        public static bool IsPressed(GamepadButton button, InputSlot slot = InputSlot.All)
+        public static bool IsPressed(InputGamepadButton button, InputSlot slot = InputSlot.All)
         {
             if (slot != InputSlot.All)
                 return s_Gamepads[(int)slot] != null &&
@@ -1113,11 +1110,11 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <summary>
         /// Was the specified control pressed in the current frame.
         /// </summary>
-        /// <param name="button">A control from the GamepadButton enum.</param>
+        /// <param name="button">A control from the InputGamepadButton enum.</param>
         /// <param name="slot">Which gamepad to check for input. Default is 'All'.</param>
         /// <returns>True if the input was pressed in the current frame, false if the input is not pressed, was
         /// pressed in a frame previous to the current one, or if 'slot' is specified and no gamepad is connected to that slot.</returns>
-        public static bool WasPressedThisFrame(GamepadButton button, InputSlot slot = InputSlot.All)
+        public static bool WasPressedThisFrame(InputGamepadButton button, InputSlot slot = InputSlot.All)
         {
             if (slot != InputSlot.All)
                 return s_Gamepads[(int)slot] != null &&
@@ -1247,7 +1244,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// <param name="slot">Which gamepad to check for input. Default is 'Any'.</param>
         /// <returns>True if the input was released in the current frame, otherwise false.
         /// Also returns false if 'slot' is specified and no gamepad is connected to that slot.</returns>
-        public static bool WasReleasedThisFrame(GamepadButton button, InputSlot slot = InputSlot.All)
+        public static bool WasReleasedThisFrame(InputGamepadButton button, InputSlot slot = InputSlot.All)
         {
             if (slot != InputSlot.All)
                 return s_Gamepads[(int)slot] != null &&
@@ -1858,6 +1855,8 @@ namespace UnityEngine.InputSystem.HighLevel
                 s_Joysticks[i] = null;
             }
         }
-    }
-}
+    } // public static partial class Input
+
+} // namespace UnityEngine.InputSystem
+
 #endif
