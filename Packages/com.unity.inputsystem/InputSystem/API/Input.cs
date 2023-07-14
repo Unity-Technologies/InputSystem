@@ -1300,7 +1300,7 @@ namespace UnityEngine.InputSystem.HighLevel
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
         /// <returns>A value between 0 at un-actuated to 1 at fully actuated.</returns>
-        public static float GetAxis(Inputs input)
+        public static float GetAxis(Inputs input, InputSlot slot = InputSlot.All)
         {
             var deviceType = GetDeviceTypeForInput(input);
             var maxValue = 0.0f;
@@ -1328,8 +1328,11 @@ namespace UnityEngine.InputSystem.HighLevel
 
                     break;
                 case InputDeviceType.Gamepad:
-                    foreach (var gamepad in s_Gamepads)
+                    for (var i = 0; i < s_Gamepads.Length; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
+                        var gamepad = s_Gamepads[i];
                         if (gamepad == null) continue;
 
                         maxValue = Mathf.Max(maxValue,
@@ -1338,8 +1341,11 @@ namespace UnityEngine.InputSystem.HighLevel
 
                     break;
                 case InputDeviceType.Joystick:
-                    foreach (var joystick in s_Joysticks)
+                    for (var i = 0; i < (int)InputSlot.Joystick_Max; i++)
                     {
+                        if (slot != InputSlot.All && (int)slot != i) continue;
+
+                        var joystick = s_Joysticks[i];
                         if (joystick == null) continue;
 
                         var control = GetJoystickButtonControl(joystick, input);
