@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var boolValue = parameter.value.value.ToBoolean();
                     var field = new Toggle(label.text) { value = boolValue };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
-                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    field.RegisterValueChangedCallback(_ => OnEditEnd());
                     root.Add(field);
                 }
             }
