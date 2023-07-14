@@ -263,6 +263,10 @@ namespace UnityEngine.InputSystem.Editor.Lists
             {
                 parameter.value.value = PrimitiveValue.FromObject(result).ConvertTo(parameter.value.type);
                 m_Parameters[i] = parameter;
+            }
+
+            void OnEditEnd()
+            {
                 onChange?.Invoke();
             }
 
@@ -277,6 +281,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var intValue = parameter.value.value.ToInt32();
                     var field = new DropdownField(label.text, parameter.enumNames.Select(x => x.text).ToList(), intValue);
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
                 else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
@@ -284,6 +289,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var longValue = parameter.value.value.ToInt64();
                     var field = new LongField(label.text) { value = longValue };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
                 else if (parameter.value.type.IsInt())
@@ -291,6 +297,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var intValue = parameter.value.value.ToInt32();
                     var field = new IntegerField(label.text) { value = intValue };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
                 else if (parameter.value.type == TypeCode.Single)
@@ -298,6 +305,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var floatValue = parameter.value.value.ToSingle();
                     var field = new FloatField(label.text) { value = floatValue };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
                 else if (parameter.value.type == TypeCode.Double)
@@ -305,6 +313,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var floatValue = parameter.value.value.ToDouble();
                     var field = new DoubleField(label.text) { value = floatValue };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
                 else if (parameter.value.type == TypeCode.Boolean)
@@ -312,6 +321,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var boolValue = parameter.value.value.ToBoolean();
                     var field = new Toggle(label.text) { value = boolValue };
                     field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, evt.newValue, closedIndex));
+                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
                     root.Add(field);
                 }
             }

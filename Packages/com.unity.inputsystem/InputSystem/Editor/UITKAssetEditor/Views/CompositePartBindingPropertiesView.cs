@@ -29,11 +29,13 @@ namespace UnityEngine.InputSystem.Editor
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");
 
             CreateSelector(Selectors.GetSelectedBinding,
-                (b, s) => !b.HasValue ? null : Selectors.GetCompositePartBindingViewState(b.Value, s));
+                (b, s) => b.HasValue && b.Value.isPartOfComposite ? Selectors.GetCompositePartBindingViewState(b.Value, s) : null);
         }
 
         public override void RedrawUI(ViewState viewState)
         {
+            if (viewState == null)
+                return;
             // TODO: Persist control picker state
             var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                 () => { Dispatch(Commands.ApplyModifiedProperties()); });
