@@ -1,3 +1,4 @@
+#if UNITY_2020_2_OR_NEWER
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Input = UnityEngine.InputSystem.Input;
@@ -44,3 +45,4 @@ public class NewBehaviourScript : MonoBehaviour
 
     }
 }
+#endif
