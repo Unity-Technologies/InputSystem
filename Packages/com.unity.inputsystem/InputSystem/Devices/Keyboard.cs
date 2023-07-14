@@ -198,21 +198,21 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// Named according to the US keyboard layout which is used as a reference layout.
-    /// 
+    ///
     /// Note:
     /// Unity input system key codes and input manager key codes are designed with game controls in mind.
-    ///     
-    /// This means the way they are assigned is intended to preserve the location of keys on keyboards, 
+    ///
+    /// This means the way they are assigned is intended to preserve the location of keys on keyboards,
     /// so that pressing a key in the same location on different keyboards should result in the same action
     /// regardless of what is printed on a key or what current system language is set.
-    /// 
+    ///
     /// This means, for example, that <see cref="A"/> is always the key to the right of <see cref="CapsLock"/>,
     /// regardless of which key (if any) produces the "a" character on the current keyboard layout.
-    /// 
+    ///
     /// Unity relies on physical hardware in the keyboards to report same USB HID "usage" for the keys in
     /// the same location.This puts a practical limit on what can be achieved, because different keyboards
     /// might report different data, and this is outside of Unity's control.
-    /// 
+    ///
     /// For this reason, you should not use key codes to read text input.
     /// Instead, you should use the <see cref="Keyboard.onTextInput"/> callback.
     /// The `onTextInput` callback provides you with the actual text characters which correspond
