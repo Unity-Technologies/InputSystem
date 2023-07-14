@@ -1,3 +1,6 @@
+---
+uid: input-system-installation
+---
 # Installation guide
 
 * [Installing the package](#installing-the-package)

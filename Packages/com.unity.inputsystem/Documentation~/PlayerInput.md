@@ -1,3 +1,6 @@
+---
+uid: input-system-player-input
+---
 # The PlayerInput component
 
 The Input System provides two related components that simplify how you set up and work with input: the **Player Input** component and the [**Player Input Manager**](PlayerInputManager.md) component.

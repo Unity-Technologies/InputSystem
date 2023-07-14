@@ -1,3 +1,6 @@
+---
+uid: input-system-sensors
+---
 # Sensor support
 
 * [Sampling Frequency](#sampling-frequency)

@@ -1,3 +1,6 @@
+---
+uid: input-system-mouse
+---
 # Mouse support
 
 The Input System represents mouse input with the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout that the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](Pointers.md) layout.
