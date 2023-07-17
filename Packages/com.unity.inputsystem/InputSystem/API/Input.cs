@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem
 
         static Input()
         {
-            s_InputSlotEnums = new ReadOnlyArray<InputSlot>(new[]
+            s_GamepadSlotEnums = new ReadOnlyArray<InputSlot>(new[]
             {
                 InputSlot.Slot0,
                 InputSlot.Slot1,
@@ -368,7 +368,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        public static ReadOnlyArray<InputSlot> gamepadSlotEnums => s_InputSlotEnums;
+        public static ReadOnlyArray<InputSlot> gamepadSlotEnums => s_GamepadSlotEnums;
 
         /// <summary>
         /// The maximum number of supported gamepad slots.
@@ -430,7 +430,7 @@ namespace UnityEngine.InputSystem
         private static Gamepad[] s_Gamepads;
         private static int[] s_GamepadsConnectedFrames;
         private static int[] s_GamepadsDisconnectedFrames;
-        private static ReadOnlyArray<InputSlot> s_InputSlotEnums;
+        private static ReadOnlyArray<InputSlot> s_GamepadSlotEnums;
         private static GamepadConfig[] s_GamepadConfigs = new GamepadConfig[(int)InputSlot.Slot11 + 1];
 
         private static Joystick[] s_Joysticks;
