@@ -13,10 +13,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static Action<InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
         internal static Action<InputActionsTreeViewItem> DeleteAction => Delete;
         internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
-
-        internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier =>
-            AddNewPositiveNegativeComposite;
-
+        internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier => AddNewPositiveNegativeComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
         internal static Action<InputActionsTreeViewItem> CreateAction => CreateNewAction;
@@ -47,7 +44,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             treeViewItem.DeleteItem();
         }
-
 
         private static void CreateNewAction(InputActionsTreeViewItem item)
         {
