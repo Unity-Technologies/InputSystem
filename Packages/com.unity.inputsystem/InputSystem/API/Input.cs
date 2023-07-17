@@ -1496,10 +1496,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="slot"></param>
         /// <returns></returns>
-        public static bool IsGamepadConnected(InputSlot slot)
+        public static bool IsGamepadConnected(InputSlot gamepadSlot)
         {
-            if (slot != InputSlot.All)
-                return s_Gamepads[(int)slot] != null;
+            if (gamepadSlot != InputSlot.All)
+                return s_Gamepads[(int)gamepadSlot] != null;
 
             foreach (var g in s_Gamepads)
             {
@@ -1517,10 +1517,10 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Use this method when you have logic that you want to run once when a gamepad connects.
         /// </remarks>
-        public static bool DidGamepadConnectThisFrame(InputSlot slot)
+        public static bool DidGamepadConnectThisFrame(InputSlot gamepadSlot)
         {
-            if (slot != InputSlot.All)
-                return s_GamepadsConnectedFrames[(int)slot] == Time.frameCount;
+            if (gamepadSlot != InputSlot.All)
+                return s_GamepadsConnectedFrames[(int)gamepadSlot] == Time.frameCount;
 
             foreach (var frame in s_GamepadsConnectedFrames)
             {
@@ -1540,10 +1540,10 @@ namespace UnityEngine.InputSystem
         /// Use this method when you have logic that you want to run once when a gamepad disconnects, such as
         /// showing a reconnect message.
         /// </remarks>
-        public static bool DidGamepadDisconnectThisFrame(InputSlot slot)
+        public static bool DidGamepadDisconnectThisFrame(InputSlot gamepadSlot)
         {
-            if (slot != InputSlot.All)
-                return s_GamepadsDisconnectedFrames[(int)slot] == Time.frameCount;
+            if (gamepadSlot != InputSlot.All)
+                return s_GamepadsDisconnectedFrames[(int)gamepadSlot] == Time.frameCount;
 
             foreach (var frame in s_GamepadsDisconnectedFrames)
             {
