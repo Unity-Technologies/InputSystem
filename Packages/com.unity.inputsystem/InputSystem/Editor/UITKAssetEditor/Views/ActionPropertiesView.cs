@@ -3,15 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
-        private readonly VisualElement m_Root;
         private readonly Foldout m_ParentFoldout;
+        private readonly VisualElement m_Root;
 
         public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
             : base(stateContainer)
@@ -29,11 +28,11 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
-        public override void RedrawUI((SerializedInputAction ? , List<string>) viewState)
+        public override void RedrawUI((SerializedInputAction?, List<string>) viewState)
         {
             if (!viewState.Item1.HasValue)
                 return;
-            
+
             m_ParentFoldout.text = "Action";
             var inputAction = viewState.Item1.Value;
 

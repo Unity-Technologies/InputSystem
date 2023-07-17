@@ -13,7 +13,10 @@ namespace UnityEngine.InputSystem.Editor
         internal static Action<InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
         internal static Action<InputActionsTreeViewItem> DeleteAction => Delete;
         internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
-        internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier => AddNewPositiveNegativeComposite;
+
+        internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier =>
+            AddNewPositiveNegativeComposite;
+
         internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
         internal static Action<InputActionsTreeViewItem> CreateAction => CreateNewAction;
@@ -29,26 +32,29 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_TreeView.SetSelection(index);
             treeViewItem.FocusOnRenameTextField();
-        } 
+        }
+
         private static void RenameActionMapItem(InputActionsTreeViewItem treeViewItem)
         {
             var index = m_ListView.itemsSource.IndexOf(treeViewItem.label.text);
-            if(index < 0 || index >= m_ListView.itemsSource.Count)
+            if (index < 0 || index >= m_ListView.itemsSource.Count)
                 return;
             m_ListView.SetSelection(index);
             treeViewItem.FocusOnRenameTextField();
         }
+
         private static void Delete(InputActionsTreeViewItem treeViewItem)
         {
             treeViewItem.DeleteItem();
         }
 
+
         private static void CreateNewAction(InputActionsTreeViewItem item)
-        { 
+        {
             var index = m_ListView.itemsSource.IndexOf(item.label.text);
-            if(index < 0 || index >= m_ListView.itemsSource.Count)
+            if (index < 0 || index >= m_ListView.itemsSource.Count)
                 return;
-            m_ListView.SetSelection(index); 
+            m_ListView.SetSelection(index);
             m_ActionsTreeView.AddAction();
         }
 
@@ -57,17 +63,19 @@ namespace UnityEngine.InputSystem.Editor
             var action = inputActionsTreeViewItem.label.text;
             m_ActionsTreeView.AddBinding(action);
         }
-        
+
         private static void AddNewPositiveNegativeComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
             var action = inputActionsTreeViewItem.label.text;
             m_ActionsTreeView.AddComposite(action, "1DAxis");
         }
+
         private static void AddNewOneModifierComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
             var action = inputActionsTreeViewItem.label.text;
             m_ActionsTreeView.AddComposite(action, "OneModifier");
         }
+
         private static void AddNewTwoModifierComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
             var action = inputActionsTreeViewItem.label.text;
