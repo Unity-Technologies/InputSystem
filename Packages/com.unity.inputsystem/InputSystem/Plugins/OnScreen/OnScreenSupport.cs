@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
+#if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA || UNITY_VISIONOS
 namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
