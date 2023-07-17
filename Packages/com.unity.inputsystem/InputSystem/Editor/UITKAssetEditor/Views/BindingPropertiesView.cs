@@ -41,6 +41,8 @@ namespace UnityEngine.InputSystem.Editor
             var binding = viewState.selectedBinding;
             if (!binding.HasValue)
                 return;
+
+            m_ParentFoldout.text = "Binding";
             if (binding.Value.isComposite)
             {
                 m_ParentFoldout.text = "Composite";
@@ -53,8 +55,6 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                m_ParentFoldout.text = "Binding";
-
                 var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                     () => { Dispatch(Commands.ApplyModifiedProperties()); });
 
