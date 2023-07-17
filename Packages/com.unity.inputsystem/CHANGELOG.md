@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Preliminary support for visionOS.
 
 ## [1.6.3] - 2023-07-11
 
