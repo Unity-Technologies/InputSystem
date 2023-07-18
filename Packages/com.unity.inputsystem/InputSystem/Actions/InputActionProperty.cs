@@ -29,9 +29,9 @@ namespace UnityEngine.InputSystem
     public struct InputActionProperty : IEquatable<InputActionProperty>, IEquatable<InputAction>, IEquatable<InputActionReference>
     {
         /// <summary>
-        /// The action held on to by the property.
+        /// The effective action held on to by the property.
         /// </summary>
-        /// <value>The action object contained in the property.</value>
+        /// <value>The effective action object contained in the property.</value>
         /// <remarks>
         /// This property will return <c>null</c> if the property is using a <see cref="reference"/> and
         /// the referenced action cannot be found. Also, it will be <c>null</c> if the property
@@ -41,11 +41,23 @@ namespace UnityEngine.InputSystem
         public InputAction action => m_UseReference ? m_Reference != null ? m_Reference.action : null : m_Action;
 
         /// <summary>
-        /// If the property contains a reference to the action, this property returns
+        /// If the property is set to use a reference to the action, this property returns
         /// the reference. Otherwise it returns <c>null</c>.
         /// </summary>
         /// <value>Reference to external input action, if defined.</value>
         public InputActionReference reference => m_UseReference ? m_Reference : null;
+
+        /// <summary>
+        /// The serialized loose action created in code serialized with this property.
+        /// </summary>
+        /// <value>The serialized action field.</value>
+        internal InputAction serializedAction => m_Action;
+
+        /// <summary>
+        /// The serialized reference to an external action.
+        /// </summary>
+        /// <value>The serialized reference field.</value>
+        internal InputActionReference serializedReference => m_Reference;
 
         /// <summary>
         /// Initialize the property to contain the given action.
@@ -157,8 +169,8 @@ namespace UnityEngine.InputSystem
             return !left.Equals(right);
         }
 
-        [SerializeField] internal bool m_UseReference;
-        [SerializeField] internal InputAction m_Action;
-        [SerializeField] internal InputActionReference m_Reference;
+        [SerializeField] private bool m_UseReference;
+        [SerializeField] private InputAction m_Action;
+        [SerializeField] private InputActionReference m_Reference;
     }
 }

@@ -646,10 +646,10 @@ namespace UnityEngine.InputSystem.XR
 #pragma warning disable UNT0029 // Pattern matching with null on Unity objects -- Using true null is intentional, not operator== evaluation.
             // We're checking for true null here since we don't want to migrate if the new field is already being used, even if the reference is missing.
             // Migrate the old fields to the new properties added in Input System 1.1.0-pre.6.
-            if (m_PositionInput.m_Reference is null && m_PositionInput.m_Action is null && !(m_PositionAction is null))
+            if (m_PositionInput.serializedReference is null && m_PositionInput.serializedAction is null && !(m_PositionAction is null))
                 m_PositionInput = new InputActionProperty(m_PositionAction);
 
-            if (m_RotationInput.m_Reference is null && m_RotationInput.m_Action is null && !(m_RotationAction is null))
+            if (m_RotationInput.serializedReference is null && m_RotationInput.serializedAction is null && !(m_RotationAction is null))
                 m_RotationInput = new InputActionProperty(m_RotationAction);
 #pragma warning restore UNT0029
 #pragma warning restore 0612
