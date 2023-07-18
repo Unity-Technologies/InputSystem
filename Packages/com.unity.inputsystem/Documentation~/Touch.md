@@ -1,3 +1,6 @@
+---
+uid: input-system-touch
+---
 # Touch support
 
 - [Touch support](#touch-support)

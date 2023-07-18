@@ -1,3 +1,6 @@
+---
+uid: input-system-devices
+---
 # Devices
 
 - [Devices](#devices)

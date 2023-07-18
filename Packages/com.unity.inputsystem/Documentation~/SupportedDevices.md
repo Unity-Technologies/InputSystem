@@ -1,3 +1,6 @@
+---
+uid: input-system-supported-devices
+---
 # Supported Input Devices
 
 This page lists Input Device types and products that the Input System package supports, and the platforms they're supported on.
