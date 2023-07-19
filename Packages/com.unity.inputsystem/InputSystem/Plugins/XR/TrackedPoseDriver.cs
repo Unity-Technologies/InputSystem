@@ -581,18 +581,23 @@ namespace UnityEngine.InputSystem.XR
             var positionValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Position) != 0;
             var rotationValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Rotation) != 0;
 
-            if (rotationValid &&
-                (m_TrackingType == TrackingType.RotationAndPosition ||
-                 m_TrackingType == TrackingType.RotationOnly))
+            if (rotationValid && positionValid && m_TrackingType == TrackingType.RotationAndPosition)
             {
-                transform.localRotation = newRotation;
+                transform.SetLocalPositionAndRotation(newPosition, newRotation);
             }
-
-            if (positionValid &&
-                (m_TrackingType == TrackingType.RotationAndPosition ||
-                 m_TrackingType == TrackingType.PositionOnly))
+            else
             {
-                transform.localPosition = newPosition;
+                if (rotationValid &&
+                m_TrackingType == TrackingType.RotationOnly)
+                {
+                    transform.localRotation = newRotation;
+                }
+
+                if (positionValid &&
+                     m_TrackingType == TrackingType.PositionOnly)
+                {
+                    transform.localPosition = newPosition;
+                }
             }
         }
 
