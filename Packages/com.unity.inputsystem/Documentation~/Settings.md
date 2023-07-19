@@ -1,3 +1,6 @@
+---
+uid: input-system-settings
+---
 # Input settings
 
 * [Update Mode](#update-mode)

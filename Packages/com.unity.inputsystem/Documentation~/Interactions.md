@@ -1,3 +1,6 @@
+---
+uid: input-system-interactions
+---
 # Interactions
 
 - [Interactions](#interactions)

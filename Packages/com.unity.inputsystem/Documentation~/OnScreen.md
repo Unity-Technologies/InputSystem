@@ -1,3 +1,6 @@
+---
+uid: input-system-on-screen
+---
 # On-screen Controls
 
 You can use on-screen Controls to simulate Input Devices with UI widgets that the user interacts with on the screen. The most prominent example is the use of stick and button widgets on touchscreens to emulate a joystick or gamepad.
