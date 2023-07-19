@@ -97,6 +97,41 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command DuplicateActionMap(int actionMapIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+                var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
+                var name = actionMap?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+                var newMap = InputActionSerializationHelpers.DuplicateElement(actionMapArray, actionMap, name);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectActionMap(newMap.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue);
+            };
+        }
+
+        public static Command DuplicateAction()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
+                var actionName = action?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+                var actionArray = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+                var newAction = InputActionSerializationHelpers.DuplicateElement(actionArray, action, actionName);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectAction(newAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue);
+            };
+        }
+
+        public static Command DuplicateBinding()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                //TODO
+                return state.SelectBinding(0);
+            };
+        }
+
         private static InputActionsEditorState SelectPrevActionMap(InputActionsEditorState state)
         {
             var count = Selectors.GetActionMapCount(state);

@@ -110,6 +110,16 @@ namespace UnityEngine.InputSystem.Editor
             return indexInArray;
         }
 
+        public static SerializedProperty DuplicateElement(SerializedProperty arrayProperty, SerializedProperty actionMap, string name)
+        {
+            var json = actionMap.CopyToJson(true);
+            var duplicatedProperty = AddElement(arrayProperty, name, actionMap.GetIndexOfArrayElement() + 1);
+            duplicatedProperty.RestoreFromJson(json);
+            duplicatedProperty.FindPropertyRelative("m_Name").stringValue = FindUniqueName(arrayProperty, name);
+            AssignUniqueIDs(duplicatedProperty);
+            return duplicatedProperty;
+        }
+
         public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
         {
             var uniqueName = FindUniqueName(arrayProperty, name);
