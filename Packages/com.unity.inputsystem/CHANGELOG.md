@@ -10,8 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Fixed
+- Fixed missing prefab errors in InputDeviceTester project (case ISXB-420).
+
 ### Added
 - Preliminary support for visionOS.
+
 
 ## [1.6.3] - 2023-07-11
 
