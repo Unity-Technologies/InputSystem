@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
         static EnableUITKEditor()
         {
             // set this feature flag to true to enable the UITK editor
-            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditor, false);
+            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditor, true);
         }
     }
 
