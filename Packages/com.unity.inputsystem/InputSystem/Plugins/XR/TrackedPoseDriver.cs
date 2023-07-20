@@ -1,15 +1,3 @@
-// Transform.SetLocalPositionAndRotation API added in:
-
-// 2022.3.0f1 or newer
-#if UNITY_2022_3_OR_NEWER
-#define HAS_SET_LOCAL_POSITION_AND_ROTATION
-#endif
-
-// 2021.3.11f1 or newer
-#if UNITY_2021_3 && !(UNITY_2021_3_0 || UNITY_2021_3_1 || UNITY_2021_3_2 || UNITY_2021_3_3 || UNITY_2021_3_4 || UNITY_2021_3_5 || UNITY_2021_3_6 || UNITY_2021_3_7 || UNITY_2021_3_8 || UNITY_2021_3_9 || UNITY_2021_3_10)
-#define HAS_SET_LOCAL_POSITION_AND_ROTATION
-#endif
-
 using System;
 using UnityEngine.InputSystem.LowLevel;
 
