@@ -397,8 +397,6 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         protected void Reset()
         {
-            m_HasMigratedActions = true;
-
             m_PositionInput = new InputActionProperty(new InputAction("Position", expectedControlType: "Vector3"));
             m_RotationInput = new InputActionProperty(new InputAction("Rotation", expectedControlType: "Quaternion"));
             m_TrackingStateInput = new InputActionProperty(new InputAction("Tracking State", expectedControlType: "Integer"));
@@ -636,12 +634,6 @@ namespace UnityEngine.InputSystem.XR
 #pragma warning restore 0649
         // ReSharper restore UnassignedField.Local
 
-        /// <summary>
-        /// Stores whether the fields of type <see cref="InputAction"/> have been migrated to fields of type <see cref="InputActionProperty"/>.
-        /// </summary>
-        [SerializeField, HideInInspector]
-        bool m_HasMigratedActions;
-
         /// <inheritdoc />
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
@@ -650,13 +642,16 @@ namespace UnityEngine.InputSystem.XR
         /// <inheritdoc />
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            if (m_HasMigratedActions)
-                return;
+#pragma warning disable 0612 // Type or member is obsolete -- Deprecated fields are migrated to new properties.
+#pragma warning disable UNT0029 // Pattern matching with null on Unity objects -- Using true null is intentional, not operator== evaluation.
+            // We're checking for true null here since we don't want to migrate if the new field is already being used, even if the reference is missing.
+            // Migrate the old fields to the new properties added in Input System 1.1.0-pre.6.
+            if (m_PositionInput.serializedReference is null && m_PositionInput.serializedAction is null && !(m_PositionAction is null))
+                m_PositionInput = new InputActionProperty(m_PositionAction);
 
-#pragma warning disable 0612
-            m_PositionInput = new InputActionProperty(m_PositionAction);
-            m_RotationInput = new InputActionProperty(m_RotationAction);
-            m_HasMigratedActions = true;
+            if (m_RotationInput.serializedReference is null && m_RotationInput.serializedAction is null && !(m_RotationAction is null))
+                m_RotationInput = new InputActionProperty(m_RotationAction);
+#pragma warning restore UNT0029
 #pragma warning restore 0612
         }
 

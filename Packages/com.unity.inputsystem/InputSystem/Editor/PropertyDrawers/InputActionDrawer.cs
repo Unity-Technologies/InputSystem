@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -52,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (property == null) return;
 
-            property.SetStringValue(nameof(InputAction.m_Id), "");
+            property.SetStringValue(nameof(InputAction.m_Id), Guid.NewGuid().ToString());
             property.SetStringValue(nameof(InputAction.m_Name), "Input Action");
             property.FindPropertyRelative(nameof(InputAction.m_SingletonActionBindings))?.ClearArray();
             property.serializedObject?.ApplyModifiedPropertiesWithoutUndo();

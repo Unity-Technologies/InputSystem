@@ -10,12 +10,16 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
-### Fixed
-- Fixed missing prefab errors in InputDeviceTester project (case ISXB-420).
-
 ### Added
 - Preliminary support for visionOS.
 
+### Changed
+- Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
+
+### Fixed
+- Fixed missing prefab errors in InputDeviceTester project ([case ISXB-420](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-420)).
+- Fixed serialization migration in the Tracked Pose Driver component causing bindings to clear when prefabs are used in some cases ([case ISXB-512](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-512), [case ISXB-521](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-521)).
+- Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
 
 ## [1.6.3] - 2023-07-11
 
