@@ -116,8 +116,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
                 var actionName = action?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
-                var actionArray = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                var newAction = InputActionSerializationHelpers.DuplicateElement(actionArray, action, actionName);
+                var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
+                var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+                var newAction = InputActionSerializationHelpers.DuplicateAction(actionMap, actionArray, action, actionName);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectAction(newAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue);
             };
@@ -127,8 +128,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                //TODO
-                return state.SelectBinding(0);
+                var binding = Selectors.GetSelectedBinding(state)?.wrappedProperty;
+                var bindingName = binding?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+                var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
+                var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+                InputActionSerializationHelpers.DuplicateBinding(bindingsArray, binding, bindingName);
+                state.serializedObject.ApplyModifiedProperties();
+                return state.SelectBinding(state.selectedBindingIndex + 1);
             };
         }
 
