@@ -110,10 +110,10 @@ namespace UnityEngine.InputSystem.Editor
             return indexInArray;
         }
 
-        public static SerializedProperty DuplicateElement(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, bool changeName = true)
+        public static SerializedProperty DuplicateElement(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, int index, bool changeName = true)
         {
             var json = toDuplicate.CopyToJson(true);
-            var duplicatedProperty = AddElement(arrayProperty, name, toDuplicate.GetIndexOfArrayElement() + 1);
+            var duplicatedProperty = AddElement(arrayProperty, name, index);
             duplicatedProperty.RestoreFromJson(json);
             if (changeName)
                 EnsureUniqueName(duplicatedProperty);
@@ -123,22 +123,23 @@ namespace UnityEngine.InputSystem.Editor
 
         public static SerializedProperty DuplicateAction(SerializedProperty actionMap, SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name)
         {
-            var property = DuplicateElement(arrayProperty, toDuplicate, name);
+            var property = DuplicateElement(arrayProperty, toDuplicate, name, toDuplicate.GetIndexOfArrayElement() + 1);
             var newName = property.FindPropertyRelative("m_Name").stringValue;
             var bindingsArray = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var bindings = bindingsArray.Where(binding => binding.FindPropertyRelative("m_Action").stringValue.Equals(name));
+            var bindings = bindingsArray.Where(binding => binding.FindPropertyRelative("m_Action").stringValue.Equals(name)).ToList();
+            var index = bindings.Select(b => b.GetIndexOfArrayElement()).Max() + 1;
             foreach (var binding in bindings)
             {
-                var duplicatedBinding = DuplicateBinding(bindingsArray, binding, binding.FindPropertyRelative("m_Name").stringValue);
+                var duplicatedBinding = DuplicateBinding(bindingsArray, binding, binding.FindPropertyRelative("m_Name").stringValue, index);
                 duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newName;
             }
 
             return property;
         }
 
-        public static SerializedProperty DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name)
+        public static SerializedProperty DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, int index)
         {
-            return DuplicateElement(arrayProperty, toDuplicate, name, false);
+            return DuplicateElement(arrayProperty, toDuplicate, name, index, false);
         }
 
         public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
