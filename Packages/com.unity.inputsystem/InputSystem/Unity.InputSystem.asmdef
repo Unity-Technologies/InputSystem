@@ -63,7 +63,12 @@
         },
         {
             "name": "Unity",
-            "expression": "2022.3",
+            "expression": "[2022.1.19,2022.2)",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.2",
             "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
         }
     ],
