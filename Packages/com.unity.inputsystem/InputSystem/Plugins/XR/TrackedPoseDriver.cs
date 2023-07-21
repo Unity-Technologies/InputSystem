@@ -579,6 +579,14 @@ namespace UnityEngine.InputSystem.XR
             var positionValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Position) != 0;
             var rotationValid = m_IgnoreTrackingState || (m_CurrentTrackingState & TrackingStates.Rotation) != 0;
 
+#if HAS_SET_LOCAL_POSITION_AND_ROTATION
+            if (m_TrackingType == TrackingType.RotationAndPosition && rotationValid && positionValid)
+            {
+                transform.SetLocalPositionAndRotation(newPosition, newRotation);
+                return;
+            }
+#endif
+
             if (rotationValid &&
                 (m_TrackingType == TrackingType.RotationAndPosition ||
                  m_TrackingType == TrackingType.RotationOnly))
