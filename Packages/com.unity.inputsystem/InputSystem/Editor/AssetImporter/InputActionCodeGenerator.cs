@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             writer.EndBlock();
             writer.WriteLine();
-            
+
             writer.WriteLine($"~@{options.className}()");
             writer.BeginBlock();
             foreach (var map in maps)
