@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed serialization migration in the Tracked Pose Driver component causing bindings to clear when prefabs are used in some cases ([case ISXB-512](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-512), [case ISXB-521](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-521)).
 - Fixed Tracked Pose Driver to use `Transform.SetLocalPositionAndRotation` when available to improve performance. Based on the user contribution from [DevDunk](https://forum.unity.com/members/devdunk.4432119/) in a [forum post](https://forum.unity.com/threads/more-performant-tracked-pose-driver-solution-included.1462691).
 - Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
+- Fixed the "Release tests throws exception in InputSystem" bug ([case ISXB-581](https://jira.unity3d.com/browse/ISXB-581)).
 
 ## [1.6.3] - 2023-07-11
 
