@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Tracked Pose Driver to use `Transform.SetLocalPositionAndRotation` when available to improve performance. Based on the user contribution from [DevDunk](https://forum.unity.com/members/devdunk.4432119/) in a [forum post](https://forum.unity.com/threads/more-performant-tracked-pose-driver-solution-included.1462691).
 - Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
 - Fixed the "Release tests throws exception in InputSystem" bug ([case ISXB-581](https://issuetracker.unity3d.com/issues/release-tests-fail-when-input-system-package-is-installed)).
+- Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
 
 ## [1.6.3] - 2023-07-11
 
