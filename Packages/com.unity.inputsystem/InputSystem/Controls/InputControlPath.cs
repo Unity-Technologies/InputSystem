@@ -723,31 +723,31 @@ namespace UnityEngine.InputSystem
 
         internal static bool MatchControlComponent(in ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem, bool matchAlias = false)
         {
+            bool controlItemNameMatched = false;
+            var anyUsageMatches = false;
+
             // Check to see that there is a match with the name or alias if specified
             // Exit early if we can't create a match.
-            if (!expectedControlComponent.m_Name.isEmpty && !StringMatches(expectedControlComponent.m_Name, controlItem.name))
+            if (!expectedControlComponent.m_Name.isEmpty)
             {
-                if (matchAlias)
+                if (StringMatches(expectedControlComponent.m_Name, controlItem.name))
+                    controlItemNameMatched = true;
+                else if (matchAlias)
                 {
-                    bool hasMatchingAlias = false;
 
                     var aliases = controlItem.aliases;
                     for (var i = 0; i < aliases.Count; i++)
                     {
                         if (StringMatches(expectedControlComponent.m_Name, aliases[i]))
                         {
-                            hasMatchingAlias = true;
+                            controlItemNameMatched = true;
                             break;
                         }
                     }
-
-                    if (!hasMatchingAlias)
-                        return false;
                 }
                 else
                     return false;
             }
-
 
             // All of usages should match to the one of usage in the control
             foreach (var usage in expectedControlComponent.m_Usages)
@@ -755,7 +755,6 @@ namespace UnityEngine.InputSystem
                 if (!usage.isEmpty)
                 {
                     var usageCount = controlItem.usages.Count;
-                    var anyUsageMatches = false;
                     for (var i = 0; i < usageCount; ++i)
                     {
                         if (StringMatches(usage, controlItem.usages[i]))
@@ -764,13 +763,11 @@ namespace UnityEngine.InputSystem
                             break;
                         }
                     }
-
-                    if (!anyUsageMatches)
-                        return false;
                 }
             }
 
-            return true;
+            // Return whether or not we were able to match an alias or a usage
+            return controlItemNameMatched || anyUsageMatches;
         }
 
         /// <summary>

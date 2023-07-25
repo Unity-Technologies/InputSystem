@@ -126,11 +126,11 @@ namespace UnityEngine.InputSystem.Editor
             if (path == string.Empty)
                 return;
 
-            var deviceLayoutPath = new InternedString(InputControlPath.TryGetDeviceLayout(path));
+            var deviceLayoutPath = InputControlPath.TryGetDeviceLayout(path);
             var parsedPath = InputControlPath.Parse(path).ToArray();
 
             // If the provided path is parseable into device and control components, draw UI which shows control layouts that match the path.
-            if (parsedPath.Length >= 2)
+            if (parsedPath.Length >= 2 && !string.IsNullOrEmpty(deviceLayoutPath))
             {
                 bool matchExists = false;
 
@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Editor
                 bool controlPathUsagePresent = parsedPath[1].usages.Count() > 0;
                 bool hasChildDeviceLayouts = deviceLayoutPath == InputControlPath.Wildcard || EditorInputControlLayoutCache.HasChildLayouts(rootDeviceLayout.name);
 
-                // If the path provided is a specific device (i.e. has no ui-facing child device layouts or uses control usages), then exit early
+                // If the path provided matches exactly one control path (i.e. has no ui-facing child device layouts or uses control usages), then exit early
                 if (!controlPathUsagePresent && !hasChildDeviceLayouts)
                     return;
 
@@ -154,10 +154,13 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (showMatchingLayouts)
                 {
-                    if (controlPathUsagePresent && deviceLayoutPath != InputControlPath.Wildcard)
+                    // If our control path contains a usage, make sure we render the binding that belongs to the root device layout first
+                    if (deviceLayoutPath != InputControlPath.Wildcard && controlPathUsagePresent)
                     {
                         matchExists |= DrawMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath, true);
                     }
+                    // Otherwise, just render the bindings that belong to child device layouts. The binding that matches the root layout is 
+                    // already represented by the user generated control path itself.
                     else
                     {
                         IEnumerable<InputControlLayout> matchedChildLayouts = Enumerable.Empty<InputControlLayout>();
