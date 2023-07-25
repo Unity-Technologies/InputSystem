@@ -1,3 +1,6 @@
+---
+uid: input-system-workflows
+---
 
 # Input System Workflows
 

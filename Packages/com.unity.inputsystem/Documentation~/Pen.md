@@ -1,3 +1,6 @@
+---
+uid: input-system-pen
+---
 # Pen, tablet, and stylus support
 
 Pen support comprises both tablets on desktops (such as the various tablets produced by Wacom), and styluses on mobile devices (such as the stylus on the Samsung Note, the Apple Pencil on iOS, or the Surface Pen on the Microsoft Surface line of notebooks).

@@ -1,3 +1,6 @@
+---
+uid: input-system-concepts
+---
 # Input System Concepts
 
 This page introduces the concepts that relate to working with the Input System.
