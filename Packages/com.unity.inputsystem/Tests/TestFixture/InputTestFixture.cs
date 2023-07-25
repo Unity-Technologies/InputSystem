@@ -91,8 +91,9 @@ namespace UnityEngine.InputSystem
                 runtime = new InputTestRuntime();
 
                 // Push current input system state on stack.
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
-
+#endif
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
                 #if UNITY_EDITOR
@@ -165,7 +166,9 @@ namespace UnityEngine.InputSystem
 
             try
             {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 InputSystem.Restore();
+#endif
                 runtime.Dispose();
 
                 // Unhook from play mode state changes.
