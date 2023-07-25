@@ -1,3 +1,6 @@
+---
+uid: input-system-gamepad
+---
 # Gamepad Support
 
 - [Gamepad Support](#gamepad-support)
