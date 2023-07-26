@@ -734,7 +734,6 @@ namespace UnityEngine.InputSystem
                     controlItemNameMatched = true;
                 else if (matchAlias)
                 {
-
                     var aliases = controlItem.aliases;
                     for (var i = 0; i < aliases.Count; i++)
                     {

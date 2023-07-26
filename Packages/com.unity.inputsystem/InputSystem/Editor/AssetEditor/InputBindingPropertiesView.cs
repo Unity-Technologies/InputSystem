@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         matchExists |= DrawMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath, true);
                     }
-                    // Otherwise, just render the bindings that belong to child device layouts. The binding that matches the root layout is 
+                    // Otherwise, just render the bindings that belong to child device layouts. The binding that matches the root layout is
                     // already represented by the user generated control path itself.
                     else
                     {
