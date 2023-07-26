@@ -2579,15 +2579,15 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("DerivedLayout");
         var parsedPath = InputControlPath.Parse("<BaseLayout>/ControlWithExplicitDefaultVariant").ToArray()[1];
-        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(in parsedPath, ref x)), Is.True);
+        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(ref parsedPath, ref x)), Is.True);
 
         // Verify that we can match alias's when provided
         var parsedAliasPath = InputControlPath.Parse("<BaseLayout>/A").ToArray()[1];
-        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(in parsedAliasPath, ref x, true)), Is.True);
+        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(ref parsedAliasPath, ref x, true)), Is.True);
 
         // Verify that we match usages when it is the only control path component provided
         var parsedUsagesPath = InputControlPath.Parse("<BaseLayout>/{Submit}").ToArray()[1];
-        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(in parsedUsagesPath, ref x)), Is.True);
+        Assert.That(layout.m_Controls.Any(x => InputControlPath.MatchControlComponent(ref parsedUsagesPath, ref x)), Is.True);
     }
 
     [Test]
