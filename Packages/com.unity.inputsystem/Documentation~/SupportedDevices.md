@@ -27,7 +27,7 @@ Support for the following Devices doesn't require specialized support of particu
 
 ## Gamepads
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4/PS5(7)|Switch(7)|WebGL|
+|Device|Windows|Mac|Linux|UWP(13)|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4/PS5(7)|Switch(7)|WebGL|
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
@@ -53,6 +53,7 @@ On UWP only USB connection is supported, motor rumble and lightbar are not worki
 On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
 On Android it's expected to be working from Android 12.
 On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.
+>13. To ensure all controller types are detected on UWP, enable the HumanInterfaceDevice setting in [UWP Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettingsWSA.html#Capabilities).
 
 ### WebGL
 
