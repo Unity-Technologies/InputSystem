@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
             return duplicatedProperty;
         }
 
-        public static SerializedProperty DuplicateAction(SerializedProperty actionMap, SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name)
+        public static void DuplicateAction(SerializedProperty actionMap, SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name)
         {
             var property = DuplicateElement(arrayProperty, toDuplicate, name, toDuplicate.GetIndexOfArrayElement() + 1);
             var newName = property.FindPropertyRelative("m_Name").stringValue;
@@ -131,34 +131,22 @@ namespace UnityEngine.InputSystem.Editor
             var index = bindings.Select(b => b.GetIndexOfArrayElement()).Max() + 1;
             foreach (var binding in bindings)
             {
-                var bindingName = binding.FindPropertyRelative("m_Name").stringValue;
-                if (binding.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite)
-                {
-                    DuplicateComposite(bindingsArray, binding, bindingName, newName, index, out var newIndex);
-                    index = newIndex;
-                    continue;
-                }
-                if (binding.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite)
-                    continue;
-                var duplicatedBinding = DuplicateElement(bindingsArray, binding, bindingName, index++, false);
-                duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newName;
+                var newIndex = DuplicateBinding(bindingsArray, binding, name, newName, index);
+                index = newIndex;
             }
-
-            return property;
         }
 
-        private static SerializedProperty DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string actionName, int index, out int newIndex)
+        private static void DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string oldActionName, string actionName, int index, out int newIndex)
         {
             newIndex = index;
             var newComposite = DuplicateElement(bindingsArray, compositeToDuplicate, name, newIndex++, false);
-            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate).ToArray();
+            newComposite.FindPropertyRelative("m_Action").stringValue = actionName;
+            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate).Where(b => b.FindPropertyRelative("m_Action").stringValue.Equals(oldActionName)).ToArray();
             foreach (var binding in bindings)
             {
                 var newBinding = DuplicateElement(bindingsArray, binding, binding.FindPropertyRelative("m_Name").stringValue, newIndex++, false);
                 newBinding.FindPropertyRelative("m_Action").stringValue = actionName;
             }
-            newComposite.FindPropertyRelative("m_Action").stringValue = actionName;
-            return newComposite;
         }
 
         private static IEnumerable<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, SerializedProperty composite)
@@ -174,17 +162,20 @@ namespace UnityEngine.InputSystem.Editor
             });
         }
 
-        public static SerializedProperty DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, int index)
+        public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string actionName, string newActionName, int index)
         {
             var isComposite = toDuplicate.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite;
+            var bindingName = toDuplicate.FindPropertyRelative("m_Name").stringValue;
             if (isComposite)
             {
-                var actionName = toDuplicate.FindPropertyRelative("m_Name").stringValue;
-                return DuplicateComposite(arrayProperty, toDuplicate, name, actionName, index, out _);
+                DuplicateComposite(arrayProperty, toDuplicate, bindingName, actionName, newActionName, index, out var newIndex);
+                return newIndex;
             }
-
-            //TODO is part of composite?
-            return DuplicateElement(arrayProperty, toDuplicate, name, index, false);
+            if (toDuplicate.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite)
+                return index;
+            var duplicatedBinding = DuplicateElement(arrayProperty, toDuplicate, bindingName, index++, false);
+            duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newActionName;
+            return index;
         }
 
         public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
