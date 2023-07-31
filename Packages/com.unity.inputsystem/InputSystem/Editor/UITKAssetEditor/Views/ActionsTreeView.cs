@@ -37,9 +37,10 @@ namespace UnityEngine.InputSystem.Editor
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-
-                if (item.isAction || item.isComposite)
-                    ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
+                if (item.isComposite)
+                    ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
+                else if (item.isAction)
+                    ContextMenu.GetContextMenuForActionItem(treeViewItem, i);
                 else
                     ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
@@ -112,13 +113,14 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
 
-            CreateSelector(Selectors.GetActionsForSelectedActionMap,
-                (_, state) =>
+            CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
+                (_, count, state) =>
                 {
                     var treeData = Selectors.GetActionsAsTreeViewData(state);
                     return new ViewState
                     {
                         treeViewData = treeData,
+                        actionMapCount = count ?? 0,
                         newElementID = GetSelectedElementId(state, treeData)
                     };
                 });
@@ -174,6 +176,7 @@ namespace UnityEngine.InputSystem.Editor
             if (viewState.newElementID != -1)
                 m_ActionsTreeView.SetSelectionById(viewState.newElementID);
             RenameNewAction(viewState.newElementID);
+            addActionButton.SetEnabled(viewState.actionMapCount > 0);
         }
 
         private void RenameNewAction(int id)
@@ -181,20 +184,26 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_RenameOnActionAdded || id == -1)
                 return;
             m_ActionsTreeView.ScrollToItemById(id);
-            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id).Q<InputActionsTreeViewItem>();
-            treeViewItem.FocusOnRenameTextField();
+            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id)?.Q<InputActionsTreeViewItem>();
+            treeViewItem?.FocusOnRenameTextField();
         }
 
-        private void AddAction()
+        internal void AddAction()
         {
             Dispatch(Commands.AddAction());
             m_RenameOnActionAdded = true;
         }
 
-        private void AddBinding(string actionName)
+        internal void AddBinding(string actionName)
         {
             Dispatch(Commands.SelectAction(actionName));
             Dispatch(Commands.AddBinding());
+        }
+
+        internal void AddComposite(string actionName, string compositeType)
+        {
+            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.AddComposite(compositeType));
         }
 
         private void DeleteItem(ActionOrBindingData data)
@@ -242,6 +251,7 @@ namespace UnityEngine.InputSystem.Editor
         internal class ViewState
         {
             public List<TreeViewItemData<ActionOrBindingData>> treeViewData;
+            public int actionMapCount;
             public int newElementID;
         }
     }
@@ -344,7 +354,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static string GetHumanReadableCompositeName(SerializedInputBinding binding)
         {
             return $"{ObjectNames.NicifyVariableName(binding.name)}: " +
-                $"{InputControlPath.ToHumanReadableString(binding.path)}";
+                $"{GetHumanReadableBindingName(binding)}";
         }
 
         private static string GetControlLayout(string path)

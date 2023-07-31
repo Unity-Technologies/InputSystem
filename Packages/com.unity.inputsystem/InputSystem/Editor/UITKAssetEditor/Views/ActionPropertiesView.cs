@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -10,11 +11,13 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
         private readonly VisualElement m_Root;
+        private readonly Foldout m_ParentFoldout;
 
-        public ActionPropertiesView(VisualElement root, StateContainer stateContainer)
+        public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
             : base(stateContainer)
         {
             m_Root = root;
+            m_ParentFoldout = foldout;
 
             // TODO: Consider IEquatable<T> and how to compare selector data
             CreateSelector(Selectors.GetSelectedAction,
@@ -30,6 +33,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!viewState.Item1.HasValue)
                 return;
+
+            m_ParentFoldout.text = "Action";
             var inputAction = viewState.Item1.Value;
 
             m_Root.Clear();
@@ -51,6 +56,8 @@ namespace UnityEngine.InputSystem.Editor
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
+                //if type changed and index is -1 clamp to 0, prevent overflowing indices
+                controlTypeIndex = Math.Clamp(controlTypeIndex, 0, controlTypes.Count - 1);
                 controlType.SetValueWithoutNotify(controlType.choices[controlTypeIndex]);
                 controlType.tooltip = inputAction.expectedControlTypeTooltip;
 
@@ -67,6 +74,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
                 };
+                initialStateCheck.SetValueWithoutNotify(inputAction.initialStateCheck);
                 initialStateCheck.RegisterValueChangedCallback(evt =>
                 {
                     Dispatch(Commands.ChangeInitialStateCheck(inputAction, evt.newValue));

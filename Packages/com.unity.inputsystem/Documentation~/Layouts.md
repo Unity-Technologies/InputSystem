@@ -1,3 +1,6 @@
+---
+uid: input-system-layouts
+---
 # Layouts
 
 * [Layout formats](#layout-formats)

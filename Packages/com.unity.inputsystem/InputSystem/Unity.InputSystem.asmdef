@@ -10,8 +10,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [     
-         {
+    "versionDefines": [
+        {
             "name": "com.unity.xr.oculus",
             "expression": "1.0.3",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
@@ -55,6 +55,21 @@
             "name": "com.unity.ugui",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_UI"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2021.3.11,2022.1)",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
+        },
+        {
+            "name": "Unity",
+            "expression": "[2022.1.19,2022.2)",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
+        },
+        {
+            "name": "Unity",
+            "expression": "2022.2",
+            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
         }
     ],
     "noEngineReferences": false
