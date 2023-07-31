@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Tracked Pose Driver to use `Transform.SetLocalPositionAndRotation` when available to improve performance. Based on the user contribution from [DevDunk](https://forum.unity.com/members/devdunk.4432119/) in a [forum post](https://forum.unity.com/threads/more-performant-tracked-pose-driver-solution-included.1462691).
 - Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
 - Fixed the "Release tests throws exception in InputSystem" bug ([case ISXB-581](https://issuetracker.unity3d.com/issues/release-tests-fail-when-input-system-package-is-installed)).
+- Fixed issues with generating Precompiled Layouts for devices which are not defined in a namespace
 
 ## [1.6.3] - 2023-07-11
 
@@ -37,7 +38,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416, ISXB-342).
 - Fixed unstable integration test `Integration_CanSendAndReceiveEvents` by ignoring application focus on integration tests. (case ISX-1381)
 - Fixed broken "Listen" button in Input actions editor window with Unity dark skin (case ISXB-536).
-- Fixed issues with generating Precompiled Layouts for devices which are not defined in a namespace
 
 ## [1.6.1] - 2023-05-26
 
