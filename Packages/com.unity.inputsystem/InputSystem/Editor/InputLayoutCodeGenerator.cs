@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine($"{visibility} partial class {namePrefix}{baseTypeName} : {baseTypeName}");
             else
                 writer.WriteLine($"{visibility} partial class {namePrefix}{baseTypeName} : {baseTypeNamespace}.{baseTypeName}");
-            
+
             writer.BeginBlock();
 
             // "Metadata". ATM this is simply a flat, semicolon-separated list of names for layouts and processors that
@@ -310,7 +310,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             writer.EndBlock();
-            
+
             if (!string.IsNullOrEmpty(@namespace))
                 writer.EndBlock();
 
