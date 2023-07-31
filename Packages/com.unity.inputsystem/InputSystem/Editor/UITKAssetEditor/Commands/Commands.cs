@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionName = binding?.FindPropertyRelative("m_Action").stringValue;
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-                InputActionSerializationHelpers.DuplicateBinding(bindingsArray, binding, actionName, bindingName, binding.GetIndexOfArrayElement() + 1);
+                InputActionSerializationHelpers.DuplicateBinding(bindingsArray, binding, bindingName, actionName, binding.GetIndexOfArrayElement() + 1);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectBinding(state.selectedBindingIndex + 1);
             };
