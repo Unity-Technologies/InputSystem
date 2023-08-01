@@ -1,3 +1,6 @@
+---
+uid: input-system-workflow-direct
+---
 # Workflow Overview - Directly Reading Device States
 
 ![image alt text](./Images/Workflow-Direct.svg)
