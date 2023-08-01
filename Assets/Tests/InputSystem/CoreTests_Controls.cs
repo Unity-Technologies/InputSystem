@@ -1527,7 +1527,7 @@ partial class CoreTests
         Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
         Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
     }
-    
+
     [Test]
     [Category("Controls")]
     public void Controls_PrecompiledLayouts_AllChildControlPropertiesHaveSetters()
@@ -1544,10 +1544,10 @@ partial class CoreTests
                     // Skip base types
                     if (type == inputControlType || type == inputDevice)
                         continue;
-                    
+
                     if (!inputControlType.IsAssignableFrom(type))
                         continue;
-                    
+
                     CheckChildControls(type, checkedTypes);
                 }
             }
@@ -1564,7 +1564,7 @@ partial class CoreTests
             return;
 
         foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-        {   
+        {
             if (!typeof(InputControl).IsAssignableFrom(property.PropertyType))
                 continue;
 
