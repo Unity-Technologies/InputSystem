@@ -131,50 +131,75 @@ namespace UnityEngine.InputSystem.Editor
             var index = bindings.Select(b => b.GetIndexOfArrayElement()).Max() + 1;
             foreach (var binding in bindings)
             {
-                var newIndex = DuplicateBinding(bindingsArray, binding, name, newName, index);
+                var newIndex = DuplicateBindingAsPartOfAction(bindingsArray, binding, newName, index);
                 index = newIndex;
             }
         }
 
-        private static void DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string oldActionName, string actionName, int index, out int newIndex)
+        private static SerializedProperty DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string actionName, int index, out int newIndex, bool increaseIndex = true)
         {
             newIndex = index;
+            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate);
+            if (increaseIndex)
+                newIndex += GetCompositePartCount(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
             var newComposite = DuplicateElement(bindingsArray, compositeToDuplicate, name, newIndex++, false);
             newComposite.FindPropertyRelative("m_Action").stringValue = actionName;
-            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate).Where(b => b.FindPropertyRelative("m_Action").stringValue.Equals(oldActionName)).ToArray();
             foreach (var binding in bindings)
             {
                 var newBinding = DuplicateElement(bindingsArray, binding, binding.FindPropertyRelative("m_Name").stringValue, newIndex++, false);
                 newBinding.FindPropertyRelative("m_Action").stringValue = actionName;
             }
+            return newComposite;
         }
 
-        private static IEnumerable<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, SerializedProperty composite)
+        private static List<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate)
         {
-            return bindingsArray.Where(b =>
+            var compositeBindings = new List<SerializedProperty>();
+            var compositeStartIndex = GetCompositeStartIndex(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
+            if (compositeStartIndex == -1)
+                return compositeBindings;
+
+            for (var i = compositeStartIndex + 1; i < bindingsArray.arraySize; ++i)
             {
-                var isPartOfComposite = b.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite;
-                var isComposite = b == composite;
-                if (!isPartOfComposite || isComposite)
-                    return false;
-                var isPartOfGivenComposite = SerializedInputBinding.GetCompositePath(b).Equals(composite.FindPropertyRelative("m_Path").stringValue);
-                return isPartOfGivenComposite;
-            });
+                var bindingProperty = bindingsArray.GetArrayElementAtIndex(i);
+                var bindingFlags = (InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue;
+                if ((bindingFlags & InputBinding.Flags.PartOfComposite) == 0)
+                    break;
+                compositeBindings.Add(bindingProperty);
+            }
+            return compositeBindings;
         }
 
-        public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string actionName, string newActionName, int index)
+        private static bool IsComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite;
+        private static bool IsPartComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite;
+        private static string PropertyName(SerializedProperty property) => property.FindPropertyRelative("m_Name").stringValue;
+
+        private static int DuplicateBindingAsPartOfAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
         {
-            var isComposite = toDuplicate.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite;
-            var bindingName = toDuplicate.FindPropertyRelative("m_Name").stringValue;
-            if (isComposite)
+            if (IsComposite(toDuplicate))
             {
-                DuplicateComposite(arrayProperty, toDuplicate, bindingName, actionName, newActionName, index, out var newIndex);
+                DuplicateComposite(arrayProperty, toDuplicate, PropertyName(toDuplicate), newActionName, index, out var newIndex, false);
                 return newIndex;
             }
-            if (toDuplicate.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite)
+            if (IsPartComposite(toDuplicate))
                 return index;
-            var duplicatedBinding = DuplicateElement(arrayProperty, toDuplicate, bindingName, index++, false);
+            var duplicatedBinding = DuplicateElement(arrayProperty, toDuplicate, PropertyName(toDuplicate), index++, false);
             duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newActionName;
+            return index;
+        }
+
+        public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
+        {
+            if (IsComposite(toDuplicate))
+            {
+                var newComposite = DuplicateComposite(arrayProperty, toDuplicate, PropertyName(toDuplicate), newActionName, index, out _);
+                index = newComposite.GetIndexOfArrayElement();
+            }
+            else
+            {
+                var duplicatedBinding = DuplicateElement(arrayProperty, toDuplicate, PropertyName(toDuplicate), index, false);
+                duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newActionName;
+            }
             return index;
         }
 
