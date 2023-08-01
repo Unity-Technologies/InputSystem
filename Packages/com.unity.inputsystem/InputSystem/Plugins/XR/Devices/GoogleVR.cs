@@ -22,27 +22,27 @@ namespace Unity.XR.GoogleVr
     public class DaydreamController : XRController
     {
         [InputControl]
-        public Vector2Control touchpad { get; private set; }
+        public Vector2Control touchpad { get; protected set; }
         [InputControl]
-        public ButtonControl volumeUp { get; private set; }
+        public ButtonControl volumeUp { get; protected set; }
         [InputControl]
-        public ButtonControl recentered { get; private set; }
+        public ButtonControl recentered { get; protected set; }
         [InputControl]
-        public ButtonControl volumeDown { get; private set; }
+        public ButtonControl volumeDown { get; protected set; }
         [InputControl]
-        public ButtonControl recentering { get; private set; }
+        public ButtonControl recentering { get; protected set; }
         [InputControl]
-        public ButtonControl app { get; private set; }
+        public ButtonControl app { get; protected set; }
         [InputControl]
-        public ButtonControl home { get; private set; }
+        public ButtonControl home { get; protected set; }
         [InputControl]
-        public ButtonControl touchpadClicked { get; private set; }
+        public ButtonControl touchpadClicked { get; protected set; }
         [InputControl]
-        public ButtonControl touchpadTouched { get; private set; }
+        public ButtonControl touchpadTouched { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceVelocity { get; private set; }
+        public Vector3Control deviceVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAcceleration { get; private set; }
+        public Vector3Control deviceAcceleration { get; protected set; }
 
         protected override void FinishSetup()
         {

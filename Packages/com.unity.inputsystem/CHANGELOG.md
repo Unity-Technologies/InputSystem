@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
 - Fixed the "Release tests throws exception in InputSystem" bug ([case ISXB-581](https://issuetracker.unity3d.com/issues/release-tests-fail-when-input-system-package-is-installed)).
 - Fixed issues with generating Precompiled Layouts for devices which are not defined in a namespace
+- Fixed an issue where some controls like `QuaternionControl` could not be included in a Precompiled Layout because the generated code could not access a setter on child control properties.
 
 ## [1.6.3] - 2023-07-11
 

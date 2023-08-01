@@ -1041,7 +1041,7 @@ partial class CoreTests
     private class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
     {
         [InputControl(format = "FLT")]
-        public ButtonControl button { get; private set; }
+        public ButtonControl button { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -2029,7 +2029,7 @@ partial class CoreTests
     class DeviceWithCustomReset : InputDevice, ICustomDeviceReset
     {
         [InputControl]
-        public AxisControl axis { get; private set; }
+        public AxisControl axis { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -5630,8 +5630,8 @@ partial class CoreTests
 
         public Behavior behavior = Behavior.PreserveEventsAsIs;
 
-        public IntegerControl value1 { get; private set; }
-        public IntegerControl value2 { get; private set; }
+        public IntegerControl value1 { get; protected set; }
+        public IntegerControl value2 { get; protected set; }
 
         protected override void FinishSetup()
         {

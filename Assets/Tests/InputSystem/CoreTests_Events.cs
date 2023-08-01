@@ -2081,7 +2081,7 @@ partial class CoreTests
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
     private class CustomDevice : InputDevice
     {
-        public AxisControl axis { get; private set; }
+        public AxisControl axis { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -2549,7 +2549,7 @@ partial class CoreTests
         }
 
         public bool throwExceptionOnState = true;
-        public AxisControl axis { get; private set; }
+        public AxisControl axis { get; protected set; }
 
         protected override void FinishSetup()
         {

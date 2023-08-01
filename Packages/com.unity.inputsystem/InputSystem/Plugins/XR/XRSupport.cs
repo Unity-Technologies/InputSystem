@@ -283,11 +283,11 @@ namespace UnityEngine.InputSystem.XR
     public class BoneControl : InputControl<Bone>
     {
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
-        public IntegerControl parentBoneIndex { get; private set; }
+        public IntegerControl parentBoneIndex { get; set; }
         [InputControl(offset = 4, displayName = "Position")]
-        public Vector3Control position { get; private set; }
+        public Vector3Control position { get; set; }
         [InputControl(offset = 16, displayName = "Rotation")]
-        public QuaternionControl rotation { get; private set; }
+        public QuaternionControl rotation { get; set; }
 
         protected override void FinishSetup()
         {
@@ -319,19 +319,19 @@ namespace UnityEngine.InputSystem.XR
     public class EyesControl : InputControl<Eyes>
     {
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
-        public Vector3Control leftEyePosition { get; private set; }
+        public Vector3Control leftEyePosition { get; set; }
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
-        public QuaternionControl leftEyeRotation { get; private set; }
+        public QuaternionControl leftEyeRotation { get; set; }
         [InputControl(offset = 28, displayName = "RightEyePosition")]
-        public Vector3Control rightEyePosition { get; private set; }
+        public Vector3Control rightEyePosition { get; set; }
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
-        public QuaternionControl rightEyeRotation { get; private set; }
+        public QuaternionControl rightEyeRotation { get; set; }
         [InputControl(offset = 56, displayName = "FixationPoint")]
-        public Vector3Control fixationPoint { get; private set; }
+        public Vector3Control fixationPoint { get; set; }
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
-        public AxisControl leftEyeOpenAmount { get; private set; }
+        public AxisControl leftEyeOpenAmount { get; set; }
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
-        public AxisControl rightEyeOpenAmount { get; private set; }
+        public AxisControl rightEyeOpenAmount { get; set; }
 
         protected override void FinishSetup()
         {
