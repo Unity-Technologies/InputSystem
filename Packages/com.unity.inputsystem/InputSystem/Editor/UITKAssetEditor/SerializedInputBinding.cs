@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public SerializedProperty wrappedProperty { get; }
 
-        public static string GetCompositePath(SerializedProperty serializedProperty)
+        private static string GetCompositePath(SerializedProperty serializedProperty)
         {
             var bindingArrayProperty = serializedProperty.GetArrayPropertyFromElement();
             var partBindingIndex = InputActionSerializationHelpers.GetIndex(bindingArrayProperty, serializedProperty);
