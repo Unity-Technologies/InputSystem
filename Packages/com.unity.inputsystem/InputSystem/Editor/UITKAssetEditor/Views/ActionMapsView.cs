@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.DeleteActionMap(index));
         }
-        
+
         private void DuplicateActionMap(int index)
         {
             Dispatch(Commands.DuplicateActionMap(index));
