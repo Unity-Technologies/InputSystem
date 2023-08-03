@@ -561,7 +561,7 @@ internal class OnScreenTests : CoreTestsFixture
     public class CustomDevice : InputDevice
     {
         [InputControl]
-        public ButtonControl button { get; private set; }
+        public ButtonControl button { get; protected set; }
 
         protected override void FinishSetup()
         {
