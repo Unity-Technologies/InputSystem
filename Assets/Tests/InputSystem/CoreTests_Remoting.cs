@@ -532,7 +532,7 @@ partial class CoreTests
 
     private class MyDevice : InputDevice
     {
-        public ButtonControl myControl { get; private set; }
+        public ButtonControl myControl { get; protected set; }
 
         protected override void FinishSetup()
         {
