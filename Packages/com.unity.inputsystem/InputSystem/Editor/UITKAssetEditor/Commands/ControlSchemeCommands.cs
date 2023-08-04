@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command SaveControlScheme(bool updateExisting = false)
+        public static Command SaveControlScheme(string oldName = "", bool updateExisting = false)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 var controlSchemesArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
                 var controlScheme = controlSchemesArray
-                    .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == controlSchemeName);
+                    .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == (string.IsNullOrEmpty(oldName) ? controlSchemeName : oldName));
 
                 // if the control scheme is null, we're saving a new control scheme, otherwise editing an existing one
                 if (controlScheme == null && updateExisting)
@@ -167,11 +167,16 @@ namespace UnityEngine.InputSystem.Editor
 
         public static Command ChangeSelectedControlSchemeName(string controlSchemeName)
         {
-            return (in InputActionsEditorState state) => state.With(
-                selectedControlScheme: new InputControlScheme(
-                    controlSchemeName,
-                    state.selectedControlScheme.deviceRequirements,
-                    state.selectedControlScheme.m_BindingGroup));
+            return (in InputActionsEditorState state) =>
+            {
+                var name = MakeUniqueControlSchemeName(state, controlSchemeName);
+                state.selectedControlScheme.SetNameAndBindingGroup(name);
+                return state.With(
+                    selectedControlScheme: new InputControlScheme(
+                        name,
+                        state.selectedControlScheme.deviceRequirements,
+                        state.selectedControlScheme.m_BindingGroup));
+            };
         }
 
         public static Command ReorderDeviceRequirements(int oldPosition, int newPosition)

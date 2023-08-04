@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class ControlSchemesView : ViewBase<InputControlScheme>
     {
+        private string m_OldName;
         public ControlSchemesView(VisualElement root, StateContainer stateContainer, bool updateExisting = false)
             : base(stateContainer)
         {
@@ -27,6 +28,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Dispatch(ControlSchemeCommands.ChangeSelectedControlSchemeName(((TextField)evt.currentTarget).value));
             });
+
+            OnClosing += (d) => m_OldName = "";
 
             m_ModalWindow = new VisualElement
             {
@@ -63,7 +66,12 @@ namespace UnityEngine.InputSystem.Editor
             m_ListView.itemsSource = new List<string>();
 
             CreateSelector(s => s.selectedControlScheme,
-                (_, s) => s.selectedControlScheme);
+                (_, s) =>
+                {
+                    if (string.IsNullOrEmpty(m_OldName))
+                        m_OldName = s.selectedControlScheme.name;
+                    return s.selectedControlScheme;
+                });
         }
 
         private void AddDeviceRequirement()
@@ -102,7 +110,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SaveAndClose()
         {
-            Dispatch(ControlSchemeCommands.SaveControlScheme(m_UpdateExisting));
+            Dispatch(ControlSchemeCommands.SaveControlScheme(m_OldName, m_UpdateExisting));
             Close();
         }
 
