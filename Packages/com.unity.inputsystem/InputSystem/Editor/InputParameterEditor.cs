@@ -182,6 +182,17 @@ namespace UnityEngine.InputSystem.Editor
             OnEnable();
         }
 
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+        /// <summary>
+        /// Default stub implementation of <see cref="InputParameterEditor.OnDrawVisualElements"/>.
+        /// Should be overridden to create the desired UI.
+        /// </summary>
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+        }
+
+#endif
+
         /// <summary>
         /// Helper for parameters that have defaults (usually from <see cref="InputSettings"/>).
         /// </summary>
