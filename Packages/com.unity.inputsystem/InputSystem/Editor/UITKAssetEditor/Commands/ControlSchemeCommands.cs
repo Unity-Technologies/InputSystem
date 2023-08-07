@@ -39,7 +39,6 @@ namespace UnityEngine.InputSystem.Editor
                 var controlSchemeName = state.selectedControlScheme.name;
 
                 var controlSchemesArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
-                //use the old name to find the control scheme in the array
                 var controlScheme = controlSchemesArray
                     .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == controlSchemeName);
 
@@ -72,10 +71,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 state.serializedObject.ApplyModifiedProperties();
-
-                if (!string.IsNullOrEmpty(newName))
-                    return state.With(selectedControlScheme: new InputControlScheme(controlScheme));
-                return state.With(selectedControlSchemeIndex: controlSchemesArray.arraySize - 1);
+                return state.With(selectedControlScheme: new InputControlScheme(controlScheme));
             };
         }
 
