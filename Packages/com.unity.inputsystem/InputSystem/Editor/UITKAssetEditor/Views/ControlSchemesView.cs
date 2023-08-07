@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class ControlSchemesView : ViewBase<InputControlScheme>
     {
+        //is used to save the original name of the control scheme when renaming
         private string m_OldName;
         public ControlSchemesView(VisualElement root, StateContainer stateContainer, bool updateExisting = false)
             : base(stateContainer)

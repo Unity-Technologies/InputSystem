@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Editor
                     state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)));
             };
         }
-
+        
         public static Command SaveControlScheme(string oldName = "", bool updateExisting = false)
         {
             return (in InputActionsEditorState state) =>
@@ -39,6 +39,7 @@ namespace UnityEngine.InputSystem.Editor
                 var controlSchemeName = state.selectedControlScheme.name;
 
                 var controlSchemesArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+                //use the old name to find the control scheme in the array
                 var controlScheme = controlSchemesArray
                     .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == (string.IsNullOrEmpty(oldName) ? controlSchemeName : oldName));
 
