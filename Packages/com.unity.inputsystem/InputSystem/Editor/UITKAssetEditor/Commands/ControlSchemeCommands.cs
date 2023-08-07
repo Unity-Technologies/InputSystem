@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Editor
                     state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)));
             };
         }
-        
+
         public static Command SaveControlScheme(string oldName = "", bool updateExisting = false)
         {
             return (in InputActionsEditorState state) =>
