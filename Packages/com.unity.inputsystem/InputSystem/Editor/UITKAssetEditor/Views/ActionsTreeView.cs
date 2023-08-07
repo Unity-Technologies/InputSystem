@@ -36,7 +36,9 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
+                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
                 else if (item.isAction)
@@ -99,6 +101,7 @@ namespace UnityEngine.InputSystem.Editor
                     treeViewItem.Reset();
 
                 treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -212,6 +215,11 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
             else
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
+        }
+
+        private void DuplicateItem(ActionOrBindingData data)
+        {
+            Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
