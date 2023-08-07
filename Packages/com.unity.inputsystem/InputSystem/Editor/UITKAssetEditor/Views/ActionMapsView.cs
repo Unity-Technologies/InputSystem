@@ -27,7 +27,9 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
+                treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
 
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
@@ -37,6 +39,7 @@ namespace UnityEngine.InputSystem.Editor
                 var treeViewElement = (InputActionsTreeViewItem)element;
                 treeViewElement.Reset();
                 treeViewElement.OnDeleteItem -= treeViewElement.DeleteCallback;
+                treeViewElement.OnDuplicateItem -= treeViewElement.DuplicateCallback;
                 treeViewElement.EditTextFinished -= treeViewElement.EditTextFinishedCallback;
             };
 
@@ -86,6 +89,11 @@ namespace UnityEngine.InputSystem.Editor
         private void DeleteActionMap(int index)
         {
             Dispatch(Commands.DeleteActionMap(index));
+        }
+
+        private void DuplicateActionMap(int index)
+        {
+            Dispatch(Commands.DuplicateActionMap(index));
         }
 
         private void ChangeActionMapName(int index, string newName)

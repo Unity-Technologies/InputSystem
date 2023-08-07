@@ -15,10 +15,12 @@ namespace UnityEngine.InputSystem.Editor
     {
         public EventCallback<string> EditTextFinishedCallback;
         public EventCallback<int> DeleteCallback;
+        public EventCallback<int> DuplicateCallback;
 
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
         public event EventCallback<int> OnDeleteItem;
+        public event EventCallback<int> OnDuplicateItem;
 
         private bool m_IsEditing;
 
@@ -103,6 +105,11 @@ namespace UnityEngine.InputSystem.Editor
         public void DeleteItem()
         {
             OnDeleteItem?.Invoke(0);
+        }
+
+        public void DuplicateItem()
+        {
+            OnDuplicateItem?.Invoke(0);
         }
 
         private void OnEditTextFinished()
