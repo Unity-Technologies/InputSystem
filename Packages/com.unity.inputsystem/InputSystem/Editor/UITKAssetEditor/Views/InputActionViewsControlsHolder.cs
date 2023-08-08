@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
         internal static Action<InputActionsTreeViewItem> CreateAction => CreateNewAction;
+        internal static Action<InputActionsTreeViewItem> DuplicateAction => Duplicate;
 
         internal static void Initialize(VisualElement root, ActionsTreeView actionsTreeView)
         {
@@ -76,6 +77,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             var action = inputActionsTreeViewItem.label.text;
             m_ActionsTreeView.AddComposite(action, "TwoModifiers");
+        }
+
+        private static void Duplicate(InputActionsTreeViewItem inputActionsTreeViewItem)
+        {
+            inputActionsTreeViewItem.DuplicateItem();
         }
     }
 }

@@ -6,6 +6,7 @@ namespace UnityEngine.InputSystem.Editor
     internal static class ContextMenu
     {
         private static readonly string rename_String = "Rename";
+        private static readonly string duplicate_String = "Duplicate";
         private static readonly string delete_String = "Delete";
 
         private static readonly string add_Action_String = "Add Action";
@@ -20,6 +21,7 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateAction.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(rename_String, _ => InputActionViewsControlsHolder.RenameActionMap.Invoke(treeViewItem));
+                AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }
@@ -34,6 +36,7 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(add_twoModifier_Binding_String, _ => InputActionViewsControlsHolder.AddCompositeTwoModifier.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
                 AppendRenameAction(menuEvent, index, treeViewItem);
+                AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }
@@ -43,6 +46,7 @@ namespace UnityEngine.InputSystem.Editor
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 AppendRenameAction(menuEvent, index, treeViewItem);
+                AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }
@@ -51,6 +55,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
+                AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }
@@ -58,6 +63,11 @@ namespace UnityEngine.InputSystem.Editor
         private static void AppendDeleteAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem)
         {
             menuEvent.menu.AppendAction(delete_String, _ => {InputActionViewsControlsHolder.DeleteAction.Invoke(treeViewItem);});
+        }
+
+        private static void AppendDuplicateAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem)
+        {
+            menuEvent.menu.AppendAction(duplicate_String, _ => {InputActionViewsControlsHolder.DuplicateAction.Invoke(treeViewItem);});
         }
 
         private static void AppendRenameAction(ContextualMenuPopulateEvent menuEvent, int index, InputActionsTreeViewItem treeViewItem)
