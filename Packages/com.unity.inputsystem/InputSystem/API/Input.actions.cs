@@ -84,26 +84,14 @@ namespace UnityEngine.InputSystem
 
         internal static void InitializeGlobalActions(string defaultAssetPath = null, string assetPath = null)
         {
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
 
+            // This loads from AssetDatabase (or creates a new setting). Anything previously stored in EditorBuildSettings will overwritten.
             InputSystem.actions = GlobalActionsAsset.GetOrCreateGlobalActionsAsset(assetPath, defaultAssetPath);
-#else
-            // find the source generated global actions runtime file in the users assembly and use it to load the
-            // runtime actions
-            var runtimeAssetLoaderType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetExportedTypes())
-                .FirstOrDefault(t => t.IsAssignableFrom(typeof(IGlobalActionsRuntimeAsset)));
-            if (runtimeAssetLoaderType == null)
-            {
-                Debug.LogError($"Couldn't load global actions runtime asset.");
-            }
-            else
-            {
-                var runtimeAssetLoader = (IGlobalActionsRuntimeAsset)Activator.CreateInstance(runtimeAssetLoaderType);
-                InputSystem.actions = runtimeAssetLoader.Load();
-            }
-#endif
+            #endif
+
             if (InputSystem.actions == null)
             {
                 Debug.LogError($"Couldn't initialize global input actions");

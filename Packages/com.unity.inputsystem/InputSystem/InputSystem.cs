@@ -3012,16 +3012,44 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
         /// <summary>
-        /// The set of globally active input actions.
+        /// The set of project-wide available input actions.
         /// </summary>
-        /// <remarks>
-        /// TODO
-        /// </remarks>
-        /// <seealso cref="InputSettings.actions"/>
+        private static InputActionAsset s_projectWideActions;
         public static InputActionAsset actions
         {
-            get => settings.actions;
-            set => settings.actions = value;
+            get
+            {
+                if (s_projectWideActions != null)
+                    return s_projectWideActions;
+
+                #if UNITY_EDITOR
+                UnityEditor.EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey, out s_projectWideActions);
+                #else
+                s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault();
+                #endif
+                return s_projectWideActions;
+            }
+
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (s_projectWideActions == value)
+                    return;
+
+                // In the editor, we keep track of the actions asset through EditorBuildSettings.
+                // This ensures it is packed in the Player via the BuildProvider.
+                #if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                        value, true);
+                }
+                #endif
+
+                s_projectWideActions = value;
+            }
         }
 #endif
 
@@ -3446,6 +3474,13 @@ namespace UnityEngine.InputSystem
 
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+                if (!settings.disableHighLevelAPI)
+                {
+                    Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
+                }
+#endif
             }
             else
             {
@@ -3507,13 +3542,6 @@ namespace UnityEngine.InputSystem
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
                     s_SystemObject.enterPlayModeTime = 0;
-
-#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
-                    if (!settings.disableHighLevelAPI)
-                    {
-                        Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
-                    }
-#endif
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
@@ -3535,13 +3563,6 @@ namespace UnityEngine.InputSystem
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
-
-#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
-                    if (!settings.disableHighLevelAPI)
-                    {
-                        Input.Shutdown();
-                    }
-#endif
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))
@@ -3624,14 +3645,6 @@ namespace UnityEngine.InputSystem
             s_Manager = new InputManager();
             s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
 
-#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
-            if (!InputSystem.settings.disableHighLevelAPI)
-            {
-                Input.Initialize();
-                Input.InitializeGlobalActions();
-            }
-#endif
-
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
 #endif
@@ -3640,6 +3653,13 @@ namespace UnityEngine.InputSystem
 #if DEVELOPMENT_BUILD
             if (ShouldEnableRemoting())
                 SetUpRemoting();
+#endif
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+            if (!InputSystem.settings.disableHighLevelAPI)
+            {
+                Input.Initialize();
+            }
 #endif
         }
 
@@ -3728,6 +3748,16 @@ namespace UnityEngine.InputSystem
         {
             Profiler.BeginSample("InputSystem.Reset");
 
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+            if (s_Manager != null && s_Manager.settings != null)
+            {
+                if (!s_Manager.settings.disableHighLevelAPI)
+                {
+                    Input.Shutdown();
+                }
+            }
+#endif
+
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
             if (s_Manager != null)
@@ -3749,6 +3779,13 @@ namespace UnityEngine.InputSystem
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+            if (!s_Manager.settings.disableHighLevelAPI)
+            {
+                Input.Initialize(s_DefaultGlobalActionsPath, s_GlobalActionsAssetPath);
+            }
+#endif
 
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
@@ -3782,6 +3819,13 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+            if (!settings.disableHighLevelAPI)
+            {
+                Input.Shutdown();
+            }
+#endif
 
             s_Manager.Destroy();
             if (s_RemoteConnection != null)

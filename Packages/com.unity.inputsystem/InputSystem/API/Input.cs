@@ -1856,7 +1856,6 @@ namespace UnityEngine.InputSystem
             }
         }
     } // public static partial class Input
-
 } // namespace UnityEngine.InputSystem
 
 #endif

@@ -9,21 +9,32 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSettingsBuildProvider : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
+        InputActionAsset m_ProjectWideActions;
+        Object[] m_OriginalPreloadedAssets;
         public int callbackOrder => 0;
 
         public void OnPreprocessBuild(BuildReport report)
         {
+            m_OriginalPreloadedAssets = PlayerSettings.GetPreloadedAssets();
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
+
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
+            EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                out m_ProjectWideActions);
+
+            if (m_ProjectWideActions != null)
+            {
+                if (!preloadedAssets.Contains(InputSystem.actions))
+                {
+                    ArrayHelpers.Append(ref preloadedAssets, InputSystem.actions);
+                    PlayerSettings.SetPreloadedAssets(preloadedAssets);
+                }
+            }
+#endif
+
             if (InputSystem.settings == null)
                 return;
 
-            // If we operate on temporary object instead of input setting asset,
-            // adding temporary asset would result in preloadedAssets containing null object "{fileID: 0}".
-            // Hence we ignore adding temporary objects to preloaded assets.
-            if (!EditorUtility.IsPersistent(InputSystem.settings))
-                return;
-
-            // Add InputSettings object assets, if it's not in there already.
-            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
             if (!preloadedAssets.Contains(InputSystem.settings))
             {
                 ArrayHelpers.Append(ref preloadedAssets, InputSystem.settings);
@@ -33,19 +44,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            // Revert back to original state by removing all input settings from preloaded assets.
-            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
-            while (preloadedAssets != null && preloadedAssets.Length > 0)
-            {
-                var index = preloadedAssets.IndexOf(x => x is InputSettings);
-                if (index != -1)
-                {
-                    ArrayHelpers.EraseAt(ref preloadedAssets, index);
-                    PlayerSettings.SetPreloadedAssets(preloadedAssets);
-                }
-                else
-                    break;
-            }
+            // Revert back to original state
+            PlayerSettings.SetPreloadedAssets(m_OriginalPreloadedAssets);
         }
     }
 }

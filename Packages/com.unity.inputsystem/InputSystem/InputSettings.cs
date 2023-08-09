@@ -686,24 +686,6 @@ namespace UnityEngine.InputSystem
                 OnChange();
             }
         }
-
-        /// <summary>
-        /// The global set of actions.
-        /// </summary>
-        /// <remarks>
-        /// TODO
-        /// </remarks>
-        /// <seealso cref="InputSystem.actions"/>
-        public InputActionAsset actions
-        {
-            get => m_GlobalInputActionsAsset;
-            set
-            {
-                m_GlobalInputActionsAsset?.Disable();
-                m_GlobalInputActionsAsset = value;
-                m_GlobalInputActionsAsset?.Enable();
-            }
-        }
 #endif
 
         /// <summary>
@@ -800,7 +782,6 @@ namespace UnityEngine.InputSystem
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
         [SerializeField] private bool m_DisableHighLevelApi = false;
-        [SerializeField] private InputActionAsset m_GlobalInputActionsAsset;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
