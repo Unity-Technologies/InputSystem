@@ -44,6 +44,7 @@ namespace Unity.InputSystem.SourceGenerators
             //    syntaxReceiver.InputActionsReferences.Count == 0)
             //    return;
 
+            // This should never be caught
             context.CancellationToken.ThrowIfCancellationRequested();
 
             var additionalFile = context.AdditionalFiles.FirstOrDefault();
@@ -94,6 +95,7 @@ using UnityEngine.InputSystem;
 using Input=UnityEngine.InputSystem.Input;
 
 
+    [CompilerGenerated]
     public static partial class InputActions
     {
 
