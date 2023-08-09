@@ -144,6 +144,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
+                EditorGUILayout.PropertyField(m_InputActionPropertyDrawerMode, m_InputActionPropertyDrawerModeContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
@@ -273,6 +274,7 @@ namespace UnityEngine.InputSystem.Editor
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
             m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
+            m_InputActionPropertyDrawerMode = m_SettingsObject.FindProperty("m_InputActionPropertyDrawerMode");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
             m_DefaultButtonPressPoint = m_SettingsObject.FindProperty("m_DefaultButtonPressPoint");
@@ -301,6 +303,9 @@ namespace UnityEngine.InputSystem.Editor
                 + "the game.\n"
                 + "'All Device Input Always Goes To Game View' causes input to treat 'Background Behavior' exactly as in the player including devices potentially being disabled entirely while the Game View "
                 + "does not have focus. In this setting, no input from the Input System will be visible to EditorWindows.");
+            m_InputActionPropertyDrawerModeContent = new GUIContent("Input Action Property Drawer Mode", "Determines how the Inspector window displays InputActionProperty fields.\n\n" +
+                "'Compact' displays the property in a compact format, using a single line when possible.\n" +
+                "'Multiline' displays the property in multiple lines.");
             m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");
@@ -411,6 +416,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
         [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
+        [NonSerialized] private SerializedProperty m_InputActionPropertyDrawerMode;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
         [NonSerialized] private SerializedProperty m_DefaultButtonPressPoint;
@@ -434,6 +440,7 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_CompensateForScreenOrientationContent;
         private GUIContent m_BackgroundBehaviorContent;
         private GUIContent m_EditorInputBehaviorInPlayModeContent;
+        private GUIContent m_InputActionPropertyDrawerModeContent;
         private GUIContent m_DefaultDeadzoneMinContent;
         private GUIContent m_DefaultDeadzoneMaxContent;
         private GUIContent m_DefaultButtonPressPointContent;
