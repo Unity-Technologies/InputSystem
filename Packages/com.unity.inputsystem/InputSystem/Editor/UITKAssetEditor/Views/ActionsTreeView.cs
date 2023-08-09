@@ -363,27 +363,28 @@ namespace UnityEngine.InputSystem.Editor
             var name = InputControlPath.ToHumanReadableString(serializedInputBinding.path);
             if (String.IsNullOrEmpty(name))
                 name = "<No Binding>";
-            if (IsBindingAssignedToNoOrAllControlSchemes(serializedInputBinding, allControlSchemes))
+            if (IsBindingAssignedToNoOrAllControlSchemes(serializedInputBinding, allControlSchemes, currentControlScheme))
                 name += " {GLOBAL}";
             return name;
         }
 
-        private static bool IsBindingAssignedToNoOrAllControlSchemes(SerializedInputBinding serializedInputBinding, SerializedProperty allControlSchemes)
+        private static bool IsBindingAssignedToNoOrAllControlSchemes(SerializedInputBinding serializedInputBinding, SerializedProperty allControlSchemes, InputControlScheme? currentControlScheme)
         {
-            if (allControlSchemes.arraySize <= 0)
+            if (allControlSchemes.arraySize <= 0 || !currentControlScheme.HasValue || string.IsNullOrEmpty(currentControlScheme.Value.name))
                 return false;
-            for (int i = 0; i < allControlSchemes.arraySize; i++)
-            {
-                if (!serializedInputBinding.controlSchemes.Contains(allControlSchemes.GetArrayElementAtIndex(i).FindPropertyRelative("m_Name").stringValue))
-                    return false;
-            }
-            return true;
+            if (serializedInputBinding.controlSchemes.Length <= 0)
+                return true;
+            return false;
         }
 
         private static bool IsBindingPartOfCurrentControlScheme(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme)
         {
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
+            {
+                if (serializedInputBinding.controlSchemes.Length <= 0)
+                    return true;
                 return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name);
+            }
 
             return true;
         }
