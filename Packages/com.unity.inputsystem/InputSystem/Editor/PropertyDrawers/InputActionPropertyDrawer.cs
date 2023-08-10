@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
 
         static void DrawMultilineGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            const float kIndent = 16f;
+            const float kIndent = 15f;
 
             var titleRect = position;
             titleRect.height = EditorGUIUtility.singleLineHeight;
