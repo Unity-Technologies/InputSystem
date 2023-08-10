@@ -182,9 +182,8 @@ internal partial class CoreTests
         var gamepadOne = InputSystem.AddDevice<Gamepad>();
         var gamepadTwo = InputSystem.AddDevice<Gamepad>();
         var expectedUnusedSlot = slot == InputSlot.Slot2 ? InputSlot.Slot1 : InputSlot.Slot2;
-        var gamepadButtons = Enum.GetValues(typeof(UnityEngine.InputSystem.InputGamepadButton))
-            .Cast<UnityEngine.InputSystem.InputGamepadButton>()
-            .ToList();
+        var inputsList = Enum.GetValues(typeof(UnityEngine.InputSystem.Inputs)).Cast<UnityEngine.InputSystem.Inputs>().ToList();
+        var gamepadButtons = inputsList.Where(e => e >= Inputs.Gamepad_DpadUp && e <= Inputs.Gamepad_Select).ToList();
 
         var gamepadState = new GamepadState(
             GamepadButton.DpadUp,
@@ -233,7 +232,7 @@ internal partial class CoreTests
             AssertControlStates(buttonValue, false, false, false, expectedUnusedSlot);
         }
 
-        void AssertControlStates(UnityEngine.InputSystem.InputGamepadButton gamepadButton,
+        void AssertControlStates(UnityEngine.InputSystem.Inputs gamepadButton,
             bool controlDown, bool controlPressed, bool controlUp, InputSlot gamepadSlot)
         {
             Assert.That(Input.WasPressedThisFrame(gamepadButton, gamepadSlot), Is.EqualTo(controlDown));
@@ -251,22 +250,22 @@ internal partial class CoreTests
 
         Set((ButtonControl)joystickTwo["button2"], 1);
 
-        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, InputSlot.Slot1), Is.False);
-        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.True);
+        Assert.That(Input.WasPressedThisFrame(Inputs.Joystick_Button2, InputSlot.Slot1), Is.False);
+        Assert.That(Input.WasPressedThisFrame(Inputs.Joystick_Button2, InputSlot.Slot2), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.WasPressedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.False);
-        Assert.That(Input.IsPressed(JoystickButton.Button2, InputSlot.Slot2), Is.True);
+        Assert.That(Input.WasPressedThisFrame(Inputs.Joystick_Button2, InputSlot.Slot2), Is.False);
+        Assert.That(Input.IsPressed(Inputs.Joystick_Button2, InputSlot.Slot2), Is.True);
 
         Set((ButtonControl)joystickTwo["button2"], 0);
 
-        Assert.That(Input.IsPressed(JoystickButton.Button2, InputSlot.Slot2), Is.False);
-        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.True);
+        Assert.That(Input.IsPressed(Inputs.Joystick_Button2, InputSlot.Slot2), Is.False);
+        Assert.That(Input.WasReleasedThisFrame(Inputs.Joystick_Button2, InputSlot.Slot2), Is.True);
 
         InputSystem.Update();
 
-        Assert.That(Input.WasReleasedThisFrame(JoystickButton.Button2, InputSlot.Slot2), Is.False);
+        Assert.That(Input.WasReleasedThisFrame(Inputs.Joystick_Button2, InputSlot.Slot2), Is.False);
     }
 
     [Test]
