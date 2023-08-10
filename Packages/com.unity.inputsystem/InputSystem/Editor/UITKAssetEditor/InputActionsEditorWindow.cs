@@ -25,6 +25,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
         private int m_AssetId;
+        private static string m_AssetPath;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -74,7 +75,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SetAsset(InputActionAsset asset)
         {
-            var serializedAsset = new SerializedObject(asset);
+            m_AssetPath = AssetDatabase.GetAssetPath(asset);
+            var serializedAsset = new SerializedObject(Instantiate(asset));
             m_State = new InputActionsEditorState(serializedAsset);
             bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
             Debug.Assert(isGUIDObtained, $"Failed to get asset {asset.name} GUID");
@@ -95,6 +97,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_State.serializedObject == null)
                 {
                     var asset = GetAssetFromDatabase();
+                    m_AssetPath = AssetDatabase.GetAssetPath(asset);
                     var serializedAsset = new SerializedObject(asset);
                     m_State = new InputActionsEditorState(m_State, serializedAsset);
                 }
@@ -136,15 +139,14 @@ namespace UnityEngine.InputSystem.Editor
         public static void SaveAsset(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
-            var assetPath = AssetDatabase.GetAssetPath(asset);
             var assetJson = asset.ToJson();
 
-            var existingJson = File.ReadAllText(assetPath);
+            var existingJson = File.ReadAllText(m_AssetPath);
             if (assetJson != existingJson)
             {
-                EditorHelpers.CheckOut(assetPath);
-                File.WriteAllText(assetPath, assetJson);
-                AssetDatabase.ImportAsset(assetPath);
+                EditorHelpers.CheckOut(m_AssetPath);
+                File.WriteAllText(m_AssetPath, assetJson);
+                AssetDatabase.ImportAsset(m_AssetPath);
             }
         }
     }
