@@ -27,6 +27,7 @@ namespace UnityEngine.InputSystem.Editor
         private int m_AssetId;
         private static string m_AssetPath;
         private static string m_AssetJson;
+        private static bool m_IsDirty;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -132,10 +133,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
         {
-            if (!InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject))
-                titleContent = new GUIContent("(*) Input Actions Editor");
-            else
-                titleContent = new GUIContent("Input Actions Editor");
+            m_IsDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
+            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
         }
 
         private bool HasAssetChanged(SerializedObject serializedAsset)
@@ -143,6 +142,32 @@ namespace UnityEngine.InputSystem.Editor
             var asset = (InputActionAsset)serializedAsset.targetObject;
             var newAssetJson = asset.ToJson();
             return newAssetJson != m_AssetJson;
+        }
+
+        private void OnDestroy()
+        {
+            ConfirmSaveChangesIfNeeded();
+        }
+
+        private void ConfirmSaveChangesIfNeeded()
+        {
+            // Ask for confirmation if we have unsaved changes.
+            if (!m_IsDirty)
+                return;
+
+            var result = EditorUtility.DisplayDialogComplex("Input Action Asset has been modified", $"Do you want to save the changes you made in:\n{m_AssetPath}\n\nYour changes will be lost if you don't save them.", "Save", "Cancel", "Don't Save");
+            switch (result)
+            {
+                case 0:     // Save
+                    SaveAsset(m_State.serializedObject);
+                    break;
+                case 1:
+                    // Cancel editor quit.
+                    Instantiate(this).Show(); //TODO
+                    break;
+                case 2:     // Don't save, don't ask again.
+                    break;
+            }
         }
 
         private InputActionAsset GetAssetFromDatabase()
