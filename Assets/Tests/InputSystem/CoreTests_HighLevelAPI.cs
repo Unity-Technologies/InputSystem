@@ -315,8 +315,8 @@ internal partial class CoreTests
             Is.EqualTo(new Vector2(-0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
 
         // sticks go via different path
-        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.71f, -0.71f)).Using(new Vector2EqualityComparer(0.01f)));
-        Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadStick.LeftStick), Is.EqualTo(new Vector2(-0.71f, -0.71f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadStick.RightStick), Is.EqualTo(new Vector2(0.71f, 0.71f)).Using(new Vector2EqualityComparer(0.01f)));
     }
 
     [Test]
@@ -495,11 +495,11 @@ internal partial class CoreTests
         InputSystem.Update();
 
         Input.SetGamepadStickDeadzone(0.0f);
-        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.3f, 0.3f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadStick.LeftStick), Is.EqualTo(new Vector2(-0.3f, 0.3f)).Using(new Vector2EqualityComparer(0.01f)));
 
         Input.SetGamepadStickDeadzone(0.3f);
-        Assert.That(Input.GetAxis(GamepadAxis.LeftStick), Is.EqualTo(new Vector2(-0.13f, 0.13f)).Using(new Vector2EqualityComparer(0.01f)));
-        Assert.That(Input.GetAxis(GamepadAxis.RightStick), Is.EqualTo(new Vector2(0.70f, -0.70f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadStick.LeftStick), Is.EqualTo(new Vector2(-0.13f, 0.13f)).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(Input.GetAxis(GamepadStick.RightStick), Is.EqualTo(new Vector2(0.70f, -0.70f)).Using(new Vector2EqualityComparer(0.01f)));
     }
 
     [Test]
@@ -661,8 +661,8 @@ internal partial class CoreTests
         Input.DidGamepadDisconnectThisFrame(InputSlot.Slot1);
         Input.DidGamepadDisconnectThisFrame(InputSlot.All);
 
-        Input.GetAxis(GamepadAxis.LeftStick, InputSlot.All);
-        Input.GetAxis(GamepadAxis.LeftStick, InputSlot.Slot1);
+        Input.GetAxis(GamepadStick.LeftStick, InputSlot.All);
+        Input.GetAxis(GamepadStick.LeftStick, InputSlot.Slot1);
 
         Input.GetAxis(Inputs.Key_A);
         Input.GetAxis(Inputs.Mouse_Left);

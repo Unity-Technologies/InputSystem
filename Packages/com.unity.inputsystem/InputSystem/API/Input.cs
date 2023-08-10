@@ -184,8 +184,8 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// An enum for querying the state of gamepad sticks.
     /// </summary>
-    /// <seealso cref="Input.GetAxis(GamepadAxis,InputSlot)"/>
-    public enum GamepadAxis
+    /// <seealso cref="Input.GetAxis(GamepadStick,InputSlot)"/>
+    public enum GamepadStick
     {
         LeftStick,
         RightStick
@@ -205,7 +205,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Input.IsGamepadConnected(InputSlot)"/>
     /// <seealso cref="Input.DidGamepadConnectThisFrame(InputSlot)"/>
     /// <seealso cref="Input.DidGamepadDisconnectThisFrame(InputSlot)"/>
-    /// <seealso cref="Input.GetAxis(GamepadAxis,InputSlot)"/>
+    /// <seealso cref="Input.GetAxis(GamepadStick,InputSlot)"/>
     /// <seealso cref="Input.GetGamepadDeadZone(InputSlot)"/>
     public enum InputSlot
     {
@@ -1135,18 +1135,18 @@ namespace UnityEngine.InputSystem
             return new Vector2(GetAxis(left, right), GetAxis(down, up));
         }
 
-        private static StickControl GetGamepadStickControl(Gamepad gamepad, GamepadAxis stick)
+        private static StickControl GetGamepadStickControl(Gamepad gamepad, GamepadStick stick)
         {
             if (gamepad == null)
                 return null;
 
             switch (stick)
             {
-                case GamepadAxis.LeftStick: return gamepad.leftStick;
-                case GamepadAxis.RightStick: return gamepad.rightStick;
+                case GamepadStick.LeftStick: return gamepad.leftStick;
+                case GamepadStick.RightStick: return gamepad.rightStick;
             }
 
-            throw new ArgumentException($"Unexpected GamepadAxis enum value '{stick}'");
+            throw new ArgumentException($"Unexpected GamepadStick enum value '{stick}'");
         }
 
         /// <summary>
@@ -1155,7 +1155,7 @@ namespace UnityEngine.InputSystem
         /// <param name="stick"></param>
         /// <param name="gamepadSlot">Read values from the gamepad in this slot, or maximum magnitude value from all gamepads if gamepadSlot is InputSlot.All.</param>
         /// <returns>A normalized Vector2 containing the actuation of the specified stick control.</returns>
-        public static Vector2 GetAxis(GamepadAxis stick, InputSlot gamepadSlot = InputSlot.All)
+        public static Vector2 GetAxis(GamepadStick stick, InputSlot gamepadSlot = InputSlot.All)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
