@@ -606,7 +606,7 @@ internal partial class CoreTests
             var joystick = joysticks[i];
             var value = joystick.stick.ReadUnprocessedValue();
             value = Input.NormalizeAxis2D(value, Input.kDefaultJoystickDeadzone);
-            Assert.That(value, Is.EqualTo(Input.GetAxis2D((InputSlot)i)));
+            Assert.That(value, Is.EqualTo(Input.GetJoystickAxis2D((InputSlot)i)));
         }
     }
 
@@ -669,7 +669,7 @@ internal partial class CoreTests
         Input.GetAxis(Inputs.Gamepad_A);
         Input.GetAxis(Inputs.Joystick_Trigger);
 
-        Input.GetAxis2D(InputSlot.All);
+        Input.GetJoystickAxis2D(InputSlot.All);
     }
 
     private Joystick AddHidJoystick()

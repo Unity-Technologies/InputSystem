@@ -1192,7 +1192,7 @@ namespace UnityEngine.InputSystem
         /// <param name="deadzone">A deadzone to apply to the joystick axis. Default is 0.125.</param>
         /// <returns>A normalized Vector2 with the value of the joystick X axis in the Vector2.x component and
         /// the Y axis in Vector2.y components. Both values are in the range [-1, 1].</returns>
-        public static Vector2 GetAxis2D(InputSlot joystickSlot, float deadzone = kDefaultJoystickDeadzone)
+        public static Vector2 GetJoystickAxis2D(InputSlot joystickSlot, float deadzone = kDefaultJoystickDeadzone)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
