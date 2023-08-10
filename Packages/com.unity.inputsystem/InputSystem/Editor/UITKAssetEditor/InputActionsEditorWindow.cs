@@ -26,6 +26,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
         private int m_AssetId;
         private static string m_AssetPath;
+        private static string m_AssetJson;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -76,6 +77,7 @@ namespace UnityEngine.InputSystem.Editor
         private void SetAsset(InputActionAsset asset)
         {
             m_AssetPath = AssetDatabase.GetAssetPath(asset);
+            m_AssetJson = File.ReadAllText(m_AssetPath);
             var serializedAsset = new SerializedObject(Instantiate(asset));
             m_State = new InputActionsEditorState(serializedAsset);
             bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
@@ -98,6 +100,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var asset = GetAssetFromDatabase();
                     m_AssetPath = AssetDatabase.GetAssetPath(asset);
+                    m_AssetJson = File.ReadAllText(m_AssetPath);
                     var serializedAsset = new SerializedObject(asset);
                     m_State = new InputActionsEditorState(m_State, serializedAsset);
                 }
@@ -122,8 +125,24 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
+            DirtyInputActionsEditorWindow(newState);
             if (InputEditorUserSettings.autoSaveInputActionAssets)
                 SaveAsset(m_State.serializedObject);
+        }
+
+        private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
+        {
+            if (!InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject))
+                titleContent = new GUIContent("(*) Input Actions Editor");
+            else
+                titleContent = new GUIContent("Input Actions Editor");
+        }
+
+        private bool HasAssetChanged(SerializedObject serializedAsset)
+        {
+            var asset = (InputActionAsset)serializedAsset.targetObject;
+            var newAssetJson = asset.ToJson();
+            return newAssetJson != m_AssetJson;
         }
 
         private InputActionAsset GetAssetFromDatabase()
@@ -147,6 +166,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorHelpers.CheckOut(m_AssetPath);
                 File.WriteAllText(m_AssetPath, assetJson);
                 AssetDatabase.ImportAsset(m_AssetPath);
+                m_AssetJson = assetJson;
             }
         }
     }
