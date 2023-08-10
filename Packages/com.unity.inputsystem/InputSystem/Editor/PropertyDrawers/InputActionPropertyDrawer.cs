@@ -57,7 +57,6 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             EditorGUI.EndProperty();
-
         }
 
         static float GetCompactHeight(SerializedProperty property)
@@ -113,12 +112,16 @@ namespace UnityEngine.InputSystem.Editor
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 
+            // Using BeginProperty / EndProperty on the popup button allows the user to
+            // revert prefab overrides to Use Reference by right-clicking the configuration button.
+            EditorGUI.BeginProperty(buttonRect, GUIContent.none, useReference);
             using (var check = new EditorGUI.ChangeCheckScope())
             {
                 var newPopupIndex = EditorGUI.Popup(buttonRect, GetCompactPopupIndex(useReference), Contents.compactPopupOptions, popupStyle);
                 if (check.changed)
                     useReference.boolValue = IsUseReference(newPopupIndex);
             }
+            EditorGUI.EndProperty();
 
             EditorGUI.PropertyField(position, effectiveProperty, GUIContent.none);
 
