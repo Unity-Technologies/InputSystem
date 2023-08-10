@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Editor
             // Calculate rect for configuration button
             var buttonRect = position;
             var popupStyle = Styles.GetPopupStyle();
-            buttonRect.yMin += popupStyle.margin.top;
+            buttonRect.yMin += popupStyle.margin.top + 1f;
             buttonRect.width = popupStyle.fixedWidth + popupStyle.margin.right;
             buttonRect.height = EditorGUIUtility.singleLineHeight;
             position.xMin = buttonRect.xMax;
