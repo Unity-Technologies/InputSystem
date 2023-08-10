@@ -324,7 +324,7 @@ namespace UnityEngine.InputSystem.Editor
                         var nextBinding = actionBindings[++i];
                         while (nextBinding.isPartOfComposite)
                         {
-                            var isVisible = IsBindingPartOfCurrentControlScheme(nextBinding, state.selectedControlScheme);
+                            var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme);
                             if (isVisible)
                             {
                                 var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
@@ -345,7 +345,7 @@ namespace UnityEngine.InputSystem.Editor
                     }
                     else
                     {
-                        var isVisible = IsBindingPartOfCurrentControlScheme(serializedInputBinding, state.selectedControlScheme);
+                        var isVisible = ShouldBindingBeVisible(serializedInputBinding, state.selectedControlScheme);
                         if (isVisible)
                             bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
                                 new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
@@ -363,12 +363,12 @@ namespace UnityEngine.InputSystem.Editor
             var name = InputControlPath.ToHumanReadableString(serializedInputBinding.path);
             if (String.IsNullOrEmpty(name))
                 name = "<No Binding>";
-            if (IsBindingAssignedToNoOrAllControlSchemes(serializedInputBinding, allControlSchemes, currentControlScheme))
+            if (IsBindingAssignedToNoControlSchemes(serializedInputBinding, allControlSchemes, currentControlScheme))
                 name += " {GLOBAL}";
             return name;
         }
 
-        private static bool IsBindingAssignedToNoOrAllControlSchemes(SerializedInputBinding serializedInputBinding, SerializedProperty allControlSchemes, InputControlScheme? currentControlScheme)
+        private static bool IsBindingAssignedToNoControlSchemes(SerializedInputBinding serializedInputBinding, SerializedProperty allControlSchemes, InputControlScheme? currentControlScheme)
         {
             if (allControlSchemes.arraySize <= 0 || !currentControlScheme.HasValue || string.IsNullOrEmpty(currentControlScheme.Value.name))
                 return false;
@@ -377,15 +377,16 @@ namespace UnityEngine.InputSystem.Editor
             return false;
         }
 
-        private static bool IsBindingPartOfCurrentControlScheme(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme)
+        private static bool ShouldBindingBeVisible(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme)
         {
             if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
             {
+                //if binding is global (not assigned to any control scheme) show always
                 if (serializedInputBinding.controlSchemes.Length <= 0)
                     return true;
                 return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name);
             }
-
+            //if no control scheme selected then show all bindings
             return true;
         }
 
