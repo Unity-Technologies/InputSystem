@@ -304,8 +304,9 @@ namespace UnityEngine.InputSystem.Editor
                 + "'All Device Input Always Goes To Game View' causes input to treat 'Background Behavior' exactly as in the player including devices potentially being disabled entirely while the Game View "
                 + "does not have focus. In this setting, no input from the Input System will be visible to EditorWindows.");
             m_InputActionPropertyDrawerModeContent = new GUIContent("Input Action Property Drawer Mode", "Determines how the Inspector window displays InputActionProperty fields.\n\n" +
-                "'Compact' displays the property in a compact format, using a single line when possible.\n" +
-                "'Multiline' displays the property in multiple lines.");
+                "'Compact' displays the property in a compact format, using a minimal number of lines.\n" +
+                "'Multiline Effective' displays the effective action underlying the property, using multiple lines.\n" +
+                "'Multiline Both' displays both the input action and external reference underlying the property.");
             m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");

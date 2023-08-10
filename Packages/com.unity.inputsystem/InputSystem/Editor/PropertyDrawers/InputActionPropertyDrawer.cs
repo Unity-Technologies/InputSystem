@@ -7,9 +7,11 @@ namespace UnityEngine.InputSystem.Editor
     /// A custom property drawer for <see cref="InputActionProperty"/>.
     /// </summary>
     /// <remarks>
-    /// This is basically a toggle between the editor for <see cref="InputActionReference"/>
-    /// and the editor for <see cref="InputAction"/>.
+    /// Selectively draws the <see cref="InputActionReference"/> and/or the <see cref="InputAction"/>
+    /// underlying the property, based on whether the property is set to use a reference or not.
+    /// The drawer also allows for drawing in different layouts, chosen through Project Settings.
     /// </remarks>
+    /// <seealso cref="InputSettings.InputActionPropertyDrawerMode"/>
     [CustomPropertyDrawer(typeof(InputActionProperty))]
     internal class InputActionPropertyDrawer : PropertyDrawer
     {
@@ -23,10 +25,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 case InputSettings.InputActionPropertyDrawerMode.Compact:
                 default:
-                    return GetCompactHeight(property, label);
+                    return GetCompactHeight(property);
 
-                case InputSettings.InputActionPropertyDrawerMode.Multiline:
-                    return GetMultilineHeight(property, label);
+                case InputSettings.InputActionPropertyDrawerMode.MultilineEffective:
+                case InputSettings.InputActionPropertyDrawerMode.MultilineBoth:
+                    return GetMultilineHeight(property, drawerMode == InputSettings.InputActionPropertyDrawerMode.MultilineEffective);
             }
         }
 
@@ -47,8 +50,9 @@ namespace UnityEngine.InputSystem.Editor
                     DrawCompactGUI(position, property, label);
                     break;
 
-                case InputSettings.InputActionPropertyDrawerMode.Multiline:
-                    DrawMultilineGUI(position, property, label);
+                case InputSettings.InputActionPropertyDrawerMode.MultilineEffective:
+                case InputSettings.InputActionPropertyDrawerMode.MultilineBoth:
+                    DrawMultilineGUI(position, property, label, drawerMode == InputSettings.InputActionPropertyDrawerMode.MultilineEffective);
                     break;
             }
 
@@ -56,14 +60,14 @@ namespace UnityEngine.InputSystem.Editor
 
         }
 
-        static float GetCompactHeight(SerializedProperty property, GUIContent label)
+        static float GetCompactHeight(SerializedProperty property)
         {
             var useReference = property.FindPropertyRelative("m_UseReference");
             var effectiveProperty = useReference.boolValue ? property.FindPropertyRelative("m_Reference") : property.FindPropertyRelative("m_Action");
             return EditorGUI.GetPropertyHeight(effectiveProperty);
         }
 
-        static float GetMultilineHeight(SerializedProperty property, GUIContent label)
+        static float GetMultilineHeight(SerializedProperty property, bool showEffectiveOnly)
         {
             var height = 0f;
 
@@ -75,8 +79,17 @@ namespace UnityEngine.InputSystem.Editor
 
             // We show either the InputAction property drawer or InputActionReference drawer (default object field).
             var useReference = property.FindPropertyRelative("m_UseReference");
-            var effectiveProperty = useReference.boolValue ? property.FindPropertyRelative("m_Reference") : property.FindPropertyRelative("m_Action");
-            height += EditorGUI.GetPropertyHeight(effectiveProperty);
+            var reference = property.FindPropertyRelative("m_Reference");
+            var action = property.FindPropertyRelative("m_Action");
+            if (showEffectiveOnly)
+            {
+                var effectiveProperty = useReference.boolValue ? reference : action;
+                height += EditorGUI.GetPropertyHeight(effectiveProperty);
+            }
+            else
+            {
+                height += EditorGUI.GetPropertyHeight(reference) + EditorGUI.GetPropertyHeight(action);
+            }
 
             return height;
         }
@@ -113,7 +126,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.indentLevel = indent;
         }
 
-        static void DrawMultilineGUI(Rect position, SerializedProperty property, GUIContent label)
+        static void DrawMultilineGUI(Rect position, SerializedProperty property, GUIContent label, bool showEffectiveOnly)
         {
             const float kIndent = 15f;
 
@@ -127,16 +140,38 @@ namespace UnityEngine.InputSystem.Editor
             useReferenceToggleRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             useReferenceToggleRect.height = EditorGUI.GetPropertyHeight(useReference);
 
-            var effectiveProperty = useReference.boolValue ? property.FindPropertyRelative("m_Reference") : property.FindPropertyRelative("m_Action");
-            var effectiveRect = position;
-            effectiveRect.x += kIndent;
-            effectiveRect.width -= kIndent;
-            effectiveRect.y += (useReferenceToggleRect.height + EditorGUIUtility.standardVerticalSpacing) * 2;
-            effectiveRect.height = EditorGUI.GetPropertyHeight(effectiveProperty);
+            var firstValueRect = position;
+            firstValueRect.x += kIndent;
+            firstValueRect.width -= kIndent;
+            firstValueRect.y += (titleRect.height + useReferenceToggleRect.height) + (EditorGUIUtility.standardVerticalSpacing * 2f);
 
+            var reference = property.FindPropertyRelative("m_Reference");
+            var action = property.FindPropertyRelative("m_Action");
+
+            // Draw the Use Reference toggle.
             EditorGUI.LabelField(titleRect, label, Styles.header);
             EditorGUI.PropertyField(useReferenceToggleRect, useReference);
-            EditorGUI.PropertyField(effectiveRect, effectiveProperty);
+
+            if (showEffectiveOnly)
+            {
+                // Draw only the Reference or Action underlying the property, whichever is the effective one.
+                var effectiveProperty = useReference.boolValue ? reference : action;
+                firstValueRect.height = EditorGUI.GetPropertyHeight(effectiveProperty);
+
+                EditorGUI.PropertyField(firstValueRect, effectiveProperty);
+            }
+            else
+            {
+                // Draw the Action followed by the Reference.
+                firstValueRect.height = EditorGUI.GetPropertyHeight(action);
+
+                var referenceRect = firstValueRect;
+                referenceRect.y += firstValueRect.height + EditorGUIUtility.standardVerticalSpacing;
+                referenceRect.height = EditorGUI.GetPropertyHeight(reference);
+
+                EditorGUI.PropertyField(firstValueRect, action);
+                EditorGUI.PropertyField(referenceRect, reference);
+            }
         }
 
         // 0 == Use Reference, 1 == Use Action

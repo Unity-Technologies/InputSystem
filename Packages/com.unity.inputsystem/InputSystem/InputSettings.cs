@@ -924,22 +924,31 @@ namespace UnityEngine.InputSystem
         public enum InputActionPropertyDrawerMode
         {
             /// <summary>
-            /// Display the property in a compact format, using a single line when possible.
+            /// Display the property in a compact format, using a minimal number of lines.
             /// Toggling between a reference to an input action in an asset and a directly serialized input action
             /// is done using a dropdown menu.
             /// </summary>
             Compact,
 
             /// <summary>
-            /// Display the property in multiple lines.
+            /// Display the effective action underlying the property, using multiple lines.
             /// Toggling between a reference to an input action in an asset and a directly serialized input action
             /// is done using a property that is always visible.
             /// </summary>
             /// <remarks>
-            /// This mode could be useful if you want to see prefab overrides for the Use Reference property
-            /// or revert child serialized properties.
+            /// This mode could be useful if you want to see or revert prefab overrides and hide the field that is ignored.
             /// </remarks>
-            Multiline,
+            MultilineEffective,
+
+            /// <summary>
+            /// Display both the input action and external reference underlying the property.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see both values of the property without needing to toggle Use Reference.
+            /// </remarks>
+            MultilineBoth,
         }
     }
 }
