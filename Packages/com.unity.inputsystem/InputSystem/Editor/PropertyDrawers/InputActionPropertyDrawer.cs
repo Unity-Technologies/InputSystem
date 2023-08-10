@@ -58,7 +58,6 @@ namespace UnityEngine.InputSystem.Editor
 
         static float GetCompactHeight(SerializedProperty property, GUIContent label)
         {
-            //return EditorGUIUtility.singleLineHeight;
             var useReference = property.FindPropertyRelative("m_UseReference");
             var effectiveProperty = useReference.boolValue ? property.FindPropertyRelative("m_Reference") : property.FindPropertyRelative("m_Action");
             return EditorGUI.GetPropertyHeight(effectiveProperty);
