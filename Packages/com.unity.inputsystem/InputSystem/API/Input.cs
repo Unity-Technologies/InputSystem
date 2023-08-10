@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Input.IsPressed(Inputs, InputSlot)"/>
     /// <seealso cref="Input.GetAxis(Inputs)"/>
     /// <seealso cref="Input.GetAxis(Inputs, Inputs)"/>
-    /// <seealso cref="Input.GetAxis(Inputs, Inputs, Inputs, Inputs)"/>
+    /// <seealso cref="Input.GetAxis2D(Inputs, Inputs, Inputs, Inputs)"/>
     public enum Inputs
     {
         Key_Space = 10001,
@@ -184,7 +184,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// An enum for querying the state of gamepad sticks.
     /// </summary>
-    /// <seealso cref="Input.GetAxis(GamepadStick,InputSlot)"/>
+    /// <seealso cref="Input.GetAxis2D(GamepadStick,InputSlot)"/>
     public enum GamepadStick
     {
         LeftStick,
@@ -205,7 +205,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Input.IsGamepadConnected(InputSlot)"/>
     /// <seealso cref="Input.DidGamepadConnectThisFrame(InputSlot)"/>
     /// <seealso cref="Input.DidGamepadDisconnectThisFrame(InputSlot)"/>
-    /// <seealso cref="Input.GetAxis(GamepadStick,InputSlot)"/>
+    /// <seealso cref="Input.GetAxis2D(GamepadStick,InputSlot)"/>
     /// <seealso cref="Input.GetGamepadDeadZone(InputSlot)"/>
     public enum InputSlot
     {
@@ -1099,7 +1099,7 @@ namespace UnityEngine.InputSystem
             return GetAxis(positiveAxis) - GetAxis(negativeAxis);
         }
 
-        internal static Vector2 NormalizeAxis(Vector2 axis, float deadzone)
+        internal static Vector2 NormalizeAxis2D(Vector2 axis, float deadzone)
         {
             var currentMag = axis.magnitude;
             if (currentMag < deadzone)
@@ -1116,10 +1116,10 @@ namespace UnityEngine.InputSystem
         /// <param name="up"></param>
         /// <param name="down"></param>
         /// <returns></returns>
-        public static Vector2 GetAxis(Inputs left, Inputs right, Inputs up, Inputs down)
+        public static Vector2 GetAxis2D(Inputs left, Inputs right, Inputs up, Inputs down)
         {
-            var axis = GetAxisRaw(left, right, up, down);
-            return NormalizeAxis(axis, InputSystem.settings.defaultDeadzoneMin);
+            var axis = GetAxis2DRaw(left, right, up, down);
+            return NormalizeAxis2D(axis, InputSystem.settings.defaultDeadzoneMin);
         }
 
         /// <summary>
@@ -1130,7 +1130,7 @@ namespace UnityEngine.InputSystem
         /// <param name="up"></param>
         /// <param name="down"></param>
         /// <returns></returns>
-        public static Vector2 GetAxisRaw(Inputs left, Inputs right, Inputs up, Inputs down)
+        public static Vector2 GetAxis2DRaw(Inputs left, Inputs right, Inputs up, Inputs down)
         {
             return new Vector2(GetAxis(left, right), GetAxis(down, up));
         }
@@ -1155,7 +1155,7 @@ namespace UnityEngine.InputSystem
         /// <param name="stick"></param>
         /// <param name="gamepadSlot">Read values from the gamepad in this slot, or maximum magnitude value from all gamepads if gamepadSlot is InputSlot.All.</param>
         /// <returns>A normalized Vector2 containing the actuation of the specified stick control.</returns>
-        public static Vector2 GetAxis(GamepadStick stick, InputSlot gamepadSlot = InputSlot.All)
+        public static Vector2 GetAxis2D(GamepadStick stick, InputSlot gamepadSlot = InputSlot.All)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
@@ -1171,7 +1171,7 @@ namespace UnityEngine.InputSystem
 
                 var rawAxis = GetGamepadStickControl(gamepad, stick).ReadUnprocessedValue();
                 var deadZone = GetGamepadStickDeadZone((InputSlot)i);
-                var axis = NormalizeAxis(rawAxis, deadZone);
+                var axis = NormalizeAxis2D(rawAxis, deadZone);
                 var axisMaxSquared = axis.sqrMagnitude;
                 if (axisMaxSquared >= maxAxisMagSquared)
                 {
@@ -1192,7 +1192,7 @@ namespace UnityEngine.InputSystem
         /// <param name="deadzone">A deadzone to apply to the joystick axis. Default is 0.125.</param>
         /// <returns>A normalized Vector2 with the value of the joystick X axis in the Vector2.x component and
         /// the Y axis in Vector2.y components. Both values are in the range [-1, 1].</returns>
-        public static Vector2 GetAxis(InputSlot joystickSlot, float deadzone = kDefaultJoystickDeadzone)
+        public static Vector2 GetAxis2D(InputSlot joystickSlot, float deadzone = kDefaultJoystickDeadzone)
         {
             var maxAxis = Vector2.zero;
             var maxAxisMagSquared = 0.0f;
@@ -1207,7 +1207,7 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 var rawAxis = control.ReadUnprocessedValue();
-                var axis = NormalizeAxis(rawAxis, deadzone);
+                var axis = NormalizeAxis2D(rawAxis, deadzone);
                 var axisMaxSquared = axis.sqrMagnitude;
                 if (axisMaxSquared >= maxAxisMagSquared)
                 {
