@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
+- Changed `InputActionProperty` property drawer to be more compact. A new setting was added to the Project Settings window to switch between different drawing modes, which includes the original method if preferred.
 
 ### Fixed
 - Fixed missing prefab errors in InputDeviceTester project ([case ISXB-420](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-420)).
