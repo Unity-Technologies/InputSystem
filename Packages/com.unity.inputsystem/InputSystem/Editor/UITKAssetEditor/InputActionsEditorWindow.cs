@@ -151,7 +151,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ConfirmSaveChangesIfNeeded()
         {
-            // Ask for confirmation if we have unsaved changes.
+            // Do we have unsaved changes?
             if (!m_IsDirty)
                 return;
 
@@ -161,13 +161,21 @@ namespace UnityEngine.InputSystem.Editor
                 case 0:     // Save
                     SaveAsset(m_State.serializedObject);
                     break;
-                case 1:
-                    // Cancel editor quit.
-                    Instantiate(this).Show(); //TODO
+                case 1:    // Cancel editor quit. (open new editor window with the edited asset)
+                    ReshowEditorWindowWithUnsavedChanges();
                     break;
-                case 2:     // Don't save, don't ask again.
+                case 2:     // Don't save, quit
                     break;
             }
+        }
+
+        private void ReshowEditorWindowWithUnsavedChanges()
+        {
+            var window = CreateWindow<InputActionsEditorWindow>();
+            window.m_AssetId = m_AssetId;
+            window.m_State = m_State;
+            window.BuildUI();
+            window.Show();
         }
 
         private InputActionAsset GetAssetFromDatabase()
