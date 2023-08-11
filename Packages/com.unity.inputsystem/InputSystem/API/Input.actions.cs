@@ -15,21 +15,6 @@ namespace UnityEngine.InputSystem
         internal const string kGlobalActionsAssetName = "GlobalInputActions";
         internal const string kGlobalActionsAssetConfigKey = "com.unity.inputsystem.globalactionsasset";
 
-        public static bool IsPressed<TActionType>(Input<TActionType> input) where TActionType : struct
-        {
-            return input.isPressed;
-        }
-
-        public static bool WasPressedThisFrame<TActionType>(Input<TActionType> input) where TActionType : struct
-        {
-            return input.wasPressedThisFrame;
-        }
-
-        public static bool WasReleasedThisFrame<TActionType>(Input<TActionType> input) where TActionType : struct
-        {
-            return input.wasReleasedThisFrame;
-        }
-
         internal static void InitializeGlobalActions(string defaultAssetPath = null, string assetPath = null)
         {
             #if UNITY_EDITOR
