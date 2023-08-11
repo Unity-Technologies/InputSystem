@@ -53,25 +53,25 @@ public class NewBehaviourScript : MonoBehaviour
         }
 
         // Project-Wide Actions via API
-        if (Input.IsPressed("Crouch", "Player"))
+        if (crouch.isPressed)
         {
             cube.GetComponent<Renderer>().material.color = Color.gray;
         }
 
         // Project-Wide Actions via Source Generated type-safe API
-        if (InputActions.player.move.value.x < 0.0f)
+        if (move.value.x < 0.0f)
         {
             cube.transform.Translate(new Vector3(-10 * Time.deltaTime, 0, 0));
         }
-        else if (InputActions.player.move.value.x > 0.0f)
+        else if (move.value.x > 0.0f)
         {
             cube.transform.Translate(new Vector3(10 * Time.deltaTime, 0, 0));
         }
-        if (InputActions.player.move.value.y < 0.0f)
+        if (move.value.y < 0.0f)
         {
             cube.transform.Translate(new Vector3(0, -10 * Time.deltaTime, 0));
         }
-        else if (InputActions.player.move.value.y > 0.0f)
+        else if (move.value.y > 0.0f)
         {
             cube.transform.Translate(new Vector3(0, 10 * Time.deltaTime, 0));
         }

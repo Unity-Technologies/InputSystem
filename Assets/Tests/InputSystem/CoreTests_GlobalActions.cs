@@ -62,29 +62,6 @@ internal partial class CoreTests
 
     [Test]
     [Category(TestCategory)]
-    public void GlobalActions_CanQueryActionsByStringName()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        InputSystem.actions.FindAction("ActionOne").AddBinding("<keyboard>/w");
-
-        Set(keyboard.wKey, 1);
-
-        Assert.That(Input.WasPressedThisFrame("ActionOne"), Is.True);
-        Assert.That(Input.IsPressed("ActionOne"), Is.True);
-
-        Set(keyboard.wKey, 0);
-
-        Assert.That(Input.IsPressed("ActionOne"), Is.False);
-        Assert.That(Input.WasReleasedThisFrame("ActionOne"), Is.True);
-
-        InputSystem.Update();
-
-        Assert.That(Input.WasReleasedThisFrame("ActionOne"), Is.False);
-    }
-
-    [Test]
-    [Category(TestCategory)]
     public void GlobalActions_NoExceptionIsThrownWhenReadingTheValueOfAnIncompatibleControl()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();

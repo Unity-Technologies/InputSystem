@@ -15,54 +15,6 @@ namespace UnityEngine.InputSystem
         internal const string kGlobalActionsAssetName = "GlobalInputActions";
         internal const string kGlobalActionsAssetConfigKey = "com.unity.inputsystem.globalactionsasset";
 
-        /// <summary>
-        /// True if the specified action is currently pressed.
-        /// </summary>
-        /// <param name="actionMapName"></param>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
-        public static bool IsPressed(string actionName, string actionMapName = "")
-        {
-            Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
-
-            var action = InputSystem.actions?.FindAction(string.IsNullOrEmpty(actionMapName)
-                ? actionName
-                : $"{actionMapName}/{actionName}");
-            return action != null && action.IsPressed();
-        }
-
-        /// <summary>
-        /// True in the frame that the action started.
-        /// </summary>
-        /// <param name="actionMapName"></param>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
-        public static bool WasPressedThisFrame(string actionName, string actionMapName = "")
-        {
-            Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
-
-            var action = InputSystem.actions?.FindAction(string.IsNullOrEmpty(actionMapName)
-                ? actionName
-                : $"{actionMapName}/{actionName}");
-            return action != null && action.WasPressedThisFrame();
-        }
-
-        /// <summary>
-        /// True in the frame that the action ended.
-        /// </summary>
-        /// <param name="actionMapName"></param>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
-        public static bool WasReleasedThisFrame(string actionName, string actionMapName = "")
-        {
-            Debug.Assert(InputSystem.actions != null, "Global actions have not been correctly initialized");
-
-            var action = InputSystem.actions?.FindAction(string.IsNullOrEmpty(actionMapName)
-                ? actionName
-                : $"{actionMapName}/{actionName}");
-            return action != null && action.WasReleasedThisFrame();
-        }
-
         public static bool IsPressed<TActionType>(Input<TActionType> input) where TActionType : struct
         {
             return input.isPressed;
