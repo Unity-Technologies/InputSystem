@@ -25,9 +25,9 @@ namespace UnityEngine.InputSystem.Editor
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
         private int m_AssetId;
-        private static string m_AssetPath;
-        private static string m_AssetJson;
-        private static bool m_IsDirty;
+        private string m_AssetPath;
+        private string m_AssetJson;
+        private bool m_IsDirty;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.Editor
                 window.Focus();
                 return true;
             }
-            m_IsDirty = false;
+            window.m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
             window.SetAsset(asset);
@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.Editor
             switch (result)
             {
                 case 0:     // Save
-                    SaveAsset(m_State.serializedObject);
+                    SaveAsset(m_State.serializedObject, this);
                     break;
                 case 1:    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
@@ -191,18 +191,21 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
 
-        public static void SaveAsset(SerializedObject serializedAsset)
+        public static void SaveAsset(SerializedObject serializedAsset, InputActionsEditorWindow currentWindow = null)
         {
+            if ((focusedWindow == null || focusedWindow is not InputActionsEditorWindow) && currentWindow == null)
+                return;
+            currentWindow = currentWindow ? currentWindow : (InputActionsEditorWindow)focusedWindow;
             var asset = (InputActionAsset)serializedAsset.targetObject;
             var assetJson = asset.ToJson();
 
-            var existingJson = File.ReadAllText(m_AssetPath);
+            var existingJson = File.ReadAllText(currentWindow.m_AssetPath);
             if (assetJson != existingJson)
             {
-                EditorHelpers.CheckOut(m_AssetPath);
-                File.WriteAllText(m_AssetPath, assetJson);
-                AssetDatabase.ImportAsset(m_AssetPath);
-                m_AssetJson = assetJson;
+                EditorHelpers.CheckOut(currentWindow.m_AssetPath);
+                File.WriteAllText(currentWindow.m_AssetPath, assetJson);
+                AssetDatabase.ImportAsset(currentWindow.m_AssetPath);
+                currentWindow.m_AssetJson = assetJson;
             }
         }
     }
