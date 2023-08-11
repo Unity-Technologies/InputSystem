@@ -1,14 +1,10 @@
 #if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
 
 using System;
-using System.Linq;
 using System.Linq.Expressions;
 using UnityEditor;
 using UnityEngine.InputSystem.LowLevel;
 #if UNITY_EDITOR
-using System.Reflection;
-using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Editor;
 #endif
 
