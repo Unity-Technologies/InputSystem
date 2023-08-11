@@ -54,6 +54,7 @@ namespace UnityEngine.InputSystem.Editor
                 window.Focus();
                 return true;
             }
+            m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
             window.SetAsset(asset);
@@ -78,9 +79,11 @@ namespace UnityEngine.InputSystem.Editor
         private void SetAsset(InputActionAsset asset)
         {
             m_AssetPath = AssetDatabase.GetAssetPath(asset);
-            m_AssetJson = File.ReadAllText(m_AssetPath);
-            var serializedAsset = new SerializedObject(Instantiate(asset));
+            var clone = Instantiate(asset);
+            clone.name = asset.name;
+            var serializedAsset = new SerializedObject(clone);
             m_State = new InputActionsEditorState(serializedAsset);
+            m_AssetJson = File.ReadAllText(m_AssetPath);
             bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
             Debug.Assert(isGUIDObtained, $"Failed to get asset {asset.name} GUID");
 
