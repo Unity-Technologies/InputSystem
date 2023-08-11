@@ -84,13 +84,6 @@ namespace UnityEngine.InputSystem.Editor
 
             AssetDatabase.SaveAssets();
 
-            // output the temp file for source generators to pick up
-            var libraryPath = Path.Combine(Application.dataPath, "..", "Library", "com.unity.inputsystem");
-            if (Directory.Exists(libraryPath) == false)
-                Directory.CreateDirectory(libraryPath);
-
-            File.WriteAllText(Path.Combine(libraryPath, "GlobalActionsAsset.json"), asset.ToJson());
-
             return asset;
         }
     }
