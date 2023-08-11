@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Calculate rect for configuration button
             var buttonRect = position;
-            var popupStyle = Styles.GetPopupStyle();
+            var popupStyle = Styles.popup;
             buttonRect.yMin += popupStyle.margin.top + 1f;
             buttonRect.width = popupStyle.fixedWidth + popupStyle.margin.right;
             buttonRect.height = EditorGUIUtility.singleLineHeight;
@@ -191,17 +191,8 @@ namespace UnityEngine.InputSystem.Editor
 
         static class Styles
         {
-            static GUIStyle s_PopupStyle;
-
             public static readonly GUIStyle header = new GUIStyle("Label").WithFontStyle(FontStyle.Bold);
-
-            public static GUIStyle GetPopupStyle()
-            {
-                if (s_PopupStyle == null)
-                    s_PopupStyle = new GUIStyle(GUI.skin.GetStyle("PaneOptions")) { imagePosition = ImagePosition.ImageOnly };
-
-                return s_PopupStyle;
-            }
+            public static readonly GUIStyle popup = new GUIStyle("PaneOptions") { imagePosition = ImagePosition.ImageOnly };
         }
     }
 }
