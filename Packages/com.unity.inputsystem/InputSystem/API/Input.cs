@@ -15,9 +15,9 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="Input.WasPressedThisFrame(Inputs, InputSlot)"/>
     /// <seealso cref="Input.WasReleasedThisFrame(Inputs, InputSlot)"/>
     /// <seealso cref="Input.IsPressed(Inputs, InputSlot)"/>
-    /// <seealso cref="Input.GetAxis(Inputs)"/>
-    /// <seealso cref="Input.GetAxis(Inputs, Inputs)"/>
-    /// <seealso cref="Input.GetAxis2D(Inputs, Inputs, Inputs, Inputs)"/>
+    /// <seealso cref="Input.GetAxis(Inputs, InputSlot)"/>
+    /// <seealso cref="Input.GetAxis(Inputs, Inputs, InputSlot)"/>
+    /// <seealso cref="Input.GetAxis2D(Inputs, Inputs, Inputs, Inputs, InputSlot)"/>
     public enum Inputs
     {
         Key_Space = 10001,
@@ -1024,6 +1024,14 @@ namespace UnityEngine.InputSystem
         /// Returns actuation value for single analogue controls.
         /// </summary>
         /// <param name="input">Control from Inputs enum.</param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns>A value between 0 at un-actuated to 1 at fully actuated.</returns>
         public static float GetAxis(Inputs input, InputSlot slot = InputSlot.All)
         {
@@ -1093,10 +1101,18 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="negativeAxis">Control from Inputs enum.</param>
         /// <param name="positiveAxis">Control from Inputs enum.</param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns>Value from [-1, 1] inclusive. If both controls are fully actuated, 0 will be returned.</returns>
-        public static float GetAxis(Inputs negativeAxis, Inputs positiveAxis)
+        public static float GetAxis(Inputs negativeAxis, Inputs positiveAxis, InputSlot slot = InputSlot.All)
         {
-            return GetAxis(positiveAxis) - GetAxis(negativeAxis);
+            return GetAxis(positiveAxis, slot) - GetAxis(negativeAxis, slot);
         }
 
         internal static Vector2 NormalizeAxis2D(Vector2 axis, float deadzone)
@@ -1115,10 +1131,18 @@ namespace UnityEngine.InputSystem
         /// <param name="right"></param>
         /// <param name="up"></param>
         /// <param name="down"></param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns></returns>
-        public static Vector2 GetAxis2D(Inputs left, Inputs right, Inputs up, Inputs down)
+        public static Vector2 GetAxis2D(Inputs left, Inputs right, Inputs up, Inputs down, InputSlot slot = InputSlot.All)
         {
-            var axis = GetAxis2DRaw(left, right, up, down);
+            var axis = GetAxis2DRaw(left, right, up, down, slot);
             return NormalizeAxis2D(axis, InputSystem.settings.defaultDeadzoneMin);
         }
 
@@ -1129,10 +1153,18 @@ namespace UnityEngine.InputSystem
         /// <param name="right"></param>
         /// <param name="up"></param>
         /// <param name="down"></param>
+        /// <param name="slot">
+        /// Which gamepad or joystick to check for input.
+        /// Changes context depending on the value of <paramref name="input"/>.
+        /// If it references a Gamepad control then this represents a Gamepad slot.
+        /// If it references a Joystick control then this represents a Joystick slot.
+        /// This value is ignored for all other device types.
+        /// Default is 'Any'.
+        /// </param>
         /// <returns></returns>
-        public static Vector2 GetAxis2DRaw(Inputs left, Inputs right, Inputs up, Inputs down)
+        public static Vector2 GetAxis2DRaw(Inputs left, Inputs right, Inputs up, Inputs down, InputSlot slot = InputSlot.All)
         {
-            return new Vector2(GetAxis(left, right), GetAxis(down, up));
+            return new Vector2(GetAxis(left, right, slot), GetAxis(down, up, slot));
         }
 
         private static StickControl GetGamepadStickControl(Gamepad gamepad, GamepadStick stick)
