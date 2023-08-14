@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.7.0] - 2023-08-14
 
 ### Added
 - Preliminary support for visionOS.
