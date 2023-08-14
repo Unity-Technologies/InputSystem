@@ -136,7 +136,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
         {
-            m_IsDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
+            var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
+            if (m_IsDirty == isWindowDirty)
+                return;
+            m_IsDirty = isWindowDirty;
             titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
         }
 
