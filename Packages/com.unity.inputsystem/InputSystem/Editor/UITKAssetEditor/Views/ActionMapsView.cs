@@ -50,6 +50,8 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             m_ListView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+            m_ListView.AddManipulator(new DropManipulator());
+
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));

@@ -115,6 +115,7 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+            m_ActionsTreeView.AddManipulator(new DragManipulator());
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
