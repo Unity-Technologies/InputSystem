@@ -1,4 +1,4 @@
-#if UNITY_2020_2_OR_NEWER
+#if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
