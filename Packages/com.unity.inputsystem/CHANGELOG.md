@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Changed
+- Changed `InputActionProperty` property drawer to be more compact. A new setting was added to the Project Settings window to switch between different drawing modes, which includes the original method if preferred.
+
 ## [1.7.0] - 2023-08-14
 
 ### Added
@@ -16,7 +21,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
-- Changed `InputActionProperty` property drawer to be more compact. A new setting was added to the Project Settings window to switch between different drawing modes, which includes the original method if preferred.
 
 ### Fixed
 - Fixed missing prefab errors in InputDeviceTester project ([case ISXB-420](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-420)).
