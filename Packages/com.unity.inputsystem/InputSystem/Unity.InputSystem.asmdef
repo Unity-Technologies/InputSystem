@@ -58,13 +58,8 @@
         },
         {
             "name": "Unity",
-            "expression": "2020.2",
+            "expression": "2022.3",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API"
-        },
-        {
-            "name": "Unity",
-            "expression": "2020.2",
-            "define": "UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR"
         }
     ],
     "noEngineReferences": false
