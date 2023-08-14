@@ -247,7 +247,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
             m_ParameterEditor = null;
         }
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_2022_3_OR_NEWER
         public void OnDrawVisualElements(VisualElement root)
         {
             if (m_ParameterEditor != null)

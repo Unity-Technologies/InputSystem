@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_2022_3_OR_NEWER
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;

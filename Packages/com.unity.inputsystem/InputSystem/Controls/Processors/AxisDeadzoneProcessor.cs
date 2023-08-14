@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Processors
             m_MaxSetting.OnGUI();
         }
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_2022_3_OR_NEWER
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_MinSetting.OnDrawVisualElements(root, onChangedCallback);

@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+        #if UNITY_EDITOR && UNITY_2022_3_OR_NEWER
         internal InputControlScheme(SerializedProperty sp)
         {
             var requirements = new List<DeviceRequirement>();

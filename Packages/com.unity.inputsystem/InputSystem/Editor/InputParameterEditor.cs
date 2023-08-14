@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public abstract void OnGUI();
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_2022_3_OR_NEWER
         /// <summary>
         /// Add visual elements for this parameter editor to a root VisualElement.
         /// </summary>
@@ -212,7 +212,7 @@ namespace UnityEngine.InputSystem.Editor
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_2022_3_OR_NEWER
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
             {
                 var value = m_GetValue();
@@ -373,7 +373,7 @@ namespace UnityEngine.InputSystem.Editor
             private FloatField m_FloatField;
             private Button m_OpenInputSettingsButton;
             private Toggle m_DefaultToggle;
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_2022_3_OR_NEWER
             private HelpBox m_HelpBox;
 #endif
         }
