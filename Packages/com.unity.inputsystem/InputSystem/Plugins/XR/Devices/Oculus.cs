@@ -17,31 +17,31 @@ namespace Unity.XR.Oculus.Input
         [InputControl]
         [InputControl(name = "trackingState", layout = "Integer", aliases = new[] { "devicetrackingstate" })]
         [InputControl(name = "isTracked", layout = "Button", aliases = new[] { "deviceistracked" })]
-        public ButtonControl userPresence { get; private set; }
+        public ButtonControl userPresence { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAngularVelocity { get; private set; }
+        public Vector3Control deviceAngularVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAcceleration { get; private set; }
+        public Vector3Control deviceAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAngularAcceleration { get; private set; }
+        public Vector3Control deviceAngularAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control leftEyeAngularVelocity { get; private set; }
+        public Vector3Control leftEyeAngularVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control leftEyeAcceleration { get; private set; }
+        public Vector3Control leftEyeAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control leftEyeAngularAcceleration { get; private set; }
+        public Vector3Control leftEyeAngularAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control rightEyeAngularVelocity { get; private set; }
+        public Vector3Control rightEyeAngularVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control rightEyeAcceleration { get; private set; }
+        public Vector3Control rightEyeAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control rightEyeAngularAcceleration { get; private set; }
+        public Vector3Control rightEyeAngularAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control centerEyeAngularVelocity { get; private set; }
+        public Vector3Control centerEyeAngularVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control centerEyeAcceleration { get; private set; }
+        public Vector3Control centerEyeAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control centerEyeAngularAcceleration { get; private set; }
+        public Vector3Control centerEyeAngularAcceleration { get; protected set; }
 
 
         protected override void FinishSetup()
@@ -71,45 +71,45 @@ namespace Unity.XR.Oculus.Input
     public class OculusTouchController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
-        public Vector2Control thumbstick { get; private set; }
+        public Vector2Control thumbstick { get; protected set; }
 
         [InputControl]
-        public AxisControl trigger { get; private set; }
+        public AxisControl trigger { get; protected set; }
         [InputControl]
-        public AxisControl grip { get; private set; }
+        public AxisControl grip { get; protected set; }
 
         [InputControl(aliases = new[] { "A", "X", "Alternate" })]
-        public ButtonControl primaryButton { get; private set; }
+        public ButtonControl primaryButton { get; protected set; }
         [InputControl(aliases = new[] { "B", "Y", "Primary" })]
-        public ButtonControl secondaryButton { get; private set; }
+        public ButtonControl secondaryButton { get; protected set; }
         [InputControl(aliases = new[] { "GripButton" })]
-        public ButtonControl gripPressed { get; private set; }
+        public ButtonControl gripPressed { get; protected set; }
         [InputControl]
-        public ButtonControl start { get; private set; }
+        public ButtonControl start { get; protected set; }
         [InputControl(aliases = new[] { "JoystickOrPadPressed", "thumbstickClick" })]
-        public ButtonControl thumbstickClicked { get; private set; }
+        public ButtonControl thumbstickClicked { get; protected set; }
         [InputControl(aliases = new[] { "ATouched", "XTouched", "ATouch", "XTouch" })]
-        public ButtonControl primaryTouched { get; private set; }
+        public ButtonControl primaryTouched { get; protected set; }
         [InputControl(aliases = new[] { "BTouched", "YTouched", "BTouch", "YTouch" })]
-        public ButtonControl secondaryTouched { get; private set; }
+        public ButtonControl secondaryTouched { get; protected set; }
         [InputControl(aliases = new[] { "indexTouch", "indexNearTouched" })]
-        public AxisControl triggerTouched { get; private set; }
+        public AxisControl triggerTouched { get; protected set; }
         [InputControl(aliases = new[] { "indexButton", "indexTouched" })]
-        public ButtonControl triggerPressed { get; private set; }
+        public ButtonControl triggerPressed { get; protected set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched", "thumbstickTouch" })]
         [InputControl(name = "trackingState", layout = "Integer", aliases = new[] { "controllerTrackingState" })]
         [InputControl(name = "isTracked", layout = "Button", aliases = new[] { "ControllerIsTracked" })]
         [InputControl(name = "devicePosition", layout = "Vector3", aliases = new[] { "controllerPosition" })]
         [InputControl(name = "deviceRotation", layout = "Quaternion", aliases = new[] { "controllerRotation" })]
-        public ButtonControl thumbstickTouched { get; private set; }
+        public ButtonControl thumbstickTouched { get; protected set; }
         [InputControl(noisy = true, aliases = new[] { "controllerVelocity" })]
-        public Vector3Control deviceVelocity { get; private set; }
+        public Vector3Control deviceVelocity { get; protected set; }
         [InputControl(noisy = true, aliases = new[] { "controllerAngularVelocity" })]
-        public Vector3Control deviceAngularVelocity { get; private set; }
+        public Vector3Control deviceAngularVelocity { get; protected set; }
         [InputControl(noisy = true, aliases = new[] { "controllerAcceleration" })]
-        public Vector3Control deviceAcceleration { get; private set; }
+        public Vector3Control deviceAcceleration { get; protected set; }
         [InputControl(noisy = true, aliases = new[] { "controllerAngularAcceleration" })]
-        public Vector3Control deviceAngularAcceleration { get; private set; }
+        public Vector3Control deviceAngularAcceleration { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -140,9 +140,9 @@ namespace Unity.XR.Oculus.Input
     public class OculusTrackingReference : TrackedDevice
     {
         [InputControl(aliases = new[] { "trackingReferenceTrackingState" })]
-        public new IntegerControl trackingState { get; private set; }
+        public new IntegerControl trackingState { get; protected set; }
         [InputControl(aliases = new[] { "trackingReferenceIsTracked" })]
-        public new ButtonControl isTracked { get; private set; }
+        public new ButtonControl isTracked { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -160,11 +160,11 @@ namespace Unity.XR.Oculus.Input
     public class OculusRemote : InputDevice
     {
         [InputControl]
-        public ButtonControl back { get; private set; }
+        public ButtonControl back { get; protected set; }
         [InputControl]
-        public ButtonControl start { get; private set; }
+        public ButtonControl start { get; protected set; }
         [InputControl]
-        public Vector2Control touchpad { get; private set; }
+        public Vector2Control touchpad { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -183,9 +183,9 @@ namespace Unity.XR.Oculus.Input
     public class OculusHMDExtended : OculusHMD
     {
         [InputControl]
-        public ButtonControl back { get; private set; }
+        public ButtonControl back { get; protected set; }
         [InputControl]
-        public Vector2Control touchpad { get; private set; }
+        public Vector2Control touchpad { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -203,23 +203,23 @@ namespace Unity.XR.Oculus.Input
     public class GearVRTrackedController : XRController
     {
         [InputControl]
-        public Vector2Control touchpad { get; private set; }
+        public Vector2Control touchpad { get; protected set; }
         [InputControl]
-        public AxisControl trigger { get; private set; }
+        public AxisControl trigger { get; protected set; }
         [InputControl]
-        public ButtonControl back { get; private set; }
+        public ButtonControl back { get; protected set; }
         [InputControl]
-        public ButtonControl triggerPressed { get; private set; }
+        public ButtonControl triggerPressed { get; protected set; }
         [InputControl]
-        public ButtonControl touchpadClicked { get; private set; }
+        public ButtonControl touchpadClicked { get; protected set; }
         [InputControl]
-        public ButtonControl touchpadTouched { get; private set; }
+        public ButtonControl touchpadTouched { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAngularVelocity { get; private set; }
+        public Vector3Control deviceAngularVelocity { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAcceleration { get; private set; }
+        public Vector3Control deviceAcceleration { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control deviceAngularAcceleration { get; private set; }
+        public Vector3Control deviceAngularAcceleration { get; protected set; }
 
         protected override void FinishSetup()
         {

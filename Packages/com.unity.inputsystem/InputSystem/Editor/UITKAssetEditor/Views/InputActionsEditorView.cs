@@ -28,9 +28,11 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorConstants.MainEditorViewNameUxml);
 
             mainEditorAsset.CloneTree(m_Root);
+            var actionsTreeView = new ActionsTreeView(m_Root, stateContainer);
             CreateChildView(new ActionMapsView(m_Root, stateContainer));
-            CreateChildView(new ActionsTreeView(m_Root, stateContainer));
+            CreateChildView(actionsTreeView);
             CreateChildView(new PropertiesView(m_Root, stateContainer));
+            InputActionViewsControlsHolder.Initialize(m_Root, actionsTreeView);
 
             var menuButton = m_Root.Q<ToolbarMenu>("control-schemes-toolbar-menu");
             menuButton.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(m_Root));

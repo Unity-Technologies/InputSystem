@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor
     {
-        public Vector3Control acceleration { get; private set; }
+        public Vector3Control acceleration { get; protected set; }
 
         /// <summary>
         /// The accelerometer that was last added or had activity last.
@@ -199,7 +199,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
-        public Vector3Control angularVelocity { get; private set; }
+        public Vector3Control angularVelocity { get; protected set; }
 
         /// <summary>
         /// The gyroscope that was last added or had activity last.
@@ -240,7 +240,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(GravityState), displayName = "Gravity")]
     public class GravitySensor : Sensor
     {
-        public Vector3Control gravity { get; private set; }
+        public Vector3Control gravity { get; protected set; }
 
         /// <summary>
         /// The gravity sensor that was last added or had activity last.
@@ -282,7 +282,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(AttitudeState), displayName = "Attitude")]
     public class AttitudeSensor : Sensor
     {
-        public QuaternionControl attitude { get; private set; }
+        public QuaternionControl attitude { get; protected set; }
 
         /// <summary>
         /// The attitude sensor that was last added or had activity last.
@@ -324,7 +324,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(LinearAccelerationState), displayName = "Linear Acceleration")]
     public class LinearAccelerationSensor : Sensor
     {
-        public Vector3Control acceleration { get; private set; }
+        public Vector3Control acceleration { get; protected set; }
 
         /// <summary>
         /// The linear acceleration sensor that was last added or had activity last.
@@ -369,7 +369,7 @@ namespace UnityEngine.InputSystem
         /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </remarks>
         [InputControl(displayName = "Magnetic Field", noisy = true)]
-        public Vector3Control magneticField { get; private set; }
+        public Vector3Control magneticField { get; protected set; }
 
         /// <summary>
         /// The linear acceleration sensor that was last added or had activity last.
@@ -410,7 +410,7 @@ namespace UnityEngine.InputSystem
         /// Light level in SI lux units.
         /// </summary>
         [InputControl(displayName = "Light Level", noisy = true)]
-        public AxisControl lightLevel { get; private set; }
+        public AxisControl lightLevel { get; protected set; }
 
         /// <summary>
         /// The light sensor that was last added or had activity last.
@@ -451,7 +451,7 @@ namespace UnityEngine.InputSystem
         /// Atmospheric pressure in hPa (millibar).
         /// </summary>
         [InputControl(displayName = "Atmospheric Pressure", noisy = true)]
-        public AxisControl atmosphericPressure { get; private set; }
+        public AxisControl atmosphericPressure { get; protected set; }
 
         /// <summary>
         /// The pressure sensor that was last added or had activity last.
@@ -495,7 +495,7 @@ namespace UnityEngine.InputSystem
         /// Proximity sensor distance measured in centimeters.
         /// </summary>
         [InputControl(displayName = "Distance", noisy = true)]
-        public AxisControl distance { get; private set; }
+        public AxisControl distance { get; protected set; }
 
         /// <summary>
         /// The proximity sensor that was last added or had activity last.
@@ -536,7 +536,7 @@ namespace UnityEngine.InputSystem
         /// Relative ambient air humidity in percent.
         /// </summary>
         [InputControl(displayName = "Relative Humidity", noisy = true)]
-        public AxisControl relativeHumidity { get; private set; }
+        public AxisControl relativeHumidity { get; protected set; }
 
         /// <summary>
         /// The humidity sensor that was last added or had activity last.
@@ -577,7 +577,7 @@ namespace UnityEngine.InputSystem
         /// Temperature in degree Celsius.
         /// </summary>
         [InputControl(displayName = "Ambient Temperature", noisy = true)]
-        public AxisControl ambientTemperature { get; private set; }
+        public AxisControl ambientTemperature { get; protected set; }
 
         /// <summary>
         /// The ambient temperature sensor that was last added or had activity last.
@@ -621,7 +621,7 @@ namespace UnityEngine.InputSystem
         /// The number of steps taken by the user since the last reboot while activated.
         /// </summary>
         [InputControl(displayName = "Step Counter", noisy = true)]
-        public IntegerControl stepCounter { get; private set; }
+        public IntegerControl stepCounter { get; protected set; }
 
         /// <summary>
         /// The step counter that was last added or had activity last.

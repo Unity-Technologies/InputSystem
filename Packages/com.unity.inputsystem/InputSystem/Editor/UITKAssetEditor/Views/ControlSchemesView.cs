@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -9,6 +10,10 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class ControlSchemesView : ViewBase<InputControlScheme>
     {
+        //is used to save the new name of the control scheme when renaming
+        private string m_NewName;
+        public event Action<ViewBase<InputControlScheme>> OnClosing;
+
         public ControlSchemesView(VisualElement root, StateContainer stateContainer, bool updateExisting = false)
             : base(stateContainer)
         {
@@ -25,7 +30,12 @@ namespace UnityEngine.InputSystem.Editor
             controlSchemeVisualElement.Q<Button>(kSaveButton).clicked += SaveAndClose;
             controlSchemeVisualElement.Q<TextField>(kControlSchemeNameTextField).RegisterCallback<FocusOutEvent>(evt =>
             {
-                Dispatch(ControlSchemeCommands.ChangeSelectedControlSchemeName(((TextField)evt.currentTarget).value));
+                Dispatch((in InputActionsEditorState state) =>
+                {
+                    m_NewName = ControlSchemeCommands.MakeUniqueControlSchemeName(state,
+                        ((TextField)evt.currentTarget).value);
+                    return state.With(selectedControlScheme: state.selectedControlScheme);
+                });
             });
 
             m_ModalWindow = new VisualElement
@@ -102,8 +112,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private void SaveAndClose()
         {
-            Dispatch(ControlSchemeCommands.SaveControlScheme(m_UpdateExisting));
+            Dispatch(ControlSchemeCommands.SaveControlScheme(m_NewName, m_UpdateExisting));
             Close();
+        }
+
+        private void Close()
+        {
+            m_NewName = "";
+            OnClosing?.Invoke(this);
         }
 
         private VisualElement MakeRequiredCell()

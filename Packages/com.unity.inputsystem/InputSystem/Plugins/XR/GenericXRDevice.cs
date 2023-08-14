@@ -35,17 +35,17 @@ namespace UnityEngine.InputSystem.XR
         /// </remarks>
 
         [InputControl(noisy = true)]
-        public Vector3Control leftEyePosition { get; private set; }
+        public Vector3Control leftEyePosition { get; protected set; }
         [InputControl(noisy = true)]
-        public QuaternionControl leftEyeRotation { get; private set; }
+        public QuaternionControl leftEyeRotation { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control rightEyePosition { get; private set; }
+        public Vector3Control rightEyePosition { get; protected set; }
         [InputControl(noisy = true)]
-        public QuaternionControl rightEyeRotation { get; private set; }
+        public QuaternionControl rightEyeRotation { get; protected set; }
         [InputControl(noisy = true)]
-        public Vector3Control centerEyePosition { get; private set; }
+        public Vector3Control centerEyePosition { get; protected set; }
         [InputControl(noisy = true)]
-        public QuaternionControl centerEyeRotation { get; private set; }
+        public QuaternionControl centerEyeRotation { get; protected set; }
 
         protected override void FinishSetup()
         {

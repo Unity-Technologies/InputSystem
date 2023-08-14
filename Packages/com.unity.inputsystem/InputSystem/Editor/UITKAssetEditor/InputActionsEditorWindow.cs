@@ -3,6 +3,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine.UIElements;
@@ -23,6 +24,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionsEditorWindow : EditorWindow
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
+        private int m_AssetId;
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -42,12 +44,32 @@ namespace UnityEngine.InputSystem.Editor
             if (asset == null)
                 return false;
 
-            var window = GetWindow<InputActionsEditorWindow>();
+
+            var window = GetOrCreateWindow(instanceId, out var isAlreadyOpened);
+            if (isAlreadyOpened)
+            {
+                window.Focus();
+                return true;
+            }
+            window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
             window.SetAsset(asset);
             window.Show();
 
             return true;
+        }
+
+        private static InputActionsEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
+        {
+            isAlreadyOpened = false;
+            if (HasOpenInstances<InputActionsEditorWindow>())
+            {
+                var openWindows = Resources.FindObjectsOfTypeAll(typeof(InputActionsEditorWindow)) as InputActionsEditorWindow[];
+                var alreadyOpenWindow = openWindows?.ToList().FirstOrDefault(window => window.m_AssetId.Equals(id));
+                isAlreadyOpened = alreadyOpenWindow != null;
+                return isAlreadyOpened ? alreadyOpenWindow : CreateWindow<InputActionsEditorWindow>();
+            }
+            return GetWindow<InputActionsEditorWindow>();
         }
 
         private void SetAsset(InputActionAsset asset)

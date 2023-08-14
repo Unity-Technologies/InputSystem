@@ -1,3 +1,6 @@
+---
+uid: input-system-ui-support
+---
 # UI support
 
 * [Setting up UI Input](#setting-up-ui-input)

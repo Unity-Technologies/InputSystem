@@ -36,10 +36,13 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
+                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-
-                if (item.isAction || item.isComposite)
-                    ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
+                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
+                if (item.isComposite)
+                    ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
+                else if (item.isAction)
+                    ContextMenu.GetContextMenuForActionItem(treeViewItem, i);
                 else
                     ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
@@ -98,6 +101,7 @@ namespace UnityEngine.InputSystem.Editor
                     treeViewItem.Reset();
 
                 treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -183,20 +187,26 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_RenameOnActionAdded || id == -1)
                 return;
             m_ActionsTreeView.ScrollToItemById(id);
-            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id).Q<InputActionsTreeViewItem>();
-            treeViewItem.FocusOnRenameTextField();
+            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id)?.Q<InputActionsTreeViewItem>();
+            treeViewItem?.FocusOnRenameTextField();
         }
 
-        private void AddAction()
+        internal void AddAction()
         {
             Dispatch(Commands.AddAction());
             m_RenameOnActionAdded = true;
         }
 
-        private void AddBinding(string actionName)
+        internal void AddBinding(string actionName)
         {
             Dispatch(Commands.SelectAction(actionName));
             Dispatch(Commands.AddBinding());
+        }
+
+        internal void AddComposite(string actionName, string compositeType)
+        {
+            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.AddComposite(compositeType));
         }
 
         private void DeleteItem(ActionOrBindingData data)
@@ -205,6 +215,11 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
             else
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
+        }
+
+        private void DuplicateItem(ActionOrBindingData data)
+        {
+            Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
@@ -308,7 +323,7 @@ namespace UnityEngine.InputSystem.Editor
                         var nextBinding = actionBindings[++i];
                         while (nextBinding.isPartOfComposite)
                         {
-                            var name = GetHumanReadableCompositeName(nextBinding);
+                            var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, state.selectedControlSchemeIndex);
 
                             compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
                                 new ActionOrBindingData(false, name, actionMapIndex, false, GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
@@ -326,7 +341,7 @@ namespace UnityEngine.InputSystem.Editor
                     else
                     {
                         bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                            new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding), actionMapIndex,
+                            new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlSchemeIndex, state.selectedControlScheme), actionMapIndex,
                                 false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
                     }
                 }
@@ -336,18 +351,28 @@ namespace UnityEngine.InputSystem.Editor
             return actionItems;
         }
 
-        private static string GetHumanReadableBindingName(SerializedInputBinding serializedInputBinding)
+        private static string GetHumanReadableBindingName(SerializedInputBinding serializedInputBinding, int currentControlSchemeIndex, InputControlScheme? currentControlScheme)
         {
             var name = InputControlPath.ToHumanReadableString(serializedInputBinding.path);
             if (String.IsNullOrEmpty(name))
                 name = "<No Binding>";
+            if (!IsBindingPartOfCurrentControlScheme(serializedInputBinding, currentControlScheme, currentControlSchemeIndex))
+                name += " {GLOBAL}";
             return name;
         }
 
-        internal static string GetHumanReadableCompositeName(SerializedInputBinding binding)
+        private static bool IsBindingPartOfCurrentControlScheme(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme, int currentControlSchemeIndex)
+        {
+            if (currentControlScheme.HasValue && currentControlSchemeIndex >= 0)
+                return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name);
+
+            return true;
+        }
+
+        internal static string GetHumanReadableCompositeName(SerializedInputBinding binding, InputControlScheme? currentControlScheme, int currentControlSchemeIndex)
         {
             return $"{ObjectNames.NicifyVariableName(binding.name)}: " +
-                $"{InputControlPath.ToHumanReadableString(binding.path)}";
+                $"{GetHumanReadableBindingName(binding, currentControlSchemeIndex, currentControlScheme)}";
         }
 
         private static string GetControlLayout(string path)

@@ -1,3 +1,6 @@
+---
+uid: input-system-how-do-i
+---
 # How do I…?
 
 A collection of frequently asked questions, and where to find their answers in the documentation.
