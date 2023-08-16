@@ -79,9 +79,7 @@ namespace UnityEngine.InputSystem.Editor
         private void SetAsset(InputActionAsset asset)
         {
             m_AssetPath = AssetDatabase.GetAssetPath(asset);
-            var clone = Instantiate(asset);
-            clone.name = asset.name;
-            var serializedAsset = new SerializedObject(clone);
+            var serializedAsset = new SerializedObject(asset);
             m_State = new InputActionsEditorState(serializedAsset);
             m_AssetJson = File.ReadAllText(m_AssetPath);
             bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
@@ -170,7 +168,8 @@ namespace UnityEngine.InputSystem.Editor
                 case 1:    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
                     break;
-                case 2:     // Don't save, quit
+                case 2:     // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
+                    AssetDatabase.ImportAsset(m_AssetPath);
                     break;
             }
         }
