@@ -34,6 +34,7 @@ namespace UnityEngine.InputSystem.Editor
             if (DragManipulator.dragging)
             {
                 DragManipulator.dragging = false;
+                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
             }
         }
 
@@ -55,6 +56,7 @@ namespace UnityEngine.InputSystem.Editor
         void OnDragLeaveEvent(DragLeaveEvent evt)
         {
             Debug.Log("Drag leave");
+            DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
             // ((Label)evt.target).style.backgroundColor = Color.clear;
         }
 

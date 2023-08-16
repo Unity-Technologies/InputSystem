@@ -48,7 +48,9 @@ namespace UnityEngine.InputSystem.Editor
             if (evt.isPrimary && evt.button == 0)
             {
                 Debug.Log("Pointer down");
+                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
                 m_IsPointerDown = true;
+                dragging = false;
             }
         }
 
