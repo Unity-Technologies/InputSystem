@@ -40,6 +40,7 @@ namespace UnityEngine.InputSystem.Editor
             var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                 () => { Dispatch(Commands.ApplyModifiedProperties()); });
 
+            controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
             controlPathEditor.SetExpectedControlLayout(viewState.expectedControlLayoutName);
 
             m_PathEditorContainer.onGUIHandler = controlPathEditor.OnGUI;
@@ -59,6 +60,7 @@ namespace UnityEngine.InputSystem.Editor
             public SerializedProperty selectedBindingPath;
             public SerializedInputBinding selectedBinding;
             public IEnumerable<string> compositePartNames;
+            public InputControlScheme currentControlScheme;
             public string expectedControlLayoutName;
             public string selectedCompositePartName;
         }
@@ -78,6 +80,7 @@ namespace UnityEngine.InputSystem.Editor
                 selectedBinding = binding,
                 selectedBindingPath = GetSelectedBindingPath(state),
                 selectedCompositePartName = selectedCompositePartName,
+                currentControlScheme = state.selectedControlScheme,
                 compositePartNames = compositeParts.Select(ObjectNames.NicifyVariableName).ToList(),
                 expectedControlLayoutName = InputBindingComposite.GetExpectedControlLayoutName(binding.compositePath, binding.name) ?? ""
             };
