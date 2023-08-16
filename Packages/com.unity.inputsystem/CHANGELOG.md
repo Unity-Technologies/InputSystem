@@ -10,6 +10,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+## [1.7.0] - 2023-08-14
+
 ### Added
 - Preliminary support for visionOS.
 - Show a list of `Derived Bindings` underneath the Binding Path editor to show all controls that matched.
