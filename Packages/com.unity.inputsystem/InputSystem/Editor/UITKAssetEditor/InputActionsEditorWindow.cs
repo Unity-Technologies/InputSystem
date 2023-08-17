@@ -177,10 +177,18 @@ namespace UnityEngine.InputSystem.Editor
         private void ReshowEditorWindowWithUnsavedChanges()
         {
             var window = CreateWindow<InputActionsEditorWindow>();
-            window.m_AssetId = m_AssetId;
-            window.m_State = m_State;
+            CopyOldStatsToNewWindow(window);
             window.BuildUI();
             window.Show();
+        }
+
+        private void CopyOldStatsToNewWindow(InputActionsEditorWindow window)
+        {
+            window.m_AssetId = m_AssetId;
+            window.m_State = m_State;
+            window.m_AssetPath = m_AssetPath;
+            window.m_AssetJson = m_AssetJson;
+            window.m_IsDirty = true;
         }
 
         private InputActionAsset GetAssetFromDatabase()
