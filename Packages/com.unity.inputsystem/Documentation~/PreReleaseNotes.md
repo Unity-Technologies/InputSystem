@@ -84,7 +84,7 @@ Because this is a pre-release, the project-wide actions feature is not yet compl
 
 **The project-wide actions cannot be referenced in an ActionsAsset field in the inspector.**
 
-You can't assign the project-wide input actions asset to UI fields where you would normally assign an input action asset.For example, if you are using the PlayerInput component, you can’t assign the project wide actions to its "Actions" field. This means if you want to use the PlayerInput component, you must create an Actions asset and set up your input configuration there instead of in the project-wide actions.
+You can't assign the project-wide input actions asset to UI fields where you would normally assign an input action asset. For example, if you are using the PlayerInput component, you can’t assign the project wide actions to its "Actions" field. This means if you want to use the PlayerInput component, you must create an Actions asset and set up your input configuration there instead of in the project-wide actions.
 
 **Some features of the project-wide actions editor are different, or missing, compared with the Actions Editor window for actions assets.**
 
