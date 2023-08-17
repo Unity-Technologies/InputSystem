@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
@@ -30,6 +31,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
                 treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
+                treeViewItem.userData = i;
 
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
@@ -50,13 +52,32 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             m_ListView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
-            m_ListView.AddManipulator(new DropManipulator());
+            m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler));
 
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
 
             addActionMapButton.clicked += AddActionMap;
+        }
+
+        void OnDroppedHandler(DragPerformEvent evt)
+        {
+            Debug.Log("Dropped performed");
+
+            //TODO
+            //get treeview item (all tree or just an item? confirm this)
+            var actionOrBinding = (ActionOrBindingData)DragAndDrop.GetGenericData("tree");
+
+            // get destination action map index and name
+            var listView = (ListView)evt.target;
+            var destinationActionMapIndex = (int)listView.panel.Pick(evt.mousePosition).FindAncestorUserData();
+            var destinationActionMapName = (string)listView.itemsSource[destinationActionMapIndex];
+
+            // TODO get original data (copy)
+            Dispatch(Commands.SelectAction(actionOrBinding.name));
+            // TODO paste data into destination action map
+            // TODO remove action from source action map where it was before
         }
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");

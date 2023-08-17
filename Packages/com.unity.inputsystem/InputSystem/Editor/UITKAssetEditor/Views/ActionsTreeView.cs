@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
-            m_ActionsTreeView.AddManipulator(new DragManipulator());
+            m_ActionsTreeView.AddManipulator(new DragManipulator(OnDragStarted));
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -130,6 +130,16 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             addActionButton.clicked += AddAction;
+        }
+
+        void OnDragStarted(PointerMoveEvent evt)
+        {
+            Debug.Log("Selected tree view Index item to drag: " + m_ActionsTreeView.selectedItem);
+
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.SetGenericData("tree", m_ActionsTreeView.selectedItem);
+            DragAndDrop.SetGenericData("string", "dropped");
+            DragAndDrop.StartDrag(string.Empty);
         }
 
         private int GetSelectedElementId(InputActionsEditorState state, List<TreeViewItemData<ActionOrBindingData>> treeData)
