@@ -9,6 +9,13 @@ namespace UnityEngine.InputSystem.Editor
     {
         String initialLabelText;
 
+        EventCallback<PointerMoveEvent> DragStartedCallback;
+
+        public DragManipulator(EventCallback<PointerMoveEvent> dragStartedCallback)
+        {
+            DragStartedCallback = dragStartedCallback;
+        }
+
         public static bool dragging;
         private bool m_IsPointerDown;
         protected override void RegisterCallbacksOnTarget()
@@ -25,9 +32,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_IsPointerDown = false;
                 Debug.Log("Starting drag!");
-                DragAndDrop.PrepareStartDrag();
-                DragAndDrop.SetGenericData("string", "dropped");
-                DragAndDrop.StartDrag(string.Empty);
+                DragStartedCallback.Invoke(evt);
                 dragging = true;
             }
         }
