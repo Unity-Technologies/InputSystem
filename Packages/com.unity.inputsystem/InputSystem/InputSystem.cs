@@ -3014,6 +3014,10 @@ namespace UnityEngine.InputSystem
         /// The set of project-wide available input actions.
         /// </summary>
         private static InputActionAsset s_projectWideActions;
+
+        /// <summary>
+        /// The set of project-wide available input actions.
+        /// </summary>
         public static InputActionAsset actions
         {
             get
