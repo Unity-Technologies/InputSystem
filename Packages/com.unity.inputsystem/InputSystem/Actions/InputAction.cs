@@ -702,6 +702,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputAction()
         {
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -757,8 +758,9 @@ namespace UnityEngine.InputSystem
                         path = binding,
                         interactions = interactions,
                         processors = processors,
-                        action = m_Name
-                    }
+                        action = m_Name,
+                        id = Guid.NewGuid(),
+                    },
                 };
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
@@ -770,6 +772,7 @@ namespace UnityEngine.InputSystem
             }
 
             m_ExpectedControlType = expectedControlType;
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -946,6 +949,7 @@ namespace UnityEngine.InputSystem
                 m_ExpectedControlType = m_ExpectedControlType,
                 m_Interactions = m_Interactions,
                 m_Processors = m_Processors,
+                m_Flags = m_Flags,
             };
             return clone;
         }

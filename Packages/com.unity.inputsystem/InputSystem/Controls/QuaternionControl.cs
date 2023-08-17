@@ -22,28 +22,28 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>Control representing the X component.</value>
         [InputControl(displayName = "X")]
-        public AxisControl x { get; private set; }
+        public AxisControl x { get; set; }
 
         /// <summary>
         /// The Y component of the quaternion.
         /// </summary>
         /// <value>Control representing the Y component.</value>
         [InputControl(displayName = "Y")]
-        public AxisControl y { get; private set; }
+        public AxisControl y { get; set; }
 
         /// <summary>
         /// The Z component of the quaternion.
         /// </summary>
         /// <value>Control representing the Z component.</value>
         [InputControl(displayName = "Z")]
-        public AxisControl z { get; private set; }
+        public AxisControl z { get; set; }
 
         /// <summary>
         /// The W component of the quaternion.
         /// </summary>
         /// <value>Control representing the W component.</value>
         [InputControl(displayName = "W")]
-        public AxisControl w { get; private set; }
+        public AxisControl w { get; set; }
 
         /// <summary>
         /// Default-initialize the control.

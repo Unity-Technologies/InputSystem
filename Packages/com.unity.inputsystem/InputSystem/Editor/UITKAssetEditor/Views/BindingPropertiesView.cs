@@ -23,6 +23,7 @@ namespace UnityEngine.InputSystem.Editor
                 (_, controlSchemes, s) => new ViewState
                 {
                     controlSchemes = controlSchemes,
+                    currentControlScheme = s.selectedControlScheme,
                     selectedBinding = Selectors.GetSelectedBinding(s),
                     selectedBindingIndex = s.selectedBindingIndex,
                     selectedBindingPath = Selectors.GetSelectedBindingPath(s),
@@ -41,6 +42,8 @@ namespace UnityEngine.InputSystem.Editor
             var binding = viewState.selectedBinding;
             if (!binding.HasValue)
                 return;
+
+            m_ParentFoldout.text = "Binding";
             if (binding.Value.isComposite)
             {
                 m_ParentFoldout.text = "Composite";
@@ -53,10 +56,9 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                m_ParentFoldout.text = "Binding";
-
                 var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                     () => { Dispatch(Commands.ApplyModifiedProperties()); });
+                controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
 
                 var inputAction = viewState.selectedInputAction;
                 controlPathEditor.SetExpectedControlLayout(inputAction?.expectedControlType ?? "");
@@ -100,6 +102,7 @@ namespace UnityEngine.InputSystem.Editor
             public int selectedBindingIndex;
             public SerializedInputBinding? selectedBinding;
             public ViewStateCollection<InputControlScheme> controlSchemes;
+            public InputControlScheme currentControlScheme;
             public SerializedProperty selectedBindingPath;
             public SerializedInputAction? selectedInputAction;
         }

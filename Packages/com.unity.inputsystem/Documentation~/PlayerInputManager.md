@@ -1,3 +1,6 @@
+---
+uid: input-system-player-input-manager
+---
 # The Player Input Manager component
 
 >NOTE: The Input System package comes with a sample called `Simple Multiplayer` which you can install from the package manager UI in the Unity editor. The sample demonstrates how to use [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) to set up a simple local multiplayer scenario.

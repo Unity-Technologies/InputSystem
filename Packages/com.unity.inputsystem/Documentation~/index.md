@@ -1,3 +1,6 @@
+---
+uid: input-system-index
+---
 # Input System
 
 The **Input System** allows your users to control your game or app using a device, touch, or gestures.
