@@ -49,6 +49,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isAction)
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
+                    addBindingButton.clickable = null; //reset the clickable to avoid multiple subscriptions
                     addBindingButton.clicked += () => AddBinding(item.name);
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
