@@ -7,7 +7,7 @@
 }
 
 .body-panel-container {
-    min-width: auto;
+    min-width: 150px;
     border-top-width: 1px;
     border-left-color: rgb(25, 25, 25);
     border-right-color: rgb(25, 25, 25);
