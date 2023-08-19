@@ -1,3 +1,6 @@
+---
+uid: input-system-joystick
+---
 # Joystick support
 
 The Input System currently has limited support for joysticks as generic [HIDs](HID.md) only. The system attempts to identify Controls based on the information provided in the HID descriptor of the Device, but it might not always be accurate. These Devices often work best when you allow the user to [manually remap the Controls](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html).

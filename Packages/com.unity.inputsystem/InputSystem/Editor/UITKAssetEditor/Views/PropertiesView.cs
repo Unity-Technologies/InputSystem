@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 case SelectionType.Action:
                     m_Root.Q<Label>("properties-header-label").text = "Action Properties";
-                    m_ActionPropertyView = CreateChildView(new ActionPropertiesView(visualElement, stateContainer));
+                    m_ActionPropertyView = CreateChildView(new ActionPropertiesView(visualElement, foldout, stateContainer));
                     break;
 
                 case SelectionType.Binding:

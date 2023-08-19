@@ -1,3 +1,6 @@
+---
+uid: input-system-architecture
+---
 # Architecture
 
 The Input System has a layered architecture that consists of a low-level layer and a high-level layer.

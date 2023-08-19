@@ -1,3 +1,6 @@
+---
+uid: input-system-action-bindings
+---
 # Input Bindings
 
 * [Composite Bindings](#composite-bindings)

@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command SaveControlScheme(bool updateExisting = false)
+        public static Command SaveControlScheme(string newName = "", bool updateExisting = false)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
                     controlScheme = controlSchemesArray.GetArrayElementAtIndex(controlSchemesArray.arraySize - 1);
                 }
 
-                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue = controlSchemeName;
+                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue = string.IsNullOrEmpty(newName) ? controlSchemeName  : newName;
 
                 var serializedDeviceRequirements = controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_DeviceRequirements));
                 serializedDeviceRequirements.ClearArray();
@@ -71,8 +71,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 state.serializedObject.ApplyModifiedProperties();
-
-                return state.With(selectedControlSchemeIndex: controlSchemesArray.arraySize - 1);
+                return state.With(selectedControlScheme: new InputControlScheme(controlScheme));
             };
         }
 
@@ -81,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 if (controlSchemeIndex == -1)
-                    return state.With(selectedControlSchemeIndex: controlSchemeIndex);
+                    return state.With(selectedControlSchemeIndex: controlSchemeIndex, selectedControlScheme: new InputControlScheme());
 
                 var controlSchemeSerializedProperty = state.serializedObject
                     .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
@@ -137,7 +136,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        private static string MakeUniqueControlSchemeName(InputActionsEditorState state, string name)
+        internal static string MakeUniqueControlSchemeName(InputActionsEditorState state, string name)
         {
             var controlSchemes = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
 
@@ -163,15 +162,6 @@ namespace UnityEngine.InputSystem.Editor
                     deviceRequirements,
                     state.selectedControlScheme.bindingGroup));
             };
-        }
-
-        public static Command ChangeSelectedControlSchemeName(string controlSchemeName)
-        {
-            return (in InputActionsEditorState state) => state.With(
-                selectedControlScheme: new InputControlScheme(
-                    controlSchemeName,
-                    state.selectedControlScheme.deviceRequirements,
-                    state.selectedControlScheme.m_BindingGroup));
         }
 
         public static Command ReorderDeviceRequirements(int oldPosition, int newPosition)

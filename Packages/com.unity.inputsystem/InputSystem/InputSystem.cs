@@ -3625,11 +3625,11 @@ namespace UnityEngine.InputSystem
         {
             UISupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             DualShockSupport.Initialize();
             #endif
 
@@ -3641,7 +3641,7 @@ namespace UnityEngine.InputSystem
             Android.AndroidSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             iOS.iOSSupport.Initialize();
             #endif
 
@@ -3665,7 +3665,7 @@ namespace UnityEngine.InputSystem
             Linux.LinuxSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA || UNITY_VISIONOS
             OnScreen.OnScreenSupport.Initialize();
             #endif
 

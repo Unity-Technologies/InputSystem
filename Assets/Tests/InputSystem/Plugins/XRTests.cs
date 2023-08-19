@@ -333,11 +333,11 @@ internal class XRTests : CoreTestsFixture
     class TestHMD : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]
-        public QuaternionControl rotation { get; private set; }
+        public QuaternionControl rotation { get; protected set; }
         [InputControl]
-        public Vector3Control position { get; private set; }
+        public Vector3Control position { get; protected set; }
         [InputControl]
-        public IntegerControl trackingState { get; private set; }
+        public IntegerControl trackingState { get; protected set; }
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -351,9 +351,9 @@ internal class XRTests : CoreTestsFixture
     class TestHMDWithoutTrackingState : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]
-        public QuaternionControl rotation { get; private set; }
+        public QuaternionControl rotation { get; protected set; }
         [InputControl]
-        public Vector3Control position { get; private set; }
+        public Vector3Control position { get; protected set; }
         protected override void FinishSetup()
         {
             base.FinishSetup();

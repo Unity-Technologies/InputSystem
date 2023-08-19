@@ -1,3 +1,6 @@
+---
+uid: input-system-workflow-embedded
+---
 # Workflow Overview - Using Embedded Actions
 
 ![image alt text](./Images/Workflow-Embedded.svg)

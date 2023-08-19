@@ -36,16 +36,20 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
+                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-
-                if (item.isAction || item.isComposite)
-                    ContextMenu.GetContextMenuForActionOrCompositeItem(treeViewItem, m_ActionsTreeView, i);
+                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
+                if (item.isComposite)
+                    ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
+                else if (item.isAction)
+                    ContextMenu.GetContextMenuForActionItem(treeViewItem, i);
                 else
                     ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
                 if (item.isAction)
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
+                    addBindingButton.clickable = null; //reset the clickable to avoid multiple subscriptions
                     addBindingButton.clicked += () => AddBinding(item.name);
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
@@ -98,6 +102,7 @@ namespace UnityEngine.InputSystem.Editor
                     treeViewItem.Reset();
 
                 treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -183,20 +188,26 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_RenameOnActionAdded || id == -1)
                 return;
             m_ActionsTreeView.ScrollToItemById(id);
-            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id).Q<InputActionsTreeViewItem>();
-            treeViewItem.FocusOnRenameTextField();
+            var treeViewItem = m_ActionsTreeView.GetRootElementForId(id)?.Q<InputActionsTreeViewItem>();
+            treeViewItem?.FocusOnRenameTextField();
         }
 
-        private void AddAction()
+        internal void AddAction()
         {
             Dispatch(Commands.AddAction());
             m_RenameOnActionAdded = true;
         }
 
-        private void AddBinding(string actionName)
+        internal void AddBinding(string actionName)
         {
             Dispatch(Commands.SelectAction(actionName));
             Dispatch(Commands.AddBinding());
+        }
+
+        internal void AddComposite(string actionName, string compositeType)
+        {
+            Dispatch(Commands.SelectAction(actionName));
+            Dispatch(Commands.AddComposite(compositeType));
         }
 
         private void DeleteItem(ActionOrBindingData data)
@@ -205,6 +216,11 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
             else
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
+        }
+
+        private void DuplicateItem(ActionOrBindingData data)
+        {
+            Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)
@@ -276,6 +292,7 @@ namespace UnityEngine.InputSystem.Editor
             var actionMapIndex = state.selectedActionMapIndex;
             var actionMaps = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
 
+            var controlSchemes = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
             var actionMap = actionMapIndex == -1 || actionMaps.arraySize <= 0 ?
                 null : actionMaps.GetArrayElementAtIndex(actionMapIndex);
 
@@ -308,10 +325,14 @@ namespace UnityEngine.InputSystem.Editor
                         var nextBinding = actionBindings[++i];
                         while (nextBinding.isPartOfComposite)
                         {
-                            var name = GetHumanReadableCompositeName(nextBinding);
-
-                            compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                                new ActionOrBindingData(false, name, actionMapIndex, false, GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
+                            var isVisible = ShouldBindingBeVisible(nextBinding, state.selectedControlScheme);
+                            if (isVisible)
+                            {
+                                var name = GetHumanReadableCompositeName(nextBinding, state.selectedControlScheme, controlSchemes);
+                                compositeItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
+                                    new ActionOrBindingData(false, name, actionMapIndex, false,
+                                        GetControlLayout(nextBinding.path), nextBinding.indexOfBinding)));
+                            }
 
                             if (++i >= actionBindings.Count)
                                 break;
@@ -325,9 +346,11 @@ namespace UnityEngine.InputSystem.Editor
                     }
                     else
                     {
-                        bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
-                            new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding), actionMapIndex,
-                                false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
+                        var isVisible = ShouldBindingBeVisible(serializedInputBinding, state.selectedControlScheme);
+                        if (isVisible)
+                            bindingItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
+                                new ActionOrBindingData(false, GetHumanReadableBindingName(serializedInputBinding, state.selectedControlScheme, controlSchemes), actionMapIndex,
+                                    false, GetControlLayout(serializedInputBinding.path), serializedInputBinding.indexOfBinding)));
                     }
                 }
                 actionItems.Add(new TreeViewItemData<ActionOrBindingData>(id++,
@@ -336,18 +359,42 @@ namespace UnityEngine.InputSystem.Editor
             return actionItems;
         }
 
-        private static string GetHumanReadableBindingName(SerializedInputBinding serializedInputBinding)
+        private static string GetHumanReadableBindingName(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme, SerializedProperty allControlSchemes)
         {
             var name = InputControlPath.ToHumanReadableString(serializedInputBinding.path);
             if (String.IsNullOrEmpty(name))
                 name = "<No Binding>";
+            if (IsBindingAssignedToNoControlSchemes(serializedInputBinding, allControlSchemes, currentControlScheme))
+                name += " {GLOBAL}";
             return name;
         }
 
-        internal static string GetHumanReadableCompositeName(SerializedInputBinding binding)
+        private static bool IsBindingAssignedToNoControlSchemes(SerializedInputBinding serializedInputBinding, SerializedProperty allControlSchemes, InputControlScheme? currentControlScheme)
+        {
+            if (allControlSchemes.arraySize <= 0 || !currentControlScheme.HasValue || string.IsNullOrEmpty(currentControlScheme.Value.name))
+                return false;
+            if (serializedInputBinding.controlSchemes.Length <= 0)
+                return true;
+            return false;
+        }
+
+        private static bool ShouldBindingBeVisible(SerializedInputBinding serializedInputBinding, InputControlScheme? currentControlScheme)
+        {
+            if (currentControlScheme.HasValue && !string.IsNullOrEmpty(currentControlScheme.Value.name))
+            {
+                //if binding is global (not assigned to any control scheme) show always
+                if (serializedInputBinding.controlSchemes.Length <= 0)
+                    return true;
+                return serializedInputBinding.controlSchemes.Contains(currentControlScheme.Value.name);
+            }
+            //if no control scheme selected then show all bindings
+            return true;
+        }
+
+        internal static string GetHumanReadableCompositeName(SerializedInputBinding binding, InputControlScheme? currentControlScheme, SerializedProperty allControlSchemes)
         {
             return $"{ObjectNames.NicifyVariableName(binding.name)}: " +
-                $"{InputControlPath.ToHumanReadableString(binding.path)}";
+                $"{GetHumanReadableBindingName(binding, currentControlScheme, allControlSchemes)}";
         }
 
         private static string GetControlLayout(string path)
