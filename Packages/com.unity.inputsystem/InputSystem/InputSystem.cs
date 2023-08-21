@@ -3009,6 +3009,56 @@ namespace UnityEngine.InputSystem
 
         #region Actions
 
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+        /// <summary>
+        /// The set of project-wide available input actions.
+        /// </summary>
+        private static InputActionAsset s_projectWideActions;
+        public static InputActionAsset actions
+        {
+            get
+            {
+                if (s_projectWideActions != null)
+                    return s_projectWideActions;
+
+                #if UNITY_EDITOR
+                // Load the InputActionsAsset and store it in EditorBuildSettings so it can be packed in Player builds
+                s_projectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(s_projectWideActions)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                        s_projectWideActions, true);
+                }
+                #else
+                s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault();
+                #endif
+
+                if (s_projectWideActions == null)
+                    Debug.LogError($"Couldn't initialize project-wide input actions");
+                return s_projectWideActions;
+            }
+
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (s_projectWideActions == value)
+                    return;
+
+                #if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                        value, true);
+                }
+                #endif
+
+                s_projectWideActions = value;
+            }
+        }
+#endif
+
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
@@ -3430,6 +3480,10 @@ namespace UnityEngine.InputSystem
 
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
+
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+                actions?.Enable();
+#endif
             }
             else
             {
@@ -3603,6 +3657,10 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
+
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+            actions?.Enable();
+#endif
         }
 
 #endif // UNITY_EDITOR
@@ -3690,6 +3748,10 @@ namespace UnityEngine.InputSystem
         {
             Profiler.BeginSample("InputSystem.Reset");
 
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+            actions?.Disable();
+#endif
+
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
             if (s_Manager != null)
@@ -3711,6 +3773,10 @@ namespace UnityEngine.InputSystem
 
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
+
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+            actions?.Enable();
+#endif
 
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
@@ -3744,6 +3810,10 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
+
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+            actions?.Disable();
+#endif
 
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
