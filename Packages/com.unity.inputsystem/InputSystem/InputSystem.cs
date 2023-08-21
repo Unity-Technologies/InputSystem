@@ -3774,10 +3774,6 @@ namespace UnityEngine.InputSystem
             s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
             s_Manager.m_Runtime.onProjectChange = OnProjectChange;
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
-            actions?.Enable();
-#endif
-
             InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
             if (enableRemoting)
@@ -3796,6 +3792,11 @@ namespace UnityEngine.InputSystem
             InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
+
+#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+            actions?.Enable();
+#endif
+
             Profiler.EndSample();
         }
 
