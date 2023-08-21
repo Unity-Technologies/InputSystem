@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 if (controlSchemeIndex == -1)
-                    return state.With(selectedControlSchemeIndex: controlSchemeIndex);
+                    return state.With(selectedControlSchemeIndex: controlSchemeIndex, selectedControlScheme: new InputControlScheme());
 
                 var controlSchemeSerializedProperty = state.serializedObject
                     .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
