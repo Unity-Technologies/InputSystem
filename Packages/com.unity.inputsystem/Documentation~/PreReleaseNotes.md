@@ -45,11 +45,12 @@ For example, here is the script from the [Action Assets workflow page](Workflow-
 ```
 using UnityEngine;
 using UnityEngine.InputSystem;
-public class ExampleScript : MonoBehaviour
 
+public class ExampleScript : MonoBehaviour
 {
     // private field to store move action reference
     private InputAction moveAction;
+    
     void Awake()
     {
         // find the "move" action, and keep the reference to it, for use in Update
