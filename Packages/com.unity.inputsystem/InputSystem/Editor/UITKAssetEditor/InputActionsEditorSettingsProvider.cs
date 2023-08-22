@@ -20,8 +20,6 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            var visualElement = Resources.Load<VisualTreeAsset>("InputActionsEditor");
-            visualElement.CloneTree(rootElement);
             m_RootVisualElement = rootElement;
             var asset = ProjectWideActionsAsset.GetOrCreate();
             var serializedAsset = new SerializedObject(asset);
