@@ -16,21 +16,18 @@ namespace UnityEngine.InputSystem.Editor
     {
         static EnableUITKEditor()
         {
-            // set this feature flag to true to enable the UITK editor
-            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditor, false);
+            // Controls whether the UITK version of the InputActionAsset Editor is enabled or not for
+            // editing standalone user Input Action assets.
+            // At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
+            // This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
+            // UITK Editor is always be used for the Project Settings Editor regardless of this setting.
+            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditorForAllAssets, false);
         }
     }
 
     internal class InputActionsEditorWindow : EditorWindow
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
-        /// <summary>
-        /// Controls whether the UITK version of the InputActionAsset Editor is enabled or not for editing Input Action
-        /// assets.
-        /// </summary>
-        /// At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
-        /// This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
-        internal static bool isWindowEnabled = false;
         private int m_AssetId;
         private string m_AssetPath;
         private string m_AssetJson;
@@ -39,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor) || !isWindowEnabled)
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditorForAllAssets))
                 return false;
 
             var path = AssetDatabase.GetAssetPath(instanceId);

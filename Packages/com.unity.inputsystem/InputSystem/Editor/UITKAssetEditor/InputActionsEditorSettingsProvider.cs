@@ -23,9 +23,6 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor))
-                return null;
-
             var provider = new InputActionsEditorSettingsProvider(kSettingsPath, SettingsScope.Project)
             {
                 label = "Input Actions"
