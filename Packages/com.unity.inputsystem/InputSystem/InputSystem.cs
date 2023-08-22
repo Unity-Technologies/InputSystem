@@ -3011,9 +3011,7 @@ namespace UnityEngine.InputSystem
 
 
 #if UNITY_INPUT_SYSTEM_ENABLE_GLOBAL_ACTIONS_API
-        /// <summary>
-        /// The set of project-wide available input actions.
-        /// </summary>
+
         private static InputActionAsset s_projectWideActions;
 
         /// <summary>
