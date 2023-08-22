@@ -24,6 +24,13 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionsEditorWindow : EditorWindow
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
+        /// <summary>
+        /// Controls whether the UITK version of the InputActionAsset Editor is enabled or not for editing Input Action
+        /// assets.
+        /// </summary>
+        /// At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
+        /// This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
+        internal static bool isWindowEnabled = false;
         private int m_AssetId;
         private string m_AssetPath;
         private string m_AssetJson;
@@ -32,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor))
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor) || !isWindowEnabled)
                 return false;
 
             var path = AssetDatabase.GetAssetPath(instanceId);
