@@ -3010,9 +3010,7 @@ namespace UnityEngine.InputSystem
         #region Actions
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        /// <summary>
-        /// The set of project-wide available input actions.
-        /// </summary>
+
         private static InputActionAsset s_projectWideActions;
 
         /// <summary>
