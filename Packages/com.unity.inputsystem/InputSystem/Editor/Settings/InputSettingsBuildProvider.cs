@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Editor
             m_OriginalPreloadedAssets = PlayerSettings.GetPreloadedAssets();
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
                 out m_ProjectWideActions);
 

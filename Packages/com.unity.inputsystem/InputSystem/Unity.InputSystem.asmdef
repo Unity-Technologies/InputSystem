@@ -75,7 +75,7 @@
         {
             "name": "Unity",
             "expression": "2022.3",
-            "define": "UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR"
+            "define": "UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS"
         }
     ],
     "noEngineReferences": false

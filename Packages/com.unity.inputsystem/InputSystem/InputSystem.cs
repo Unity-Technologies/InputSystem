@@ -3009,7 +3009,7 @@ namespace UnityEngine.InputSystem
 
         #region Actions
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         /// <summary>
         /// The set of project-wide available input actions.
         /// </summary>
@@ -3481,7 +3481,7 @@ namespace UnityEngine.InputSystem
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 actions?.Enable();
 #endif
             }
@@ -3658,7 +3658,7 @@ namespace UnityEngine.InputSystem
                 SetUpRemoting();
 #endif
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             actions?.Enable();
 #endif
         }
@@ -3748,7 +3748,7 @@ namespace UnityEngine.InputSystem
         {
             Profiler.BeginSample("InputSystem.Reset");
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             actions?.Disable();
 #endif
 
@@ -3793,7 +3793,7 @@ namespace UnityEngine.InputSystem
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             actions?.Enable();
 #endif
 
@@ -3812,7 +3812,7 @@ namespace UnityEngine.InputSystem
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             actions?.Disable();
 #endif
 
