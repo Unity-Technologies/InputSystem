@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             DirtyInputActionsEditorWindow(newState);
             if (InputEditorUserSettings.autoSaveInputActionAssets)
-                SaveAsset(m_State.serializedObject);
+                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
@@ -167,7 +167,7 @@ namespace UnityEngine.InputSystem.Editor
             switch (result)
             {
                 case 0:     // Save
-                    SaveAsset(m_State.serializedObject, this);
+                    InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
                     break;
                 case 1:    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
@@ -204,24 +204,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
-
-        public static void SaveAsset(SerializedObject serializedAsset, InputActionsEditorWindow currentWindow = null)
-        {
-            if ((focusedWindow == null || focusedWindow is not InputActionsEditorWindow) && currentWindow == null)
-                return;
-            currentWindow = currentWindow ? currentWindow : (InputActionsEditorWindow)focusedWindow;
-            var asset = (InputActionAsset)serializedAsset.targetObject;
-            var assetJson = asset.ToJson();
-
-            var existingJson = File.ReadAllText(currentWindow.m_AssetPath);
-            if (assetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(currentWindow.m_AssetPath);
-                File.WriteAllText(currentWindow.m_AssetPath, assetJson);
-                AssetDatabase.ImportAsset(currentWindow.m_AssetPath);
-                currentWindow.m_AssetJson = assetJson;
-            }
-        }
     }
 }
 

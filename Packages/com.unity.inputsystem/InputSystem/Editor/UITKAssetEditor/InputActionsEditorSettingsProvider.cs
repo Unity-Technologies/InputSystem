@@ -9,6 +9,10 @@ namespace UnityEngine.InputSystem.Editor
     {
         public const string kSettingsPath = "Project/Input System Package/Actions";
 
+        [SerializeField] InputActionsEditorState m_State;
+        VisualElement m_RootVisualElement;
+        StateContainer m_StateContainer;
+
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
         {
@@ -18,6 +22,26 @@ namespace UnityEngine.InputSystem.Editor
         {
             var visualElement = Resources.Load<VisualTreeAsset>("InputActionsEditor");
             visualElement.CloneTree(rootElement);
+            m_RootVisualElement = rootElement;
+            var asset = ProjectWideActionsAsset.GetOrCreate();
+            var serializedAsset = new SerializedObject(asset);
+            m_State = new InputActionsEditorState(serializedAsset);
+            BuildUI();
+        }
+
+        private void OnStateChanged(InputActionsEditorState newState)
+        {
+            if (InputEditorUserSettings.autoSaveInputActionAssets)
+                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+        }
+
+        private void BuildUI()
+        {
+            m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
+            m_StateContainer.StateChanged += OnStateChanged;
+            m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
+            new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
+            m_StateContainer.Initialize();
         }
 
         [SettingsProvider]
