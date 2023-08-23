@@ -23,7 +23,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Preliminary support for visionOS.
 - Show a list of `Derived Bindings` underneath the Binding Path editor to show all controls that matched.
-
+- Support for Game rotation vector on Android
+  
 ### Changed
 - Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
 
