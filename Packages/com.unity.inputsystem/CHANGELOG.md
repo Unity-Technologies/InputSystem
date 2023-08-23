@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Initial version of Project Wide Actions for pre-release (`InputSystem.actions`). This feature is available only on Unity Editor versions 2022.3 and above and can be modified in the Project Settings.
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
 
 ### Fixed
 - Fixed device selection menu not responding to mouse clicks when trying to add a device in a Control Scheme ([case ISXB-622](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-622)).
@@ -23,8 +24,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Preliminary support for visionOS.
 - Show a list of `Derived Bindings` underneath the Binding Path editor to show all controls that matched.
-- Support for Game rotation vector on Android
-  
+
 ### Changed
 - Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
 

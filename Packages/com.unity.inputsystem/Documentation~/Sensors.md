@@ -96,6 +96,20 @@ Use the gravity sensor to determine the direction of the gravity vector relative
 
 Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
+**Android**: Has two types of Attitude sensors - [**RotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [**GameRotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR), **RotationVector** is not always available, thus you should implement a fallback mechanism in your code.
+```CSharp
+AttitudeSensor attitudeSensor = InputSystem.GetDevice<AndroidRotationVector>();
+if (attitudeSensor == null)
+{
+    attitudeSensor = InputSystem.GetDevice<AndroidGameRotationVector>();
+    if (attitudeSensor == null)
+       Debug.LogError("AttitudeSensor is not available");
+}
+
+if (attitudeSensor != null)
+    InputSystem.EnableDevice(attitudeSensor);
+```
+
 ## <a name="linearaccelerationsensor"></a>[`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html)
 
 Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (see `GravitySensor`). Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
