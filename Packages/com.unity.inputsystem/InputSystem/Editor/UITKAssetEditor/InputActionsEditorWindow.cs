@@ -35,6 +35,7 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetPath;
         private string m_AssetJson;
         private bool m_IsDirty;
+        static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
@@ -64,6 +65,7 @@ namespace UnityEngine.InputSystem.Editor
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
+            window.minSize = k_MinWindowSize;
             window.SetAsset(asset);
             window.Show();
 
