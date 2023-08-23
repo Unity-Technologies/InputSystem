@@ -81,7 +81,10 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 state.serializedObject.ApplyModifiedProperties();
-                return state.With(selectedControlScheme: new InputControlScheme(controlScheme));
+                return state.With(
+                    selectedControlScheme: new InputControlScheme(controlScheme),
+                    // Select the control scheme updated, otherwise select the new one it was added
+                    selectedControlSchemeIndex: updateExisting? state.selectedControlSchemeIndex: controlSchemesArray.arraySize - 1);
             };
         }
 
