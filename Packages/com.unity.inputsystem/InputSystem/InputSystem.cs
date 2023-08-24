@@ -3054,7 +3054,9 @@ namespace UnityEngine.InputSystem
                 }
                 #endif
 
+                s_projectWideActions.Disable();
                 s_projectWideActions = value;
+                s_projectWideActions.Enable();
             }
         }
 #endif
@@ -3480,10 +3482,6 @@ namespace UnityEngine.InputSystem
 
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                actions?.Enable();
-#endif
             }
             else
             {
@@ -3658,7 +3656,9 @@ namespace UnityEngine.InputSystem
                 SetUpRemoting();
 #endif
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && !UNITY_INCLUDE_TESTS
+            // Touching the `actions` property here will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Player
             actions?.Enable();
 #endif
         }
@@ -3749,8 +3749,15 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputSystem.Reset");
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            actions?.Disable();
+            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
+            if (s_projectWideActions)
+            {
+                s_projectWideActions.Disable();
+                s_projectWideActions = null;
+            }
 #endif
+            // Nuke all InputActionMapStates. Releases their unmanaged memory.
+            InputActionState.DestroyAllActionMapStates();
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -3794,6 +3801,8 @@ namespace UnityEngine.InputSystem
             EnhancedTouchSupport.Reset();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Touching the `actions` property will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
             actions?.Enable();
 #endif
 
@@ -3811,11 +3820,6 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            actions?.Disable();
-#endif
-
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
