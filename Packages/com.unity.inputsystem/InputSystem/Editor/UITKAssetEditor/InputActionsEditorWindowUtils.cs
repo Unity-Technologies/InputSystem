@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public class InputActionsEditorWindowUtils
+    internal class InputActionsEditorWindowUtils
     {
         public static StyleSheet theme => EditorGUIUtility.isProSkin
         ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
