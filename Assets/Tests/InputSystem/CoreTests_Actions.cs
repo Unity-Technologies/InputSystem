@@ -2042,6 +2042,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
         var map1 = new InputActionMap("map1");
@@ -3541,6 +3544,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanQueryAllEnabledActions()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+
         var action = new InputAction(binding: "<Gamepad>/leftStick");
         action.Enable();
 
@@ -4669,6 +4675,10 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenDeviceIsRemoved_DeviceIsRemovedFromDeviceMask()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+        InputActionState.DestroyAllActionMapStates();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var map = new InputActionMap();
@@ -4867,6 +4877,10 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdateInActionMap_NotificationIsTriggered()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+        InputActionState.DestroyAllActionMapStates();
+
         var actionMap = new InputActionMap("map");
         actionMap.AddAction("action", binding: "<Gamepad>/leftTrigger");
         actionMap.Enable();
@@ -5077,6 +5091,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+
         var action1 = new InputAction(name: "a");
         var action2 = new InputAction(name: "b");
 

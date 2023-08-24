@@ -3235,6 +3235,9 @@ internal class UITests : CoreTestsFixture
     [Category("UI")]
     public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+
         InputSystem.AddDevice<Touchscreen>();
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -3800,6 +3803,9 @@ internal class UITests : CoreTestsFixture
     [Category("UI")]
     public IEnumerator UI_WhenCursorIsLockedToScreenCenter_PointerEnterAndExitEventsFire()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+
         var eventSystem = new GameObject("EventSystem", typeof(TestEventSystem), typeof(InputSystemUIInputModule));
         var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
         inputModule.m_CursorLockBehavior = InputSystemUIInputModule.CursorLockBehavior.ScreenCenter;

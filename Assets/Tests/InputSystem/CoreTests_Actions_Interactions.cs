@@ -751,6 +751,9 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCustomizeButtonPressPointsOfInteractions()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var pressAction = new InputAction("PressAction", binding: "<Gamepad>/leftTrigger", interactions: "press(pressPoint=0.234)");

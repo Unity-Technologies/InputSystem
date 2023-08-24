@@ -4097,6 +4097,10 @@ partial class CoreTests
     [Retry(2)] // Warm up JIT
     public void Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
     {
+        // Exclude project-wide actions from this test
+        InputSystem.actions.Disable();
+        InputActionState.DestroyAllActionMapStates();
+
         var description =
             new InputDeviceDescription
         {
