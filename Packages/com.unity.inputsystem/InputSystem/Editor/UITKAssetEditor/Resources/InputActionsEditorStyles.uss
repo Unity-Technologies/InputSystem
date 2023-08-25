@@ -169,6 +169,13 @@
     width: 190px;
 }
 
+#save-asset-toolbar-container
+{
+    /* hide while always autosaving in project wide settings */
+    display: none;
+}
+
+
 .unity-two-pane-split-view__dragline-anchor {
     background-color: rgb(25, 25, 25);
 }
