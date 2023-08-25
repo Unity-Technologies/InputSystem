@@ -751,8 +751,10 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCustomizeButtonPressPointsOfInteractions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions.Disable();
+#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
