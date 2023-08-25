@@ -240,7 +240,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (e.keyCode == KeyCode.F2)
                 OnKeyDownEventForRename();
-            else if (e.keyCode == KeyCode.Space)
+            else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
         }
 
