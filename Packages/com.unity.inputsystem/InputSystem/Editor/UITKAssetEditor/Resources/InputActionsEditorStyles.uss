@@ -164,6 +164,8 @@
 }
 
 .search-field {
+	/* hide while not implemented */
+    display: none; 
     width: 190px;
 }
 
