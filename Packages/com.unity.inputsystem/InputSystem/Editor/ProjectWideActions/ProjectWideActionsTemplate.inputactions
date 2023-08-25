@@ -1,5 +1,5 @@
 {
-    "name": "GlobalInputActions",
+    "name": "ProjectWideActionsTemplate",
     "maps": [
         {
             "name": "Player",
@@ -33,15 +33,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Jump",
-                    "type": "Button",
-                    "id": "f1ba0d36-48eb-4cd5-b651-1c94a6531f70",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Interact",
                     "type": "Button",
                     "id": "852140f2-7766-474d-8707-702459ba45f3",
@@ -51,13 +42,22 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Next",
-                    "type": "Value",
-                    "id": "b7230bb6-fc9b-4f52-8b25-f5e19cb2c2ba",
-                    "expectedControlType": "Axis",
+                    "name": "Crouch",
+                    "type": "Button",
+                    "id": "27c5f898-bc57-4ee1-8800-db469aca5fe3",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": true
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Jump",
+                    "type": "Button",
+                    "id": "f1ba0d36-48eb-4cd5-b651-1c94a6531f70",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 },
                 {
                     "name": "Previous",
@@ -69,18 +69,18 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "Next",
+                    "type": "Value",
+                    "id": "b7230bb6-fc9b-4f52-8b25-f5e19cb2c2ba",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
                     "name": "Sprint",
                     "type": "Button",
                     "id": "641cd816-40e6-41b4-8c3d-04687c349290",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Crouch",
-                    "type": "Button",
-                    "id": "27c5f898-bc57-4ee1-8800-db469aca5fe3",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -310,30 +310,19 @@
                 },
                 {
                     "name": "",
-                    "id": "1c04ea5f-b012-41d1-a6f7-02e963b52893",
-                    "path": "<Keyboard>/e",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Interact",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b3f66d0b-7751-423f-908b-a11c5bd95930",
-                    "path": "<Gamepad>/buttonNorth",
+                    "id": "b3c1c7f0-bd20-4ee7-a0f1-899b24bca6d7",
+                    "path": "<Keyboard>/enter",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Interact",
+                    "action": "Attack",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "cbac6039-9c09-46a1-b5f2-4e5124ccb5ed",
-                    "path": "<Keyboard>/1",
+                    "path": "<Keyboard>/2",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -344,33 +333,11 @@
                 {
                     "name": "",
                     "id": "e15ca19d-e649-4852-97d5-7fe8ccc44e94",
-                    "path": "<Gamepad>/buttonNorth",
+                    "path": "<Gamepad>/dpad/right",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Next",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "1534dc16-a6aa-499d-9c3a-22b47347b52a",
-                    "path": "<Keyboard>/2",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Previous",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "25060bbd-a3a6-476e-8fba-45ae484aad05",
-                    "path": "<Gamepad>/dpad/left",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Previous",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -392,6 +359,17 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d8bf24bf-3f2f-4160-a97c-38ec1eb520ba",
+                    "path": "<XRController>/trigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
                     "action": "Sprint",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -426,6 +404,50 @@
                     "processors": "",
                     "groups": "XR",
                     "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1534dc16-a6aa-499d-9c3a-22b47347b52a",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Previous",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "25060bbd-a3a6-476e-8fba-45ae484aad05",
+                    "path": "<Gamepad>/dpad/left",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Previous",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1c04ea5f-b012-41d1-a6f7-02e963b52893",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b3f66d0b-7751-423f-908b-a11c5bd95930",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Interact",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -494,7 +516,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "PrimaryAction",
+                    "name": "Click",
                     "type": "PassThrough",
                     "id": "3c7022bf-7922-4f7c-a998-c437916075ad",
                     "expectedControlType": "Button",
@@ -503,16 +525,16 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Scroll",
+                    "name": "RightClick",
                     "type": "PassThrough",
-                    "id": "0489e84a-4833-4c40-bfae-cea84b696689",
-                    "expectedControlType": "Vector2",
+                    "id": "44b200b1-1557-4083-816c-b22cbdf77ddf",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "TertiaryAction",
+                    "name": "MiddleClick",
                     "type": "PassThrough",
                     "id": "dad70c86-b58c-4b17-88ad-f5e53adf419e",
                     "expectedControlType": "Button",
@@ -521,10 +543,10 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SecondaryAction",
+                    "name": "ScrollWheel",
                     "type": "PassThrough",
-                    "id": "44b200b1-1557-4083-816c-b22cbdf77ddf",
-                    "expectedControlType": "Button",
+                    "id": "0489e84a-4833-4c40-bfae-cea84b696689",
+                    "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -857,7 +879,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "PrimaryAction",
+                    "action": "Click",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -868,7 +890,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "PrimaryAction",
+                    "action": "Click",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -879,7 +901,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Touch",
-                    "action": "PrimaryAction",
+                    "action": "Click",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -890,7 +912,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "XR",
-                    "action": "PrimaryAction",
+                    "action": "Click",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -901,18 +923,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Scroll",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "24066f69-da47-44f3-a07e-0015fb02eb2e",
-                    "path": "<Mouse>/middleButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard&Mouse",
-                    "action": "TertiaryAction",
+                    "action": "ScrollWheel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -922,8 +933,19 @@
                     "path": "<Mouse>/rightButton",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Keyboard&Mouse",
-                    "action": "SecondaryAction",
+                    "groups": "Keyboard&Mouse",
+                    "action": "RightClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "24066f69-da47-44f3-a07e-0015fb02eb2e",
+                    "path": "<Mouse>/middleButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "MiddleClick",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
