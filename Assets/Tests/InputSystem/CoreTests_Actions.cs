@@ -2042,8 +2042,10 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions.Disable();
+#endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
@@ -3544,8 +3546,10 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanQueryAllEnabledActions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions.Disable();
+#endif
 
         var action = new InputAction(binding: "<Gamepad>/leftStick");
         action.Enable();
@@ -4675,9 +4679,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenDeviceIsRemoved_DeviceIsRemovedFromDeviceMask()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions.Disable();
         InputActionState.DestroyAllActionMapStates();
+#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -4877,9 +4883,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdateInActionMap_NotificationIsTriggered()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions.Disable();
         InputActionState.DestroyAllActionMapStates();
+#endif
 
         var actionMap = new InputActionMap("map");
         actionMap.AddAction("action", binding: "<Gamepad>/leftTrigger");
@@ -5091,8 +5099,10 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions.Disable();
+#endif
 
         var action1 = new InputAction(name: "a");
         var action2 = new InputAction(name: "b");
