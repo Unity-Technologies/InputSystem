@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement = rootVisualElement;
             m_State = initialState;
 
+            rootVisualElement.Unbind();
             m_RootVisualElement.TrackSerializedObjectValue(initialState.serializedObject, so =>
             {
                 StateChanged?.Invoke(m_State);
