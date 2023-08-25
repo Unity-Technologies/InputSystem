@@ -34,13 +34,13 @@ The project-wide actions feature has some default action maps set up, which you 
 
 You can access the project-wide actions in your script by using the [InputSystem.actions](../api/UnityEngine.InputSystem.actions.html) property. For example:
 
-	var myAction = InputSystem.actions.FindAction("Player/Jump");
+    var myAction = InputSystem.actions.FindAction("Player/Jump");
 
 The above line of code reads the "Jump" action, from the “Player” action map, which is one of the default actions that comes with the new project-wide actions feature.
 
 Unlike Input Action assets, the project-wide actions are stored in your project’s Project Settings folder, so they do not appear in your Project window. The **InputSystem.actions** property is a built-in reference to that asset. This means you can use all the same techniques described throughout the rest of the documentation about [using action assets](Workflow-ActionsAsset), but instead of referencing an asset from your project, you can use the **InputSystem.actions property** in your scripts to reference the project-wide actions.
 
-For example, here is the script from the [Action Assets workflow page](Workflow-ActionsAsset), adapted to use the project-wide actions, and the default actions in the "Player" action map. 
+For example, here is the script from the [Action Assets workflow page](Workflow-ActionsAsset), adapted to use the project-wide actions, and the default actions in the "Player" action map.
 
 ```
 using UnityEngine;
@@ -50,7 +50,7 @@ public class ExampleScript : MonoBehaviour
 {
     // private field to store move action reference
     private InputAction moveAction;
-    
+
     void Awake()
     {
         // find the "move" action, and keep the reference to it, for use in Update
@@ -90,6 +90,3 @@ You can't assign the project-wide input actions asset to UI fields where you wou
 **Some features of the project-wide actions editor are different, or missing, compared with the Actions Editor window for actions assets.**
 
 Although the UI to edit the project-wide actions in the Project Settings window is very similar to the Actions Editor for action assets, there are some differences and missing features. In particular, the new project-wide actions editor uses a newer UI system, and therefore there are some cosmetic differences such as different icons, and some workflow features are missing such as some of the keyboard shortcuts. You also cannot yet access the project-wide actions [through a C# wrapper](Workflow-ActionsAsset.html#referencing-the-actions-asset-through-a-c-wrapper).
-
-
-
