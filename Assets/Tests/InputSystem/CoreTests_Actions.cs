@@ -527,6 +527,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanTargetSameControlWithMultipleActions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+#endif
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action1 = new InputAction("action1", binding: "<Gamepad>/buttonSouth");
@@ -2044,7 +2049,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable();
 #endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2296,6 +2301,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_DriveInteractionsFromControlWithGreatestActuation()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+#endif
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // We go through several permutations of the same behavior all in one test. Makes the
@@ -2583,6 +2593,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+#endif
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -3103,6 +3118,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanRecordAllActionsInTheSystem()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+#endif
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var map = new InputActionMap();
@@ -3548,7 +3568,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable();
 #endif
 
         var action = new InputAction(binding: "<Gamepad>/leftStick");
@@ -3793,6 +3813,12 @@ partial class CoreTests
     [TestCaseSource(typeof(ModificationCases))]
     public void Actions_CanHandleModification(Modification modification, IInputActionCollection2 actions)
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+#endif
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         if (modification == Modification.AddDevice || modification == Modification.RemoveDevice)
@@ -4681,8 +4707,8 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions.Disable();
-        InputActionState.DestroyAllActionMapStates();
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4827,6 +4853,12 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdate_NotificationIsTriggered_ButOnlyAfterBindingsHaveFirstBeenResolved()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+#endif
+
         var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");
 
         // Enabling an action resolves its bindings. From the on, we get notifications for when
@@ -4885,8 +4917,8 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions.Disable();
-        InputActionState.DestroyAllActionMapStates();
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
 #endif
 
         var actionMap = new InputActionMap("map");
@@ -4915,6 +4947,12 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdateInActionAsset_NotificationIsTriggered()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();  // Worked in Standalone
+        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+#endif
+
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.name = "asset";
         var actionMap = new InputActionMap("map");
@@ -5101,7 +5139,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable();
 #endif
 
         var action1 = new InputAction(name: "a");
@@ -9743,6 +9781,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanUseTouchWithActions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+#endif
+
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         var primaryTouchAction = new InputAction("PrimaryTouch" , binding: "<Touchscreen>/primaryTouch/position");
@@ -9813,6 +9856,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanDrivePointerInputFromTouchPenAndMouse()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable();
+#endif
+
         // Give us known parameters for tap detection.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
