@@ -5020,6 +5020,12 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdate_InProgressActionsKeepGoing()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_EDITOR
+        // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
+        // Causes: "[Assert] Could not find active control after binding resolution"
+        // when RemoveDevice() called
+        InputSystem.actions.Disable();
+#endif
         currentTime = 0;
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
