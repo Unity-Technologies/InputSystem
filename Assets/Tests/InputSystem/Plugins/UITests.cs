@@ -3282,6 +3282,7 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
     }
+
 #endif
 
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
@@ -3832,6 +3833,7 @@ internal class UITests : CoreTestsFixture
         yield return null;
         Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerExit), Is.True);
     }
+
 #endif
 
     #region Multi Display Tests
