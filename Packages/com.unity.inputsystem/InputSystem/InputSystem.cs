@@ -3058,7 +3058,7 @@ namespace UnityEngine.InputSystem
                 }
                 #endif
 
-                s_projectWideActions.Disable();
+                s_projectWideActions?.Disable();
                 s_projectWideActions = value;
                 s_projectWideActions.Enable();
             }
@@ -3757,11 +3757,10 @@ namespace UnityEngine.InputSystem
             if (s_projectWideActions)
             {
                 s_projectWideActions.Disable();
+                s_projectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
                 s_projectWideActions = null;
             }
 #endif
-            // Nuke all InputActionMapStates. Releases their unmanaged memory.
-            InputActionState.DestroyAllActionMapStates();
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
