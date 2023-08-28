@@ -44,6 +44,8 @@
     type: {{ platform.type }}
     image: {{ platform.image }}
     flavor: {{ platform.flavor }}
+  variables:
+    BEE_CACHE_BEHAVIOUR: _
   commands:
     - {{ utr_install_nix }}
     - {{ upm_ci_install }}
@@ -154,6 +156,8 @@ build_android_{{ editor.version }}_{{ backend.name }}:
       type: Unity::VM
       image: package-ci/win10:default
       flavor: b1.xlarge
+  variables:
+    BEE_CACHE_BEHAVIOUR: _
   commands:
     - {{ utr_install_win }}
     - {{ unity_downloader_install }}
