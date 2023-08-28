@@ -3014,8 +3014,15 @@ namespace UnityEngine.InputSystem
         private static InputActionAsset s_projectWideActions;
 
         /// <summary>
-        /// The set of project-wide available input actions.
+        /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
         /// </summary>
+        /// <remarks>
+        /// A default set of actions and action maps are installed and enabled by default on every project.
+        /// These actions and their bindings may be modified in the Project Settings.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset"/>
+        /// <seealso cref="InputActionMap"/>
+        /// <seealso cref="InputAction"/>
         public static InputActionAsset actions
         {
             get
