@@ -32,15 +32,15 @@ The project-wide actions feature has some default action maps set up, which you 
 
 ### Reading project-wide actions
 
-You can access the project-wide actions in your script by using the [InputSystem.actions](../api/UnityEngine.InputSystem.actions.html) property. For example:
+You can access the project-wide actions in your script by using the [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_actions) property. For example:
 
     var myAction = InputSystem.actions.FindAction("Player/Jump");
 
 The above line of code reads the "Jump" action, from the “Player” action map, which is one of the default actions that comes with the new project-wide actions feature.
 
-Unlike Input Action assets, the project-wide actions are stored in your project’s Project Settings folder, so they do not appear in your Project window. The **InputSystem.actions** property is a built-in reference to that asset. This means you can use all the same techniques described throughout the rest of the documentation about [using action assets](Workflow-ActionsAsset), but instead of referencing an asset from your project, you can use the **InputSystem.actions property** in your scripts to reference the project-wide actions.
+Unlike Input Action assets, the project-wide actions are stored in your project’s Project Settings folder, so they do not appear in your Project window. The **InputSystem.actions** property is a built-in reference to that asset. This means you can use all the same techniques described throughout the rest of the documentation about [using action assets](Workflow-ActionsAsset.html), but instead of referencing an asset from your project, you can use the **InputSystem.actions property** in your scripts to reference the project-wide actions.
 
-For example, here is the script from the [Action Assets workflow page](Workflow-ActionsAsset), adapted to use the project-wide actions, and the default actions in the "Player" action map.
+For example, here is the script from the [Action Assets workflow page](Workflow-ActionsAsset.html), adapted to use the project-wide actions, and the default actions in the "Player" action map.
 
 ```
 using UnityEngine;
@@ -73,7 +73,7 @@ public class ExampleScript : MonoBehaviour
 }
 ```
 
-Things to note about the above example script, as compared to the script on the [Action Assets workflow page](Workflow-ActionsAsset):
+Things to note about the above example script, as compared to the script on the [Action Assets workflow page](Workflow-ActionsAsset.html):
 
 * Because there is a built-in reference to the project-wide actions, you do not need a public field with an assigned asset to get a reference to the actions.
 
