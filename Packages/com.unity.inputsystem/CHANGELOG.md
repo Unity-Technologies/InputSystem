@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Initial version of Project Wide Actions for pre-release (`InputSystem.actions`). This feature is available only on Unity Editor versions 2022.3 and above and can be modified in the Project Settings.
+
 ## [1.7.0] - 2023-08-14
 
 ### Added
