@@ -1,4 +1,6 @@
 editors:
+  - version: fabeaf66dbcc2c5c9660a5acc40fe3a6a293492e
+  - version: 15c37a698ebfa0f5f5a4a6628afe4207dfc79332
   - version: 2021.3
   - version: 2022.3
   - version: 2023.1
