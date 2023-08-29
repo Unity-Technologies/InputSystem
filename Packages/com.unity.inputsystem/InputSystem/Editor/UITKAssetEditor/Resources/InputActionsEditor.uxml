@@ -4,16 +4,13 @@
         <ui:Label text="Input Actions" display-tooltip-when-elided="true" name="title-label" class="header-label" style="width: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
         <uie:ToolbarSearchField focusable="true" name="search-actions-text-field" class="search-field" />
     </ui:VisualElement>
-    <ui:VisualElement name="save-asset-toolbar-container">
-        <uie:Toolbar />
-    </ui:VisualElement>
     <ui:VisualElement name="control-schemes-toolbar-container">
         <uie:Toolbar>
             <ui:VisualElement style="flex-direction: row; flex-grow: 1;">
                 <uie:ToolbarMenu display-tooltip-when-elided="true" text="No Control Schemes" name="control-schemes-toolbar-menu" style="min-width: 135px;" />
                 <uie:ToolbarMenu display-tooltip-when-elided="true" text="All Devices" enabled="false" name="control-schemes-filter-toolbar-menu" />
             </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; justify-content: flex-end;">
+            <ui:VisualElement style="flex-direction: row; justify-content: flex-end;" name="save-asset-toolbar-container">
                 <uie:ToolbarButton text="Save Asset" display-tooltip-when-elided="true" name="save-asset-toolbar-button" style="align-items: auto;" />
                 <uie:ToolbarToggle focusable="false" label="Auto-Save" name="auto-save-toolbar-toggle" style="width: 69px;" />
             </ui:VisualElement>

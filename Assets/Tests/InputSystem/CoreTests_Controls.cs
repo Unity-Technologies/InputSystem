@@ -478,6 +478,12 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
     {
+        // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
+        // Somehow the presence of action controls prevents those controls being marked as stale
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        InputSystem.actions.Disable();
+#endif
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // read all values to initially mark everything as cached
