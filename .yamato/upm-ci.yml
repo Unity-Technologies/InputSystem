@@ -154,7 +154,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
   name: Build Tests on {{ editor.version }} on android {{ backend.name }}
   agent:
       type: Unity::VM
-      image: package-ci/win10:default
+      image: package-ci/win10:v4.16.0
       flavor: b1.xlarge
   variables:
     BEE_CACHE_BEHAVIOUR: _
@@ -175,7 +175,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
   name: Run Tests on {{ editor.version }} on android {{ backend.name }}
   agent:
       type: Unity::mobile::shield
-      image: package-ci/win10:default
+      image: package-ci/win10:v4.16.0
       flavor: b1.medium
   # Skip repository cloning
   skip_checkout: true
@@ -238,7 +238,7 @@ publish{% cycle "", "_dryrun" %}:
   name: Publish to Internal Registry {% cycle "", "(Dry Run)" %}
   agent:
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4.16.0
     flavor: b1.large
   variables:
     UPMCI_ENABLE_PACKAGE_SIGNING: 1

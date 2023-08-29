@@ -16,16 +16,16 @@ upm_ci_install: npm install -g upm-ci-utils@stable --registry https://artifactor
 platforms_win:
   - name: win
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4.16.0
     flavor: b1.large
   - name: win_standalone
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4.16.0
     flavor: b1.large
     runtime: StandaloneWindows64
   - name: win_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/win10:default
+    image: package-ci/win10:v4.16.0
     flavor: b1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
