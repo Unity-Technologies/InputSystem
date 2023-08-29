@@ -3012,6 +3012,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         private static InputActionAsset s_projectWideActions;
+        internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
 
         /// <summary>
         /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
@@ -3039,7 +3040,7 @@ namespace UnityEngine.InputSystem
                         s_projectWideActions, true);
                 }
                 #else
-                s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault();
+                s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
                 #endif
 
                 if (s_projectWideActions == null)
