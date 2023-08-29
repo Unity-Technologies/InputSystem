@@ -1,6 +1,10 @@
 editors:
   - version: fabeaf66dbcc2c5c9660a5acc40fe3a6a293492e
   - version: 15c37a698ebfa0f5f5a4a6628afe4207dfc79332
+  - version: 0782aa60b3de148ed792378c98fd1a0c57fd16b0
+  - version: ae530186f9ef2c3543100b11d9e74b172cbe1d60
+  - version: ae7cc5a95f70bddfd42e7550a3b779001f698afc
+  - version: 42cedf2c35df7de4daccf62f28efa62a64be436f
   - version: 2021.3
   - version: 2022.3
   - version: 2023.1
