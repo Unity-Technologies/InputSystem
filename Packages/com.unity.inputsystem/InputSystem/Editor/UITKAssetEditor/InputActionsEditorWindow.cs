@@ -1,6 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.IO;
 using System.Linq;
@@ -16,21 +16,18 @@ namespace UnityEngine.InputSystem.Editor
     {
         static EnableUITKEditor()
         {
-            // set this feature flag to true to enable the UITK editor
-            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditor, false);
+            // Controls whether the UITK version of the InputActionAsset Editor is enabled or not for
+            // editing standalone user Input Action assets.
+            // At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
+            // This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
+            // UITK Editor is always be used for the Project Settings Editor regardless of this setting.
+            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditorForAllAssets, false);
         }
     }
 
     internal class InputActionsEditorWindow : EditorWindow
     {
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
-        /// <summary>
-        /// Controls whether the UITK version of the InputActionAsset Editor is enabled or not for editing Input Action
-        /// assets.
-        /// </summary>
-        /// At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
-        /// This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
-        internal static bool isWindowEnabled = false;
         private int m_AssetId;
         private string m_AssetPath;
         private string m_AssetJson;
@@ -40,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor) || !isWindowEnabled)
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditorForAllAssets))
                 return false;
 
             var path = AssetDatabase.GetAssetPath(instanceId);
@@ -138,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             DirtyInputActionsEditorWindow(newState);
             if (InputEditorUserSettings.autoSaveInputActionAssets)
-                SaveAsset(m_State.serializedObject);
+                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
@@ -172,7 +169,7 @@ namespace UnityEngine.InputSystem.Editor
             switch (result)
             {
                 case 0:     // Save
-                    SaveAsset(m_State.serializedObject, this);
+                    InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
                     break;
                 case 1:    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
@@ -209,24 +206,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [SerializeField] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
-
-        public static void SaveAsset(SerializedObject serializedAsset, InputActionsEditorWindow currentWindow = null)
-        {
-            if ((focusedWindow == null || focusedWindow is not InputActionsEditorWindow) && currentWindow == null)
-                return;
-            currentWindow = currentWindow ? currentWindow : (InputActionsEditorWindow)focusedWindow;
-            var asset = (InputActionAsset)serializedAsset.targetObject;
-            var assetJson = asset.ToJson();
-
-            var existingJson = File.ReadAllText(currentWindow.m_AssetPath);
-            if (assetJson != existingJson)
-            {
-                EditorHelpers.CheckOut(currentWindow.m_AssetPath);
-                File.WriteAllText(currentWindow.m_AssetPath, assetJson);
-                AssetDatabase.ImportAsset(currentWindow.m_AssetPath);
-                currentWindow.m_AssetJson = assetJson;
-            }
-        }
     }
 }
 

@@ -204,7 +204,7 @@ namespace UnityEngine.InputSystem.Composites
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             var modeField = new EnumField("Mode", target.mode)
