@@ -1,10 +1,17 @@
 editors:
-  - version: fabeaf66dbcc2c5c9660a5acc40fe3a6a293492e
   - version: 15c37a698ebfa0f5f5a4a6628afe4207dfc79332
   - version: 0782aa60b3de148ed792378c98fd1a0c57fd16b0
   - version: ae530186f9ef2c3543100b11d9e74b172cbe1d60
   - version: ae7cc5a95f70bddfd42e7550a3b779001f698afc
   - version: 42cedf2c35df7de4daccf62f28efa62a64be436f
+  - version: fabeaf66dbcc2c5c9660a5acc40fe3a6a293492e
+  - version: 0bed414db25f131dfab6a812c74a6261bbb9532c
+  - version: 0d37d648047c9f18b591f4b07b05b347dabad853
+  - version: 93f8d9e7b3f2e345d09dba277ee5da95a2b8aca2
+  - version: af2010de499a508def356f930dc1cc0a44b94f70
+  - version: 869f68ea679f12e82494a574296abc55bf196d45
+  - version: 019bfb28b260c116c5e01631fe77d69ca7239669
+  - version: 6408ea10955a7eaaccd393f1d4d8212fab9dd17b
   - version: 2021.3
   - version: 2022.3
   - version: 2023.1
