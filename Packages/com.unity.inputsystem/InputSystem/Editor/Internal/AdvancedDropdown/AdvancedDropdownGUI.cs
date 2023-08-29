@@ -10,11 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private static class Styles
         {
-#if UNITY_2023_2_OR_NEWER || UNITY_2021_3_28 || UNITY_2022_3_1
-            public static readonly GUIStyle toolbarSearchField = "ToolbarSearchTextField";
-#else
-            public static readonly GUIStyle toolbarSearchField = "ToolbarSeachTextField";
-#endif
+            public static readonly GUIStyle toolbarSearchField = EditorStyles.toolbarSearchField;
             public static readonly GUIStyle itemStyle = new GUIStyle("PR Label")
                 .WithAlignment(TextAnchor.MiddleLeft)
                 .WithPadding(new RectOffset())
