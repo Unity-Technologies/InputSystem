@@ -17,12 +17,20 @@ namespace UnityEngine.InputSystem.Editor
         static string s_DefaultAssetPath = kDefaultAssetPath;
         static string s_AssetPath = kAssetPath;
 
-        // For Testing
+#if UNITY_INCLUDE_TESTS
         internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
         {
             s_DefaultAssetPath = defaultAssetPath;
             s_AssetPath = assetPath;
         }
+
+        internal static void Reset()
+        {
+            s_DefaultAssetPath = kDefaultAssetPath;
+            s_AssetPath = kAssetPath;
+        }
+
+#endif
 
         [InitializeOnLoadMethod]
         internal static void InstallProjectWideActions()
