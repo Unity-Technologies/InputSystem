@@ -1,6 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,21 +145,22 @@ namespace UnityEngine.InputSystem.Editor
             return id;
         }
 
-        private int GetComponentOrBindingID(List<TreeViewItemData<ActionOrBindingData>> treeList, int selectedBindingIndex)
+        private int GetComponentOrBindingID(List<TreeViewItemData<ActionOrBindingData>> treeItemList, int selectedBindingIndex)
         {
-            var currentBindingIndex = -1;
-            foreach (var action in treeList)
+            foreach (var actionItem in treeItemList)
             {
-                foreach (var bindingOrComponent in action.children)
+                // Look for the element ID by checking if the selected binding index matches the binding index of
+                // the ActionOrBindingData of the item. Deals with composite bindings as well.
+                foreach (var bindingOrComponentItem in actionItem.children)
                 {
-                    currentBindingIndex++;
-                    if (currentBindingIndex == selectedBindingIndex) return bindingOrComponent.id;
-                    if (bindingOrComponent.hasChildren)
+                    if (bindingOrComponentItem.data.bindingIndex == selectedBindingIndex)
+                        return bindingOrComponentItem.id;
+                    if (bindingOrComponentItem.hasChildren)
                     {
-                        foreach (var binding in bindingOrComponent.children)
+                        foreach (var bindingItem in bindingOrComponentItem.children)
                         {
-                            currentBindingIndex++;
-                            if (currentBindingIndex == selectedBindingIndex) return binding.id;
+                            if (bindingOrComponentItem.data.bindingIndex == selectedBindingIndex)
+                                return bindingItem.id;
                         }
                     }
                 }
@@ -239,7 +240,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (e.keyCode == KeyCode.F2)
                 OnKeyDownEventForRename();
-            else if (e.keyCode == KeyCode.Space)
+            else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
         }
 

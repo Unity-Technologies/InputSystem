@@ -37,8 +37,8 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
-            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditor) && InputActionsEditorWindow.isWindowEnabled)
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditorForAllAssets))
                 return false;
 #endif
             var path = AssetDatabase.GetAssetPath(instanceId);

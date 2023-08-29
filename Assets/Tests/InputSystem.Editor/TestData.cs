@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;

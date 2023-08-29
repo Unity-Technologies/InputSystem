@@ -3009,6 +3009,67 @@ namespace UnityEngine.InputSystem
 
         #region Actions
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
+        private static InputActionAsset s_projectWideActions;
+
+        /// <summary>
+        /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
+        /// </summary>
+        /// <remarks>
+        /// A default set of actions and action maps are installed and enabled by default on every project.
+        /// These actions and their bindings may be modified in the Project Settings.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset"/>
+        /// <seealso cref="InputActionMap"/>
+        /// <seealso cref="InputAction"/>
+        public static InputActionAsset actions
+        {
+            get
+            {
+                if (s_projectWideActions != null)
+                    return s_projectWideActions;
+
+                #if UNITY_EDITOR
+                // Load the InputActionsAsset and store it in EditorBuildSettings so it can be packed in Player builds
+                s_projectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(s_projectWideActions)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                        s_projectWideActions, true);
+                }
+                #else
+                s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault();
+                #endif
+
+                if (s_projectWideActions == null)
+                    Debug.LogError($"Couldn't initialize project-wide input actions");
+                return s_projectWideActions;
+            }
+
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (s_projectWideActions == value)
+                    return;
+
+                #if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
+                        value, true);
+                }
+                #endif
+
+                s_projectWideActions?.Disable();
+                s_projectWideActions = value;
+                s_projectWideActions.Enable();
+            }
+        }
+#endif
+
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
         /// when actions are triggered.
@@ -3603,6 +3664,12 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && !UNITY_INCLUDE_TESTS
+            // Touching the `actions` property here will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Player
+            actions?.Enable();
+#endif
         }
 
 #endif // UNITY_EDITOR
@@ -3690,6 +3757,16 @@ namespace UnityEngine.InputSystem
         {
             Profiler.BeginSample("InputSystem.Reset");
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
+            if (s_projectWideActions)
+            {
+                s_projectWideActions.Disable();
+                s_projectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
+                s_projectWideActions = null;
+            }
+#endif
+
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
             if (s_Manager != null)
@@ -3730,6 +3807,13 @@ namespace UnityEngine.InputSystem
             InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Touching the `actions` property will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
+            actions?.Enable();
+#endif
+
             Profiler.EndSample();
         }
 
@@ -3744,7 +3828,6 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
