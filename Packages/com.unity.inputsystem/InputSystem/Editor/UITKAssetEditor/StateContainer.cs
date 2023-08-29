@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Linq.Expressions;
 using UnityEditor;
@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement = rootVisualElement;
             m_State = initialState;
 
+            rootVisualElement.Unbind();
             m_RootVisualElement.TrackSerializedObjectValue(initialState.serializedObject, so =>
             {
                 StateChanged?.Invoke(m_State);

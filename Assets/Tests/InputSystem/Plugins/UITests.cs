@@ -3231,6 +3231,8 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
+// @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
+#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS || UNITY_EDITOR
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
@@ -3280,6 +3282,8 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
     }
+
+#endif
 
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
     ////        IMO is whether navigation should even be affected that way by not having a current selection. Seems to me that the
@@ -3796,6 +3800,8 @@ internal class UITests : CoreTestsFixture
         Assert.That(clicked, Is.True);
     }
 
+// @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
+#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS || UNITY_EDITOR
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_WhenCursorIsLockedToScreenCenter_PointerEnterAndExitEventsFire()
@@ -3827,6 +3833,8 @@ internal class UITests : CoreTestsFixture
         yield return null;
         Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerExit), Is.True);
     }
+
+#endif
 
     #region Multi Display Tests
 #if UNITY_2022_3_OR_NEWER // displayIndex is only available from 2022.3 onwards

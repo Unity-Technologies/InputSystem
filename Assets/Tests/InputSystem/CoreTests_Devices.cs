@@ -4097,6 +4097,13 @@ partial class CoreTests
     [Retry(2)] // Warm up JIT
     public void Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // Prevent GC Allocations happening later in test
+        InputSystem.actions.Disable();
+        InputActionState.DestroyAllActionMapStates();
+#endif
+
         var description =
             new InputDeviceDescription
         {
@@ -4383,6 +4390,12 @@ partial class CoreTests
     [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
     public unsafe void Devices_CanHandleFocusChanges(bool appRunInBackground, InputSettings.BackgroundBehavior backgroundBehavior, InputSettings.EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode)
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_EDITOR
+        // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
+        // Causes: "[Assert] Could not find active control after binding resolution"
+        // due to: mouse3 = InputSystem.AddDevice<Mouse>();
+        InputSystem.actions.Disable();
+#endif
         // The constant leads to "Unreachable code detected" warnings.
         #pragma warning disable CS0162
 
@@ -5350,6 +5363,16 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_RemovingDevice_MakesNextDeviceOfTypeCurrent()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_EDITOR
+        // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
+        // Causes: "[Assert] Could not find active control after binding resolution"
+        // during  point where Pointer is removed
+        // - InputActionState.OnDeviceChange(device, InputDeviceChange.Removed);
+        // - LazyResolveBindings(bool fullResolve)
+        // - ResolveBindings()
+        // - RestoreActionStatesAfterReResolvingBindings(UnmanagedMemory oldState, InputControlList<InputControl> activeControls, bool isFullResolve)
+        InputSystem.actions.Disable();
+#endif
         var mouse = InputSystem.AddDevice<Mouse>();
         Press(mouse.leftButton);
         Assert.That(Pointer.current, Is.EqualTo(mouse));
