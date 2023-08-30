@@ -27,6 +27,9 @@ namespace UnityEngine.InputSystem.Editor
 
     internal class InputActionsEditorWindow : EditorWindow
     {
+        [SerializeField] private InputActionsEditorState m_State;
+        [SerializeField] private string m_AssetGUID;
+
         private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
         private int m_AssetId;
         private string m_AssetPath;
@@ -49,9 +52,26 @@ namespace UnityEngine.InputSystem.Editor
             //       without forcing a checkout.
             var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
-            if (asset == null)
-                return false;
 
+            string actionMapToSelect = null;
+            string actionToSelect = null;
+
+            // Means we're dealing with an InputActionReference, e.g. when expanding the an .input action asset
+            // on the Asset window and selecting an Action.
+            if (asset == null)
+            {
+                var actionReference = obj as InputActionReference;
+                if (actionReference != null)
+                {
+                    asset = actionReference.asset;
+                    actionMapToSelect = actionReference.action.actionMap.name;
+                    actionToSelect = actionReference.action.name;
+                }
+                else
+                {
+                    return false;
+                }
+            }
 
             var window = GetOrCreateWindow(instanceId, out var isAlreadyOpened);
             if (isAlreadyOpened)
@@ -62,6 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
+            window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.minSize = k_MinWindowSize;
             window.SetAsset(asset);
             window.Show();
@@ -82,11 +103,19 @@ namespace UnityEngine.InputSystem.Editor
             return GetWindow<InputActionsEditorWindow>();
         }
 
-        private void SetAsset(InputActionAsset asset)
+        private void SetAsset(InputActionAsset asset, string actionToSelect = null, string actionMapToSelect = null)
         {
             m_AssetPath = AssetDatabase.GetAssetPath(asset);
             var serializedAsset = new SerializedObject(asset);
             m_State = new InputActionsEditorState(serializedAsset);
+
+            // Select the action that was selected on the Asset window.
+            if (actionMapToSelect != null && actionToSelect != null)
+            {
+                m_State = m_State.SelectActionMap(actionMapToSelect);
+                m_State = m_State.SelectAction(actionToSelect);
+            }
+
             m_AssetJson = File.ReadAllText(m_AssetPath);
             bool isGUIDObtained = AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out m_AssetGUID, out long _);
             Debug.Assert(isGUIDObtained, $"Failed to get asset {asset.name} GUID");
@@ -203,9 +232,6 @@ namespace UnityEngine.InputSystem.Editor
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             return AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
         }
-
-        [SerializeField] private InputActionsEditorState m_State;
-        [SerializeField] private string m_AssetGUID;
     }
 }
 
