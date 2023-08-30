@@ -4390,7 +4390,7 @@ partial class CoreTests
     [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)]
     public unsafe void Devices_CanHandleFocusChanges(bool appRunInBackground, InputSettings.BackgroundBehavior backgroundBehavior, InputSettings.EditorInputBehaviorInPlayMode editorInputBehaviorInPlayMode)
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
         // Causes: "[Assert] Could not find active control after binding resolution"
         // due to: mouse3 = InputSystem.AddDevice<Mouse>();
@@ -5363,7 +5363,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_RemovingDevice_MakesNextDeviceOfTypeCurrent()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
         // Causes: "[Assert] Could not find active control after binding resolution"
         // during  point where Pointer is removed

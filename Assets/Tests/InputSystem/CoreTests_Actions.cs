@@ -5020,7 +5020,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdate_InProgressActionsKeepGoing()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
         // Causes: "[Assert] Could not find active control after binding resolution"
         // when RemoveDevice() called
