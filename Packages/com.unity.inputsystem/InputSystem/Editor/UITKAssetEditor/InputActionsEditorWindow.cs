@@ -61,11 +61,11 @@ namespace UnityEngine.InputSystem.Editor
             if (asset == null)
             {
                 var actionReference = obj as InputActionReference;
-                if (actionReference != null)
+                if (actionReference != null && actionReference.asset != null)
                 {
                     asset = actionReference.asset;
-                    actionMapToSelect = actionReference.action.actionMap.name;
-                    actionToSelect = actionReference.action.name;
+                    actionMapToSelect = actionReference.action.actionMap?.name;
+                    actionToSelect = actionReference.action?.name;
                 }
                 else
                 {
@@ -82,9 +82,8 @@ namespace UnityEngine.InputSystem.Editor
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
-            window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.minSize = k_MinWindowSize;
-            window.SetAsset(asset);
+            window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.Show();
 
             return true;
