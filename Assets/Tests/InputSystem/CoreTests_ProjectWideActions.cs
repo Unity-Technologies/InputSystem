@@ -33,19 +33,21 @@ internal partial class CoreTests
         // we don't need different tests for the player.
         // This also means these tests are dependant on the content of InputManager.asset not being changed.
 #if UNITY_EDITOR
-        // this asset takes the place of InputManager.asset for the sake of testing, as we don't really want to go changing
-        // that asset in every test.
+        // This asset takes the place of ProjectSettings/InputManager.asset for the sake of testing, as we don't
+        // really want to go changing that asset in every test.
+        // This is used as a backing for `InputSystem.actions` in PlayMode tests.
         var testAsset = ScriptableObject.CreateInstance<TestActionsAsset>();
         AssetDatabase.CreateAsset(testAsset, TestAssetPath);
 
-        // create a template input action asset from which the input action asset stuffed inside the InputManager will be created
+        // Create a template `InputActionAsset` containing some test actions.
+        // This will then be used to populate the initially empty `TestActionsAsset` when it is first acessed.
         var templateActions = ScriptableObject.CreateInstance<InputActionAsset>();
         templateActions.name = "TestAsset";
         var map = templateActions.AddActionMap("InitialActionMapOne");
         map.AddAction("InitialActionOne");
         map.AddAction("InitialActionTwo");
 
-        m_TemplateAssetPath = Path.Combine(Environment.CurrentDirectory, "Assets/TestGlobalActions.inputactions");
+        m_TemplateAssetPath = Path.Combine(Environment.CurrentDirectory, "Assets/ProjectWideActionsTemplate.inputactions");
         File.WriteAllText(m_TemplateAssetPath, templateActions.ToJson());
 
         ProjectWideActionsAsset.SetAssetPaths(m_TemplateAssetPath, TestAssetPath);
@@ -175,7 +177,6 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions, Is.Not.Null);
         Assert.That(InputSystem.actions.enabled, Is.True);
         var enabledActions = InputSystem.ListEnabledActions();
-        enabledActions.ForEach(o => Debug.Log("JAMES: " + o.name));
         Assert.That(enabledActions, Has.Count.EqualTo(initialActionCount));
 
         // Build new asset
