@@ -18,11 +18,11 @@ internal partial class CoreTests
     string m_TemplateAssetPath;
 
 #if UNITY_EDITOR
-        const int initialActionCount = 2;
-        const int initialMapCount = 1;
+    const int initialActionCount = 2;
+    const int initialMapCount = 1;
 #else
-        const int initialActionCount = 17;
-        const int initialMapCount = 2;
+    const int initialActionCount = 17;
+    const int initialMapCount = 2;
 #endif
 
     [SetUp]
@@ -118,6 +118,7 @@ internal partial class CoreTests
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("FirstAction"));
         Assert.That(asset.actionMaps[1].actions[0].name, Is.EqualTo("AnotherAction"));
     }
+
 #endif
 
     [Test]
@@ -208,7 +209,6 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions.actionMaps[1].actions.Count, Is.EqualTo(1));
         Assert.That(InputSystem.actions.actionMaps[1].actions[0].name, Is.EqualTo("replacedAction4"));
     }
-
 }
 
 #endif
