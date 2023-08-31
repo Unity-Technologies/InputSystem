@@ -946,6 +946,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Flags that control which controls are returned by <see cref="InputControlExtensions.EnumerateControls"/>.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:Flags enums should have plural names", Justification = "False positive: `IgnoreControlsInDefaultState` is a plural form.")]
         [Flags]
         public enum Enumerate
         {
