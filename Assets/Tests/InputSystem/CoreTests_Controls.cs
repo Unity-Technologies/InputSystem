@@ -485,7 +485,7 @@ partial class CoreTests
         // and invalidate the cache (make it stale), immediately afterwards we
         // call NotifyControlStateChanged for each of the actions which _may_ cause a Read()
         // on the control and make it immediately cached (non-stale) again.
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable();
 #endif
 
         var keyboard = InputSystem.AddDevice<Keyboard>();

@@ -529,7 +529,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2102,7 +2102,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2356,7 +2356,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2648,7 +2648,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -3173,7 +3173,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3621,7 +3621,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
 #endif
 
         var action = new InputAction(binding: "<Gamepad>/leftStick");
@@ -3869,7 +3869,7 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4761,7 +4761,7 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4909,8 +4909,8 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
-#endif
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
+ #endif
 
         var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");
 
@@ -4971,7 +4971,7 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var actionMap = new InputActionMap("map");
@@ -5002,8 +5002,8 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();  // Worked in Standalone
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -5192,7 +5192,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
 #endif
 
         var action1 = new InputAction(name: "a");
@@ -9836,7 +9836,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
@@ -9911,7 +9911,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         // Give us known parameters for tap detection.
