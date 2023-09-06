@@ -10,14 +10,17 @@ namespace UnityEngine.InputSystem.Editor
         private static ActionsTreeView m_ActionsTreeView;
         private static ListView m_ListView;
         internal static Action<int, InputActionsTreeViewItem> RenameAction => RenameActionItem;
-        internal static Action<InputActionsTreeViewItem> RenameActionMap => RenameActionMapItem;
-        internal static Action<InputActionsTreeViewItem> DeleteAction => Delete;
+        internal static Action<InputActionMapsTreeViewItem> RenameActionMap => RenameActionMapItem;
+        internal static Action<InputActionsTreeViewItem> DeleteAction => DeleteActionItem;
+        internal static Action<InputActionMapsTreeViewItem> DeleteActionMap => DeleteActionMapItem;
         internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
         internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier => AddNewPositiveNegativeComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
         internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
+        internal static Action<InputActionMapsTreeViewItem> CreateActionMap => CreateNewActionMap;
         internal static Action<InputActionsTreeViewItem> CreateAction => CreateNewAction;
-        internal static Action<InputActionsTreeViewItem> DuplicateAction => Duplicate;
+        internal static Action<InputActionsTreeViewItem> DuplicateAction => DuplicateActionItem;
+        internal static Action<InputActionMapsTreeViewItem> DuplicateActionMap => DuplicateActionMapItem;
 
         internal static void Initialize(VisualElement root, ActionsTreeView actionsTreeView)
         {
@@ -32,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
             treeViewItem.FocusOnRenameTextField();
         }
 
-        private static void RenameActionMapItem(InputActionsTreeViewItem treeViewItem)
+        private static void RenameActionMapItem(InputActionMapsTreeViewItem treeViewItem)
         {
             var index = m_ListView.itemsSource.IndexOf(treeViewItem.label.text);
             if (index < 0 || index >= m_ListView.itemsSource.Count)
@@ -41,9 +44,23 @@ namespace UnityEngine.InputSystem.Editor
             treeViewItem.FocusOnRenameTextField();
         }
 
-        private static void Delete(InputActionsTreeViewItem treeViewItem)
+        private static void DeleteActionItem(InputActionsTreeViewItem treeViewItem)
         {
             treeViewItem.DeleteItem();
+        }
+
+        private static void DeleteActionMapItem(InputActionMapsTreeViewItem treeViewItem)
+        {
+            treeViewItem.DeleteItem();
+        }
+
+        private static void CreateNewActionMap(InputActionMapsTreeViewItem item)
+        {
+            var index = m_ListView.itemsSource.IndexOf(item.label.text);
+            if (index < 0 || index >= m_ListView.itemsSource.Count)
+                return;
+            m_ListView.SetSelection(index);
+            m_ActionsTreeView.AddAction();
         }
 
         private static void CreateNewAction(InputActionsTreeViewItem item)
@@ -79,7 +96,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.AddComposite(action, "TwoModifiers");
         }
 
-        private static void Duplicate(InputActionsTreeViewItem inputActionsTreeViewItem)
+        private static void DuplicateActionMapItem(InputActionMapsTreeViewItem inputActionsTreeViewItem)
+        {
+            inputActionsTreeViewItem.DuplicateItem();
+        }
+        private static void DuplicateActionItem(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
             inputActionsTreeViewItem.DuplicateItem();
         }

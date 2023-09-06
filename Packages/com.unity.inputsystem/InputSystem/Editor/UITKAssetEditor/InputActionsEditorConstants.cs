@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.Editor
         public const string CompositeBindingPropertiesViewUxml = "/CompositeBindingPropertiesEditor.uxml";
         public const string CompositePartBindingPropertiesViewUxml = "/CompositePartBindingPropertiesEditor.uxml";
         public const string ControlSchemeEditorViewUxml = "/ControlSchemeEditor.uxml";
+        public const string InputActionMapsTreeViewItemUxml = "/InputActionMapsTreeViewItem.uxml";
         public const string InputActionsTreeViewItemUxml = "/InputActionsTreeViewItem.uxml";
 
         /// Classes
