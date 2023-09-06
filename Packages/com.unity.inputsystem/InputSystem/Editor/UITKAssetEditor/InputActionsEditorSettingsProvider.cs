@@ -40,6 +40,14 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
             m_StateContainer.Initialize();
+
+            // Hide the save / auto save buttons in the project wide input actions
+            var element = m_RootVisualElement.Q("save-asset-toolbar-container");
+            if (element != null)
+            {
+                element.style.visibility = Visibility.Hidden;
+                element.style.display = DisplayStyle.None;
+            }
         }
 
         [SettingsProvider]

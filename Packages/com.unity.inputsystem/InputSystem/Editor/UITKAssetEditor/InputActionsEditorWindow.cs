@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
             // At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
             // This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
             // UITK Editor is always be used for the Project Settings Editor regardless of this setting.
-            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditorForAllAssets, false);
+            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditorForAllAssets, true);
         }
     }
 
@@ -125,14 +125,6 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             var view = new InputActionsEditorView(rootVisualElement, stateContainer);
             stateContainer.Initialize();
-
-            // Hide the save / auto save buttons in the project wide input actions
-            var element = rootVisualElement.Q("save-asset-toolbar-container");
-            if (element != null)
-            {
-                element.style.visibility = Visibility.Hidden;
-                element.style.display = DisplayStyle.None;
-            }
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
