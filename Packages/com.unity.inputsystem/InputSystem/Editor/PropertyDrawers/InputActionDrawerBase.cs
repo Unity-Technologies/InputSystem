@@ -16,6 +16,9 @@ namespace UnityEngine.InputSystem.Editor
             return GetOrCreateViewData(property).TreeView.totalHeight;
         }
 
+#if !UNITY_2023_2_OR_NEWER 
+        [Obsolete("CanCacheInspectorGUI has been deprecated and is no longer used.", false)]
+#endif
         public override bool CanCacheInspectorGUI(SerializedProperty property)
         {
             return false;

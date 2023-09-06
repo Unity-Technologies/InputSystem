@@ -122,13 +122,17 @@ namespace UnityEngine.InputSystem.Editor
             var stateContainer = new StateContainer(rootVisualElement, m_State);
             stateContainer.StateChanged += OnStateChanged;
 
-            var theme = EditorGUIUtility.isProSkin
-                ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
-                : AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorLight.uss");
-
-            rootVisualElement.styleSheets.Add(theme);
+            rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             var view = new InputActionsEditorView(rootVisualElement, stateContainer);
             stateContainer.Initialize();
+
+            // Hide the save / auto save buttons in the project wide input actions
+            var element = rootVisualElement.Q("save-asset-toolbar-container");
+            if (element != null)
+            {
+                element.style.visibility = Visibility.Hidden;
+                element.style.display = DisplayStyle.None;
+            }
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
