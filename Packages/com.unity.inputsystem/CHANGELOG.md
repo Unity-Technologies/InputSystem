@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- Removed icons from action map list as these were always the same and the icon was placeholder
+
+
 ## [1.8.0-pre.1] - 2023-09-04
 
 ### Added
