@@ -314,7 +314,7 @@
                     "path": "<Keyboard>/enter",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Keyboard&Mouse",
                     "action": "Attack",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -347,7 +347,7 @@
                     "path": "<Keyboard>/leftShift",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Keyboard&Mouse",
                     "action": "Sprint",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -369,7 +369,7 @@
                     "path": "<XRController>/trigger",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "XR",
                     "action": "Sprint",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -446,7 +446,7 @@
                     "path": "<Gamepad>/buttonNorth",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": "Gamepad",
                     "action": "Interact",
                     "isComposite": false,
                     "isPartOfComposite": false

@@ -12,17 +12,25 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
         internal const string kAssetPath = "ProjectSettings/InputManager.asset";
-        internal const string kAssetName = "ProjectWideInputActions";
+        internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
         static string s_DefaultAssetPath = kDefaultAssetPath;
         static string s_AssetPath = kAssetPath;
 
-        // For Testing
+#if UNITY_INCLUDE_TESTS
         internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
         {
             s_DefaultAssetPath = defaultAssetPath;
             s_AssetPath = assetPath;
         }
+
+        internal static void Reset()
+        {
+            s_DefaultAssetPath = kDefaultAssetPath;
+            s_AssetPath = kAssetPath;
+        }
+
+#endif
 
         [InitializeOnLoadMethod]
         internal static void InstallProjectWideActions()
