@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
@@ -1227,6 +1229,49 @@ namespace UnityEngine.InputSystem
 
                 // Set interactions on binding.
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].interactions = interactions;
+                m_ActionMap.OnBindingModified();
+
+                return this;
+            }
+
+            /// <summary>
+            /// Remove the last instance of the matching interaction type from the list of interactions.
+            /// </summary>
+            /// <typeparam name="TInteraction"></typeparam>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException"></exception>
+            /// <remarks>
+            /// Be aware that this method will allocate managed memory due to interaction string parsing.
+            /// </remarks>
+            public BindingSyntax RemoveInteraction<TInteraction>() where TInteraction : IInputInteraction
+            {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
+
+                var interactionName = InputInteraction.s_Interactions.FindNameForType(typeof(TInteraction));
+                if (interactionName.IsEmpty())
+                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a interaction");
+
+                var interactionsString = m_ActionMap.m_Bindings[m_BindingIndexInMap].interactions;
+                if (string.IsNullOrEmpty(interactionsString))
+                    return this;
+
+                var nameAndParameters = NameAndParameters.ParseMultiple(interactionsString);
+                var interactions = nameAndParameters as List<NameAndParameters> ?? nameAndParameters.ToList();
+                var lastIndexOfInteraction = -1;
+                for (var i = interactions.Count - 1; i >= 0; i--)
+                {
+                    if (interactions[i].name == interactionName)
+                    {
+                        lastIndexOfInteraction = i;
+                        break;
+                    }
+                }
+
+                if (lastIndexOfInteraction != -1)
+                    interactions.RemoveAt(lastIndexOfInteraction);
+
+                m_ActionMap.m_Bindings[m_BindingIndexInMap].interactions = string.Join(NamedValue.Separator, interactions);
                 m_ActionMap.OnBindingModified();
 
                 return this;
