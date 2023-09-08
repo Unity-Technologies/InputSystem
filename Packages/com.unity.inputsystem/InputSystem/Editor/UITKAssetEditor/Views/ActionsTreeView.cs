@@ -179,8 +179,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
             m_ActionsTreeView.Rebuild();
             if (viewState.newElementID != -1)
+            {
                 m_ActionsTreeView.SetSelectionById(viewState.newElementID);
-            RenameNewAction(viewState.newElementID);
+                m_ActionsTreeView.ScrollToItemById(viewState.newElementID);
+            }
+            RenameNewAction(viewState.newElementID);;
             addActionButton.SetEnabled(viewState.actionMapCount > 0);
         }
 
