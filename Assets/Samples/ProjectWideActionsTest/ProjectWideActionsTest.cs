@@ -44,20 +44,20 @@ public class NewBehaviourScript : MonoBehaviour
             cube.GetComponent<Renderer>().material.color = Color.green;
         }
 
-        var moveVal = move.ReadValue<Vector2>();
-        if (moveVal.x < 0.0f)
+        // Project-Wide Actions via Source Generated type-safe API
+        if (InputActions.player.move.value.x < 0.0f)
         {
             cube.transform.Translate(new Vector3(-10 * Time.deltaTime, 0, 0));
         }
-        else if (moveVal.x > 0.0f)
+        else if (InputActions.player.move.value.x > 0.0f)
         {
             cube.transform.Translate(new Vector3(10 * Time.deltaTime, 0, 0));
         }
-        if (moveVal.y < 0.0f)
+        if (InputActions.player.move.value.y < 0.0f)
         {
             cube.transform.Translate(new Vector3(0, -10 * Time.deltaTime, 0));
         }
-        else if (moveVal.y > 0.0f)
+        else if (InputActions.player.move.value.y > 0.0f)
         {
             cube.transform.Translate(new Vector3(0, 10 * Time.deltaTime, 0));
         }
