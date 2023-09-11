@@ -16,12 +16,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         static EnableUITKEditor()
         {
-            // Controls whether the UITK version of the InputActionAsset Editor is enabled or not for
-            // editing standalone user Input Action assets.
-            // At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
-            // This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
-            // UITK Editor is always be used for the Project Settings Editor regardless of this setting.
-            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditorForAllAssets, true);
         }
     }
 
@@ -40,7 +34,7 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditorForAllAssets))
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
                 return false;
 
             var path = AssetDatabase.GetAssetPath(instanceId);
