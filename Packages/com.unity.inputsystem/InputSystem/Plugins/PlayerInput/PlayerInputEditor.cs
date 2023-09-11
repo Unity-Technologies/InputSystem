@@ -32,7 +32,8 @@ namespace UnityEngine.InputSystem.Editor
             InputUser.onChange += OnUserChange;
 
             // Look up properties.
-            m_ActionsProperty = serializedObject.FindProperty(nameof(PlayerInput.m_Actions));
+            m_ActionsAssetProperty = serializedObject.FindProperty(nameof(PlayerInput.m_ActionsProperty));
+            m_ActionsProperty = m_ActionsAssetProperty.FindPropertyRelative(nameof(PlayerInput.m_ActionsProperty.m_ActionsAsset));
             m_DefaultControlSchemeProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DefaultControlScheme));
             m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty(nameof(PlayerInput.m_NeverAutoSwitchControlSchemes));
             m_DefaultActionMapProperty = serializedObject.FindProperty(nameof(PlayerInput.m_DefaultActionMap));
@@ -72,7 +73,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Action config section.
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(m_ActionsProperty);
+            EditorGUILayout.PropertyField(m_ActionsAssetProperty);
+
             var actionsWereChanged = false;
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
             {
@@ -359,7 +361,7 @@ namespace UnityEngine.InputSystem.Editor
                     builder.Append(PlayerInput.ControlsChangedMessage);
 
                     var playerInput = (PlayerInput)target;
-                    var asset = playerInput.m_Actions;
+                    var asset = playerInput.m_ActionsProperty.m_ActionsAsset;
                     if (asset != null)
                     {
                         foreach (var action in asset)
@@ -551,6 +553,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent[] m_ActionMapOptions;
 
         [NonSerialized] private SerializedProperty m_ActionsProperty;
+        [NonSerialized] private SerializedProperty m_ActionsAssetProperty;
         [NonSerialized] private SerializedProperty m_DefaultControlSchemeProperty;
         [NonSerialized] private SerializedProperty m_DefaultActionMapProperty;
         [NonSerialized] private SerializedProperty m_NeverAutoSwitchControlSchemesProperty;
