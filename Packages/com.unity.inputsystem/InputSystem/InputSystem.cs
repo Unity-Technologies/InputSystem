@@ -3032,13 +3032,7 @@ namespace UnityEngine.InputSystem
                     return s_projectWideActions;
 
                 #if UNITY_EDITOR
-                // Load the InputActionsAsset and store it in EditorBuildSettings so it can be packed in Player builds
                 s_projectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(s_projectWideActions)))
-                {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                        s_projectWideActions, true);
-                }
                 #else
                 s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
                 #endif
@@ -3055,14 +3049,6 @@ namespace UnityEngine.InputSystem
 
                 if (s_projectWideActions == value)
                     return;
-
-                #if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
-                {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                        value, true);
-                }
-                #endif
 
                 s_projectWideActions?.Disable();
                 s_projectWideActions = value;
