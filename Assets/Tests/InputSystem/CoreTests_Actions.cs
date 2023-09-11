@@ -529,7 +529,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1337,6 +1337,59 @@ partial class CoreTests
         Assert.That(action.controls, Is.EquivalentTo(new InputControl[] {gamepad.leftStick, mouse.delta}));
     }
 
+    // ReSharper disable once ClassNeverInstantiated.Local
+    private class ConstantFloatTestProcessor : InputProcessor<float>
+    {
+        public const float EXPECTED_VALUE = 0.5f;
+        public override float Process(float value, InputControl control)
+        {
+            return EXPECTED_VALUE;
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActiveBindingsHaveCorrectBindingIndicesAfterBindingResolution()
+    {
+        // Attaching a processor to a particular binding is how
+        // we test that we are correctly referencing the same binding
+        // from before and after the binding resolution.
+        // This is a tricky issue to tease out. Testing with just ReadValue(),
+        // with the control (i.e. mouse.leftButton) or with action callbacks
+        // could all appear correct because those don't actually use bindingIndex.
+        // This issue originally manifested itself as an assert in another place in the code.
+        InputSystem.RegisterProcessor<ConstantFloatTestProcessor>();
+
+        // This test is sensitive to binding order.
+        // It's important that the active binding is not in the first
+        // position of the action (i.e. not at the default index).
+        var map = new InputActionMap("map");
+        var action = map.AddAction("action1", binding: "<Gamepad>/buttonSouth");
+        action.AddBinding("<Mouse>/leftButton").WithProcessor<ConstantFloatTestProcessor>(); // binding in 2nd position.
+        map.Enable();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
+
+        // Put the action into an active state using the 2nd binding.
+        Press(mouse.leftButton);
+        Assert.That(action.activeControl, Is.SameAs(mouse.leftButton));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(ConstantFloatTestProcessor.EXPECTED_VALUE));
+
+        // Perform binding resolution while the action is active.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Assert.That(action.activeControl, Is.SameAs(mouse.leftButton));
+
+        // Check the active control is still triggered by the 2nd binding (with the processor attached).
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(ConstantFloatTestProcessor.EXPECTED_VALUE));
+
+        // Perform binding resolution again.
+        // This would cause an assert if the binding indices were incorrect
+        // as the binding resolver would choke on the bad data at this point.
+        InputSystem.RemoveDevice(gamepad);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanDisableAndEnableOtherAction_FromCallback()
@@ -2049,7 +2102,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2303,7 +2356,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -2595,7 +2648,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -3120,7 +3173,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3568,7 +3621,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
 #endif
 
         var action = new InputAction(binding: "<Gamepad>/leftStick");
@@ -3816,7 +3869,7 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4708,7 +4761,7 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4856,8 +4909,8 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
-#endif
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
+ #endif
 
         var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");
 
@@ -4918,7 +4971,7 @@ partial class CoreTests
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var actionMap = new InputActionMap("map");
@@ -4949,8 +5002,8 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();  // Worked in Standalone
-        InputActionState.DestroyAllActionMapStates(); // Also remove controls so the changed control count is accurate
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 #endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -5020,12 +5073,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdate_InProgressActionsKeepGoing()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
-        // Causes: "[Assert] Could not find active control after binding resolution"
-        // when RemoveDevice() called
-        InputSystem.actions.Disable();
-#endif
         currentTime = 0;
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -5145,7 +5192,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
 #endif
 
         var action1 = new InputAction(name: "a");
@@ -9789,7 +9836,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
@@ -9864,7 +9911,7 @@ partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions?.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         // Give us known parameters for tap detection.
