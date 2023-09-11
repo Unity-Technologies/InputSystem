@@ -19,14 +19,12 @@ namespace UnityEngine.InputSystem.Editor
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                out m_ProjectWideActions);
-
+            m_ProjectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
             if (m_ProjectWideActions != null)
             {
-                if (!preloadedAssets.Contains(InputSystem.actions))
+                if (!preloadedAssets.Contains(m_ProjectWideActions))
                 {
-                    ArrayHelpers.Append(ref preloadedAssets, InputSystem.actions);
+                    ArrayHelpers.Append(ref preloadedAssets, m_ProjectWideActions);
                     PlayerSettings.SetPreloadedAssets(preloadedAssets);
                 }
             }
