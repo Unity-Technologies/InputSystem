@@ -145,15 +145,34 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, PostSaveAction);
             stateContainer.Initialize();
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
             DirtyInputActionsEditorWindow(newState);
+
             if (InputEditorUserSettings.autoSaveInputActionAssets)
-                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                Save();
+        }
+
+        private void UpdateWindowTitle()
+        {
+            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
+        }
+
+        private void Save()
+        {
+            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            PostSaveAction();
+        }
+
+        private void PostSaveAction()
+        {
+            m_IsDirty = false;
+            m_AssetJson = File.ReadAllText(m_AssetPath);
+            UpdateWindowTitle();
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
@@ -162,7 +181,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_IsDirty == isWindowDirty)
                 return;
             m_IsDirty = isWindowDirty;
-            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
+            UpdateWindowTitle();
         }
 
         private bool HasAssetChanged(SerializedObject serializedAsset)
@@ -187,7 +206,7 @@ namespace UnityEngine.InputSystem.Editor
             switch (result)
             {
                 case 0:     // Save
-                    InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                    Save();
                     break;
                 case 1:    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();

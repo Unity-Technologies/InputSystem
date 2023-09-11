@@ -13,6 +13,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
 
+### Changed
+- Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
+
 ## [1.8.0-pre.1] - 2023-09-04
 
 ### Added

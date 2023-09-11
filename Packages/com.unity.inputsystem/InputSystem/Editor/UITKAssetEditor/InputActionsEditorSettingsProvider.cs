@@ -29,8 +29,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
-                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            // Project wide input actions always auto save - don't check the asset auto save status
+            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
         }
 
         private void BuildUI()
@@ -38,10 +38,11 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
             m_StateContainer.StateChanged += OnStateChanged;
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
+            new InputActionsEditorView(m_RootVisualElement, m_StateContainer, null);
             m_StateContainer.Initialize();
 
             // Hide the save / auto save buttons in the project wide input actions
+            // Project wide input actions always auto save
             var element = m_RootVisualElement.Q("save-asset-toolbar-container");
             if (element != null)
             {
