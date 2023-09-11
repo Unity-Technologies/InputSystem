@@ -95,6 +95,11 @@ namespace UnityEngine.InputSystem.Android
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidSensor")
                     .WithCapability("sensorType", AndroidSensorType.AmbientTemperature));
+            InputSystem.RegisterLayout<AndroidGameRotationVector>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(kAndroidInterface)
+                    .WithDeviceClass("AndroidSensor")
+                    .WithCapability("sensorType", AndroidSensorType.GameRotationVector));
             InputSystem.RegisterLayout<AndroidStepCounter>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)

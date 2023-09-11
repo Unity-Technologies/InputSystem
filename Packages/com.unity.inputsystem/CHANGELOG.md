@@ -10,8 +10,19 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
+
 ### Changed
 - Changed `InputActionProperty` property drawer to be more compact. A new setting was added to the Project Settings window to switch between different drawing modes, which includes the original method if preferred.
+
+## [1.8.0-pre.1] - 2023-09-04
+
+### Added
+- Initial version of Project Wide Actions for pre-release (`InputSystem.actions`). This feature is available only on Unity Editor versions 2022.3 and above and can be modified in the Project Settings.
+
+### Fixed
+- Fixed device selection menu not responding to mouse clicks when trying to add a device in a Control Scheme ([case ISXB-622](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-622)).
 
 ## [1.7.0] - 2023-08-14
 

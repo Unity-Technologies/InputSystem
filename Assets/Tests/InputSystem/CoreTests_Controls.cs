@@ -478,6 +478,16 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // The presence of any enabled actions means we have installed StateChangeMonitors
+        // which interferes with this test. Essentially when we update the device state
+        // and invalidate the cache (make it stale), immediately afterwards we
+        // call NotifyControlStateChanged for each of the actions which _may_ cause a Read()
+        // on the control and make it immediately cached (non-stale) again.
+        InputSystem.actions?.Disable();
+#endif
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // read all values to initially mark everything as cached

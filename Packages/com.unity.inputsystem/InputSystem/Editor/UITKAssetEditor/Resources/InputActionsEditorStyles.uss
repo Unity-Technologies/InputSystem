@@ -7,7 +7,7 @@
 }
 
 .body-panel-container {
-    min-width: auto;
+    min-width: 150px;
     border-top-width: 1px;
     border-left-color: rgb(25, 25, 25);
     border-right-color: rgb(25, 25, 25);
@@ -164,8 +164,17 @@
 }
 
 .search-field {
+    /* hide while not implemented */
+    display: none;
     width: 190px;
 }
+
+#save-asset-toolbar-container
+{
+    /* hide while always autosaving in project wide settings */
+    display: none;
+}
+
 
 .unity-two-pane-split-view__dragline-anchor {
     background-color: rgb(25, 25, 25);

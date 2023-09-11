@@ -2837,6 +2837,18 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_LeavingPlayMode_DestroysAllActionStates()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // With Project-wide Actions `InputSystem.actions`, we begin with some initial ActionState
+        // Disabling Project-wide actions so that we begin from zero.
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates();
+#endif
+
+        // Initial state
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(0));
+
         InputSystem.AddDevice<Gamepad>();
 
         // Enter play mode.
