@@ -96,6 +96,21 @@ Use the gravity sensor to determine the direction of the gravity vector relative
 
 Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
 
+**Note**: On Android devices, there are two types of attitude sensors: [**RotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [**GameRotationVector**](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR). Some Android devices have both types of sensor, while other devices may only have one or the other type available. These two types of attitude sensor behave slightly differently to each other. You can [read about the differences between them here](https://developer.android.com/guide/topics/sensors/sensors_position#sensors-pos-gamerot). Because of this variety in what type of rotation sensors are available across devices, when you require input from a rotation sensor on Android devices, you should include code that checks for your preferred type of rotation sensor with a fallback to the alternative type of rotation sensor if it is not present. For example:
+
+```CSharp
+AttitudeSensor attitudeSensor = InputSystem.GetDevice<AndroidRotationVector>();
+if (attitudeSensor == null)
+{
+    attitudeSensor = InputSystem.GetDevice<AndroidGameRotationVector>();
+    if (attitudeSensor == null)
+       Debug.LogError("AttitudeSensor is not available");
+}
+
+if (attitudeSensor != null)
+    InputSystem.EnableDevice(attitudeSensor);
+```
+
 ## <a name="linearaccelerationsensor"></a>[`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html)
 
 Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (see `GravitySensor`). Values are affected by the [__Compensate Orientation__](Settings.md#compensate-orientation) setting.
