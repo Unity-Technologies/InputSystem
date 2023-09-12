@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Editor
                         InputActionsEditorWindow.OpenEditor(inputActionAsset);
                     else
 #endif
-                        InputActionEditorWindow.OpenEditor(inputActionAsset);
+                    InputActionEditorWindow.OpenEditor(inputActionAsset);
                 }
             }
 
