@@ -107,7 +107,7 @@ namespace UnityEngine.InputSystem.Editor
         private static InputActionAsset CreateNewActionAsset()
         {
             var templateAssetPath = Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath);
-            var projectAssetPath = Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath);
+            var projectAssetPath = Path.Combine(Environment.CurrentDirectory, s_AssetPath);
             File.Copy(templateAssetPath, projectAssetPath);
 
             return LoadFromProjectSettings();
