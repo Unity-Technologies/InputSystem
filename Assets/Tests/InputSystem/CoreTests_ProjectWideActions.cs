@@ -163,7 +163,7 @@ internal partial class CoreTests
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
 
         // Disabling works
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable();
         enabledActions = InputSystem.ListEnabledActions();
         Assert.That(enabledActions, Has.Count.EqualTo(1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
