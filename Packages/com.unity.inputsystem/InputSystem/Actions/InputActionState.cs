@@ -551,6 +551,7 @@ namespace UnityEngine.InputSystem
                 newActionState.pressedInUpdate = oldActionState.pressedInUpdate;
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
+                newActionState.bindingIndex = oldActionState.bindingIndex;
 
                 if (oldActionState.phase != InputActionPhase.Disabled)
                 {
@@ -628,6 +629,7 @@ namespace UnityEngine.InputSystem
                     // so we can simply look on the binding for where the control is now.
                     var newControlIndex = FindControlIndexOnBinding(bindingIndex, control);
 
+                    // This assert is used by test: Actions_ActiveBindingsHaveCorrectBindingIndicesAfterBindingResolution
                     Debug.Assert(newControlIndex != kInvalidIndex, "Could not find active control after binding resolution");
                     if (newControlIndex != kInvalidIndex)
                     {
