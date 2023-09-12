@@ -100,6 +100,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             inputActionsTreeViewItem.DuplicateItem();
         }
+
         private static void DuplicateActionItem(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
             inputActionsTreeViewItem.DuplicateItem();
