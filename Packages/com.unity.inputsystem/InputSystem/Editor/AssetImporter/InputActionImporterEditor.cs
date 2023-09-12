@@ -35,7 +35,14 @@ namespace UnityEngine.InputSystem.Editor
             using (new EditorGUI.DisabledScope(inputActionAsset == null))
             {
                 if (GUILayout.Button("Edit asset"))
-                    InputActionEditorWindow.OpenEditor(inputActionAsset);
+                {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                    if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
+                        InputActionsEditorWindow.OpenEditor(inputActionAsset);
+                    else
+#endif
+                        InputActionEditorWindow.OpenEditor(inputActionAsset);
+                }
             }
 
             EditorGUILayout.Space();

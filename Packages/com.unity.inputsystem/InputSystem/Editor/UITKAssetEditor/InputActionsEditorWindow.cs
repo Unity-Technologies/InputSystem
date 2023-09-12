@@ -67,11 +67,23 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
+            OpenWindow(asset, actionMapToSelect, actionToSelect);
+            return true;
+        }
+
+        private static InputActionsEditorWindow OpenWindow(InputActionAsset asset, string actionMapToSelect = null, string actionToSelect = null)
+        {
+            int instanceId = asset.GetInstanceID();
+
+            ////REVIEW: It'd be great if the window got docked by default but the public EditorWindow API doesn't allow that
+            ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
+            ////        only way to get programmatic docking with the current API).
+            // See if we have an existing editor window that has the asset open.
             var window = GetOrCreateWindow(instanceId, out var isAlreadyOpened);
             if (isAlreadyOpened)
             {
                 window.Focus();
-                return true;
+                return window;
             }
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
@@ -80,7 +92,18 @@ namespace UnityEngine.InputSystem.Editor
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.Show();
 
-            return true;
+            return window;
+        }
+
+        /// <summary>
+        /// Open the specified <paramref name="asset"/> in an editor window. Used when someone hits the "Edit Asset" button in the
+        /// importer inspector.
+        /// </summary>
+        /// <param name="asset">The InputActionAsset to open.</param>
+        /// <returns>The editor window.</returns>
+        public static InputActionsEditorWindow OpenEditor(InputActionAsset asset)
+        {
+            return OpenWindow(asset, null, null);
         }
 
         private static InputActionsEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
