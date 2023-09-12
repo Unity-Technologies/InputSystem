@@ -14,9 +14,7 @@ namespace Unity.InputSystem.SourceGenerators
     [Generator]
     public class GlobalInputActionsSourceGenerator : ISourceGenerator
     {
-        //@TODO: This needs a JSON file
-        //@TODO: This is pointing to the template at the moment (The active user file is InputManager.asset, which is not JSON)
-        private const string GlobalActionsAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
+        private const string ActionsAssetPath = "ProjectSettings/InputSystemActions.inputactions";
 
         // Entry assembly is null in VS IDE
         // At build time, it is `csc` or `VBCSCompiler`
@@ -48,14 +46,14 @@ namespace Unity.InputSystem.SourceGenerators
             }
 
             var projectPath = additionalFile.GetText().ToString();
-            var globalActionsAssetPath = Path.Combine(projectPath, GlobalActionsAssetPath);
-            if (!File.Exists(globalActionsAssetPath))
+            var actionsAssetPath = Path.Combine(projectPath, ActionsAssetPath);
+            if (!File.Exists(actionsAssetPath))
             {
-                Console.Error.Write($"Global input actions asset file not found at '{globalActionsAssetPath}'.");
+                Console.Error.Write($"Project input actions asset file not found at '{actionsAssetPath}'.");
                 return;
             }
 
-            using var fileStream = new FileStream(globalActionsAssetPath, FileMode.Open);
+            using var fileStream = new FileStream(actionsAssetPath, FileMode.Open);
             InputActionAsset inputActionAssetNullable = default;
             try
             {
@@ -73,7 +71,7 @@ namespace Unity.InputSystem.SourceGenerators
             catch (Exception)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("ISGEN002", "", $"Couldn't parse global input actions asset.", "InputSystemSourceGenerator",
+                    new DiagnosticDescriptor("ISGEN002", "", $"Couldn't parse project input actions asset.", "InputSystemSourceGenerator",
                         DiagnosticSeverity.Error, true), null));
                 return;
             }
@@ -120,9 +118,9 @@ namespace Unity.InputSystem.SourceGenerators
                 """;
             source += " }";
 
-            context.AddSource($"InputSystemGlobalActionsSourceGenerator_{GetStableHashCode(source)}.g.cs", SourceText.From(source, Encoding.UTF8));
+            context.AddSource($"InputSystemProjectActionsSourceGenerator_{GetStableHashCode(source)}.g.cs", SourceText.From(source, Encoding.UTF8));
 
-            File.WriteAllText(Path.Combine(projectPath, "temp\\InputSystemGlobalActionsSourceGenerator.g.cs"), source);
+            File.WriteAllText(Path.Combine(projectPath, "temp\\InputSystemProjectActionsSourceGenerator.g.cs"), source);
         }
 
         private string GenerateInputActionWrapper(InputAction inputAction)

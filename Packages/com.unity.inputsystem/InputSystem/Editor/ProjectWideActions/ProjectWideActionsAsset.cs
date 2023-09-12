@@ -4,18 +4,20 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
     internal static class ProjectWideActionsAsset
     {
         internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
-        internal const string kAssetPath = "ProjectSettings/InputManager.asset";
+        internal const string kInputManagerAssetPath = "ProjectSettings/InputManager.asset";
+        internal const string kAssetPath = "ProjectSettings/InputSystemActions.inputactions";
         internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
         static string s_DefaultAssetPath = kDefaultAssetPath;
         static string s_AssetPath = kAssetPath;
+
+        public static string assetPath => s_AssetPath;
 
 #if UNITY_INCLUDE_TESTS
         internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
@@ -38,69 +40,77 @@ namespace UnityEngine.InputSystem.Editor
             GetOrCreate();
         }
 
-        internal static InputActionAsset GetOrCreate()
+        internal static InputActionAsset LoadFromProjectSettings()
         {
-            var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
+            string text;
+            try
+            {
+                text = File.ReadAllText(s_AssetPath);
+            }
+            catch
+            {
+                return null;
+            }
+
+            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+            asset.name = kAssetName;
+            try
+            {
+                asset.LoadFromJson(text);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"Could not parse input actions in JSON format from '{s_AssetPath}' ({exception})");
+                Object.DestroyImmediate(asset);
+                return null;
+            }
+            return asset;
+        }
+
+        internal static InputActionAsset LoadFromInputManagerSettings()
+        {
+            var objects = AssetDatabase.LoadAllAssetsAtPath(kInputManagerAssetPath);
             if (objects != null)
             {
                 var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
                 if (inputActionsAsset != null)
                     return inputActionsAsset;
             }
+            return null;
+        }
 
+        internal static InputActionAsset GetOrCreate()
+        {
+            InputActionAsset asset;
+
+            asset = LoadFromProjectSettings();
+            if (asset != null) return asset;
+
+            // v1.8.0-pre1 stored the Actions in ProjectSettings/InputManager.asset.
+            // Check if we have a project that was saved on that version and migrate it
+            asset = LoadFromInputManagerSettings();
+            if (asset != null)
+            {
+                // Migrate the pre1 asset
+                var assetJson = asset.ToJson();
+                File.WriteAllText(s_AssetPath, assetJson);
+
+                // Load from the newly migrated asset.
+                asset = LoadFromProjectSettings();
+                if (asset != null) return asset;
+            }
+
+            // Create a new one if we couldn't find any existing one to load.
             return CreateNewActionAsset();
         }
 
         private static InputActionAsset CreateNewActionAsset()
         {
-            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath));
+            var templateAssetPath = Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath);
+            var projectAssetPath = Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath);
+            File.Copy(templateAssetPath, projectAssetPath);
 
-            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.LoadFromJson(json);
-            asset.name = kAssetName;
-
-            AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
-
-            // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
-            var maps = asset.actionMaps;
-            foreach (var map in maps)
-            {
-                // Make sure action map has GUID.
-                if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
-                    map.GenerateId();
-
-                // Make sure all actions have GUIDs.
-                foreach (var action in map.actions)
-                {
-                    var actionId = action.m_Id;
-                    if (string.IsNullOrEmpty(actionId) || asset.actionMaps.Sum(m => m.actions.Count(a => a.m_Id == actionId)) > 1)
-                        action.GenerateId();
-                }
-
-                // Make sure all bindings have GUIDs.
-                for (var i = 0; i < map.m_Bindings.LengthSafe(); ++i)
-                {
-                    var bindingId = map.m_Bindings[i].m_Id;
-                    if (string.IsNullOrEmpty(bindingId) || asset.actionMaps.Sum(m => m.bindings.Count(b => b.m_Id == bindingId)) > 1)
-                        map.m_Bindings[i].GenerateId();
-                }
-            }
-
-            // Create sub-asset for each action. This is so that users can select individual input actions from the asset when they're
-            // trying to assign to a field that accepts only one action.
-            foreach (var map in maps)
-            {
-                foreach (var action in map.actions)
-                {
-                    var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
-                    actionReference.Set(action);
-                    AssetDatabase.AddObjectToAsset(actionReference, asset);
-                }
-            }
-
-            AssetDatabase.SaveAssets();
-
-            return asset;
+            return LoadFromProjectSettings();
         }
     }
 }
