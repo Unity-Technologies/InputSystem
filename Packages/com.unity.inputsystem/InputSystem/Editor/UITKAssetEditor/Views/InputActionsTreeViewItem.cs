@@ -1,6 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -15,10 +15,12 @@ namespace UnityEngine.InputSystem.Editor
     {
         public EventCallback<string> EditTextFinishedCallback;
         public EventCallback<int> DeleteCallback;
+        public EventCallback<int> DuplicateCallback;
 
         private const string kRenameTextField = "rename-text-field";
         public event EventCallback<string> EditTextFinished;
         public event EventCallback<int> OnDeleteItem;
+        public event EventCallback<int> OnDuplicateItem;
 
         private bool m_IsEditing;
 
@@ -103,6 +105,11 @@ namespace UnityEngine.InputSystem.Editor
         public void DeleteItem()
         {
             OnDeleteItem?.Invoke(0);
+        }
+
+        public void DuplicateItem()
+        {
+            OnDuplicateItem?.Invoke(0);
         }
 
         private void OnEditTextFinished()

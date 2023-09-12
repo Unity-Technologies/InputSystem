@@ -751,6 +751,11 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCustomizeButtonPressPointsOfInteractions()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
+#endif
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var pressAction = new InputAction("PressAction", binding: "<Gamepad>/leftTrigger", interactions: "press(pressPoint=0.234)");

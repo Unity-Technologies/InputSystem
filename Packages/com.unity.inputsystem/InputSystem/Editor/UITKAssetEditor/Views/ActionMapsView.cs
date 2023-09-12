@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -22,27 +22,30 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.bindItem = (element, i) =>
             {
-                var treeViewItem = (InputActionsTreeViewItem)element;
+                var treeViewItem = (InputActionMapsTreeViewItem)element;
                 treeViewItem.label.text = (string)m_ListView.itemsSource[i];
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.DeleteCallback = _ => DeleteActionMap(i);
+                treeViewItem.DuplicateCallback = _ => DuplicateActionMap(i);
                 treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
+                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
 
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
-            m_ListView.makeItem = () => new InputActionsTreeViewItem();
+            m_ListView.makeItem = () => new InputActionMapsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
-                var treeViewElement = (InputActionsTreeViewItem)element;
+                var treeViewElement = (InputActionMapsTreeViewItem)element;
                 treeViewElement.Reset();
                 treeViewElement.OnDeleteItem -= treeViewElement.DeleteCallback;
+                treeViewElement.OnDuplicateItem -= treeViewElement.DuplicateCallback;
                 treeViewElement.EditTextFinished -= treeViewElement.EditTextFinishedCallback;
             };
 
             m_ListView.itemsChosen += objects =>
             {
-                var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionsTreeViewItem>();
+                var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionMapsTreeViewItem>();
                 item.FocusOnRenameTextField();
             };
 
@@ -79,13 +82,18 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
+            ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
             m_EnterRenamingMode = false;
         }
 
         private void DeleteActionMap(int index)
         {
             Dispatch(Commands.DeleteActionMap(index));
+        }
+
+        private void DuplicateActionMap(int index)
+        {
+            Dispatch(Commands.DuplicateActionMap(index));
         }
 
         private void ChangeActionMapName(int index, string newName)
@@ -114,13 +122,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnKeyDownEventForRename()
         {
-            var item = (InputActionsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             item.FocusOnRenameTextField();
         }
 
         private void OnKeyDownEventForDelete()
         {
-            var item = (InputActionsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             item.DeleteItem();
         }
 

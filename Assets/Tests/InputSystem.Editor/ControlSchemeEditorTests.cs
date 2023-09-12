@@ -1,5 +1,6 @@
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 
@@ -210,9 +211,8 @@ public class ControlSchemesEditorTests
         var asset = TestData.inputActionAsset.WithControlScheme(TestData.controlScheme).Generate();
         var state = TestData.EditorStateWithAsset(asset).Generate().With(selectedControlScheme: asset.controlSchemes[0]);
 
-
+        state.serializedObject.Update();
         var newState = ControlSchemeCommands.DuplicateSelectedControlScheme()(in state);
-
 
         Assert.That(newState.selectedControlScheme.name, Is.EqualTo(state.selectedControlScheme.name + "1"));
         Assert.That(newState.selectedControlScheme.deviceRequirements, Is.EqualTo(state.selectedControlScheme.deviceRequirements));

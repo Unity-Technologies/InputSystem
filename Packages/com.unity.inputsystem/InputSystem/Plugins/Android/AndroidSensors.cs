@@ -84,6 +84,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         // RotationVector - OK
         // RelativeHumidity - no alternative in old system
         // AmbientTemperature - no alternative in old system
+        // GameRotationVector - no alternative in old system
         // StepCounter - no alternative in old system
         // GeomagneticRotationVector - no alternative in old system
         // HeartRate - no alternative in old system
@@ -100,6 +101,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "attitude", layout = "Quaternion", processors = "AndroidCompensateRotation", variants = "RotationVector")]
         [InputControl(name = "relativeHumidity", layout = "Axis", variants = "RelativeHumidity")]
         [InputControl(name = "ambientTemperature", layout = "Axis", variants = "AmbientTemperature")]
+        [InputControl(name = "attitude", layout = "Quaternion", processors = "AndroidCompensateRotation", variants = "GameRotationVector")]
         [InputControl(name = "stepCounter", layout = "Integer", variants = "StepCounter")]
         [InputControl(name = "rotation", layout = "Quaternion", processors = "AndroidCompensateRotation", variants = "GeomagneticRotationVector")]
         [InputControl(name = "rate", layout = "Axis", variants = "HeartRate")]
@@ -254,6 +256,15 @@ namespace UnityEngine.InputSystem.Android
     /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_AMBIENT_TEMPERATURE"/>
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature", hideInUI = true)]
     public class AndroidAmbientTemperature : AmbientTemperatureSensor
+    {
+    }
+
+    /// <summary>
+    /// Game rotation vector sensor device on Android.
+    /// </summary>
+    /// <seealso href="https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR"/>
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "GameRotationVector", hideInUI = true)]
+    public class AndroidGameRotationVector : AttitudeSensor
     {
     }
 

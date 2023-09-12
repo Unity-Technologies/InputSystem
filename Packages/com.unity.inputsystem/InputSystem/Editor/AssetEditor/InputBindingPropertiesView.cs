@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
 using UnityEngine.InputSystem.Layouts;
@@ -102,9 +103,185 @@ namespace UnityEngine.InputSystem.Editor
                     }
                 }
 
+                // Show the specific controls which match the current path
+                DrawMatchingControlPaths();
+
                 // Control scheme matrix.
                 DrawUseInControlSchemes();
             }
+        }
+
+        /// <summary>
+        /// Used to keep track of which foldouts are expanded.
+        /// </summary>
+        private static bool showMatchingLayouts = false;
+        private static Dictionary<string, bool> showMatchingChildLayouts = new Dictionary<string, bool>();
+
+        /// <summary>
+        /// Finds all registered control paths implemented by concrete classes which match the current binding path and renders it.
+        /// </summary>
+        private void DrawMatchingControlPaths()
+        {
+            var path = m_ControlPathEditor.pathProperty.stringValue;
+            if (path == string.Empty)
+                return;
+
+            var deviceLayoutPath = InputControlPath.TryGetDeviceLayout(path);
+            var parsedPath = InputControlPath.Parse(path).ToArray();
+
+            // If the provided path is parseable into device and control components, draw UI which shows control layouts that match the path.
+            if (parsedPath.Length >= 2 && !string.IsNullOrEmpty(deviceLayoutPath))
+            {
+                bool matchExists = false;
+
+                var rootDeviceLayout = EditorInputControlLayoutCache.TryGetLayout(deviceLayoutPath);
+                bool isValidDeviceLayout = deviceLayoutPath == InputControlPath.Wildcard || (rootDeviceLayout != null && !rootDeviceLayout.isOverride && !rootDeviceLayout.hideInUI);
+                // Exit early if a malformed device layout was provided,
+                if (!isValidDeviceLayout)
+                    return;
+
+                bool controlPathUsagePresent = parsedPath[1].usages.Count() > 0;
+                bool hasChildDeviceLayouts = deviceLayoutPath == InputControlPath.Wildcard || EditorInputControlLayoutCache.HasChildLayouts(rootDeviceLayout.name);
+
+                // If the path provided matches exactly one control path (i.e. has no ui-facing child device layouts or uses control usages), then exit early
+                if (!controlPathUsagePresent && !hasChildDeviceLayouts)
+                    return;
+
+                // Otherwise, we will show either all controls that match the current binding (if control usages are used)
+                // or all controls in derived device layouts (if a no control usages are used).
+                EditorGUILayout.BeginVertical();
+                showMatchingLayouts = EditorGUILayout.Foldout(showMatchingLayouts, "Derived Bindings");
+
+                if (showMatchingLayouts)
+                {
+                    // If our control path contains a usage, make sure we render the binding that belongs to the root device layout first
+                    if (deviceLayoutPath != InputControlPath.Wildcard && controlPathUsagePresent)
+                    {
+                        matchExists |= DrawMatchingControlPathsForLayout(rootDeviceLayout, in parsedPath, true);
+                    }
+                    // Otherwise, just render the bindings that belong to child device layouts. The binding that matches the root layout is
+                    // already represented by the user generated control path itself.
+                    else
+                    {
+                        IEnumerable<InputControlLayout> matchedChildLayouts = Enumerable.Empty<InputControlLayout>();
+                        if (deviceLayoutPath == InputControlPath.Wildcard)
+                        {
+                            matchedChildLayouts = EditorInputControlLayoutCache.allLayouts
+                                .Where(x => x.isDeviceLayout && !x.hideInUI && !x.isOverride && x.isGenericTypeOfDevice && x.baseLayouts.Count() == 0).OrderBy(x => x.displayName);
+                        }
+                        else
+                        {
+                            matchedChildLayouts = EditorInputControlLayoutCache.TryGetChildLayouts(rootDeviceLayout.name);
+                        }
+
+                        foreach (var childLayout in matchedChildLayouts)
+                        {
+                            matchExists |= DrawMatchingControlPathsForLayout(childLayout, in parsedPath);
+                        }
+                    }
+
+                    // Otherwise, indicate that no layouts match the current path.
+                    if (!matchExists)
+                    {
+                        if (controlPathUsagePresent)
+                            EditorGUILayout.HelpBox("No registered controls match this current binding. Some controls are only registered at runtime.", MessageType.Warning);
+                        else
+                            EditorGUILayout.HelpBox("No other registered controls match this current binding. Some controls are only registered at runtime.", MessageType.Warning);
+                    }
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the deviceLayout or any of its children has controls which match the provided parsed path. exist matching registered control paths.
+        /// </summary>
+        /// <param name="deviceLayout">The device layout to draw control paths for</param>
+        /// <param name="parsedPath">The parsed path containing details of the Input Controls that can be matched</param>
+        private bool DrawMatchingControlPathsForLayout(InputControlLayout deviceLayout, in InputControlPath.ParsedPathComponent[] parsedPath, bool isRoot = false)
+        {
+            string deviceName = deviceLayout.displayName;
+            string controlName = string.Empty;
+            bool matchExists = false;
+
+            for (int i = 0; i < deviceLayout.m_Controls.Length; i++)
+            {
+                ref InputControlLayout.ControlItem controlItem = ref deviceLayout.m_Controls[i];
+                if (InputControlPath.MatchControlComponent(ref parsedPath[1], ref controlItem, true))
+                {
+                    // If we've already located a match, append a ", " to the control name
+                    // This is to accomodate cases where multiple control items match the same path within a single device layout
+                    // Note, some controlItems have names but invalid displayNames (i.e. the Dualsense HID > leftTriggerButton)
+                    // There are instance where there are 2 control items with the same name inside a layout definition, however they are not
+                    // labeled significantly differently.
+                    // The notable example is that the Android Xbox and Android Dualshock layouts have 2 d-pad definitions, one is a "button"
+                    // while the other is an axis.
+                    controlName += matchExists ? $", {controlItem.name}" : controlItem.name;
+
+                    // if the parsePath has a 3rd component, try to match it with items in the controlItem's layout definition.
+                    if (parsedPath.Length == 3)
+                    {
+                        var controlLayout = EditorInputControlLayoutCache.TryGetLayout(controlItem.layout);
+                        if (controlLayout.isControlLayout && !controlLayout.hideInUI)
+                        {
+                            for (int j = 0; j < controlLayout.m_Controls.Count(); j++)
+                            {
+                                ref InputControlLayout.ControlItem controlLayoutItem = ref controlLayout.m_Controls[j];
+                                if (InputControlPath.MatchControlComponent(ref parsedPath[2], ref controlLayoutItem))
+                                {
+                                    controlName += $"/{controlLayoutItem.name}";
+                                    matchExists = true;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        matchExists = true;
+                    }
+                }
+            }
+
+            IEnumerable<InputControlLayout> matchedChildLayouts = EditorInputControlLayoutCache.TryGetChildLayouts(deviceLayout.name);
+
+            // If this layout does not have a match, or is the top level root layout,
+            // skip over trying to draw any items for it, and immediately try processing the child layouts
+            if (!matchExists)
+            {
+                foreach (var childLayout in matchedChildLayouts)
+                {
+                    matchExists |= DrawMatchingControlPathsForLayout(childLayout, in parsedPath);
+                }
+            }
+            // Otherwise, draw the items for it, and then only process the child layouts if the foldout is expanded.
+            else
+            {
+                bool showLayout = false;
+                EditorGUI.indentLevel++;
+                if (matchedChildLayouts.Count() > 0 && !isRoot)
+                {
+                    showMatchingChildLayouts.TryGetValue(deviceName, out showLayout);
+                    showMatchingChildLayouts[deviceName] = EditorGUILayout.Foldout(showLayout, $"{deviceName} > {controlName}");
+                }
+                else
+                {
+                    EditorGUILayout.LabelField($"{deviceName} > {controlName}");
+                }
+
+                showLayout |= isRoot;
+
+                if (showLayout)
+                {
+                    foreach (var childLayout in matchedChildLayouts)
+                    {
+                        DrawMatchingControlPathsForLayout(childLayout, in parsedPath);
+                    }
+                }
+                EditorGUI.indentLevel--;
+            }
+
+            return matchExists;
         }
 
         /// <summary>

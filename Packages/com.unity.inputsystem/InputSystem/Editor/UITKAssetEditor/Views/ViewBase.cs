@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
 
@@ -18,8 +18,6 @@ namespace UnityEngine.InputSystem.Editor
 
     internal abstract class ViewBase<TViewState> : IView
     {
-        public event Action<ViewBase<TViewState>> OnClosing;
-
         protected ViewBase(StateContainer stateContainer)
         {
             this.stateContainer = stateContainer;
@@ -54,11 +52,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ChildViews.Add(view);
             return view;
-        }
-
-        public void Close()
-        {
-            OnClosing?.Invoke(this);
         }
 
         public void DestroyChildView<TView>(TView view) where TView : IView
