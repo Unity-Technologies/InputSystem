@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine;
 
 public partial class @SimpleControls: IInputActionCollection2, IDisposable
 {
@@ -165,6 +166,11 @@ public partial class @SimpleControls: IInputActionCollection2, IDisposable
         m_gameplay_fire = m_gameplay.FindAction("fire", throwIfNotFound: true);
         m_gameplay_move = m_gameplay.FindAction("move", throwIfNotFound: true);
         m_gameplay_look = m_gameplay.FindAction("look", throwIfNotFound: true);
+    }
+
+    ~@SimpleControls()
+    {
+        Debug.Assert(!m_gameplay.enabled, "This will cause a leak and performance issues, SimpleControls.gameplay.Disable() has not been called.");
     }
 
     public void Dispose()

@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine;
 
 public partial class @InputActionCodeGeneratorActions: IInputActionCollection2, IDisposable
 {
@@ -78,6 +79,11 @@ public partial class @InputActionCodeGeneratorActions: IInputActionCollection2, 
         m_gameplay = asset.FindActionMap("gameplay", throwIfNotFound: true);
         m_gameplay_action1 = m_gameplay.FindAction("action1", throwIfNotFound: true);
         m_gameplay_action2 = m_gameplay.FindAction("action2", throwIfNotFound: true);
+    }
+
+    ~@InputActionCodeGeneratorActions()
+    {
+        Debug.Assert(!m_gameplay.enabled, "This will cause a leak and performance issues, InputActionCodeGeneratorActions.gameplay.Disable() has not been called.");
     }
 
     public void Dispose()
