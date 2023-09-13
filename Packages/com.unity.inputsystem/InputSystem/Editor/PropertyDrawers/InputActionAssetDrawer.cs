@@ -1,3 +1,5 @@
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -65,3 +67,5 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
+
+#endif
