@@ -5,7 +5,7 @@ using UnityEditor;
 namespace UnityEngine.InputSystem.Editor
 {
     [CustomPropertyDrawer(typeof(InputActionAsset))]
-    public class InputActionAssetDrawer : PropertyDrawer
+    internal class InputActionAssetDrawer : PropertyDrawer
     {
         static readonly string[] k_ActionsTypeOptions = new[] { "Project-Wide Actions", "Actions Asset" };
 
