@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine;
 
 namespace UnityEngine.InputSystem.Samples.InGameHints
 {
@@ -270,6 +271,11 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
             m_Gameplay_PickUp = m_Gameplay.FindAction("PickUp", throwIfNotFound: true);
             m_Gameplay_Drop = m_Gameplay.FindAction("Drop", throwIfNotFound: true);
             m_Gameplay_Throw = m_Gameplay.FindAction("Throw", throwIfNotFound: true);
+        }
+
+        ~@InGameHintsActions()
+        {
+            Debug.Assert(!m_Gameplay.enabled, "This will cause a leak and performance issues, InGameHintsActions.Gameplay.Disable() has not been called.");
         }
 
         public void Dispose()
