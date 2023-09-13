@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
@@ -313,22 +312,22 @@ namespace UnityEngine.InputSystem
             {
                 if (!m_ActionsInitialized && gameObject.activeInHierarchy)
                     InitializeActions();
-                return m_ActionsProperty.m_ActionsAsset;
+                return m_Actions;
             }
             set
             {
-                if (m_ActionsProperty.m_ActionsAsset == value)
+                if (m_Actions == value)
                     return;
 
                 // Make sure that if we already have actions, they get disabled.
-                if (m_ActionsProperty.m_ActionsAsset != null)
+                if (m_Actions != null)
                 {
-                    m_ActionsProperty.m_ActionsAsset.Disable();
+                    m_Actions.Disable();
                     if (m_ActionsInitialized)
                         UninitializeActions();
                 }
 
-                m_ActionsProperty.m_ActionsAsset = value;
+                m_Actions = value;
 
                 if (m_Enabled)
                 {
@@ -739,13 +738,13 @@ namespace UnityEngine.InputSystem
                 if (m_UIInputModule == value)
                     return;
 
-                if (m_UIInputModule != null && m_UIInputModule.actionsAsset == m_ActionsProperty.m_ActionsAsset)
+                if (m_UIInputModule != null && m_UIInputModule.actionsAsset == m_Actions)
                     m_UIInputModule.actionsAsset = null;
 
                 m_UIInputModule = value;
 
-                if (m_UIInputModule != null && m_ActionsProperty.m_ActionsAsset != null)
-                    m_UIInputModule.actionsAsset = m_ActionsProperty.m_ActionsAsset;
+                if (m_UIInputModule != null && m_Actions != null)
+                    m_UIInputModule.actionsAsset = m_Actions;
             }
         }
         #endif
@@ -849,7 +848,7 @@ namespace UnityEngine.InputSystem
 
             // If we have no current action map but there's a default
             // action map, make it current.
-            if (m_CurrentActionMap == null && m_ActionsProperty.m_ActionsAsset != null && !string.IsNullOrEmpty(m_DefaultActionMap))
+            if (m_CurrentActionMap == null && m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
                 SwitchCurrentActionMap(m_DefaultActionMap);
             else
                 m_CurrentActionMap?.Enable();
@@ -967,17 +966,17 @@ namespace UnityEngine.InputSystem
             }
 
             // Must have actions.
-            if (m_ActionsProperty.m_ActionsAsset == null)
+            if (m_Actions == null)
             {
                 Debug.LogError($"Cannot switch to actions '{mapNameOrId}'; no actions set on PlayerInput", this);
                 return;
             }
 
             // Must have map.
-            var actionMap = m_ActionsProperty.m_ActionsAsset.FindActionMap(mapNameOrId);
+            var actionMap = m_Actions.FindActionMap(mapNameOrId);
             if (actionMap == null)
             {
-                Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_ActionsProperty.m_ActionsAsset}'", this);
+                Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_Actions}'", this);
                 return;
             }
 
@@ -1132,7 +1131,7 @@ namespace UnityEngine.InputSystem
         }
 
         [Tooltip("Input actions associated with the player.")]
-        [SerializeField] internal InputActionAssetProperty m_ActionsProperty;
+        [SerializeField] internal InputActionAsset m_Actions;
         [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [Tooltip("UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.")]
@@ -1194,20 +1193,20 @@ namespace UnityEngine.InputSystem
         {
             if (m_ActionsInitialized)
                 return;
-            if (m_ActionsProperty.m_ActionsAsset == null)
+            if (m_Actions == null)
                 return;
 
             // Check if we need to duplicate our actions by looking at all other players. If any
             // has the same actions, duplicate.
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
-                if (s_AllActivePlayers[i].m_ActionsProperty.m_ActionsAsset == m_ActionsProperty.m_ActionsAsset && s_AllActivePlayers[i] != this)
+                if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
-                    var oldActions = m_ActionsProperty.m_ActionsAsset;
-                    m_ActionsProperty.m_ActionsAsset = Instantiate(m_ActionsProperty.m_ActionsAsset);
+                    var oldActions = m_Actions;
+                    m_Actions = Instantiate(m_Actions);
                     for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
                     {
                         for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
-                            m_ActionsProperty.m_ActionsAsset.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+                            m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
                     }
 
                     break;
@@ -1215,7 +1214,7 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
-                uiInputModule.actionsAsset = m_ActionsProperty.m_ActionsAsset;
+                uiInputModule.actionsAsset = m_Actions;
             #endif
 
             switch (m_NotificationBehavior)
@@ -1243,7 +1242,7 @@ namespace UnityEngine.InputSystem
                                 continue;
 
                             // Find action for event.
-                            var action = m_ActionsProperty.m_ActionsAsset.FindAction(id);
+                            var action = m_Actions.FindAction(id);
                             if (action == null)
                                 continue;
 
@@ -1263,7 +1262,7 @@ namespace UnityEngine.InputSystem
         {
             if (!m_ActionsInitialized)
                 return;
-            if (m_ActionsProperty.m_ActionsAsset == null)
+            if (m_Actions == null)
                 return;
 
             UninstallOnActionTriggeredHook();
@@ -1277,7 +1276,7 @@ namespace UnityEngine.InputSystem
                         continue;
 
                     // Find action for event.
-                    var action = m_ActionsProperty.m_ActionsAsset.FindAction(id);
+                    var action = m_Actions.FindAction(id);
                     if (action != null)
                     {
                         ////REVIEW: really wish we had a single callback
@@ -1296,14 +1295,14 @@ namespace UnityEngine.InputSystem
         {
             if (m_ActionTriggeredDelegate == null)
                 m_ActionTriggeredDelegate = OnActionTriggered;
-            foreach (var actionMap in m_ActionsProperty.m_ActionsAsset.actionMaps)
+            foreach (var actionMap in m_Actions.actionMaps)
                 actionMap.actionTriggered += m_ActionTriggeredDelegate;
         }
 
         private void UninstallOnActionTriggeredHook()
         {
             if (m_ActionTriggeredDelegate != null)
-                foreach (var actionMap in m_ActionsProperty.m_ActionsAsset.actionMaps)
+                foreach (var actionMap in m_Actions.actionMaps)
                     actionMap.actionTriggered -= m_ActionTriggeredDelegate;
         }
 
@@ -1354,7 +1353,7 @@ namespace UnityEngine.InputSystem
 
         private void CacheMessageNames()
         {
-            if (m_ActionsProperty.m_ActionsAsset == null)
+            if (m_Actions == null)
                 return;
 
             if (m_ActionMessageNames != null)
@@ -1362,7 +1361,7 @@ namespace UnityEngine.InputSystem
             else
                 m_ActionMessageNames = new Dictionary<string, string>();
 
-            foreach (var action in m_ActionsProperty.m_ActionsAsset)
+            foreach (var action in m_Actions)
             {
                 action.MakeSureIdIsInPlace();
 
@@ -1387,7 +1386,7 @@ namespace UnityEngine.InputSystem
 
             // All our input goes through actions so there's no point setting
             // anything up if we have none.
-            if (m_ActionsProperty.m_ActionsAsset == null)
+            if (m_Actions == null)
             {
                 // If we have devices we are meant to pair with, do so.  Otherwise, don't
                 // do anything as we don't know what kind of input to look for.
@@ -1406,17 +1405,17 @@ namespace UnityEngine.InputSystem
             }
 
             // If we have control schemes, try to find the one we should use.
-            if (m_ActionsProperty.m_ActionsAsset.controlSchemes.Count > 0)
+            if (m_Actions.controlSchemes.Count > 0)
             {
                 if (!string.IsNullOrEmpty(s_InitControlScheme))
                 {
                     // We've been given a control scheme to initialize this. Try that one and
                     // that one only. Might mean we end up with missing devices.
 
-                    var controlScheme = m_ActionsProperty.m_ActionsAsset.FindControlScheme(s_InitControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(s_InitControlScheme);
                     if (controlScheme == null)
                     {
-                        Debug.LogError($"No control scheme '{s_InitControlScheme}' in '{m_ActionsProperty.m_ActionsAsset}'", this);
+                        Debug.LogError($"No control scheme '{s_InitControlScheme}' in '{m_Actions}'", this);
                     }
                     else
                     {
@@ -1427,10 +1426,10 @@ namespace UnityEngine.InputSystem
                 {
                     // There's a control scheme we should try by default.
 
-                    var controlScheme = m_ActionsProperty.m_ActionsAsset.FindControlScheme(m_DefaultControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(m_DefaultControlScheme);
                     if (controlScheme == null)
                     {
-                        Debug.LogError($"Cannot find default control scheme '{m_DefaultControlScheme}' in '{m_ActionsProperty.m_ActionsAsset}'", this);
+                        Debug.LogError($"Cannot find default control scheme '{m_DefaultControlScheme}' in '{m_Actions}'", this);
                     }
                     else
                     {
@@ -1446,7 +1445,7 @@ namespace UnityEngine.InputSystem
                     // want to pick any one control scheme that is the best match for the devices we have regardless of whether
                     // we'll need additional devices. TryToActivateControlScheme will take care of that.
                     var controlScheme = InputControlScheme.FindControlSchemeForDevices(
-                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_ActionsProperty.m_ActionsAsset.controlSchemes,
+                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes,
                         allowUnsuccesfulMatch: true);
                     if (controlScheme != null)
                         TryToActivateControlScheme(controlScheme.Value);
@@ -1458,7 +1457,7 @@ namespace UnityEngine.InputSystem
                 {
                     using (var availableDevices = InputUser.GetUnpairedInputDevices())
                     {
-                        var controlScheme = InputControlScheme.FindControlSchemeForDevices(availableDevices, m_ActionsProperty.m_ActionsAsset.controlSchemes);
+                        var controlScheme = InputControlScheme.FindControlSchemeForDevices(availableDevices, m_Actions.controlSchemes);
                         if (controlScheme != null)
                             TryToActivateControlScheme(controlScheme.Value);
                     }
@@ -1496,15 +1495,15 @@ namespace UnityEngine.InputSystem
 
             // If we don't have a valid user at this point, we don't have any paired devices.
             if (m_InputUser.valid)
-                m_InputUser.AssociateActionsWithUser(m_ActionsProperty.m_ActionsAsset);
+                m_InputUser.AssociateActionsWithUser(m_Actions);
         }
 
         private bool HaveBindingForDevice(InputDevice device)
         {
-            if (m_ActionsProperty.m_ActionsAsset == null)
+            if (m_Actions == null)
                 return false;
 
-            var actionMaps = m_ActionsProperty.m_ActionsAsset.actionMaps;
+            var actionMaps = m_Actions.actionMaps;
             for (var i = 0; i < actionMaps.Count; ++i)
             {
                 var actionMap = actionMaps[i];
@@ -1519,8 +1518,8 @@ namespace UnityEngine.InputSystem
         {
             if (m_InputUser.valid)
                 m_InputUser.UnpairDevicesAndRemoveUser();
-            if (m_ActionsProperty.m_ActionsAsset != null)
-                m_ActionsProperty.m_ActionsAsset.devices = null;
+            if (m_Actions != null)
+                m_Actions.devices = null;
         }
 
         private bool TryToActivateControlScheme(InputControlScheme controlScheme)
@@ -1643,7 +1642,7 @@ namespace UnityEngine.InputSystem
             // In single player, set up for automatic device switching.
             if (isSinglePlayer)
             {
-                if (m_ActionsProperty.m_ActionsAsset != null && m_ActionsProperty.m_ActionsAsset.controlSchemes.Count == 0)
+                if (m_Actions != null && m_Actions.controlSchemes.Count == 0)
                 {
                     // No control schemes. We pick up whatever is compatible with the bindings
                     // we have.
@@ -1857,7 +1856,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             var player = all[0];
-            var actions = player.m_ActionsProperty.m_ActionsAsset;
+            var actions = player.m_Actions;
             if (actions == null)
                 return;
 
@@ -1881,7 +1880,7 @@ namespace UnityEngine.InputSystem
                     availableDevices.Add(currentDevices[i]);
 
                 // Find the best control scheme to use.
-                if (InputControlScheme.FindControlSchemeForDevices(availableDevices, player.m_ActionsProperty.m_ActionsAsset.controlSchemes,
+                if (InputControlScheme.FindControlSchemeForDevices(availableDevices, player.m_Actions.controlSchemes,
                     out var controlScheme, out var matchResult, mustIncludeDevice: device))
                 {
                     try
@@ -1918,7 +1917,7 @@ namespace UnityEngine.InputSystem
             // single-player mode, pair the device to the player if it works with the bindings we have.
             if (change == InputDeviceChange.Added &&
                 isSinglePlayer &&
-                m_ActionsProperty.m_ActionsAsset != null && m_ActionsProperty.m_ActionsAsset.controlSchemes.Count == 0 &&
+                m_Actions != null && m_Actions.controlSchemes.Count == 0 &&
                 HaveBindingForDevice(device) &&
                 m_InputUser.valid)
             {
