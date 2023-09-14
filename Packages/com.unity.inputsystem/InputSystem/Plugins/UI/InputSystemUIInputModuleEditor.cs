@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             {
                 foreach (var action in actions)
                 {
-                    if (action.action!=null && string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    if (action.action != null && string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return action;
                 }
             }
