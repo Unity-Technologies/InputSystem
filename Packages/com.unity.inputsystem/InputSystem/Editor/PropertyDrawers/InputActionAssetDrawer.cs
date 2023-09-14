@@ -4,6 +4,21 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    /// <summary>
+    /// Enum describing the asset option selected.
+    /// </summary>
+    enum AssetOptions
+    {
+        [InspectorName("Project-Wide Actions")]
+        ProjectWideActions,
+        ActionsAsset
+    }
+
+    /// <summary>
+    /// Property drawer for <see cref="InputActionAsset"/>.
+    /// </summary>
+    /// This property drawer allows for choosing the action asset field as either project-wide actions or
+    /// a user created actions asset
     [CustomPropertyDrawer(typeof(InputActionAsset))]
     internal class InputActionAssetDrawer : PropertyDrawer
     {
@@ -14,10 +29,10 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginProperty(position, label, property);
 
             var isAssetProjectWideActions = IsAssetProjectWideActions(property);
-            var selectedAssetOptionIndex = isAssetProjectWideActions ? 0 : 1;
+            var selectedAssetOptionIndex = isAssetProjectWideActions ? AssetOptions.ProjectWideActions : AssetOptions.ActionsAsset;
 
             // Draw dropdown menu to select between using project-wide actions or an action asset
-            var selected = EditorGUILayout.Popup(new GUIContent("Actions"), selectedAssetOptionIndex, k_ActionsTypeOptions);
+            var selected = (AssetOptions)EditorGUILayout.EnumPopup(new GUIContent("Actions"), selectedAssetOptionIndex);
 
             // Update property in case there's a change in the dropdown popup
             if (selectedAssetOptionIndex != selected)
@@ -28,7 +43,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Show relevant UI elements depending on the option selected
             // In case project-wide actions are selected, the object picker is not shown.
-            if (selectedAssetOptionIndex == 1)
+            if (selectedAssetOptionIndex == AssetOptions.ActionsAsset)
             {
                 EditorGUILayout.PropertyField(property, label, true);
             }
@@ -36,9 +51,9 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.EndProperty();
         }
 
-        static void UpdatePropertyWithSelectedOption(SerializedProperty assetProperty, int selected)
+        static void UpdatePropertyWithSelectedOption(SerializedProperty assetProperty, AssetOptions selected)
         {
-            if (selected == 0)
+            if (selected == AssetOptions.ProjectWideActions)
             {
                 assetProperty.objectReferenceValue = ProjectWideActionsAsset.GetOrCreate();
             }
