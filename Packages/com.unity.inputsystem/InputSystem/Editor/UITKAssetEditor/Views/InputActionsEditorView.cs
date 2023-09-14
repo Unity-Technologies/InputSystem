@@ -13,10 +13,13 @@ namespace UnityEngine.InputSystem.Editor
         private const string saveButtonId = "save-asset-toolbar-button";
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
+        Action m_PostSaveAction;
+
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction)
             : base(stateContainer)
         {
             m_Root = root;
+            m_PostSaveAction = mpostSaveAction;
             BuildUI();
         }
 
@@ -64,12 +67,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnSaveButton()
         {
-            Dispatch(Commands.SaveAsset());
+            Dispatch(Commands.SaveAsset(m_PostSaveAction));
         }
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
         {
-            Dispatch(Commands.ToggleAutoSave(evt.newValue));
+            Dispatch(Commands.ToggleAutoSave(evt.newValue, m_PostSaveAction));
         }
 
         public override void RedrawUI(ViewState viewState)
