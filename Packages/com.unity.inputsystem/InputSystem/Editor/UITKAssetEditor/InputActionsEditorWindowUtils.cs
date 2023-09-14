@@ -20,7 +20,10 @@ namespace UnityEngine.InputSystem.Editor
                 : AssetDatabase.GetAssetPath(asset);
 
             if (string.IsNullOrEmpty(assetPath))
+            {
+                Debug.LogError("InputActions Asset Editor tried to save without an asset path");
                 return;
+            }
 
             var assetJson = asset.ToJson();
             var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : "";

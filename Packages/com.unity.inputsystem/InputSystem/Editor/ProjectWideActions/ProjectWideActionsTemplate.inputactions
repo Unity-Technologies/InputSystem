@@ -1,5 +1,6 @@
 {
-    "name": "ProjectWideActions",
+    "_comment": "name must match ProjectWideActionsAsset.kAssetName",
+    "name": "ProjectWideInputActions",
     "maps": [
         {
             "name": "Player",
