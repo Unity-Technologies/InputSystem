@@ -25,7 +25,7 @@ Tutorials on how to use the Input System are available as part of:
     - [Simple Demo](Assets/Samples/SimpleDemo) - Shows how to set up a simple character controller using actions, action asset as well as using the `PlayerInput` component.
     - [Simple Multiplayer](Assets/Samples/SimpleMultiplayer) - Demonstrates a basic split-screen local multiplayer setup where players can join by pressing buttons on the supported devices to join the game.
     - [UI vs Game Input](Assets/Samples/UIvsGameInput) - Illustrates how to handle input and resolve ambiguities that arise when overlaying UI elements in the game-view.
-    - [Visualizers](Assets/Samples/Visualizers) - Provides various input data visualizations for common devices. 
+    - [Visualizers](Assets/Samples/Visualizers) - Provides various input data visualizations for common devices.
 
 ## How to use a released versions of the package within a Unity project
 
@@ -38,21 +38,20 @@ To test out the latest (unreleased) changes:
 1. Clone [develop](https://github.com/Unity-Technologies/InputSystem/tree/develop). The intention is to always keep the `develop` branch in a releasable state, but it reflects current development and may contain bugs or unexpected behavior that was not present in the latest released version.
 2. Add the local package to your project by following the steps described in [Unity Manual - Installing a package from a local folder](https://docs.unity3d.com/Manual/upm-ui-local.html) and select `Packages/com.unity.inputsystem/package.json`.
 
-## Recommended way of developing the Input System 
+## Recommended way of developing the Input System
 
-1. Clone [develop](https://github.com/Unity-Technologies/InputSystem/tree/develop) or the desired branch or release tag. 
+1. Clone [develop](https://github.com/Unity-Technologies/InputSystem/tree/develop) or the desired branch or release tag.
 2. Open the root folder of the repository in the Unity Editor. This way you have access to tests and samples that are excluded when importing only the package into another Unity project.
 
-During development, run Input System automated tests by selecting `Window > General > Test Runner` to access the Test Runner and select `Run All` for `PlayMode` or `EditMode` tests. 
+During development, run Input System automated tests by selecting `Window > General > Test Runner` to access the Test Runner and select `Run All` for `PlayMode` or `EditMode` tests.
 
 ## Contribution & Feedback
-This project is developed by Unity Technologies but welcomes user contributions and feedback. 
+This project is developed by Unity Technologies but welcomes user contributions and feedback.
 
-If you have any feedback or questions about Unity's Input System, you are invited to join us on the [Unity Forums](https://forum.unity.com/forums/new-input-system.103/). 
+If you have any feedback or questions about Unity's Input System, you are invited to join us on the [Unity Forums](https://forum.unity.com/forums/new-input-system.103/).
 
 If you want to contribute to the development of the Input System see [CONTRIBUTIONS.md](https://github.com/Unity-Technologies/InputSystem/blob/develop/CONTRIBUTIONS.md) for additional information.
 
 ## License
 
 This package is distributed under the [Unity Companion License for Unity-dependent projects](LICENSE.md) license with addition of [third party licenses](Third%20Party%20Notices.md) which applies to the [Assets/Samples/RebindingUI](Assets/Samples/RebindingUI) example project specifically.
-

@@ -500,6 +500,7 @@ internal class AndroidTests : CoreTestsFixture
     [TestCase(typeof(AndroidRotationVector))]
     [TestCase(typeof(AndroidRelativeHumidity))]
     [TestCase(typeof(AndroidAmbientTemperature))]
+    [TestCase(typeof(AndroidGameRotationVector))]
     [TestCase(typeof(AndroidStepCounter))]
     public void Devices_CanCreateAndroidSensors(Type type)
     {
@@ -592,6 +593,7 @@ internal class AndroidTests : CoreTestsFixture
     [Test]
     [Category("Devices")]
     [TestCase("AndroidRotationVector", "attitude")]
+    [TestCase("AndroidGameRotationVector", "attitude")]
     public void Devices_SupportSensorsWithQuaternionControl(string layoutName, string controlName)
     {
         var device = InputSystem.AddDevice(layoutName);

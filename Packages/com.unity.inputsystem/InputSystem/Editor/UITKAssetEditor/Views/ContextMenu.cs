@@ -14,15 +14,15 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string add_positiveNegative_Binding_String = "Add Positive\\Negative Binding";
         private static readonly string add_oneModifier_Binding_String = "Add Binding With One Modifier";
         private static readonly string add_twoModifier_Binding_String = "Add Binding With Two Modifiers";
-        public static void GetContextMenuForActionMapItem(InputActionsTreeViewItem treeViewItem)
+        public static void GetContextMenuForActionMapItem(InputActionMapsTreeViewItem treeViewItem)
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
-                menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateAction.Invoke(treeViewItem));
+                menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateActionMap.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(rename_String, _ => InputActionViewsControlsHolder.RenameActionMap.Invoke(treeViewItem));
-                AppendDuplicateAction(menuEvent, treeViewItem);
-                AppendDeleteAction(menuEvent, treeViewItem);
+                AppendDuplicateActionMap(menuEvent, treeViewItem);
+                AppendDeleteActionMap(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }
 
@@ -58,6 +58,16 @@ namespace UnityEngine.InputSystem.Editor
                 AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
+        }
+
+        private static void AppendDeleteActionMap(ContextualMenuPopulateEvent menuEvent, InputActionMapsTreeViewItem treeViewItem)
+        {
+            menuEvent.menu.AppendAction(delete_String, _ => { InputActionViewsControlsHolder.DeleteActionMap.Invoke(treeViewItem); });
+        }
+
+        private static void AppendDuplicateActionMap(ContextualMenuPopulateEvent menuEvent, InputActionMapsTreeViewItem treeViewItem)
+        {
+            menuEvent.menu.AppendAction(duplicate_String, _ => { InputActionViewsControlsHolder.DuplicateActionMap.Invoke(treeViewItem); });
         }
 
         private static void AppendDeleteAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem)
