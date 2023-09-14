@@ -19,6 +19,9 @@ namespace UnityEngine.InputSystem.Editor
                 ? ProjectWideActionsAsset.assetPath
                 : AssetDatabase.GetAssetPath(asset);
 
+            if (string.IsNullOrEmpty(assetPath))
+                return;
+
             var assetJson = asset.ToJson();
             var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : "";
             if (assetJson != existingJson)
