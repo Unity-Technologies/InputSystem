@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             {
                 foreach (var action in actions)
                 {
-                    if (string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    if (action.action!=null && string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return action;
                 }
             }
@@ -184,6 +184,8 @@ namespace UnityEngine.InputSystem.UI.Editor
         {
             // return 0 instead of -1 here because the zero-th index refers to the 'None' binding.
             if (inputAction == null)
+                return 0;
+            if (m_AvailableActionReferencesInAssetDatabase == null)
                 return 0;
 
             var index = 0;
