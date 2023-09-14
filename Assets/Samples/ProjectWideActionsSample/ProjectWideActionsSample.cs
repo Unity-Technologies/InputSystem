@@ -1,8 +1,8 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
-namespace UnityEngine.InputSystem.Samples.ProjectWideActionsTest
+namespace UnityEngine.InputSystem.Samples.ProjectWideActionsSample
 {
-    public class ProjectWideActionsTest : MonoBehaviour
+    public class ProjectWideActionsSample : MonoBehaviour
     {
         [SerializeField] public GameObject cube;
 
