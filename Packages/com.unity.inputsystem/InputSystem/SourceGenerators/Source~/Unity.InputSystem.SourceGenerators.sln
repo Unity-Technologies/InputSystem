@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.InputSystem.SourceGenerators", "SourceGenerators\Unity.InputSystem.SourceGenerators.csproj", "{6215306F-B2A2-44C2-9B97-3A38B97B324D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputSystemActionsAPIGenerator", "SourceGenerators\InputSystemActionsAPIGenerator.csproj", "{6215306F-B2A2-44C2-9B97-3A38B97B324D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

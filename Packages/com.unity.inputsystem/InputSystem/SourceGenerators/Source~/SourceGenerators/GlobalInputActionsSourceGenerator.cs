@@ -1,7 +1,8 @@
 using System;
+using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Text.Json;
@@ -9,73 +10,106 @@ using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Unity.InputSystem.SourceGenerators
+[Generator]
+public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
 {
-    [Generator]
-    public class GlobalInputActionsSourceGenerator : ISourceGenerator
+    const string kActionsAssetPath = "ProjectSettings/InputSystemActions.inputactions";
+
+    public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
-        private const string ActionsAssetPath = "ProjectSettings/InputSystemActions.inputactions";
+        // Get the additional file paths
+        IncrementalValuesProvider<AdditionalText> additionalTexts = initContext.AdditionalTextsProvider;
+        IncrementalValuesProvider<string> transformed = additionalTexts.Select(static (text, _) => text.Path);
+        IncrementalValueProvider<ImmutableArray<string>> collected = transformed.Collect();
 
-        // Entry assembly is null in VS IDE
-        // At build time, it is `csc` or `VBCSCompiler`
-        private static bool IsBuildTime => Assembly.GetEntryAssembly() != null;
-
-        public void Initialize(GeneratorInitializationContext context)
+        initContext.RegisterSourceOutput(collected, static (sourceProductionContext, filePaths) =>
         {
-            if (IsBuildTime)
-                context.RegisterForSyntaxNotifications(() => new InputActionsSyntaxReceiver());
-        }
+            Execute(sourceProductionContext, filePaths);
+        });
+    }
 
-// Code formatter does not like raw literals
-//*begin-nonstandard-formatting*
-        public void Execute(GeneratorExecutionContext context)
+    static void Execute(SourceProductionContext context, ImmutableArray<string> additionalFilePaths)
+    {
+        try
         {
-            // only run at build time
-            if (!IsBuildTime)
-                return;
-
-            // This should never be caught
             context.CancellationToken.ThrowIfCancellationRequested();
 
-            var additionalFile = context.AdditionalFiles.FirstOrDefault();
-            if (additionalFile == null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("ISGEN001", "Additional files not specified.", "", "InputSystemSourceGenerator", DiagnosticSeverity.Error, true, "No additional files were specified."), null));
-                return;
-            }
-
-            var projectPath = additionalFile.GetText().ToString();
-            var actionsAssetPath = Path.Combine(projectPath, ActionsAssetPath);
+            var projectPath = GetProjectFilePath(context, additionalFilePaths);
+            var actionsAssetPath = Path.Combine(projectPath, kActionsAssetPath);
             if (!File.Exists(actionsAssetPath))
-            {
-                Console.Error.Write($"Project input actions asset file not found at '{actionsAssetPath}'.");
                 return;
-            }
 
-            using var fileStream = new FileStream(actionsAssetPath, FileMode.Open);
-            InputActionAsset inputActionAssetNullable = default;
-            try
-            {
-                inputActionAssetNullable = JsonSerializer.Deserialize<InputActionAsset>(
-                    fileStream,
-                    new JsonSerializerOptions
+            context.CancellationToken.ThrowIfCancellationRequested();
+            InputActionAsset asset = ParseInputActionsAsset(context, actionsAssetPath);
+            var source = BuildActionAssetSource(asset);
+
+            context.CancellationToken.ThrowIfCancellationRequested();
+            context.AddSource($"InputSystemProjectActions.g.cs", SourceText.From(source, Encoding.UTF8));
+            File.WriteAllText(Path.Combine(projectPath, "temp//InputSystemProjectActionsSourceGenerator.g.cs"), source);
+        }
+        catch (Exception exception)
+        {
+            if (exception is OperationCanceledException)
+                throw;
+        }
+    }
+
+    // First additional file should be "AdditionalFile.txt" and it's contents contains the project path
+    static string GetProjectFilePath(SourceProductionContext context, ImmutableArray<string> additionalFilePaths)
+    {
+        var firstAdditionalFilePath = additionalFilePaths.FirstOrDefault();
+        if (firstAdditionalFilePath == null)
+        {
+            // @TODO: Why additional paths are empty but only for the IDE?
+            return "/opt/UnitySrc/InputSystem/project-wide-actions-phase2";
+            // context.ReportDiagnostic(Diagnostic.Create(
+            //     new DiagnosticDescriptor("ISGEN001", "Additional files not specified.", "",
+            //         "InputSystemSourceGenerator", DiagnosticSeverity.Error, true,
+            //         "No additional files were specified."), null));
+            //
+            // throw new FileNotFoundException("Missing AdditionalFile.txt");
+        }
+
+        return File.ReadAllText(firstAdditionalFilePath);
+    }
+
+    static InputActionAsset ParseInputActionsAsset(SourceProductionContext context, string assetPath)
+    {
+        try
+        {
+            using var fileStream = new FileStream(assetPath, FileMode.Open);
+            InputActionAsset inputActionAssetNullable = JsonSerializer.Deserialize<InputActionAsset>(
+                fileStream,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    IncludeFields = true,
+                    Converters =
                     {
-                        PropertyNameCaseInsensitive = true,
-                        IncludeFields = true,
-                        Converters ={
-                            new JsonStringEnumConverter()
-                        }
-                    });
-            }
-            catch (Exception)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("ISGEN002", "", $"Couldn't parse project input actions asset.", "InputSystemSourceGenerator",
-                        DiagnosticSeverity.Error, true), null));
-                return;
-            }
+                        new JsonStringEnumConverter()
+                    }
+                });
 
+            return inputActionAssetNullable;
+        }
+        catch (Exception exception)
+        {
+            if (exception is OperationCanceledException)
+                throw;
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                new DiagnosticDescriptor("ISGEN002", "", $"Couldn't parse project input actions asset.",
+                    "InputSystemSourceGenerator",
+                    DiagnosticSeverity.Error, true), null));
+
+            throw;
+        }
+    }
+
+    // Code formatter does not like raw literals
+    //*begin-nonstandard-formatting*
+        static string BuildActionAssetSource(InputActionAsset asset)
+        {
             var source =
 """
 // <auto-generated/>
@@ -88,8 +122,7 @@ namespace Unity.InputSystem.SourceGenerators
     {
 
 """;
-
-            var inputActionAsset = inputActionAssetNullable;
+            var inputActionAsset = asset;
             foreach (var actionMap in inputActionAsset.Maps)
             {
                 source +=
@@ -118,33 +151,15 @@ namespace Unity.InputSystem.SourceGenerators
                 """;
             source += " }";
 
-            context.AddSource($"InputSystemProjectActionsSourceGenerator_{GetStableHashCode(source)}.g.cs", SourceText.From(source, Encoding.UTF8));
-
-            File.WriteAllText(Path.Combine(projectPath, "temp\\InputSystemProjectActionsSourceGenerator.g.cs"), source);
+            return source;
         }
 
-        private string GenerateInputActionWrapper(InputAction inputAction)
-        {
-            var interactionFields = "";
-            return $$"""
-                public class {{FormatClassName(inputAction.Name)}}Input
-                {
-                    {{interactionFields}}
-
-                    internal {{FormatClassName(inputAction.Name)}}Input()
-                    {
-
-                    }
-                }
-                """;
-        }
-
-        private string GetInputActionWrapperType(InputAction inputAction)
+        static string GetInputActionWrapperType(InputAction inputAction)
         {
             return $"Input<{GetTypeFromExpectedType(inputAction.ExpectedControlType)}>";
         }
 
-        private string GenerateInputActionProperties(ActionMap actionMap)
+        static string GenerateInputActionProperties(ActionMap actionMap)
         {
             var source = string.Empty;
             foreach (var action in actionMap.Actions)
@@ -194,177 +209,170 @@ namespace Unity.InputSystem.SourceGenerators
 
                 source += $"public Input<{typeFromExpectedType}> {FormatFieldName(action.Name)}  {{ get; }}{Environment.NewLine}";
             }
-
             return source;
         }
 //*end-nonstandard-formatting*
 
-        private string GenerateInstantiateInputActionMaps(ActionMap[] actionMaps)
+    static string GenerateInstantiateInputActionMaps(ActionMap[] actionMaps)
+    {
+        var str = "";
+        foreach (var actionMap in actionMaps)
         {
-            var str = "";
-            foreach (var actionMap in actionMaps)
-            {
-                str += $"{FormatFieldName(actionMap.Name)} = new {GenerateInputActionMapClassName(actionMap)}();{Environment.NewLine}";
-            }
-
-            return str;
+            str += $"{FormatFieldName(actionMap.Name)} = new {GenerateInputActionMapClassName(actionMap)}();{Environment.NewLine}";
         }
 
-        private static string GenerateInputActionMapClassName(ActionMap actionMap)
+        return str;
+    }
+
+    static string GenerateInputActionMapClassName(ActionMap actionMap)
+    {
+        // TODO: More robust class name generation. Replace incompatible characters
+        var actionMapClassName = actionMap.Name.Replace(" ", "");
+
+        return FormatClassName(actionMapClassName) + "InputActionMap";
+    }
+
+    static string FormatClassName(string str)
+    {
+        return "_" + char.ToUpper(str[0]) + str.Substring(1);
+    }
+
+    static string FormatFieldName(string str)
+    {
+        if (str.Length <= 3)
+            return (char.IsDigit(str[0]) ? "_" : "") + str.ToUpper();
+
+        return (char.IsDigit(str[0]) ? "_" : "") + char.ToLower(str[0]) + str.Substring(1);
+    }
+
+    static string GetTypeFromExpectedType(ControlType controlType)
+    {
+        switch (controlType)
         {
-            // TODO: More robust class name generation. Replace incompatible characters
-            var actionMapClassName = actionMap.Name.Replace(" ", "");
+            case ControlType.Analog:
+            case ControlType.Axis:
+            case ControlType.Button:
+            case ControlType.Delta:
+            case ControlType.DiscreteButton:
+            case ControlType.Key:
+                return nameof(Single);
 
-            return FormatClassName(actionMapClassName) + "InputActionMap";
-        }
+            case ControlType.Digital:
+            case ControlType.Integer:
+                return nameof(Int32);
 
-        private static string FormatClassName(string str)
-        {
-            return "_" + char.ToUpper(str[0]) + str.Substring(1);
-        }
+            case ControlType.Double:
+                return nameof(Double);
 
-        private static string FormatFieldName(string str)
-        {
-            if (str.Length <= 3)
-                return (char.IsDigit(str[0]) ? "_" : "") + str.ToUpper();
+            case ControlType.Bone:
+                return "UnityEngine.InputSystem.XR.Bone";
 
-            return (char.IsDigit(str[0]) ? "_" : "") + char.ToLower(str[0]) + str.Substring(1);
-        }
+            case ControlType.Dpad:
+            case ControlType.Vector2:
+            case ControlType.Stick:
+                return "UnityEngine.Vector2";
 
-        private string GetTypeFromExpectedType(ControlType controlType)
-        {
-            switch (controlType)
-            {
-                case ControlType.Analog:
-                case ControlType.Axis:
-                case ControlType.Button:
-                case ControlType.Delta:
-                case ControlType.DiscreteButton:
-                case ControlType.Key:
-                    return nameof(Single);
+            case ControlType.Vector3:
+                return "UnityEngine.Vector3";
 
-                case ControlType.Digital:
-                case ControlType.Integer:
-                    return nameof(Int32);
+            case ControlType.Eyes:
+                return "UnityEngine.InputSystem.XR.Eyes";
 
-                case ControlType.Double:
-                    return nameof(Double);
+            case ControlType.Pose:
+                return "UnityEngine.InputSystem.XR.PoseState";
 
-                case ControlType.Bone:
-                    return "UnityEngine.InputSystem.XR.Bone";
+            case ControlType.Quaternion:
+                return "UnityEngine.Quaternion";
 
-                case ControlType.Dpad:
-                case ControlType.Vector2:
-                case ControlType.Stick:
-                    return "UnityEngine.Vector2";
+            case ControlType.Touch:
+                return "UnityEngine.InputSystem.LowLevel.TouchState";
 
-                case ControlType.Vector3:
-                    return "UnityEngine.Vector3";
-
-                case ControlType.Eyes:
-                    return "UnityEngine.InputSystem.XR.Eyes";
-
-                case ControlType.Pose:
-                    return "UnityEngine.InputSystem.XR.PoseState";
-
-                case ControlType.Quaternion:
-                    return "UnityEngine.Quaternion";
-
-                case ControlType.Touch:
-                    return "UnityEngine.InputSystem.LowLevel.TouchState";
-
-                default:
-                    return null;
-            }
-        }
-
-        public static int GetStableHashCode(string str)
-        {
-            unchecked
-            {
-                var hash1 = 5381;
-                var hash2 = hash1;
-
-                for (var i = 0; i < str.Length && str[i] != '\0'; i += 2)
-                {
-                    hash1 = ((hash1 << 5) + hash1) ^ str[i];
-                    if (i == str.Length - 1 || str[i + 1] == '\0')
-                        break;
-                    hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
-                }
-
-                return hash1 + (hash2 * 1566083941);
-            }
+            default:
+                return null;
         }
     }
+}
 
-    public struct InputActionAsset
+public static class LinqExtensions
+{
+    public static string Render<T>(this IEnumerable<T> collection, Func<T, string> renderFunc)
     {
-        public string Name;
-        public ActionMap[] Maps;
-        public ControlScheme[] ControlSchemes;
-    }
+        var sb = new StringBuilder();
+        foreach (var item in collection)
+        {
+            sb.Append(renderFunc(item));
+        }
 
-    public struct ActionMap
-    {
-        public string Id;
-        public string Name;
-        public InputAction[] Actions;
-        public Binding[] Bindings;
+        return sb.ToString();
     }
+}
 
-    public class InputAction
-    {
-        public string Id;
-        public ActionType Type;
-        public string Name;
-        public ControlType ExpectedControlType;
-        public string Processors;
-        public string Interactions;
-    }
+public struct InputActionAsset
+{
+    public string Name;
+    public ActionMap[] Maps;
+    public ControlScheme[] ControlSchemes;
+}
 
-    public class Binding
-    {
-        public string Id;
-        public string Name;
-        public string Path;
-        public string Interactions;
-        public string Groups;
-        public string Action;
-        public bool IsComposite;
-        public bool IsPartOfComposite;
-    }
+public struct ActionMap
+{
+    public string Id;
+    public string Name;
+    public InputAction[] Actions;
+    public Binding[] Bindings;
+}
 
-    public class ControlScheme
-    {
-    }
+public class InputAction
+{
+    public string Id;
+    public ActionType Type;
+    public string Name;
+    public ControlType ExpectedControlType;
+    public string Processors;
+    public string Interactions;
+}
 
-    public enum ActionType
-    {
-        Button,
-        Value,
-        Passthrough
-    }
+public class Binding
+{
+    public string Id;
+    public string Name;
+    public string Path;
+    public string Interactions;
+    public string Groups;
+    public string Action;
+    public bool IsComposite;
+    public bool IsPartOfComposite;
+}
 
-    public enum ControlType
-    {
-        Analog,
-        Axis,
-        Bone,
-        Button,
-        Delta,
-        Digital,
-        DiscreteButton,
-        Double,
-        Dpad,
-        Eyes,
-        Integer,
-        Key,
-        Pose,
-        Quaternion,
-        Stick,
-        Touch,
-        Vector2,
-        Vector3
-    }
+public class ControlScheme
+{
+}
+
+public enum ActionType
+{
+    Button,
+    Value,
+    Passthrough
+}
+
+public enum ControlType
+{
+    Analog,
+    Axis,
+    Bone,
+    Button,
+    Delta,
+    Digital,
+    DiscreteButton,
+    Double,
+    Dpad,
+    Eyes,
+    Integer,
+    Key,
+    Pose,
+    Quaternion,
+    Stick,
+    Touch,
+    Vector2,
+    Vector3
 }
