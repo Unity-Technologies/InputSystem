@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Editor
         static string s_DefaultAssetPath = kDefaultAssetPath;
         static string s_AssetPath = kAssetPath;
 
-        public static string assetPath => s_AssetPath;
+        public static string assetPath { get { return s_AssetPath; } }
 
 #if UNITY_INCLUDE_TESTS
         internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
