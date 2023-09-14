@@ -299,16 +299,17 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command SaveAsset()
+        public static Command SaveAsset(Action postSaveAction)
         {
             return (in InputActionsEditorState state) =>
             {
                 InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                postSaveAction?.Invoke();
                 return state;
             };
         }
 
-        public static Command ToggleAutoSave(bool newValue)
+        public static Command ToggleAutoSave(bool newValue, Action postSaveAction)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -316,7 +317,10 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // If it changed from disabled to enabled, perform an initial save.
                     if (newValue)
+                    {
                         InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                        postSaveAction?.Invoke();
+                    }
 
                     InputEditorUserSettings.autoSaveInputActionAssets = newValue;
                 }

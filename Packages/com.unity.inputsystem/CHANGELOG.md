@@ -12,9 +12,13 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Removed icons from action map list as these were always the same and the icon was placeholder
+- Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
+
+### Fixed
+- Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
 
 ## [1.8.0-pre.1] - 2023-09-04
 

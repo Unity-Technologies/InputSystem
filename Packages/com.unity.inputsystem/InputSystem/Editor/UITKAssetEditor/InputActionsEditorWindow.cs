@@ -16,12 +16,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         static EnableUITKEditor()
         {
-            // Controls whether the UITK version of the InputActionAsset Editor is enabled or not for
-            // editing standalone user Input Action assets.
-            // At the moment, the UITK Asset Editor doesn't have feature parity with the IMGUI version.
-            // This is set to false to show the IMGUI version of the InputActionAsset Editor instead.
-            // UITK Editor is always be used for the Project Settings Editor regardless of this setting.
-            InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseUIToolkitEditorForAllAssets, false);
         }
     }
 
@@ -40,7 +34,7 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OpenAsset(int instanceId, int line)
         {
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseUIToolkitEditorForAllAssets))
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
                 return false;
 
             var path = AssetDatabase.GetAssetPath(instanceId);
@@ -73,11 +67,23 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
+            OpenWindow(asset, actionMapToSelect, actionToSelect);
+            return true;
+        }
+
+        private static InputActionsEditorWindow OpenWindow(InputActionAsset asset, string actionMapToSelect = null, string actionToSelect = null)
+        {
+            int instanceId = asset.GetInstanceID();
+
+            ////REVIEW: It'd be great if the window got docked by default but the public EditorWindow API doesn't allow that
+            ////        to be done for windows that aren't singletons (GetWindow<T>() will only create one window and it's the
+            ////        only way to get programmatic docking with the current API).
+            // See if we have an existing editor window that has the asset open.
             var window = GetOrCreateWindow(instanceId, out var isAlreadyOpened);
             if (isAlreadyOpened)
             {
                 window.Focus();
-                return true;
+                return window;
             }
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
@@ -86,7 +92,18 @@ namespace UnityEngine.InputSystem.Editor
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.Show();
 
-            return true;
+            return window;
+        }
+
+        /// <summary>
+        /// Open the specified <paramref name="asset"/> in an editor window. Used when someone hits the "Edit Asset" button in the
+        /// importer inspector.
+        /// </summary>
+        /// <param name="asset">The InputActionAsset to open.</param>
+        /// <returns>The editor window.</returns>
+        public static InputActionsEditorWindow OpenEditor(InputActionAsset asset)
+        {
+            return OpenWindow(asset, null, null);
         }
 
         private static InputActionsEditorWindow GetOrCreateWindow(int id, out bool isAlreadyOpened)
@@ -150,20 +167,35 @@ namespace UnityEngine.InputSystem.Editor
             var stateContainer = new StateContainer(rootVisualElement, m_State);
             stateContainer.StateChanged += OnStateChanged;
 
-            var theme = EditorGUIUtility.isProSkin
-                ? AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorDark.uss")
-                : AssetDatabase.LoadAssetAtPath<StyleSheet>(InputActionsEditorConstants.PackagePath + InputActionsEditorConstants.ResourcesPath + "/InputAssetEditorLight.uss");
-
-            rootVisualElement.styleSheets.Add(theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer);
+            rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, PostSaveAction);
             stateContainer.Initialize();
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
             DirtyInputActionsEditorWindow(newState);
+
             if (InputEditorUserSettings.autoSaveInputActionAssets)
-                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                Save();
+        }
+
+        private void UpdateWindowTitle()
+        {
+            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
+        }
+
+        private void Save()
+        {
+            InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            PostSaveAction();
+        }
+
+        private void PostSaveAction()
+        {
+            m_IsDirty = false;
+            m_AssetJson = File.ReadAllText(m_AssetPath);
+            UpdateWindowTitle();
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
@@ -172,7 +204,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_IsDirty == isWindowDirty)
                 return;
             m_IsDirty = isWindowDirty;
-            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
+            UpdateWindowTitle();
         }
 
         private bool HasAssetChanged(SerializedObject serializedAsset)
@@ -197,7 +229,7 @@ namespace UnityEngine.InputSystem.Editor
             switch (result)
             {
                 case 0:     // Save
-                    InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                    Save();
                     break;
                 case 1:    // Cancel editor quit. (open new editor window with the edited asset)
                     ReshowEditorWindowWithUnsavedChanges();
