@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
             var selectedAssetOptionIndex = isAssetProjectWideActions ? AssetOptions.ProjectWideActions : AssetOptions.ActionsAsset;
 
             // Draw dropdown menu to select between using project-wide actions or an action asset
-            var selected = (AssetOptions)EditorGUILayout.EnumPopup(new GUIContent("Actions"), selectedAssetOptionIndex);
+            var selected = (AssetOptions)EditorGUILayout.EnumPopup(label, selectedAssetOptionIndex);
 
             // Update property in case there's a change in the dropdown popup
             if (selectedAssetOptionIndex != selected)
@@ -45,7 +45,9 @@ namespace UnityEngine.InputSystem.Editor
             // In case project-wide actions are selected, the object picker is not shown.
             if (selectedAssetOptionIndex == AssetOptions.ActionsAsset)
             {
-                EditorGUILayout.PropertyField(property, label, true);
+                ++EditorGUI.indentLevel;
+                EditorGUILayout.PropertyField(property, new GUIContent("Actions Asset") , true);
+                --EditorGUI.indentLevel;
             }
 
             EditorGUI.EndProperty();
