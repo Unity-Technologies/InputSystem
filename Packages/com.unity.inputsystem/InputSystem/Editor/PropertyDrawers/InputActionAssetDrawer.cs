@@ -31,8 +31,12 @@ namespace UnityEngine.InputSystem.Editor
             var isAssetProjectWideActions = IsAssetProjectWideActions(property);
             var selectedAssetOptionIndex = isAssetProjectWideActions ? AssetOptions.ProjectWideActions : AssetOptions.ActionsAsset;
 
+            EditorGUILayout.BeginHorizontal();
             // Draw dropdown menu to select between using project-wide actions or an action asset
             var selected = (AssetOptions)EditorGUILayout.EnumPopup(label, selectedAssetOptionIndex);
+            // Draw button to edit the asset
+            DoOpenAssetButtonUI(property, selected);
+            EditorGUILayout.EndHorizontal();
 
             // Update property in case there's a change in the dropdown popup
             if (selectedAssetOptionIndex != selected)
@@ -51,6 +55,19 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             EditorGUI.EndProperty();
+        }
+
+        static void DoOpenAssetButtonUI(SerializedProperty property, AssetOptions selected)
+        {
+            if (selected == AssetOptions.ProjectWideActions)
+            {
+                GUIContent buttonText = new GUIContent("Open");
+                Vector2 buttonSize = GUI.skin.button.CalcSize(buttonText);
+                // Create a new Rect with the calculated size
+                // Rect buttonRect = new Rect(position.x, position.y, buttonSize.x, buttonSize.y);
+                if (GUILayout.Button(buttonText, GUILayout.Width(buttonSize.x)))
+                    SettingsService.OpenProjectSettings(InputActionsEditorSettingsProvider.kSettingsPath);
+            }
         }
 
         static void UpdatePropertyWithSelectedOption(SerializedProperty assetProperty, AssetOptions selected)
