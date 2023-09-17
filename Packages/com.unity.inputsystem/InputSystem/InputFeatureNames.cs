@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem
         public const string kParanoidReadValueCachingChecks = "PARANOID_READ_VALUE_CACHING_CHECKS";
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        public const string kUseUIToolkitEditorForAllAssets = "USE_UITOOLKIT_EDITOR";
+        public const string kUseIMGUIEditorForAssets = "USE_IMGUI_EDITOR_FOR_ASSETS";
 #endif
     }
 }

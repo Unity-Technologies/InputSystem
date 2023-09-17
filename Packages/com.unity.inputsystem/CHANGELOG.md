@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - Removed icons from action map list as these were always the same and the icon was placeholder
+- Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
 - Changed `InputActionProperty` property drawer to be more compact. A new setting was added to the Project Settings window to switch between different drawing modes, which includes the original method if preferred.
 
 ### Added
