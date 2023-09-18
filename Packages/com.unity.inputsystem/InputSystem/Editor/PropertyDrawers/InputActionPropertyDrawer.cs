@@ -152,7 +152,7 @@ namespace UnityEngine.InputSystem.Editor
             var action = property.FindPropertyRelative("m_Action");
 
             // Draw the Use Reference toggle.
-            EditorGUI.LabelField(titleRect, label, Styles.header);
+            EditorGUI.LabelField(titleRect, label);
             EditorGUI.PropertyField(useReferenceToggleRect, useReference);
 
             if (showEffectiveOnly)
@@ -191,7 +191,6 @@ namespace UnityEngine.InputSystem.Editor
 
         static class Styles
         {
-            public static readonly GUIStyle header = new GUIStyle("Label").WithFontStyle(FontStyle.Bold);
             public static readonly GUIStyle popup = new GUIStyle("PaneOptions") { imagePosition = ImagePosition.ImageOnly };
         }
     }
