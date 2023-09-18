@@ -77,7 +77,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
     {
         try
         {
-            using var fileStream = new FileStream(assetPath, FileMode.Open);
+            using var fileStream = new FileStream(assetPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             InputActionAsset inputActionAssetNullable = JsonSerializer.Deserialize<InputActionAsset>(
                 fileStream,
                 new JsonSerializerOptions
