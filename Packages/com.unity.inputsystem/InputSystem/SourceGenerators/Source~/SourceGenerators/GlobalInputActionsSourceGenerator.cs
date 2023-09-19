@@ -13,7 +13,10 @@ using Microsoft.CodeAnalysis.Text;
 [Generator]
 public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
 {
-    const string kActionsAssetPath = "ProjectSettings//InputSystemActions.inputactions";
+    const string kPackagePath = "Packages//";
+    const string kLibraryPackagePath = "Library//PackageCache//";
+    const string kActionsTemplateAssetPath = "com.unity.inputsystem//InputSystem//Editor//ProjectWideActions//ProjectWideActionsTemplate.inputactions";
+    const string kActionsAssetPath = "Assets//InputSystem//actions.InputSystemActionsAPIGenerator.additionalfile";
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -35,8 +38,8 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
             context.CancellationToken.ThrowIfCancellationRequested();
 
             var projectPath = GetProjectFilePath(context, additionalFilePaths);
-            var actionsAssetPath = Path.Combine(projectPath, kActionsAssetPath);
-            if (!File.Exists(actionsAssetPath))
+            var actionsAssetPath = GetAssetFilePath(projectPath);
+            if (string.IsNullOrEmpty(actionsAssetPath))
                 return;
 
             context.CancellationToken.ThrowIfCancellationRequested();
@@ -45,7 +48,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
 
             context.CancellationToken.ThrowIfCancellationRequested();
             context.AddSource($"InputSystemProjectActions.g.cs", SourceText.From(source, Encoding.UTF8));
-            File.WriteAllText(Path.Combine(projectPath, "temp//InputSystemProjectActionsSourceGenerator.g.cs"), source);
+            File.WriteAllText(Path.Combine(projectPath, "temp//InputSystemActionsAPIGenerator.g.cs"), source);
         }
         catch (Exception exception)
         {
@@ -62,6 +65,8 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
         {
             // @TODO: Why additional paths are empty but only for the IDE?
             return "/opt/UnitySrc/InputSystem/project-wide-actions-phase2";
+            //return "D://UnitySrc//InputSystem//project-wide-actions-phase2";
+
             // context.ReportDiagnostic(Diagnostic.Create(
             //     new DiagnosticDescriptor("ISGEN001", "Additional files not specified.", "",
             //         "InputSystemSourceGenerator", DiagnosticSeverity.Error, true,
@@ -71,6 +76,26 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
         }
 
         return File.ReadAllText(firstAdditionalFilePath);
+    }
+
+    static string GetAssetFilePath(string projectPath)
+    {
+        var actionsAssetPath = Path.Combine(projectPath, kActionsAssetPath);
+        if (File.Exists(actionsAssetPath))
+            return actionsAssetPath;
+
+        // If the asset file hasn't been created yet, then we use the template (default) asset from the package
+        actionsAssetPath = Path.Combine(projectPath, kLibraryPackagePath);
+        actionsAssetPath = Path.Combine(actionsAssetPath, kActionsTemplateAssetPath);
+        if (File.Exists(actionsAssetPath))
+            return actionsAssetPath;
+
+        actionsAssetPath = Path.Combine(projectPath, kPackagePath);
+        actionsAssetPath = Path.Combine(actionsAssetPath, kActionsTemplateAssetPath);
+        if (File.Exists(actionsAssetPath))
+            return actionsAssetPath;
+
+        return null;
     }
 
     static InputActionAsset ParseInputActionsAsset(SourceProductionContext context, string assetPath)
