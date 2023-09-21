@@ -17,6 +17,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
     const string kLibraryPackagePath = "Library//PackageCache//";
     const string kActionsTemplateAssetPath = "com.unity.inputsystem//InputSystem//Editor//ProjectWideActions//ProjectWideActionsTemplate.inputactions";
     const string kActionsAssetPath = "Assets//InputSystem//actions.InputSystemActionsAPIGenerator.additionalfile";
+    const string kTargetAssembly = "Unity.InputSystem";
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -25,9 +26,17 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
         IncrementalValuesProvider<string> transformed = additionalTexts.Select(static (text, _) => text.Path);
         IncrementalValueProvider<ImmutableArray<string>> collected = transformed.Collect();
 
-        initContext.RegisterSourceOutput(collected, static (sourceProductionContext, filePaths) =>
+        var assemblyName = initContext.CompilationProvider.Select(static (c, _) => c.AssemblyName);
+        var combined = collected.Combine(assemblyName);
+
+        initContext.RegisterSourceOutput(combined, static (spc, combinedPair) =>
         {
-            Execute(sourceProductionContext, filePaths);
+            // We only want to inject the new API into one location and not duplicate into every loaded assembly.
+            var assemblyName = combinedPair.Right;
+            if (assemblyName != kTargetAssembly)
+                return;
+
+            Execute(spc, combinedPair.Left);
         });
     }
 
