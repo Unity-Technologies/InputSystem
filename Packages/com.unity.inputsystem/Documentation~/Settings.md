@@ -158,6 +158,8 @@ Determines how input is handled in the Editor when in play mode. Unlike in playe
 
 Determines how the Inspector window displays [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) fields.
 
+This setting is not shown in the **Edit** &gt; **Project Settings** window, it is instead only available in the Debug mode of the Inspector window of an Input Settings asset. See the Unity Manual page for [working in the Inspector](https://docs.unity3d.com/Manual/InspectorOptions.html) under section Toggle Debug Mode.
+
 |Setting|Description|
 |-------|-----------|
 |[`Compact`](../api/UnityEngine.InputSystem.InputSettings.InputActionPropertyDrawerMode.html#UnityEngine_InputSystem_InputSettings_InputActionPropertyDrawerMode_Compact)|Display the property in a compact format, using a minimal number of lines. Toggling between a reference to an input action in an asset and a directly serialized input action is done using a dropdown menu.|
