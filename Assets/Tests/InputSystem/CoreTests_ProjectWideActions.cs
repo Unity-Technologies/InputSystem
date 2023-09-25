@@ -21,7 +21,7 @@ internal partial class CoreTests
     const int initialActionCount = 2;
     const int initialMapCount = 1;
 #else
-    const int initialActionCount = 17;
+    const int initialActionCount = 19;
     const int initialMapCount = 2;
 #endif
 
