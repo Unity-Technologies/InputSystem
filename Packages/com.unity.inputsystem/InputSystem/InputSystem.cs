@@ -3050,6 +3050,17 @@ namespace UnityEngine.InputSystem
                 if (s_projectWideActions == value)
                     return;
 
+                #if UNITY_EDITOR
+                // Store which asset is _the_ Project-Wide Actions asset.
+                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
+                {
+                    EditorBuildSettings.AddConfigObject(
+                        InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
+                        value,
+                        true);
+                }
+                #endif
+
                 s_projectWideActions?.Disable();
                 s_projectWideActions = value;
                 s_projectWideActions.Enable();

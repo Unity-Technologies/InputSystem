@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
+        public const string kProjectActionsConfigKey = "com.unity.input.actions";
         public const string kSettingsPath = "Project/Input System Package/Actions";
 
         [SerializeField] InputActionsEditorState m_State;

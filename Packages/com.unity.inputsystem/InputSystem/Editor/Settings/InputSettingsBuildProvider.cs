@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
             var preloadedAssets = PlayerSettings.GetPreloadedAssets();
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            m_ProjectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
+            m_ProjectWideActions = ProjectWideActionsAsset.GetOrCreate();
             if (m_ProjectWideActions != null)
             {
                 if (!preloadedAssets.Contains(m_ProjectWideActions))
