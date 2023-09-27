@@ -1,5 +1,5 @@
 {
-    "_comment": "name must match ProjectWideActionsAsset.kAssetName",
+    "_comment": "name must match InputSystem.kProjectWideActionsAssetName",
     "name": "ProjectWideInputActions",
     "maps": [
         {
