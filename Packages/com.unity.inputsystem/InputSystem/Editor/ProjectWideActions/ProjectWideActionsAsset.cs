@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -15,16 +16,37 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
                 out InputActionAsset actionAsset))
             {
-                // If we have marked a asset as being the project-wide actions but it is not yet assigned to `InputSystem.actions` then ensure it is.
+                // If we have marked a asset as being the project-wide actions but it doesn't match `InputSystem.actions` then ensure it does.
                 if (InputSystem.actions != actionAsset || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(InputSystem.actions)))
                 {
                     actionAsset.name = InputSystem.kProjectWideActionsAssetName;
                     InputSystem.actions = actionAsset;
+                    return;
+                }
+                else
+                {
+                    // @TODO: Handle files in the deletedAssets list
+
+                    // Handle edits to the project-wide actions asset.
+                    // Ensure we pass a copy of the project wide actions asset inside the roslyn source generator additionalfile.
+                    // Touching this file will cause the source generator to update the typesafe api.
+                    var assetPath = AssetDatabase.GetAssetPath(actionAsset);
+                    if (!string.IsNullOrEmpty(assetPath))
+                    {
+                        // Only modify the file if there were modifications.
+                        if (ArrayHelpers.Contains(importedAssets, assetPath) ||
+                            ArrayHelpers.Contains(movedAssets, assetPath))
+                        {
+                            ProjectWideActionsAsset.RefreshRoslynAdditionalFile(assetPath);
+                        }
+                    }
                 }
             }
             else
             {
-                // Ensure we have Project-Wide Actions imported into AssetDatabase and marked as being the project-wide actions
+                // If we haven't yet marked any asset to be the project-wide actions then we rectifiy this here.
+                // This can happen on opening a new project if ProjectWideActionsAsset.GetOrCreate() was called whilst AssetDatabase
+                // was still busy importing. We call it again now that we know importing has finished.
                 // This will cause an import of the asset and trigger this callback again.
                 ProjectWideActionsAsset.GetOrCreate();
             }
@@ -61,6 +83,41 @@ namespace UnityEngine.InputSystem.Editor
         internal static void InstallProjectWideActions()
         {
             GetOrCreate();
+        }
+
+        // Store which asset is _the_ Project-Wide Actions asset.
+        internal static void SetAsProjectWideActions(InputActionAsset newActionsAsset)
+        {
+            var newAssetPath = AssetDatabase.GetAssetPath(newActionsAsset);
+            if (!string.IsNullOrEmpty(newAssetPath))
+            {
+                EditorBuildSettings.AddConfigObject(
+                    InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
+                    newActionsAsset,
+                    true);
+
+                RefreshRoslynAdditionalFile(newAssetPath);
+            }
+        }
+
+        internal static void RefreshRoslynAdditionalFile(string sourceAssetPath)
+        {
+            // @TODO: Delete all other InputSystemActionsAPIGenerator.additionalfiles in the assets directory
+            // @TODO: Move location to always be next to the sourceAsset
+            const string destFilePath = "Assets/actions.InputSystemActionsAPIGenerator.additionalfile";
+
+            try
+            {
+                if (File.Exists(sourceAssetPath))
+                {
+                    File.Copy(sourceAssetPath, destFilePath, true);
+                    AssetDatabase.ImportAsset(destFilePath); // Invoke importer and therefore source generator
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"InputSystem could not save actions additional file: '{destFilePath}' ({exception})");
+            }
         }
 
         internal static InputActionAsset LoadFromPath(string assetPath)

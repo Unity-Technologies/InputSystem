@@ -3032,7 +3032,7 @@ namespace UnityEngine.InputSystem
                     return s_projectWideActions;
 
                 #if UNITY_EDITOR
-                s_projectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
+                s_projectWideActions = ProjectWideActionsAsset.GetOrCreate();
                 #else
                 s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
                 #endif
@@ -3050,20 +3050,13 @@ namespace UnityEngine.InputSystem
                 if (s_projectWideActions == value)
                     return;
 
-                #if UNITY_EDITOR
-                // Store which asset is _the_ Project-Wide Actions asset.
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
-                {
-                    EditorBuildSettings.AddConfigObject(
-                        InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
-                        value,
-                        true);
-                }
-                #endif
-
                 s_projectWideActions?.Disable();
                 s_projectWideActions = value;
                 s_projectWideActions.Enable();
+
+                #if UNITY_EDITOR
+                ProjectWideActionsAsset.SetAsProjectWideActions(value);
+                #endif
             }
         }
 #endif
