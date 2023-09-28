@@ -7,6 +7,30 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    internal sealed class ProjectWideActionsAssetPostprocessor : AssetPostprocessor
+    {
+        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+        {
+            if (EditorBuildSettings.TryGetConfigObject(
+                InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
+                out InputActionAsset actionAsset))
+            {
+                // If we have marked a asset as being the project-wide actions but it is not yet assigned to `InputSystem.actions` then ensure it is.
+                if (InputSystem.actions != actionAsset || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(InputSystem.actions)))
+                {
+                    actionAsset.name = InputSystem.kProjectWideActionsAssetName;
+                    InputSystem.actions = actionAsset;
+                }
+            }
+            else
+            {
+                // Ensure we have Project-Wide Actions imported into AssetDatabase and marked as being the project-wide actions
+                // This will cause an import of the asset and trigger this callback again.
+                ProjectWideActionsAsset.GetOrCreate();
+            }
+        }
+    }
+
     internal static class ProjectWideActionsAsset
     {
         internal const string kTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
