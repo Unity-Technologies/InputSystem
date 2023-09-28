@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
+- Fixed an issue where selecting an action in the Input Action Asset Editor tree-view and then pressing ESC to unselect would throw an `InvalidOperationException`.
 
 ## [1.8.0-pre.1] - 2023-09-04
 

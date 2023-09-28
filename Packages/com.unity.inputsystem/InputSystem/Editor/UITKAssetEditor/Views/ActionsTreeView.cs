@@ -108,7 +108,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.selectedIndicesChanged += indicies =>
             {
-                var index = indicies.First();
+                var index = indicies.FirstOrFallback(-1); 
                 if (index == -1)
                     return;
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
