@@ -106,9 +106,9 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
-            m_ActionsTreeView.selectedIndicesChanged += indicies =>
+            m_ActionsTreeView.selectedIndicesChanged += indices =>
             {
-                var index = indicies.FirstOrFallback(-1); 
+                var index = indices.FirstOrFallback(-1); // avoid multiple-enumeration to check for empty sequence
                 if (index == -1)
                     return;
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
