@@ -526,6 +526,22 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Determines how the Inspector window displays <see cref="InputActionProperty"/> fields.
+        /// </summary>
+        /// <seealso cref="InputActionPropertyDrawerMode"/>
+        public InputActionPropertyDrawerMode inputActionPropertyDrawerMode
+        {
+            get => m_InputActionPropertyDrawerMode;
+            set
+            {
+                if (m_InputActionPropertyDrawerMode == value)
+                    return;
+                m_InputActionPropertyDrawerMode = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
         /// Upper limit on the amount of bytes worth of <see cref="InputEvent"/>s processed in a single
         /// <see cref="InputSystem.Update"/>.
         /// </summary>
@@ -738,6 +754,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private BackgroundBehavior m_BackgroundBehavior = BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
         [SerializeField] private EditorInputBehaviorInPlayMode m_EditorInputBehaviorInPlayMode;
+        [SerializeField] private InputActionPropertyDrawerMode m_InputActionPropertyDrawerMode = InputActionPropertyDrawerMode.Compact;
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
         // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
@@ -898,6 +915,40 @@ namespace UnityEngine.InputSystem
             /// will be respected as in the player and devices may thus be disabled in the runtime based on Game View focus.
             /// </summary>
             AllDeviceInputAlwaysGoesToGameView,
+        }
+
+        /// <summary>
+        /// Determines how the Inspector window displays <see cref="InputActionProperty"/> fields.
+        /// </summary>
+        /// <seealso cref="inputActionPropertyDrawerMode"/>
+        public enum InputActionPropertyDrawerMode
+        {
+            /// <summary>
+            /// Display the property in a compact format, using a minimal number of lines.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a dropdown menu.
+            /// </summary>
+            Compact,
+
+            /// <summary>
+            /// Display the effective action underlying the property, using multiple lines.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see or revert prefab overrides and hide the field that is ignored.
+            /// </remarks>
+            MultilineEffective,
+
+            /// <summary>
+            /// Display both the input action and external reference underlying the property.
+            /// Toggling between a reference to an input action in an asset and a directly serialized input action
+            /// is done using a property that is always visible.
+            /// </summary>
+            /// <remarks>
+            /// This mode could be useful if you want to see both values of the property without needing to toggle Use Reference.
+            /// </remarks>
+            MultilineBoth,
         }
     }
 }
