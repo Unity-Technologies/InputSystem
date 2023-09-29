@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
 - UI fix for input fields in interactions: they are wider now and the width is fixed.
+- Fixed exiting empty input fields for actions, action maps and composites in the input action asset editor.
 
 ## [1.8.0-pre.1] - 2023-09-04
 
