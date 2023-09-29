@@ -210,6 +210,11 @@ namespace UnityEngine.InputSystem.Editor
         private bool HasAssetChanged(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
+
+            // Checks if the new asset is empty. If it is, there's nothing to save.
+            if (asset.actionMaps.Count == 0 && asset.controlSchemes.Count == 0)
+                return false;
+
             var newAssetJson = asset.ToJson();
             return newAssetJson != m_AssetJson;
         }
