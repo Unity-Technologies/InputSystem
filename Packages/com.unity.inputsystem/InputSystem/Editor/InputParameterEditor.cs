@@ -242,6 +242,7 @@ namespace UnityEngine.InputSystem.Editor
 
 
                 m_FloatField = new FloatField(m_ValueLabel.text) { value = value };
+                m_FloatField.Q("unity-text-input").AddToClassList("float-field");
                 m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
                 m_FloatField.RegisterCallback<BlurEvent>(_ => OnEditEnd(onChangedCallback));
                 m_FloatField.SetEnabled(!m_UseDefaultValue);
