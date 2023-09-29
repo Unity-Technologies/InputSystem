@@ -12,7 +12,8 @@
   commands:
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
-    # Get version 2.3.0-preview of doctools package (if fails for 3.0.0). Automatically makes the documentation tests in APIVerification go live.
+    # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
+    # Automatically makes the documentation tests in APIVerification go live.
     - '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
     - git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
@@ -47,7 +48,7 @@
   commands:
     - {{ utr_install_nix }}
     - {{ upm_ci_install }}
-    # Get version 2.3.0-preview of doctools package (if fails for 3.0.0).
+    # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
     # Automatically makes the documentation tests in APIVerification go live.
     - git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
