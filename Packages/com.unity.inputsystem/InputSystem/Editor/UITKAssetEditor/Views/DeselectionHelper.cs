@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
         /// related to not having selections more quickly. Also it might be desirable to either support or
         /// not support deselection (E.g. pressing ESC while having a current selection).
         /// </summary>
-        private const bool kAllowDeselection = true;
+        private const bool kAllowDeselection = false;
 
         private int m_SelectedIndex = -1;
 
