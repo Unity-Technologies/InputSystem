@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - Removed icons from action map list as these were always the same and the icon was placeholder
 - Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
+- Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
