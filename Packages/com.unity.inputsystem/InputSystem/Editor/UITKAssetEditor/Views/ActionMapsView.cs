@@ -133,8 +133,7 @@ namespace UnityEngine.InputSystem.Editor
             var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             item.DeleteItem();
         }
-
-        //private int m_PrevSelectedIndex = -1;
+        
         private readonly DeselectionHelper m_DeselectionHelper = new();
         private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
