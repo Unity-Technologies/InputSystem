@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -18,7 +19,13 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-            m_ListView.selectionChanged += _ => SelectActionMap();
+            m_ListView.selectedIndicesChanged += (selectedIndices) =>
+            {
+                if (!m_DeselectionHelper.Select(m_ListView, selectedIndices))
+                    return; // abort since triggered again from within Select(...)
+                
+                Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+            };
 
             m_ListView.bindItem = (element, i) =>
             {
@@ -101,11 +108,6 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ChangeActionMapName(index, newName));
         }
 
-        private void SelectActionMap()
-        {
-            Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
-        }
-
         private void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
@@ -132,6 +134,8 @@ namespace UnityEngine.InputSystem.Editor
             item.DeleteItem();
         }
 
+        //private int m_PrevSelectedIndex = -1;
+        private readonly DeselectionHelper m_DeselectionHelper = new();
         private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
         private ListView m_ListView;

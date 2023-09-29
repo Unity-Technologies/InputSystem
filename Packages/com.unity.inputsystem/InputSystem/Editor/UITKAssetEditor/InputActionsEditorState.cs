@@ -148,8 +148,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 return With(selectedActionIndex: i, selectionType: SelectionType.Action);
             }
-
-            throw new InvalidOperationException($"Couldn't find an action map with name '{actionName}'.");
+            
+            // If we cannot find the desired map we should return invalid index
+            return With(selectedActionIndex: -1, selectionType: SelectionType.Action);
         }
 
         public InputActionsEditorState SelectAction(SerializedProperty state)

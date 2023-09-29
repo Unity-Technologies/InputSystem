@@ -20,7 +20,8 @@ namespace UnityEngine.InputSystem.Editor
         private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
 
         private bool m_RenameOnActionAdded;
-
+        private readonly DeselectionHelper m_DeselectionHelper = new();
+        
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -108,11 +109,19 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.selectedIndicesChanged += indices =>
             {
-                var index = indices.FirstOrFallback(-1); // avoid multiple-enumeration to check for empty sequence
-                if (index == -1)
-                    return;
-                var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
-                Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
+                if (!m_DeselectionHelper.Select(m_ActionsTreeView, indices))
+                    return; // abort since triggered again from within Select(...)
+
+                if (m_ActionsTreeView.selectedIndex >= 0)
+                {
+                    var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);
+                    Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));    
+                }
+                else
+                {
+                    Dispatch(Commands.SelectAction(null));
+                    Dispatch(Commands.SelectBinding(-1));
+                }
             };
 
             m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
