@@ -118,23 +118,19 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             lastSingleClick = 0;
             delegatesFocus = false;
+            
+            renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
+            m_IsEditing = false;
 
             var text = renameTextfield.text?.Trim();
             if (string.IsNullOrEmpty(text))
             {
-                renameTextfield.schedule.Execute(() =>
-                {
-                    FocusOnRenameTextField();
-                    renameTextfield.SetValueWithoutNotify(text);
-                });
+                renameTextfield.schedule.Execute(() => renameTextfield.SetValueWithoutNotify(text));
                 return;
             }
 
-            renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
-            label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
-
             EditTextFinished?.Invoke(text);
-            m_IsEditing = false;
         }
     }
 }
