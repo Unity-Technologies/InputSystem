@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private bool m_RenameOnActionAdded;
         private readonly DeselectionHelper m_DeselectionHelper = new();
-        
+
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ActionsTreeView.selectedIndex >= 0)
                 {
                     var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);
-                    Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));    
+                    Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
                 }
                 else
                 {

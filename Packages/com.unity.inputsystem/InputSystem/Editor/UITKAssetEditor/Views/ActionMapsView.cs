@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (!m_DeselectionHelper.Select(m_ListView, selectedIndices))
                     return; // abort since triggered again from within Select(...)
-                
+
                 Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
             };
 
@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
             var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             item.DeleteItem();
         }
-        
+
         private readonly DeselectionHelper m_DeselectionHelper = new();
         private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;

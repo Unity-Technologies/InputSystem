@@ -31,12 +31,12 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         view.selectedIndex = this.m_SelectedIndex;
                         return false;
-                    }    
+                    }
                 }
-                
+
                 // If its a valid selection store index to allow preventing future deselect
                 if (selectedIndex >= 0)
-                    this.m_SelectedIndex = selectedIndex;   
+                    this.m_SelectedIndex = selectedIndex;
             }
 
             return true;

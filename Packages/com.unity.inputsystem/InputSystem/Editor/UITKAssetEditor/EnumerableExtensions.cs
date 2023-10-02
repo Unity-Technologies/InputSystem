@@ -17,14 +17,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             return string.Join(separator, enumerable);
         }
-        
+
         /// <summary>
         /// Similar to IEnumerable interface FirstOrDefault() extension operation but allows providing an explicit
-        /// fallback if sequence is empty. 
+        /// fallback if sequence is empty.
         /// </summary>
         /// <remarks>
         /// Note that this implies a performance hit compared to FirstOrDefault() since fallback needs
-        /// to be constructed even if the source sequence is not empty. 
+        /// to be constructed even if the source sequence is not empty.
         /// </remarks>
         /// <param name="source">°The source sequence.</param>
         /// <param name="fallback">The fallback value.</param>
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 }
             }
-            
+
             return fallback;
         }
     }

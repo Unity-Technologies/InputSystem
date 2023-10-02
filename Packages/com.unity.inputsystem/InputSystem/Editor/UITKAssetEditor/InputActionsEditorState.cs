@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 return With(selectedActionIndex: i, selectionType: SelectionType.Action);
             }
-            
+
             // If we cannot find the desired map we should return invalid index
             return With(selectedActionIndex: -1, selectionType: SelectionType.Action);
         }
