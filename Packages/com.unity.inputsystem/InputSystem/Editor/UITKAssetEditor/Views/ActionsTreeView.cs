@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
         private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
 
         private bool m_RenameOnActionAdded;
-        private readonly DeselectionHelper m_DeselectionHelper = new();
+        private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
@@ -107,11 +107,9 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
-            m_ActionsTreeView.selectedIndicesChanged += indices =>
+            m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
+            m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
             {
-                if (!m_DeselectionHelper.Select(m_ActionsTreeView, indices))
-                    return; // abort since triggered again from within Select(...)
-
                 if (m_ActionsTreeView.selectedIndex >= 0)
                 {
                     var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);

@@ -19,11 +19,10 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-            m_ListView.selectedIndicesChanged += (selectedIndices) =>
-            {
-                if (!m_DeselectionHelper.Select(m_ListView, selectedIndices))
-                    return; // abort since triggered again from within Select(...)
 
+            m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
+            m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
+            {
                 Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
             };
 
@@ -134,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
             item.DeleteItem();
         }
 
-        private readonly DeselectionHelper m_DeselectionHelper = new();
+        private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
         private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
         private ListView m_ListView;
