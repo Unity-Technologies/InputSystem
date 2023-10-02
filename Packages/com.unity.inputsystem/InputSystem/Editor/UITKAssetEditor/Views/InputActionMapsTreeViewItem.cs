@@ -118,7 +118,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             lastSingleClick = 0;
             delegatesFocus = false;
-            
+
             renameTextfield.AddToClassList(InputActionsEditorConstants.HiddenStyleClassName);
             label.RemoveFromClassList(InputActionsEditorConstants.HiddenStyleClassName);
             m_IsEditing = false;
