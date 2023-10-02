@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
                 else if (item.isAction)
-                    ContextMenu.GetContextMenuForActionItem(treeViewItem, i);
+                    ContextMenu.GetContextMenuForActionItem(treeViewItem, item.controlLayout, i);
                 else
                     ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
