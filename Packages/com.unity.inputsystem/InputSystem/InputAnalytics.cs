@@ -168,6 +168,79 @@ namespace UnityEngine.InputSystem
         [Serializable]
         public struct InputActionsEditorSession
         {
+            public InputActionsEditorSession(InputActionsEditorType type)
+            {
+                this.type = type;
+                totalDurationSeconds = 0;
+                totalFocusDurationSeconds = 0;
+                totalActionMapEdits = 0;
+                totalActionEdits = 0;
+                totalBindingEdits = 0;
+                numberOfUserSaves = 0;
+                numberOfAutoSaves = 0;
+                
+                m_FocusStart = float.NaN;
+                m_SessionStart = float.NaN;
+            }
+
+            public void RegisterActionMapEdit()
+            {
+                ++totalActionMapEdits;
+            }
+
+            public void RegisterActionEdit()
+            {
+                ++totalActionEdits;
+            }
+
+            public void RegisterBindingEdit()
+            {
+                ++totalBindingEdits;
+            }
+
+            public void RegisterFocusIn()
+            {
+                if (hasFocus)
+                    return;
+
+                m_FocusStart = CurrentTime();
+            }
+
+            public void RegisterFocusOut()
+            {
+                if (!hasFocus)
+                    return;
+                
+                var focusDurationSeconds = CurrentTime() - m_FocusStart;
+                this.totalFocusDurationSeconds += focusDurationSeconds;
+            }
+
+            public void StartSession()
+            {
+                if (hasSession)
+                    return;
+                
+                m_SessionStart = CurrentTime();
+            }
+
+            public void EndSession()
+            {
+                var sessionDurationSeconds = CurrentTime() - m_SessionStart;
+                totalDurationSeconds += sessionDurationSeconds;
+            }
+
+            public override string ToString()
+            {
+                return $"{nameof(type)}: {type}, " +
+                       $"{nameof(totalDurationSeconds)}: {totalDurationSeconds} seconds, " +
+                       $"{nameof(totalFocusDurationSeconds)}: {totalFocusDurationSeconds} seconds, " +
+                       $"{nameof(totalActionMapEdits)}: {totalActionMapEdits}, " +
+                       $"{nameof(totalActionEdits)}: {totalActionEdits}, " +
+                       $"{nameof(totalBindingEdits)}: {totalBindingEdits}, " +
+                       $"{nameof(numberOfUserSaves)}: {numberOfUserSaves}, " +
+                       $"{nameof(numberOfAutoSaves)}: {numberOfAutoSaves}";
+            }
+
             public InputActionsEditorType type;
             public float totalDurationSeconds;
             public float totalFocusDurationSeconds;
@@ -176,6 +249,13 @@ namespace UnityEngine.InputSystem
             public int totalBindingEdits;
             public int numberOfUserSaves;
             public int numberOfAutoSaves;
+            
+            [NonSerialized] private float m_FocusStart;
+            [NonSerialized] private float m_SessionStart;
+
+            private bool hasFocus => !float.IsNaN(m_FocusStart);
+            private bool hasSession => !float.IsNaN(m_SessionStart);
+            private float CurrentTime() => Time.realtimeSinceStartup;
         }
 
         public static InputActionsEditorSession OnInputActionsEditorBeginSession(InputActionsEditorType type)
@@ -187,7 +267,7 @@ namespace UnityEngine.InputSystem
 
         public static void OnInputActionsEditorSessionEnding(ref InputActionsEditorSession session)
         {
-            Debug.Log("OnInputActionsEditorBeginSession: " + session);
+            Debug.Log("OnInputActionsEditorEndSession: " + session);
         }
     }
 }
