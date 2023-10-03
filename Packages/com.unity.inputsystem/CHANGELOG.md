@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Removed icons from action map list as these were always the same and the icon was placeholder
 - Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
 - Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
+- Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
 - Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
 
 ### Added
