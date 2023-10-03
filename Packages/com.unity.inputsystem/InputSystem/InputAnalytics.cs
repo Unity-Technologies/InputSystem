@@ -157,6 +157,38 @@ namespace UnityEngine.InputSystem
             public int total_frame_count;
             public float total_event_processing_time;
         }
+
+        public enum InputActionsEditorType
+        {
+            Invalid = 0,
+            FreeFloatingEditorWindow = 1,
+            EmbeddedInProjectSettings = 2
+        }
+
+        [Serializable]
+        public struct InputActionsEditorSession
+        {
+            public InputActionsEditorType type;
+            public float totalDurationSeconds;
+            public float totalFocusDurationSeconds;
+            public int totalActionMapEdits;
+            public int totalActionEdits;
+            public int totalBindingEdits;
+            public int numberOfUserSaves;
+            public int numberOfAutoSaves;
+        }
+
+        public static InputActionsEditorSession OnInputActionsEditorBeginSession(InputActionsEditorType type)
+        {
+            Debug.Log("OnInputActionsEditorBeginSession");
+
+            return new InputActionsEditorSession { type = type };
+        }
+
+        public static void OnInputActionsEditorSessionEnding(ref InputActionsEditorSession session)
+        {
+            Debug.Log("OnInputActionsEditorBeginSession: " + session);
+        }
     }
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR
