@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Removed icons from action map list as these were always the same and the icon was placeholder
 - Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
 - Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
+- Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
