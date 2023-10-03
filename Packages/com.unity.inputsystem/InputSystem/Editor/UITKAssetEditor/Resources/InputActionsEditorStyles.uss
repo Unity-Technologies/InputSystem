@@ -140,6 +140,11 @@
     align-items: flex-end;
 }
 
+.float-field {
+    width: 50px;
+    display: initial;
+}
+
 .name-and-parameters-list-view .up {
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
 }
