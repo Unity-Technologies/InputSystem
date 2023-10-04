@@ -159,13 +159,6 @@ namespace UnityEngine.InputSystem
             public int total_frame_count;
             public float total_event_processing_time;
         }
-
-        public enum InputActionsEditorType
-        {
-            Invalid = 0,
-            FreeFloatingEditorWindow = 1,
-            EmbeddedInProjectSettings = 2
-        }
     }
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR
