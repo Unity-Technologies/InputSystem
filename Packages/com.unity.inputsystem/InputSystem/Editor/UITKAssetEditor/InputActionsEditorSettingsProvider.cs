@@ -55,6 +55,12 @@ namespace UnityEngine.InputSystem.Editor
             
             m_AnalyticsSession.End();
             InputAnalytics.OnInputActionEditorSessionEnd(ref m_AnalyticsSession);
+
+            if (m_HasFocus)
+            {
+                OnFocusLost(null);
+                m_HasFocus = false;    
+            }
         }
 
         private void OnFocus(FocusInEvent @event)
@@ -73,12 +79,16 @@ namespace UnityEngine.InputSystem.Editor
         private void OnFocusLost(FocusOutEvent @event)
         {
             // This can be used to detect focus lost events, but will not detect window focus
-            var element = (VisualElement)@event.relatedTarget;
+            var element = (VisualElement)@event?.relatedTarget;
             if (element == null && m_HasFocus)
             {
                 m_HasFocus = false;
                 
                 Debug.Log("OnFocusLost");
+                
+                #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+                InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+                #endif
                 
                 m_AnalyticsSession.RegisterEditorFocusOut();
             }
@@ -86,8 +96,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            // No action, auto-saved on edit-focus lost
+            #else
             // Project wide input actions always auto save - don't check the asset auto save status
             InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
+            #endif
         }
 
         private void BuildUI()
