@@ -1,7 +1,9 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
@@ -165,57 +167,90 @@ namespace UnityEngine.InputSystem
             EmbeddedInProjectSettings = 2
         }
 
+        /// <summary>
+        /// Analytics record for tracking engagement with Input Action Asset editor(s).
+        /// </summary>
         [Serializable]
         public struct InputActionsEditorSession
         {
+            /// <summary>
+            /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
+            /// </summary>
+            /// <param name="type">The editor type for which this record is valid.</param>
             public InputActionsEditorSession(InputActionsEditorType type)
             {
                 this.type = type;
-                totalDurationSeconds = 0;
-                totalFocusDurationSeconds = 0;
-                totalActionMapEdits = 0;
-                totalActionEdits = 0;
-                totalBindingEdits = 0;
-                numberOfUserSaves = 0;
-                numberOfAutoSaves = 0;
+                sessionDurationSeconds = 0;
+                sessionFocusDurationSeconds = 0;
+                sessionFocusSwitchCount = 0;
+                actionMapModificationCount = 0;
+                actionModificationCount = 0;
+                bindingModificationCount = 0;
+                explicitSaveCount = 0;
+                autoSaveCount = 0;
                 
                 m_FocusStart = float.NaN;
                 m_SessionStart = float.NaN;
             }
 
+            /// <summary>
+            /// Register that an action map edit has occurred.
+            /// </summary>
             public void RegisterActionMapEdit()
             {
-                ++totalActionMapEdits;
+                if (hasSession && hasFocus)
+                    ++actionMapModificationCount;
             }
 
+            /// <summary>
+            /// Register that an action edit has occurred.
+            /// </summary>
             public void RegisterActionEdit()
             {
-                ++totalActionEdits;
+                if (hasSession && hasFocus)
+                    ++actionModificationCount;
             }
 
+            /// <summary>
+            /// Register than a binding edit has occurred.
+            /// </summary>
             public void RegisterBindingEdit()
             {
-                ++totalBindingEdits;
+                if (hasSession && hasFocus)
+                    ++bindingModificationCount;
             }
 
-            public void RegisterFocusIn()
+            /// <summary>
+            /// Register that the editor has received focus which is expected to reflect that the user
+            /// is currently exploring or editing it.
+            /// </summary>
+            public void RegisterEditorFocusIn()
             {
-                if (hasFocus)
+                if (!hasSession || hasFocus)
                     return;
 
                 m_FocusStart = CurrentTime();
             }
 
-            public void RegisterFocusOut()
+            /// <summary>
+            /// Register that the editor has lost focus which is expected to reflect that the user currently
+            /// has the attention elsewhere.
+            /// </summary>
+            public void RegisterEditorFocusOut()
             {
-                if (!hasFocus)
+                if (!hasSession || !hasFocus)
                     return;
                 
-                var focusDurationSeconds = CurrentTime() - m_FocusStart;
-                this.totalFocusDurationSeconds += focusDurationSeconds;
+                var duration = CurrentTime() - m_FocusStart;
+                m_FocusStart = float.NaN;
+                sessionFocusDurationSeconds += (float)duration;
+                ++sessionFocusSwitchCount;
             }
 
-            public void StartSession()
+            /// <summary>
+            /// Begins a new session.
+            /// </summary>
+            public void Begin()
             {
                 if (hasSession)
                     return;
@@ -223,50 +258,59 @@ namespace UnityEngine.InputSystem
                 m_SessionStart = CurrentTime();
             }
 
-            public void EndSession()
+            /// <summary>
+            /// Ends the current session.
+            /// </summary>
+            public void End()
             {
-                var sessionDurationSeconds = CurrentTime() - m_SessionStart;
-                totalDurationSeconds += sessionDurationSeconds;
+                if (!hasSession)
+                    return;
+                
+                var duration = CurrentTime() - m_SessionStart;
+                this.sessionDurationSeconds += (float)duration;
             }
-
+            
             public override string ToString()
             {
                 return $"{nameof(type)}: {type}, " +
-                       $"{nameof(totalDurationSeconds)}: {totalDurationSeconds} seconds, " +
-                       $"{nameof(totalFocusDurationSeconds)}: {totalFocusDurationSeconds} seconds, " +
-                       $"{nameof(totalActionMapEdits)}: {totalActionMapEdits}, " +
-                       $"{nameof(totalActionEdits)}: {totalActionEdits}, " +
-                       $"{nameof(totalBindingEdits)}: {totalBindingEdits}, " +
-                       $"{nameof(numberOfUserSaves)}: {numberOfUserSaves}, " +
-                       $"{nameof(numberOfAutoSaves)}: {numberOfAutoSaves}";
+                       $"{nameof(sessionDurationSeconds)}: {sessionDurationSeconds} seconds, " +
+                       $"{nameof(sessionFocusDurationSeconds)}: {sessionFocusDurationSeconds} seconds, " +
+                       $"{nameof(sessionFocusSwitchCount)}: {sessionFocusSwitchCount}, " +
+                       $"{nameof(actionMapModificationCount)}: {actionMapModificationCount}, " +
+                       $"{nameof(actionModificationCount)}: {actionModificationCount}, " +
+                       $"{nameof(bindingModificationCount)}: {bindingModificationCount}, " +
+                       $"{nameof(explicitSaveCount)}: {explicitSaveCount}, " +
+                       $"{nameof(autoSaveCount)}: {autoSaveCount}";
             }
 
-            public InputActionsEditorType type;
-            public float totalDurationSeconds;
-            public float totalFocusDurationSeconds;
-            public int totalActionMapEdits;
-            public int totalActionEdits;
-            public int totalBindingEdits;
-            public int numberOfUserSaves;
-            public int numberOfAutoSaves;
+            private InputActionsEditorType type;
+            private float sessionDurationSeconds;
+            private float sessionFocusDurationSeconds;
+            private int sessionFocusSwitchCount;
+            private int actionMapModificationCount;
+            private int actionModificationCount;
+            private int bindingModificationCount;
+            private int explicitSaveCount;
+            private int autoSaveCount;
             
-            [NonSerialized] private float m_FocusStart;
-            [NonSerialized] private float m_SessionStart;
+            [NonSerialized] private double m_FocusStart;
+            [NonSerialized] private double m_SessionStart;
 
-            private bool hasFocus => !float.IsNaN(m_FocusStart);
-            private bool hasSession => !float.IsNaN(m_SessionStart);
-            private float CurrentTime() => Time.realtimeSinceStartup;
+            private bool hasFocus => !double.IsNaN(m_FocusStart);
+            private bool hasSession => !double.IsNaN(m_SessionStart);
+            private double CurrentTime() => EditorApplication.timeSinceStartup;
+            public bool isValid => sessionDurationSeconds >= 0;
         }
 
-        public static InputActionsEditorSession OnInputActionsEditorBeginSession(InputActionsEditorType type)
+        /// <summary>
+        /// Reports analytics for a single Input Actions Asset editing session.
+        /// </summary>
+        /// <param name="session">The session related analytics.</param>
+        public static void OnInputActionEditorSessionEnd(ref InputActionsEditorSession session)
         {
-            Debug.Log("OnInputActionsEditorBeginSession");
-
-            return new InputActionsEditorSession { type = type };
-        }
-
-        public static void OnInputActionsEditorSessionEnding(ref InputActionsEditorSession session)
-        {
+            if (!session.isValid)
+                return;
+            
             Debug.Log("OnInputActionsEditorEndSession: " + session);
         }
     }
