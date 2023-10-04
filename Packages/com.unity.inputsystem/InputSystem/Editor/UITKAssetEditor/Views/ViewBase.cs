@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -111,6 +112,12 @@ namespace UnityEngine.InputSystem.Editor
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;
         private bool m_IsFirstUpdate = true;
+
+#if UNITY_STANDALONE_OSX
+        protected bool IsCommandOrControlPressed(KeyDownEvent keyDownEvent) => keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Command;
+#elif UNITY_STANDALONE_WIN
+        private bool IsCommandOrControlPressed(KeyDownEvent keyDownEvent) => keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Control;
+#endif
     }
 
     internal class ViewStateSelector<TReturn> : IViewStateSelector<TReturn>
