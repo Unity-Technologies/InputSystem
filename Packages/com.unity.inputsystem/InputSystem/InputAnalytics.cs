@@ -1,9 +1,7 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
