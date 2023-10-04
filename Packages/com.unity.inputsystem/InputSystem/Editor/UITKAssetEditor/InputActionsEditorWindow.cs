@@ -215,7 +215,7 @@ namespace UnityEngine.InputSystem.Editor
             // If it is, there's nothing to save.
             // At the moment, an asset only has the default asset layout content on disk when it is first created.
             // So in this case we cannot go through the normal path and compare what's on disk with what has been serialized.
-            if (InputActionAsset.HasDefaultJsonLayout(m_AssetJson) && asset.IsEmpty())
+            if (m_AssetJson == InputActionAsset.kDefaultAssetLayoutJson && asset.IsEmpty())
                 return false;
 
             var newAssetJson = asset.ToJson();
