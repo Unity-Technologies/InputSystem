@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
 - Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
 - Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
+- Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
