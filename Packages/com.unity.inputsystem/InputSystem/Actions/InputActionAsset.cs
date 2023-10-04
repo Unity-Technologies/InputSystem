@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public const string Extension = "inputactions";
         ////REVIEW: actually pre-populate with some stuff?
-        internal const string kDefaultAssetLayout = "{}";
+        internal const string kDefaultAssetLayoutJson = "{}";
 
         /// <summary>
         /// True if any action in the asset is currently enabled.
@@ -877,11 +877,6 @@ namespace UnityEngine.InputSystem
         internal bool IsEmpty()
         {
             return actionMaps.Count == 0 && controlSchemes.Count == 0;
-        }
-
-        internal static bool HasDefaultJsonLayout(string assetJson)
-        {
-            return assetJson == kDefaultAssetLayout;
         }
 
         internal void OnWantToChangeSetup()
