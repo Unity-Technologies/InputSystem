@@ -11,7 +11,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
-        private VisualElement m_MainElement;
         private bool m_HasEditFocus;
         StateContainer m_StateContainer;
 
