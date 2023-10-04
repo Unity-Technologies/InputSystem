@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
 
 #if UNITY_STANDALONE_OSX
         protected bool IsCommandOrControlPressed(KeyDownEvent keyDownEvent) => keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Command;
-#elif UNITY_STANDALONE_WIN
+#else
         private bool IsCommandOrControlPressed(KeyDownEvent keyDownEvent) => keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Control;
 #endif
     }
