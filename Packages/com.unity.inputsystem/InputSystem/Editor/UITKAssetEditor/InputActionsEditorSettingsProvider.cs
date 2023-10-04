@@ -28,8 +28,6 @@ namespace UnityEngine.InputSystem.Editor
             m_State = new InputActionsEditorState(serializedAsset);
             BuildUI();
 
-            Debug.Log("OnActivate"); // At this point we now the editor has been opened
-
             // Monitor focus state of root element
             m_RootVisualElement.focusable = true;
             m_RootVisualElement.RegisterCallback<FocusOutEvent>(OnEditFocusLost);
@@ -44,6 +42,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnDeactivate()
         {
+            if (m_RootVisualElement != null)
+            {
+                m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnEditFocusLost);
+                m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnEditFocus);    
+            }
+            
             // Note that OnDeactivate will also trigger when opening the Project Settings (existing instance).
             // Hence we guard against duplicate OnDeactivate() calls.
             if (m_HasEditFocus)
