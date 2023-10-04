@@ -231,7 +231,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Auto-save triggers on focus-lost instead of on every change
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
+            if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
                 Save();
             #endif
         }

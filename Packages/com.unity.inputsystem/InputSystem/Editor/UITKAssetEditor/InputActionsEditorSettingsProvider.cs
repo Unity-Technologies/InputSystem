@@ -66,7 +66,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnEditFocusLost(FocusOutEvent @event)
         {
-            // This can be used to detect focus lost events of container elements, but will not detect window focus
+            // This can be used to detect focus lost events of container elements, but will not detect window focus.
+            // Note that `event.relatedTarget` contains the element that gains focus, which is null if we select
+            // elements outside of project settings Editor Window. Also note that @event is null when we call this
+            // from OnDeactivate().
             var element = (VisualElement)@event?.relatedTarget;
             if (element == null && m_HasEditFocus)
             {
