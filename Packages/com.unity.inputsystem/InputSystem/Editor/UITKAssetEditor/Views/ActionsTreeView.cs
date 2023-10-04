@@ -20,6 +20,7 @@ namespace UnityEngine.InputSystem.Editor
         private Button addActionButton => m_Root?.Q<Button>("add-new-action-button");
 
         private bool m_RenameOnActionAdded;
+        private readonly CollectionViewSelectionChangeFilter m_ActionsTreeViewSelectionChangeFilter;
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
@@ -106,13 +107,19 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
-            m_ActionsTreeView.selectedIndicesChanged += indicies =>
+            m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
+            m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
             {
-                var index = indicies.First();
-                if (index == -1)
-                    return;
-                var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(index);
-                Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
+                if (m_ActionsTreeView.selectedIndex >= 0)
+                {
+                    var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex);
+                    Dispatch(item.isAction ? Commands.SelectAction(item.name) : Commands.SelectBinding(item.bindingIndex));
+                }
+                else
+                {
+                    Dispatch(Commands.SelectAction(null));
+                    Dispatch(Commands.SelectBinding(-1));
+                }
             };
 
             m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
