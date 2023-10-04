@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
 
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEngine.InputSystem.Editor.Views
 {
     /// <summary>
     /// A helper class that provides a workaround to prevent deselection in a UI-Toolkit list or tree-view,
@@ -19,37 +19,33 @@ namespace UnityEngine.InputSystem.Editor
     ///
     /// This workaround should be removed if this changes in the future and the functionality is provided by
     /// the UI framework.
+    ///
+    /// Define UNITY_INPUT_SYSTEM_INPUT_ASSET_EDITOR_ALLOWS_DESELECTION to disable this feature if desired
+    /// during development.
     /// </remarks>>
     internal class CollectionViewSelectionChangeFilter
     {
-        /// <summary>
-        /// Currently left as a constant to allow turning deselection on/off to be able to remove issues
-        /// related to not having selections more quickly. Also it might be desirable to either support or
-        /// not support deselection (E.g. pressing ESC while having a current selection).
-        ///
-        /// Could be removed if there is no use-case for quickly switching between modes during development.
-        /// </summary>
-        private const bool kAllowDeselection = false;
-
-        private readonly BaseVerticalCollectionView m_View_;
-        private List<int> m_SelectedIndices_;
+        private readonly BaseVerticalCollectionView m_View;
+        private List<int> m_SelectedIndices;
 
         /// <summary>
-        /// Event
+        /// Event triggered as an output to filtering the selected indices reported by the view.
         /// </summary>
         public event Action<IEnumerable<int>> selectedIndicesChanged;
 
         public CollectionViewSelectionChangeFilter(BaseVerticalCollectionView view)
         {
-            m_SelectedIndices_ = new List<int>();
+            m_SelectedIndices = new List<int>();
 
-            m_View_ = view;
-            if (kAllowDeselection)
-                m_View_.selectedIndicesChanged += OnSelectedIndicesChanged;
-            else
-                m_View_.selectedIndicesChanged += FilterSelectedIndicesChanged;
+            m_View = view;
+            #if UNITY_INPUT_SYSTEM_INPUT_ASSET_EDITOR_ALLOWS_DESELECTION
+            m_View_.selectedIndicesChanged += OnSelectedIndicesChanged;
+            #else
+            m_View.selectedIndicesChanged += FilterSelectedIndicesChanged;
+            #endif
         }
 
+        #if !UNITY_INPUT_SYSTEM_INPUT_ASSET_EDITOR_ALLOWS_DESELECTION
         private void FilterSelectedIndicesChanged(IEnumerable<int> selectedIndices)
         {
             // Convert IEnumerable to a list to allow for multiple-iteration
@@ -58,30 +54,32 @@ namespace UnityEngine.InputSystem.Editor
             // If the selection change is a deselection (transition from having a selection to having none)
             if (currentlySelectedIndices.Count == 0)
             {
-                if (m_SelectedIndices_.Count > 0)
+                if (m_SelectedIndices.Count > 0)
                 {
                     // Remove any stored selection indices that are no longer within valid range
-                    var count = m_View_.itemsSource.Count;
-                    for (var i = m_SelectedIndices_.Count - 1; i >= 0; --i)
+                    var count = m_View.itemsSource.Count;
+                    for (var i = m_SelectedIndices.Count - 1; i >= 0; --i)
                     {
-                        if (m_SelectedIndices_[i] >= count)
-                            m_SelectedIndices_.RemoveAt(i);
+                        if (m_SelectedIndices[i] >= count)
+                            m_SelectedIndices.RemoveAt(i);
                     }
 
                     // Restore selection based on last known selection and return immediately since
                     // assignment will retrigger selection change.
-                    m_View_.SetSelection(m_SelectedIndices_);
+                    m_View.SetSelection(m_SelectedIndices);
                     return;
                 }
             }
             else
             {
                 // Store indices to allow preventing future deselect
-                m_SelectedIndices_ = currentlySelectedIndices;
+                m_SelectedIndices = currentlySelectedIndices;
             }
 
-            OnSelectedIndicesChanged(this.m_SelectedIndices_);
+            OnSelectedIndicesChanged(this.m_SelectedIndices);
         }
+
+        #endif
 
         private void OnSelectedIndicesChanged(IEnumerable<int> selectedIndices)
         {
