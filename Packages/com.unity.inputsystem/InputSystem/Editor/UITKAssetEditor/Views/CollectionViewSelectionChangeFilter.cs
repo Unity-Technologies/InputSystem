@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
 
-namespace UnityEngine.InputSystem.Editor.Views
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A helper class that provides a workaround to prevent deselection in a UI-Toolkit list or tree-view,
