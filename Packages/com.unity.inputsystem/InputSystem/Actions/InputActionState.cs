@@ -2596,6 +2596,7 @@ namespace UnityEngine.InputSystem
             return maps[mapIndex];
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "mapIndex", Justification = "Keep this for future implementation")]
         private void ResetInteractionStateAndCancelIfNecessary(int mapIndex, int bindingIndex, int interactionIndex)
         {
             Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount, "Interaction index out of range");
