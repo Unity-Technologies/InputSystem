@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
                 File.WriteAllText(assetPath, assetJson);
                 AssetDatabase.ImportAsset(assetPath);
             }
-            
+
             Debug.Log("Asset saved");
         }
     }

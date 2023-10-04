@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Editor
                 window.Focus();
                 return window;
             }
-            
+
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
@@ -214,7 +214,7 @@ namespace UnityEngine.InputSystem.Editor
             // Window is dirty is never true since every change is auto-saved
             var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
             #endif
-            
+
             if (m_IsDirty == isWindowDirty)
                 return;
             m_IsDirty = isWindowDirty;
