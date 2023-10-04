@@ -44,9 +44,9 @@ namespace UnityEngine.InputSystem.Editor
             if (m_RootVisualElement != null)
             {
                 m_RootVisualElement.UnregisterCallback<FocusOutEvent>(OnEditFocusLost);
-                m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnEditFocus);    
+                m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnEditFocus);
             }
-            
+
             // Note that OnDeactivate will also trigger when opening the Project Settings (existing instance).
             // Hence we guard against duplicate OnDeactivate() calls.
             if (m_HasEditFocus)
