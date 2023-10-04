@@ -211,8 +211,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
 
-            // Checks if the new asset is empty. If it is, there's nothing to save.
-            if (asset.actionMaps.Count == 0 && asset.controlSchemes.Count == 0)
+            // Checks if the asset being edited is a new asset that was never saved before.
+            // If it is, there's nothing to save.
+            // At the moment, an asset only has the default asset layout content on disk when it is first created.
+            // So in this case we cannot go through the normal path and compare what's on disk with what has been serialized.
+            if (InputActionAsset.HasDefaultJsonLayout(m_AssetJson) && asset.IsEmpty())
                 return false;
 
             var newAssetJson = asset.ToJson();
