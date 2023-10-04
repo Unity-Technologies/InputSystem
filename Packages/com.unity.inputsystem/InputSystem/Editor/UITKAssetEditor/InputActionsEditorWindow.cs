@@ -193,7 +193,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save()
         {
-            Debug.Log("Save");
             InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
             PostSaveAction();
         }
