@@ -137,6 +137,13 @@ namespace UnityEngine.InputSystem.Composites
             }
         }
 
+        /// <inheritdoc />
+        public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            var value = ReadValue(ref context);
+            return value.magnitude;
+        }
+
         /// <summary>
         /// Determines how a <c>Vector3</c> is synthesized from part controls.
         /// </summary>
