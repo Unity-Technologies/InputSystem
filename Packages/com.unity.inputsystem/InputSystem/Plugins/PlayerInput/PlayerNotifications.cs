@@ -3,6 +3,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Determines how the triggering of an action or other input-related events are relayed to other GameObjects.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1717:Only FlagsAttribute enums should have plural names")]
     public enum PlayerNotifications
     {
         ////TODO: add a "None" behavior; for actions, users may want to poll (or use the generated interfaces)

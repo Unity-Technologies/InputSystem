@@ -14,9 +14,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static Action<InputActionsTreeViewItem> DeleteAction => DeleteActionItem;
         internal static Action<InputActionMapsTreeViewItem> DeleteActionMap => DeleteActionMapItem;
         internal static Action<InputActionsTreeViewItem> AddBinding => AddNewBinding;
-        internal static Action<InputActionsTreeViewItem> AddCompositePositivNegativModifier => AddNewPositiveNegativeComposite;
-        internal static Action<InputActionsTreeViewItem> AddCompositeOneModifier => AddNewOneModifierComposite;
-        internal static Action<InputActionsTreeViewItem> AddCompositeTwoModifier => AddNewTwoModifierComposite;
+        internal static Action<InputActionsTreeViewItem, string> AddComposite => AddNewComposite;
         internal static Action<InputActionMapsTreeViewItem> CreateActionMap => CreateNewActionMap;
         internal static Action<InputActionsTreeViewItem> CreateAction => CreateNewAction;
         internal static Action<InputActionsTreeViewItem> DuplicateAction => DuplicateActionItem;
@@ -78,22 +76,10 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionsTreeView.AddBinding(action);
         }
 
-        private static void AddNewPositiveNegativeComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
+        private static void AddNewComposite(InputActionsTreeViewItem inputActionsTreeViewItem, string compositeType)
         {
             var action = inputActionsTreeViewItem.label.text;
-            m_ActionsTreeView.AddComposite(action, "1DAxis");
-        }
-
-        private static void AddNewOneModifierComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
-        {
-            var action = inputActionsTreeViewItem.label.text;
-            m_ActionsTreeView.AddComposite(action, "OneModifier");
-        }
-
-        private static void AddNewTwoModifierComposite(InputActionsTreeViewItem inputActionsTreeViewItem)
-        {
-            var action = inputActionsTreeViewItem.label.text;
-            m_ActionsTreeView.AddComposite(action, "TwoModifiers");
+            m_ActionsTreeView.AddComposite(action, compositeType);
         }
 
         private static void DuplicateActionMapItem(InputActionMapsTreeViewItem inputActionsTreeViewItem)
