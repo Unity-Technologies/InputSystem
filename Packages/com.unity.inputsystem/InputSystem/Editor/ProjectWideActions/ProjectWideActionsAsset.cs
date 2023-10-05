@@ -12,6 +12,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
         {
+            // Is there an inputactions asset nominated as the Project-Wide Actions.
             if (EditorBuildSettings.TryGetConfigObject(
                 InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
                 out InputActionAsset actionAsset))
@@ -23,22 +24,43 @@ namespace UnityEngine.InputSystem.Editor
                     InputSystem.actions = actionAsset;
                     return;
                 }
-                else
-                {
-                    // @TODO: Handle files in the deletedAssets list
 
-                    // Handle edits to the project-wide actions asset.
-                    // Ensure we pass a copy of the project wide actions asset inside the roslyn source generator additionalfile.
-                    // Touching this file will cause the source generator to update the typesafe api.
-                    var assetPath = AssetDatabase.GetAssetPath(actionAsset);
-                    if (!string.IsNullOrEmpty(assetPath))
+                var assetPath = AssetDatabase.GetAssetPath(actionAsset);
+                if (string.IsNullOrEmpty(assetPath))
+                    return;
+
+                // Handle edits to the project-wide actions asset.
+                // Ensure we pass a copy of the project wide actions asset inside the roslyn source generator additionalfile.
+                // Touching this file will cause the source generator to update the typesafe api.
+
+                // Handle asset moves independently as we want to also move the additionalfile in this case.
+                var assetFileName = Path.GetFileName(assetPath);
+                foreach (var fromPath in movedFromAssetPaths)
+                {
+                    if (fromPath.EndsWith(assetFileName))
                     {
-                        // Only modify the file if there were modifications.
-                        if (ArrayHelpers.Contains(importedAssets, assetPath) ||
-                            ArrayHelpers.Contains(movedAssets, assetPath))
-                        {
-                            ProjectWideActionsAsset.RefreshRoslynAdditionalFile(assetPath);
-                        }
+                        ProjectWideActionsAsset.MoveRoslynAdditionalFileForAsset(fromPath, assetPath);
+                        return;
+                    }
+                }
+
+                // Handle asset edits (or initial asset creation).
+                if (ArrayHelpers.Contains(importedAssets, assetPath))
+                {
+                    ProjectWideActionsAsset.CreateRoslynAdditionalFileForAsset(assetPath);
+                    return;
+                }
+
+                // Handle if the user moves the .additionalfile directly.
+                // In this case we need to move it back next to the asset, otherwise we will lose track
+                // of where it is located and won't be able to delete it. Having multiple additionalfiles
+                // could result and then the source generator could pick up a outdated source.
+                foreach (var toPath in movedAssets)
+                {
+                    if (toPath.EndsWith(ProjectWideActionsAsset.kAdditionalFilename))
+                    {
+                        ProjectWideActionsAsset.MoveRoslynAdditionalFileForAsset(toPath, assetPath);
+                        return;
                     }
                 }
             }
@@ -88,6 +110,15 @@ namespace UnityEngine.InputSystem.Editor
         // Store which asset is _the_ Project-Wide Actions asset.
         internal static void SetAsProjectWideActions(InputActionAsset newActionsAsset)
         {
+            if (EditorBuildSettings.TryGetConfigObject(
+                InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
+                out InputActionAsset previousActionsAsset))
+            {
+                var previousAssetPath = AssetDatabase.GetAssetPath(previousActionsAsset);
+                if (!string.IsNullOrEmpty(previousAssetPath))
+                    DeleteRoslynAdditionalFileForAsset(previousAssetPath);
+            }
+
             var newAssetPath = AssetDatabase.GetAssetPath(newActionsAsset);
             if (!string.IsNullOrEmpty(newAssetPath))
             {
@@ -96,27 +127,78 @@ namespace UnityEngine.InputSystem.Editor
                     newActionsAsset,
                     true);
 
-                RefreshRoslynAdditionalFile(newAssetPath);
+                CreateRoslynAdditionalFileForAsset(newAssetPath);
             }
         }
 
-        internal static void RefreshRoslynAdditionalFile(string sourceAssetPath)
+        // Copies the inputactionasset content into a file that the Roslyn source generator
+        // will be able to read. This file is automatically generated and is created in the
+        // same directory as the asset.
+        internal static void CreateRoslynAdditionalFileForAsset(string assetFilePath)
         {
-            // @TODO: Delete all other InputSystemActionsAPIGenerator.additionalfiles in the assets directory
-            // @TODO: Move location to always be next to the sourceAsset
-            const string destFilePath = "Assets/actions.InputSystemActionsAPIGenerator.additionalfile";
+            Debug.Assert(!string.IsNullOrEmpty(assetFilePath));
+
+            var assetDirectory = Path.GetDirectoryName(assetFilePath);
+            var destFilePath = Path.Combine(assetDirectory, kAdditionalFilename);
 
             try
             {
-                if (File.Exists(sourceAssetPath))
+                if (File.Exists(assetFilePath))
                 {
-                    File.Copy(sourceAssetPath, destFilePath, true);
+                    File.Copy(assetFilePath, destFilePath, true);
                     AssetDatabase.ImportAsset(destFilePath); // Invoke importer and therefore source generator
                 }
             }
             catch (Exception exception)
             {
                 Debug.LogError($"InputSystem could not save actions additional file: '{destFilePath}' ({exception})");
+            }
+        }
+
+        internal static void DeleteRoslynAdditionalFileForAsset(string assetFilePath)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(assetFilePath));
+
+            var assetDirectory = Path.GetDirectoryName(assetFilePath);
+            var additionalFilePath = Path.Combine(assetDirectory, kAdditionalFilename);
+
+            try
+            {
+                if (File.Exists(additionalFilePath))
+                    AssetDatabase.DeleteAsset(assetFilePath);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"InputSystem could not delete actions additional file: '{additionalFilePath}' ({exception})");
+            }
+        }
+
+        internal static void MoveRoslynAdditionalFileForAsset(string oldAssetFilePath, string newAssetFilePath)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(oldAssetFilePath));
+            Debug.Assert(!string.IsNullOrEmpty(newAssetFilePath));
+
+            var moveFromDirectory = Path.GetDirectoryName(oldAssetFilePath);
+            var moveToDirectory = Path.GetDirectoryName(newAssetFilePath);
+
+            var existingFilePath = Path.Combine(moveFromDirectory, kAdditionalFilename);
+            var newFilePath = Path.Combine(moveToDirectory, kAdditionalFilename);
+
+            try
+            {
+                if (File.Exists(existingFilePath))
+                {
+                    AssetDatabase.MoveAsset(existingFilePath, newFilePath);
+                    // Don't require re-importing additionalfile after moves as content shouldn't change
+                }
+                else
+                {
+                    CreateRoslynAdditionalFileForAsset(newAssetFilePath);
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"InputSystem could not move actions additional file to: '{newFilePath}' ({exception})");
             }
         }
 
@@ -193,7 +275,6 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
                 out InputActionAsset actionsAsset))
             {
-                // @TODO: Test what happens if this asset was deleted from the filesystem but is still in BuildSettings
                 actionsAsset.name = InputSystem.kProjectWideActionsAssetName;
                 return actionsAsset;
             }
