@@ -43,45 +43,16 @@ namespace UnityEngine.InputSystem
                     Debug.LogWarning(ex.Message);
                 }
 
-                return m_Action.ReadDefaultValue<TActionType>(
-                    new BindingIndex(m_Action, m_Action.activeBindingIndex, BindingIndex.IndexType.IncludeCompositeParts)
-                        .ToIndexWithoutCompositeParts().value);
+                return default(TActionType);
             }
         }
 
-        /// <summary>
-        /// A high-level collection of Input Bindings that by default skips over the composite part bindings
-        /// for purposes of indexing.
-        /// </summary>
-        /// <remarks>
-        ///
-        /// </remarks>
-        public InputBindingsCollection bindings =>
-            new InputBindingsCollection(m_Action, InputBindingsCollection.EnumerationBehaviour.SkipCompositeParts);
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="action"></param>
-        /// <remarks>
-        /// </remarks>
         public Input(InputAction action)
         {
             Debug.Assert(action != null);
 
             m_Action = action ?? throw new ArgumentNullException(nameof(action));
             m_Action.Enable();
-        }
-
-        /// <summary>
-        /// True when the action is pressed.
-        /// </summary>
-        /// <param name="input"></param>
-        /// <remarks>
-        /// </remarks>
-        public static implicit operator bool(Input<TActionType> input)
-        {
-            return input.m_Action.IsPressed();
         }
 
         private InputAction m_Action;
