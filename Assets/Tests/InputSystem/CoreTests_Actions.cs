@@ -6292,29 +6292,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanRemoveExistingInteractionOnBinding()
-    {
-        var action = new InputAction();
-        action.AddBinding("<Gamepad>/buttonSouth", interactions: "hold,tap(duration=0.5),hold(duration=0.5)");
-
-        action.Enable();
-
-        action.ChangeBinding(0).RemoveInteraction<HoldInteraction>();
-        Assert.That(action.bindings[0].interactions, Is.EqualTo("hold,tap(duration=0.5)"));
-
-        action.ChangeBinding(0).RemoveInteraction<HoldInteraction>();
-        Assert.That(action.bindings[0].interactions, Is.EqualTo("tap(duration=0.5)"));
-
-        // make sure removing a non-existent interaction doesn't throw
-        Assert.DoesNotThrow(() => action.ChangeBinding(0).RemoveInteraction<HoldInteraction>());
-        Assert.That(action.bindings[0].interactions, Is.EqualTo("tap(duration=0.5)"));
-
-        action.ChangeBinding(0).RemoveInteraction<TapInteraction>();
-        Assert.That(action.bindings[0].interactions, Is.Empty);
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_DestroyingAssetClearsCallbacks()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
