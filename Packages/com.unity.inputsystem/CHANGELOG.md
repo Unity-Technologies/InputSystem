@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
 - Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
 - Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
+- Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
@@ -27,6 +28,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed exiting empty input fields for actions, action maps and composites in the input action asset editor.
 - Fixed an issue where selecting an Action in the Input Action Asset Editor tree-view and then pressing ESC to unselect would throw an `InvalidOperationException`.
 - Fixed an issue where selecting an Action Map in the Input Action Asset Editor list and then pressing ESC to unselect would print an `NullReferenceException` to the Debug console.
+- Fixed case [ISXB-251](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-251) (Action only calls started & performed callbacks when control type is set to Vector3Composite). `EvaluateMagnitude` wasn't overridden for Vector3Composite, also made some minor changes to Vector3Composite and Vector2Composite for consistency.
+- Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
+- Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
 
 ## [1.8.0-pre.1] - 2023-09-04
 
