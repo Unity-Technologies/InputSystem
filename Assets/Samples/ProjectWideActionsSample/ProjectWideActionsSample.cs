@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActionsSample
             {
                 cube.GetComponent<Renderer>().material.color = Color.green;
             }
-            
+
             if (InputActions.player.move.value.x < 0.0f)
             {
                 cube.transform.Translate(new Vector3(-10 * Time.deltaTime, 0, 0));

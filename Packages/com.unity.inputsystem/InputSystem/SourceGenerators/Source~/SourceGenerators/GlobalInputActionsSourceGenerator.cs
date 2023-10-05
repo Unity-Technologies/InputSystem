@@ -35,7 +35,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
         var assemblyName = initContext.CompilationProvider.Select(static (c, _) => c.AssemblyName);
 
         var additionalTexts = initContext.AdditionalTextsProvider;
-        var pathsAndContents = additionalTexts.Select((text, cancellationToken) => new PathAndContent(text.Path, text.GetText(cancellationToken)!.ToString()));
+        var pathsAndContents = additionalTexts.Select((text, cancellationToken) => new PathAndContent(text.Path, text.GetText(cancellationToken) !.ToString()));
         var combined = pathsAndContents.Collect().Combine(assemblyName);
 
         initContext.RegisterSourceOutput(combined, static (spc, combinedPair) =>
