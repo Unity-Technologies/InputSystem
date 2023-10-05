@@ -1,3 +1,7 @@
+// Note: If not UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS we do not use a custom property drawer and
+//       picker for InputActionReferences but rather rely on default (classic) object picker.
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Search;
@@ -12,18 +16,16 @@ using UnityEditor.Search;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    static class InputActionReferenceSearchProviderConstants
-    {
-        internal const string type = "InputActionReference"; // This allows picking up also assets
-    }
-
     static class InputActionReferenceSearchProvider
     {
-        // No need to use the SearchItemProvider -> this attribute is used to register the provider to the SearchWindow.
+        private const string kInputActionReferenceType = "InputActionReference";
+
+        // No need to use the SearchItemProvider -> this attribute is used to register the provider to
+        // the SearchWindow and here we are mainly interested in using SearchItemProvider as a picker.
         // [SearchItemProvider]
         internal static SearchProvider CreateProjectSettingsAssetProvider()
         {
-            return new SearchProvider(InputActionReferenceSearchProviderConstants.type, "Project Settings")
+            return new SearchProvider(kInputActionReferenceType, "Project Settings")
             {
                 priority = 25,
                 toObject = (item, type) => GetObject(item, type),
@@ -37,7 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             var icon = AssetDatabase.GetCachedIcon(ProjectWideActionsAsset.kAssetPath) as Texture2D;
 
             // This yields all accepted assets (InputActionReference) from ProjectWideActionsAsset.kAssetPath.
-            var assets = AssetDatabase.LoadAllAssetsAtPath(ProjectWideActionsAsset.kAssetPath); // TODO Why does this return an outdated asset?!
+            // TODO Why does this return an outdated asset?! Must be a problem unrelated to this search.
+            var assets = AssetDatabase.LoadAllAssetsAtPath(ProjectWideActionsAsset.kAssetPath);
             foreach (var asset in assets)
             {
                 var label = asset.name;
@@ -45,9 +48,9 @@ namespace UnityEngine.InputSystem.Editor
                     yield return provider.CreateItem(context, asset.GetInstanceID().ToString(), label,
                         "Input Action Reference (Project Settings)", icon, asset);
             }
-        }        
+        }
 
-        static Object GetObject(SearchItem item, System.Type type)
+        private static Object GetObject(SearchItem item, System.Type type)
         {
             return item.data as Object;
         }
@@ -55,20 +58,22 @@ namespace UnityEngine.InputSystem.Editor
 
     // Custom property drawer in order to use the Advance picker:
     [CustomPropertyDrawer(typeof(InputActionReference))]
-    public class AdvanceInputActionReferencePropertyDrawer : PropertyDrawer
+    public sealed class InputActionReferencePropertyDrawer : PropertyDrawer
     {
-        private SearchContext m_Context;
-        public AdvanceInputActionReferencePropertyDrawer()
-        {
-            // By default ADB search provider yields ALL assets even if the search query is empty. AssetProvider will NOT yield anything if searchQuery is empty
-            var adbProvider = UnityEditor.Search.SearchService.GetProvider("adb");
-            var defaultProvider = InputActionReferenceSearchProvider.CreateProjectSettingsAssetProvider();
-            m_Context = UnityEditor.Search.SearchService.CreateContext(
-                new[] { adbProvider, defaultProvider },
-                "",
-                // SearchFlags : these flags are used to customize how search is performed and how search results are displayed.
-                SearchFlags.Sorted | SearchFlags.OpenPicker | SearchFlags.Packages);
+        private readonly SearchContext m_Context;
 
+        public InputActionReferencePropertyDrawer()
+        {
+            // By default ADB search provider yields ALL assets even if the search query is empty.
+            // AssetProvider ("asset") will NOT yield anything if searchQuery is empty.
+            var adbProvider = UnityEditor.Search.SearchService.GetProvider("adb");
+            var projectSettingsProvider = InputActionReferenceSearchProvider.CreateProjectSettingsAssetProvider();
+            m_Context = UnityEditor.Search.SearchService.CreateContext(
+                new[] { adbProvider, projectSettingsProvider },
+                "",
+                // SearchFlags : these flags are used to customize how search is performed and how search
+                // results are displayed.
+                SearchFlags.Sorted | SearchFlags.OpenPicker | SearchFlags.Packages);
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -76,7 +81,12 @@ namespace UnityEngine.InputSystem.Editor
             // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
 
             ObjectField.DoObjectField(position, property, typeof(InputActionReference), label, m_Context,
-                Search.SearchViewFlags.OpenInBuilderMode | Search.SearchViewFlags.DisableBuilderModeToggle | Search.SearchViewFlags.DisableInspectorPreview | Search.SearchViewFlags.DisableSavedSearchQuery);
+                Search.SearchViewFlags.OpenInBuilderMode |
+                Search.SearchViewFlags.DisableBuilderModeToggle |
+                Search.SearchViewFlags.DisableInspectorPreview |
+                Search.SearchViewFlags.DisableSavedSearchQuery);
         }
     }
 }
+
+#endif
