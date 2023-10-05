@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.Editor
                 OnKeyDownEventForRename();
             else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
-            else if (IsCommandOrControlPressed(e))
+            else if (IsDuplicateShortcutPressed(e))
                 OnKeyDownEventForDuplicate();
         }
 
@@ -137,8 +137,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnKeyDownEventForDuplicate()
         {
-            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            item?.DuplicateItem();
+            ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
         }
 
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
