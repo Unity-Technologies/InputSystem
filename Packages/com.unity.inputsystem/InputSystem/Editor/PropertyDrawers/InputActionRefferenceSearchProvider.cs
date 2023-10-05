@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Search;
+using UnityEngine.UIElements;
 
 // TODO Why is project wide input asset (InputManager.asset) not up to date when loaded?
 // TODO Fix asset icons to make sense
@@ -62,6 +63,12 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly SearchContext m_Context;
 
+        // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
+        private readonly Search.SearchViewFlags m_ViewFlags = Search.SearchViewFlags.OpenInBuilderMode |
+                Search.SearchViewFlags.DisableBuilderModeToggle |
+                Search.SearchViewFlags.DisableInspectorPreview |
+                Search.SearchViewFlags.DisableSavedSearchQuery;
+
         public InputActionReferencePropertyDrawer()
         {
             // By default ADB search provider yields ALL assets even if the search query is empty.
@@ -76,16 +83,29 @@ namespace UnityEngine.InputSystem.Editor
                 SearchFlags.Sorted | SearchFlags.OpenPicker | SearchFlags.Packages);
         }
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        // Advance Picker in UITk
+        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
-            // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
 
-            ObjectField.DoObjectField(position, property, typeof(InputActionReference), label, m_Context,
-                Search.SearchViewFlags.OpenInBuilderMode |
-                Search.SearchViewFlags.DisableBuilderModeToggle |
-                Search.SearchViewFlags.DisableInspectorPreview |
-                Search.SearchViewFlags.DisableSavedSearchQuery);
+            ObjectField obj = new ObjectField()
+            {
+                name = "InputActionReferenceProperty",
+                label = preferredLabel,
+                bindingPath = prop.propertyPath,
+                objectType = fieldInfo.FieldType,
+                searchViewFlags = m_ViewFlags,
+                searchContext = m_Context
+            };
+            return obj;
         }
+
+        /*
+        // Advance Picker in IMGUI
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {            
+            ObjectField.DoObjectField(position, property, typeof(InputActionReference), label, m_Context,m_ViewFlags);
+        }
+        */
     }
 }
 
