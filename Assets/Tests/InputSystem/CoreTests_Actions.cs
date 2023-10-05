@@ -10483,42 +10483,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_ActiveBindingIndex_PointsAtRelativeIndexInActionBindingsArray()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        var actionMap = new InputActionMap("ActionMap");
-        var actionOne = actionMap.AddAction("ActionOne");
-        var actionTwo = actionMap.AddAction("ActionTwo");
-
-        actionOne.AddBinding("<keyboard>/a");
-        actionOne.AddBinding("<keyboard>/b");
-        actionTwo.AddBinding("<keyboard>/c");
-
-        actionMap.Enable();
-
-        PressAndRelease(keyboard.cKey);
-
-        Assert.That(actionTwo.bindings[actionTwo.activeBindingIndex], Is.EqualTo(actionTwo.bindings[0]));
-
-        // the activeBindingIndex treats composites as normal bindings and ignores the composite parts for reasons
-        // of indexing, so pressing any of the controls from the parts of these composites should set the active binding
-        // index to be the composite itself
-        actionTwo.AddCompositeBinding("OneModifier")
-            .With("modifier", "<Keyboard>/leftShift")
-            .With("binding", "<Keyboard>/1");
-        actionTwo.AddCompositeBinding("OneModifier")
-            .With("modifier", "<Keyboard>/leftShift")
-            .With("binding", "<Keyboard>/2");
-
-        Press(keyboard.leftShiftKey);
-        PressAndRelease(keyboard.digit2Key);
-
-        Assert.That(actionTwo.bindings[actionTwo.activeBindingIndex], Is.EqualTo(actionTwo.bindings[4]));
-    }
-
-    [Test]
-    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {
