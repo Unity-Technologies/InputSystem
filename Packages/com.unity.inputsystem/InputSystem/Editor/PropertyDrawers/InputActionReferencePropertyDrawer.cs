@@ -21,31 +21,28 @@ namespace UnityEngine.InputSystem.Editor
             AssetSearchProviders.CreateInputActionReferenceSearchProvider()
         }, string.Empty, SearchConstants.SearchFlags);
 
-        // TODO: Enable UITk picker as part of modernizing all pickers. Since sizing policies are different its not advised to introduce this change at the moment without further work.
-        /*
         // Advanced Picker in UITk
-        public override VisualElement CreatePropertyGUI(SerializedProperty prop)
+        public override UIElements.VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
-
             ObjectField obj = new ObjectField()
             {
                 name = "InputActionReferenceProperty",
                 label = preferredLabel,
                 bindingPath = prop.propertyPath,
                 objectType = fieldInfo.FieldType,
-                searchViewFlags = m_ViewFlags,
+                searchViewFlags = SearchConstants.ViewFlags,
                 searchContext = m_Context
             };
+            obj.AddToClassList(ObjectField.alignedFieldUssClassName); // align width
             return obj;
         }
-        */
 
-        // Advanced Picker in IMGUI
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        // Advanced Picker in IMGUI, keeping for reference
+        /*public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             ObjectField.DoObjectField(position, property, typeof(InputActionReference), label,
                 m_Context, SearchConstants.ViewFlags);
-        }
+        }*/
     }
 }
 
