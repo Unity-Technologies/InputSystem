@@ -33,7 +33,14 @@ namespace UnityEngine.InputSystem.Editor
                 searchViewFlags = SearchConstants.ViewFlags,
                 searchContext = m_Context
             };
-            obj.AddToClassList(ObjectField.alignedFieldUssClassName); // align width
+
+            // Align width in Inspector - note that ObjectField.alignedFieldUssClassName was made public in 2022.2
+            #if UNITY_2022_2_OR_NEWER
+            obj.AddToClassList(ObjectField.alignedFieldUssClassName);
+            #else
+            obj.AddToClassList(ObjectField.ussClassName + "__aligned");
+            #endif
+
             return obj;
         }
 
