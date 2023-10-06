@@ -212,15 +212,12 @@ namespace UnityEngine.InputSystem.Editor
             InputActionEditorWindow.RefreshAllOnAssetReimport();
         }
 
-        ////REVIEW: actually pre-populate with some stuff?
-        private const string kDefaultAssetLayout = "{}";
-
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
             ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
-                kDefaultAssetLayout, (Texture2D)EditorGUIUtility.Load(kAssetIcon));
+                InputActionAsset.kDefaultAssetLayoutJson, (Texture2D)EditorGUIUtility.Load(kAssetIcon));
         }
     }
 }

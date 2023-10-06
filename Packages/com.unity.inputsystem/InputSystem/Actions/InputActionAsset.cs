@@ -83,6 +83,8 @@ namespace UnityEngine.InputSystem
         /// InputActionAssets.
         /// </remarks>
         public const string Extension = "inputactions";
+        ////REVIEW: actually pre-populate with some stuff?
+        internal const string kDefaultAssetLayoutJson = "{}";
 
         /// <summary>
         /// True if any action in the asset is currently enabled.
@@ -870,6 +872,11 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             InputSystem.TrackDirtyInputActionAsset(this);
 #endif
+        }
+
+        internal bool IsEmpty()
+        {
+            return actionMaps.Count == 0 && controlSchemes.Count == 0;
         }
 
         internal void OnWantToChangeSetup()
