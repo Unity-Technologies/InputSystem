@@ -28,7 +28,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            var isAssetProjectWideActions = IsAssetProjectWideActions(property);
+            // Check if the property InputActionAsset name is the same as project-wide actions to determine if
+            // project-wide actions are set.
+            var isAssetProjectWideActions = ProjectWideActionsAsset.IsProjectWideActionsAsset(property.objectReferenceValue);
             var selectedAssetOptionIndex = isAssetProjectWideActions ? AssetOptions.ProjectWideActions : AssetOptions.ActionsAsset;
 
             EditorGUILayout.BeginHorizontal();
@@ -83,13 +85,6 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             assetProperty.serializedObject.ApplyModifiedProperties();
-        }
-
-        static bool IsAssetProjectWideActions(SerializedProperty property)
-        {
-            // Check if the property InputActionAsset name is the same as project-wide actions to determine if
-            // project-wide actions are set.
-            return ProjectWideActionsAsset.IsProjectWideActionsAsset(property.objectReferenceValue);
         }
     }
 }

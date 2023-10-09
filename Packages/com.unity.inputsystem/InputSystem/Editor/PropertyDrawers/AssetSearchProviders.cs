@@ -11,9 +11,8 @@ namespace UnityEngine.InputSystem.Editor
     {
         // SearchFlags : these flags are used to customize how search is performed and how search
         // results are displayed.
-        internal static readonly SearchFlags SearchFlags = SearchFlags.Sorted |
-            SearchFlags.OpenPicker |
-            SearchFlags.Packages;
+        // Note that SearchFlags.Packages is not currently used and hides all results from packages.
+        internal static readonly SearchFlags SearchFlags = SearchFlags.Sorted | SearchFlags.OpenPicker;
 
         // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
         internal static readonly Search.SearchViewFlags ViewFlags = Search.SearchViewFlags.OpenInBuilderMode |
