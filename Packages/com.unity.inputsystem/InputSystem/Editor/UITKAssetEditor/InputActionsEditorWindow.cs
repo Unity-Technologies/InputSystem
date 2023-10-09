@@ -223,6 +223,14 @@ namespace UnityEngine.InputSystem.Editor
         private bool HasAssetChanged(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
+
+            // Checks if the asset being edited is a new asset that was never saved before.
+            // If it is, there's nothing to save.
+            // At the moment, an asset only has the default asset layout content on disk when it is first created.
+            // So in this case we cannot go through the normal path and compare what's on disk with what has been serialized.
+            if (m_AssetJson == InputActionAsset.kDefaultAssetLayoutJson && asset.IsEmpty())
+                return false;
+
             var newAssetJson = asset.ToJson();
             return newAssetJson != m_AssetJson;
         }
