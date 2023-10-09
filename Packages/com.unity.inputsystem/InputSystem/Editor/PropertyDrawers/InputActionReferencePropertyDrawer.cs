@@ -17,12 +17,22 @@ namespace UnityEngine.InputSystem.Editor
         // AssetProvider ("asset") will NOT yield anything if searchQuery is empty.
         private readonly SearchContext m_Context = UnityEditor.Search.SearchService.CreateContext(new[]
         {
-            UnityEditor.Search.SearchService.GetProvider("adb"),
+            AssetSearchProviders.CreateDefaultProvider(),
             AssetSearchProviders.CreateInputActionReferenceSearchProvider()
         }, string.Empty, SearchConstants.SearchFlags);
 
+        // Advanced Picker in IMGUI, keeping for reference
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            ObjectField.DoObjectField(position, property, typeof(InputActionReference), label,
+                m_Context, SearchConstants.ViewFlags);
+        }
+
         // Advanced Picker in UITk
-        public override UIElements.VisualElement CreatePropertyGUI(SerializedProperty prop)
+        // Kept uncommented as a future reference for modernizing property drawers.
+        // We can only use this one if we rewrite InputProperty property drawer for UITK as well since it would
+        // render UI where InputActionReferecePropertyDrawer is a sub interface.
+        /*public override UIElements.VisualElement CreatePropertyGUI(SerializedProperty prop)
         {
             ObjectField obj = new ObjectField()
             {
@@ -34,21 +44,14 @@ namespace UnityEngine.InputSystem.Editor
                 searchContext = m_Context
             };
 
-            // Align width in Inspector - note that ObjectField.alignedFieldUssClassName was made public in 2022.2
-            #if UNITY_2022_2_OR_NEWER
+            // Align width in Inspector - note that ObjectField.alignedFieldUssClassName was made public in 2021.2.7f1
+            #if UNITY_2021_3_OR_NEWER
             obj.AddToClassList(ObjectField.alignedFieldUssClassName);
             #else
             obj.AddToClassList(ObjectField.ussClassName + "__aligned");
             #endif
 
             return obj;
-        }
-
-        // Advanced Picker in IMGUI, keeping for reference
-        /*public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            ObjectField.DoObjectField(position, property, typeof(InputActionReference), label,
-                m_Context, SearchConstants.ViewFlags);
         }*/
     }
 }

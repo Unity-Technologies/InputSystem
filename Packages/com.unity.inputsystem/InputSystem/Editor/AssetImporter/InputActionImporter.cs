@@ -29,9 +29,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const int kVersion = 13;
 
-        internal const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
-        internal const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
-
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
         [SerializeField] private string m_WrapperClassName;
@@ -88,8 +85,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-            var assetIcon = (Texture2D)EditorGUIUtility.Load(kAssetIcon);
-            var actionIcon = (Texture2D)EditorGUIUtility.Load(kActionIcon);
+            var assetIcon = InputActionAssetIconProvider.LoadAssetIcon();
+            var actionIcon = InputActionAssetIconProvider.LoadActionIcon();
 
             // Add asset.
             ctx.AddObjectToAsset("<root>", asset, assetIcon);

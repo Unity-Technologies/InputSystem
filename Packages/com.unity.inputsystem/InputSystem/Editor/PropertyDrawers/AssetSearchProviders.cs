@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Search;
-using UnityEditor.VersionControl;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -39,6 +38,11 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        internal static SearchProvider CreateDefaultProvider()
+        {
+            return UnityEditor.Search.SearchService.GetProvider("adb");
+        }
+
         internal static SearchProvider CreateInputActionReferenceSearchProvider()
         {
             // Match icon used for sub-assets from importer, if null will use cached icon from asset database instead.
@@ -47,18 +51,12 @@ namespace UnityEngine.InputSystem.Editor
                 "InputActionReferenceSearchProvider",
                 "Project-Wide Input Actions",
                 GetInputActionReferenceAssets,
-                (Texture2D)EditorGUIUtility.Load(InputActionImporter.kActionIcon));
+                InputActionAssetIconProvider.LoadActionIcon());
         }
 
         private static IEnumerable<Object> GetInputActionReferenceAssets()
         {
-            // Extract actions from actions maps from ProjectWideActionAsset.
-            // Note that we cannot do something like:
-            //  return AssetDatabase.LoadAllAssetsAtPath(ProjectWideActionsAsset.kAssetPath)
-            //      .Where((asset) => (asset is InputActionReference));
-            // Since that would return an outdated asset that is out of sync with ProjectWideActionsAsset.
-            // TODO Understand why this is a problem and update this comment
-            var asset = ProjectWideActionsAsset.GetOrCreate();
+            var asset = ProjectWideActionsAsset.GetOrCreate(); // alt. InputSystem.actions
             return (from actionMap in asset.actionMaps from action in actionMap.actions select InputActionReference.Create(action)).ToList();
         }
 
@@ -71,11 +69,12 @@ namespace UnityEngine.InputSystem.Editor
                 if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
                     continue; // Ignore: not matching search text filter
 
+                var assetPath = AssetDatabase.GetAssetPath(asset);
                 yield return provider.CreateItem(context,
                     asset.GetInstanceID().ToString(),
                     label,
-                    $"{AssetDatabase.GetAssetPath(asset)} ({label})",
-                    (thumbnail == null) ? AssetDatabase.GetCachedIcon(ProjectWideActionsAsset.kAssetPath) as Texture2D : thumbnail,
+                    $"{assetPath} ({label})",
+                    (thumbnail == null) ? AssetDatabase.GetCachedIcon(assetPath) as Texture2D : thumbnail,
                     asset);
             }
         }

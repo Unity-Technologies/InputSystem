@@ -10,18 +10,18 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class ProjectWideActionsAsset
     {
-        internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
-        internal const string kAssetPath = "ProjectSettings/InputManager.asset";
-        internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
-
-        static string s_DefaultAssetPath = kDefaultAssetPath;
-        static string s_AssetPath = kAssetPath;
+        private const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
+        private const string kAssetPath = "ProjectSettings/InputManager.asset";
+        private const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
 #if UNITY_INCLUDE_TESTS
-        internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
+        private static string s_DefaultAssetPath = kDefaultAssetPath;
+        private static string s_AssetPath = kAssetPath;
+
+        internal static void SetAssetPaths(string defaultAssetPathOverride, string assetPathOverride)
         {
-            s_DefaultAssetPath = defaultAssetPath;
-            s_AssetPath = assetPath;
+            s_DefaultAssetPath = defaultAssetPathOverride;
+            s_AssetPath = assetPathOverride;
         }
 
         internal static void Reset()
@@ -30,6 +30,11 @@ namespace UnityEngine.InputSystem.Editor
             s_AssetPath = kAssetPath;
         }
 
+        internal static string defaultAssetPath => s_DefaultAssetPath;
+        internal static string assetPath => s_AssetPath;
+#else
+        internal static string defaultAssetPath => kDefaultAssetPath;
+        internal static string assetPath => kAssetPath;
 #endif
 
         [InitializeOnLoadMethod]
@@ -38,17 +43,25 @@ namespace UnityEngine.InputSystem.Editor
             GetOrCreate();
         }
 
+        internal static bool IsProjectWideActionsAsset(Object obj)
+        {
+            return IsProjectWideActionsAsset(obj as InputActionAsset);
+        }
+
+        internal static bool IsProjectWideActionsAsset(InputActionAsset asset)
+        {
+            if (ReferenceEquals(asset, null))
+                return false;
+            return kAssetName.Equals(asset.name);
+        }
+
         internal static InputActionAsset GetOrCreate()
         {
             var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
-            if (objects != null)
-            {
-                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
-                if (inputActionsAsset != null)
-                    return inputActionsAsset;
-            }
-
-            return CreateNewActionAsset();
+            var inputActionsAsset = (InputActionAsset)objects?.FirstOrDefault(IsProjectWideActionsAsset);
+            if (ReferenceEquals(inputActionsAsset, null))
+                return CreateNewActionAsset();
+            return inputActionsAsset;
         }
 
         private static InputActionAsset CreateNewActionAsset()

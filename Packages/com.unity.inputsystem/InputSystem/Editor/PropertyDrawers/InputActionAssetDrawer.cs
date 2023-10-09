@@ -87,17 +87,9 @@ namespace UnityEngine.InputSystem.Editor
 
         static bool IsAssetProjectWideActions(SerializedProperty property)
         {
-            var isAssetProjectWideActions = false;
-
             // Check if the property InputActionAsset name is the same as project-wide actions to determine if
-            // project-wide actions are set
-            if (property.objectReferenceValue != null)
-            {
-                var asset = (InputActionAsset)property.objectReferenceValue;
-                isAssetProjectWideActions = asset?.name == ProjectWideActionsAsset.kAssetName;
-            }
-
-            return isAssetProjectWideActions;
+            // project-wide actions are set.
+            return ProjectWideActionsAsset.IsProjectWideActionsAsset(property.objectReferenceValue);
         }
     }
 }
