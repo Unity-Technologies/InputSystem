@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         // Copies the inputactionasset content from the Project Setting asset into a file that
-        // the Roslyn source generator will be able to read. 
+        // the Roslyn source generator will be able to read.
         internal static void CreateRoslynAdditionalFileForAsset()
         {
             try
