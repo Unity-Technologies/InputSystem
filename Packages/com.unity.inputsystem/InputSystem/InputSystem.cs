@@ -3053,10 +3053,6 @@ namespace UnityEngine.InputSystem
                 s_ProjectWideActions?.Disable();
                 s_ProjectWideActions = value;
                 s_ProjectWideActions.Enable();
-
-                #if UNITY_EDITOR
-                ProjectWideActionsAsset.SetAsProjectWideActions(value);
-                #endif
             }
         }
 #endif
