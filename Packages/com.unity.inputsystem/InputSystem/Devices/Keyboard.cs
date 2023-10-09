@@ -959,12 +959,16 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// An event that is fired to get IME composition strings.  Fired once for every change,
-        /// sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
+        /// An event that is fired to get IME composition strings.  Fired once for every change containing the entire string to date.
+        /// When using an IME, this event can be used to display the composition string while it is being edited. When a composition
+        /// string is submitted, one or many <see cref="Keyboard.OnTextInput"/> events will fire with the submitted characters.
         /// </summary>
         /// <remarks>
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
+        ///
+        /// Many IMEs cause this event to fire with a blank string when the composition is submitted or reset, however it is best
+        /// not to rely on this behaviour since it is IME dependent.
         ///
         /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
