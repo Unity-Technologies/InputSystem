@@ -15,8 +15,6 @@ namespace UnityEngine.InputSystem.Editor
 
         static InputActionAsset s_TestAsset = null;
 
-        const string kAdditionalFilePath = "Assets/actions.InputSystemActionsAPIGenerator.additionalfile"; // Copy of asset that is fed to the SourceGenerator
-
 #if UNITY_INCLUDE_TESTS
         internal static void SetTestAsset(InputActionAsset testAsset)
         {
@@ -35,24 +33,6 @@ namespace UnityEngine.InputSystem.Editor
         internal static void InstallProjectWideActions()
         {
             GetOrCreate();
-        }
-
-        // Copies the inputactionasset content from the Project Setting asset into a file that
-        // the Roslyn source generator will be able to read.
-        internal static void CreateRoslynAdditionalFileForAsset()
-        {
-            try
-            {
-                if (File.Exists(kAssetPath))
-                {
-                    File.Copy(kAssetPath, kAdditionalFilePath, true);
-                    AssetDatabase.ImportAsset(kAdditionalFilePath); // Invoke importer and therefore source generator
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogError($"InputSystem could not save actions additional file: '{kAdditionalFilePath}' ({exception})");
-            }
         }
 
         internal static InputActionAsset LoadFromProjectSettings()
@@ -86,11 +66,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             var objects = AssetDatabase.LoadAllAssetsAtPath(kInputManagerAssetPath);
             if (objects != null)
-            {
-                var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == InputSystem.kProjectWideActionsAssetName) as InputActionAsset;
-                if (inputActionsAsset != null)
-                    return inputActionsAsset;
-            }
+                return objects.FirstOrDefault(o => o != null && o.name == InputSystem.kProjectWideActionsAssetName) as InputActionAsset;
             return null;
         }
 
