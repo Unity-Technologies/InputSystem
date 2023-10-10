@@ -20,6 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 - Store ProjectWide Actions in `ProjectSettings/InputSystemActions.inputactions`.
 - Renamed ProjectWideActionsTest to ProjectWideActionsSample
 - Removed need to test ProjectWide Actions differently when running in the player by injecting a test asset.
+- Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
