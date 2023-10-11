@@ -8,51 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal sealed class ProjectWideActionsAssetPostprocessor : AssetPostprocessor
-    {
-        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
-        {
-            if (EditorBuildSettings.TryGetConfigObject(
-                InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
-                out InputActionAsset actionAsset))
-            {
-                // If we have marked a asset as being the project-wide actions but it doesn't match `InputSystem.actions` then ensure it does.
-                if (InputSystem.actions != actionAsset || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(InputSystem.actions)))
-                {
-                    actionAsset.name = InputSystem.kProjectWideActionsAssetName;
-                    InputSystem.actions = actionAsset;
-                    return;
-                }
-                else
-                {
-                    // @TODO: Handle files in the deletedAssets list
-
-                    // Handle edits to the project-wide actions asset.
-                    // Ensure we pass a copy of the project wide actions asset inside the roslyn source generator additionalfile.
-                    // Touching this file will cause the source generator to update the typesafe api.
-                    var assetPath = AssetDatabase.GetAssetPath(actionAsset);
-                    if (!string.IsNullOrEmpty(assetPath))
-                    {
-                        // Only modify the file if there were modifications.
-                        if (ArrayHelpers.Contains(importedAssets, assetPath) ||
-                            ArrayHelpers.Contains(movedAssets, assetPath))
-                        {
-                            ProjectWideActionsAsset.RefreshRoslynAdditionalFile(assetPath);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // If we haven't yet marked any asset to be the project-wide actions then we rectifiy this here.
-                // This can happen on opening a new project if ProjectWideActionsAsset.GetOrCreate() was called whilst AssetDatabase
-                // was still busy importing. We call it again now that we know importing has finished.
-                // This will cause an import of the asset and trigger this callback again.
-                ProjectWideActionsAsset.GetOrCreate();
-            }
-        }
-    }
-
     internal static class ProjectWideActionsAsset
     {
         internal const string kTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
