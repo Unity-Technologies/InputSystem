@@ -12,27 +12,25 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
         internal const string kInputManagerAssetPath = "ProjectSettings/InputManager.asset";
-
-        internal const string kAssetDirectory = "Assets/InputSystem";
-        internal const string kAssetFilename = "actions.InputSystemActionsAPIGenerator.additionalfile";
+        internal const string kAssetPath = "Assets/InputSystem/actions.InputSystemActionsAPIGenerator.additionalfile";
         internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
         static string s_DefaultAssetPath = kDefaultAssetPath;
-        static string s_AssetPath = Path.Combine(kAssetDirectory, kAssetFilename);
+        static string s_AssetPath = kAssetPath;
 
         public static string assetPath { get { return s_AssetPath; } }
 
 #if UNITY_INCLUDE_TESTS
-        internal static void SetAssetPaths(string defaultAssetPath, string runtimeAssetPath)
+        internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
         {
             s_DefaultAssetPath = defaultAssetPath;
-            s_AssetPath = runtimeAssetPath;
+            s_AssetPath = assetPath;
         }
 
         internal static void Reset()
         {
             s_DefaultAssetPath = kDefaultAssetPath;
-            s_AssetPath = Path.Combine(kAssetDirectory, kAssetFilename);
+            s_AssetPath = kAssetPath;
         }
 
 #endif
@@ -43,12 +41,12 @@ namespace UnityEngine.InputSystem.Editor
             GetOrCreate();
         }
 
-        internal static InputActionAsset LoadFromAsset()
+        internal static InputActionAsset LoadFromProjectSettings()
         {
             string text;
             try
             {
-                text = File.ReadAllText(assetPath);
+                text = File.ReadAllText(s_AssetPath);
             }
             catch
             {
@@ -63,7 +61,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogError($"InputSystem could not parse input actions in JSON format from '{assetPath}' ({exception})");
+                Debug.LogError($"Could not parse input actions in JSON format from '{s_AssetPath}' ({exception})");
                 Object.DestroyImmediate(asset);
                 return null;
             }
@@ -86,7 +84,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             InputActionAsset asset;
 
-            asset = LoadFromAsset();
+            asset = LoadFromProjectSettings();
             if (asset != null) return asset;
 
             // v1.8.0-pre1 stored the Actions in ProjectSettings/InputManager.asset.
@@ -95,10 +93,11 @@ namespace UnityEngine.InputSystem.Editor
             if (asset != null)
             {
                 // Migrate the pre1 asset
-                SaveAsset(asset);
+                var assetJson = asset.ToJson();
+                File.WriteAllText(s_AssetPath, assetJson);
 
                 // Load from the newly migrated asset.
-                asset = LoadFromAsset();
+                asset = LoadFromProjectSettings();
                 if (asset != null) return asset;
             }
 
@@ -106,39 +105,13 @@ namespace UnityEngine.InputSystem.Editor
             return CreateNewActionAsset();
         }
 
-        static void SaveAsset(InputActionAsset asset)
+        private static InputActionAsset CreateNewActionAsset()
         {
-            try
-            {
-                if (!Directory.Exists(kAssetDirectory))
-                    Directory.CreateDirectory(kAssetDirectory);
+            var templateAssetPath = Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath);
+            var projectAssetPath = Path.Combine(Environment.CurrentDirectory, s_AssetPath);
+            File.Copy(templateAssetPath, projectAssetPath);
 
-                var assetJson = asset.ToJson();
-                File.WriteAllText(assetPath, assetJson);
-
-            }
-            catch (Exception exception)
-            {
-                Debug.LogError($"InputSystem could not save project-wide actions to {assetPath}:  ({exception})");
-            }
-        }
-
-        static InputActionAsset CreateNewActionAsset()
-        {
-            try
-            {
-                if (!Directory.Exists(kAssetDirectory))
-                    Directory.CreateDirectory(kAssetDirectory);
-
-                File.Copy(s_DefaultAssetPath, assetPath);
-            }
-            catch (Exception exception)
-            {
-                Debug.LogError($"InputSystem could not instal Project Wide Actions to {assetPath}: ({exception})");
-                return null;
-            }
-
-            return LoadFromAsset();
+            return LoadFromProjectSettings();
         }
     }
 }
