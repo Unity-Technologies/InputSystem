@@ -1,5 +1,7 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
+using System;
+using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -12,27 +14,43 @@ using UnityEngine.InputSystem.Editor;
 internal partial class CoreTests
 {
     const string TestCategory = "ProjectWideActions";
+    const string TestAssetPath = "Assets/TestInputManager.asset";
+    string m_TemplateAssetPath;
 
+#if UNITY_EDITOR
     const int initialActionCount = 2;
     const int initialMapCount = 1;
+#else
+    const int initialActionCount = 17;
+    const int initialMapCount = 2;
+#endif
 
     [SetUp]
     public override void Setup()
     {
-        // This asset takes the place of the project wide actions asset for the sake of testing, as we don't
+        // @TODO: Currently we can only inject the TestActionsAsset in PlayMode tests.
+        // It would be nice to be able to inject it as a Preloaded asset into the Player tests so
+        // we don't need different tests for the player.
+        // This also means these tests are dependant on the content of InputManager.asset not being changed.
+#if UNITY_EDITOR
+        // This asset takes the place of ProjectSettings/InputManager.asset for the sake of testing, as we don't
         // really want to go changing that asset in every test.
         // This is used as a backing for `InputSystem.actions` in PlayMode tests.
-        var testAsset = ScriptableObject.CreateInstance<InputActionAsset>();
-        testAsset.name = InputSystem.kProjectWideActionsAssetName;
+        var testAsset = ScriptableObject.CreateInstance<TestActionsAsset>();
+        AssetDatabase.CreateAsset(testAsset, TestAssetPath);
 
-        var map = testAsset.AddActionMap("InitialActionMapOne");
+        // Create a template `InputActionAsset` containing some test actions.
+        // This will then be used to populate the initially empty `TestActionsAsset` when it is first acessed.
+        var templateActions = ScriptableObject.CreateInstance<InputActionAsset>();
+        templateActions.name = "TestAsset";
+        var map = templateActions.AddActionMap("InitialActionMapOne");
         map.AddAction("InitialActionOne");
         map.AddAction("InitialActionTwo");
 
-#if UNITY_EDITOR
-        ProjectWideActionsAsset.SetTestAsset(testAsset);
-#else
-        InputSystem.actions = testAsset;
+        m_TemplateAssetPath = Path.Combine(Environment.CurrentDirectory, "Assets/ProjectWideActionsTemplate.inputactions");
+        File.WriteAllText(m_TemplateAssetPath, templateActions.ToJson());
+
+        ProjectWideActionsAsset.SetAssetPaths(m_TemplateAssetPath, TestAssetPath);
 #endif
 
         base.Setup();
@@ -42,7 +60,12 @@ internal partial class CoreTests
     public override void TearDown()
     {
 #if UNITY_EDITOR
-        ProjectWideActionsAsset.ResetTestAsset();
+        ProjectWideActionsAsset.Reset();
+
+        if (File.Exists(m_TemplateAssetPath))
+            File.Delete(m_TemplateAssetPath);
+
+        AssetDatabase.DeleteAsset(TestAssetPath);
 #endif
 
         base.TearDown();
@@ -115,8 +138,13 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions, Is.Not.Null);
         Assert.That(InputSystem.actions.actionMaps.Count, Is.EqualTo(initialMapCount));
 
+#if UNITY_EDITOR
         Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(initialActionCount));
         Assert.That(InputSystem.actions.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
+#else
+        Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(9));
+        Assert.That(InputSystem.actions.actionMaps[0].actions[0].name, Is.EqualTo("Move"));
+#endif
     }
 
     [Test]

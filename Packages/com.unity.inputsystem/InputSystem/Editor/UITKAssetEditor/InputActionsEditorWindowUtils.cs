@@ -14,7 +14,10 @@ namespace UnityEngine.InputSystem.Editor
         public static void SaveAsset(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
-            string assetPath = AssetDatabase.GetAssetPath(asset);
+
+            string assetPath = (asset.name == ProjectWideActionsAsset.kAssetName)
+                ? ProjectWideActionsAsset.assetPath
+                : AssetDatabase.GetAssetPath(asset);
 
             if (string.IsNullOrEmpty(assetPath))
             {
