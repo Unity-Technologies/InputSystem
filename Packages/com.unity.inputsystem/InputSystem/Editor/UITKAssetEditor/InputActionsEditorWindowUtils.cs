@@ -15,16 +15,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
 
-            string assetPath = (asset.name == ProjectWideActionsAsset.kAssetName)
-                ? ProjectWideActionsAsset.assetPath
-                : AssetDatabase.GetAssetPath(asset);
-
-            if (string.IsNullOrEmpty(assetPath))
+            // for the global actions asset: save differently (as it is a yaml file and not a json)
+            if (asset.name == ProjectWideActionsAsset.kAssetName)
             {
-                Debug.LogError("InputActions Asset Editor tried to save without an asset path");
+                AssetDatabase.SaveAssets();
                 return;
             }
 
+            var assetPath = AssetDatabase.GetAssetPath(asset);
             var assetJson = asset.ToJson();
             var existingJson = File.Exists(assetPath) ? File.ReadAllText(assetPath) : "";
             if (assetJson != existingJson)
