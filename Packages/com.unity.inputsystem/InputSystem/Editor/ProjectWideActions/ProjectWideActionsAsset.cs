@@ -12,8 +12,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
         {
-            AssetDatabase.DisallowAutoRefresh();
-
             // Is there an inputactions asset nominated as the Project-Wide Actions.
             if (EditorBuildSettings.TryGetConfigObject(
                 InputActionsEditorSettingsProvider.kProjectActionsConfigKey,
@@ -24,16 +22,12 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     actionAsset.name = InputSystem.kProjectWideActionsAssetName;
                     InputSystem.actions = actionAsset;
-                    AssetDatabase.AllowAutoRefresh();
                     return;
                 }
 
                 var assetPath = AssetDatabase.GetAssetPath(actionAsset);
                 if (string.IsNullOrEmpty(assetPath))
-                {
-                    AssetDatabase.AllowAutoRefresh();
                     return;
-                }
 
                 // Handle edits to the project-wide actions asset.
                 // Ensure we pass a copy of the project wide actions asset inside the roslyn source generator additionalfile.
@@ -46,7 +40,6 @@ namespace UnityEngine.InputSystem.Editor
                     if (fromPath.EndsWith(assetFileName))
                     {
                         ProjectWideActionsAsset.MoveRoslynAdditionalFileForAsset(fromPath, assetPath);
-                        AssetDatabase.AllowAutoRefresh();
                         return;
                     }
                 }
@@ -55,7 +48,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (ArrayHelpers.Contains(importedAssets, assetPath))
                 {
                     ProjectWideActionsAsset.CreateRoslynAdditionalFileForAsset(assetPath);
-                    AssetDatabase.AllowAutoRefresh();
                     return;
                 }
 
@@ -68,7 +60,6 @@ namespace UnityEngine.InputSystem.Editor
                     if (toPath.EndsWith(ProjectWideActionsAsset.kAdditionalFilename))
                     {
                         ProjectWideActionsAsset.MoveRoslynAdditionalFileForAsset(toPath, assetPath);
-                        AssetDatabase.AllowAutoRefresh();
                         return;
                     }
                 }
@@ -81,7 +72,6 @@ namespace UnityEngine.InputSystem.Editor
                 // This will cause an import of the asset and trigger this callback again.
                 ProjectWideActionsAsset.GetOrCreate();
             }
-            AssetDatabase.AllowAutoRefresh();
         }
     }
 
