@@ -18,18 +18,7 @@ namespace UnityEngine.InputSystem.Editor
         static string s_AssetPath = kAssetPath;
 
 #if UNITY_INCLUDE_TESTS
-        internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
-        {
-            s_DefaultAssetPath = defaultAssetPath;
-            s_AssetPath = assetPath;
-        }
-
-        internal static void Reset()
-        {
-            s_DefaultAssetPath = kDefaultAssetPath;
-            s_AssetPath = kAssetPath;
-        }
-
+        internal static InputActionAsset testAsset  { get; set; }
 #endif
 
         [InitializeOnLoadMethod]
@@ -40,6 +29,10 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionAsset GetOrCreate()
         {
+#if UNITY_INCLUDE_TESTS
+            if (testAsset != null) return testAsset;
+#endif
+
             var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
             if (objects != null)
             {
