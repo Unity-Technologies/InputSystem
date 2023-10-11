@@ -96,24 +96,6 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
             }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Project-Wide Actions Asset
-            if (InputSystem.actions == inputActionAsset)
-                EditorGUILayout.HelpBox("This asset contains the currently active project-wide actions for the Input System.", MessageType.Info);
-            else
-            {
-                string projectWideActionsAssetsPath = null;
-                string msg = null;
-                if (InputSystem.actions != null)
-                    projectWideActionsAssetsPath = AssetDatabase.GetAssetPath(InputSystem.actions);
-                if (!string.IsNullOrEmpty(projectWideActionsAssetsPath))
-                    msg = $"The project-wide actions are stored in {projectWideActionsAssetsPath}. ";
-                EditorGUILayout.HelpBox($"Note that this asset does not contain the project-wide actions for the Input System. {msg??""}Click \"Make Active\" below to make {target.name} the project-wide actions.", MessageType.Warning);
-                if (GUILayout.Button($"Make active", EditorStyles.miniButton))
-                    InputSystem.actions = inputActionAsset;
-            }
-#endif
-
             // Using ApplyRevertGUI requires calling Update and ApplyModifiedProperties around the serializedObject,
             // and will print warning messages otherwise (see warning message in ApplyRevertGUI implementation).
             serializedObject.ApplyModifiedProperties();
