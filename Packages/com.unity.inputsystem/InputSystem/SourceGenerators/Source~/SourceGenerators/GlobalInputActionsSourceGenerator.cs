@@ -237,6 +237,10 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
             }
         }
 
+        /// <summary>
+        /// Construct a strongly-typed wrapper from the given <see cref="InputAction"/>.
+        /// </summary>
+        /// <param name="action">The action to be wrapped in the typesafe class.</param>
         public Input(InputAction action)
         {
             Debug.Assert(action != null);
@@ -246,10 +250,14 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
         }
 
         private InputAction m_Action;
-    } // class _Input
+    } // class Input
 } // namespace UnityEngine.InputSystem.TypeSafeAPIInternals
 
-
+namespace UnityEngine.InputSystem
+{
+    /// <summary>
+    /// A container class to hold the project-wide actions typesafe api.
+    /// </summary>
     [CompilerGenerated]
     public static partial class InputActions
     {
@@ -259,31 +267,32 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
             foreach (var actionMap in inputActionAsset.Maps)
             {
                 source +=
-                    $$"""
-                    public class {{GenerateInputActionMapClassName(actionMap)}}
-                    {
-                        public {{GenerateInputActionMapClassName(actionMap)}}()
-                        {
-                            {{actionMap.Actions.Render(a =>
-                                $"{FormatFieldName(a.Name)} = new {GetInputActionWrapperType(a)}(InputSystem.actions.FindAction(\"{actionMap.Name}/{a.Name}\"));{Environment.NewLine}")}}
-                        }
-
-                        {{GenerateInputActionProperties(actionMap)}}
-                    }
-
-                    public static {{GenerateInputActionMapClassName(actionMap)}} {{FormatFieldName(actionMap.Name)}};{{Environment.NewLine}}
-                    """;
+$$"""
+        public class {{GenerateInputActionMapClassName(actionMap)}}
+        {
+            public {{GenerateInputActionMapClassName(actionMap)}}()
+            {
+                {{actionMap.Actions.Render(a =>
+                    $"{FormatFieldName(a.Name)} = new {GetInputActionWrapperType(a)}(InputSystem.actions.FindAction(\"{actionMap.Name}/{a.Name}\"));{Environment.NewLine}")}}
             }
 
-            source +=
-                $$"""
-                static InputActions()
-                {
-                    {{GenerateInstantiateInputActionMaps(inputActionAsset.Maps)}}
-                }
-                """;
-            source += " }";
+            {{GenerateInputActionProperties(actionMap)}}
+        }
 
+        public static {{GenerateInputActionMapClassName(actionMap)}} {{FormatFieldName(actionMap.Name)}} { get; }{{Environment.NewLine}}
+""";
+            } // foreach inputActionAsset.Maps
+
+            source +=
+$$"""
+
+        static InputActions()
+        {
+            {{GenerateInstantiateInputActionMaps(inputActionAsset.Maps)}}
+        }
+    } // class InputActions
+} // namespace UnityEngine.InputSystem
+""";
             return source;
         }
 
