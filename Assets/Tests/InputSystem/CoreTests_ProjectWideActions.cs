@@ -19,7 +19,6 @@ internal partial class CoreTests
     [SetUp]
     public override void Setup()
     {
-
         // This asset takes the place of the project wide actions asset for the sake of testing, as we don't
         // really want to go changing that asset in every test.
         // This is used as a backing for `InputSystem.actions` in PlayMode tests.
