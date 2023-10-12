@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem
     /// A container class to hold the project-wide actions typesafe api.
     /// </summary>
     [CompilerGenerated]
-    public static partial class Input
+    public static partial class ProjectActions
     {
 
 """;
@@ -286,7 +286,7 @@ $$"""
             source +=
 $$"""
 
-        static Input()
+        static ProjectActions()
         {
             {{GenerateInstantiateInputActionMaps(inputActionAsset.Maps)}}
         }

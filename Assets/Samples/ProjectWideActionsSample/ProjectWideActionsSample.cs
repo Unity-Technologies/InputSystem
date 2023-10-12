@@ -15,28 +15,28 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActionsSample
         void Update()
         {
             // Project-Wide Actions via Source Generated type-safe API
-            if (Input.player.attack.wasPressedThisFrame)
+            if (ProjectActions.player.attack.wasPressedThisFrame)
             {
                 cube.GetComponent<Renderer>().material.color = Color.red;
             }
-            else if (Input.player.attack.wasReleasedThisFrame)
+            else if (ProjectActions.player.attack.wasReleasedThisFrame)
             {
                 cube.GetComponent<Renderer>().material.color = Color.green;
             }
 
-            if (Input.player.move.value.x < 0.0f)
+            if (ProjectActions.player.move.value.x < 0.0f)
             {
                 cube.transform.Translate(new Vector3(-10 * Time.deltaTime, 0, 0));
             }
-            else if (Input.player.move.value.x > 0.0f)
+            else if (ProjectActions.player.move.value.x > 0.0f)
             {
                 cube.transform.Translate(new Vector3(10 * Time.deltaTime, 0, 0));
             }
-            if (Input.player.move.value.y < 0.0f)
+            if (ProjectActions.player.move.value.y < 0.0f)
             {
                 cube.transform.Translate(new Vector3(0, -10 * Time.deltaTime, 0));
             }
-            else if (Input.player.move.value.y > 0.0f)
+            else if (ProjectActions.player.move.value.y > 0.0f)
             {
                 cube.transform.Translate(new Vector3(0, 10 * Time.deltaTime, 0));
             }

@@ -180,7 +180,7 @@ class APIVerificationTests
         return
             // Roslyn generated classes. Not visible to doctools.
             fullName == typeof(UnityEngine.InputSystem.TypeSafeAPIInternals._Input<>).FullName ||
-            fullName == typeof(UnityEngine.InputSystem.Input).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.ProjectActions).FullName ||
 
             fullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
             fullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
