@@ -178,10 +178,11 @@ class APIVerificationTests
     internal static bool IgnoreTypeForDocsByName(string fullName)
     {
         return
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Roslyn generated classes. Not visible to doctools.
             fullName == typeof(UnityEngine.InputSystem.TypeSafeAPIInternals._Input<>).FullName ||
             fullName == typeof(UnityEngine.InputSystem.ProjectActions).FullName ||
-
+#endif
             fullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
             fullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
 #if UNITY_EDITOR_OSX
