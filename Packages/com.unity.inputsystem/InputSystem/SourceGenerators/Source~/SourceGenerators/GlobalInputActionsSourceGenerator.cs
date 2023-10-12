@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
     /// A strongly-typed wrapper for an Input Action.
     /// </summary>
     /// <typeparam name="TActionType">The type that will be used in calls to <see cref="InputAction.ReadValue{T}"/></typeparam>
-    public class Input<TActionType> where TActionType : struct
+    public class _Input<TActionType> where TActionType : struct
     {
         /// <summary>
         /// Enables access to the underlying Input Action for advanced functionality such as rebinding.
@@ -241,7 +241,7 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
         /// Construct a strongly-typed wrapper from the given <see cref="InputAction"/>.
         /// </summary>
         /// <param name="action">The action to be wrapped in the typesafe class.</param>
-        public Input(InputAction action)
+        public _Input(InputAction action)
         {
             Debug.Assert(action != null);
 
@@ -250,7 +250,7 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
         }
 
         private InputAction m_Action;
-    } // class Input
+    } // class _Input
 } // namespace UnityEngine.InputSystem.TypeSafeAPIInternals
 
 namespace UnityEngine.InputSystem
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem
     /// A container class to hold the project-wide actions typesafe api.
     /// </summary>
     [CompilerGenerated]
-    public static partial class InputActions
+    public static partial class Input
     {
 
 """;
@@ -286,11 +286,11 @@ $$"""
             source +=
 $$"""
 
-        static InputActions()
+        static Input()
         {
             {{GenerateInstantiateInputActionMaps(inputActionAsset.Maps)}}
         }
-    } // class InputActions
+    } // class Input
 } // namespace UnityEngine.InputSystem
 """;
             return source;
@@ -298,7 +298,7 @@ $$"""
 
         static string GetInputActionWrapperType(InputAction inputAction)
         {
-            return $"UnityEngine.InputSystem.TypeSafeAPIInternals.Input<{GetTypeFromExpectedType(inputAction.ExpectedControlType)}>";
+            return $"UnityEngine.InputSystem.TypeSafeAPIInternals._Input<{GetTypeFromExpectedType(inputAction.ExpectedControlType)}>";
         }
 
         static string GenerateInputActionProperties(ActionMap actionMap)
@@ -349,7 +349,7 @@ $$"""
 
                     """;
 
-                source += $"public UnityEngine.InputSystem.TypeSafeAPIInternals.Input<{typeFromExpectedType}> {FormatFieldName(action.Name)}  {{ get; }}{Environment.NewLine}";
+                source += $"public UnityEngine.InputSystem.TypeSafeAPIInternals._Input<{typeFromExpectedType}> {FormatFieldName(action.Name)}  {{ get; }}{Environment.NewLine}";
             }
             return source;
         }
