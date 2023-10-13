@@ -173,7 +173,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
                 throw;
 
             context.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor("ISGEN002", "", $"InputSystem couldn't parse project input actions asset file: {assetPath}. " + exception.Message.ToString(),
+                new DiagnosticDescriptor("ISGEN002", "", $"InputSystem couldn't parse project input actions asset file: {assetPath}. : CONTENT: {jsonAsset} " + exception.Message.ToString(),
                     "InputSystemSourceGenerator", DiagnosticSeverity.Error, true), null));
 
             throw;
