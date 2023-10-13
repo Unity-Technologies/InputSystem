@@ -879,6 +879,7 @@ namespace UnityEngine.InputSystem
                     m_DeviceFindExecuteCommandDelegate =
                         (ref InputDeviceCommand commandRef) =>
                     {
+                        Profiler.EndSample();
                         if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
                             return InputDeviceCommand.GenericFailure;
                         return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
@@ -1259,7 +1260,10 @@ namespace UnityEngine.InputSystem
             if (layout.IsEmpty())
             {
                 if (throwIfNoLayoutFound)
+                {
+                    Profiler.EndSample();
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
+                }
 
                 // If it's a device coming from the runtime, disable it.
                 if (deviceId != InputDevice.InvalidDeviceId)
@@ -2844,7 +2848,10 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputUpdate");
 
             if (m_InputEventStream.isOpen)
+            {
+                Profiler.EndSample();
                 throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
+            }
 
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
@@ -3205,7 +3212,10 @@ namespace UnityEngine.InputSystem
                         var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
 #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
+                        {
+                            Profiler.EndSample();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+                        }
 #endif
                         if (!shouldProcess)
                         {
@@ -3386,6 +3396,7 @@ namespace UnityEngine.InputSystem
             {
                 // We need to restore m_InputEventStream to a sound state
                 // to avoid failing recursive OnUpdate check next frame.
+                Profiler.EndSample();
                 m_InputEventStream.CleanUpAfterException();
                 throw;
             }
