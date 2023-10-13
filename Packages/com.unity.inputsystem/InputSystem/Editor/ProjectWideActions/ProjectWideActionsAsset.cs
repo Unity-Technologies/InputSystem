@@ -13,7 +13,11 @@ namespace UnityEngine.InputSystem.Editor
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
         {
             if (ArrayHelpers.Contains(importedAssets, ProjectWideActionsAsset.kAssetPath))
+            {
+                AssetDatabase.DisallowAutoRefresh();
                 ProjectWideActionsAsset.CreateRoslynAdditionalFile();
+                AssetDatabase.AllowAutoRefresh();
+            }
         }
     }
 
