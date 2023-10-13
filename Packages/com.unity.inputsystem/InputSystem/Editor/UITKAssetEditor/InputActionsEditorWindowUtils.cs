@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Editor
             if (asset.name == ProjectWideActionsAsset.kAssetName)
             {
                 AssetDatabase.SaveAssets();
+                ProjectWideActionsAsset.CreateRoslynAdditionalFile();
                 return;
             }
 
