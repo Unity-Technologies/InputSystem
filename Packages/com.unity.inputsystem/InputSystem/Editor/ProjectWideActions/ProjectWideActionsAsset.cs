@@ -8,6 +8,15 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    class ProjectWideActionsAssetPostprocessor : AssetPostprocessor
+    {
+        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
+        {
+            if (ArrayHelpers.Contains(importedAssets, ProjectWideActionsAsset.kAssetPath))
+                ProjectWideActionsAsset.CreateRoslynAdditionalFile();
+        }
+    }
+
     internal static class ProjectWideActionsAsset
     {
         internal const string kTemplateAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
@@ -110,6 +119,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (assetJson != existingJson)
                 {
                     File.WriteAllText(kAdditionalFilePath, assetJson);
+                    AssetDatabase.ImportAsset(kAdditionalFilePath); // Invoke importer and therefore source generator
                 }
             }
             catch (Exception exception)
@@ -122,7 +132,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             try
             {
-                File.Delete(kAdditionalFilePath);
+                AssetDatabase.DeleteAsset(kAdditionalFilePath);
             }
             catch (Exception exception)
             {
