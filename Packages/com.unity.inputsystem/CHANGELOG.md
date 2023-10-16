@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
 - Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
 - Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
+- Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
@@ -31,6 +32,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case [ISXB-251](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-251) (Action only calls started & performed callbacks when control type is set to Vector3Composite). `EvaluateMagnitude` wasn't overridden for Vector3Composite, also made some minor changes to Vector3Composite and Vector2Composite for consistency.
 - Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
 - Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
+- Fixed case [ISXB-628](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-628) (OnIMECompositionChange does not return an empty string on accept when using Microsoft IME) by clarifying expectations and intended usage for the IME composition change event.
 
 ## [1.8.0-pre.1] - 2023-09-04
 
