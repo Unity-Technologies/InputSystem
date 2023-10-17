@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System.Reflection;
 
 internal class PathAndContent
 {
@@ -161,6 +162,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
                     IncludeFields = true,
                     Converters =
                     {
+                        new ExpectedControlTypeConverter(),
                         new JsonStringEnumConverter()
                     }
                 });
@@ -173,7 +175,7 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
                 throw;
 
             context.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor("ISGEN002", "", $"InputSystem couldn't parse project input actions asset file: {assetPath}. : CONTENT: {jsonAsset} " + exception.Message.ToString(),
+                new DiagnosticDescriptor("ISGEN002", "", $"InputSystem couldn't parse project input actions asset file: {assetPath}. " + exception.Message.ToString(),
                     "InputSystemSourceGenerator", DiagnosticSeverity.Error, true), null));
 
             throw;
@@ -195,10 +197,13 @@ using UnityEngine.InputSystem;
 namespace UnityEngine.InputSystem.TypeSafeAPIInternals
 {
     /// <summary>
-    /// A strongly-typed wrapper for an Input Action.
+    /// A wrapper base class for an Input Action
     /// </summary>
-    /// <typeparam name="TActionType">The type that will be used in calls to <see cref="InputAction.ReadValue{T}"/></typeparam>
-    public class _Input<TActionType> where TActionType : struct
+    /// <remarks>
+    /// This is missing the type component of the _Input<T> class and therefore does not expose a type-safe value property.
+    /// It is left to the user to call <see cref="InputAction.ReadValue{T}"/> directly on the underlying action with the correct type.
+    /// </remarks>
+    public class _Input
     {
         /// <summary>
         /// Enables access to the underlying Input Action for advanced functionality such as rebinding.
@@ -212,6 +217,27 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
         /// <see cref="InputAction.WasReleasedThisFrame"/>
         public bool wasReleasedThisFrame => m_Action.WasReleasedThisFrame();
 
+        /// <summary>
+        /// Construct a wrapper from the given <see cref="InputAction"/>.
+        /// </summary>
+        /// <param name="action">The action to be wrapped.</param>
+        public _Input(InputAction action)
+        {
+            Debug.Assert(action != null);
+
+            m_Action = action ?? throw new ArgumentNullException(nameof(action));
+            m_Action.Enable();
+        }
+
+        protected InputAction m_Action;
+    } // class _Input
+
+    /// <summary>
+    /// A strongly-typed wrapper for an Input Action.
+    /// </summary>
+    /// <typeparam name="TActionType">The type that will be used in calls to <see cref="InputAction.ReadValue{T}"/></typeparam>
+    public class _Input<TActionType> : _Input where TActionType : struct
+    {
         /// <summary>
         /// Returns the current value of the Input Action.
         /// </summary>
@@ -241,16 +267,11 @@ namespace UnityEngine.InputSystem.TypeSafeAPIInternals
         /// Construct a strongly-typed wrapper from the given <see cref="InputAction"/>.
         /// </summary>
         /// <param name="action">The action to be wrapped in the typesafe class.</param>
-        public _Input(InputAction action)
+        public _Input(InputAction action) : base(action)
         {
-            Debug.Assert(action != null);
-
-            m_Action = action ?? throw new ArgumentNullException(nameof(action));
-            m_Action.Enable();
         }
 
-        private InputAction m_Action;
-    } // class _Input
+    } // class _Input<T>
 } // namespace UnityEngine.InputSystem.TypeSafeAPIInternals
 
 namespace UnityEngine.InputSystem
@@ -298,7 +319,11 @@ $$"""
 
         static string GetInputActionWrapperType(InputAction inputAction)
         {
-            return $"UnityEngine.InputSystem.TypeSafeAPIInternals._Input<{GetTypeFromExpectedType(inputAction.ExpectedControlType)}>";
+            var controlType = GetTypeFromExpectedType(inputAction.ExpectedControlType, inputAction.Type);
+            if (controlType == null)
+                return $"UnityEngine.InputSystem.TypeSafeAPIInternals._Input";
+            else
+                return $"UnityEngine.InputSystem.TypeSafeAPIInternals._Input<{controlType}>";
         }
 
         static string GenerateInputActionProperties(ActionMap actionMap)
@@ -306,8 +331,6 @@ $$"""
             var source = string.Empty;
             foreach (var action in actionMap.Actions)
             {
-                var typeFromExpectedType = GetTypeFromExpectedType(action.ExpectedControlType);
-
                 var bindings = actionMap.Bindings.Where(b => b.Action == action.Name).ToList();
 
                 var bindingString = string.Empty;
@@ -349,7 +372,7 @@ $$"""
 
                     """;
 
-                source += $"public UnityEngine.InputSystem.TypeSafeAPIInternals._Input<{typeFromExpectedType}> {FormatFieldName(action.Name)}  {{ get; }}{Environment.NewLine}";
+                source += $"public {GetInputActionWrapperType(action)} {FormatFieldName(action.Name)}  {{ get; }}{Environment.NewLine}";
             }
             return source;
         }
@@ -387,10 +410,17 @@ $$"""
         return (char.IsDigit(str[0]) ? "_" : "") + char.ToLower(str[0]) + str.Substring(1);
     }
 
-    static string GetTypeFromExpectedType(ControlType controlType)
+    static string GetTypeFromExpectedType(ControlType controlType, ActionType actionType)
     {
+        if (actionType == ActionType.Button)
+            return nameof(Single);
+
         switch (controlType)
         {
+            case ControlType.None:
+            case ControlType.Any:
+                return null;
+
             case ControlType.Analog:
             case ControlType.Axis:
             case ControlType.Button:
@@ -431,6 +461,65 @@ $$"""
 
             default:
                 return null;
+        }
+    }
+
+    // This is to workaround that Unity's JsonUtility does not handle optional fields properly.
+    // Essentially it populates optional fields as empty strings, rather than omitting them during serialization.
+    // These cannot then be properly deserialized into Enums here without some customisation.
+    public class ExpectedControlTypeConverter : JsonConverterFactory
+    {
+        public override bool CanConvert(Type typeToConvert)
+        {
+            return typeToConvert == typeof(ControlType);
+        }
+
+        public override JsonConverter CreateConverter(
+            Type type,
+            JsonSerializerOptions options)
+        {
+            JsonConverter converter = (JsonConverter)Activator.CreateInstance(
+                typeof(ExpectedControlTypeConverterInner),
+                BindingFlags.Instance | BindingFlags.Public,
+                binder: null,
+                args: new object[] { options },
+                culture: null)!;
+
+            return converter;
+        }
+
+        private class ExpectedControlTypeConverterInner : JsonConverter<ControlType>
+        {
+            private readonly JsonConverter<ControlType> m_ValueConverter;
+            private readonly Type m_ValueType;
+
+            public ExpectedControlTypeConverterInner(JsonSerializerOptions options)
+            {
+                // For performance, use the existing converter.
+                m_ValueConverter = (JsonConverter<ControlType>)new JsonStringEnumConverter().CreateConverter(typeof(ControlType), options);
+                    //(JsonConverter<ControlType>)options.GetConverter(typeof(ControlType));
+                m_ValueType = typeof(ControlType);
+            }
+
+            public override ControlType Read(
+                ref Utf8JsonReader reader,
+                Type typeToConvert,
+                JsonSerializerOptions options)
+            {
+                var controlType = ControlType.None; // Default value. Used for empty strings or missing values.
+                try
+                {
+                    controlType = m_ValueConverter.Read(ref reader, m_ValueType, options);
+                }
+                catch { }
+
+                return controlType;
+            }
+
+            public override void Write(
+                Utf8JsonWriter writer,
+                ControlType controlType,
+                JsonSerializerOptions options) => throw new NotImplementedException();
         }
     }
 }
@@ -499,7 +588,10 @@ public enum ActionType
 
 public enum ControlType
 {
+    None,
+
     Analog,
+    Any,
     Axis,
     Bone,
     Button,
