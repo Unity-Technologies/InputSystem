@@ -127,13 +127,21 @@ namespace UnityEngine.InputSystem.XR.Haptics
         /// Deprecated. Use <see cref="bufferFrequencyHz"/> instead.
         /// </summary>
         [Obsolete("frequencyHz has been deprecated. Use bufferFrequencyHz instead.")]
-        public uint frequencyHz => bufferFrequencyHz;
+        public uint frequencyHz
+        {
+            get => bufferFrequencyHz;
+            set => bufferFrequencyHz = value;
+        }
 
         /// <summary>
         /// Deprecated. Use <see cref="bufferMaxSize"/> instead.
         /// </summary>
         [Obsolete("maxBufferSize has been deprecated. Use bufferMaxSize instead.")]
-        public uint maxBufferSize => bufferMaxSize;
+        public uint maxBufferSize
+        {
+            get => bufferMaxSize;
+            set => bufferMaxSize = value;
+        }
 
         public HapticCapabilities capabilities => new HapticCapabilities(numChannels, supportsImpulse, supportsBuffer, bufferFrequencyHz, bufferMaxSize, bufferOptimalSize);
 
