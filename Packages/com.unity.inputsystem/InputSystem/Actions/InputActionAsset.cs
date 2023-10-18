@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -924,10 +923,40 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        #if UNITY_EDITOR
+
+        private void OnValidate()
+        {
+            // Only currently validates references if serialized property has been set to true
+            if (m_ValidateReferencesInEditMode)
+                Editor.InputActionReferenceValidator.ValidateReferences(this);
+        }
+
+        #endif
+
+        internal InputAction FindActionById(string actionId)
+        {
+            if (m_ActionMaps == null)
+                return null;
+
+            foreach (var t in m_ActionMaps)
+            {
+                var action = t.FindAction(actionId);
+                if (action != null)
+                    return action;
+            }
+
+            return null;
+        }
+
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
+
+        // Note: not serialized to JSON only as asset objects
+        [NonSerialized] internal InputActionReference[] m_References; // TODO Tentative
+        [SerializeField] internal bool m_ValidateReferencesInEditMode;// TODO Tentative
 
         ////TODO: make this persistent across domain reloads
         /// <summary>

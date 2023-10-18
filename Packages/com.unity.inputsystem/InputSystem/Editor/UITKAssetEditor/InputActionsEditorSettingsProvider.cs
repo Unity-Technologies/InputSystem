@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
             // Note that focused element will be set if we are navigating back to
             // an existing instance when switching setting in the left project settings panel since
             // this doesn't recreate the editor.
-            if (m_RootVisualElement.focusController.focusedElement != null)
+            if (m_RootVisualElement?.focusController?.focusedElement != null)
                 OnEditFocus(null);
         }
 
@@ -76,6 +76,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_HasEditFocus = false;
 
                 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+                Debug.Log("SaveAsset");
                 InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
                 #endif
             }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEditor;
 
 ////REVIEW: Can we somehow make this a simple struct? The one problem we have is that we can't put struct instances as sub-assets into
 ////        the import (i.e. InputActionImporter can't do AddObjectToAsset with them). However, maybe there's a way around that. The thing
@@ -159,6 +160,29 @@ namespace UnityEngine.InputSystem
 
             return base.ToString();
         }
+
+#if UNITY_EDITOR
+
+        private void OnEnable()
+        {
+            // This is invoked after InputActionReference deserialization
+            if (m_Action == null && m_Asset != null)
+            {
+                m_Action = m_Asset.FindActionById(m_ActionId);
+                Invalidate();
+            }
+        }
+
+        internal void Invalidate()
+        {
+            // TODO Check if it makes a difference to do full re-evaluation here (only to see if reference invalidation for asset is broken)
+
+            // Reflect action name as the name of this SerializableObject
+            if (m_Action != null)
+                name = GetDisplayName(m_Action);
+        }
+
+#endif // #if UNITY_EDITOR
 
         private static string GetDisplayName(InputAction action)
         {

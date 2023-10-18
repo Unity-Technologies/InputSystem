@@ -9307,7 +9307,6 @@ partial class CoreTests
         action.Disable();
         action.ApplyBindingOverride(0, "/gamepad/leftTrigger");
         action.Enable();
-
         Press(gamepad.leftTrigger);
 
         Assert.That(performed);
@@ -9549,6 +9548,36 @@ partial class CoreTests
         var referencedAction = reference.action;
 
         Assert.That(referencedAction, Is.SameAs(action2));
+    }
+    
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanResolveActionReference_WhenUsingToInputActionToConstructANewReference()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+        
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        reference.Set(asset, "map", "action2");
+        
+        var copy1 = InputActionReference.Create(reference.action);
+        var copy2 = InputActionReference.Create(reference.ToInputAction());
+        
+        // Expecting action to be the same
+        Assert.That(reference.action, Is.SameAs(copy1.action));
+        Assert.That(reference.action, Is.SameAs(copy2.action));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanImplicitlyConvertReferenceToAction_WhenAssigningActionFromReference()
+    {
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        InputAction action = reference; // implicit conversion
+        Assert.That(reference.action, Is.Null);
     }
 
     [Test]

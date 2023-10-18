@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Editor
             // for the global actions asset: save differently (as it is a yaml file and not a json)
             if (ProjectWideActionsAsset.IsProjectWideActionsAsset(asset))
             {
+                InputActionReferenceValidator.ValidateReferences(asset);
                 AssetDatabase.SaveAssets();
                 return;
             }

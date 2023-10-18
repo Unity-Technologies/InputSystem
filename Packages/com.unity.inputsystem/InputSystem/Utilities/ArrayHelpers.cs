@@ -628,6 +628,27 @@ namespace UnityEngine.InputSystem.Utilities
             return false;
         }
 
+        public static void EraseAll<TValue>(ref TValue[] array, TValue value, IEqualityComparer<TValue> comparer)
+        {
+            Debug.Assert(array != null);
+
+            // Move tail element into position of element to be deleted (if necessary) and finally
+            // resize the array to to match capacity of elements contained.
+            // Note that Array.Resize is a no-op if size is unchanged.
+            var count = array.Length;
+            for (var i = count - 1; i >= 0; --i)
+            {
+                if (comparer.Equals(array[i], value))
+                {
+                    if (i != count - 1)
+                        array[i] = array[count - 1];
+                    --count;
+                }
+            }
+
+            Array.Resize(ref array, count);
+        }
+
         /// <summary>
         /// Erase an element from the array by moving the tail element into its place.
         /// </summary>

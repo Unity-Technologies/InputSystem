@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -207,6 +208,13 @@ namespace UnityEngine.InputSystem.Editor
 
             // Refresh editors.
             InputActionEditorWindow.RefreshAllOnAssetReimport();
+        }
+
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(InputActionAsset asset)
+        {
+            // Assuming InputActionReferences are stored at the same asset path as InputActionAsset
+            return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset)).Where(
+                o => o is InputActionReference).Cast<InputActionReference>();
         }
 
         // Add item to plop an .inputactions asset into the project.

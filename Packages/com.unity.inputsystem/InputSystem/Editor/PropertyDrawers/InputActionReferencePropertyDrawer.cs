@@ -18,14 +18,42 @@ namespace UnityEngine.InputSystem.Editor
         private readonly SearchContext m_Context = UnityEditor.Search.SearchService.CreateContext(new[]
         {
             AssetSearchProviders.CreateDefaultProvider(),
-            AssetSearchProviders.CreateInputActionReferenceSearchProvider()
-        }, string.Empty, SearchConstants.SearchFlags);
+            AssetSearchProviders.CreateProjectWideInputActionReferenceSearchProvider(),
+        }, string.Empty, SearchConstants.PickerSearchFlags);
 
-        // Advanced Picker in IMGUI, keeping for reference
+        private void OnValidate()
+        {
+            Debug.Log("OnValidate editor");
+        }
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             ObjectField.DoObjectField(position, property, typeof(InputActionReference), label,
-                m_Context, SearchConstants.ViewFlags);
+                m_Context, SearchConstants.PickerViewFlags);
+
+#if false // TODO Remove this code before final version/merge
+            // This is debug code to simplify evaluate desynchronized InputActionReference instances
+            var buttonRect = position;
+            var popupStyle = Styles.popup;
+            buttonRect.yMin += popupStyle.margin.top + 1f;
+            buttonRect.width = popupStyle.fixedWidth + popupStyle.margin.right + 5f;
+            buttonRect.height = EditorGUIUtility.singleLineHeight;
+            buttonRect.x += 75;
+
+            if (GUI.Button(buttonRect, "D"))
+            {
+                var reference = property.objectReferenceValue as InputActionReference;
+                if (reference != null)
+                    Debug.Log(label + ": " + property.objectReferenceValue + ", " + reference.action);
+                else
+                    Debug.Log(label + ": null");
+            }
+#endif
+        }
+
+        static class Styles
+        {
+            public static readonly GUIStyle popup = new GUIStyle("PaneOptions") { imagePosition = ImagePosition.ImageOnly };
         }
 
         // Advanced Picker in UITk

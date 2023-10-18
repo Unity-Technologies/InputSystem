@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEditor.Search;
 
 namespace UnityEngine.InputSystem.Editor
@@ -12,10 +11,10 @@ namespace UnityEngine.InputSystem.Editor
         // SearchFlags : these flags are used to customize how search is performed and how search
         // results are displayed.
         // Note that SearchFlags.Packages is not currently used and hides all results from packages.
-        internal static readonly SearchFlags SearchFlags = SearchFlags.Sorted | SearchFlags.OpenPicker;
+        internal static readonly SearchFlags PickerSearchFlags = SearchFlags.Sorted | SearchFlags.OpenPicker;
 
         // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
-        internal static readonly Search.SearchViewFlags ViewFlags = Search.SearchViewFlags.OpenInBuilderMode |
+        internal static readonly Search.SearchViewFlags PickerViewFlags = Search.SearchViewFlags.OpenInBuilderMode |
             Search.SearchViewFlags.DisableBuilderModeToggle |
             Search.SearchViewFlags.DisableInspectorPreview |
             Search.SearchViewFlags.DisableSavedSearchQuery;
@@ -23,64 +22,74 @@ namespace UnityEngine.InputSystem.Editor
 
     internal static class AssetSearchProviders
     {
-        // Note that if this method is annotated with [SearchItemProvider] we would register the provider to
-        // the SearchWindow, we currently skip this since we are mainly interested in using SearchItemProvider as
-        // a picker.
-        private static SearchProvider CreateAssetSearchProvider(string id, string displayName,
-            Func<IEnumerable<Object>> assetProvider, Texture2D thumbnail = null)
-        {
-            return new SearchProvider(id, displayName)
-            {
-                priority = 25,
-                toObject = GetObject,
-                fetchItems = (context, items, provider) => Search(context, provider, assetProvider, thumbnail),
-            };
-        }
-
         internal static SearchProvider CreateDefaultProvider()
         {
+            // Known issues with current ADB implementation:
+            // - Asset icon reverts to file-icon on minimum zoom level.
+            // - AssetDatabase.CachedIcon fails to retrieve custom package type icon.
             return UnityEditor.Search.SearchService.GetProvider("adb");
         }
 
-        internal static SearchProvider CreateInputActionReferenceSearchProvider()
+        private static SearchProvider CreateInputActionReferenceSearchProvider(string id, string displayName,
+            Func<Object, string> createItemFetchDescription, Func<IEnumerable<Object>> fetchAssets)
         {
-            // Match icon used for sub-assets from importer, if null will use cached icon from asset database instead.
-            // Note that .inputactions has one icon and sub-assets (actions) have another in the importer.
-            return CreateAssetSearchProvider(
-                "InputActionReferenceSearchProvider",
-                "Project-Wide Input Actions",
-                GetInputActionReferenceAssets,
-                InputActionAssetIconProvider.LoadActionIcon());
-        }
-
-        private static IEnumerable<Object> GetInputActionReferenceAssets()
-        {
-            var asset = ProjectWideActionsAsset.GetOrCreate(); // alt. InputSystem.actions
-            return (from actionMap in asset.actionMaps from action in actionMap.actions select InputActionReference.Create(action)).ToList();
-        }
-
-        static IEnumerable<SearchItem> Search(
-            SearchContext context, SearchProvider provider, Func<IEnumerable<Object>> assetProvider, Texture2D thumbnail)
-        {
-            foreach (var asset in assetProvider())
+            // Match icon used for sub-assets from importer for InputActionReferences.
+            // Note that we assign description+label in FilteredSearch but also provide a fetchDescription+fetchLabel below.
+            // This is needed to support all zoom-modes for unknown reason.
+            // ALso not that fetchLabel/fetchDescription and what is provided to CreateItem is playing different
+            // roles at different zoom levels.
+            var inputActionReferenceIcon = InputActionAssetIconProvider.LoadActionIcon();
+            return new SearchProvider(id, displayName)
             {
-                var label = asset.name;
-                if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
-                    continue; // Ignore: not matching search text filter
+                priority = 25,
+                fetchDescription = FetchLabel,
+                fetchItems = (context, items, provider) => FilteredSearch(context, provider, FetchLabel, createItemFetchDescription,
+                    fetchAssets, "(Project-Wide Input Actions)"),
+                fetchLabel = FetchLabel,
+                fetchPreview = (item, context, size, options) => inputActionReferenceIcon,
+                fetchThumbnail = (item, context) => inputActionReferenceIcon,
+                toObject = (item, type) => item.data as Object
+            };
+        }
 
-                var assetPath = AssetDatabase.GetAssetPath(asset);
-                yield return provider.CreateItem(context,
-                    asset.GetInstanceID().ToString(),
-                    label,
-                    $"{assetPath} ({label})",
-                    (thumbnail == null) ? AssetDatabase.GetCachedIcon(assetPath) as Texture2D : thumbnail,
-                    asset);
+        internal static SearchProvider CreateProjectWideInputActionReferenceSearchProvider()
+        {
+            return CreateInputActionReferenceSearchProvider("InputActionReferencePickerSearchProvider",
+                "Project-Wide Input Actions",
+                (obj) => "(Project-Wide Input Actions)",
+                () => InputActionImporter.LoadInputActionReferencesFromAsset(ProjectWideActionsAsset.GetOrCreate()));
+        }
+
+        // Custom search function with label matching filtering.
+        private static IEnumerable<SearchItem> FilteredSearch(SearchContext context, SearchProvider provider,
+            Func<Object, string> fetchObjectLabel, Func<Object, string> createItemFetchDescription, Func<IEnumerable<Object>> fetchAssets, string description)
+        {
+            foreach (var asset in  fetchAssets())
+            {
+                var label = fetchObjectLabel(asset);
+                if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
+                    continue; // Ignore due to filtering
+                yield return provider.CreateItem(context, asset.GetInstanceID().ToString(), label, createItemFetchDescription(asset),
+                    null, asset);
             }
         }
 
-        private static Object GetObject(SearchItem item, System.Type type)
+        // Note that this is overloaded to allow utilizing FetchLabel inside fetchItems to keep label formatting
+        // consistent between CreateItem and additional fetchLabel calls.
+
+        private static string FetchLabel(Object obj)
         {
-            return item.data as Object;
+            return obj.name;
+        }
+
+        private static string FetchLabel(SearchItem item, SearchContext context)
+        {
+            return FetchLabel((item.data as Object) !);
+        }
+
+        private static IEnumerable<InputActionReference> GetInputActionReferences(InputActionAsset asset)
+        {
+            return (from actionMap in asset.actionMaps from action in actionMap.actions select InputActionReference.Create(action));
         }
     }
 }
