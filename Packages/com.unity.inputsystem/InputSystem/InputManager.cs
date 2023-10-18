@@ -845,70 +845,74 @@ namespace UnityEngine.InputSystem
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
-            Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
-            ////TODO: this will want to take overrides into account
-
-            // See if we can match by description.
-            var layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
-            if (layoutName.IsEmpty())
+            try
             {
-                // No, so try to match by device class. If we have a "Gamepad" layout,
-                // for example, a device that classifies itself as a "Gamepad" will match
-                // that layout.
-                //
-                // NOTE: Have to make sure here that we get a device layout and not a
-                //       control layout.
-                if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
+                Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
+                ////TODO: this will want to take overrides into account
+
+                // See if we can match by description.
+                var layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
+                if (layoutName.IsEmpty())
                 {
-                    var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
-                    var type = m_Layouts.GetControlTypeForLayout(deviceClassLowerCase);
-                    if (type != null && typeof(InputDevice).IsAssignableFrom(type))
-                        layoutName = new InternedString(deviceDescription.deviceClass);
+                    // No, so try to match by device class. If we have a "Gamepad" layout,
+                    // for example, a device that classifies itself as a "Gamepad" will match
+                    // that layout.
+                    //
+                    // NOTE: Have to make sure here that we get a device layout and not a
+                    //       control layout.
+                    if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
+                    {
+                        var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
+                        var type = m_Layouts.GetControlTypeForLayout(deviceClassLowerCase);
+                        if (type != null && typeof(InputDevice).IsAssignableFrom(type))
+                            layoutName = new InternedString(deviceDescription.deviceClass);
+                    }
                 }
-            }
 
-            ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
-            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks? or should we just remove haveOverridenLayoutName?
-            // Give listeners a shot to select/create a layout.
-            if (m_DeviceFindLayoutCallbacks.length > 0)
-            {
-                // First time we get here, put our delegate for executing device commands
-                // in place. We wrap the call to IInputRuntime.DeviceCommand so that we don't
-                // need to expose the runtime to the onFindLayoutForDevice callbacks.
-                if (m_DeviceFindExecuteCommandDelegate == null)
-                    m_DeviceFindExecuteCommandDelegate =
-                        (ref InputDeviceCommand commandRef) =>
-                    {
-                        Profiler.EndSample();
-                        if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
-                            return InputDeviceCommand.GenericFailure;
-                        return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
-                    };
-                m_DeviceFindExecuteCommandDeviceId = deviceId;
-
-                var haveOverriddenLayoutName = false;
-                m_DeviceFindLayoutCallbacks.LockForChanges();
-                for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
+                ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
+                ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks? or should we just remove haveOverridenLayoutName?
+                // Give listeners a shot to select/create a layout.
+                if (m_DeviceFindLayoutCallbacks.length > 0)
                 {
-                    try
-                    {
-                        var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
-                        if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                    // First time we get here, put our delegate for executing device commands
+                    // in place. We wrap the call to IInputRuntime.DeviceCommand so that we don't
+                    // need to expose the runtime to the onFindLayoutForDevice callbacks.
+                    if (m_DeviceFindExecuteCommandDelegate == null)
+                        m_DeviceFindExecuteCommandDelegate =
+                            (ref InputDeviceCommand commandRef) =>
                         {
-                            layoutName = new InternedString(newLayout);
-                            haveOverriddenLayoutName = true;
+                            if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
+                                return InputDeviceCommand.GenericFailure;
+                            return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
+                        };
+                    m_DeviceFindExecuteCommandDeviceId = deviceId;
+
+                    var haveOverriddenLayoutName = false;
+                    m_DeviceFindLayoutCallbacks.LockForChanges();
+                    for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
+                    {
+                        try
+                        {
+                            var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
+                            if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                            {
+                                layoutName = new InternedString(newLayout);
+                                haveOverriddenLayoutName = true;
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onFindLayoutForDevice' callbacks");
+                            Debug.LogException(exception);
                         }
                     }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onFindLayoutForDevice' callbacks");
-                        Debug.LogException(exception);
-                    }
+                    m_DeviceFindLayoutCallbacks.UnlockForChanges();
                 }
-                m_DeviceFindLayoutCallbacks.UnlockForChanges();
             }
-
-            Profiler.EndSample();
+            finally
+            {
+                Profiler.EndSample();
+            }
             return layoutName;
         }
 
