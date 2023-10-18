@@ -845,13 +845,14 @@ namespace UnityEngine.InputSystem
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
+            string layoutName = string.Empty;
             try
             {
                 Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
                 ////TODO: this will want to take overrides into account
 
                 // See if we can match by description.
-                var layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
+                layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
                 if (layoutName.IsEmpty())
                 {
                     // No, so try to match by device class. If we have a "Gamepad" layout,
