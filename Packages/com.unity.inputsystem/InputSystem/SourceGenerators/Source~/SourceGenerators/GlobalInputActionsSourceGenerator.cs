@@ -3,13 +3,10 @@ using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using YamlDotNet.Serialization;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System.Reflection;
 
 internal class PathAndContent
 {
@@ -57,9 +54,19 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
             context.CancellationToken.ThrowIfCancellationRequested();
             var assetInfo = GetAssetContentAndPath(context, pathsAndContents);
 
+            // @TODO: Restore fallback, will require changing file to YAML
             // If the asset file hasn't been created yet, then we fallback to the template (default) asset from the package
+            //if (assetInfo == null)
+            //    assetInfo = GetDefaultAssetContentAndPath(context, pathsAndContents);
+
             if (assetInfo == null)
-                assetInfo = GetDefaultAssetContentAndPath(context, pathsAndContents);
+            {
+                // @TODO: Do we want the diagnostic or is this a valid way to switch off source generation?
+                context.ReportDiagnostic(Diagnostic.Create(
+                    new DiagnosticDescriptor($"ISGEN004", "", $"InputSystem Source Generator has no additionalfile",
+                        "InputSystemSourceGenerator", DiagnosticSeverity.Error, true), null));
+                return;
+            }
 
             var asset = ParseInputActionsAsset(context, assetInfo.content, assetInfo.path);
 
@@ -76,6 +83,10 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
         }
         catch (Exception exception)
         {
+            context.ReportDiagnostic(Diagnostic.Create(
+                new DiagnosticDescriptor($"ISGEN003", "", $"InputSystem Source Generator threw exception: {exception}",
+                    "InputSystemSourceGenerator", DiagnosticSeverity.Error, true), null));
+
             if (exception is OperationCanceledException)
                 throw;
         }
@@ -150,32 +161,27 @@ public class GlobalInputActionsSourceGenerator : IIncrementalGenerator
         throw new FileNotFoundException($"InputSystem Source Generator couldn't find additionalfile: {fileToFind}");
     }
 
-    static InputActionAsset ParseInputActionsAsset(SourceProductionContext context, string jsonAsset, string assetPath)
+    static InputActionAsset ParseInputActionsAsset(SourceProductionContext context, string yamlAsset, string assetPath)
     {
         try
         {
-            InputActionAsset inputActionAssetNullable = JsonSerializer.Deserialize<InputActionAsset>(
-                jsonAsset,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    IncludeFields = true,
-                    Converters =
-                    {
-                        new ExpectedControlTypeConverter(),
-                        new JsonStringEnumConverter()
-                    }
-                });
+            // @TODO: Parse unity Tags
+            // @TODO: Parse multiple documents (if using InputManager.asset content directly, otherwise could work with a file containing only InputActionAsset)
+            var deserializer = new DeserializerBuilder()
+                .IgnoreUnmatchedProperties()
+                .Build();
 
-            return inputActionAssetNullable;
+            Container container = deserializer.Deserialize<Container>(yamlAsset);
+            return container.MonoBehaviour;
         }
         catch (Exception exception)
         {
             if (exception is OperationCanceledException)
                 throw;
 
+            // @TODO: Remove CONTENT from error output
             context.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor("ISGEN002", "", $"InputSystem couldn't parse project input actions asset file: {assetPath}. " + exception.Message.ToString(),
+                new DiagnosticDescriptor("ISGEN002", "", $"InputSystem couldn't parse project input actions asset file: {assetPath}. : CONTENT: {yamlAsset} " + exception.Message.ToString(),
                     "InputSystemSourceGenerator", DiagnosticSeverity.Error, true), null));
 
             throw;
@@ -285,7 +291,7 @@ namespace UnityEngine.InputSystem
 
 """;
             var inputActionAsset = asset;
-            foreach (var actionMap in inputActionAsset.Maps)
+            foreach (var actionMap in inputActionAsset.m_ActionMaps)
             {
                 source +=
 $$"""
@@ -293,14 +299,14 @@ $$"""
         {
             public {{GenerateInputActionMapClassName(actionMap)}}()
             {
-                {{actionMap.Actions.Render(a =>
-                    $"{FormatFieldName(a.Name)} = new {GetInputActionWrapperType(a)}(InputSystem.actions.FindAction(\"{actionMap.Name}/{a.Name}\"));{Environment.NewLine}")}}
+                {{actionMap.m_Actions.Render(a =>
+                    $"{FormatFieldName(a.m_Name)} = new {GetInputActionWrapperType(a)}(InputSystem.actions.FindAction(\"{actionMap.m_Name}/{a.m_Name}\"));{Environment.NewLine}")}}
             }
 
             {{GenerateInputActionProperties(actionMap)}}
         }
 
-        public static {{GenerateInputActionMapClassName(actionMap)}} {{FormatFieldName(actionMap.Name)}} { get; }{{Environment.NewLine}}
+        public static {{GenerateInputActionMapClassName(actionMap)}} {{FormatFieldName(actionMap.m_Name)}} { get; }{{Environment.NewLine}}
 """;
             } // foreach inputActionAsset.Maps
 
@@ -309,7 +315,7 @@ $$"""
 
         static ProjectActions()
         {
-            {{GenerateInstantiateInputActionMaps(inputActionAsset.Maps)}}
+            {{GenerateInstantiateInputActionMaps(inputActionAsset.m_ActionMaps)}}
         }
     } // class Input
 } // namespace UnityEngine.InputSystem
@@ -319,7 +325,7 @@ $$"""
 
         static string GetInputActionWrapperType(InputAction inputAction)
         {
-            var controlType = GetTypeFromExpectedType(inputAction.ExpectedControlType, inputAction.Type);
+            var controlType = GetTypeFromExpectedType(inputAction.m_ExpectedControlType, inputAction.m_Type);
             if (controlType == null)
                 return $"UnityEngine.InputSystem.TypeSafeAPIInternals._Input";
             else
@@ -329,50 +335,52 @@ $$"""
         static string GenerateInputActionProperties(ActionMap actionMap)
         {
             var source = string.Empty;
-            foreach (var action in actionMap.Actions)
+            foreach (var action in actionMap.m_Actions)
             {
-                var bindings = actionMap.Bindings.Where(b => b.Action == action.Name).ToList();
+                // @TODO: Binding information not yet parsed from YAML
 
-                var bindingString = string.Empty;
-                for (var i = 0; i < bindings.Count; i++)
-                {
-                    if (bindings[i].IsComposite)
-                    {
-                        bindingString += $"/// {bindings[i].Name}{Environment.NewLine}";
+                //var bindings = actionMap.Bindings.Where(b => b.Action == action.Name).ToList();
 
-                        i++;
-                        while (i < bindings.Count && bindings[i].IsPartOfComposite)
-                        {
-                            bindingString += $"/// {bindings[i].Name}:{SecurityElement.Escape(bindings[i].Path)}{Environment.NewLine}";
-                            i++;
-                        }
-                    }
-                    else
-                    {
-                        bindingString += $"/// {SecurityElement.Escape(bindings[i].Path)}{Environment.NewLine}";
-                    }
-                }
+                //var bindingString = string.Empty;
+                //for (var i = 0; i < bindings.Count; i++)
+                //{
+                //    if (bindings[i].IsComposite)
+                //    {
+                //        bindingString += $"/// {bindings[i].Name}{Environment.NewLine}";
 
-                // remove the trailing newline
-                if (bindings.Count > 0)
-                    bindingString = bindingString.TrimEnd('\n', '\r');
+                //        i++;
+                //        while (i < bindings.Count && bindings[i].IsPartOfComposite)
+                //        {
+                //            bindingString += $"/// {bindings[i].Name}:{SecurityElement.Escape(bindings[i].Path)}{Environment.NewLine}";
+                //            i++;
+                //        }
+                //    }
+                //    else
+                //    {
+                //        bindingString += $"/// {SecurityElement.Escape(bindings[i].Path)}{Environment.NewLine}";
+                //    }
+                //}
 
-                source += $$"""
-                    /// <summary>
-                    /// This action is currently bound to the following control paths:
-                    ///
-                    /// <example>
-                    /// <code>
-                    ///
-                    {{bindingString}}
-                    ///
-                    /// </code>
-                    /// </example>
-                    /// </summary>
+                //// remove the trailing newline
+                //if (bindings.Count > 0)
+                //    bindingString = bindingString.TrimEnd('\n', '\r');
 
-                    """;
+                //source += $$"""
+                //    /// <summary>
+                //    /// This action is currently bound to the following control paths:
+                //    ///
+                //    /// <example>
+                //    /// <code>
+                //    ///
+                //    {{bindingString}}
+                //    ///
+                //    /// </code>
+                //    /// </example>
+                //    /// </summary>
 
-                source += $"public {GetInputActionWrapperType(action)} {FormatFieldName(action.Name)}  {{ get; }}{Environment.NewLine}";
+                //    """;
+
+                source += $"public {GetInputActionWrapperType(action)} {FormatFieldName(action.m_Name)}  {{ get; }}{Environment.NewLine}";
             }
             return source;
         }
@@ -383,7 +391,7 @@ $$"""
         var str = "";
         foreach (var actionMap in actionMaps)
         {
-            str += $"{FormatFieldName(actionMap.Name)} = new {GenerateInputActionMapClassName(actionMap)}();{Environment.NewLine}";
+            str += $"{FormatFieldName(actionMap.m_Name)} = new {GenerateInputActionMapClassName(actionMap)}();{Environment.NewLine}";
         }
 
         return str;
@@ -392,7 +400,7 @@ $$"""
     static string GenerateInputActionMapClassName(ActionMap actionMap)
     {
         // TODO: More robust class name generation. Replace incompatible characters
-        var actionMapClassName = actionMap.Name.Replace(" ", "");
+        var actionMapClassName = actionMap.m_Name.Replace(" ", "");
 
         return FormatClassName(actionMapClassName) + "InputActionMap";
     }
@@ -463,65 +471,6 @@ $$"""
                 return null;
         }
     }
-
-    // This is to workaround that Unity's JsonUtility does not handle optional fields properly.
-    // Essentially it populates optional fields as empty strings, rather than omitting them during serialization.
-    // These cannot then be properly deserialized into Enums here without some customisation.
-    public class ExpectedControlTypeConverter : JsonConverterFactory
-    {
-        public override bool CanConvert(Type typeToConvert)
-        {
-            return typeToConvert == typeof(ControlType);
-        }
-
-        public override JsonConverter CreateConverter(
-            Type type,
-            JsonSerializerOptions options)
-        {
-            JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(ExpectedControlTypeConverterInner),
-                BindingFlags.Instance | BindingFlags.Public,
-                binder: null,
-                args: new object[] { options },
-                culture: null)!;
-
-            return converter;
-        }
-
-        private class ExpectedControlTypeConverterInner : JsonConverter<ControlType>
-        {
-            private readonly JsonConverter<ControlType> m_ValueConverter;
-            private readonly Type m_ValueType;
-
-            public ExpectedControlTypeConverterInner(JsonSerializerOptions options)
-            {
-                // For performance, use the existing converter.
-                m_ValueConverter = (JsonConverter<ControlType>)new JsonStringEnumConverter().CreateConverter(typeof(ControlType), options);
-                    //(JsonConverter<ControlType>)options.GetConverter(typeof(ControlType));
-                m_ValueType = typeof(ControlType);
-            }
-
-            public override ControlType Read(
-                ref Utf8JsonReader reader,
-                Type typeToConvert,
-                JsonSerializerOptions options)
-            {
-                var controlType = ControlType.None; // Default value. Used for empty strings or missing values.
-                try
-                {
-                    controlType = m_ValueConverter.Read(ref reader, m_ValueType, options);
-                }
-                catch { }
-
-                return controlType;
-            }
-
-            public override void Write(
-                Utf8JsonWriter writer,
-                ControlType controlType,
-                JsonSerializerOptions options) => throw new NotImplementedException();
-        }
-    }
 }
 
 public static class LinqExtensions
@@ -538,41 +487,48 @@ public static class LinqExtensions
     }
 }
 
+public struct Container
+{
+    public InputActionAsset MonoBehaviour;
+}
+
 public struct InputActionAsset
 {
-    public string Name;
-    public ActionMap[] Maps;
-    public ControlScheme[] ControlSchemes;
+    public string m_Name;
+    public ActionMap[] m_ActionMaps;
+    public ControlScheme[] m_ControlSchemes;
 }
 
 public struct ActionMap
 {
-    public string Id;
-    public string Name;
-    public InputAction[] Actions;
-    public Binding[] Bindings;
+    public string m_Id;
+    public string m_Name;
+    public InputAction[] m_Actions;
+    public Binding[] m_Bindings;
 }
 
 public class InputAction
 {
-    public string Id;
-    public ActionType Type;
-    public string Name;
-    public ControlType ExpectedControlType;
-    public string Processors;
-    public string Interactions;
+    public string m_Id;
+    public ActionType m_Type;
+    public string m_Name;
+    public ControlType m_ExpectedControlType;
+    public string m_Processors;
+    public string m_Interactions;
 }
 
 public class Binding
 {
-    public string Id;
-    public string Name;
-    public string Path;
-    public string Interactions;
-    public string Groups;
-    public string Action;
-    public bool IsComposite;
-    public bool IsPartOfComposite;
+    public string m_Id;
+    public string m_Name;
+    public string m_Path;
+    public string m_Interactions;
+    public string m_Groups;
+    public string m_Action;
+
+    // @TODO: Need to parse the YAML equivalents
+    //public bool IsComposite;
+    //public bool IsPartOfComposite;
 }
 
 public class ControlScheme
@@ -581,8 +537,8 @@ public class ControlScheme
 
 public enum ActionType
 {
-    Button,
     Value,
+    Button,
     Passthrough
 }
 

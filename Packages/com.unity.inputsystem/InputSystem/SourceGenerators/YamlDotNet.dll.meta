@@ -1,0 +1,6 @@
+fileFormatVersion: 2
+guid: 886edc2086a37084d912303757a9915a
+labels:
+- RoslynAnalyzer
+- RunOnlyOnAssembliesWithReference
+- SourceGenerator

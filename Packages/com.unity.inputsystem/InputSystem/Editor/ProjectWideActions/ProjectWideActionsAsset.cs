@@ -14,9 +14,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (ArrayHelpers.Contains(importedAssets, ProjectWideActionsAsset.kAssetPath))
             {
-                AssetDatabase.DisallowAutoRefresh();
                 ProjectWideActionsAsset.CreateRoslynAdditionalFile();
-                AssetDatabase.AllowAutoRefresh();
             }
         }
     }
@@ -27,7 +25,7 @@ namespace UnityEngine.InputSystem.Editor
         internal const string kAssetPath = "ProjectSettings/InputManager.asset";
         internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
-        internal const string kAdditionalFilePath = "Assets/actions.InputSystemActionsAPIGenerator.additionalfile"; // Copy of asset that is fed to the SourceGenerator
+        const string kAdditionalFilePath = "ProjectSettings/actions.InputSystemActionsAPIGenerator.additionalfile"; // Copy of asset that is fed to the SourceGenerator
 
 #if UNITY_INCLUDE_TESTS
         internal static InputActionAsset testAsset  { get; set; }
@@ -115,16 +113,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             try
             {
-                if (!Directory.Exists("Assets"))
-                    Directory.CreateDirectory("Assets");
+                // @TODO: Needs to serialize a YAML file (hopefully with just a InputActionAsset).
 
-                var assetJson = InputSystem.actions.ToJson();
-                var existingJson = File.Exists(kAdditionalFilePath) ? File.ReadAllText(kAdditionalFilePath) : "";
-                if (assetJson != existingJson)
-                {
-                    File.WriteAllText(kAdditionalFilePath, assetJson);
-                    AssetDatabase.ImportAsset(kAdditionalFilePath); // Invoke importer and therefore source generator
-                }
+                //var assetJson = InputSystem.actions.ToJson();
+                //var existingJson = File.Exists(kAdditionalFilePath) ? File.ReadAllText(kAdditionalFilePath) : "";
+                //if (assetJson != existingJson)
+                //{
+                //    File.WriteAllText(kAdditionalFilePath, assetJson);
+                //    AssetDatabase.ImportAsset(kAdditionalFilePath); // Invoke importer and therefore source generator
+                //}
             }
             catch (Exception exception)
             {
