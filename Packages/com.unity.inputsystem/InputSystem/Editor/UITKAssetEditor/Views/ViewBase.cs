@@ -1,6 +1,7 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -33,7 +34,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_ViewStateSelector == null)
             {
-                Debug.LogWarning($"View '{GetType().Name}' has no selector and will not render. Create a selector for the " +
+                Debug.LogWarning(
+                    $"View '{GetType().Name}' has no selector and will not render. Create a selector for the " +
                     $"view using the CreateSelector method.");
                 return;
             }
@@ -111,6 +113,16 @@ namespace UnityEngine.InputSystem.Editor
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;
         private bool m_IsFirstUpdate = true;
+
+
+        protected bool IsDuplicateShortcutPressed(KeyDownEvent keyDownEvent)
+        {
+#if UNITY_STANDALONE_OSX
+            return keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Command;
+#else
+            return keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Control;
+#endif
+        }
     }
 
     internal class ViewStateSelector<TReturn> : IViewStateSelector<TReturn>

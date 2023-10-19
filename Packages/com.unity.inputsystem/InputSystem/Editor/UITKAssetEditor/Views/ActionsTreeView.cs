@@ -252,6 +252,8 @@ namespace UnityEngine.InputSystem.Editor
                 OnKeyDownEventForRename();
             else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
+            else if (IsDuplicateShortcutPressed(e))
+                OnKeyDownEventForDuplicate();
         }
 
         private void OnKeyDownEventForRename()
@@ -266,6 +268,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
             item?.DeleteItem();
+        }
+
+        private void OnKeyDownEventForDuplicate()
+        {
+            m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
         }
 
         internal class ViewState
