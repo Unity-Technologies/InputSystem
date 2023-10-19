@@ -845,7 +845,7 @@ namespace UnityEngine.InputSystem
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
-            string layoutName = string.Empty;
+            InternedString layoutName = new InternedString(string.Empty);
             try
             {
                 Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
