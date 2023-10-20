@@ -14,9 +14,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (ArrayHelpers.Contains(importedAssets, ProjectWideActionsAsset.kAssetPath))
             {
-                AssetDatabase.DisallowAutoRefresh();
                 ProjectWideActionsAsset.CreateRoslynAdditionalFile();
-                AssetDatabase.AllowAutoRefresh();
             }
         }
     }
@@ -27,10 +25,24 @@ namespace UnityEngine.InputSystem.Editor
         internal const string kAssetPath = "ProjectSettings/InputManager.asset";
         internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
+        static string s_DefaultAssetPath = kTemplateAssetPath;
+        static string s_AssetPath = kAssetPath;
+
         internal const string kAdditionalFilePath = "Assets/actions.InputSystemActionsAPIGenerator.additionalfile"; // Copy of asset that is fed to the SourceGenerator
 
 #if UNITY_INCLUDE_TESTS
-        internal static InputActionAsset testAsset  { get; set; }
+        internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
+        {
+            s_DefaultAssetPath = defaultAssetPath;
+            s_AssetPath = assetPath;
+        }
+
+        internal static void Reset()
+        {
+            s_DefaultAssetPath = kTemplateAssetPath;
+            s_AssetPath = kAssetPath;
+        }
+
 #endif
 
         [InitializeOnLoadMethod]
@@ -41,11 +53,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionAsset GetOrCreate()
         {
-#if UNITY_INCLUDE_TESTS
-            if (testAsset != null) return testAsset;
-#endif
-
-            var objects = AssetDatabase.LoadAllAssetsAtPath(kAssetPath);
+            var objects = AssetDatabase.LoadAllAssetsAtPath(s_AssetPath);
             if (objects != null)
             {
                 var inputActionsAsset = objects.FirstOrDefault(o => o != null && o.name == kAssetName) as InputActionAsset;
@@ -58,13 +66,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private static InputActionAsset CreateNewActionAsset()
         {
-            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, kTemplateAssetPath));
+            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath));
 
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
             asset.LoadFromJson(json);
             asset.name = kAssetName;
 
-            AssetDatabase.AddObjectToAsset(asset, kAssetPath);
+            AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
 
             // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
             var maps = asset.actionMaps;
