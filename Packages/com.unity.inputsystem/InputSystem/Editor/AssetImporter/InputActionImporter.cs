@@ -212,9 +212,40 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(InputActionAsset asset)
         {
-            // Assuming InputActionReferences are stored at the same asset path as InputActionAsset
+            //Get all InputActionReferences are stored at the same asset path as InputActionAsset
             return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset)).Where(
                 o => o is InputActionReference).Cast<InputActionReference>();
+        }
+
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] folderPath = null)
+        {
+            string[] searchInFolderPath = null;
+            // If folderPath is null, search in "Assets" folder.
+            if (folderPath == null)
+            {
+                searchInFolderPath = new string[] { "Assets" };
+            }
+
+            // Get all InputActionReference from assets in "Asset" folder. It does not search inside "Packages" folder.
+            var inputActionReferenceGUIDs = AssetDatabase.FindAssets($"t:{typeof(InputActionReference).Name}", searchInFolderPath);
+
+            // To find all the InputActionReferences, the GUID of the asset containing at least one action reference is
+            // used to find the asset path. This is because InputActionReferences are stored in the asset database as sub-assets of InputActionAsset.
+            // Then the whole asset is loaded and all the InputActionReferences are extracted from it.
+            // Also, the action references are duplicated to have backwards compatibility with the 1.0.0-preview.7. That
+            // is why we look for references withouth the `HideFlags.HideInHierarchy` flag.
+            var inputActionReferencesList = new List<InputActionReference>();
+            foreach (var guid in inputActionReferenceGUIDs)
+            {
+                var assetName = AssetDatabase.GUIDToAssetPath(guid);
+                var assetInputActionReferenceList = AssetDatabase.LoadAllAssetsAtPath(assetName).Where(
+                    o => o is InputActionReference &&
+                    !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
+                    .Cast<InputActionReference>().ToList();
+
+                inputActionReferencesList.AddRange(assetInputActionReferenceList);
+            }
+            return inputActionReferencesList;
         }
 
         // Add item to plop an .inputactions asset into the project.
