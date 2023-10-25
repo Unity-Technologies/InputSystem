@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Editor
                 window.Focus();
                 return window;
             }
-            
+
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
             window.titleContent = new GUIContent("Input Actions Editor");
@@ -193,7 +193,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Save()
         {
-            Debug.Log("Save");
             InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
             PostSaveAction();
         }
@@ -214,7 +213,7 @@ namespace UnityEngine.InputSystem.Editor
             // Window is dirty is never true since every change is auto-saved
             var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasAssetChanged(newState.serializedObject);
             #endif
-            
+
             if (m_IsDirty == isWindowDirty)
                 return;
             m_IsDirty = isWindowDirty;
@@ -224,6 +223,14 @@ namespace UnityEngine.InputSystem.Editor
         private bool HasAssetChanged(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
+
+            // Checks if the asset being edited is a new asset that was never saved before.
+            // If it is, there's nothing to save.
+            // At the moment, an asset only has the default asset layout content on disk when it is first created.
+            // So in this case we cannot go through the normal path and compare what's on disk with what has been serialized.
+            if (m_AssetJson == InputActionAsset.kDefaultAssetLayoutJson && asset.IsEmpty())
+                return false;
+
             var newAssetJson = asset.ToJson();
             return newAssetJson != m_AssetJson;
         }
@@ -232,7 +239,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Auto-save triggers on focus-lost instead of on every change
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
+            if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
                 Save();
             #endif
         }

@@ -8059,6 +8059,39 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_Vector2Composite_WithKeyboardKeys_CancelOnRelease()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up classic WASD control.
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        bool wasCanceled = false;
+        action.canceled += ctx => { wasCanceled = true; };
+
+        // Test all directions to ensure they are correctly canceled
+        var keys = new Key[] { Key.W, Key.A, Key.S, Key.D };
+        foreach (var key in keys)
+        {
+            wasCanceled = false;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+            InputSystem.Update();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            Assert.That(wasCanceled, Is.EqualTo(true));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateComposite_WithPartsBeingOutOfOrder()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -8913,6 +8946,41 @@ partial class CoreTests
             Is.EqualTo(new Vector3(1, -1, -1).normalized).Using(Vector3EqualityComparer.Instance));
         Assert.That(digital.ReadValue<Vector3>(),
             Is.EqualTo(new Vector3(1, -1, -1)).Using(Vector3EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Vector3Composite_WithKeyboardKeys_CancelOnRelease()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up classic WASD control (with QE for forward / backward).
+        var action = new InputAction();
+        action.AddCompositeBinding("3DVector")
+            .With("Forward", "<Keyboard>/q")
+            .With("Backward", "<Keyboard>/e")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.Enable();
+
+        bool wasCanceled = false;
+        action.canceled += ctx => { wasCanceled = true; };
+
+        // Test all directions to ensure they are correctly canceled
+        var keys = new Key[] { Key.Q, Key.E, Key.W, Key.A, Key.S, Key.D };
+        foreach (var key in keys)
+        {
+            wasCanceled = false;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+            InputSystem.Update();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.Update();
+
+            Assert.That(wasCanceled, Is.EqualTo(true));
+        }
     }
 
     [Test]

@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -18,7 +19,12 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-            m_ListView.selectionChanged += _ => SelectActionMap();
+
+            m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
+            m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
+            {
+                Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+            };
 
             m_ListView.bindItem = (element, i) =>
             {
@@ -101,11 +107,6 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ChangeActionMapName(index, newName));
         }
 
-        private void SelectActionMap()
-        {
-            Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
-        }
-
         private void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
@@ -118,6 +119,8 @@ namespace UnityEngine.InputSystem.Editor
                 OnKeyDownEventForRename();
             else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
+            else if (IsDuplicateShortcutPressed(e))
+                OnKeyDownEventForDuplicate();
         }
 
         private void OnKeyDownEventForRename()
@@ -132,6 +135,12 @@ namespace UnityEngine.InputSystem.Editor
             item.DeleteItem();
         }
 
+        private void OnKeyDownEventForDuplicate()
+        {
+            ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
+        }
+
+        private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
         private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
         private ListView m_ListView;

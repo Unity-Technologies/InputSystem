@@ -14,13 +14,26 @@ however, it has to be formatted properly to pass verification tests.
 - Removed icons from action map list as these were always the same and the icon was placeholder
 - Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
 - Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
+- Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
+- Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
+- Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
+- Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
+- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
 
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
 - UI fix for input fields in interactions: they are wider now and the width is fixed.
+- Fixed exiting empty input fields for actions, action maps and composites in the input action asset editor.
+- Fixed an issue where selecting an Action in the Input Action Asset Editor tree-view and then pressing ESC to unselect would throw an `InvalidOperationException`.
+- Fixed an issue where selecting an Action Map in the Input Action Asset Editor list and then pressing ESC to unselect would print an `NullReferenceException` to the Debug console.
+- Fixed case [ISXB-251](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-251) (Action only calls started & performed callbacks when control type is set to Vector3Composite). `EvaluateMagnitude` wasn't overridden for Vector3Composite, also made some minor changes to Vector3Composite and Vector2Composite for consistency.
+- Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
+- Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
+- Fixed case [ISXB-628](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-628) (OnIMECompositionChange does not return an empty string on accept when using Microsoft IME) by clarifying expectations and intended usage for the IME composition change event.
+- Fixed case [ISX-1668] (The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
 
 ## [1.8.0-pre.1] - 2023-09-04
 

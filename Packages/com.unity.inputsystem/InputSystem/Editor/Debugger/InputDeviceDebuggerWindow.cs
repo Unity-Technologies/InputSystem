@@ -361,6 +361,7 @@ namespace UnityEngine.InputSystem.Editor
             InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "device", Justification = "Keep this for future implementation")]
         internal static InputUpdateType DetermineUpdateTypeToShow(InputDevice device)
         {
             if (EditorApplication.isPlaying)
