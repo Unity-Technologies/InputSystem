@@ -1245,9 +1245,9 @@ namespace UnityEngine.InputSystem
                 if (!valid)
                     throw new InvalidOperationException("Accessor is not valid");
 
-                var interactionName = InputProcessor.s_Processors.FindNameForType(typeof(TInteraction));
+                var interactionName = InputInteraction.s_Interactions.FindNameForType(typeof(TInteraction));
                 if (interactionName.IsEmpty())
-                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a processor");
+                    throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a interaction");
 
                 return WithInteraction(interactionName);
             }
