@@ -205,5 +205,20 @@ partial class CoreTests
     {
         Assert.Fail();
     }
+
+    [Test]
+    [Category("Analytics")]
+    public void InputActionEditorAnalytics_Xxx()
+    {
+        InputAnalytics.InputActionsEditorSession session = new InputAnalytics.InputActionsEditorSession();
+        
+        session.Begin();
+        session.RegisterEditorFocusIn();
+        session.RegisterBindingEdit();
+        session.RegisterActionEdit();
+        session.RegisterActionMapEdit();
+        session.RegisterEditorFocusOut();
+        session.End();
+    }
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR

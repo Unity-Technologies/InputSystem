@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem
     {
         public const string kEventStartup = "input_startup";
         public const string kEventShutdown = "input_shutdown";
+        public const string kEventInputActionEditorWindowSession = "input_action_editor_window_session";
 
         public static void Initialize(InputManager manager)
         {
@@ -62,8 +63,12 @@ namespace UnityEngine.InputSystem
             data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
             #endif
 
-            manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
+            manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 100, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
+            
+            #if UNITY_EDITOR
+            manager.m_Runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, maxPerHour: 100, maxPropertiesPerEvent: 100);
+            #endif
         }
 
         public static void OnShutdown(InputManager manager)
@@ -160,6 +165,12 @@ namespace UnityEngine.InputSystem
             public float total_event_processing_time;
         }
 
+        /// <summary>
+        /// Represents an editor type.
+        /// </summary>
+        /// <remarks>
+        /// This may be added to in the future but items may never be removed.
+        /// </remarks>
         public enum InputActionsEditorType
         {
             Invalid = 0,
