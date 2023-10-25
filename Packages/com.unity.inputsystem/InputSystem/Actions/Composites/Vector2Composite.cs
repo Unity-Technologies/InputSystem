@@ -8,6 +8,8 @@ using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
 
 ////TODO: add support for ramp up/down
@@ -51,7 +53,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Axis")] public int up = 0;
+        [InputControl(layout = "Axis")] public int up;
 
         /// <summary>
         /// Binding for the button represents the down (that is, <c>(0,-1)</c>) direction of the vector.
@@ -61,7 +63,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Axis")] public int down = 0;
+        [InputControl(layout = "Axis")] public int down;
 
         /// <summary>
         /// Binding for the button represents the left (that is, <c>(-1,0)</c>) direction of the vector.
@@ -71,7 +73,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         // ReSharper disable once MemberCanBePrivate.Global
         // ReSharper disable once FieldCanBeMadeReadOnly.Global
-        [InputControl(layout = "Axis")] public int left = 0;
+        [InputControl(layout = "Axis")] public int left;
 
         /// <summary>
         /// Binding for the button that represents the right (that is, <c>(1,0)</c>) direction of the vector.
@@ -79,7 +81,7 @@ namespace UnityEngine.InputSystem.Composites
         /// <remarks>
         /// This property is automatically assigned by the input system.
         /// </remarks>
-        [InputControl(layout = "Axis")] public int right = 0;
+        [InputControl(layout = "Axis")] public int right;
 
         [Obsolete("Use Mode.DigitalNormalized with 'mode' instead")]
         public bool normalize = true;
@@ -122,7 +124,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </code>
         /// </example>
         /// </remarks>
-        public Mode mode;
+        public Mode mode = Mode.DigitalNormalized;
 
         /// <inheritdoc />
         public override Vector2 ReadValue(ref InputBindingCompositeContext context)
@@ -201,6 +203,25 @@ namespace UnityEngine.InputSystem.Composites
         {
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            var modeField = new EnumField("Mode", target.mode)
+            {
+                tooltip = m_ModeLabel.text
+            };
+
+            modeField.RegisterValueChangedCallback(evt =>
+            {
+                target.mode = (Vector2Composite.Mode)evt.newValue;
+                onChangedCallback();
+            });
+
+            root.Add(modeField);
+        }
+
+#endif
     }
     #endif
 }

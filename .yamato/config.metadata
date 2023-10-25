@@ -1,9 +1,8 @@
 editors:
-  - version: 2020.3
-    disable_tvos_run: true
   - version: 2021.3
-  - version: 2022.2
-  - version: 2023.1
+  - version: 2022.3
+  - version: 2023.1/staging
+  - version: 2023.2/staging
   - version: trunk
     disable_tvos_run: true
 
@@ -34,16 +33,16 @@ platforms_win:
 platforms_nix:
   - name: mac
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-13:default
     flavor: m1.mac
   - name: mac_standalone
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-13:default
     flavor: m1.mac
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-13:default
     flavor: m1.mac
     runtime: StandaloneOSX
     scripting-backend: Il2Cpp

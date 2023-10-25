@@ -1,3 +1,6 @@
+---
+uid: input-system-controls
+---
 # Controls
 
 * [Hierarchies](#control-hierarchies)

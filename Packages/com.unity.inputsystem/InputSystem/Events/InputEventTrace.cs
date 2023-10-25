@@ -836,7 +836,10 @@ namespace UnityEngine.InputSystem.LowLevel
                         newBufferSize = m_MaxEventBufferSize;
 
                     if (newBufferSize < bytesNeeded)
+                    {
+                        Profiler.EndSample();
                         return;
+                    }
 
                     Resize(newBufferSize);
 

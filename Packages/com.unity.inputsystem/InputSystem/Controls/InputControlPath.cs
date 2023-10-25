@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
@@ -558,7 +559,7 @@ namespace UnityEngine.InputSystem
                         return true; // Wildcard at end of string so rest is matched.
 
                     ++posInStr;
-                    nextChar = char.ToLower(str[posInStr]);
+                    nextChar = char.ToLower(str[posInStr], CultureInfo.InvariantCulture);
 
                     while (posInMatchTo < matchToLength && matchToLowerCase[posInMatchTo] != nextChar)
                         ++posInMatchTo;
@@ -566,7 +567,7 @@ namespace UnityEngine.InputSystem
                     if (posInMatchTo == matchToLength)
                         return false; // Matched all the way to end of matchTo but there's more in str after the wildcard.
                 }
-                else if (char.ToLower(nextChar) != matchToLowerCase[posInMatchTo])
+                else if (char.ToLower(nextChar, CultureInfo.InvariantCulture) != matchToLowerCase[posInMatchTo])
                 {
                     return false;
                 }
@@ -718,6 +719,54 @@ namespace UnityEngine.InputSystem
 
             var parser = new PathParser(expected);
             return MatchesRecursive(ref parser, control);
+        }
+
+        internal static bool MatchControlComponent(ref ParsedPathComponent expectedControlComponent, ref InputControlLayout.ControlItem controlItem, bool matchAlias = false)
+        {
+            bool controlItemNameMatched = false;
+            var anyUsageMatches = false;
+
+            // Check to see that there is a match with the name or alias if specified
+            // Exit early if we can't create a match.
+            if (!expectedControlComponent.m_Name.isEmpty)
+            {
+                if (StringMatches(expectedControlComponent.m_Name, controlItem.name))
+                    controlItemNameMatched = true;
+                else if (matchAlias)
+                {
+                    var aliases = controlItem.aliases;
+                    for (var i = 0; i < aliases.Count; i++)
+                    {
+                        if (StringMatches(expectedControlComponent.m_Name, aliases[i]))
+                        {
+                            controlItemNameMatched = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                    return false;
+            }
+
+            // All of usages should match to the one of usage in the control
+            foreach (var usage in expectedControlComponent.m_Usages)
+            {
+                if (!usage.isEmpty)
+                {
+                    var usageCount = controlItem.usages.Count;
+                    for (var i = 0; i < usageCount; ++i)
+                    {
+                        if (StringMatches(usage, controlItem.usages[i]))
+                        {
+                            anyUsageMatches = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Return whether or not we were able to match an alias or a usage
+            return controlItemNameMatched || anyUsageMatches;
         }
 
         /// <summary>
@@ -1107,7 +1156,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 var charInComponent = component[indexInComponent];
-                if (charInComponent == nextCharInPath || char.ToLower(charInComponent) == char.ToLower(nextCharInPath))
+                if (charInComponent == nextCharInPath || char.ToLower(charInComponent, CultureInfo.InvariantCulture) == char.ToLower(nextCharInPath, CultureInfo.InvariantCulture))
                 {
                     ++indexInComponent;
                     ++indexInPath;

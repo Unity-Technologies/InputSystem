@@ -1,3 +1,6 @@
+---
+uid: input-system-action-assets
+---
 # Input Action Assets
 
 * [Creating Action Assets](#creating-input-action-assets)

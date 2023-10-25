@@ -17,6 +17,10 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+#if UNITY_EDITOR
+using CustomBindingPathValidator = System.Func<string, System.Action>;
+#endif
+
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
 
 ////TODO: work towards InputManager having no direct knowledge of actions
@@ -229,6 +233,55 @@ namespace UnityEngine.InputSystem
         }
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Callback that can be used to display a warning and draw additional custom Editor UI for bindings.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal event CustomBindingPathValidator customBindingPathValidators
+        {
+            add => m_customBindingPathValidators.AddCallback(value);
+            remove => m_customBindingPathValidators.RemoveCallback(value);
+        }
+
+        /// <summary>
+        /// Invokes any custom UI rendering code for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.OnDrawCustomWarningForBindingPath"/> instead.
+        /// </remarks>
+        internal void OnDrawCustomWarningForBindingPath(string bindingPath)
+        {
+            DelegateHelpers.InvokeCallbacksSafe_AndInvokeReturnedActions(
+                ref m_customBindingPathValidators,
+                bindingPath,
+                "InputSystem.OnDrawCustomWarningForBindingPath");
+        }
+
+        /// <summary>
+        /// Determines if any warning icon is to be displayed for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="InputSystem.customBindingPathValidators"/>
+        /// <remarks>
+        /// This is not intended to be called directly.
+        /// Please use <see cref="InputSystem.OnDrawCustomWarningForBindingPath"/> instead.
+        /// </remarks>
+        internal bool ShouldDrawWarningIconForBinding(string bindingPath)
+        {
+            return DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsObject(
+                ref m_customBindingPathValidators,
+                bindingPath,
+                "InputSystem.ShouldDrawWarningIconForBinding");
+        }
+
+#endif // UNITY_EDITOR
 
 #if UNITY_EDITOR
         private bool m_RunPlayerUpdatesInEditMode;
@@ -792,69 +845,75 @@ namespace UnityEngine.InputSystem
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
-            Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
-            ////TODO: this will want to take overrides into account
-
-            // See if we can match by description.
-            var layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
-            if (layoutName.IsEmpty())
+            InternedString layoutName = new InternedString(string.Empty);
+            try
             {
-                // No, so try to match by device class. If we have a "Gamepad" layout,
-                // for example, a device that classifies itself as a "Gamepad" will match
-                // that layout.
-                //
-                // NOTE: Have to make sure here that we get a device layout and not a
-                //       control layout.
-                if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
+                Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
+                ////TODO: this will want to take overrides into account
+
+                // See if we can match by description.
+                layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
+                if (layoutName.IsEmpty())
                 {
-                    var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
-                    var type = m_Layouts.GetControlTypeForLayout(deviceClassLowerCase);
-                    if (type != null && typeof(InputDevice).IsAssignableFrom(type))
-                        layoutName = new InternedString(deviceDescription.deviceClass);
+                    // No, so try to match by device class. If we have a "Gamepad" layout,
+                    // for example, a device that classifies itself as a "Gamepad" will match
+                    // that layout.
+                    //
+                    // NOTE: Have to make sure here that we get a device layout and not a
+                    //       control layout.
+                    if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
+                    {
+                        var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
+                        var type = m_Layouts.GetControlTypeForLayout(deviceClassLowerCase);
+                        if (type != null && typeof(InputDevice).IsAssignableFrom(type))
+                            layoutName = new InternedString(deviceDescription.deviceClass);
+                    }
                 }
-            }
 
-            ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
-            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks? or should we just remove haveOverridenLayoutName?
-            // Give listeners a shot to select/create a layout.
-            if (m_DeviceFindLayoutCallbacks.length > 0)
-            {
-                // First time we get here, put our delegate for executing device commands
-                // in place. We wrap the call to IInputRuntime.DeviceCommand so that we don't
-                // need to expose the runtime to the onFindLayoutForDevice callbacks.
-                if (m_DeviceFindExecuteCommandDelegate == null)
-                    m_DeviceFindExecuteCommandDelegate =
-                        (ref InputDeviceCommand commandRef) =>
-                    {
-                        if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
-                            return InputDeviceCommand.GenericFailure;
-                        return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
-                    };
-                m_DeviceFindExecuteCommandDeviceId = deviceId;
-
-                var haveOverriddenLayoutName = false;
-                m_DeviceFindLayoutCallbacks.LockForChanges();
-                for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
+                ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
+                ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks? or should we just remove haveOverridenLayoutName?
+                // Give listeners a shot to select/create a layout.
+                if (m_DeviceFindLayoutCallbacks.length > 0)
                 {
-                    try
-                    {
-                        var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
-                        if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                    // First time we get here, put our delegate for executing device commands
+                    // in place. We wrap the call to IInputRuntime.DeviceCommand so that we don't
+                    // need to expose the runtime to the onFindLayoutForDevice callbacks.
+                    if (m_DeviceFindExecuteCommandDelegate == null)
+                        m_DeviceFindExecuteCommandDelegate =
+                            (ref InputDeviceCommand commandRef) =>
                         {
-                            layoutName = new InternedString(newLayout);
-                            haveOverriddenLayoutName = true;
+                            if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
+                                return InputDeviceCommand.GenericFailure;
+                            return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
+                        };
+                    m_DeviceFindExecuteCommandDeviceId = deviceId;
+
+                    var haveOverriddenLayoutName = false;
+                    m_DeviceFindLayoutCallbacks.LockForChanges();
+                    for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
+                    {
+                        try
+                        {
+                            var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName, m_DeviceFindExecuteCommandDelegate);
+                            if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                            {
+                                layoutName = new InternedString(newLayout);
+                                haveOverriddenLayoutName = true;
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onFindLayoutForDevice' callbacks");
+                            Debug.LogException(exception);
                         }
                     }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError($"{exception.GetType().Name} while executing 'InputSystem.onFindLayoutForDevice' callbacks");
-                        Debug.LogException(exception);
-                    }
+                    m_DeviceFindLayoutCallbacks.UnlockForChanges();
                 }
-                m_DeviceFindLayoutCallbacks.UnlockForChanges();
             }
-
-            Profiler.EndSample();
+            finally
+            {
+                Profiler.EndSample();
+            }
             return layoutName;
         }
 
@@ -1206,7 +1265,10 @@ namespace UnityEngine.InputSystem
             if (layout.IsEmpty())
             {
                 if (throwIfNoLayoutFound)
+                {
+                    Profiler.EndSample();
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
+                }
 
                 // If it's a device coming from the runtime, disable it.
                 if (deviceId != InputDevice.InvalidDeviceId)
@@ -1975,6 +2037,11 @@ namespace UnityEngine.InputSystem
         // callback for this so we have to poll this state.
         #if UNITY_EDITOR
         private bool m_EditorIsActive;
+        #endif
+
+        // Allow external users to hook in validators and draw custom UI in the binding path editor
+        #if UNITY_EDITOR
+        private Utilities.CallbackArray<CustomBindingPathValidator> m_customBindingPathValidators;
         #endif
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
@@ -2786,7 +2853,10 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputUpdate");
 
             if (m_InputEventStream.isOpen)
+            {
+                Profiler.EndSample();
                 throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
+            }
 
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
@@ -2882,9 +2952,8 @@ namespace UnityEngine.InputSystem
                 );
 
 
-            bool dropStatusEvents = false;
-
 #if UNITY_EDITOR
+            var dropStatusEvents = false;
             if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
             {
                 // If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
@@ -3148,7 +3217,10 @@ namespace UnityEngine.InputSystem
                         var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
 #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
+                        {
+                            Profiler.EndSample();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+                        }
 #endif
                         if (!shouldProcess)
                         {
@@ -3329,6 +3401,7 @@ namespace UnityEngine.InputSystem
             {
                 // We need to restore m_InputEventStream to a sound state
                 // to avoid failing recursive OnUpdate check next frame.
+                Profiler.EndSample();
                 m_InputEventStream.CleanUpAfterException();
                 throw;
             }

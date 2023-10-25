@@ -1,11 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
@@ -473,6 +478,16 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_ValueCachingWorksAcrossEntireDeviceMemoryRange()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // The presence of any enabled actions means we have installed StateChangeMonitors
+        // which interferes with this test. Essentially when we update the device state
+        // and invalidate the cache (make it stale), immediately afterwards we
+        // call NotifyControlStateChanged for each of the actions which _may_ cause a Read()
+        // on the control and make it immediately cached (non-stale) again.
+        InputSystem.actions?.Disable();
+#endif
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // read all values to initially mark everything as cached
@@ -914,6 +929,22 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_FindControl_FindsControlDespiteTurkishCulture()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var matches = InputSystem.FindControls("/gamePAD/LEFTSTICK"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+        Thread.CurrentThread.CurrentCulture = culture;
     }
 
     [Test]
@@ -1505,5 +1536,68 @@ partial class CoreTests
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
         Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
         Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_PrecompiledLayouts_AllChildControlPropertiesHaveSetters()
+    {
+        var inputDevice = typeof(InputDevice);
+        var inputControlType = typeof(InputControl);
+        var checkedTypes = new HashSet<Type>();
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    // Skip base types
+                    if (type == inputControlType || type == inputDevice)
+                        continue;
+
+                    if (!inputControlType.IsAssignableFrom(type))
+                        continue;
+
+                    CheckChildControls(type, checkedTypes);
+                }
+            }
+            catch (ReflectionTypeLoadException)
+            {
+                // Suppress type load exceptions
+            }
+        }
+    }
+
+    static void CheckChildControls(Type type, HashSet<Type> checkedTypes)
+    {
+        if (!checkedTypes.Add(type))
+            return;
+
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+        {
+            if (!typeof(InputControl).IsAssignableFrom(property.PropertyType))
+                continue;
+
+            // Note: This will miss InputDevice controls that don't have an InputControlAttribute, but is necessary
+            // because not all InputControl properties are actually controls. We would need to build the device to know
+            // for sure if a given property is a control
+            if (!property.GetCustomAttributes<InputControlAttribute>().Any())
+                continue;
+
+            var setMethod = property.SetMethod;
+            if (typeof(InputDevice).IsAssignableFrom(type))
+            {
+                // Properties on an InputDevice can be protected, since the precompiled layout will be an inherited class
+                var inputDeviceMessage = $"A public or protected setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+                Assert.That(setMethod, Is.Not.Null, inputDeviceMessage);
+                Assert.That(setMethod.IsPrivate, Is.Not.True, inputDeviceMessage);
+                Assert.That(setMethod.IsAssembly, Is.Not.True, inputDeviceMessage);
+                continue;
+            }
+
+            var inputControlMessage = $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+            Assert.That(setMethod, Is.Not.Null, inputControlMessage);
+            Assert.That(setMethod.IsPublic, Is.True, inputControlMessage);
+        }
     }
 }

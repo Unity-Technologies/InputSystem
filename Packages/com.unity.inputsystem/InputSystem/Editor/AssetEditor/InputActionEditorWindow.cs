@@ -37,6 +37,10 @@ namespace UnityEngine.InputSystem.Editor
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
+                return false;
+#endif
             var path = AssetDatabase.GetAssetPath(instanceId);
             if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                 return false;
@@ -594,6 +598,14 @@ namespace UnityEngine.InputSystem.Editor
             LoadPropertiesForSelection();
         }
 
+        #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+        private void OnLostFocus()
+        {
+            m_ActionAssetManager.SaveChangesToAsset();
+        }
+
+        #endif
+
         private void Apply()
         {
             m_ActionAssetManager.ApplyChanges();
@@ -602,6 +614,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionMapsTree.UpdateSerializedObjectDirtyCount();
             m_ActionsTree.UpdateSerializedObjectDirtyCount();
 
+            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
+            // If auto-save should be triggered on focus lost, only mark asset as dirty
+            m_ActionAssetManager.SetAssetDirty();
+            titleContent = m_DirtyTitle;
+            #else
             // If auto-save is active, immediately flush out the changes to disk. Otherwise just
             // put us into dirty state.
             if (InputEditorUserSettings.autoSaveInputActionAssets)
@@ -613,6 +630,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ActionAssetManager.SetAssetDirty();
                 titleContent = m_DirtyTitle;
             }
+            #endif
         }
 
         private void OnGUI()
@@ -871,7 +889,7 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
-            #pragma warning disable CA1801 // unused parameters
+#pragma warning disable CA1801 // unused parameters
 
             // Handle .inputactions asset being moved.
             // ReSharper disable once UnusedMember.Local
@@ -890,7 +908,7 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
-            #pragma warning restore CA1801
+#pragma warning restore CA1801
         }
     }
 }

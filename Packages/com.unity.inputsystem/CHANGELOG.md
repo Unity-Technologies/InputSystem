@@ -10,6 +10,96 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- Removed icons from action map list as these were always the same and the icon was placeholder
+- Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
+- Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
+- Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
+- Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
+- Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
+- Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
+
+### Added
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
+- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+
+### Fixed
+- Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
+- UI fix for input fields in interactions: they are wider now and the width is fixed.
+- Fixed exiting empty input fields for actions, action maps and composites in the input action asset editor.
+- Fixed an issue where selecting an Action in the Input Action Asset Editor tree-view and then pressing ESC to unselect would throw an `InvalidOperationException`.
+- Fixed an issue where selecting an Action Map in the Input Action Asset Editor list and then pressing ESC to unselect would print an `NullReferenceException` to the Debug console.
+- Fixed case [ISXB-251](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-251) (Action only calls started & performed callbacks when control type is set to Vector3Composite). `EvaluateMagnitude` wasn't overridden for Vector3Composite, also made some minor changes to Vector3Composite and Vector2Composite for consistency.
+- Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
+- Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
+- Fixed case [ISXB-628](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-628) (OnIMECompositionChange does not return an empty string on accept when using Microsoft IME) by clarifying expectations and intended usage for the IME composition change event.
+- Fixed case [ISX-1668] (The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
+- Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
+
+## [1.8.0-pre.1] - 2023-09-04
+
+### Added
+- Initial version of Project Wide Actions for pre-release (`InputSystem.actions`). This feature is available only on Unity Editor versions 2022.3 and above and can be modified in the Project Settings.
+
+### Fixed
+- Fixed device selection menu not responding to mouse clicks when trying to add a device in a Control Scheme ([case ISXB-622](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-622)).
+
+## [1.7.0] - 2023-08-14
+
+### Added
+- Preliminary support for visionOS.
+- Show a list of `Derived Bindings` underneath the Binding Path editor to show all controls that matched.
+
+### Changed
+- Changed the `InputAction` constructors so it generates an ID for the action and the optional binding parameter. This is intended to improve the serialization of input actions on behaviors when created through API when the property drawer in the Inspector window does not have a chance to generate an ID.
+
+### Fixed
+- Fixed missing prefab errors in InputDeviceTester project ([case ISXB-420](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-420)).
+- Fixed serialization migration in the Tracked Pose Driver component causing bindings to clear when prefabs are used in some cases ([case ISXB-512](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-512), [case ISXB-521](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-521)).
+- Fixed Tracked Pose Driver to use `Transform.SetLocalPositionAndRotation` when available to improve performance. Based on the user contribution from [DevDunk](https://forum.unity.com/members/devdunk.4432119/) in a [forum post](https://forum.unity.com/threads/more-performant-tracked-pose-driver-solution-included.1462691).
+- Fixed the `Clone` methods of `InputAction` and `InputActionMap` so it copies the Initial State Check flag (`InputAction.wantsInitialStateCheck`) of input actions.
+- Fixed the "Release tests throws exception in InputSystem" bug ([case ISXB-581](https://issuetracker.unity3d.com/issues/release-tests-fail-when-input-system-package-is-installed)).
+- Fixed issues with generating Precompiled Layouts for devices which are not defined in a namespace
+- Fixed an issue where some controls like `QuaternionControl` could not be included in a Precompiled Layout because the generated code could not access a setter on child control properties.
+
+## [1.6.3] - 2023-07-11
+
+### Fixed
+- Fixed warning in USS file
+
+## [1.6.2] - 2023-07-10
+
+### Added
+- Enabled `displayIndex` support for Unity 2022.3.
+
+### Fixed
+- Fixed UI clicks not registering when OS provides multiple input sources for the same event, e.g. on Samsung Dex (case ISX-1416, ISXB-342).
+- Fixed unstable integration test `Integration_CanSendAndReceiveEvents` by ignoring application focus on integration tests. (case ISX-1381)
+- Fixed broken "Listen" button in Input actions editor window with Unity dark skin (case ISXB-536).
+
+## [1.6.1] - 2023-05-26
+
+### Fixed
+- Fixed issue with compiling in Unity 2022.1 and with XR Toolkit by guarding the experimental UITK Asset Editor code completely.
+
+## [1.6.0] - 2023-05-25
+
+### Added
+- Added internal `InputSystemProvider` class for the new `InputForUI` internal module. `InputForUI` allows the UIToolkit to have a single dependency for input events, regardless of using the new input system or the legacy input system.
+- Added `InputSystem.customBindingPathValidators` interface to allow showing warnings in the `InputAsset` Editor for specific InputBindings and draw custom UI in the properties panel.
+- Added `InputSystem.runInBackground` to be used internally by specific platforms packages. Allows telling the input system that a specific platform runs in background. It allows fixing of [case UUM-6744](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-6744).
+- Added new UIToolkit version of the `InputActionsAsset` editor. Currently this is incomplete (view-only) and the existing editor is still used by default.
+- Added `displayIndex` field to the Touch struct to expose the index of the display that was touched.
+
+### Changed
+- Changed XR Layout build behavior to create Axis2D control devices with `StickControl` type instead of `Vector2Control`.
+
+### Fixed
+- Fixed BindingPath String-Comparison to be culture and case insensitive (case ISXB-449).
+- Fixed custom processor display in the input action asset UI after entering/exiting play mode (previously they got hidden) ([case ISXB-445](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-445)).
+
+## [1.5.1] - 2023-03-15
+
 ### Fixed
 - Fixed unclosed profiler marker in `InvokeCallbacksSafe_AnyCallbackReturnsTrue` which would lead to eventually broken profiler traces in some cases like using `PlayerInput` (case ISXB-393).
 - Fixed InputAction.bindings.count not getting correctly updated after removing bindings with Erase().

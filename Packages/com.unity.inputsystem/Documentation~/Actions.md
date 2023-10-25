@@ -1,3 +1,6 @@
+---
+uid: input-system-actions
+---
 # Actions
 
 - [Actions](#actions)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -21,6 +22,10 @@ using UnityEditor.Networking.PlayerConnection;
 #else
 using System.Linq;
 using UnityEngine.Networking.PlayerConnection;
+#endif
+
+#if UNITY_EDITOR
+using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
 
 ////TODO: allow aliasing processors etc
@@ -70,10 +75,12 @@ namespace UnityEngine.InputSystem
     /// be called on the main thread. However, select APIs like <see cref="QueueEvent"/> can be
     /// called from threads. Where this is the case, it is stated in the documentation.
     /// </remarks>
+
     [SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Options for namespaces are limited due to the legacy input class. Agreed on this as the least bad solution.")]
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
+
     public static partial class InputSystem
     {
         #region Layouts
@@ -2916,9 +2923,139 @@ namespace UnityEngine.InputSystem
             remove => s_Manager.onSettingsChange -= value;
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        /// Callback that can be used to display a warning and draw additional custom Editor UI for bindings.
+        /// </summary>
+        /// <seealso cref="InputBinding"/>
+        /// <remarks>
+        /// This allows Users to control the behavior of the <see cref="InputActionAsset"/> Editor.
+        /// Specifically this controls whether a warning icon will appear next to a particular
+        /// <see cref="InputBinding"/> in the list and also draw custom UI content for it once
+        /// it is selected.
+        /// By default no callbacks exist and therefore no warnings or custom content will be shown.
+        /// A User interested in customizing this behavior is expected to provide a callback function here.
+        /// This callback function will receive the binding path to be inspected.
+        /// The callback is then expected to either return null to indicate no warning is to be displayed
+        /// for this binding path or a <see cref="System.Action"/> which contains the custom rendering function
+        /// to be shown in the Binding properties panel when a InputBinding has been selected.
+        /// Returning any <see cref="System.Action"/> will also display a small warning icon next to the
+        /// particular <see cref="InputBinding"/> in the list, regardless of the contents of that function.
+        /// </remarks>
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.customBindingPathValidators += (string bindingPath) => {
+        ///     // Mark <Gamepad> bindings with a warning
+        ///     if (!bindingPath.StartsWith("<Gamepad>"))
+        ///         return null;
+        ///
+        ///     // Draw the warning information in the Binding Properties panel
+        ///     return () =>
+        ///     {
+        ///         GUILayout.BeginVertical("GroupBox");
+        ///         GUILayout.BeginHorizontal();
+        ///         GUILayout.Box(EditorGUIUtility.FindTexture("console.warnicon.sml"));
+        ///         GUILayout.Label(
+        ///             "This binding is inactive because it refers to a disabled OpenXR interaction profile.",
+        ///             EditorStyles.wordWrappedLabel);
+        ///         GUILayout.EndHorizontal();
+        ///
+        ///         GUILayout.Button("Manage Interaction Profiles");
+        ///         GUILayout.EndVertical();
+        ///     };
+        /// };
+        /// </code>
+        /// </example>
+        public static event CustomBindingPathValidator customBindingPathValidators
+        {
+            add => s_Manager.customBindingPathValidators += value;
+            remove => s_Manager.customBindingPathValidators -= value;
+        }
+
+        /// <summary>
+        /// Invokes any custom UI rendering code for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="customBindingPathValidators"/>
+        /// <remarks>
+        /// This is called internally by the <see cref="InputActionAsset"/> Editor while displaying
+        /// the properties for a <see cref="InputBinding"/>.
+        /// This is not intended to be called directly.
+        /// Please use <see cref="customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal static void OnDrawCustomWarningForBindingPath(string bindingPath)
+        {
+            s_Manager.OnDrawCustomWarningForBindingPath(bindingPath);
+        }
+
+        /// <summary>
+        /// Determines if any warning icon is to be displayed for this Binding Path in the editor.
+        /// </summary>
+        /// <seealso cref="customBindingPathValidators"/>
+        /// <remarks>
+        /// This is called internally by the <see cref="InputActionAsset"/> Editor while displaying
+        /// the list of each <see cref="InputBinding"/>.
+        /// This is not intended to be called directly.
+        /// Please use <see cref="customBindingPathValidators"/> instead.
+        /// </remarks>
+        internal static bool ShouldDrawWarningIconForBinding(string bindingPath)
+        {
+            return s_Manager.ShouldDrawWarningIconForBinding(bindingPath);
+        }
+
+#endif
+
         #endregion
 
         #region Actions
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
+        private static InputActionAsset s_ProjectWideActions;
+        internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
+
+        /// <summary>
+        /// An input action asset (see <see cref="InputActionAsset"/>) which is always available by default.
+        /// </summary>
+        /// <remarks>
+        /// A default set of actions and action maps are installed and enabled by default on every project.
+        /// These actions and their bindings may be modified in the Project Settings.
+        /// </remarks>
+        /// <seealso cref="InputActionAsset"/>
+        /// <seealso cref="InputActionMap"/>
+        /// <seealso cref="InputAction"/>
+        public static InputActionAsset actions
+        {
+            get
+            {
+                if (s_ProjectWideActions != null)
+                    return s_ProjectWideActions;
+
+                #if UNITY_EDITOR
+                s_ProjectWideActions = ProjectWideActionsAsset.GetOrCreate();
+                #else
+                s_ProjectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
+                #endif
+
+                if (s_ProjectWideActions == null)
+                    Debug.LogError($"Couldn't initialize project-wide input actions");
+                return s_ProjectWideActions;
+            }
+
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+
+                if (s_ProjectWideActions == value)
+                    return;
+
+                s_ProjectWideActions?.Disable();
+                s_ProjectWideActions = value;
+                s_ProjectWideActions.Enable();
+            }
+        }
+#endif
 
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
@@ -3192,6 +3329,20 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Current version of the input system.</value>
         public static Version version => new Version(kAssemblyVersion);
+
+        /// <summary>
+        /// Property for internal use that allows setting the player to run in the background.
+        /// </summary>
+        /// <remarks>
+        /// Some platforms don't care about <see cref="Application.runInBackground"/> and for those we need to
+        /// enable it manually through this propriety.
+        /// </remarks>
+        /// <param name="value">The boolean value to set to <see cref="NativeInputRuntime.runInBackground"/></param>
+        public static bool runInBackground
+        {
+            get => s_Manager.m_Runtime.runInBackground;
+            set => s_Manager.m_Runtime.runInBackground = value;
+        }
 
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
@@ -3500,6 +3651,12 @@ namespace UnityEngine.InputSystem
             if (ShouldEnableRemoting())
                 SetUpRemoting();
 #endif
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && !UNITY_INCLUDE_TESTS
+            // Touching the `actions` property here will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Player
+            actions?.Enable();
+#endif
         }
 
 #endif // UNITY_EDITOR
@@ -3522,11 +3679,11 @@ namespace UnityEngine.InputSystem
         {
             UISupport.Initialize();
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_PS5 || UNITY_WSA || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             DualShockSupport.Initialize();
             #endif
 
@@ -3538,7 +3695,7 @@ namespace UnityEngine.InputSystem
             Android.AndroidSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS
             iOS.iOSSupport.Initialize();
             #endif
 
@@ -3562,7 +3719,7 @@ namespace UnityEngine.InputSystem
             Linux.LinuxSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA || UNITY_VISIONOS
             OnScreen.OnScreenSupport.Initialize();
             #endif
 
@@ -3586,6 +3743,16 @@ namespace UnityEngine.InputSystem
         private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
         {
             Profiler.BeginSample("InputSystem.Reset");
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
+            if (s_ProjectWideActions)
+            {
+                s_ProjectWideActions.Disable();
+                s_ProjectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
+                s_ProjectWideActions = null;
+            }
+#endif
 
             // Some devices keep globals. Get rid of them by pretending the devices
             // are removed.
@@ -3627,6 +3794,13 @@ namespace UnityEngine.InputSystem
             InputEventListener.s_ObserverState = default;
             InputUser.ResetGlobals();
             EnhancedTouchSupport.Reset();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Touching the `actions` property will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
+            actions?.Enable();
+#endif
+
             Profiler.EndSample();
         }
 
@@ -3641,7 +3815,6 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-
             s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);

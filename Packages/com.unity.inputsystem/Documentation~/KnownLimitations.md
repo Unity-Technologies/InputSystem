@@ -1,3 +1,6 @@
+---
+uid: input-system-known-limitations
+---
 # Known Limitations
 
 The following is a list of known limitations that the Input System currently has.

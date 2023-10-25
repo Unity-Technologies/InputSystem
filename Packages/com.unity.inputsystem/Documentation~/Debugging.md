@@ -1,13 +1,21 @@
+---
+uid: input-system-debugging
+---
 # Debugging
 
-* [Input Debugger](#input-debugger)
-  * [Debugging Devices](#debugging-devices)
-  * [Debugging Actions](#debugging-actions)
-  * [Debugging users and PlayerInput](#debugging-users-and-playerinput)
-  * [Debugging layouts](#debugging-layouts)
-  * [Debugging Remotely](#debugging-remotely)
-* [Device Simulator](#device-simulator)
-* [Unity Remote](#unity-remote)
+- [Debugging](#debugging)
+  - [Input Debugger](#input-debugger)
+    - [Debugging Devices](#debugging-devices)
+    - [Debugging Actions](#debugging-actions)
+    - [Debugging users and PlayerInput](#debugging-users-and-playerinput)
+    - [Debugging layouts](#debugging-layouts)
+    - [Debugging remotely](#debugging-remotely)
+  - [Input visualizers](#input-visualizers)
+    - [`InputControlVisualizer`](#inputcontrolvisualizer)
+    - [`InputActionVisualizer`](#inputactionvisualizer)
+  - [Device Simulator](#device-simulator)
+  - [Unity Remote (iOS, Android)](#unity-remote)
+  - [Other tips:](#other-tips)
 
 When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players.
 
@@ -58,7 +66,7 @@ When there are [`InputUser`](UserManagement.md) instances (if you use `PlayerInp
 
 ### Debugging layouts
 
-The [__Layouts__](Layouts.md) list in the Input Debugger window displays a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. It's useful when you want to [create a new Device mapping](HowDoI.md#create-my-own-custom-devices) and see how the Input System represents it.
+The [__Layouts__](Layouts.md) list in the Input Debugger window displays a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. It's useful when you want to [create a new Device mapping](HID.md#creating-a-custom-device-layout) and see how the Input System represents it.
 
 ![Layouts in Input Debugger](Images/LayoutsInDebugger.png)
 
@@ -96,15 +104,15 @@ When Device Simulator window is in use, mouse and pen inputs on the simulated de
 
 To prevent conflicts between simulated touchscreen inputs and native mouse and pen inputs, Device Simulator disables all native mouse and pen devices.
 
-## <a name="unity-remote"></a> Unity Remote (iOS, Android)
-
->__Note__: Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.
-
->__Note__: This requires Unity 2021.2.18 or later.
+## Unity Remote
 
 The Unity Remote is an app available for iOS and Android which allows using a mobile device for input while running in the Unity Editor. You can find details about the app and how to install it in the [Unity manual](https://docs.unity3d.com/Manual/UnityRemote5.html).
 
 If you would like to try out the Unity Remote app, you can [install](Installation.md#installing-samples) the "Unity Remote" sample that is provided with the Input System package.
+
+>__Note__: Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.
+
+>__Note__: This requires Unity 2021.2.18 or later.
 
 When in play mode in the Editor and connected to the Unity Remote app, you will see a number of Devices have been added with the [`InputDevice.remote`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_remote) flag set to true:
 
@@ -125,3 +133,44 @@ The [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html) device 
 The remaining sensors listed above will need to be explicitly enabled via [`InputSystem.EnableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_) just like local sensors. Setting the sampling frequency on these sensors from the Unity Remote using [`Sensor.samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) will be relayed to the device but note that setting the frequency on one of them will set it for all of them.
 
 Touch coordinates from the device will be translated to the screen coordinates of the Game View inside the Editor.
+
+## Other tips:
+
+To record events flowing through the system, use this code:
+
+```C#
+
+    // You can also provide a device ID to only
+    // trace events for a specific device.
+    var trace = new InputEventTrace();
+
+    trace.Enable();
+
+    var current = new InputEventPtr();
+    while (trace.GetNextEvent(ref current))
+    {
+        Debug.Log("Got some event: " + current);
+    }
+
+    // Also supports IEnumerable.
+    foreach (var eventPtr in trace)
+        Debug.Log("Got some event: " + eventPtr);
+
+    // Trace consumes unmanaged resources. Make sure you dispose it correctly to avoid memory leaks.
+    trace.Dispose();
+
+```
+
+To see events as they're processed, use this code:
+
+```C#
+
+    InputSystem.onEvent +=
+        (eventPtr, device) =>
+        {
+            // Can handle events yourself, for example, and then stop them
+            // from further processing by marking them as handled.
+            eventPtr.handled = true;
+        };
+
+```

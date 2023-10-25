@@ -1,0 +1,4 @@
+:root {
+    --input-editor-colors-properties-foldout: rgb(34, 34, 34);
+    --input-editor-colors-properties-foldout-border: #808080;
+}

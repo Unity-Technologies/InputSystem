@@ -1,3 +1,6 @@
+---
+uid: input-system-user-management
+---
 # User Management
 
 The Input System supports multi-user management through the [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) class. This comprises both user account management features on platforms that have these capabilities built into them (such as Xbox and PS4), as well as features to manage Device allocations to one or more local users.

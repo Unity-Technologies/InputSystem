@@ -1,3 +1,6 @@
+---
+uid: input-system-pointers
+---
 # Pointers
 
 [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html) Devices are defined as [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) that track positions on a 2D surface. The Input System supports three types of pointers:

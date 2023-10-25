@@ -12,9 +12,10 @@
   commands:
     - {{ utr_install_win }}
     - {{ upm_ci_install }}
-    # Get latest version of doctools package. Automatically makes the documentation tests in APIVerification go live.
+    # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
+    # Automatically makes the documentation tests in APIVerification go live.
     - '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-    - git clone git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+    - git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
     # really work with them. Move them into the package for when we run upm-ci here.
     - move /Y .\Assets\Samples .\Packages\com.unity.inputsystem
@@ -47,8 +48,9 @@
   commands:
     - {{ utr_install_nix }}
     - {{ upm_ci_install }}
-    # Get latest version of doctools package. Automatically makes the documentation tests in APIVerification go live.
-    - git clone git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+    # Get version 2.3.0-preview of doctools package (it currently fails for 3.0.0-preview).
+    # Automatically makes the documentation tests in APIVerification go live.
+    - git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
     # really work with them. Move them into the package for when we run upm-ci here.
     - mv ./Assets/Samples ./Packages/com.unity.inputsystem
@@ -78,7 +80,7 @@ build_ios_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on ios
   agent:
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-12:v4.19.0
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -97,7 +99,7 @@ run_ios_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on ios
   agent:
       type: Unity::mobile::iPhone
-      image: package-ci/macos-12:default
+      image: package-ci/macos-12:v4.19.0
       model: SE
       flavor: b1.medium
   skip_checkout: true
@@ -115,7 +117,7 @@ build_tvos_{{ editor.version }}:
   name: Build Tests on {{ editor.version }} on tvos
   agent:
     type: Unity::VM::osx
-    image: package-ci/macos-12:default
+    image: package-ci/macos-12:v4.19.0
     flavor: b1.large
   commands:
     - {{ utr_install_nix }}
@@ -134,7 +136,7 @@ run_tvos_{{ editor.version }}:
   name: Run Tests on {{ editor.version }} on tvos
   agent:
       type: Unity::mobile::appletv
-      image: package-ci/macos-12:default
+      image: package-ci/macos-12:v4.19.0
       flavor: b1.medium
   skip_checkout: true
   dependencies:

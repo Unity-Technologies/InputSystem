@@ -1,8 +1,10 @@
+using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.UIElements;
 #endif
 
 namespace UnityEngine.InputSystem.Interactions
@@ -125,6 +127,15 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.OnGUI();
             m_DurationSetting.OnGUI();
         }
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
+        {
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
+        }
+
+#endif
 
         private CustomOrDefaultSetting m_PressPointSetting;
         private CustomOrDefaultSetting m_DurationSetting;
