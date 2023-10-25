@@ -15,15 +15,31 @@ namespace UnityEngine.InputSystem.Editor
     {
         private readonly SearchContext m_Context = UnityEditor.Search.SearchService.CreateContext(new[]
         {
-            AssetSearchProviders.CreateInputActionReferenceSearchProviderForAssets(),
-            AssetSearchProviders.CreateInputActionReferenceSearchProviderForProjectWideActions(),
+            InputActionReferenceSearchProviders.CreateInputActionReferenceSearchProviderForAssets(),
+            InputActionReferenceSearchProviders.CreateInputActionReferenceSearchProviderForProjectWideActions(),
         }, string.Empty, SearchConstants.PickerSearchFlags);
 
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            // Sets the property to null if the action is not found in the asset.
+            ValidatePropertyWithDanglingInputActionReferences(property);
+
             ObjectField.DoObjectField(position, property, typeof(InputActionReference), label,
                 m_Context, SearchConstants.PickerViewFlags);
+        }
+
+        static void ValidatePropertyWithDanglingInputActionReferences(SerializedProperty property)
+        {
+            if (property?.objectReferenceValue is InputActionReference reference)
+            {
+                var action = reference?.asset?.FindAction(reference.action.id);
+                if (action is null)
+                {
+                    property.objectReferenceValue = null;
+                    property.serializedObject.ApplyModifiedProperties();
+                }
+            }
         }
     }
 }
