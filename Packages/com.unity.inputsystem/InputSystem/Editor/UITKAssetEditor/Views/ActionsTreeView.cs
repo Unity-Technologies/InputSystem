@@ -314,20 +314,17 @@ namespace UnityEngine.InputSystem.Editor
         public static List<TreeViewItemData<ActionOrBindingData>> GetActionsAsTreeViewData(InputActionsEditorState state, Dictionary<Guid, int> idDictionary)
         {
             var actionMapIndex = state.selectedActionMapIndex;
-            var actionMaps = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
-
             var controlSchemes = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ControlSchemes));
-            var actionMap = actionMapIndex == -1 || actionMaps.arraySize <= 0 ?
-                null : actionMaps.GetArrayElementAtIndex(actionMapIndex);
+            var actionMap = GetSelectedActionMap(state);
 
             if (actionMap == null)
                 return new List<TreeViewItemData<ActionOrBindingData>>();
 
-            var actions = actionMap
+            var actions = actionMap.Value.wrappedProperty
                 .FindPropertyRelative(nameof(InputActionMap.m_Actions))
                 .Select(sp => new SerializedInputAction(sp));
 
-            var bindings = actionMap
+            var bindings = actionMap.Value.wrappedProperty
                 .FindPropertyRelative(nameof(InputActionMap.m_Bindings))
                 .Select(sp => new SerializedInputBinding(sp))
                 .ToList();
