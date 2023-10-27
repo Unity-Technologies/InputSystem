@@ -13,7 +13,12 @@ public class XRIPackageTests
 {
 	static AddRequest XRAddRequest;
     static RemoveRequest XRRemoveRequest;
-	
+
+    /// <summary>
+    /// TearDown removes the added XRI package again.
+    /// If you are adding a 2nd test that needs the XRI package adjust this.
+    /// </summary>
+    /// <returns></returns>
     [UnityTearDown]
     public IEnumerator TearDown()
     {
@@ -27,7 +32,7 @@ public class XRIPackageTests
 
     [UnityTest]    
     [Category("Integration")]
-    public IEnumerator AddingXRIPackageThrowsNoErrors()
+    public IEnumerator AdddingLatestXRIPackageThrowsNoErrors()
     {
         Application.logMessageReceived += HandleLog;
 
@@ -41,9 +46,7 @@ public class XRIPackageTests
 
         AssetDatabase.Refresh();
 
-        yield return new WaitForDomainReload();
-
-        Assert.That(true);                           
+        yield return new WaitForDomainReload();   
     }
 
     static void AddProgress()
@@ -73,9 +76,7 @@ public class XRIPackageTests
     }
 
     void HandleLog(string logString, string stackTrace, LogType type) {
-        
-        if (type != LogType.Log) {
-            Assert.That(false);
-        }   
+
+        Assert.That(type, Is.EqualTo(LogType.Log));
     }
 }
