@@ -1,6 +1,8 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -22,7 +24,7 @@ internal class SelectorsTests
         var actionTwo = actionMap.AddAction("Action2", binding: "<Keyboard>/d");
 
 
-        var treeViewData = Selectors.GetActionsAsTreeViewData(TestData.EditorStateWithAsset(asset).Generate());
+        var treeViewData = Selectors.GetActionsAsTreeViewData(TestData.EditorStateWithAsset(asset).Generate(), new Dictionary<Guid, int>());
 
 
         Assert.That(treeViewData.Count, Is.EqualTo(2));

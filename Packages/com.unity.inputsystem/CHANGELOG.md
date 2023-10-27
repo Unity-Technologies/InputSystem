@@ -34,8 +34,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
 - Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
 - Fixed case [ISXB-628](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-628) (OnIMECompositionChange does not return an empty string on accept when using Microsoft IME) by clarifying expectations and intended usage for the IME composition change event.
+- Fixed case [ISX-1626](https://jira.unity3d.com/browse/ISX-1626) where the expanded/collapsed state of items in the input action editor was not properly saved between rebuilds of the UI.
 - Fixed case [ISX-1668] (The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
+- Fixed [ISX-1661](https://jira.unity3d.com/browse/ISX-1661) where undoing duplications of action maps caused console errors
 - Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
+
 
 ## [1.8.0-pre.1] - 2023-09-04
 
