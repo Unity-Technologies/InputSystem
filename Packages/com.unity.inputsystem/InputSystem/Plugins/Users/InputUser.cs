@@ -1658,7 +1658,10 @@ namespace UnityEngine.InputSystem.Users
             // we early out and ignore the event entirely.
             if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
                 ref s_GlobalState.onPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
+            {
+                Profiler.EndSample();
                 return;
+            }
 
             // Go through the changed controls in the event and look for ones actuated
             // above a magnitude of a little above zero.

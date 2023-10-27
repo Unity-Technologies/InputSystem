@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class ProjectWideActionsAsset
     {
-        internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.inputactions";
+        internal const string kDefaultAssetPath = "Packages/com.unity.inputsystem/InputSystem/Editor/ProjectWideActions/ProjectWideActionsTemplate.json";
         internal const string kAssetPath = "ProjectSettings/InputManager.asset";
         internal const string kAssetName = InputSystem.kProjectWideActionsAssetName;
 
