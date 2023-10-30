@@ -218,17 +218,17 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
-        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] folderPath = null)
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null)
         {
-            string[] searchInFolderPath = null;
+            string[] searchFolders = null;
             // If folderPath is null, search in "Assets" folder.
-            if (folderPath == null)
+            if (foldersPath == null)
             {
-                searchInFolderPath = new string[] { "Assets" };
+                searchFolders = new string[] { "Assets" };
             }
 
             // Get all InputActionReference from assets in "Asset" folder. It does not search inside "Packages" folder.
-            var inputActionReferenceGUIDs = AssetDatabase.FindAssets($"t:{typeof(InputActionReference).Name}", searchInFolderPath);
+            var inputActionReferenceGUIDs = AssetDatabase.FindAssets($"t:{typeof(InputActionReference).Name}", searchFolders);
 
             // To find all the InputActionReferences, the GUID of the asset containing at least one action reference is
             // used to find the asset path. This is because InputActionReferences are stored in the asset database as sub-assets of InputActionAsset.
@@ -238,8 +238,8 @@ namespace UnityEngine.InputSystem.Editor
             var inputActionReferencesList = new List<InputActionReference>();
             foreach (var guid in inputActionReferenceGUIDs)
             {
-                var assetName = AssetDatabase.GUIDToAssetPath(guid);
-                var assetInputActionReferenceList = AssetDatabase.LoadAllAssetsAtPath(assetName).Where(
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var assetInputActionReferenceList = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
                     o => o is InputActionReference &&
                     !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
                     .Cast<InputActionReference>().ToList();
