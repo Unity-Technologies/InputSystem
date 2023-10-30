@@ -20,8 +20,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 ProjectWideActionsAsset.UpdateInputActionReferences();
                 AssetDatabase.SaveAssets();
-
-                var existingReferences = InputActionImporter.LoadInputActionReferencesFromAsset(ProjectWideActionsAsset.GetOrCreate()).ToList();
                 return;
             }
             var assetPath = AssetDatabase.GetAssetPath(asset);
