@@ -583,7 +583,7 @@ namespace UnityEngine.InputSystem
         public bool triggered => WasPerformedThisFrame();
 
         /// <summary>
-        /// The currently active control that is driving the action. Null while the action
+        /// The currently active control that is driving the action. <see langword="null"/> while the action
         /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
         /// state. Otherwise the control that last had activity on it which wasn't ignored.
         /// </summary>
@@ -604,6 +604,39 @@ namespace UnityEngine.InputSystem
                     if (controlIndex != InputActionState.kInvalidIndex)
                         return state.controls[controlIndex];
                 }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Type of value returned by <see cref="ReadValueAsObject"/> and expected
+        /// by <see cref="ReadValue{TValue}"/>.
+        /// </summary>
+        /// <value>Type of object returned when reading a value.</value>
+        /// <remarks>
+        /// The type of value returned by an action is usually determined by the
+        /// <see cref="InputControl"/> that triggered the action, i.e. by the
+        /// control referenced from <see cref="activeControl"/>.
+        ///
+        /// However, if the binding that triggered is a composite, then the composite
+        /// will determine values and not the individual control that triggered (that
+        /// one just feeds values into the composite).
+        /// </remarks>
+        /// <seealso cref="InputControl.valueType"/>
+        /// <seealso cref="InputBindingComposite.valueType"/>
+        public unsafe Type valueType
+        {
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state != null)
+                {
+                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        return state.GetValueType(actionStatePtr->bindingIndex, controlIndex);
+                }
+
                 return null;
             }
         }
@@ -990,7 +1023,8 @@ namespace UnityEngine.InputSystem
             where TValue : struct
         {
             var state = GetOrCreateActionMap().m_State;
-            if (state == null) return default(TValue);
+            if (state == null)
+                return default(TValue);
 
             var actionStatePtr = &state.actionStates[m_ActionIndexInState];
             return actionStatePtr->phase.IsInProgress()
@@ -1847,6 +1881,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="InputControl.valueType"/>
             /// <seealso cref="InputBindingComposite.valueType"/>
+            /// <seealso cref="InputAction.valueType"/>
             public Type valueType => m_State?.GetValueType(bindingIndex, controlIndex);
 
             /// <summary>
@@ -1875,8 +1910,6 @@ namespace UnityEngine.InputSystem
                     return m_State.GetValueSizeInBytes(bindingIndex, controlIndex);
                 }
             }
-
-            ////TODO: need ability to read as button
 
             /// <summary>
             /// Read the value of the action as a raw byte buffer. This allows reading
