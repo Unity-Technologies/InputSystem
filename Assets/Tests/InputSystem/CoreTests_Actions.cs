@@ -1952,7 +1952,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public unsafe void Actions_CanReadValueTypeFromAction()
+    public void Actions_CanReadValueTypeFromAction()
     {
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick");
@@ -1996,6 +1996,50 @@ partial class CoreTests
 
         Assert.That(action.ReadValue<Vector2>(),
             Is.EqualTo(new StickDeadzoneProcessor().Process((Vector2.up + Vector2.left).normalized))
+                .Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReadValueTypeFromAction_WithDynamicCompositeType()
+    {
+        var action = new InputAction();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Gamepad>/leftTrigger")
+            .With("Binding", "<Gamepad>/leftStick");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        action.performed +=
+            ctx =>
+            {
+                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+                Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
+        InputSystem.Update();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.activeValueType, Is.Null);
+
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(Vector2.zero))
+                .Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f), leftTrigger = 1f });
+        InputSystem.Update();
+
+        // The active control is the most recent change (left trigger), which has a value type of float.
+        // But since the composite has evaluated type Vector2, the action's value type is Vector2.
+        Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
+        Assert.That(action.activeControl.valueType, Is.EqualTo(typeof(float)));
+        Assert.That(action.activeValueType, Is.EqualTo(typeof(Vector2)));
+
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
                 .Using(Vector2EqualityComparer.Instance));
     }
 
