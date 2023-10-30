@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Samples.IMEInput
         // Handles text passed via Keyboard.onTextInput event
         private void OnTextInput(char character)
         {
-            AssertInvariance();
+            AssertReferencesAreValid();
 
             // Assumes the current IME composition text has been submitted
             if (m_ComposingViaIME)
@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Samples.IMEInput
         // Handles text passed via Keyboard.onIMECompositionChange event
         private void OnIMECompositionChange(IMECompositionString text)
         {
-            AssertInvariance();
+            AssertReferencesAreValid();
 
             // IME composition strings without length can also mean
             // the composition has been submitted
@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Samples.IMEInput
         // Called when the input field's text is changed
         private void OnValueChanged(string value)
         {
-            AssertInvariance();
+            AssertReferencesAreValid();
 
             if (!string.IsNullOrEmpty(value))
                 return;
@@ -108,7 +108,7 @@ namespace UnityEngine.InputSystem.Samples.IMEInput
         }
 
         // Ensures all fields are correctly referenced
-        private void AssertInvariance()
+        private void AssertReferencesAreValid()
         {
             Debug.Assert(m_CompositionField != null, "Composition field cannot be null");
             Debug.Assert(m_TextField != null, "Text field field cannot be null");
