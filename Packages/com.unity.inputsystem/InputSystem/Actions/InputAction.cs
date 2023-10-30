@@ -610,7 +610,9 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Type of value returned by <see cref="ReadValueAsObject"/> and expected
-        /// by <see cref="ReadValue{TValue}"/>.
+        /// by <see cref="ReadValue{TValue}"/>. <see langword="null"/> while the action
+        /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
+        /// state as this is based on the currently active control that is driving the action.
         /// </summary>
         /// <value>Type of object returned when reading a value.</value>
         /// <remarks>
@@ -624,7 +626,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputControl.valueType"/>
         /// <seealso cref="InputBindingComposite.valueType"/>
-        public unsafe Type valueType
+        /// <seealso cref="activeControl"/>
+        public unsafe Type activeValueType
         {
             get
             {
@@ -1881,7 +1884,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             /// <seealso cref="InputControl.valueType"/>
             /// <seealso cref="InputBindingComposite.valueType"/>
-            /// <seealso cref="InputAction.valueType"/>
+            /// <seealso cref="activeValueType"/>
             public Type valueType => m_State?.GetValueType(bindingIndex, controlIndex);
 
             /// <summary>

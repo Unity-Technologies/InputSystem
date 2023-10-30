@@ -1952,6 +1952,55 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public unsafe void Actions_CanReadValueTypeFromAction()
+    {
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        action.Enable();
+
+        action.performed +=
+            ctx =>
+            {
+                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+                Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
+        InputSystem.Update();
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.leftStick));
+        Assert.That(action.activeControl.valueType, Is.EqualTo(typeof(Vector2)));
+        Assert.That(action.activeValueType, Is.EqualTo(typeof(Vector2)));
+
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+                .Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        // The active control is one of the two keyboard keys held, which has a value type of float.
+        // But since the composite has type Vector2, the action's value type is Vector2.
+        Assert.That(new[] { keyboard.wKey, keyboard.aKey }, Contains.Item(action.activeControl));
+        Assert.That(action.activeControl.valueType, Is.EqualTo(typeof(float)));
+        Assert.That(action.activeValueType, Is.EqualTo(typeof(Vector2)));
+
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process((Vector2.up + Vector2.left).normalized))
+                .Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ReadingValueOfIncorrectType_ThrowsHelpfulException()
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
@@ -2030,6 +2079,36 @@ partial class CoreTests
         Press(gamepad.buttonNorth);
 
         Assert.That(action.activeControl, Is.SameAs(gamepad.buttonNorth));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryActiveValueType()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddBinding(gamepad.buttonSouth);
+        action.AddBinding(gamepad.buttonNorth);
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.activeValueType, Is.Null);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonSouth));
+        Assert.That(action.activeValueType, Is.EqualTo(gamepad.buttonSouth.valueType));
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.activeValueType, Is.Null);
+
+        Press(gamepad.buttonNorth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonNorth));
+        Assert.That(action.activeValueType, Is.EqualTo(gamepad.buttonNorth.valueType));
     }
 
     [Test]
