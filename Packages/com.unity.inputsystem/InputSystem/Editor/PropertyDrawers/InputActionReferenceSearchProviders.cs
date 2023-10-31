@@ -1,9 +1,9 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Search;
+using UnityEngine.Search;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -15,10 +15,10 @@ namespace UnityEngine.InputSystem.Editor
         internal static readonly SearchFlags PickerSearchFlags = SearchFlags.Sorted | SearchFlags.OpenPicker;
 
         // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
-        internal static readonly Search.SearchViewFlags PickerViewFlags = Search.SearchViewFlags.OpenInBuilderMode
-            | Search.SearchViewFlags.DisableBuilderModeToggle
-            | Search.SearchViewFlags.DisableInspectorPreview
-            | Search.SearchViewFlags.DisableSavedSearchQuery;
+        internal static readonly Search.SearchViewFlags PickerViewFlags = SearchViewFlags.DisableBuilderModeToggle
+            | SearchViewFlags.DisableInspectorPreview
+            | SearchViewFlags.ListView
+            | SearchViewFlags.DisableSavedSearchQuery;
     }
 
     internal static class InputActionReferenceSearchProviders
