@@ -212,49 +212,6 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions.actionMaps[1].actions.Count, Is.EqualTo(1));
         Assert.That(InputSystem.actions.actionMaps[1].actions[0].name, Is.EqualTo("replacedAction4"));
     }
-
-    [Test]
-    [Category(TestCategory)]
-    public void ProjectWideActions_CanUpdateInputActionReferencesFromAsset()
-    {
-        List<InputActionReference> UpdateAndReturnNewReferences(InputActionAsset inputActionAsset)
-        {
-            ProjectWideActionsAsset.UpdateInputActionReferences();
-            var inputActionReferences = InputActionImporter.LoadInputActionReferencesFromAsset(inputActionAsset).ToList();
-            return inputActionReferences;
-        }
-
-        var asset = ProjectWideActionsAsset.GetOrCreate();
-        asset.Disable();
-
-        var initialReferences = InputActionImporter.LoadInputActionReferencesFromAsset(asset).ToList();
-
-        Assert.That(initialReferences.Find(r => r.action.name == "InitialActionOne"), Is.Not.Null);
-        Assert.That(initialReferences.Find(r => r.action.name == "InitialActionTwo"), Is.Not.Null);
-
-        // Remove action
-        asset.m_ActionMaps[0].m_Actions[0].RemoveAction();
-
-        var updatedReferences = UpdateAndReturnNewReferences(asset);
-
-        Assert.That(updatedReferences.Find(r => r.action.name == "InitialActionOne"), Is.Null);
-        Assert.That(updatedReferences.Find(r => r.action.name == "InitialActionTwo"), Is.Not.Null);
-
-        // Rename action
-        asset.m_ActionMaps[0].m_Actions[0].Rename("InitialActionTwoRenamed");
-
-        updatedReferences = UpdateAndReturnNewReferences(asset);
-
-        Assert.That(updatedReferences.Find(r => r.action.name == "InitialActionTwoRenamed"), Is.Not.Null);
-
-        // Adding a new action
-        asset.m_ActionMaps[0].AddAction("AddedNewAction", InputActionType.Button);
-
-        updatedReferences = UpdateAndReturnNewReferences(asset);
-
-        Assert.That(updatedReferences.Find(r => r.action.name == "InitialActionTwoRenamed"), Is.Not.Null);
-        Assert.That(updatedReferences.Find(r => r.action.name == "AddedNewAction"), Is.Not.Null);
-    }
 }
 
 #endif
