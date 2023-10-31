@@ -78,6 +78,9 @@ namespace UnityEngine.InputSystem.XR.Haptics
         public uint optimalBufferSize { get; }
     }
 
+    /// <summary>
+    /// Input device command struct for retrieving the haptic capabilities of a device.
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct GetHapticCapabilitiesCommand : IInputDeviceCommandInfo
     {
@@ -86,31 +89,64 @@ namespace UnityEngine.InputSystem.XR.Haptics
         // 20 bytes of data from uint(4) + bool(1) + bool(1) + padding + uint(4) + uint(4) + uint(4)
         const int kSize = InputDeviceCommand.kBaseCommandSize + 20;
 
+        /// <inheritdoc />
         public FourCC typeStatic => Type;
 
         [FieldOffset(0)]
         InputDeviceCommand baseCommand;
 
+        /// <summary>
+        /// The number of haptic channels available on this device.
+        /// </summary>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public uint numChannels;
 
+        /// <summary>
+        /// This device supports sending a haptic impulse.
+        /// </summary>
+        /// <seealso cref="SendHapticImpulseCommand"/>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
         public bool supportsImpulse;
 
+        /// <summary>
+        /// This device supports sending a haptic buffer.
+        /// </summary>
+        /// <seealso cref="SendBufferedHapticCommand"/>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 5)]
         public bool supportsBuffer;
 
+        /// <summary>
+        /// The buffer frequency the device operates at in Hertz. This impacts how fast the device consumes buffered haptic data.
+        /// </summary>
+        /// <remarks>
+        /// This value is greater than 0 if <see cref="supportsBuffer"/> is <see langword="true"/>, and 0 otherwise.
+        /// </remarks>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public uint frequencyHz;
 
+        /// <summary>
+        /// The max amount of buffer data that can be stored by the device.
+        /// </summary>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
         public uint maxBufferSize;
 
+        /// <summary>
+        /// The optimal size of a device's buffer, taking into account frequency and latency.
+        /// </summary>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
         public uint optimalBufferSize;
 
+        /// <summary>
+        /// The haptic capabilities of the device, populated after this command is executed.
+        /// </summary>
         public HapticCapabilities capabilities => new HapticCapabilities(numChannels, supportsImpulse, supportsBuffer, frequencyHz, maxBufferSize, optimalBufferSize);
 
+        /// <summary>
+        /// Creates and returns a new initialized input device command struct for retrieving
+        /// the haptic capabilities of a device when executed.
+        /// </summary>
+        /// <returns>Returns a new command struct with the data header initialized, making it ready to execute.</returns>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}(ref TCommand)"/>
         public static GetHapticCapabilitiesCommand Create()
         {
             return new GetHapticCapabilitiesCommand
