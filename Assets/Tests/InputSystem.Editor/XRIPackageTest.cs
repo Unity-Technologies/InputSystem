@@ -11,7 +11,7 @@ using UnityEditor.PackageManager.Requests;
 
 public class XRIPackageTests
 {
-	static AddRequest XRAddRequest;
+    static AddRequest XRAddRequest;
     static RemoveRequest XRRemoveRequest;
 
     /// <summary>
@@ -28,9 +28,9 @@ public class XRIPackageTests
         {
             yield return null;
         }
-    }    	
+    }
 
-    [UnityTest]    
+    [UnityTest]
     [Category("Integration")]
     public IEnumerator AdddingLatestXRIPackageThrowsNoErrors()
     {
@@ -38,15 +38,15 @@ public class XRIPackageTests
 
         XRAddRequest = Client.Add("com.unity.xr.interaction.toolkit");
         EditorApplication.update += AddProgress;
-        
+
         while (!XRAddRequest.IsCompleted)
         {
             yield return null;
-        }       
+        }
 
         AssetDatabase.Refresh();
 
-        yield return new WaitForDomainReload();   
+        yield return new WaitForDomainReload();
     }
 
     static void AddProgress()
@@ -75,8 +75,8 @@ public class XRIPackageTests
         }
     }
 
-    void HandleLog(string logString, string stackTrace, LogType type) {
-
+    void HandleLog(string logString, string stackTrace, LogType type)
+    {
         Assert.That(type, Is.EqualTo(LogType.Log));
     }
 }
