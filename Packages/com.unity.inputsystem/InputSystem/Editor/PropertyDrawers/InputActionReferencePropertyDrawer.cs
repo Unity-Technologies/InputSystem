@@ -33,11 +33,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (property?.objectReferenceValue is InputActionReference reference)
             {
-                var action = reference?.asset?.FindAction(reference.action.id);
-                if (action is null)
+                // Check only if the reference is a project-wide action.
+                if (reference?.asset?.name == ProjectWideActionsAsset.kAssetName)
                 {
-                    property.objectReferenceValue = null;
-                    property.serializedObject.ApplyModifiedProperties();
+                    var action = reference?.asset?.FindAction(reference.action.id);
+                    if (action is null)
+                    {
+                        property.objectReferenceValue = null;
+                        property.serializedObject.ApplyModifiedProperties();
+                    }
                 }
             }
         }
