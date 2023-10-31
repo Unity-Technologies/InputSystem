@@ -29,37 +29,18 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
             previous = InputSystem.actions.FindAction("Player/Previous");
             sprint = InputSystem.actions.FindAction("Player/Sprint");
             crouch = InputSystem.actions.FindAction("Player/Crouch");
+
+            // Handle input by responding to callbacks
+            attack.performed += ctx => cube.GetComponent<Renderer>().material.color = Color.red;
+            attack.canceled += ctx => cube.GetComponent<Renderer>().material.color = Color.green;
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (attack.WasPressedThisFrame())
-            {
-                cube.GetComponent<Renderer>().material.color = Color.red;
-            }
-            else if (attack.WasReleasedThisFrame())
-            {
-                cube.GetComponent<Renderer>().material.color = Color.green;
-            }
-
-            var moveVal = move.ReadValue<Vector2>();
-            if (moveVal.x < 0.0f)
-            {
-                cube.transform.Translate(new Vector3(-10 * Time.deltaTime, 0, 0));
-            }
-            else if (moveVal.x > 0.0f)
-            {
-                cube.transform.Translate(new Vector3(10 * Time.deltaTime, 0, 0));
-            }
-            if (moveVal.y < 0.0f)
-            {
-                cube.transform.Translate(new Vector3(0, -10 * Time.deltaTime, 0));
-            }
-            else if (moveVal.y > 0.0f)
-            {
-                cube.transform.Translate(new Vector3(0, 10 * Time.deltaTime, 0));
-            }
+            // Handle input by polling each frame
+            var moveVal = move.ReadValue<Vector2>() * 10.0f * Time.deltaTime;
+            cube.transform.Translate(new Vector3(moveVal.x, moveVal.y, 0));
         }
     } // class ProjectWideActionsExample
 
