@@ -17,5 +17,5 @@ During the installation process for the Input System package, the installer offe
 
 To get started, see the [Installation](Installation.md) and [Workflows](Workflows.md) sections. For a demo project, see the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
 
-![MyGameActions](Images/MyGameActions.png)<br/>
-_An example of a set of typical Input Actions for a game, configured in the Editor._
+![MyGameActions](Images/ProjectSettingsInputActionsSimpleShot.png)<br/>
+_The Input Actions Editor, displaying some of the default actions that come pre-configured with the Input System package._

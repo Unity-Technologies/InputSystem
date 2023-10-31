@@ -4,18 +4,20 @@ uid: input-system-workflows
 
 # Input System Workflows
 
-There are multiple ways to use the Input System, and the workflow that’s right for you depends on how quickly you want to get up and running, how flexible you want your input code to be, and whether you prefer to set things up in the Unity Editor, or in code.
+There are multiple ways to use the Input System, however the primary and recommended workflow is to use the **Input Actions** panel in the **Project Settings window** to configure your project-wide Actions and Bindings, get references to those Actions in your code's Start method, then read the values for those actions in your Update method.
 
-To understand the different workflows so that you can choose between them, it’s important to first understand the [concepts and terms](Concepts.html) used to describe them.
+There are other workflows which can suit more unusual situations, for example you can use the **PlayerInput component** together with Actions and Bindings which adds a further layer of abstraction, allowing you to connect actions to your event handlers without requiring any intermediate code, and easily handle multiplayer scenarios.
 
-Each of the four main workflows described below offers different levels of flexibility and abstraction. They are listed in an order of abstraction from least to most, where each adds a layer of abstraction, and therefore flexibility, to the previous.
+You can choose to configure Actions and Bindings in the Editor UI, or you can set up everything through scripting. Or you can take a more direct aproach by omitting the Actions and Bindings features altogether and instead use script to directly read the state of devices.
 
-|   |   |
-|---|---|
-|[**Directly Reading Device States**](Workflow-Direct.html)<br/><br/>Your script explicitly refers to device controls and reads the values directly.<br/><br/>Can be the fastest way to set up input for one device, but it is the least flexible workflow. [Read more](Workflow-Direct.html) |![image alt text](Images/Workflow-Direct.svg)|
-|[**Using Embedded Actions**](Workflow-Embedded.html)<br/><br/>Your script uses the InputAction class directly. The actions display in your script’s inspector, and allow you to configure them in the editor. [Read more](Workflow-Embedded.html)|![image alt text](Images/Workflow-Embedded.svg)|
-|[**Using an Actions Asset**](Workflow-ActionsAsset.html)<br/><br/>Your script does not define actions directly. Instead your script references an Input Actions asset which defines your actions. The Input Actions window provides a UI to define, configure, and organize all your Actions into useful groupings. [Read more](Workflow-ActionsAsset.html)|![image alt text](Images/Workflow-ActionsAsset.svg)|
-|[**Using an Actions Asset and a PlayerInput component**](Workflow-PlayerInput.html)<br/><br/>In addition to using an Actions Asset, the PlayerInput component provides a UI in the inspector to connect actions to event handlers in your script, removing the need for any intermediary code between the Input System and your Action Methods. [Read more](Workflow-PlayerInput.html)|![image alt text](Images/Workflow-PlayerInput.svg)|
+The descriptions below describe these main workflows and link to more detailed description of them.
 
->[!Note]
->Because the Input System has multiple workflows, the code samples used throughout this documentation also vary, demonstrating techniques using various workflows. For example, some code samples may use embedded actions, and others might use an action asset.
+
+
+* [**Configure Actions in the Editor and read their values from Action references in your script**](Workflow-ProjectWideActions)<br/>The primary and recommended workflow for most situations. In this workflow, you use the Input Settings window to configure your project-wide actions and bindings, then set up references and read the values for those actions in your code [(read more)](Workflow-ProjectWideActions).<br/><br/>
+
+* [**Configure input in the Editor, use PlayerInput component to handle events**](Workflow-PlayerInput)<br/>This workflow adds more complex functionality on top of the first workflow. It provides features that are useful in multiplayer scenarios such as split-screen or online multiplayer. In addition it provides features that allow you to connect up callbacks directly from Actions to your own callback handler methods, removing the need to deal with Action references in your code. [(read more)](Workflow-PlayerInput).<br/><br/>
+
+* [**Read user input directly from devices**](Workflow-Direct)<br/>This workflow is a simplified, script-only approach which is less abstracted, but also less flexible. It bypasses the Actions and Bindings features entirely, and instead your script explicitly references specific device controls (such as "left gamepad stick") and reads the values directly. This is suitable for fast prototyping, or single fixed platform scenarios [(read more)](Workflow-Direct).<br/><br/>
+
+> **Note**: Because the Input System has multiple workflows, the code samples used throughout this documentation also vary, often demonstrating techniques using various workflows. For example, some code samples may use Action references, and some may use the workflow of reading input directly from devices.

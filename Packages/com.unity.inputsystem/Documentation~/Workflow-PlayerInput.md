@@ -1,10 +1,7 @@
 ---
 uid: input-system-workflow-player-input
 ---
-# Workflow Overview - Using an Actions Asset and PlayerInput Component
-
-![image alt text](./Images/Workflow-PlayerInput.svg)
-
+# Workflow Overview - Using Actions and a PlayerInput Component
 
 The highest level of abstraction provided by the Input System is when you use the [Actions Asset](ActionAssets.html) and the **Player Input component** together.
 

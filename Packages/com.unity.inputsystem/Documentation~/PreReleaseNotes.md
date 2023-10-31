@@ -2,20 +2,15 @@
 
 ## Overview
 
-This pre-release contains updates to the Input System which simplifies and improves some of the main workflows compared with earlier versions of the Input System package.
-
-Because this is a pre-release, the rest of the documentation included with this version of the package has not yet been updated to reflect these changes. The documentation on this page explains the improvements and differences between these new features, and the previous version of the input system package. The improvements are as follows:
+This pre-release contains updates to the Input System which simplify and improve some of the main workflows compared with earlier versions of the Input System package. This page describes the main differences introduced, and assumes you are familiar with the workflow in the previous versions of the Input System package.
 
 **New project-wide actions**
 
-The Input System now allows you to configure actions in the Project Settings window, in a new Input Actions Settings panel. The actions configured here apply project-wide. This means you no longer need to create an Actions asset and set up a reference to your asset to read input actions. Instead, you can configure your actions in the Project Settings window, and read them directly from your scripts. You can still use Action assets if you like, but for many typical scenarios, they are no longer necessary.
+The Input System now allows you to configure actions in the Project Settings window, in a new Input Actions Settings panel. The actions configured here apply project-wide. This means you no longer need to create an Actions asset and set up a reference to your asset to read input actions. Instead, you can configure actions in the Project Settings window, and read them directly from your scripts. You can still use Action assets if you like, but for many typical scenarios, they are no longer necessary.
 
 **New default actions**
 
-The new project-wide actions come pre-loaded with some default action maps that contain actions suitable for many typical game scenarios, including basic player character controls, and typical UI interactions. In many cases these are enough to allow you to immediately start using input in your project with no configuration required. You are free to either add to, edit, or delete these default configurations to suit your needs.
-
-
-**Note**: The new features in this pre-release are **only documented on this page**. When reading the rest of the documentation in this package, please remember that it *will not mention these features*. So, for example, when another page in the documentation discusses **action assets**, or creating a reference to your action asset, you can in many cases use project-wide actions instead, as described on this page.
+The new project-wide actions come pre-configured with some default actions that are suitable for many typical game scenarios, including some basic player character actions, and some typical UI-related actions. In many cases these might be enough to allow you to immediately start using input in your project with no configuration required. You can either add to, edit, or delete these default configurations to suit your needs.
 
 ## Project-wide actions and default actions
 
@@ -23,7 +18,7 @@ Project-wide actions are similar to the actions you would previously define in a
 
 Compared with the previous workflow of creating an Action asset, and setting up a reference to that asset to access in your code, project-wide actions reduce the number of steps to set up input in your project, and reduces complexity in your project.
 
-![The Input Actions settings panel in the Project Settings window, showing the default player actions.](images/ProjectSettingsInputActions.png)<br/>
+![The Input Actions settings panel in the Project Settings window, showing the default player actions.](images/ProjectSettingsInputActionsSimpleShot.png)<br/>
 *The Input Actions settings panel in the Project Settings window, showing the default player actions.*
 
 The project-wide actions feature has some default action maps set up, which you can add to, modify or delete. They are actions which are useful in typical games, such as moving a player character with WSAD keys or a Joypad stick, pressing a button to jump or interact, as well as common UI controls such as pointing, submitting, or canceling within a user interface.
@@ -32,52 +27,57 @@ The project-wide actions feature has some default action maps set up, which you 
 
 ### Reading project-wide actions
 
-You can access the project-wide actions in your script by using the [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_actions) property. For example:
+To access project-wide actions in your script, first including this line at the top of your script:
 
-    var myAction = InputSystem.actions.FindAction("Player/Jump");
+    using UnityEngine.InputSystem
 
-The above line of code reads the "Jump" action, from the “Player” action map, which is one of the default actions that comes with the new project-wide actions feature.
+Then use the [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_actions) property to find references to your configured actions, like this:
 
-Unlike Input Action assets, the project-wide actions are stored in your project’s Project Settings folder, so they do not appear in your Project window. The **InputSystem.actions** property is a built-in reference to that asset. This means you can use all the same techniques described throughout the rest of the documentation about [using action assets](Workflow-ActionsAsset.html), but instead of referencing an asset from your project, you can use the **InputSystem.actions property** in your scripts to reference the project-wide actions.
+    var myAction = InputSystem.actions.FindAction("Move");
 
-For example, here is the script from the [Action Assets workflow page](Workflow-ActionsAsset.html), adapted to use the project-wide actions, and the default actions in the "Player" action map.
+The above line of code gets a reference to the "Move" action which is one of the default actions that comes with the new project-wide actions feature.
+
+Unlike the older Input Action assets, the project-wide actions are stored in your project’s Project Settings folder, so they do not appear in your Project window. The **InputSystem.actions** property is a built-in reference to that "hidden" asset. This means instead of referencing an asset from your project, you can use the **InputSystem.actions property** in your scripts to reference the project-wide actions.
+
+It is best for performance to find the references to your actions once and store them in a variable, rather than using the FindAction method every frame. For example:
+
 
 ```
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ExampleScript : MonoBehaviour
+public class Example : MonoBehaviour
 {
-    // private field to store move action reference
-    private InputAction moveAction;
+    // these variables are to contain the references to your actions
+    InputAction moveAction;
+    InputAction jumpAction;
 
-    void Awake()
+    private void Start()
     {
-        // find the "move" action, and keep the reference to it, for use in Update
-        moveAction = InputSystem.actions.FindAction("Player/move");
-        // for the "jump" action, we add a callback method for when it is performed
-        InputSystem.actions.FindAction("Player/jump").performed += OnJump;
+        // find and store references to the "Move" and "Jump" actions
+        moveAction = InputSystem.actions.FindAction("Move");
+        jumpAction = InputSystem.actions.FindAction("Jump");
     }
 
     void Update()
     {
-        // our update loop polls the "move" action value each frame
-        Vector2 moveVector = moveAction.ReadValue<Vector2>();
-    }
-
-    private void OnJump(InputAction.CallbackContext context)
-    {
-        // this is the "jump" action callback method
-        Debug.Log("Jump!");
+        // read the Move action value, which is a 2D vector:
+        Vector2 moveAmount = moveAction.ReadValue<Vector2>();
+        
+        // read the Jump action state, which is a true/false button
+        if (jumpAction.IsPressed())
+        {
+            // your jump code here
+        }
     }
 }
 ```
 
-Things to note about the above example script, as compared to the script on the [Action Assets workflow page](Workflow-ActionsAsset.html):
+Things to note about the above example script, compared with the older workflows in the previous versions of the Input System Package:
 
-* Because there is a built-in reference to the project-wide actions, you do not need a public field with an assigned asset to get a reference to the actions.
+* You do not need a public field with an assigned Action asset to get a reference to the actions, because the `InputSystem.actions` always references the project-wide actions.
 
-* This script does not enable or disable action maps. Project-wide action maps are enabled by default. This means unlike with Action assets, you do not need to enable individual action maps in your script before being able to use them. You may still want to disable or enable action maps if you want to make use of different types of input in different parts of your project.
+* This script does not enable or disable action maps. Project-wide action maps are enabled by default. This means unlike with the older Action assets, you do not need to enable individual action maps in your script before being able to use them. You may still want to disable or enable action maps if you want to make use of different types of input in different parts of your project.
 
 ### Limitations
 
@@ -89,4 +89,4 @@ You can't assign the project-wide input actions asset to UI fields where you wou
 
 **Some features of the project-wide actions editor are different, or missing, compared with the Actions Editor window for actions assets.**
 
-Although the UI to edit the project-wide actions in the Project Settings window is very similar to the Actions Editor for action assets, there are some differences and missing features. In particular, the new project-wide actions editor uses a newer UI system, and therefore there are some cosmetic differences such as different icons, and some workflow features are missing such as some of the keyboard shortcuts. You also cannot yet access the project-wide actions [through a C# wrapper](Workflow-ActionsAsset.html#referencing-the-actions-asset-through-a-c-wrapper).
+Although the UI to edit the project-wide actions in the Project Settings window is very similar to the Actions Editor for action assets, there are some differences and missing features. In particular, the new project-wide actions editor uses a newer UI system, and therefore there are some cosmetic differences such as different icons, and some workflow features are missing such as some of the keyboard shortcuts.
