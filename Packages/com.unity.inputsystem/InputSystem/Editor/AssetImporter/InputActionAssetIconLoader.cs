@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.Editor
         /// Attempts to load the icon associated with an <see cref="InputActionAsset"/>.
         /// </summary>
         /// <returns>Icon resource reference or <code>null</code> if the resource could not be loaded.</returns>
-        public static Texture2D LoadAssetIcon()
+        internal static Texture2D LoadAssetIcon()
         {
             return (Texture2D)EditorGUIUtility.Load(kAssetIcon);
         }
@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.Editor
         /// <see cref="InputActionAsset"/>.
         /// </summary>
         /// <returns>Icon resource reference or <code>null</code> if the resource could not be loaded.</returns>
-        public static Texture2D LoadActionIcon()
+        internal static Texture2D LoadActionIcon()
         {
             return (Texture2D)EditorGUIUtility.Load(kActionIcon);
         }
