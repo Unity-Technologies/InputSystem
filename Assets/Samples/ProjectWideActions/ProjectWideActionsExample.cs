@@ -3,7 +3,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class NewBehaviourScript : MonoBehaviour
+
+public class ProjectWideActionsExample : MonoBehaviour
 {
     [SerializeField] public GameObject cube;
 
