@@ -548,6 +548,7 @@ namespace UnityEngine.InputSystem
 
                 newActionState.lastCanceledInUpdate = oldActionState.lastCanceledInUpdate;
                 newActionState.lastPerformedInUpdate = oldActionState.lastPerformedInUpdate;
+                newActionState.lastUnperformedInUpdate = oldActionState.lastUnperformedInUpdate;
                 newActionState.pressedInUpdate = oldActionState.pressedInUpdate;
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
@@ -872,6 +873,7 @@ namespace UnityEngine.InputSystem
             {
                 actionState->lastCanceledInUpdate = default;
                 actionState->lastPerformedInUpdate = default;
+                actionState->lastUnperformedInUpdate = default;
                 actionState->pressedInUpdate = default;
                 actionState->releasedInUpdate = default;
             }
@@ -2394,7 +2396,7 @@ namespace UnityEngine.InputSystem
             if (newPhase != InputActionPhase.Canceled)
                 newState.magnitude = trigger.magnitude;
             else
-                newState.magnitude = 0;
+                newState.magnitude = 0f;
 
             newState.phase = newPhase;
             if (newPhase == InputActionPhase.Performed)
@@ -2422,6 +2424,12 @@ namespace UnityEngine.InputSystem
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
             }
+
+            if (newPhase != InputActionPhase.Performed && actionState->phase == InputActionPhase.Performed)
+                newState.lastUnperformedInUpdate = InputUpdate.s_UpdateStepCount;
+            else
+                newState.lastUnperformedInUpdate = actionState->lastUnperformedInUpdate;
+
             newState.pressedInUpdate = actionState->pressedInUpdate;
             newState.releasedInUpdate = actionState->releasedInUpdate;
             if (newPhase == InputActionPhase.Started)
@@ -3568,7 +3576,7 @@ namespace UnityEngine.InputSystem
         /// other is to represent the current actuation state of an action as a whole. The latter is stored in <see cref="actionStates"/>
         /// while the former is passed around as temporary instances on the stack.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 48)]
+        [StructLayout(LayoutKind.Explicit, Size = 52)]
         public struct TriggerState
         {
             public const int kMaxNumMaps = byte.MaxValue;
@@ -3588,9 +3596,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(26)] private ushort m_InteractionIndex;
             [FieldOffset(28)] private float m_Magnitude;
             [FieldOffset(32)] private uint m_LastPerformedInUpdate;
-            [FieldOffset(36)] private uint m_LastCanceledInUpdate;
-            [FieldOffset(40)] private uint m_PressedInUpdate;
-            [FieldOffset(44)] private uint m_ReleasedInUpdate;
+            [FieldOffset(36)] private uint m_LastUnperformedInUpdate;
+            [FieldOffset(40)] private uint m_LastCanceledInUpdate;
+            [FieldOffset(44)] private uint m_PressedInUpdate;
+            [FieldOffset(48)] private uint m_ReleasedInUpdate;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3738,12 +3747,22 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action triggered/performed last.
-            /// Zero if the action did not trigger yet. Also reset to zero when the action is disabled.
+            /// Zero if the action did not trigger yet. Also reset to zero when the action is hard reset.
             /// </summary>
             public uint lastPerformedInUpdate
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
+            }
+
+            /// <summary>
+            /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action unperformed last.
+            /// Zero if the action did not become unperformed yet. Also reset to zero when the action is hard reset.
+            /// </summary>
+            public uint lastUnperformedInUpdate
+            {
+                get => m_LastUnperformedInUpdate;
+                set => m_LastUnperformedInUpdate = value;
             }
 
             public uint lastCanceledInUpdate
