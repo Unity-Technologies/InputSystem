@@ -43,7 +43,6 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
             cube.transform.Translate(new Vector3(moveVal.x, moveVal.y, 0));
         }
     } // class ProjectWideActionsExample
-
 } // namespace UnityEngine.InputSystem.Samples.ProjectWideActions
 
 #endif
