@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
 - Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+- Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
@@ -38,6 +39,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case [ISX-1668] (The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
 - Fixed [ISX-1661](https://jira.unity3d.com/browse/ISX-1661) where undoing duplications of action maps caused console errors
 - Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
+- Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
 - Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
 
 
