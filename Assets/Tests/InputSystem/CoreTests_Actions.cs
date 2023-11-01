@@ -1787,6 +1787,146 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(type: actionType, binding: "<Gamepad>/leftTrigger", interactions: interactions);
+        action.Enable();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Press such that it stays below press threshold.
+        Set(gamepad.leftTrigger, 0.25f);
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Press some more such that it crosses the press threshold.
+        Set(gamepad.leftTrigger, 0.75f);
+
+        Assert.That(action.IsPressed(), Is.True);
+        Assert.That(action.WasPressedThisFrame(), Is.True);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Disabling an action at this point should affect IsPressed() but should
+        // not affect WasPressedThisFrame() and WasReleasedThisFrame().
+        action.Disable();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.True);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Re-enabling it should have no effect on WasPressedThisFrame() and
+        // WasReleasedThisFrame() either. Also IsPressed() should remain false
+        // as the button may have been released and the action wouldn't see
+        // the update while disabled.
+        action.Enable();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.True);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Advance one frame.
+        InputSystem.Update();
+
+        // Value actions perform an initial state check which flips the press state
+        // back on.
+        if (action.type == InputActionType.Value)
+        {
+            Assert.That(action.IsPressed(), Is.True);
+            Assert.That(action.WasPressedThisFrame(), Is.True);
+            Assert.That(action.WasReleasedThisFrame(), Is.False);
+        }
+        else
+        {
+            Assert.That(action.IsPressed(), Is.False);
+            Assert.That(action.WasPressedThisFrame(), Is.False);
+            Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+            Set(gamepad.leftTrigger, 0.6f);
+
+            Assert.That(action.IsPressed(), Is.True);
+            Assert.That(action.WasPressedThisFrame(), Is.True);
+            Assert.That(action.WasReleasedThisFrame(), Is.False);
+        }
+
+        // Release a bit but remain above release threshold.
+        Set(gamepad.leftTrigger, 0.41f);
+
+        Assert.That(action.IsPressed(), Is.True);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Go below release threshold.
+        Set(gamepad.leftTrigger, 0.2f);
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.True);
+
+        // Disabling should not affect WasReleasedThisFrame().
+        action.Disable();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.True);
+
+        // So should re-enabling.
+        action.Enable();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.True);
+
+        // Advance one frame. Should reset WasReleasedThisFrame().
+        InputSystem.Update();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Press-and-release in same frame.
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
+        Set(gamepad.leftTrigger, 0.25f);
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.True);
+        Assert.That(action.WasReleasedThisFrame(), Is.True);
+
+        // Advance one frame.
+        InputSystem.Update();
+
+        Assert.That(action.IsPressed(), Is.False);
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(action.WasReleasedThisFrame(), Is.False);
+
+        // Press-and-release-and-press-again in same frame.
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
+        Set(gamepad.leftTrigger, 0.25f, queueEventOnly: true);
+        Set(gamepad.leftTrigger, 0.75f);
+
+        Assert.That(action.IsPressed(), Is.True);
+        Assert.That(action.WasPressedThisFrame(), Is.True);
+        Assert.That(action.WasReleasedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase(InputActionType.Value)]
+    [TestCase(InputActionType.Value, "press")]
+    [TestCase(InputActionType.Value, "hold(duration=0.5)")]
+    [TestCase(InputActionType.Button)]
+    [TestCase(InputActionType.Button, "press")]
+    [TestCase(InputActionType.Button, "hold(duration=0.5)")]
+    [TestCase(InputActionType.PassThrough)]
+    public void Actions_CanReadPerformedFromAction_AsButton(InputActionType actionType, string interactions = null)
+    {
+        // Set global press and release points to known values.
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        InputSystem.settings.buttonReleaseThreshold = 0.8f; // 80% puts the release point at 0.4.
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: actionType, binding: "<Gamepad>/leftTrigger", interactions: interactions);
 
         var isHold = interactions?.StartsWith("hold") ?? false;
         var isPress = interactions?.StartsWith("press") ?? false;
