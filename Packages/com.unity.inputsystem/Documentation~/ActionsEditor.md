@@ -10,8 +10,6 @@ Open the Input Actions settings by going to **Edit** > **Project Settings** > **
 ![image alt text](./Images/ProjectSettingsInputActions.png)
 *The Input Actions editor in the Project Settings window*
 
-
-
 The Input Action editor is divided into three panels (marked A, B & C above).
 
 |Name|Description|
@@ -19,6 +17,13 @@ The Input Action editor is divided into three panels (marked A, B & C above).
 |**A: Action Maps**|Displays the list of currently defined Action Maps. Each Action Map is a collection of Actions that you can enable or disable together as a group.|
 |**B: Actions**|Displays all the actions defined in the currently selected Action Map, and the bindings associated with each Action.|
 |**C: Properties**|Displays the properties of the currently selected Action or Binding from the Actions panel. The title of this panel changes depending on whether you have an Action or a Binding selected in the Actions panel.|
+
+
+
+**Action Properties** define the type of input that relates to the action, such as whether it is a button press, or a movement axis.
+
+[**Control Schemes**](ActionsEditor.html#editing-control-schemes) refer to particular modes of input, such as "Joypad" or "Keyboard and Mouse". You can specify which bindings belong to particular control schemes. You might have one control scheme which is "Joypad", and another control scheme which is "Keyboard and Mouse". This allows you to determine which control scheme the user is currently using, so your game can respond to the user accordingly. This feature is often used to adapt the in-game UI to show the correct keys or buttons in on-screen prompts.
+
 
 ### Configure Action Maps
 

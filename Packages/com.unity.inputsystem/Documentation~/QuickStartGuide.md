@@ -1,7 +1,7 @@
 
 # Quickstart Guide
 
-This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](Workflows.md) which you might prefer that offer different benefits.
+This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](Workflows.md) which you might prefer that offer different benefits. This quickstart guide shows a workflow which suits most common scenarios.
 
 First, install the Input System package. For information on how to install the new Input System, see [Installation](Installation).
 
@@ -59,9 +59,11 @@ These actions named "Move" and "Jump" in this script work straight away with no 
 
 ## The default Action Maps and Actions
 
-Actions can be grouped into Action Maps, and the Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
+Action Maps allow you to organise Actions into groups which represent specific situations where a set of actions make sense together.
 
-The "Player" action map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
+The Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
+
+The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
 
  Each each default action has bindings to several different types of Control. For example:
 

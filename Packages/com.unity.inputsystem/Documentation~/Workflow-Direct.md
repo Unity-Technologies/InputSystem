@@ -3,6 +3,8 @@ uid: input-system-workflow-direct
 ---
 # Workflow Overview - Directly Reading Device States
 
+<img src="Images/Workflow-Direct.png" height="200px">
+
 This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](ActionsEditor), so you do not benefit from all the features come with [Actions](Actions).
 
 It can be useful if you want a quick implementation with one specific type of device. It's generally not the best choice if you want to provide your users with multiple types of input or if you want to target multiple platforms.
@@ -54,4 +56,4 @@ You can find an example of this workflow in the sample projects included with th
 
 See [Supported Devices](SupportedDevices.html) for more information about devices supported by the input system, and the API to read their states.
 
-For more a more flexible workflow, you should use [project-wide actions](Workflow-ProjectWideActions.html).
+For more a more flexible workflow, see the [Actions Workflow](Workflow-Actions.html).
