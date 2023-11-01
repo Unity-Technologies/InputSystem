@@ -38,6 +38,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case [ISX-1668] (The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
 - Fixed [ISX-1661](https://jira.unity3d.com/browse/ISX-1661) where undoing duplications of action maps caused console errors
 - Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
+- Fix for UITK Input Action Editor binding 'Listen' button which wasn't working in the case for Control Type 'Any'.
 
 
 ## [1.8.0-pre.1] - 2023-09-04
