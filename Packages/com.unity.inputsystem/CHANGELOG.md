@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
 - Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+- Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
@@ -39,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an issue where undoing duplications of action maps caused console errors.
 - Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
 - Fix for UITK Input Action Editor binding 'Listen' button which wasn't working in the case for Control Type 'Any'.
+- Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
 
 
 ## [1.8.0-pre.1] - 2023-09-04
