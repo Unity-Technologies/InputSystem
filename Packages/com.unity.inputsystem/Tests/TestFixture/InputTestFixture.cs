@@ -896,5 +896,102 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        #if UNITY_EDITOR
+        /// <summary>
+        /// Represents an analytics registration event captured by test harness.
+        /// </summary>
+        protected struct AnalyticsRegistrationEventData
+        {
+            public AnalyticsRegistrationEventData(string name, int maxPerHour, int maxPropertiesPerEvent)
+            {
+                this.name = name;
+                this.maxPerHour = maxPerHour;
+                this.maxPropertiesPerEvent = maxPropertiesPerEvent;
+            }
+
+            public readonly string name;
+            public readonly int maxPerHour;
+            public readonly int maxPropertiesPerEvent;
+        }
+
+        /// <summary>
+        /// Represents an analytics data event captured by test harness.
+        /// </summary>
+        protected struct AnalyticsEventData
+        {
+            public AnalyticsEventData(string name, object data)
+            {
+                this.name = name;
+                this.data = data;
+            }
+
+            public readonly string name;
+            public readonly object data;
+        }
+
+        private List<AnalyticsRegistrationEventData> m_RegisteredAnalytics;
+        private List<AnalyticsEventData> m_SentAnalyticsEvents;
+
+        /// <summary>
+        /// Returns a read-only list of all analytics events registred by enabling capture via <see cref="CollectAnalytics(System.Predicate{string})"/>.
+        /// </summary>
+        protected IReadOnlyList<AnalyticsRegistrationEventData> registeredAnalytics => m_RegisteredAnalytics;
+
+        /// <summary>
+        /// Returns a read-only list of all analytics events captured by enabling capture via <see cref="CollectAnalytics(System.Predicate{string})"/>.
+        /// </summary>
+        protected IReadOnlyList<AnalyticsEventData> sentAnalyticsEvents => m_SentAnalyticsEvents;
+
+        /// <summary>
+        /// Set up the test fixture to collect analytics registrations and events
+        /// </summary>
+        /// <param name="analyticsNameFilter">A filter predicate evaluating whether the given analytics name should be accepted to be stored in test fixture.</param>
+        protected void CollectAnalytics(Predicate<string> analyticsNameFilter)
+        {
+            // Make sure containers are initialized and create them if not. Otherwise just clear to avoid allocation.
+            if (m_RegisteredAnalytics == null)
+                m_RegisteredAnalytics = new List<AnalyticsRegistrationEventData>();
+            else
+                m_RegisteredAnalytics.Clear();
+            if (m_SentAnalyticsEvents == null)
+                m_SentAnalyticsEvents = new List<AnalyticsEventData>();
+            else
+                m_SentAnalyticsEvents.Clear();
+
+            // Store registered analytics when called if filter applies
+            runtime.onRegisterAnalyticsEvent = (name, maxPerHour, maxPropertiesPerEvent) =>
+            {
+                if (analyticsNameFilter(name))
+                    m_RegisteredAnalytics.Add(new(name: name, maxPerHour: maxPerHour, maxPropertiesPerEvent: maxPropertiesPerEvent) );
+            };
+
+            // Store sent analytic events when called if filter applies
+            runtime.onSendAnalyticsEvent = (name, data) =>
+            {
+                if (analyticsNameFilter(name))
+                    m_SentAnalyticsEvents.Add(new AnalyticsEventData(name: name, data: data));
+            };
+        }
+
+        /// <summary>
+        /// Set up the test fixture to collect filtered analytics registrations and events.
+        /// </summary>
+        /// <param name="acceptedName">The analytics name to be accepted, all other registrations and data
+        /// will be discarded.</param>
+        protected void CollectAnalytics(string acceptedName)
+        {
+            CollectAnalytics((name) => name.Equals(acceptedName));
+        }
+
+        /// <summary>
+        /// Set up the test fixture to collect ALL analytics registrations and events.
+        /// </summary>
+        protected void CollectAnalytics()
+        {
+            CollectAnalytics((_) => true);
+        }
+
+        #endif
     }
 }

@@ -66,7 +66,9 @@ namespace UnityEngine.InputSystem
             manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 100, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
             
+            // TODO Isn't it a bad habit to handle this via run-time?
             #if UNITY_EDITOR
+            // Editor usage analytics are only available in editor
             manager.m_Runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, maxPerHour: 100, maxPropertiesPerEvent: 100);
             #endif
         }
@@ -178,20 +180,16 @@ namespace UnityEngine.InputSystem
             EmbeddedInProjectSettings = 2
         }
 
-        /// <summary>
-        /// Analytics record for tracking engagement with Input Action Asset editor(s).
-        /// </summary>
+#if UNITY_EDITOR
+
         [Serializable]
-        public struct InputActionsEditorSession
+        public struct InputActionsEditorSessionData
         {
-            /// <summary>
-            /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
-            /// </summary>
-            /// <param name="type">The editor type for which this record is valid.</param>
-            public InputActionsEditorSession(InputActionsEditorType type)
+            public InputActionsEditorSessionData(InputActionsEditorType type)
             {
                 this.type = type;
                 sessionDurationSeconds = 0;
+                sessionFocusDurationSeconds = 0;
                 sessionFocusDurationSeconds = 0;
                 sessionFocusSwitchCount = 0;
                 actionMapModificationCount = 0;
@@ -199,9 +197,53 @@ namespace UnityEngine.InputSystem
                 bindingModificationCount = 0;
                 explicitSaveCount = 0;
                 autoSaveCount = 0;
+            }
+            
+            public InputActionsEditorType type;
+            public float sessionDurationSeconds;
+            public float sessionFocusDurationSeconds;
+            public int sessionFocusSwitchCount;
+            public int actionMapModificationCount;
+            public int actionModificationCount;
+            public int bindingModificationCount;
+            public int explicitSaveCount;
+            public int autoSaveCount;
+
+            public bool isValid => type != InputActionsEditorType.Invalid && sessionDurationSeconds >= 0;
+            
+            public override string ToString()
+            {
+                return $"{nameof(type)}: {type}, " +
+                       $"{nameof(sessionDurationSeconds)}: {sessionDurationSeconds} seconds, " +
+                       $"{nameof(sessionFocusDurationSeconds)}: {sessionFocusDurationSeconds} seconds, " +
+                       $"{nameof(sessionFocusSwitchCount)}: {sessionFocusSwitchCount}, " +
+                       $"{nameof(actionMapModificationCount)}: {actionMapModificationCount}, " +
+                       $"{nameof(actionModificationCount)}: {actionModificationCount}, " +
+                       $"{nameof(bindingModificationCount)}: {bindingModificationCount}, " +
+                       $"{nameof(explicitSaveCount)}: {explicitSaveCount}, " +
+                       $"{nameof(autoSaveCount)}: {autoSaveCount}";
+            }
+        }
+        
+        /// <summary>
+        /// Analytics record for tracking engagement with Input Action Asset editor(s).
+        /// </summary>
+        public class InputActionsEditorSession
+        {
+            /// <summary>
+            /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
+            /// </summary>
+            /// <param name="manager"></param>
+            /// <param name="type">The editor type for which this record is valid.</param>
+            public InputActionsEditorSession(InputManager manager, InputActionsEditorType type)
+            {
+                if (type == InputActionsEditorType.Invalid)
+                    throw new ArgumentException(nameof(type));
                 
+                m_InputManager = manager ?? throw new NullReferenceException(nameof(manager));
                 m_FocusStart = float.NaN;
                 m_SessionStart = float.NaN;
+                m_Data = new InputActionsEditorSessionData(type);
             }
 
             /// <summary>
@@ -209,8 +251,12 @@ namespace UnityEngine.InputSystem
             /// </summary>
             public void RegisterActionMapEdit()
             {
-                if (hasSession && hasFocus)
-                    ++actionMapModificationCount;
+                if (!hasSession)
+                    return;
+                if (!hasFocus)
+                    RegisterEditorFocusIn();
+                
+                ++m_Data.actionMapModificationCount;
             }
 
             /// <summary>
@@ -218,8 +264,12 @@ namespace UnityEngine.InputSystem
             /// </summary>
             public void RegisterActionEdit()
             {
-                if (hasSession && hasFocus)
-                    ++actionModificationCount;
+                if (!hasSession)
+                    return;
+                if (!hasFocus)
+                    RegisterEditorFocusIn();
+                
+                ++m_Data.actionModificationCount;
             }
 
             /// <summary>
@@ -227,8 +277,12 @@ namespace UnityEngine.InputSystem
             /// </summary>
             public void RegisterBindingEdit()
             {
-                if (hasSession && hasFocus)
-                    ++bindingModificationCount;
+                if (!hasSession)
+                    return;
+                if (!hasFocus)
+                    RegisterEditorFocusIn();
+                    
+                ++m_Data.bindingModificationCount;
             }
 
             /// <summary>
@@ -247,6 +301,9 @@ namespace UnityEngine.InputSystem
             /// Register that the editor has lost focus which is expected to reflect that the user currently
             /// has the attention elsewhere.
             /// </summary>
+            /// <remarks>
+            /// Calling this method without having an ongoing session and having focus will not have any effect.
+            /// </remarks>
             public void RegisterEditorFocusOut()
             {
                 if (!hasSession || !hasFocus)
@@ -254,17 +311,21 @@ namespace UnityEngine.InputSystem
                 
                 var duration = CurrentTime() - m_FocusStart;
                 m_FocusStart = float.NaN;
-                sessionFocusDurationSeconds += (float)duration;
-                ++sessionFocusSwitchCount;
+                m_Data.sessionFocusDurationSeconds += (float)duration;
+                ++m_Data.sessionFocusSwitchCount;
             }
 
             /// <summary>
-            /// Begins a new session.
+            /// Begins a new session if the session has not already been started.
             /// </summary>
+            /// <remarks>
+            /// If the session has already been started due to a previous call to <see cref="Begin()"/> without
+            /// a call to <see cref="End()"/> this method has no effect.
+            /// </remarks>
             public void Begin()
             {
                 if (hasSession)
-                    return;
+                    return; // Session already started.
                 
                 m_SessionStart = CurrentTime();
             }
@@ -272,45 +333,40 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Ends the current session.
             /// </summary>
+            /// <remarks>
+            /// If the session has not previously been started via a call to <see cref="Begin()"/> calling this
+            /// method has no effect.
+            /// </remarks>
             public void End()
             {
                 if (!hasSession)
-                    return;
+                    return; // No pending session
                 
+                // Make sure we register focus out if failed to capture or not invoked
+                if (hasFocus)
+                    RegisterEditorFocusOut();
+                
+                // Compute and record total session duration
                 var duration = CurrentTime() - m_SessionStart;
-                this.sessionDurationSeconds += (float)duration;
-            }
-            
-            public override string ToString()
-            {
-                return $"{nameof(type)}: {type}, " +
-                       $"{nameof(sessionDurationSeconds)}: {sessionDurationSeconds} seconds, " +
-                       $"{nameof(sessionFocusDurationSeconds)}: {sessionFocusDurationSeconds} seconds, " +
-                       $"{nameof(sessionFocusSwitchCount)}: {sessionFocusSwitchCount}, " +
-                       $"{nameof(actionMapModificationCount)}: {actionMapModificationCount}, " +
-                       $"{nameof(actionModificationCount)}: {actionModificationCount}, " +
-                       $"{nameof(bindingModificationCount)}: {bindingModificationCount}, " +
-                       $"{nameof(explicitSaveCount)}: {explicitSaveCount}, " +
-                       $"{nameof(autoSaveCount)}: {autoSaveCount}";
+                m_Data.sessionDurationSeconds += (float)duration;
+                
+                // Send analytics event
+                m_InputManager.m_Runtime.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
             }
 
-            private InputActionsEditorType type;
-            private float sessionDurationSeconds;
-            private float sessionFocusDurationSeconds;
-            private int sessionFocusSwitchCount;
-            private int actionMapModificationCount;
-            private int actionModificationCount;
-            private int bindingModificationCount;
-            private int explicitSaveCount;
-            private int autoSaveCount;
-            
-            [NonSerialized] private double m_FocusStart;
-            [NonSerialized] private double m_SessionStart;
+            private InputManager m_InputManager;
 
+            private InputActionsEditorSessionData m_Data;
+            
+            private double m_FocusStart;
+            private double m_SessionStart;
+            
             private bool hasFocus => !double.IsNaN(m_FocusStart);
             private bool hasSession => !double.IsNaN(m_SessionStart);
-            private double CurrentTime() => EditorApplication.timeSinceStartup;
-            public bool isValid => sessionDurationSeconds >= 0;
+            // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
+            // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
+            private double CurrentTime() => m_InputManager.m_Runtime.currentTime;
+            public bool isValid => m_Data.sessionDurationSeconds >= 0;
         }
 
         /// <summary>
@@ -325,5 +381,8 @@ namespace UnityEngine.InputSystem
             Debug.Log("OnInputActionsEditorEndSession: " + session);
         }
     }
+    
+#endif // UNITY_EDITOR    
+    
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR
