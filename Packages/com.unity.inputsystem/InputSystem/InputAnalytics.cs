@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This may be added to in the future but items may never be removed.
         /// </remarks>
-        public enum InputActionsEditorType
+        public enum InputActionsEditorKind
         {
             Invalid = 0,
             FreeFloatingEditorWindow = 1,
@@ -185,9 +185,9 @@ namespace UnityEngine.InputSystem
         [Serializable]
         public struct InputActionsEditorSessionData
         {
-            public InputActionsEditorSessionData(InputActionsEditorType type)
+            public InputActionsEditorSessionData(InputActionsEditorKind kind)
             {
-                this.type = type;
+                this.kind = kind;
                 sessionDurationSeconds = 0;
                 sessionFocusDurationSeconds = 0;
                 sessionFocusDurationSeconds = 0;
@@ -199,7 +199,7 @@ namespace UnityEngine.InputSystem
                 autoSaveCount = 0;
             }
             
-            public InputActionsEditorType type;
+            [FormerlySerializedAs("type")] public InputActionsEditorKind kind;
             public float sessionDurationSeconds;
             public float sessionFocusDurationSeconds;
             public int sessionFocusSwitchCount;
@@ -209,11 +209,11 @@ namespace UnityEngine.InputSystem
             public int explicitSaveCount;
             public int autoSaveCount;
 
-            public bool isValid => type != InputActionsEditorType.Invalid && sessionDurationSeconds >= 0;
+            public bool isValid => kind != InputActionsEditorKind.Invalid && sessionDurationSeconds >= 0;
             
             public override string ToString()
             {
-                return $"{nameof(type)}: {type}, " +
+                return $"{nameof(kind)}: {kind}, " +
                        $"{nameof(sessionDurationSeconds)}: {sessionDurationSeconds} seconds, " +
                        $"{nameof(sessionFocusDurationSeconds)}: {sessionFocusDurationSeconds} seconds, " +
                        $"{nameof(sessionFocusSwitchCount)}: {sessionFocusSwitchCount}, " +
@@ -234,16 +234,17 @@ namespace UnityEngine.InputSystem
             /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
             /// </summary>
             /// <param name="manager"></param>
-            /// <param name="type">The editor type for which this record is valid.</param>
-            public InputActionsEditorSession(InputManager manager, InputActionsEditorType type)
+            /// <param name="kind">The editor type for which this record is valid.</param>
+            public InputActionsEditorSession(InputActionsEditorKind kind, InputManager manager = null)
             {
-                if (type == InputActionsEditorType.Invalid)
-                    throw new ArgumentException(nameof(type));
-                
+                if (kind == InputActionsEditorKind.Invalid)
+                    throw new ArgumentException(nameof(kind));
+
+                manager ??= InputSystem.s_Manager;
                 m_InputManager = manager ?? throw new NullReferenceException(nameof(manager));
                 m_FocusStart = float.NaN;
                 m_SessionStart = float.NaN;
-                m_Data = new InputActionsEditorSessionData(type);
+                m_Data = new InputActionsEditorSessionData(kind);
             }
 
             /// <summary>
@@ -351,16 +352,19 @@ namespace UnityEngine.InputSystem
                 m_Data.sessionDurationSeconds += (float)duration;
                 
                 // Send analytics event
-                m_InputManager.m_Runtime.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
+                inputManager?.m_Runtime?.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
+                
+                Debug.Log(m_Data);
             }
 
-            private InputManager m_InputManager;
+            private readonly InputManager m_InputManager;
 
             private InputActionsEditorSessionData m_Data;
             
             private double m_FocusStart;
             private double m_SessionStart;
             
+            private InputManager inputManager => m_InputManager ?? InputSystem.s_Manager;
             private bool hasFocus => !double.IsNaN(m_FocusStart);
             private bool hasSession => !double.IsNaN(m_SessionStart);
             // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that

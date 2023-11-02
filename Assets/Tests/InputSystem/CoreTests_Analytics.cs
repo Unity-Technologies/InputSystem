@@ -214,8 +214,9 @@ partial class CoreTests
         CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(InputSystem.s_Manager,
-            InputAnalytics.InputActionsEditorType.EmbeddedInProjectSettings);
+        var session = new InputAnalytics.InputActionsEditorSession(
+            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
+            InputSystem.s_Manager);
 
         InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
@@ -241,7 +242,7 @@ partial class CoreTests
 
         // Assert: Data content
         var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.type, Is.EqualTo(InputAnalytics.InputActionsEditorType.EmbeddedInProjectSettings));
+        Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(5.0));
@@ -259,8 +260,9 @@ partial class CoreTests
         CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(InputSystem.s_Manager,
-            InputAnalytics.InputActionsEditorType.EmbeddedInProjectSettings);
+        var session = new InputAnalytics.InputActionsEditorSession(
+            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
+            InputSystem.s_Manager);
 
         InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
@@ -291,7 +293,7 @@ partial class CoreTests
 
         // Assert: Data content
         var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.type, Is.EqualTo(InputAnalytics.InputActionsEditorType.EmbeddedInProjectSettings));
+        Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(37.0));
@@ -309,8 +311,8 @@ partial class CoreTests
         CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(InputSystem.s_Manager,
-            InputAnalytics.InputActionsEditorType.EmbeddedInProjectSettings);
+        var session = new InputAnalytics.InputActionsEditorSession(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
+            InputSystem.s_Manager);
 
         InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
@@ -337,7 +339,7 @@ partial class CoreTests
 
         // Assert: Data content
         var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.type, Is.EqualTo(InputAnalytics.InputActionsEditorType.EmbeddedInProjectSettings));
+        Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(30.0));
