@@ -44,7 +44,7 @@ public class Example : MonoBehaviour
 
         Vector2 moveValue = moveAction.ReadValue<Vector2>();
         // your movement code here
-       
+
         if (jumpAction.IsPressed())
         {
             // your jump code here
@@ -55,7 +55,7 @@ public class Example : MonoBehaviour
 
 These actions named "Move" and "Jump" in this script work straight away with no configuration required because they match the names of some of the pre-configured defaults in the Input System package.
 
-> **Note**: Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above. 
+> **Note**: Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
 
 ## The default Action Maps and Actions
 

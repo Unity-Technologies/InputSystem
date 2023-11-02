@@ -75,7 +75,7 @@ public class Example : MonoBehaviour
 
         Vector2 moveValue = moveAction.ReadValue<Vector2>();
         // your movement code here
-       
+
         if (jumpAction.IsPressed())
         {
             // your jump code here
@@ -85,4 +85,3 @@ public class Example : MonoBehaviour
 ```
 
 > **Note:** You should avoid using `FindAction` in your Update() loop, because it performs a string-based lookup which could impact performance. This is why the Action refeferences in the example above are found during the Start() functionm, and stored in variables after finding them.
-
