@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
@@ -1606,6 +1607,15 @@ namespace UnityEngine.InputSystem
                     m_PlayerIndex = 0;
             }
         }
+
+        #if UNITY_EDITOR
+        void Reset()
+        {
+            // Set default actions to project wide actions.
+            m_Actions = ProjectWideActionsAsset.GetOrCreate();
+        }
+
+        #endif
 
         private void OnEnable()
         {
