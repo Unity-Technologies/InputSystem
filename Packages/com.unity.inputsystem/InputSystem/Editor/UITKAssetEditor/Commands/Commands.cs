@@ -279,8 +279,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var controlTypes = Selectors.BuildSortedControlList(inputAction.type).ToList();
-                inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlTypes[controlTypeIndex];
+                var controlTypes = Selectors.BuildControlTypeList(inputAction.type).ToList();
+
+                // ISX-1650: "Any" (in index 0) should not be put into an InputAction.expectedControlType. It's expected to be null in this case.
+                var controlType = (controlTypeIndex == 0) ? string.Empty : controlTypes[controlTypeIndex];
+                inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlType;
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
             };
