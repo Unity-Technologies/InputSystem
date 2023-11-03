@@ -29,7 +29,7 @@
     border-width: 0;
 }
 
-#add-new-action-button  {
+#add-new-action-button {
     background-color: transparent;
     border-width: 0;
 }
@@ -150,6 +150,10 @@
 .float-field {
     width: 50px;
     display: initial;
+}
+
+.asset-menu-button {
+    background-image: resource('d__Menu.png');
 }
 
 .name-and-parameters-list-view .up {

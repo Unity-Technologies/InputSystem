@@ -17,12 +17,13 @@ namespace UnityEngine.InputSystem.Editor
         Action m_PostSaveAction;
         Action<InputActionAsset> m_PostResetAction;
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction, Action<InputActionAsset> postResetAction)
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction, Action<InputActionAsset> postResetAction = null)
             : base(stateContainer)
         {
             m_Root = root;
             m_PostSaveAction = mpostSaveAction;
-            m_PostResetAction = postResetAction;
+            if (postResetAction != null)
+                m_PostResetAction = postResetAction;
             BuildUI();
         }
 
@@ -55,7 +56,7 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
             var assetMenuButton = m_Root.Q<TextElement>(name: menuButtonId);
-            assetMenuButton.AddToClassList("kebab-menu-button");
+            assetMenuButton.visible = m_PostResetAction != null;
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction("Reset", _ => OnReset());
