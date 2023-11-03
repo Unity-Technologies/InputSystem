@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         public const string kSettingsRootPath = "Project/Input System Package";
     }
-    
+
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
