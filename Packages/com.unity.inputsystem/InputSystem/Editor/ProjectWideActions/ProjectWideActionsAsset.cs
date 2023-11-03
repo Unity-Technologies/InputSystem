@@ -86,8 +86,16 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            // Create sub-asset for each action. This is so that users can select individual input actions from the asset when they're
-            // trying to assign to a field that accepts only one action.
+            CreateInputActionReferences(asset);
+
+            AssetDatabase.SaveAssets();
+
+            return asset;
+        }
+
+        private static void CreateInputActionReferences(InputActionAsset asset)
+        {
+            var maps = asset.actionMaps;
             foreach (var map in maps)
             {
                 foreach (var action in map.actions)
@@ -97,10 +105,51 @@ namespace UnityEngine.InputSystem.Editor
                     AssetDatabase.AddObjectToAsset(actionReference, asset);
                 }
             }
+        }
 
-            AssetDatabase.SaveAssets();
+        /// <summary>
+        /// Updates the input action references in the asset by updating names, removing dangling references
+        /// and adding new ones.
+        /// </summary>
+        /// <param name="asset"></param>
+        internal static void UpdateInputActionReferences()
+        {
+            var asset = GetOrCreate();
+            var existingReferences = InputActionImporter.LoadInputActionReferencesFromAsset(asset).ToList();
 
-            return asset;
+            // Check if referenced input action exists in the asset and remove the reference if it doesn't.
+            foreach (var actionReference in existingReferences)
+            {
+                var action = asset.FindAction(actionReference.action.id);
+                if (action == null)
+                {
+                    actionReference.Set(null);
+                    AssetDatabase.RemoveObjectFromAsset(actionReference);
+                }
+            }
+
+            // Check if all actions have a reference
+            foreach (var action in asset)
+            {
+                var actionReference = existingReferences.FirstOrDefault(r => r.m_ActionId == action.id.ToString());
+                // The input action doesn't have a reference, create a new one.
+                if (actionReference == null)
+                {
+                    var actionReferenceNew = ScriptableObject.CreateInstance<InputActionReference>();
+                    actionReferenceNew.Set(action);
+                    AssetDatabase.AddObjectToAsset(actionReferenceNew, asset);
+                }
+                else
+                {
+                    // Update the name of the reference if it doesn't match the action name.
+                    if (actionReference.name != InputActionReference.GetDisplayName(action))
+                    {
+                        AssetDatabase.RemoveObjectFromAsset(actionReference);
+                        actionReference.name = InputActionReference.GetDisplayName(action);
+                        AssetDatabase.AddObjectToAsset(actionReference, asset);
+                    }
+                }
+            }
         }
     }
 }
