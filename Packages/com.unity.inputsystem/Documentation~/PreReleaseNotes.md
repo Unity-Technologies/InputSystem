@@ -6,7 +6,7 @@ This pre-release contains updates to the Input System which simplify and improve
 
 ## New project-wide actions
 
-The Input System now allows you to configure actions in the Project Settings window, in a new Input Actions Settings panel. The actions configured here apply project-wide. This means you no longer need to create an Actions asset and set up a reference to your asset to read input actions. Instead, you can configure actions in the Project Settings window, and read them directly from your scripts. You can still use Action assets if you like, but for many typical scenarios, they are no longer necessary.
+The Input System now allows you to configure actions in the Project Settings window, in the new Input Actions Settings panel. The actions configured here are available from anywhere in the project. This means you no longer need to create an Actions asset and set up a reference to your asset to read input actions. Instead, you can configure actions in the Project Settings window, and read them directly from your scripts. You can still use Action assets if you like, but for many typical scenarios, they are no longer necessary.
 
 Project-wide actions are similar to the actions you would previously define in an actions asset, however instead of being an asset that you create in the Editor, they are stored as part of your project’s settings, and are configured in the Project Settings window.
 

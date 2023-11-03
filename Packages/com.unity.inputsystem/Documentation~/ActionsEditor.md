@@ -14,27 +14,18 @@ The Input Action editor is divided into three panels (marked A, B & C above).
 
 |Name|Description|
 |-|-|
-|**A: Action Maps**|Displays the list of currently defined Action Maps. Each Action Map is a collection of Actions that you can enable or disable together as a group.|
-|**B: Actions**|Displays all the actions defined in the currently selected Action Map, and the bindings associated with each Action.|
-|**C: Properties**|Displays the properties of the currently selected Action or Binding from the Actions panel. The title of this panel changes depending on whether you have an Action or a Binding selected in the Actions panel.|
-
-
-
-**Action Properties** define the type of input that relates to the action, such as whether it is a button press, or a movement axis.
-
-[**Control Schemes**](ActionsEditor.html#editing-control-schemes) refer to particular modes of input, such as "Joypad" or "Keyboard and Mouse". You can specify which bindings belong to particular control schemes. You might have one control scheme which is "Joypad", and another control scheme which is "Keyboard and Mouse". This allows you to determine which control scheme the user is currently using, so your game can respond to the user accordingly. This feature is often used to adapt the in-game UI to show the correct keys or buttons in on-screen prompts.
-
+|**(A)&nbsp;Action Maps**|Displays the list of currently defined Action Maps. Each Action Map is a collection of Actions that you can enable or disable together as a group.|
+|**(B)&nbsp;Actions**|Displays all the actions defined in the currently selected Action Map, and the bindings associated with each Action.|
+|**(C)&nbsp;Properties**|Displays the properties of the currently selected Action or Binding from the Actions panel. The title of this panel changes depending on whether you have an Action or a Binding selected in the Actions panel.|
 
 ### Configure Action Maps
-
-
 
 * To add a new Action Map, select the Add (+) icon in the header of the Action Map panel.
 * To rename an existing Action Map, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu. Note that Action Map names can't contain slashes  (`/`).
 * To delete an existing Action Map, right-click it and select __Delete__ from the context menu.
 * To duplicate an existing Action Map, right-click it and select __Duplicate__ from the context menu.
 
-### Editing Actions
+### Configure Actions
 
 * To add a new Action, select the Add (+) icon in the header of the Action column.
 * To rename an existing Action, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
@@ -45,7 +36,7 @@ If you select an Action, you can edit its properties in the right-hand pane of t
 
 ![Action Properties](Images/ActionProperties.png)
 
-### Editing Bindings
+### Edit Bindings
 
 * To add a new Binding, select the Add (+) icon on the action you want to add it to, and select the binding type from the menu that appears.
 * To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
@@ -103,32 +94,3 @@ Input Action Assets can have multiple [Control Schemes](ActionBindings.md#contro
 
 To see the Control Schemes in the Input Action Asset editor window, open the Control Scheme drop-down list in the top left of the window. This menu lets you add or remove Control Schemes to your Asset. If the Asset contains any Control Schemes, you can select a Control Scheme, and then the window only shows bindings that belong to that Scheme. If you select a binding, you can now pick the Control Schemes for which this binding should be active in the __Properties__ view to the left of the window. When you add a new Control Scheme, or select an existing Control Scheme, and then select __Edit Control Scheme…__, you can edit the name of the Control Scheme and which devices the Scheme should be active for.
 
-## Using Input Action Assets
-
-### The Automaticaly-generated InputActions API
-
-The most convenient ways to work with your Input Actions in scripts is to use the automatically generated C# API in the InputActions class.
-
-Each Action Map and Action you define in the Input Actions editor has its own corresponding C# member on the InputActions class.
-
-For example, if you have an Action Map called *"Player"* which defines *"Move"* as an Action with a 2D axis, and *"Jump"* as an button-type action, you can use a single line of code to read the values from each of these actions:
-
-```
-    // read the default "move" action, which is a 2D vector axis
-    Vector2 move = InputActions.player.move.value;
-
-    // read the default "jump" action, which is a true/false button
-    bool jump = InputActions.player.jump.isPressed;
-```
-
-**Note**: The Action Map and Actions in this example configured as defaults when you install the Input System package.
-
-### Using Actions with the `PlayerInput` component
-
-The [Player Input](PlayerInput.md) component provides a convenient way to handle input for one or multiple players. It requires you to set up all your Actions in the Input Actions editor, which you can then select in the Player Input component. The Player Input component can then automatically handle activating Action Maps and selecting Control Schemes for you.
-
-![PlayerInput](Images/PlayerInput.png)
-
-### Modifying Input Action Assets at runtime
-
-There are several ways to modify an Input Action Asset at runtime. Any modifications that you make during Play mode to an Input Action Asset do not persist in the Input Action Asset after you exit Play mode. This means you can test your application in a realistic manner in the Editor without having to worry about inadvertently modifying the asset. For examples on how to modify an Input Action Asset, see the documentation on [Creating Actions in code](Actions.md#creating-actions-in-code) and [Changing Bindings](ActionBindings.md#changing-bindings).

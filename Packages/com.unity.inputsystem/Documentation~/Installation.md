@@ -3,9 +3,10 @@ uid: input-system-installation
 ---
 # Installation guide
 
-* [Installing the package](#installing-the-package)
-* [Enabling the new input backends](#enabling-the-new-input-backends)
-* [Installing samples](#installing-samples)
+- [Installation guide](#installation-guide)
+  - [Installing the package](#installing-the-package)
+  - [Enabling the new input backends](#enabling-the-new-input-backends)
+  - [Installing samples](#installing-samples)
 
 This guide describes how to install and activate the Input System package for your Unity Project.
 

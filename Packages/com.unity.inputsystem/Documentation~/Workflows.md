@@ -8,7 +8,7 @@ There are multiple ways to use the Input System, however the primary and recomme
 
 There are other workflows which can suit more unusual situations, for example you can use the **PlayerInput component** together with Actions and Bindings which adds a further layer of abstraction, allowing you to connect actions to your event handlers without requiring any intermediate code, and easily handle multiplayer scenarios.
 
-You can choose to configure Actions and Bindings in the Editor UI, or you can set up everything through scripting. Or you can take a more direct aproach by omitting the Actions and Bindings features altogether and instead use script to directly read the state of devices.
+You can choose to configure Actions and Bindings in the Editor UI, or you can set up everything through scripting. Or you can take a more direct approach by omitting the Actions and Bindings features altogether and instead use script to directly read the state of devices.
 
 The descriptions below describe these main workflows and link to more detailed description of them.
 

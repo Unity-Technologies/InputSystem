@@ -36,18 +36,25 @@ There are various ways to access your actions from code. One of the simplest way
 
 To use `FindAction` to get references to your Actions and read user input in your script, use the following steps:
 
-1. Create a new C# script in Unity.<br/><br/>
-1. Add the Input System's "using" statement to the top of your script. This allows you to use the Input System API throughout the rest of your script:<br/><br/>`using UnityEngine.InputSystem`<br/><br/>
-1. Create some variables of type `InputAction` in your class body, one for each Action that you want to use in your script. These will store the references to each Action. A good naming convention is to add the word Action to the name of the action. For example:<br/><br/>
-`InputAction moveAction;`<br/>
-`InputAction jumpAction;`<br/><br/>
-1. In your Start() method, use `FindAction` to find the reference to each action and store it in its respective variable, for example:<br/><br/>
-`moveAction = InputSystem.actions.FindAction("Move");`<br/>
-`jumpAction = InputSystem.actions.FindAction("Jump");`<br/><br/>
-1. In your Update() method, read the value from your action variables. This allows you to write code that reads the latest values coming from your Actions each frame and respond accordingly.<br/><br/>The way you read a value depends on the Action's **value type**. For example some actions may return a 1D or 2D axis value, and other actions may return a boolean true/false value. In this example, the "Move" action returns a 2D axis, and the "Jump" action returns a boolean.<br/><br/>
-`Vector2 moveValue = moveAction.ReadValue<Vector2>();`<br/>
-`bool jumpValue = jumpAction.IsPressed();`<br/><br/>
+1. Create a new C# script in Unity.
+1. Add the Input System's "using" statement to the top of your script. This allows you to use the Input System API throughout the rest of your script:
 
+        using UnityEngine.InputSystem
+
+1. Create some variables of type `InputAction` in your class body, one for each Action that you want to use in your script. These will store the references to each Action. A good naming convention is to add the word Action to the name of the action. For example:
+    
+        InputAction moveAction;
+        InputAction jumpAction;
+
+1. In your Start() method, use `FindAction` to find the reference to each action and store it in its respective variable, for example:
+
+        moveAction = InputSystem.actions.FindAction("Move");
+        jumpAction = InputSystem.actions.FindAction("Jump");
+
+1. In your Update() method, read the value from your action variables. This allows you to write code that reads the latest values coming from your Actions each frame and respond accordingly.<br/><br/>The way you read a value depends on the Action's **value type**. For example some actions may return a 1D or 2D axis value, and other actions may return a boolean true/false value. In this example, the "Move" action returns a 2D axis, and the "Jump" action returns a boolean.
+
+        Vector2 moveValue = moveAction.ReadValue<Vector2>();
+        bool jumpValue = jumpAction.IsPressed();
 
 The example script below shows all these steps combined together into a single script:
 
