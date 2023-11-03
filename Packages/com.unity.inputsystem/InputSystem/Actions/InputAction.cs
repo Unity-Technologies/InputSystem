@@ -1065,6 +1065,38 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Read the current amount of actuation of the control that is driving this action.
+        /// </summary>
+        /// <returns>Returns the current level of control actuation (usually [0..1]) or -1 if
+        /// the control is actuated but does not support computing magnitudes.</returns>
+        /// <remarks>
+        /// Magnitudes do not make sense for all types of controls. Controls that have no meaningful magnitude
+        /// will return -1 when calling this method. Any negative magnitude value should be considered an invalid value.
+        /// <br />
+        /// The magnitude returned by an action is usually determined by the
+        /// <see cref="InputControl"/> that triggered the action, i.e. by the
+        /// control referenced from <see cref="activeControl"/>.
+        /// <br />
+        /// However, if the binding that triggered is a composite, then the composite
+        /// will determine the magnitude and not the individual control that triggered (that
+        /// one just feeds values into the composite).
+        /// </remarks>
+        /// <seealso cref="InputControl.EvaluateMagnitude()"/>
+        /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>
+        public unsafe float GetMagnitude()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->haveMagnitude)
+                    return actionStatePtr->magnitude;
+            }
+
+            return 0f;
+        }
+
+        /// <summary>
         /// Reset the action state to default.
         /// </summary>
         /// <remarks>

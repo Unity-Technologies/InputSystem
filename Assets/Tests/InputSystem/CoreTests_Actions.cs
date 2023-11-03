@@ -1920,6 +1920,11 @@ partial class CoreTests
     [TestCase(InputActionType.PassThrough)]
     public void Actions_CanReadPerformedFromAction_AsButton(InputActionType actionType, string interactions = null)
     {
+        // This test is structured the same as Actions_CanReadValueFromAction_AsButton above,
+        // but with additional testing that the phase changes are correct for the given action type and interaction,
+        // and additinally test functionality of WasPerformedThisFrame() and WasUnperformedThisFrame(), which can
+        // be different than WasPressedThisFrame() and WasReleasedThisFrame().
+
         // Set global press and release points to known values.
         InputSystem.settings.defaultButtonPressPoint = 0.5f;
         InputSystem.settings.buttonReleaseThreshold = 0.8f; // 80% puts the release point at 0.4.
@@ -2875,6 +2880,244 @@ partial class CoreTests
 
         Assert.That(action.activeControl, Is.SameAs(gamepad.buttonNorth));
         Assert.That(action.activeValueType, Is.EqualTo(gamepad.buttonNorth.valueType));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase(InputActionType.Value)]
+    [TestCase(InputActionType.Value, "Scale(factor=2)")]
+    [TestCase(InputActionType.Button)]
+    [TestCase(InputActionType.Button, "Scale(factor=2)")]
+    public void Actions_CanQueryMagnitudeFromAction_WithAxisControl(InputActionType actionType, string processors = null)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: actionType, binding: "<Gamepad>/leftTrigger", processors: processors);
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        Set(gamepad.leftTrigger, 0.123f);
+
+        const float factor = 2f;
+        var expectedValue = processors == null ? 0.123f : 0.123f * factor;
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(expectedValue).Within(0.00001));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0.123f).Within(0.00001));
+
+        Set(gamepad.leftTrigger, 0f);
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryMagnitudeFromAction_WithStickControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/leftStick");
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
+
+        var expectedValue = new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f));
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.leftStick));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(expectedValue.magnitude));
+
+        Set(gamepad.leftStick, Vector2.zero);
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase(InputActionType.Value)]
+    [TestCase(InputActionType.Value, "Scale(factor=2)")]
+    public void Actions_CanQueryMagnitudeFromAction_WithCompositeAxisControl(InputActionType actionType, string processors = null)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Adding the Scale processor to the composite binding, not the action, to make sure
+        // the scaling is only applied once instead of scaling each part binding in addition to scaling the output
+        // of the Axis composite.
+        var action = new InputAction(type: actionType);
+        action.AddCompositeBinding($"Axis(minValue=-5,maxValue=5)", processors: processors)
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/d");
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        Press(keyboard.dKey);
+
+        const float factor = 2f;
+        var expectedValue = processors == null ? 5f : 5f * factor;
+
+        Assert.That(action.activeControl, Is.SameAs(keyboard.dKey));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(expectedValue).Within(0.00001));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+
+        Release(keyboard.dKey);
+        Press(keyboard.aKey);
+
+        Assert.That(action.activeControl, Is.SameAs(keyboard.aKey));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(-expectedValue).Within(0.00001));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+
+        Release(keyboard.aKey);
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0f));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase(InputActionType.Value)]
+    [TestCase(InputActionType.Value, "ScaleVector2(x=2,y=2)")]
+    public void Actions_CanQueryMagnitudeFromAction_WithComposite2DVectorControl(InputActionType actionType, string processors = null)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Adding the Scale processor to the composite binding, not the action, to make sure
+        // the scaling is only applied once instead of scaling each part binding in addition to scaling the output
+        // of the Axis composite.
+        var action = new InputAction(type: actionType);
+        action.AddCompositeBinding("2DVector(mode=1)", processors: processors) // Mode.Digital
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        Press(keyboard.sKey);
+
+        const float factor = 2f;
+        var expectedValue = processors == null ? Vector2.down : Vector2.down * factor;
+
+        Assert.That(action.activeControl, Is.SameAs(keyboard.sKey));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(1f).Within(0.00001));
+
+        Press(keyboard.dKey);
+
+        expectedValue = processors == null ? new Vector2(1f, -1f) : new Vector2(1f, -1f) * factor;
+
+        Assert.That(action.activeControl, Is.SameAs(keyboard.dKey));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(expectedValue).Using(Vector2EqualityComparer.Instance));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(new Vector2(1f, -1f).magnitude).Within(0.00001));
+
+        Release(keyboard.dKey);
+        Release(keyboard.sKey);
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryMagnitudeFromAction_WithQuaternionControl_ReturnsInvalidMagnitude()
+    {
+        var sensor = InputSystem.AddDevice<AttitudeSensor>();
+
+        var action = new InputAction(binding: "<AttitudeSensor>/attitude");
+
+        // Verify that the default value is not Quaternion.identity but instead a zero quaternion.
+        // When the control changes to the default value, the phase changes back to Waiting,
+        // and the magnitude is explicitly cleared.
+        Assert.That(sensor.attitude.ReadDefaultValue(), Is.EqualTo(default(Quaternion)));
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
+        Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
+
+        Set(sensor.attitude, Quaternion.Euler(30f, 60f, 45f));
+
+        Assert.That(action.activeControl, Is.SameAs(sensor.attitude));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(Quaternion.Euler(30f, 60f, 45f)).Using(QuaternionEqualityComparer.Instance));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(-1f));
+
+        Set(sensor.attitude, Quaternion.identity);
+
+        Assert.That(action.activeControl, Is.SameAs(sensor.attitude));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+        Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(Quaternion.identity));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(-1f));
+
+        Set(sensor.attitude, default(Quaternion));
+
+        Assert.That(action.activeControl, Is.Null);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(action.ReadValue<Quaternion>(), Is.EqualTo(default(Quaternion)));
+        Assert.That(action.GetMagnitude(), Is.EqualTo(0f));
     }
 
     [Test]
