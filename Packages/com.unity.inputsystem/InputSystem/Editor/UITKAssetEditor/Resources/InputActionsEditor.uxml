@@ -3,7 +3,7 @@
     <ui:VisualElement name="header" class="header">
         <ui:Label text="Input Actions" display-tooltip-when-elided="true" name="title-label" class="header-label" style="width: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
         <uie:ToolbarSearchField focusable="true" name="search-actions-text-field" class="search-field" style="display: none;" />
-        <ui:Button display-tooltip-when-elided="true" name="asset-menu" style="height: 19px; width: 3px; background-color: rgba(255, 255, 255, 0); background-image: url(&apos;project://database/Assets/Tests/InputSystem/Assets/UnityDefaultTheme.tss?fileID=4456449167576933126&amp;guid=c8d2bb3a75984bf49871b90fee28739a&amp;type=3#check-dash@2x&apos;); -unity-background-scale-mode: scale-to-fit; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0);" />
+        <ui:Label tabindex="-1" display-tooltip-when-elided="true" name="asset-menu" style="background-image: url(&apos;project://database/Assets/Tests/InputSystem/Assets/UnityDefaultTheme.tss?fileID=4154780841294389669&amp;guid=c8d2bb3a75984bf49871b90fee28739a&amp;type=3#arrow-down&apos;); height: 21px; width: 12px; -unity-background-image-tint-color: rgb(255, 255, 255); background-color: rgba(255, 255, 255, 0);" />
     </ui:VisualElement>
     <ui:VisualElement name="control-schemes-toolbar-container">
         <uie:Toolbar>

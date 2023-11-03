@@ -54,11 +54,12 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
-            var assetMenuButton = m_Root.Q<Button>(name: menuButtonId);
+            var assetMenuButton = m_Root.Q<TextElement>(name: menuButtonId);
+            assetMenuButton.AddToClassList("kebab-menu-button");
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction("Reset", _ => OnReset());
-            }) { target = assetMenuButton, activators = { new ManipulatorActivationFilter() }};
+            }) { target = assetMenuButton, activators = { new ManipulatorActivationFilter() {button = MouseButton.LeftMouse} }};
 
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
@@ -76,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnReset()
         {
-            var asset= ProjectWideActionsAsset.ResetAssetToDefault();
+            var asset = ProjectWideActionsAsset.ResetAssetToDefault();
             m_PostResetAction?.Invoke(asset);
         }
 
