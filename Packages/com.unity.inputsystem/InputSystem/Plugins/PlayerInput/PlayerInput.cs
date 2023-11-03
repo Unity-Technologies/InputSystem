@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.InputSystem.UI;
