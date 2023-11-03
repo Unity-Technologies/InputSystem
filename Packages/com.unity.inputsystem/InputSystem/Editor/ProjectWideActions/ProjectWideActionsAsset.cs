@@ -32,6 +32,11 @@ namespace UnityEngine.InputSystem.Editor
 
 #endif
 
+        internal static InputActionAsset ResetAssetToDefault()
+        {
+            return CreateNewActionAsset();
+        }
+
         [InitializeOnLoadMethod]
         internal static void InstallProjectWideActions()
         {

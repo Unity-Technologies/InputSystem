@@ -12,14 +12,17 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string saveButtonId = "save-asset-toolbar-button";
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
+        private const string menuButtonId = "asset-menu";
 
         Action m_PostSaveAction;
+        Action<InputActionAsset> m_PostResetAction;
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction)
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction, Action<InputActionAsset> postResetAction)
             : base(stateContainer)
         {
             m_Root = root;
             m_PostSaveAction = mpostSaveAction;
+            m_PostResetAction = postResetAction;
             BuildUI();
         }
 
@@ -51,6 +54,12 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
+            var assetMenuButton = m_Root.Q<Button>(name: menuButtonId);
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendAction("Reset", _ => OnReset());
+            }) { target = assetMenuButton, activators = { new ManipulatorActivationFilter() }};
+
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
             stateContainer.StateChanged += OnStateChanged;
@@ -63,6 +72,12 @@ namespace UnityEngine.InputSystem.Editor
                     controlSchemes = controlSchemes,
                     selectedControlSchemeIndex = state.selectedControlSchemeIndex
                 });
+        }
+
+        private void OnReset()
+        {
+            var asset= ProjectWideActionsAsset.ResetAssetToDefault();
+            m_PostResetAction?.Invoke(asset);
         }
 
         private void OnSaveButton()

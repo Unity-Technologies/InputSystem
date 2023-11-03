@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer, PostSaveAction);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer, PostSaveAction, OnResetAsset);
             stateContainer.Initialize();
         }
 
@@ -202,6 +202,12 @@ namespace UnityEngine.InputSystem.Editor
             m_IsDirty = false;
             m_AssetJson = File.ReadAllText(m_AssetPath);
             UpdateWindowTitle();
+        }
+
+        private void OnResetAsset(InputActionAsset newAsset)
+        {
+            var serializedAsset = new SerializedObject(newAsset);
+            m_State = new InputActionsEditorState(serializedAsset);
         }
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
