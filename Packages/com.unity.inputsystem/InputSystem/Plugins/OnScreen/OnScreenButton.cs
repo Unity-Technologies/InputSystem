@@ -17,11 +17,13 @@ namespace UnityEngine.InputSystem.OnScreen
     {
         public void OnPointerUp(PointerEventData eventData)
         {
+            Debug.Log($"OnScreenButton.OnPointerUp frame{Time.frameCount}");
             SendValueToControl(0.0f);
         }
 
         public void OnPointerDown(PointerEventData eventData)
         {
+            Debug.Log($"OnScreenButton.OnPointerDown frame{Time.frameCount}");
             SendValueToControl(1.0f);
         }
 
