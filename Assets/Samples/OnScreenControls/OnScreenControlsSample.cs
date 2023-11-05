@@ -12,48 +12,55 @@
 // or a physical gamepad.
 //
 // Note that on-screen controls 1 and 2 on the other hand are bound to a keyboard control layout and therefore
-// generates input events similar to a physical hardware keyboard. 
+// generates input events similar to a physical hardware keyboard.
 //
 // When actions defined for this sample are triggered, a log message is generated to show when the actions
 // are performed.
+//
+// Note that actions for this example have been setup to allow either on-screen controls or physical gamepad/keyboard
+// controls to be used interchangeably.
 
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.OnScreen;
 
 public sealed class OnScreenControlsSample : MonoBehaviour
 {
-    public InputActionAsset inputActions;
+    public InputActionReference mode1, mode2, leftStick, rightStick, x, y, a, b;
+    public OnScreenControlUpdateMode updateMode;
 
-    List<InputAction> m_EnabledActions;
-
-    void OnEnable()
+    void UpdateCurrentMode(OnScreenControlUpdateMode mode)
     {
-        // Enable all actions in associated inputActions and add an event handler to log when action is performed.
-        m_EnabledActions = new List<InputAction>();
-        foreach (var actionMap in inputActions.actionMaps)
-        {
-            foreach (var action in actionMap)
-            {
-                action.Enable();
-                action.performed += Log;
-                m_EnabledActions.Add(action);
-            }
-        }
+        Debug.Log($"Switched to OnScreenControl Update Mode: {mode.ToString()}");
+        foreach (var onScreenControl in GetComponentsInChildren<OnScreenControl>())
+            onScreenControl.updateMode = mode;
     }
 
-    void OnDisable()
+    void EnableAndLogPerformed(InputActionReference reference)
     {
-        // Revert action handler and disable the action to clean-up from what we did in OnEnable().
-        foreach (var action in m_EnabledActions)
-        {
-            action.performed -= Log;
-            action.Disable();
-        }
+        reference.action.Enable();
+        reference.action.performed += Performed;
     }
-    
-    void Log(InputAction.CallbackContext context)
+
+    void Start()
     {
-        Debug.Log($"Performed {context.action.name} in frame:{Time.frameCount}");
+        UpdateCurrentMode(updateMode);
+        EnableAndLogPerformed(mode1);
+        mode1.action.performed += (_) => UpdateCurrentMode(OnScreenControlUpdateMode.QueueEvents);
+        EnableAndLogPerformed(mode2);
+        mode2.action.performed += (_) => UpdateCurrentMode(OnScreenControlUpdateMode.ChangeState);
+
+        EnableAndLogPerformed(x);
+        EnableAndLogPerformed(y);
+        EnableAndLogPerformed(a);
+        EnableAndLogPerformed(b);
+
+        EnableAndLogPerformed(leftStick);
+        EnableAndLogPerformed(rightStick);
+    }
+
+    void Performed(InputAction.CallbackContext context)
+    {
+        Debug.Log($"Performed action={context.action.name}, Time.frameCount={Time.frameCount}, context.time={context.time}, Time.time={Time.time}");
     }
 }

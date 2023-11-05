@@ -185,6 +185,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     break;
             }
 
+            Debug.Log($"OnScreenStick.OnPointerDown Time.frameCount={Time.frameCount}, Time.time={Time.time}"); // TODO: Remove, temporary to show frame time update
             var newPos = new Vector2(delta.x / movementRange, delta.y / movementRange);
             SendValueToControl(newPos);
         }

@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.OnScreen
         /// it. This is the default update mode to not break backwards compability.
         /// </remarks>
         QueueEvents,
-        
+
         /// <summary>
         /// Using this update mode, control state updates are managed via
         /// <see cref="InputState.Change(InputDevice,InputEventPtr,InputUpdateType)"/>
@@ -42,10 +42,10 @@ namespace UnityEngine.InputSystem.OnScreen
         /// </summary>
         /// <remarks>
         /// This is the recommended update mode to use when the associated target control supports it.
-        /// </remarks> 
+        /// </remarks>
         ChangeState
     }
-    
+
     /// <summary>
     /// Base class for on-screen controls.
     /// </summary>
@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.OnScreen
                 }
             }
         }
-        
+
         /// <summary>
         /// The control path (see <see cref="InputControlPath"/>) for the control that the on-screen
         /// control will feed input into.
@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.OnScreen
         private OnScreenControl m_NextControlOnDevice;
         private InputEventPtr m_InputEventPtr;
         private OnScreenControlUpdateMode m_UpdateMode;
-        
+
         /// <summary>
         /// Accessor for the <see cref="controlPath"/> of the component. Must be implemented by subclasses.
         /// </summary>
@@ -239,23 +239,23 @@ namespace UnityEngine.InputSystem.OnScreen
         protected void SendValueToControl<TValue>(TValue value)
             where TValue : struct
         {
-             if (m_Control == null)
+            if (m_Control == null)
                 return;
 
-             if (!(m_Control is InputControl<TValue> inputControl))
-                 throw new ArgumentException(
-                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
-             
-             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
-             inputControl.WriteValueIntoEvent(value, m_InputEventPtr);
-             Change(m_InputEventPtr);
+            if (!(m_Control is InputControl<TValue> inputControl))
+                throw new ArgumentException(
+                    $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
+
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
+            inputControl.WriteValueIntoEvent(value, m_InputEventPtr);
+            Change(m_InputEventPtr);
         }
 
         protected void SentDefaultValueToControl()
         {
             if (m_Control == null)
                 return;
-            
+
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             m_Control.ResetToDefaultStateInEvent(m_InputEventPtr);
             Change(m_InputEventPtr);
@@ -304,7 +304,7 @@ namespace UnityEngine.InputSystem.OnScreen
                 break;
             }
         }
-        
+
         private void Change(InputEventPtr inputEventPtr)
         {
             switch (m_UpdateMode)
