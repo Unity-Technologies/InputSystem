@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_ActionsProperty);
             var actionsWereChanged = false;
-            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || CheckIfActionAssetChanged())
             {
                 OnActionAssetChange();
                 actionsWereChanged = true;
@@ -228,6 +228,22 @@ namespace UnityEngine.InputSystem.Editor
             // Debug UI.
             if (EditorApplication.isPlaying)
                 DoDebugUI();
+        }
+
+        // This checks changes that are not captured by BeginChangeCheck/EndChangeCheck.
+        // One such case is when the user triggers a "Reset" on the component.
+        bool CheckIfActionAssetChanged()
+        {
+            if (m_ActionsProperty.objectReferenceValue != null)
+            {
+                var assetInstanceID = m_ActionsProperty.objectReferenceValue.GetInstanceID();
+                bool result = assetInstanceID != m_ActionAssetInstanceID;
+                m_ActionAssetInstanceID = (int)assetInstanceID;
+                return result;
+            }
+
+            m_ActionAssetInstanceID = -1;
+            return false;
         }
 
         private void DoHelpCreateAssetUI()
@@ -566,6 +582,7 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
+        [NonSerialized] private int m_ActionAssetInstanceID;
     }
 }
 #endif // UNITY_EDITOR
