@@ -19,6 +19,8 @@ however, it has to be formatted properly to pass verification tests.
 - Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
 - Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
 - Re-enabled some UI tests that were disabled on iOS.
+- Reorganized package Project Settings so that "Input System Package" setting node contains "Input Actions" and "Settings" becomes a child node when Project-wide Actions are available. For Unity versions where Project-wide Actions are not available, the settings structure remains unchanged.
+- Make Project-wide Actions the default actions for Player Input.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
