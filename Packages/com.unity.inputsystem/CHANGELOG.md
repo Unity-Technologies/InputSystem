@@ -40,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed [ISX-1661](https://jira.unity3d.com/browse/ISX-1661) where undoing duplications of action maps caused console errors
 - Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
 - Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
+- Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
 
 
 ## [1.8.0-pre.1] - 2023-09-04
