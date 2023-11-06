@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
             m_StateContainer.StateChanged += OnStateChanged;
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, null);
+            var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
             view.postResetAction += OnResetAsset;
             m_StateContainer.Initialize();
 
