@@ -96,7 +96,8 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
             m_StateContainer.StateChanged += OnStateChanged;
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            new InputActionsEditorView(m_RootVisualElement, m_StateContainer, null, OnResetAsset);
+            var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, null);
+            view.postResetAction += OnResetAsset;
             m_StateContainer.Initialize();
 
             // Hide the save / auto save buttons in the project wide input actions

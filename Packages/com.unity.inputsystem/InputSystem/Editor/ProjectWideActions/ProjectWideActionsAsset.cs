@@ -32,11 +32,6 @@ namespace UnityEngine.InputSystem.Editor
 
 #endif
 
-        internal static InputActionAsset ResetAssetToDefault()
-        {
-            return CreateNewActionAsset();
-        }
-
         [InitializeOnLoadMethod]
         internal static void InstallProjectWideActions()
         {
@@ -56,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
             return CreateNewActionAsset();
         }
 
-        private static InputActionAsset CreateNewActionAsset()
+        internal static InputActionAsset CreateNewActionAsset()
         {
             var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath));
 

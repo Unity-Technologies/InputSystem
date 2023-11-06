@@ -15,15 +15,13 @@ namespace UnityEngine.InputSystem.Editor
         private const string menuButtonId = "asset-menu";
 
         Action m_PostSaveAction;
-        Action<InputActionAsset> m_PostResetAction;
+        internal Action<InputActionAsset> postResetAction;
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction, Action<InputActionAsset> postResetAction = null)
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction)
             : base(stateContainer)
         {
             m_Root = root;
             m_PostSaveAction = mpostSaveAction;
-            if (postResetAction != null)
-                m_PostResetAction = postResetAction;
             BuildUI();
         }
 
@@ -57,7 +55,8 @@ namespace UnityEngine.InputSystem.Editor
 
 
             var assetMenuButton = m_Root.Q<VisualElement>(name: menuButtonId);
-            assetMenuButton.visible = m_PostResetAction != null;
+            var isGlobalAsset = stateContainer.GetState().serializedObject.targetObject.name == "ProjectWideInputActions";
+            assetMenuButton.visible = isGlobalAsset;
             assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
@@ -80,8 +79,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnReset()
         {
-            var asset = ProjectWideActionsAsset.ResetAssetToDefault();
-            m_PostResetAction?.Invoke(asset);
+            Dispatch(Commands.ResetGlobalInputAsset(postResetAction));
         }
 
         private void OnSaveButton()
