@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
 - Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
 - Re-enabled some UI tests that were disabled on iOS.
+- Reorganized package Project Settings so that "Input System Package" setting node contains "Input Actions" and "Settings" becomes a child node when Project-wide Actions are available. For Unity versions where Project-wide Actions are not available, the settings structure remains unchanged.
 
 ### Added
 - Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
@@ -35,10 +36,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
 - Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
 - Fixed case [ISXB-628](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-628) (OnIMECompositionChange does not return an empty string on accept when using Microsoft IME) by clarifying expectations and intended usage for the IME composition change event.
-- Fixed case [ISX-1626](https://jira.unity3d.com/browse/ISX-1626) where the expanded/collapsed state of items in the input action editor was not properly saved between rebuilds of the UI.
-- Fixed case [ISX-1668] (The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
-- Fixed [ISX-1661](https://jira.unity3d.com/browse/ISX-1661) where undoing duplications of action maps caused console errors
+- Fixed issue where the expanded/collapsed state of items in the input action editor was not properly saved between rebuilds of the UI.
+- Fixed issue where The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
+- Fixed an issue where undoing duplications of action maps caused console errors.
 - Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
+- Fix for UITK Input Action Editor binding 'Listen' button which wasn't working in the case for Control Type 'Any'.
 - Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
 - Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
 
