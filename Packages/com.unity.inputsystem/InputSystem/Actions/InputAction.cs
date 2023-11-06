@@ -501,7 +501,6 @@ namespace UnityEngine.InputSystem
         /// only ever use <see cref="InputActionPhase.Performed"/> and not go to <see
         /// cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Canceled"/> (as
         /// pass-through actions do not follow the start-performed-canceled model in general).
-        /// Also, interactions can choose their
         ///
         /// While an action is disabled, its phase is <see cref="InputActionPhase.Disabled"/>.
         /// </remarks>

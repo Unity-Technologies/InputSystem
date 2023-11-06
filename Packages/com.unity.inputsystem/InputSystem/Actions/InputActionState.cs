@@ -2145,10 +2145,10 @@ namespace UnityEngine.InputSystem
         /// Multiple interactions on the same binding can be started concurrently but the
         /// first interaction that starts will get to drive an action until it either cancels
         /// or performs the action.
-        /// 
+        ///
         /// If an interaction driving an action performs it, all interactions will reset and
         /// go back waiting.
-        /// 
+        ///
         /// If an interaction driving an action cancels it, the next interaction in the list which
         /// has already started will get to drive the action (example: a TapInteraction and a
         /// SlowTapInteraction both start and the TapInteraction gets to drive the action because
@@ -2301,7 +2301,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="newPhase">New phase to transition to.</param>
         /// <param name="trigger">Trigger that caused the change in phase.</param>
-        /// <param name="phaseAfterPerformedOrCanceled"></param>
+        /// <param name="phaseAfterPerformedOrCanceled">The phase to immediately transition to after <paramref name="newPhase"/>
+        /// when that is <see cref="InputActionPhase.Performed"/> or <see cref="InputActionPhase.Canceled"/> (<see cref="InputActionPhase.Waiting"/>
+        /// by default).</param>
         /// <remarks>
         /// The change in phase is visible to observers, i.e. on the various callbacks and notifications.
         ///
