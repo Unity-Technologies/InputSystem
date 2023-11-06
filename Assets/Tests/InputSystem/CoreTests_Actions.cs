@@ -1691,145 +1691,207 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanDistinguishCanceledAndUnperformedInCurrentFrame()
+    [TestCase(InputActionType.Value)]
+    [TestCase(InputActionType.Button)]
+    [TestCase(InputActionType.PassThrough)]
+    public void Actions_CanDistinguishCanceledAndUnperformedInCurrentFrame(InputActionType actionType)
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var valueAction = new InputAction(binding: "<Gamepad>/buttonSouth");
-        var holdAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.5)");
+        var defaultAction = new InputAction(type: actionType, binding: "<Gamepad>/buttonSouth");
+        var pressAction = new InputAction(type: actionType, binding: "<Gamepad>/buttonSouth", interactions: "press");
+        var holdAction = new InputAction(type: actionType, binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.5)");
 
-        valueAction.Enable();
+        defaultAction.Enable();
+        pressAction.Enable();
         holdAction.Enable();
 
-        using (var valueTrace = new InputActionTrace(valueAction))
+        Assert.That(defaultAction.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(pressAction.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(holdAction.phase, Is.EqualTo(InputActionPhase.Waiting));
+
+        using (var defaultTrace = new InputActionTrace(defaultAction))
+        using (var pressTrace = new InputActionTrace(pressAction))
         using (var holdTrace = new InputActionTrace(holdAction))
         {
-            // Press button. Both actions should be considered pressed, but the
+            // Press button. Actions should be considered pressed, but the
             // hold action should not be considered performed yet.
             Press(gamepad.buttonSouth);
 
-            Assert.That(valueTrace, Started(valueAction).AndThen(Performed(valueAction)));
+            Assert.That(defaultTrace, actionType != InputActionType.PassThrough
+                ? Started(defaultAction).AndThen(Performed(defaultAction))
+                : Performed(defaultAction));
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.True);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.True);
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+
+            Assert.That(pressTrace, Started(pressAction).AndThen(Performed(pressAction)));
+            Assert.That(pressAction.WasPressedThisFrame(), Is.True);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+
             Assert.That(holdTrace, Started(holdAction));
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.True);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.False);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.True);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
             Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
 
-            valueTrace.Clear();
+            defaultTrace.Clear();
+            pressTrace.Clear();
             holdTrace.Clear();
 
             // Keep holding button but for less than the hold duration needed.
             InputSystem.Update();
 
-            Assert.That(valueTrace, Is.Empty);
+            Assert.That(defaultTrace, Is.Empty);
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+
+            Assert.That(pressTrace, Is.Empty);
+            Assert.That(pressAction.WasPressedThisFrame(), Is.False);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+
             Assert.That(holdTrace, Is.Empty);
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.False);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.False);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
             Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+
+            defaultTrace.Clear();
+            pressTrace.Clear();
+            holdTrace.Clear();
 
             // Release button, the actions should cancel. The hold action should not be considered unperformed
             // since it was not held long enough to be performed.
             Release(gamepad.buttonSouth);
 
-            Assert.That(valueTrace, Canceled(valueAction));
+            Assert.That(defaultTrace, actionType != InputActionType.PassThrough
+                ? Canceled(defaultAction)
+                : Performed(defaultAction));
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.True);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.EqualTo(actionType == InputActionType.PassThrough));
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.EqualTo(actionType == InputActionType.Button));
+
+            Assert.That(pressTrace, Canceled(pressAction));
+            Assert.That(pressAction.WasPressedThisFrame(), Is.False);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.True);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.True);
+
             Assert.That(holdTrace, Canceled(holdAction));
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.False);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.True);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
             Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
 
-            valueTrace.Clear();
+            defaultTrace.Clear();
+            pressTrace.Clear();
             holdTrace.Clear();
 
             // Press button again. Same assertions as before.
             Press(gamepad.buttonSouth);
 
-            Assert.That(valueTrace, Started(valueAction).AndThen(Performed(valueAction)));
+            Assert.That(defaultTrace, actionType != InputActionType.PassThrough
+                ? Started(defaultAction).AndThen(Performed(defaultAction))
+                : Performed(defaultAction));
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.True);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.True);
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+
+            Assert.That(pressTrace, Started(pressAction).AndThen(Performed(pressAction)));
+            Assert.That(pressAction.WasPressedThisFrame(), Is.True);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+
             Assert.That(holdTrace, Started(holdAction));
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.True);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.False);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.True);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
             Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
 
-            valueTrace.Clear();
+            defaultTrace.Clear();
+            pressTrace.Clear();
             holdTrace.Clear();
 
             // Hold button for long enough.
             currentTime += 1;
             InputSystem.Update();
 
-            Assert.That(valueTrace, Is.Empty);
+            Assert.That(defaultTrace, Is.Empty);
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+
+            Assert.That(pressTrace, Is.Empty);
+            Assert.That(pressAction.WasPressedThisFrame(), Is.False);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+
             Assert.That(holdTrace, Performed(holdAction));
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.False);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.False);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.True);
             Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
 
-            valueTrace.Clear();
+            defaultTrace.Clear();
+            pressTrace.Clear();
             holdTrace.Clear();
 
             // Keep holding button.
             InputSystem.Update();
 
-            Assert.That(valueTrace, Is.Empty);
+            Assert.That(defaultTrace, Is.Empty);
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+
+            Assert.That(pressTrace, Is.Empty);
+            Assert.That(pressAction.WasPressedThisFrame(), Is.False);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+
             Assert.That(holdTrace, Is.Empty);
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.False);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.False);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
             Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
 
-            valueTrace.Clear();
+            defaultTrace.Clear();
+            pressTrace.Clear();
             holdTrace.Clear();
 
             // Release button, the actions should cancel. The hold action should now be considered unperformed
             // since it was held long enough to be performed.
             Release(gamepad.buttonSouth);
 
-            Assert.That(valueTrace, Canceled(valueAction));
+            Assert.That(defaultTrace, actionType != InputActionType.PassThrough
+                ? Canceled(defaultAction)
+                : Performed(defaultAction));
+            Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasReleasedThisFrame(), Is.True);
+            Assert.That(defaultAction.WasPerformedThisFrame(), Is.EqualTo(actionType == InputActionType.PassThrough));
+            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.EqualTo(actionType == InputActionType.Button));
+
+            Assert.That(pressTrace, Canceled(pressAction));
+            Assert.That(pressAction.WasPressedThisFrame(), Is.False);
+            Assert.That(pressAction.WasReleasedThisFrame(), Is.True);
+            Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasUnperformedThisFrame(), Is.True);
+
             Assert.That(holdTrace, Canceled(holdAction));
-
-            Assert.That(valueAction.WasPressedThisFrame(), Is.False);
-            Assert.That(valueAction.WasReleasedThisFrame(), Is.True);
-            Assert.That(valueAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(valueAction.WasUnperformedThisFrame(), Is.False);
-
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
