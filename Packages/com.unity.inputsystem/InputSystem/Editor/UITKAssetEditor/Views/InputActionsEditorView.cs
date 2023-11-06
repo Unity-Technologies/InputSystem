@@ -55,8 +55,10 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
-            var assetMenuButton = m_Root.Q<TextElement>(name: menuButtonId);
+
+            var assetMenuButton = m_Root.Q<VisualElement>(name: menuButtonId);
             assetMenuButton.visible = m_PostResetAction != null;
+            assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction("Reset", _ => OnReset());

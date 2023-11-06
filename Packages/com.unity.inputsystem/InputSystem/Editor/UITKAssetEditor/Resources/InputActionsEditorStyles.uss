@@ -1,9 +1,14 @@
-/*****************************************************************************/
-/* Global                                                                      */
-/*****************************************************************************/
-
 .unity-input-actions-editor-hidden {
     display: none;
+}
+
+.asset-menu-button-dark-theme {
+    background-image: resource('d__Menu.png');
+}
+
+.asset-menu-button {
+    background-image: resource('_Menu.png');
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .body-panel-container {
@@ -152,10 +157,6 @@
     display: initial;
 }
 
-.asset-menu-button {
-    background-image: resource('d__Menu.png');
-}
-
 .name-and-parameters-list-view .up {
     background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/ChevronUp.png');
 }
@@ -175,12 +176,12 @@
 .name-and-parameters-list-view .delete {
     background-image: resource('Toolbar Minus.png');
 }
+
 .name-and-parameters-list-view .deleteDarkTheme {
     background-image: resource('d_Toolbar Minus.png');
 }
 
 .search-field {
-    /* hide while not implemented */
     display: none;
     width: 190px;
 }
