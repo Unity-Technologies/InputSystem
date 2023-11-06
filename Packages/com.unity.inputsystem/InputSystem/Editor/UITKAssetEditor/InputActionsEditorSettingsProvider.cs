@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
-        public const string kSettingsPath = "Project/Input System Package/Actions";
+        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
@@ -118,12 +118,7 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
-            var provider = new InputActionsEditorSettingsProvider(kSettingsPath, SettingsScope.Project)
-            {
-                label = "Input Actions"
-            };
-
-            return provider;
+            return new InputActionsEditorSettingsProvider(kSettingsPath, SettingsScope.Project);
         }
     }
 }
