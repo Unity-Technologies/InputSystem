@@ -23,6 +23,7 @@ namespace UnityEngine.InputSystem.OnScreen
         public void OnPointerDown(PointerEventData eventData)
         {
             Debug.Log($"OnScreenButton.OnPointerDown Time.frameCount={Time.frameCount}, Time.time={Time.time}"); // TODO: Remove, temporary to show frame time update
+
             SendValueToControl(1.0f);
         }
 
