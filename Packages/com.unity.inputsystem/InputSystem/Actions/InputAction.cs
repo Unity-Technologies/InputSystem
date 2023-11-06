@@ -1355,14 +1355,25 @@ namespace UnityEngine.InputSystem
         /// interaction(s) driving the action (including the default interaction if no specific interaction
         /// has been added to the action or binding).
         ///
-        /// For example, let's say the action is bound to the thumbstick and that the binding has a
-        /// custom Sector interaction assigned to it such that it only performs in the forward sector area past a button press threshold.
-        /// In the frame where the thumbstick is pushed forward, both <see cref="WasPressedThisFrame"/> will be true
-        /// (because the thumbstick actuation is now considered pressed) and <see cref="WasPerformedThisFrame"/> will be true
-        /// (because the thumbstick is in the forward sector). If the thumbstick is then moved to the left in a sweeping motion,
-        /// <see cref="IsPressed"/> will still be true. However, <c>WasUnperformedThisFrame</c> will also be true (because the thumbstick
-        /// is no longer in the forward sector while still crossed the button press threshold) and only in the frame where the thumbstick
-        /// was no longer within the forward sector.
+        /// For example, let's say the action is bound to the space bar and that the binding has a
+        /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
+        /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
+        /// but <see cref="WasPerformedThisFrame"/> will still be false (because the hold has not been performed yet).
+        /// If at that time the space bar is released, <see cref="WasReleasedThisFrame"/> will be true (because the
+        /// button/key is now released) but <c>WasUnperformedThisFrame</c> will still be false (because the hold
+        /// had not been performed yet). If instead the space bar is held down for long enough for the hold interaction
+        /// and then released, <c>WasUnperformedThisFrame</c> will be true (because the action is no longer performed)
+        /// and only in the frame where the hold performed.
+        ///
+        /// For another example where the action could be considered pressed but also unperformed, let's say the action
+        /// is bound to the thumbstick and that the binding has a Sector interaction assigned to it such that it only
+        /// performs in the forward sector area past a button press threshold. In the frame where the thumbstick is
+        /// pushed forward, both <see cref="WasPressedThisFrame"/> will be true (because the thumbstick actuation is
+        /// now considered pressed) and <see cref="WasPerformedThisFrame"/> will be true (because the thumbstick is in
+        /// the forward sector). If the thumbstick is then moved to the left in a sweeping motion, <see cref="IsPressed"/>
+        /// will still be true. However, <c>WasUnperformedThisFrame</c> will also be true (because the thumbstick is
+        /// no longer in the forward sector while still crossed the button press threshold) and only in the frame where
+        /// the thumbstick was no longer within the forward sector.
         ///
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (that is, until the next
