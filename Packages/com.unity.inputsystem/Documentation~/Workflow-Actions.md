@@ -22,7 +22,7 @@ Actions and Bindings allows you to separate the conceptual actions that you want
 
 ### The default Actions
 
-The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such asKeyboard, Mouse, Gamepad, Touchscreen and XR.
+The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
 
 This means, in many cases, you can start scripting with the Input System without any configuration by referring to the names of the default actions that are already configured for you.
 
