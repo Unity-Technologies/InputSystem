@@ -12,6 +12,18 @@ Open the Input Actions settings by going to **Edit** > **Project Settings** > **
 
 The Input Action editor is divided into three panels (marked A, B & C above).
 
+### The default Actions
+
+The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such asKeyboard, Mouse, Gamepad, Touchscreen and XR.
+
+When you first open the Input Actions Editor, you can see the default action maps and actions displayed.
+
+These default actions mean that in many cases, you can start scripting with the Input System without any configuration by referring to the names of the default actions that are already configured for you. You can also rename and reconfigure the default actions, or delete these default configurations to suit your needs.
+
+If you’d like to delete all the default actions so that you can start from an empty configuration, you don’t need to delete the individual actions one-by-one. You can delete the default Action Maps, which deletes all the Actions contained in those maps in one go.
+
+### The Actions Editor panels
+
 |Name|Description|
 |-|-|
 |**(A)&nbsp;Action Maps**|Displays the list of currently defined Action Maps. Each Action Map is a collection of Actions that you can enable or disable together as a group.|
@@ -93,4 +105,3 @@ Input Action Assets can have multiple [Control Schemes](ActionBindings.md#contro
 ![Control Scheme Properties](Images/ControlSchemeProperties.png)
 
 To see the Control Schemes in the Input Action Asset editor window, open the Control Scheme drop-down list in the top left of the window. This menu lets you add or remove Control Schemes to your Asset. If the Asset contains any Control Schemes, you can select a Control Scheme, and then the window only shows bindings that belong to that Scheme. If you select a binding, you can now pick the Control Schemes for which this binding should be active in the __Properties__ view to the left of the window. When you add a new Control Scheme, or select an existing Control Scheme, and then select __Edit Control Scheme…__, you can edit the name of the Control Scheme and which devices the Scheme should be active for.
-

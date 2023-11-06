@@ -32,3 +32,7 @@ If you used older versions of the Input System package, you might want to note t
 * You do not need a public field with an assigned Action asset to get a reference to the actions, because the `InputSystem.actions` always references the project-wide actions.
 
 * The script does not enable or disable action maps. Project-wide action maps are enabled by default. This means unlike with the older Action assets, you do not need to enable individual action maps in your script before being able to use them. You may still want to disable or enable action maps if you want to make use of different types of input in different parts of your project.
+
+-------
+
+> __Note:__ The documentation in this pre-release has not been fully updated to reflect the newest features in this package. In particular, not all pages have been updated to reflect the newer, simpler, project-wide actions workflow. This means some pages will refer to outdated workflows such as using an Actions Asset, or creating Actions as a field in your script. In most cases, if you are using the new project-wide actions, you can use `InputSystem.actions` to reference the project-wide actions, instead of using an Actions Asset or creating Actions in code.

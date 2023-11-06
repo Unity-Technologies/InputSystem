@@ -20,7 +20,7 @@ This workflow uses the following steps:
 
 These steps are shown in the example script below:
 
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.InputSystem;  // 1. The Input System "using" statement
 

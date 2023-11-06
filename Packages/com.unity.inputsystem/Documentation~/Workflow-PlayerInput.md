@@ -20,7 +20,7 @@ In the above example image, you can see the PlayerInput component set up to map 
 
 This is an example of the script which would provide an implementation of these methods
 
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 

@@ -11,7 +11,7 @@ It can be useful if you want a quick implementation with one specific type of de
 
 You can directly read the values from connected devices by referring to the device’s [controls](Controls.html) and reading the values they are currently generating, using code like this:
 
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 

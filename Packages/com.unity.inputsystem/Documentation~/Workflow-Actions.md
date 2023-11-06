@@ -42,7 +42,7 @@ To use `FindAction` to get references to your Actions and read user input in you
         using UnityEngine.InputSystem
 
 1. Create some variables of type `InputAction` in your class body, one for each Action that you want to use in your script. These will store the references to each Action. A good naming convention is to add the word Action to the name of the action. For example:
-    
+
         InputAction moveAction;
         InputAction jumpAction;
 
@@ -58,7 +58,7 @@ To use `FindAction` to get references to your Actions and read user input in you
 
 The example script below shows all these steps combined together into a single script:
 
-```
+```CSharp
 using UnityEngine;
 using UnityEngine.InputSystem;
 
