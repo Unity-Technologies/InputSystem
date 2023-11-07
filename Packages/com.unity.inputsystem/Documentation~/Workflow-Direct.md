@@ -5,7 +5,7 @@ uid: input-system-workflow-direct
 
 <img src="Images/Workflow-Direct.png" height="200px">
 
-This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](ActionsEditor), so you do not benefit from all the features come with [Actions](Actions).
+This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](ActionsEditor.md), so you do not benefit from all the features come with [Actions](Actions).
 
 It can be useful if you want a quick implementation with one specific type of device. It's generally not the best choice if you want to provide your users with multiple types of input or if you want to target multiple platforms.
 
