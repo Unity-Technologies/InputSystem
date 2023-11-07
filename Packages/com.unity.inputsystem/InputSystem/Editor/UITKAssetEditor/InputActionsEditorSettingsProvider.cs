@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputActionsEditorSettingsProvider : SettingsProvider
     {
-        public const string kSettingsPath = "Project/Input System Package/Actions";
+        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath;
 
         [SerializeField] InputActionsEditorState m_State;
         VisualElement m_RootVisualElement;
@@ -96,7 +96,8 @@ namespace UnityEngine.InputSystem.Editor
             m_StateContainer = new StateContainer(m_RootVisualElement, m_State);
             m_StateContainer.StateChanged += OnStateChanged;
             m_RootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            new InputActionsEditorView(m_RootVisualElement, m_StateContainer, null);
+            var view = new InputActionsEditorView(m_RootVisualElement, m_StateContainer);
+            view.postResetAction += OnResetAsset;
             m_StateContainer.Initialize();
 
             // Hide the save / auto save buttons in the project wide input actions
@@ -109,15 +110,16 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void OnResetAsset(InputActionAsset newAsset)
+        {
+            var serializedAsset = new SerializedObject(newAsset);
+            m_State = new InputActionsEditorState(serializedAsset);
+        }
+
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {
-            var provider = new InputActionsEditorSettingsProvider(kSettingsPath, SettingsScope.Project)
-            {
-                label = "Input Actions"
-            };
-
-            return provider;
+            return new InputActionsEditorSettingsProvider(kSettingsPath, SettingsScope.Project);
         }
     }
 }

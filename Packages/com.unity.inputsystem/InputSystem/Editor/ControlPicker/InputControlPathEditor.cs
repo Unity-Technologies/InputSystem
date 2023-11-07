@@ -109,7 +109,19 @@ namespace UnityEngine.InputSystem.Editor
             editButtonRect.width = 20;
             editButtonRect.height = 15;
 
-            var path = serializedProperty.stringValue;
+            var path = String.Empty;
+            try
+            {
+                path = serializedProperty.stringValue;
+            }
+            catch
+            {
+                // This try-catch block is a temporary fix for ISX-1436
+                // The plan is to convert InputControlPathEditor entirely to UITK and therefore this fix will
+                // no longer be required.
+                return;
+            }
+
             ////TODO: this should be cached; generates needless GC churn
             var displayName = InputControlPath.ToHumanReadableString(path);
 
