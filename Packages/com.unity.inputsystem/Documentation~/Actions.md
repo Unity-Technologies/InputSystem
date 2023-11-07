@@ -30,7 +30,7 @@ When scripting with Actions in the Input System, there are number of important c
 
 |Class|Description|
 |-----|-----------|
-|[`InputSystem.actions`](../api/UnityEngine.InputSystem.actions.html)|A reference to the set of actions configured in the [Input Actions editor](ActionsEditor.md). |
+|`InputSystem.actions`|A reference to the set of actions configured in the [Input Actions editor](ActionsEditor.md). |
 |[`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html)|A named collection of Actions. The API equivalent to an entry in the "Action Maps" column of the [Input Actions editor](ActionsEditor.md).|
 |[`InputAction`](../api/UnityEngine.InputSystem.InputAction.html)|A named Action that can return the current value of the controls that it is bound to, or can trigger callbacks in response to input. The API equivalent to an entry in the "Actions" column of the [Input Actions editor](ActionsEditor.md).|
 |[`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html)|The relationship between an Action and the specific device controls for which it receives input. For more information about Bindings and how to use them, see [Action Bindings](ActionBindings.md).|
