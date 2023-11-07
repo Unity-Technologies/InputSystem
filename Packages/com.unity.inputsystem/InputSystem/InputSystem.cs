@@ -3315,7 +3315,7 @@ namespace UnityEngine.InputSystem
         /// <returns>Returns the action with the given ID or <see langword="null"/> if no action could be found with the given ID.</returns>
         /// <remarks>
         /// For the action to be found, the action must be part of an <see cref="InputActionAsset"/>
-        /// that has had any of its actions enabled at some point. For actions that are not part of an asset, the
+        /// that has had any of its actions enabled at some point. For embedded actions that are not part of an asset, the
         /// action must have been enabled at some point.
         /// </remarks>
         /// <seealso cref="InputActionAsset.FindAction(Guid)"/>
