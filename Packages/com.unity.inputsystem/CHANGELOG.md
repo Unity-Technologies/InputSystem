@@ -44,6 +44,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fix for UITK Input Action Editor binding 'Listen' button which wasn't working in the case for Control Type 'Any'.
 - Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
 - Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
+- Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
 
 ## [1.8.0-pre.1] - 2023-09-04
 
