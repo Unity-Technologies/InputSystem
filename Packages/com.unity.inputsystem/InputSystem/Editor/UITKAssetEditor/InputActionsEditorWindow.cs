@@ -169,13 +169,15 @@ namespace UnityEngine.InputSystem.Editor
             stateContainer.StateChanged += OnStateChanged;
 
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
-            var view = new InputActionsEditorView(rootVisualElement, stateContainer, PostSaveAction);
+            var view = new InputActionsEditorView(rootVisualElement, stateContainer);
+            view.postSaveAction += PostSaveAction;
             stateContainer.Initialize();
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
             DirtyInputActionsEditorWindow(newState);
+            m_State = newState;
 
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // No action taken apart from setting dirty flag, auto-save triggered as part of having a dirty asset
