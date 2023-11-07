@@ -163,7 +163,7 @@ If you haven't specifically added an Interaction to a Binding or its Action, the
 
 |__Callback__|[`InputActionType.Value`](Actions.md#value)|[`InputActionType.Button`](Actions.md#button)|[`InputActionType.PassThrough`](Actions.md#pass-through)|
 |-----------|-------------|------------|-----------------|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control(s) changed value away from the default value.|Button started being pressed but has not necessarily crossed the press threshold yet.|First Control actuation after Action was enabled.|
+|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control(s) changed value away from the default value.|Button started being pressed but has not necessarily crossed the press threshold yet.|not used|
 |[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control(s) changed value.|Button was pressed to at least the button [press threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint).|Control changed value.|
 |[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|Control(s) are no longer actuated.|Button was released. If the button was pressed above the press threshold, the button has now fallen to or below the [release threshold](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_buttonReleaseThreshold). If the button was never fully pressed, the button is now back to completely unpressed.|Action is disabled.|
 
