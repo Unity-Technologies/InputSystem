@@ -45,7 +45,7 @@ The simplest way to create actions is to use the [Input Actions editor](ActionsE
 
 However, because the input system API is very open, there are many other ways to create actions which may suit less common scenarios. For example:
 
-- You can create [Input Actions assets](ActionAssets) which define a set of action data similar to that defined in Project Settings, but is instead stored in a self-contained asset (this is an outdated workflow but is still supported).
+- You can create [Input Actions assets](ActionAssets.md) which define a set of action data similar to that defined in Project Settings, but is instead stored in a self-contained asset (this is an outdated workflow but is still supported).
 - You can manually load Actions from JSON data.
 - You can create Actions entirely in code, including setting up the bindings.
 
@@ -63,9 +63,9 @@ The simplest way to create actions is to use the [Input Actions editor](ActionsE
 
 ### Creating Actions in Input Action Assets
 
-You can create actions that are stored in an Asset instead of in your Project Settings, by creating an [Action Asset](ActionAssets). This workflow used to be the main workflow in previous versions of the Input System package, but has been superseded by the [Input Actions editor](ActionsEditor.md) in the Project Settings window, which provides a simpler workflow.
+You can create actions that are stored in an Asset instead of in your Project Settings, by creating an [Action Asset](ActionAssets.md). This workflow used to be the main workflow in previous versions of the Input System package, but has been superseded by the [Input Actions editor](ActionsEditor.md) in the Project Settings window, which provides a simpler workflow.
 
-However it is still possible to create [Action Assets](ActionAssets) which contain a complete set of Action Maps, Actions and Bindings, and use those instead of the project-wide Actions that are defined in the Project Settings window.
+However it is still possible to create [Action Assets](ActionAssets.md) which contain a complete set of Action Maps, Actions and Bindings, and use those instead of the project-wide Actions that are defined in the Project Settings window.
 
 
 ### Creating Actions by declaring them in MonoBehaviours
