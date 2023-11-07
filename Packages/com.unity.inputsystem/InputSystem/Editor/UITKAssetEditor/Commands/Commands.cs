@@ -366,6 +366,16 @@ namespace UnityEngine.InputSystem.Editor
                 return state;
             };
         }
+
+        public static Command ResetGlobalInputAsset(Action<InputActionAsset> postResetAction)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var asset = ProjectWideActionsAsset.CreateNewActionAsset();
+                postResetAction?.Invoke(asset);
+                return state;
+            };
+        }
     }
 }
 

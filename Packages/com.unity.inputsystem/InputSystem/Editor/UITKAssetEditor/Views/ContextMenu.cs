@@ -17,9 +17,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private static readonly string add_Action_String = "Add Action";
         private static readonly string add_Binding_String = "Add Binding";
-        private static readonly string add_positiveNegative_Binding_String = "Add Positive\\Negative Binding";
-        private static readonly string add_oneModifier_Binding_String = "Add Binding With One Modifier";
-        private static readonly string add_twoModifier_Binding_String = "Add Binding With Two Modifiers";
         public static void GetContextMenuForActionMapItem(InputActionMapsTreeViewItem treeViewItem)
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
