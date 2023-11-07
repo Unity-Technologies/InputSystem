@@ -1,9 +1,14 @@
-/*****************************************************************************/
-/* Global                                                                      */
-/*****************************************************************************/
-
 .unity-input-actions-editor-hidden {
     display: none;
+}
+
+.asset-menu-button-dark-theme {
+    background-image: resource('d__Menu.png');
+}
+
+.asset-menu-button {
+    background-image: resource('_Menu.png');
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .body-panel-container {
@@ -29,7 +34,7 @@
     border-width: 0;
 }
 
-#add-new-action-button  {
+#add-new-action-button {
     background-color: transparent;
     border-width: 0;
 }
@@ -78,6 +83,13 @@
     align-items: auto;
     padding-top: 7px;
     padding-bottom: 7px;
+}
+
+.tree-view-item-icon{
+    justify-content: center;
+    background-image: url("/Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_InputControl.png");
+    width: 16px;
+    height: 16px;
 }
 
 .header {
@@ -164,12 +176,12 @@
 .name-and-parameters-list-view .delete {
     background-image: resource('Toolbar Minus.png');
 }
+
 .name-and-parameters-list-view .deleteDarkTheme {
     background-image: resource('d_Toolbar Minus.png');
 }
 
 .search-field {
-    /* hide while not implemented */
     display: none;
     width: 190px;
 }

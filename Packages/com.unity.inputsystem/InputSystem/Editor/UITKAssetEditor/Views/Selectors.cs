@@ -161,17 +161,13 @@ namespace UnityEngine.InputSystem.Editor
             return new SerializedInputAction(actions.GetArrayElementAtIndex(state.selectedActionIndex));
         }
 
-        public static IEnumerable<string> BuildSortedControlList(InputActionType selectedActionType)
-        {
-            return BuildControlTypeList(selectedActionType)
-                .OrderBy(typeName => typeName, StringComparer.OrdinalIgnoreCase);
-        }
-
         public static IEnumerable<string> BuildControlTypeList(InputActionType selectedActionType)
         {
             var allLayouts = InputSystem.s_Manager.m_Layouts;
 
+            // "Any" is always in first position (index 0)
             yield return "Any";
+
             foreach (var layoutName in allLayouts.layoutTypes.Keys)
             {
                 if (EditorInputControlLayoutCache.TryGetLayout(layoutName).hideInUI)
