@@ -96,7 +96,7 @@ The visual editors work similarly to the [Input Actions editor](ActionsEditor).
 * To edit Actions, double-click them in an Action Map, or click the gear icon on individual Action properties.<br>
 * You can also right-click entries to bring up a context menu, and you can drag them. Hold the Alt key and drag an entry to duplicate it.
 
-Unlike the project-wide actions in the Project Settings window, you must manually [enable and disable](#using-actions) Actions and Action Maps that are embedded in MonoBehaviour components.
+Unlike the project-wide actions in the Project Settings window, you must manually enable and disable Actions and Action Maps that are embedded in MonoBehaviour components.
 
 ```CSharp
 public class MyBehavior : MonoBehaviour

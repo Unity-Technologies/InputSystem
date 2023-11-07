@@ -48,7 +48,7 @@ If you select an Action, you can edit its properties in the right-hand pane of t
 
 ![Action Properties](Images/ActionProperties.png)
 
-### Edit Bindings
+### Editing Bindings
 
 * To add a new Binding, select the Add (+) icon on the action you want to add it to, and select the binding type from the menu that appears.
 * To delete an existing Binding, either right-click it and select __Delete__ from the context menu.
