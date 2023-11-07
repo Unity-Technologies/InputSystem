@@ -6516,6 +6516,43 @@ partial class CoreTests
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action2));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanFindActionsById_WithSingletonAction()
+    {
+        var action = new InputAction(name: "a");
+
+        action.Enable();
+
+        Assert.That(InputSystem.FindAction(action.id), Is.SameAs(action));
+
+        action.Disable();
+
+        Assert.That(InputSystem.FindAction(action.id), Is.SameAs(action));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanFindActionsById_WithAssetAction()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var actionMap1InAsset = asset.AddActionMap("map1");
+        var actionMap2InAsset = asset.AddActionMap("map2");
+        var action1InAsset = actionMap1InAsset.AddAction("action1");
+        var action2InAsset = actionMap2InAsset.AddAction("action2");
+
+        // The other action should become findable as long as any action in the asset has been enabled.
+        action1InAsset.Enable();
+
+        Assert.That(InputSystem.FindAction(action1InAsset.id), Is.SameAs(action1InAsset));
+        Assert.That(InputSystem.FindAction(action2InAsset.id), Is.SameAs(action2InAsset));
+
+        asset.Disable();
+
+        Assert.That(InputSystem.FindAction(action1InAsset.id), Is.SameAs(action1InAsset));
+        Assert.That(InputSystem.FindAction(action2InAsset.id), Is.SameAs(action2InAsset));
+    }
+
     // ReSharper disable once ClassNeverInstantiated.Local
     private class TestInteraction : IInputInteraction
     {
