@@ -12,14 +12,15 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string saveButtonId = "save-asset-toolbar-button";
         private const string autoSaveToggleId = "auto-save-toolbar-toggle";
+        private const string menuButtonId = "asset-menu";
 
-        Action m_PostSaveAction;
+        internal Action postSaveAction;
+        internal Action<InputActionAsset> postResetAction;
 
-        public InputActionsEditorView(VisualElement root, StateContainer stateContainer, Action mpostSaveAction)
+        public InputActionsEditorView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
             m_Root = root;
-            m_PostSaveAction = mpostSaveAction;
             BuildUI();
         }
 
@@ -51,6 +52,16 @@ namespace UnityEngine.InputSystem.Editor
             autoSaveToggle.value = InputEditorUserSettings.autoSaveInputActionAssets;
             autoSaveToggle.RegisterValueChangedCallback(OnAutoSaveToggle);
 
+
+            var assetMenuButton = m_Root.Q<VisualElement>(name: menuButtonId);
+            var isGlobalAsset = stateContainer.GetState().serializedObject.targetObject.name == "ProjectWideInputActions";
+            assetMenuButton.visible = isGlobalAsset;
+            assetMenuButton.AddToClassList(EditorGUIUtility.isProSkin ? "asset-menu-button-dark-theme" : "asset-menu-button");
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendAction("Reset", _ => OnReset());
+            }) { target = assetMenuButton, activators = { new ManipulatorActivationFilter() {button = MouseButton.LeftMouse} }};
+
             // only register the state changed event here in the parent. Changes will be cascaded
             // into child views.
             stateContainer.StateChanged += OnStateChanged;
@@ -65,14 +76,19 @@ namespace UnityEngine.InputSystem.Editor
                 });
         }
 
+        private void OnReset()
+        {
+            Dispatch(Commands.ResetGlobalInputAsset(postResetAction));
+        }
+
         private void OnSaveButton()
         {
-            Dispatch(Commands.SaveAsset(m_PostSaveAction));
+            Dispatch(Commands.SaveAsset(postSaveAction));
         }
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
         {
-            Dispatch(Commands.ToggleAutoSave(evt.newValue, m_PostSaveAction));
+            Dispatch(Commands.ToggleAutoSave(evt.newValue, postSaveAction));
         }
 
         public override void RedrawUI(ViewState viewState)
