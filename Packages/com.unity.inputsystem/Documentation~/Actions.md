@@ -21,7 +21,7 @@ Actions also make it simpler to create a system that lets your players [customiz
 >**Note**
 >Actions are a runtime only feature. You can't use them in `EditorWindow` code.
 
->__Note__: It is possible to read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct).
+>__Note__: It is possible to read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
 
 
 ## Overview

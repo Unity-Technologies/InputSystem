@@ -3,7 +3,7 @@
 
 This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](Workflows.md) which you might prefer that offer different benefits. This quickstart guide shows a workflow which suits most common scenarios.
 
-First, install the Input System package. For information on how to install the new Input System, see [Installation](Installation).
+First, install the Input System package. For information on how to install the new Input System, see [Installation](Installation.md).
 
 ## Read values from the default Actions
 

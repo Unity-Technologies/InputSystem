@@ -21,7 +21,7 @@
   * [Player Input Component](PlayerInput.md)
   * [Player Input Manager Component](PlayerInputManager.md)
   * [Input settings](Settings.md)
-  * [Advanced Topics](AdvancedTopics.md)
+  * [Advanced Topics]()
     * [Events](Events.md)
     * [Layouts](Layouts.md)
     * [User Management](UserManagement.md)
