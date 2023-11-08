@@ -52,7 +52,7 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 
 When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](#invert-vector-2) Processor to your Binding.
 
-If you're using [Input Action Assets](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding. Select the Add (+) icon on the __Processors__ foldout to open a list of all available Processors that match your control type, then choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout. If the Processor has any parameters, you can edit them in the __Processors__ foldout.
+If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an  [Action Asset](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding. Select the Add (+) icon on the __Processors__ foldout to open a list of all available Processors that match your control type, then choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout. If the Processor has any parameters, you can edit them in the __Processors__ foldout.
 
 ![Binding Processors](Images/BindingProcessors.png)
 
@@ -70,7 +70,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 Processors on Actions work in the same way as Processors on Bindings, but they affect all controls bound to an Action, rather than just the controls from a specific Binding. If there are Processors on both the Binding and the Action, the system processes the ones from the Binding first.
 
-You can add and edit Processors on Actions in [Input Action Assets](ActionAssets.md) the [same way](#processors-on-bindings) as you would for Bindings: select an Action to edit, then add one or more Processors in the right window pane.
+You can add and edit Processors on Actions in the [Input Actions Editor](ActionsEditor.md), or in an  [Action Asset](ActionAssets.md) the [same way](#processors-on-bindings) as you would for Bindings: select an Action to edit, then add one or more Processors in the right window pane.
 
 If you create your Actions in code, you can add Processors like this:
 
@@ -270,7 +270,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
 }
 ```
 
-Your new Processor is now available in the [Input Action Asset Editor window](ActionAssets.md), and you can also add it in code like this:
+Your new Processor is now available in the in the [Input Actions Editor](ActionsEditor.md) and you can also add it in code like this:
 
 ```CSharp
 var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
