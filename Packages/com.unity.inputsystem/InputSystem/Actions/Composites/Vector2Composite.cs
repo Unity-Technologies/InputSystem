@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem.Composites
         /// </code>
         /// </example>
         /// </remarks>
-        public Mode mode = Mode.DigitalNormalized;
+        public Mode mode;
 
         /// <inheritdoc />
         public override Vector2 ReadValue(ref InputBindingCompositeContext context)
