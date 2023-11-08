@@ -56,7 +56,7 @@ This is difficult to implement with normal Bindings. You can bind a  [`ButtonCon
 
 Composite Bindings (that is, Bindings that are made up of other Bindings) solve this problem. Composites themselves don't bind directly to Controls; instead, they source values from other Bindings that do, and then synthesize input on the fly from those values.
 
-To see how to create Composites in the editor UI, see documentation on [editing Composite Bindings](ActionAssets.md#editing-composite-bindings).
+To see how to create Composites in the editor UI, see documentation on [editing Composite Bindings](ActionsEditor.md#editing-composite-bindings).
 
 To create composites in code, you can use the [`AddCompositeBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddCompositeBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_) syntax.
 
@@ -519,7 +519,7 @@ playerInput.actions["move"]
 
 ### Setting parameters
 
-A Binding may, either through itself or through its associated Action, lead to [processor](Processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](ActionAssets.md#editing-bindings) of the Action editor or through the API. This configuration will give parameters their default value.
+A Binding may, either through itself or through its associated Action, lead to [processor](Processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](ActionsEditor.md#editing-bindings) of the Action editor or through the API. This configuration will give parameters their default value.
 
 ```CSharp
 // Create an action with a "Hold" interaction on it.
@@ -816,13 +816,13 @@ There are two situations where a given input may lead to ambiguity:
 
 #### Multiple, concurrently used Controls
 
->__Note:__ This section does not apply to [`PassThrough`](Actions.md#pass-through) Actions as they are by design meant to allow multiple concurrent inputs.
+>__Note:__ This section does not apply to [`PassThrough`](RespondingToActions.md#pass-through) Actions as they are by design meant to allow multiple concurrent inputs.
 
-For a [`Button`](Actions.md#button) or [`Value`](Actions.md#value) Action, there can only be one Control at any time that is "driving" the Action. This Control is considered the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl).
+For a [`Button`](RespondingToActions.md#button) or [`Value`](RespondingToActions.md#value) Action, there can only be one Control at any time that is "driving" the Action. This Control is considered the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl).
 
 When an Action is bound to multiple Controls, the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) at any point is the one with the greatest level of ["actuation"](Controls.md#control-actuation), that is, the largest value returned from [`EvaluateMagnitude`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude_). If a Control exceeds the actuation level of the current [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl), it will itself become the active Control.
 
-The following example demonstrates this mechanism with a [`Button`](Actions.md#button) Action and also demonstrates the difference to a [`PassThrough`](Actions.md#pass-through) Action.
+The following example demonstrates this mechanism with a [`Button`](RespondingToActions.md#button) Action and also demonstrates the difference to a [`PassThrough`](RespondingToActions.md#pass-through) Action.
 
 ```CSharp
 // Create a button and a pass-through action and bind each of them
@@ -872,14 +872,14 @@ For [composite bindings](#composite-bindings), magnitudes of the composite as a 
 
 ##### Disabling Conflict Resolution
 
-Conflict resolution is always applied to [Button](Actions.md#button) and [Value](Actions.md#value) type Actions. However, it can be undesirable in situations when an Action is simply used to gather any and all inputs from bound Controls. For example, the following Action would monitor the A button of all available gamepads:
+Conflict resolution is always applied to [Button](RespondingToActions.md#button) and [Value](RespondingToActions.md#value) type Actions. However, it can be undesirable in situations when an Action is simply used to gather any and all inputs from bound Controls. For example, the following Action would monitor the A button of all available gamepads:
 
 ```CSharp
 var action = new InputAction(type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
 action.Enable();
 ```
 
-By using the [Pass-Through](Actions.md#pass-through) Action type, conflict resolution is bypassed and thus, pressing the A button on one gamepad will not result in a press on a different gamepad being ignored.
+By using the [Pass-Through](RespondingToActions.md#pass-through) Action type, conflict resolution is bypassed and thus, pressing the A button on one gamepad will not result in a press on a different gamepad being ignored.
 
 #### Multiple input sequences (such as keyboard shortcuts)
 
@@ -894,7 +894,7 @@ The way this is handled is that Bindings will be processed in the order of decre
 
 In our example, this means that a [`OneModifier`](#one-modifier) composite Binding to `Shift+B` has a higher "complexity" than a Binding to `B` and thus is processed first.
 
-Additionally, the first Binding that results in the Action changing [phase](Actions.md#action-callbacks) will "consume" the input. This consuming will result in other Bindings to the same input not being processed. So in our example, when `Shift+B` "consumes" the `B` input, the Binding to `B` will be skipped.
+Additionally, the first Binding that results in the Action changing [phase](RespondingToActions.md#action-callbacks) will "consume" the input. This consuming will result in other Bindings to the same input not being processed. So in our example, when `Shift+B` "consumes" the `B` input, the Binding to `B` will be skipped.
 
 The following example illustrates how this works at the API level.
 
@@ -933,12 +933,12 @@ Press(keyboard.bKey);
 ### Initial state check
 
 After an Action is [enabled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_enabled), it will start reacting to input as it comes in. However, at the time the Action is enabled, one or more of the Controls that are [bound](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls) to an action may already have a non-default state at that point.
-
+x
 Using what is referred to as an "initial state check", an Action can be made to respond to such a non-default state as if the state change happened *after* the Action was enabled. The way this works is that in the first input [update](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) after the Action was enabled, all its bound controls are checked in turn. If any of them has a non-default state, the Action responds right away.
 
-This check is implicitly enabled for [Value](Actions.md#value) actions. If, for example, you have a `Move` Action bound to the left stick on the gamepad and the stick is already pushed in a direction when `Move` is enabled, the character will immediately start walking.
+This check is implicitly enabled for [Value](RespondingToActions.md#value) actions. If, for example, you have a `Move` Action bound to the left stick on the gamepad and the stick is already pushed in a direction when `Move` is enabled, the character will immediately start walking.
 
-By default, [Button](Actions.md#button) and [Pass-Through](Actions.md#pass-through) type Actions, do not perform this check. A button that is pressed when its respective Action is enabled first needs to be released and then pressed again for it to trigger the Action.
+By default, [Button](RespondingToActions.md#button) and [Pass-Through](RespondingToActions.md#pass-through) type Actions, do not perform this check. A button that is pressed when its respective Action is enabled first needs to be released and then pressed again for it to trigger the Action.
 
 However, you can manually enable initial state checks on these types of Actions using the checkbox in the editor:
 
