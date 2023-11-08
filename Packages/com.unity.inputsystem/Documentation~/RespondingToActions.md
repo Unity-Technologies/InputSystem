@@ -3,7 +3,7 @@
 
 There are two main techniques you can use to respond to Actions in your project. These are to either use **polling** or an **event-driven** approach.
 
-- The **Polling** approach refers to the technique of repeatedly checking the current state of the Actions you are interested in. Typically you would do this in the Update() method of a Monobehaviour script.
+- The **Polling** approach refers to the technique of repeatedly checking the current state of the Actions you are interested in. Typically you would do this in the `Update()` method of a `MonoBehaviour` script.
 - The **Event-driven** approach involves creating your own methods in code that are automatically called when an action is performed.
 
 For most common scenarios, especially action games where the user's input should have a continuous effect on an in-game character, **Polling** is usually simpler and easier to implement.
