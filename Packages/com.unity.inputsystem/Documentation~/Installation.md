@@ -3,9 +3,10 @@ uid: input-system-installation
 ---
 # Installation guide
 
-* [Installing the package](#installing-the-package)
-* [Enabling the new input backends](#enabling-the-new-input-backends)
-* [Installing samples](#installing-samples)
+- [Installation guide](#installation-guide)
+  - [Installing the package](#installing-the-package)
+  - [Enabling the new input backends](#enabling-the-new-input-backends)
+  - [Installing samples](#installing-samples)
 
 This guide describes how to install and activate the Input System package for your Unity Project.
 
@@ -19,13 +20,13 @@ To install the new Input System, open Unity's package manager (menu: __Window > 
 
 ## Enabling the new input backends
 
-By default, Unity's classic Input Manager (`UnityEngine.Input`) is active and support for the new Input System is inactive. This allows existing Unity Projects to keep working as they are.
+By default, Unity's classic Input Manager (`UnityEngine.Input`) is active, and support for the new Input System is inactive. This allows existing Unity Projects to keep working as they are.
 
-When you install the Input System package, Unity will ask whether you want to enable the new backends. If you click **Yes**, Unity will enable the new backends and disable the old backends, and the Editor will restart.
+When you install the Input System package, Unity will ask whether you want to enable the new backends. Click **Yes** to enable the new backends and disable the old backends. The Editor restarts during this process.
 
 ![Editor Restart Warning](Images/EditorRestartWarning.png)
 
-You can find the corresponding setting in the Player settings (menu: __Edit > Project Settings > Player__), under **Active Input Handling**. You can change this setting at any time. Doing so will restart the Editor.
+You can find the corresponding setting in __Edit__ > __Project Settings__ > __Player__ > __Other Settings__ > __Active Input Handling__. If you change this setting you must restart the Editor for it to take effect.
 
 >**Note:** You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
 
@@ -35,7 +36,7 @@ When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define
 
 ## Installing samples
 
-The Input System package comes with a number of samples. You can install these directly from the Package Manager window in Unity (menu: __Window > Package Manager__). To see the list, select the Input System package in the Package Manager window. Click **Import into Project** next to a sample to copy it into the current Project.
+The Input System package comes with a number of samples. You can install these directly from the Package Manager window in Unity (__Window > Package Manager__). To see the list of samples, select the Input System package in the Package Manager window and click the __Samples__ tab. Then click __Import__ next to any sample name to import it into the current Project.
 
 ![Install Samples](Images/InstallSamples.png)
 
