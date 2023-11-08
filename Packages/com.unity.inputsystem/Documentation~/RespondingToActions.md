@@ -41,7 +41,7 @@ Note that the value type has to correspond to the value type of the control that
 
 There are two methods you can use to poll for `performed` [action callbacks](#action-callbacks) to determine whether an action was performed or stopped performing in the current frame.
 
-These methods differ from [`InputAction.WasPressedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame) and [`InputAction.WasReleasedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame) in that these depends directly on the [Interactions](Interactions.md) driving the action (including the [default Interaction](Interactions.md#default-interaction) if no specific interaction has been added to the action or binding).
+These methods differ from [`InputAction.WasPressedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame) and [`InputAction.WasReleasedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame) in that these depend directly on the [Interactions](Interactions.md) driving the action (including the [default Interaction](Interactions.md#default-interaction) if no specific interaction has been added to the action or binding).
 
 |Method|Description|
 |------|-----------|
