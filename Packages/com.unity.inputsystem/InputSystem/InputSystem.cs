@@ -3011,7 +3011,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
-        private static InputActionAsset s_projectWideActions;
+        private static InputActionAsset s_ProjectWideActions;
         internal const string kProjectWideActionsAssetName = "ProjectWideInputActions";
 
         /// <summary>
@@ -3028,24 +3028,18 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (s_projectWideActions != null)
-                    return s_projectWideActions;
+                if (s_ProjectWideActions != null)
+                    return s_ProjectWideActions;
 
                 #if UNITY_EDITOR
-                // Load the InputActionsAsset and store it in EditorBuildSettings so it can be packed in Player builds
-                s_projectWideActions = Editor.ProjectWideActionsAsset.GetOrCreate();
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(s_projectWideActions)))
-                {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                        s_projectWideActions, true);
-                }
+                s_ProjectWideActions = ProjectWideActionsAsset.GetOrCreate();
                 #else
-                s_projectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
+                s_ProjectWideActions = Resources.FindObjectsOfTypeAll<InputActionAsset>().FirstOrDefault(o => o != null && o.name == kProjectWideActionsAssetName);
                 #endif
 
-                if (s_projectWideActions == null)
+                if (s_ProjectWideActions == null)
                     Debug.LogError($"Couldn't initialize project-wide input actions");
-                return s_projectWideActions;
+                return s_ProjectWideActions;
             }
 
             set
@@ -3053,20 +3047,12 @@ namespace UnityEngine.InputSystem
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (s_projectWideActions == value)
+                if (s_ProjectWideActions == value)
                     return;
 
-                #if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(AssetDatabase.GetAssetPath(value)))
-                {
-                    EditorBuildSettings.AddConfigObject(InputSettingsProvider.kEditorBuildSettingsActionsConfigKey,
-                        value, true);
-                }
-                #endif
-
-                s_projectWideActions?.Disable();
-                s_projectWideActions = value;
-                s_projectWideActions.Enable();
+                s_ProjectWideActions?.Disable();
+                s_ProjectWideActions = value;
+                s_ProjectWideActions.Enable();
             }
         }
 #endif
@@ -3760,11 +3746,11 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
-            if (s_projectWideActions)
+            if (s_ProjectWideActions)
             {
-                s_projectWideActions.Disable();
-                s_projectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
-                s_projectWideActions = null;
+                s_ProjectWideActions.Disable();
+                s_ProjectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
+                s_ProjectWideActions = null;
             }
 #endif
 

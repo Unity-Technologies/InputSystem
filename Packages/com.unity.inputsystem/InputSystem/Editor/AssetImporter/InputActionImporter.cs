@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -28,9 +29,6 @@ namespace UnityEngine.InputSystem.Editor
     internal class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 13;
-
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -88,8 +86,8 @@ namespace UnityEngine.InputSystem.Editor
 
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-            var assetIcon = (Texture2D)EditorGUIUtility.Load(kAssetIcon);
-            var actionIcon = (Texture2D)EditorGUIUtility.Load(kActionIcon);
+            var assetIcon = InputActionAssetIconLoader.LoadAssetIcon();
+            var actionIcon = InputActionAssetIconLoader.LoadActionIcon();
 
             // Add asset.
             ctx.AddObjectToAsset("<root>", asset, assetIcon);
@@ -212,15 +210,51 @@ namespace UnityEngine.InputSystem.Editor
             InputActionEditorWindow.RefreshAllOnAssetReimport();
         }
 
-        ////REVIEW: actually pre-populate with some stuff?
-        private const string kDefaultAssetLayout = "{}";
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAsset(InputActionAsset asset)
+        {
+            //Get all InputActionReferences are stored at the same asset path as InputActionAsset
+            return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset)).Where(
+                o => o is InputActionReference && o.name != "InputManager").Cast<InputActionReference>();
+        }
+
+        // Get all InputActionReferences from assets in the project. By default it only gets the assets in the "Assets" folder.
+        internal static IEnumerable<InputActionReference> LoadInputActionReferencesFromAssetDatabase(string[] foldersPath = null)
+        {
+            string[] searchFolders = null;
+            // If folderPath is null, search in "Assets" folder.
+            if (foldersPath == null)
+            {
+                searchFolders = new string[] { "Assets" };
+            }
+
+            // Get all InputActionReference from assets in "Asset" folder. It does not search inside "Packages" folder.
+            var inputActionReferenceGUIDs = AssetDatabase.FindAssets($"t:{typeof(InputActionReference).Name}", searchFolders);
+
+            // To find all the InputActionReferences, the GUID of the asset containing at least one action reference is
+            // used to find the asset path. This is because InputActionReferences are stored in the asset database as sub-assets of InputActionAsset.
+            // Then the whole asset is loaded and all the InputActionReferences are extracted from it.
+            // Also, the action references are duplicated to have backwards compatibility with the 1.0.0-preview.7. That
+            // is why we look for references withouth the `HideFlags.HideInHierarchy` flag.
+            var inputActionReferencesList = new List<InputActionReference>();
+            foreach (var guid in inputActionReferenceGUIDs)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var assetInputActionReferenceList = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(
+                    o => o is InputActionReference &&
+                    !((InputActionReference)o).hideFlags.HasFlag(HideFlags.HideInHierarchy))
+                    .Cast<InputActionReference>().ToList();
+
+                inputActionReferencesList.AddRange(assetInputActionReferenceList);
+            }
+            return inputActionReferencesList;
+        }
 
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
             ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
-                kDefaultAssetLayout, (Texture2D)EditorGUIUtility.Load(kAssetIcon));
+                InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
         }
     }
 }

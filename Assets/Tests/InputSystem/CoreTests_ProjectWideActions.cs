@@ -1,7 +1,9 @@
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -21,7 +23,7 @@ internal partial class CoreTests
     const int initialActionCount = 2;
     const int initialMapCount = 1;
 #else
-    const int initialActionCount = 17;
+    const int initialActionCount = 19;
     const int initialMapCount = 2;
 #endif
 
@@ -163,7 +165,7 @@ internal partial class CoreTests
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
 
         // Disabling works
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable();
         enabledActions = InputSystem.ListEnabledActions();
         Assert.That(enabledActions, Has.Count.EqualTo(1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));

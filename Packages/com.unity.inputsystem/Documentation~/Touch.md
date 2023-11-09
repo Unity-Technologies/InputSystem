@@ -62,7 +62,7 @@ You can use touch input with Actions, like any other [`Pointer`](Pointers.md) De
 
 However, if you want to get input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`. Alternatively, use a wildcard Binding to bind one Action to all touches: `<Touchscreen>/touch*/press`.
 
-If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](Actions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
+If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](RespondingToActions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
 
 ## `EnhancedTouch.Touch` Class
 

@@ -1,4 +1,10 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
+using UnityEditor;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -11,34 +17,56 @@ namespace UnityEngine.InputSystem.Editor
 
         private static readonly string add_Action_String = "Add Action";
         private static readonly string add_Binding_String = "Add Binding";
-        private static readonly string add_positiveNegative_Binding_String = "Add Positive\\Negative Binding";
-        private static readonly string add_oneModifier_Binding_String = "Add Binding With One Modifier";
-        private static readonly string add_twoModifier_Binding_String = "Add Binding With Two Modifiers";
-        public static void GetContextMenuForActionMapItem(InputActionsTreeViewItem treeViewItem)
+        public static void GetContextMenuForActionMapItem(InputActionMapsTreeViewItem treeViewItem)
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
-                menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateAction.Invoke(treeViewItem));
+                menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateActionMap.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(rename_String, _ => InputActionViewsControlsHolder.RenameActionMap.Invoke(treeViewItem));
-                AppendDuplicateAction(menuEvent, treeViewItem);
-                AppendDeleteAction(menuEvent, treeViewItem);
+                AppendDuplicateActionMap(menuEvent, treeViewItem);
+                AppendDeleteActionMap(menuEvent, treeViewItem);
             }) { target = treeViewItem };
         }
 
-        public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, int index)
+        public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
-                menuEvent.menu.AppendAction(add_positiveNegative_Binding_String, _ => InputActionViewsControlsHolder.AddCompositePositivNegativModifier.Invoke(treeViewItem));
-                menuEvent.menu.AppendAction(add_oneModifier_Binding_String, _ => InputActionViewsControlsHolder.AddCompositeOneModifier.Invoke(treeViewItem));
-                menuEvent.menu.AppendAction(add_twoModifier_Binding_String, _ => InputActionViewsControlsHolder.AddCompositeTwoModifier.Invoke(treeViewItem));
+                AppendCompositeMenuItems(treeViewItem, controlLayout, menuEvent.menu);
                 menuEvent.menu.AppendSeparator();
                 AppendRenameAction(menuEvent, index, treeViewItem);
                 AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
+        }
+
+        private static void AppendCompositeMenuItems(InputActionsTreeViewItem treeViewItem, string expectedControlLayout, DropdownMenu menu)
+        {
+            foreach (var compositeName in InputBindingComposite.s_Composites.internedNames.Where(x =>
+                !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
+            {
+                // Skip composites we should hide
+                var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
+                var designTimeVisible = compositeType.GetCustomAttribute<DesignTimeVisibleAttribute>();
+                if (designTimeVisible != null && !designTimeVisible.Visible)
+                    continue;
+
+                // Skip composites that don't match the expected control layout
+                if (expectedControlLayout != "Any" && expectedControlLayout != "")
+                {
+                    var valueType = InputBindingComposite.GetValueType(compositeName);
+                    if (valueType != null &&
+                        !InputControlLayout.s_Layouts.ValueTypeIsAssignableFrom(
+                            new InternedString(expectedControlLayout), valueType))
+                        continue;
+                }
+
+                var displayName = compositeType.GetCustomAttribute<DisplayNameAttribute>();
+                var niceName = displayName != null ? displayName.DisplayName.Replace('/', '\\') : ObjectNames.NicifyVariableName(compositeName) + " Composite";
+                menu.AppendAction($"Add {niceName}",  _ => InputActionViewsControlsHolder.AddComposite.Invoke(treeViewItem, compositeName));
+            }
         }
 
         public static void GetContextMenuForCompositeItem(InputActionsTreeViewItem treeViewItem, int index)
@@ -58,6 +86,16 @@ namespace UnityEngine.InputSystem.Editor
                 AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);
             }) { target = treeViewItem };
+        }
+
+        private static void AppendDeleteActionMap(ContextualMenuPopulateEvent menuEvent, InputActionMapsTreeViewItem treeViewItem)
+        {
+            menuEvent.menu.AppendAction(delete_String, _ => { InputActionViewsControlsHolder.DeleteActionMap.Invoke(treeViewItem); });
+        }
+
+        private static void AppendDuplicateActionMap(ContextualMenuPopulateEvent menuEvent, InputActionMapsTreeViewItem treeViewItem)
+        {
+            menuEvent.menu.AppendAction(duplicate_String, _ => { InputActionViewsControlsHolder.DuplicateActionMap.Invoke(treeViewItem); });
         }
 
         private static void AppendDeleteAction(ContextualMenuPopulateEvent menuEvent, InputActionsTreeViewItem treeViewItem)

@@ -8,7 +8,48 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.8.0-pre.1] - 2023-08-14
+## [1.8.0-pre.2] - 2023-11-09
+
+### Changed
+- Removed icons from action map list as these were always the same and the icon was placeholder
+- Input asset editor now switched to use UI Toolkit which matches the project wide input actions editor interface.
+- Changed [`InputActionProperty`](xref:UnityEngine.InputSystem.InputActionProperty) property drawer to be more compact. Use the More menu (`⋮`) button to open a dropdown menu and select between Use Reference and Use Action.
+- Static analysis warnings regarding flag enums have been suppressed in order to avoid compile-time warnings or errors.
+- Action Map and Action Tree views of the UI Toolkit based Input Action Editor now prevents deselection in both views when Escape key is pressed.
+- Input Action Asset editors Auto-save feature has been modified to trigger on focus-lost when activated instead of triggering on every modification to the asset in order to reduce impact of processing required to handle modified assets.
+- Project-wide input actions template extension changed from .inputactions to .json. This avoids showing template actions in the action's selector UI that are not intended to be used.
+- Re-enabled some UI tests that were disabled on iOS.
+- Reorganized package Project Settings so that "Input System Package" setting node contains "Input Actions" and "Settings" becomes a child node when Project-wide Actions are available. For Unity versions where Project-wide Actions are not available, the settings structure remains unchanged.
+- Make Project-wide Actions the default actions for Player Input.
+
+### Added
+- Support for [Game rotation vector](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR) sensor on Android
+- Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
+- Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
+- Reset project wide Input Settings to default via a new Kebab-menu in Input System Project Settings.
+
+### Fixed
+- Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
+- UI fix for input fields in interactions: they are wider now and the width is fixed.
+- Fixed exiting empty input fields for actions, action maps and composites in the input action asset editor.
+- Fixed an issue where selecting an Action in the Input Action Asset Editor tree-view and then pressing ESC to unselect would throw an `InvalidOperationException`.
+- Fixed an issue where selecting an Action Map in the Input Action Asset Editor list and then pressing ESC to unselect would print an `NullReferenceException` to the Debug console.
+- Fixed case [ISXB-251](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-251) (Action only calls started & performed callbacks when control type is set to Vector3Composite). `EvaluateMagnitude` wasn't overridden for Vector3Composite, also made some minor changes to Vector3Composite and Vector2Composite for consistency.
+- Fixed case [ISXB-580](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-580) (UI Submit / Cancel not working with Switch Pro controller) by adding "Submit" & "Cancel" usages to the Switch Pro controller input controls.
+- Fixed an issue where undoing deletion of Action Maps did not restore Actions correctly.
+- Fixed case [ISXB-628](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-628) (OnIMECompositionChange does not return an empty string on accept when using Microsoft IME) by clarifying expectations and intended usage for the IME composition change event.
+- Fixed issue where the expanded/collapsed state of items in the input action editor was not properly saved between rebuilds of the UI.
+- Fixed issue where The Profiler shows incorrect data and spams the console with "Missing Profiler.EndSample" errors when there is an Input System Component in Scene).
+- Fixed an issue where undoing duplications of action maps caused console errors.
+- Fix for BindingSyntax `WithInteraction()` which was incorrectly using processors.
+- Fix for UITK Input Action Editor binding 'Listen' button which wasn't working in the case for Control Type 'Any'.
+- Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
+- Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
+- Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
+- Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
+
+
+## [1.8.0-pre.1] - 2023-09-04
 
 ### Added
 - Initial version of Project Wide Actions for pre-release (`InputSystem.actions`). This feature is available only on Unity Editor versions 2022.3 and above and can be modified in the Project Settings.

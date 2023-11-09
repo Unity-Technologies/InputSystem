@@ -141,7 +141,7 @@ namespace UnityEngine.InputSystem.Editor
         private static InputActionsEditorState SelectPrevActionMap(InputActionsEditorState state)
         {
             var count = Selectors.GetActionMapCount(state);
-            int index = -1;
+            int index = 0;
             if (count != null && count.Value > 0)
                 index = Math.Max(state.selectedActionMapIndex - 1, 0);
             return state.SelectActionMap(index);
@@ -279,8 +279,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var controlTypes = Selectors.BuildSortedControlList(inputAction.type).ToList();
-                inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlTypes[controlTypeIndex];
+                var controlTypes = Selectors.BuildControlTypeList(inputAction.type).ToList();
+
+                // ISX-1650: "Any" (in index 0) should not be put into an InputAction.expectedControlType. It's expected to be null in this case.
+                var controlType = (controlTypeIndex == 0) ? string.Empty : controlTypes[controlTypeIndex];
+                inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).stringValue = controlType;
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
             };
@@ -299,16 +302,17 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command SaveAsset()
+        public static Command SaveAsset(Action postSaveAction)
         {
             return (in InputActionsEditorState state) =>
             {
                 InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                postSaveAction?.Invoke();
                 return state;
             };
         }
 
-        public static Command ToggleAutoSave(bool newValue)
+        public static Command ToggleAutoSave(bool newValue, Action postSaveAction)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -316,7 +320,10 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // If it changed from disabled to enabled, perform an initial save.
                     if (newValue)
+                    {
                         InputActionsEditorWindowUtils.SaveAsset(state.serializedObject);
+                        postSaveAction?.Invoke();
+                    }
 
                     InputEditorUserSettings.autoSaveInputActionAssets = newValue;
                 }
@@ -356,6 +363,16 @@ namespace UnityEngine.InputSystem.Editor
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
                 InputActionSerializationHelpers.RenameComposite(binding, newName);
                 state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
+
+        public static Command ResetGlobalInputAsset(Action<InputActionAsset> postResetAction)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var asset = ProjectWideActionsAsset.CreateNewActionAsset();
+                postResetAction?.Invoke(asset);
                 return state;
             };
         }

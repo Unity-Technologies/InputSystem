@@ -7,6 +7,9 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     public interface IInputDeviceCommandInfo
     {
+        /// <summary>
+        /// The data format identifier of the device command as a <see cref="FourCC"/> code.
+        /// </summary>
         FourCC typeStatic { get; }
     }
 }

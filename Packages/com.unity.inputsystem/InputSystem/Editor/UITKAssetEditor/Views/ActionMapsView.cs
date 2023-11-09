@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -18,11 +19,16 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-            m_ListView.selectionChanged += _ => SelectActionMap();
+
+            m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
+            m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
+            {
+                Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
+            };
 
             m_ListView.bindItem = (element, i) =>
             {
-                var treeViewItem = (InputActionsTreeViewItem)element;
+                var treeViewItem = (InputActionMapsTreeViewItem)element;
                 treeViewItem.label.text = (string)m_ListView.itemsSource[i];
                 treeViewItem.EditTextFinishedCallback = newName => ChangeActionMapName(i, newName);
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
@@ -33,10 +39,10 @@ namespace UnityEngine.InputSystem.Editor
 
                 ContextMenu.GetContextMenuForActionMapItem(treeViewItem);
             };
-            m_ListView.makeItem = () => new InputActionsTreeViewItem();
+            m_ListView.makeItem = () => new InputActionMapsTreeViewItem();
             m_ListView.unbindItem = (element, i) =>
             {
-                var treeViewElement = (InputActionsTreeViewItem)element;
+                var treeViewElement = (InputActionMapsTreeViewItem)element;
                 treeViewElement.Reset();
                 treeViewElement.OnDeleteItem -= treeViewElement.DeleteCallback;
                 treeViewElement.OnDuplicateItem -= treeViewElement.DuplicateCallback;
@@ -45,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.itemsChosen += objects =>
             {
-                var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionsTreeViewItem>();
+                var item = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex).Q<InputActionMapsTreeViewItem>();
                 item.FocusOnRenameTextField();
             };
 
@@ -82,7 +88,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             m_ListView.ScrollToItem(m_ListView.selectedIndex);
             var element = m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            ((InputActionsTreeViewItem)element).FocusOnRenameTextField();
+            ((InputActionMapsTreeViewItem)element).FocusOnRenameTextField();
             m_EnterRenamingMode = false;
         }
 
@@ -101,11 +107,6 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ChangeActionMapName(index, newName));
         }
 
-        private void SelectActionMap()
-        {
-            Dispatch(Commands.SelectActionMap((string)m_ListView.selectedItem));
-        }
-
         private void AddActionMap()
         {
             Dispatch(Commands.AddActionMap());
@@ -118,20 +119,28 @@ namespace UnityEngine.InputSystem.Editor
                 OnKeyDownEventForRename();
             else if (e.keyCode == KeyCode.Delete)
                 OnKeyDownEventForDelete();
+            else if (IsDuplicateShortcutPressed(e))
+                OnKeyDownEventForDuplicate();
         }
 
         private void OnKeyDownEventForRename()
         {
-            var item = (InputActionsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             item.FocusOnRenameTextField();
         }
 
         private void OnKeyDownEventForDelete()
         {
-            var item = (InputActionsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
+            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
             item.DeleteItem();
         }
 
+        private void OnKeyDownEventForDuplicate()
+        {
+            ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
+        }
+
+        private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;
         private bool m_EnterRenamingMode;
         private readonly VisualElement m_Root;
         private ListView m_ListView;

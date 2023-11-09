@@ -753,7 +753,7 @@ internal partial class CoreTests
     {
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
-        InputSystem.actions.Disable();
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
 #endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();

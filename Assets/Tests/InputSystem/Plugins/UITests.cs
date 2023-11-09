@@ -266,9 +266,6 @@ internal class UITests : CoreTestsFixture
     //       of to the previous click).
     [UnityTest]
     [Category("UI")]
-#if UNITY_IOS || UNITY_TVOS
-    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-#endif
     // All pointer input goes through a single code path. Goes for Pointer-derived devices as well as for TrackedDevice input but
     // also any other input that can deliver point and click functionality.
     //
@@ -1182,9 +1179,6 @@ internal class UITests : CoreTestsFixture
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
-#if UNITY_IOS || UNITY_TVOS
-    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-#endif
     public IEnumerator UI_CanDriveUIFromMultiplePointers(UIPointerBehavior pointerBehavior)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1283,7 +1277,7 @@ internal class UITests : CoreTestsFixture
         // the tracked device tests below don't seem to work on Android when run on the build farm. The pointer
         // positions fail the IsWithinRect checks. They work fine locally. Possibly something to do with tracked
         // devices on Shield? The build farm seems to always run them on Shield devices.
-#if !UNITY_ANDROID
+#if !UNITY_ANDROID && !UNITY_TVOS
         // Put tracked device #1 over left object and tracked device #2 over right object.
         // Need two updates as otherwise we'd end up with just another pointer of the right object
         // which would not result in an event.
@@ -1757,9 +1751,6 @@ internal class UITests : CoreTestsFixture
         }
     }
 
-#if UNITY_IOS || UNITY_TVOS
-    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-#endif
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanDriveUIFromMultipleTrackedDevices()
@@ -2219,9 +2210,6 @@ internal class UITests : CoreTestsFixture
         yield return null;
     }
 
-#if UNITY_IOS || UNITY_TVOS
-    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-#endif
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanGetRaycastResultMatchingEvent()
@@ -2282,9 +2270,6 @@ internal class UITests : CoreTestsFixture
         Assert.That(raycastResult.isValid, Is.False);
     }
 
-#if UNITY_IOS || UNITY_TVOS
-    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
-#endif
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_XRTrackingOriginTransformModifiesTrackedPointers()
@@ -3231,8 +3216,6 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
-// @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
-#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS || UNITY_EDITOR
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_WhenBindingsAreReResolved_PointerStatesAreKeptInSync()
@@ -3282,8 +3265,6 @@ internal class UITests : CoreTestsFixture
 
         Assert.That(EventSystem.current.IsPointerOverGameObject(), Is.True);
     }
-
-#endif
 
     ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
     ////        IMO is whether navigation should even be affected that way by not having a current selection. Seems to me that the
@@ -3800,8 +3781,6 @@ internal class UITests : CoreTestsFixture
         Assert.That(clicked, Is.True);
     }
 
-// @TODO: This should not need disabled for this test (https://jira.unity3d.com/browse/ISX-1455)
-#if !UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS || UNITY_EDITOR
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_WhenCursorIsLockedToScreenCenter_PointerEnterAndExitEventsFire()
@@ -3833,8 +3812,6 @@ internal class UITests : CoreTestsFixture
         yield return null;
         Assert.That(callbackReceiver.events.Any(e => e.type == EventType.PointerExit), Is.True);
     }
-
-#endif
 
     #region Multi Display Tests
 #if UNITY_2022_3_OR_NEWER // displayIndex is only available from 2022.3 onwards

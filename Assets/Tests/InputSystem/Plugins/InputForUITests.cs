@@ -19,7 +19,7 @@ public class InputForUITests : InputTestFixture
     InputSystemProvider m_InputSystemProvider;
 
     [SetUp]
-    public void SetUp()
+    public override void Setup()
     {
         base.Setup();
 
@@ -33,11 +33,13 @@ public class InputForUITests : InputTestFixture
     }
 
     [TearDown]
-    public void TearDown()
+    public override void TearDown()
     {
         EventProvider.Unsubscribe(InputForUIOnEvent);
         EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
+
+        base.TearDown();
     }
 
     private bool InputForUIOnEvent(in Event ev)
