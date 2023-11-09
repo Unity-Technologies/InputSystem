@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.8.0-pre.2] - 2023-11-09
 
 ### Changed
 - Removed icons from action map list as these were always the same and the icon was placeholder
