@@ -2906,10 +2906,10 @@ partial class CoreTests
 
         action.performed +=
             ctx =>
-            {
-                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
-                Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
-            };
+        {
+            Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+            Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
         InputSystem.Update();
@@ -2951,10 +2951,10 @@ partial class CoreTests
 
         action.performed +=
             ctx =>
-            {
-                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
-                Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
-            };
+        {
+            Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+            Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
         InputSystem.Update();
