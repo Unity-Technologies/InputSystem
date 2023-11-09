@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Added
+- Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
+  - [`InputAction.activeValueType`](xref:UnityEngine.InputSystem.InputAction.activeValueType) returns the `Type` expected by `ReadValue<TValue>` based on the currently active control that is driving the action.
+  - [`InputAction.GetMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetMagnitude) returns the current amount of actuation of the control that is driving the action.
+  - [`InputAction.WasUnperformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasUnperformedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
+- Added the static method [`InputSystem.FindAction`](xref:UnityEngine.InputSystem.InputSystem.FindAction) to find an [`InputAction`](xref:UnityEngine.InputSystem.InputAction) by its `Guid` ID.
+
+### Fixed
+- Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
+
 ## [1.8.0-pre.2] - 2023-11-09
 
 ### Changed
@@ -27,11 +39,6 @@ however, it has to be formatted properly to pass verification tests.
 - Duplicate Input Action Items in the new Input Action Asset Editor with Ctrl+D (Windows) or Cmd+D (Mac)
 - Selection of InputActionReferences from project-wide actions on fields that are of type InputActionReference. Uses a new advanced object picker that allows better searching and filtering of actions.
 - Reset project wide Input Settings to default via a new Kebab-menu in Input System Project Settings.
-- Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
-  - [`InputAction.activeValueType`](xref:UnityEngine.InputSystem.InputAction.activeValueType) returns the `Type` expected by `ReadValue<TValue>` based on the currently active control that is driving the action.
-  - [`InputAction.GetMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetMagnitude) returns the current amount of actuation of the control that is driving the action.
-  - [`InputAction.WasUnperformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasUnperformedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
-- Added the static method [`InputSystem.FindAction`](xref:UnityEngine.InputSystem.InputSystem.FindAction) to find an [`InputAction`](xref:UnityEngine.InputSystem.InputAction) by its `Guid` ID.
 
 ### Fixed
 - Partially fixed case ISX-1357 (Investigate performance regressing over time).  A sample showed that leaving an InputActionMap enabled could lead to an internal list of listeners growing.  This leads to slow-down, so we now warn if we think this is happening.
@@ -52,7 +59,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
 - Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
 - Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
-- Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
 
 
 ## [1.8.0-pre.1] - 2023-09-04
