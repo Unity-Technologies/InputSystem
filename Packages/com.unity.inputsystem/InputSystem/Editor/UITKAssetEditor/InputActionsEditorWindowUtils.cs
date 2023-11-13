@@ -1,5 +1,6 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -14,10 +15,11 @@ namespace UnityEngine.InputSystem.Editor
         public static void SaveAsset(SerializedObject serializedAsset)
         {
             var asset = (InputActionAsset)serializedAsset.targetObject;
-            // for the global actions asset: save differently (as it is a yaml file and not a json)
+            // For project-wide actions asset save works differently. The asset is in YAML format, not JSON.
             if (asset.name == ProjectWideActionsAsset.kAssetName)
             {
                 Debug.Log("Project Wide Actions Asset saved");
+                ProjectWideActionsAsset.UpdateInputActionReferences();
                 AssetDatabase.SaveAssets();
                 return;
             }

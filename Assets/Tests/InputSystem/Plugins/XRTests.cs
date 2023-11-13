@@ -1140,6 +1140,7 @@ internal class XRTests : CoreTestsFixture
 
     // ISXB-405
     [Test]
+    [Category("Devices")]
     public void Devices_AddingUnusualDevice_ShouldntCrashTheSystem()
     {
         var deviceDescr =
@@ -1152,6 +1153,20 @@ internal class XRTests : CoreTestsFixture
         var device = InputSystem.devices[0];
 
         Assert.That(device, Is.Not.Null);
+    }
+
+    [Test]
+    [Category("Commands")]
+    public void Commands_GetHapticCapabilitiesCommand_UsesCorrectPayloadSize()
+    {
+        unsafe
+        {
+            // Check that the payload of the command matches the low-level struct defined in IUnityXRInput.h (UnityXRHapticCapabilities)
+            // and used in XRInputSubsystem by checking the size. The sizes are required to match for the event to be
+            // sent to the device.
+            Assert.That(sizeof(UnityEngine.InputSystem.XR.Haptics.HapticCapabilities), Is.EqualTo(sizeof(UnityEngine.XR.HapticCapabilities)));
+            Assert.That(sizeof(UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) - InputDeviceCommand.BaseCommandSize, Is.EqualTo(sizeof(UnityEngine.XR.HapticCapabilities)));
+        }
     }
 }
 #endif

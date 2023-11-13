@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem
             return base.ToString();
         }
 
-        private static string GetDisplayName(InputAction action)
+        internal static string GetDisplayName(InputAction action)
         {
             return !string.IsNullOrEmpty(action?.actionMap?.name) ? $"{action.actionMap?.name}/{action.name}" : action?.name;
         }
