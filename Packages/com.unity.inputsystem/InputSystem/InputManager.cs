@@ -2937,7 +2937,8 @@ namespace UnityEngine.InputSystem
                 // still ended up here), we're done.
 #if UNITY_EDITOR
                 || ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
-                    ((m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus && updateType != InputUpdateType.Editor)
+                    ((m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices && updateType != InputUpdateType.Editor)
+                        || (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus && updateType != InputUpdateType.Editor)
                         || (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView && updateType == InputUpdateType.Editor)
                     )
                     // When the game is playing and has focus, we never process input in editor updates. All we
