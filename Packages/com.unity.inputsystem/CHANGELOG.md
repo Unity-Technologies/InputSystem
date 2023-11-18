@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed missing confirmation popup when deleting a control scheme.
+- Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

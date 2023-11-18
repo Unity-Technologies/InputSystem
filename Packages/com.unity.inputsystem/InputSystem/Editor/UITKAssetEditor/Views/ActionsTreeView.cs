@@ -25,6 +25,11 @@ namespace UnityEngine.InputSystem.Editor
         //save TreeView element id's of individual input actions and bindings to ensure saving of expanded state
         private Dictionary<Guid, int> m_GuidToTreeViewId;
 
+        private const string kCmd_Rename = "Rename";
+        private const string kCmd_Delete = "Delete";
+        private const string kCmd_SoftDelete = "SoftDelete";
+        private const string kCmd_Duplicate = "Duplicate";
+
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -128,7 +133,8 @@ namespace UnityEngine.InputSystem.Editor
                 }
             };
 
-            m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+            m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -252,33 +258,42 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
 
-        private void OnKeyDownEvent(KeyDownEvent e)
+        private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
-            if (e.keyCode == KeyCode.F2)
-                OnKeyDownEventForRename();
-            else if (e.keyCode == KeyCode.Delete)
-                OnKeyDownEventForDelete();
-            else if (IsDuplicateShortcutPressed(e))
-                OnKeyDownEventForDuplicate();
+            switch (evt.commandName)
+            {
+                case kCmd_Rename:
+                    var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
+                    if (data.isAction || data.isComposite)
+                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+                    else
+                        return;
+                    break;
+                case kCmd_Delete:
+                case kCmd_SoftDelete:
+                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
+                    break;
+                case kCmd_Duplicate:
+                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                    break;
+                default:
+                    return; // Skip StopPropagation if we didn't execute anything
+            }
+            evt.StopPropagation();
         }
 
-        private void OnKeyDownEventForRename()
+        private void OnValidateCommand(ValidateCommandEvent evt)
         {
-            var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
-            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
-            if (item != null && (data.isAction || data.isComposite))
-                item.FocusOnRenameTextField();
-        }
-
-        private void OnKeyDownEventForDelete()
-        {
-            var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
-            item?.DeleteItem();
-        }
-
-        private void OnKeyDownEventForDuplicate()
-        {
-            m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+            // Mark commands as supported for Execute by stopping propagation of the event
+            switch (evt.commandName)
+            {
+                case kCmd_Rename:
+                case kCmd_Delete:
+                case kCmd_SoftDelete:
+                case kCmd_Duplicate:
+                    evt.StopPropagation();
+                    break;
+            }
         }
 
         internal class ViewState
