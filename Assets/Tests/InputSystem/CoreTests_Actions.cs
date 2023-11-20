@@ -9970,6 +9970,88 @@ partial class CoreTests
         }
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCancelInProgressTouchScreenActions()
+    {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
+#endif
+
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        var pressAction = new InputAction("PrimaryTouch" , binding: "<Touchscreen>/press");
+        pressAction.Enable();
+        Assert.That(pressAction.controls, Is.EquivalentTo(new[] { touchscreen.press }));
+
+        int performedCallCount = 0;
+        int cancelledCallCount = 0;
+        pressAction.performed += ctx => performedCallCount++;
+        pressAction.canceled += ctx => cancelledCallCount++;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            var pressPoint = new Vector2(0.123f, 0.234f);
+            BeginTouch(1, pressPoint);
+
+            Assert.That(trace, Started(pressAction).AndThen(Performed(pressAction)));
+
+            trace.Clear();
+
+            CancelTouch(1, pressPoint);
+            Assert.That(trace, Canceled(pressAction));
+        }
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(cancelledCallCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ResettingTouchScreenDoesntTriggerRelease()
+    {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
+#endif
+
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        var pressAction = new InputAction("PrimaryTouch" , binding: "<Touchscreen>/press");
+        pressAction.Enable();
+        Assert.That(pressAction.controls, Is.EquivalentTo(new[] { touchscreen.press }));
+
+        int performedCallCount = 0;
+        int cancelledCallCount = 0;
+        pressAction.performed += ctx => performedCallCount++;
+        pressAction.canceled += ctx => cancelledCallCount++;
+
+        using (var trace = new InputActionTrace())
+        {
+            trace.SubscribeToAll();
+
+            var pressPoint = new Vector2(0.123f, 0.234f);
+            BeginTouch(1, pressPoint);
+
+            Assert.That(trace, Started(pressAction).AndThen(Performed(pressAction)));
+
+            trace.Clear();
+
+            //touchscreen.RequestReset();
+            //InputSystem.Update();
+            EndTouch(1, pressPoint, queueEventOnly: true);
+            InputSystem.ResetDevice(touchscreen);
+            InputSystem.Update();
+
+            Assert.That(trace, Canceled(pressAction));
+            //Assert.That(trace, Is.Empty);
+        }
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(cancelledCallCount, Is.EqualTo(1));
+    }
+
     // Mouse, Pen, and Touchscreen are meant to all be able to function as a Pointer. While there a slight differences
     // in how the devices support pointer-style interactions, it should be possible to bind an action using the Pointer
     // abstraction and get consistent behavior out of all three types of devices.

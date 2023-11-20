@@ -122,6 +122,11 @@ namespace UnityEngine.InputSystem.LowLevel
             var statePtr = UnsafeUtility.AddressOf(ref state);
             var stateOffset = control.stateBlock.byteOffset - device.stateBlock.byteOffset;
 
+            if (device.ToString() != "Mouse:/Mouse")
+            {
+                Debug.Log($"JAMES: Change(control:{control.ToString()}, {state.ToString()})");
+                Debug.Log($"JAMES: Change(eventPtr:{eventPtr.ToString()}");
+            }
             InputSystem.s_Manager.UpdateState(device,
                 updateType != default ? updateType : InputSystem.s_Manager.defaultUpdateType, statePtr, stateOffset,
                 (uint)stateSize,

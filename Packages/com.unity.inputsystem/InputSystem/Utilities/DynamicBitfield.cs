@@ -31,6 +31,8 @@ namespace UnityEngine.InputSystem
         {
             Debug.Assert(bitIndex >= 0);
             Debug.Assert(bitIndex < length);
+            if (bitIndex == 0)
+                Debug.Log("JAMES: setBit 0 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
             array[bitIndex / 64] |= 1UL << (bitIndex % 64);
         }
@@ -48,6 +50,8 @@ namespace UnityEngine.InputSystem
             Debug.Assert(bitIndex >= 0);
             Debug.Assert(bitIndex < length);
 
+            if (bitIndex == 0)
+                Debug.Log("JAMES: clearBit 0");
             array[bitIndex / 64] &= ~(1UL << (bitIndex % 64));
         }
 

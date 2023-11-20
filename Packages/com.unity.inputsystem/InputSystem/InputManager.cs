@@ -2675,9 +2675,12 @@ namespace UnityEngine.InputSystem
 
             return runDeviceInBackground;
         }
+        static int s_focusCount = 0;
 
         internal void OnFocusChanged(bool focus)
         {
+            s_focusCount++;
+
             #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
 
@@ -2701,9 +2704,11 @@ namespace UnityEngine.InputSystem
                 // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
                 // path as in the player.
                 gameViewFocus != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView || m_Runtime.runInBackground;
-                #else
+#else
                 m_Runtime.runInBackground;
-                #endif
+#endif
+
+            Debug.Log($"JAMES: OnFocusChanged:{focus}, runInBackground:{runInBackground}, backgroundBehaviour:{m_Settings.backgroundBehavior}");
 
             var backgroundBehavior = m_Settings.backgroundBehavior;
             if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
@@ -2711,6 +2716,7 @@ namespace UnityEngine.InputSystem
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
                 m_HasFocus = focus;
+                Debug.Log($"JAMES: OnFocusChanged: early return");
                 return;
             }
 
@@ -2756,13 +2762,17 @@ namespace UnityEngine.InputSystem
                     // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
                     if (device.disabledWhileInBackground)
                         EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+
                     // Try to sync. If it fails and we didn't run in the background, perform
                     // a reset instead. This is to cope with backends that are unable to sync but
                     // may still retain state which now may be outdated because the input device may
                     // have changed state while we weren't running. So at least make the backend flush
                     // its state (if any).
-                    else if (device.enabled && !runInBackground && !device.RequestSync())
+                    else if (device.enabled && !runInBackground && !device.RequestSync())// && device.ToString() != "Keyboard:/Keyboard5")
+                    {
+                        //Debug.Log($"JAMES: ResetDevice:{device}");
                         ResetDevice(device);
+                    }
                 }
             }
 
@@ -3441,6 +3451,8 @@ namespace UnityEngine.InputSystem
 
         internal unsafe bool UpdateState(InputDevice device, InputEvent* eventPtr, InputUpdateType updateType)
         {
+            Debug.Log($"JAMES: InputManager::UpdateStateA(device:{device.ToString()}");
+
             Debug.Assert(eventPtr != null, "Received NULL event ptr");
 
             var stateBlockOfDevice = device.m_StateBlock;
@@ -3511,8 +3523,16 @@ namespace UnityEngine.InputSystem
         internal unsafe bool UpdateState(InputDevice device, InputUpdateType updateType,
             void* statePtr, uint stateOffsetInDevice, uint stateSize, double internalTime, InputEventPtr eventPtr = default)
         {
+
             var deviceIndex = device.m_DeviceIndex;
             ref var stateBlockOfDevice = ref device.m_StateBlock;
+
+            if (device.ToString().ToLower().Contains("keyboard"))// ||
+             //(device.ToString().ToLower().Contains("touch") && s_focusCount >= 2 ))
+            {
+                Debug.Log($"JAMES: BLOCKED deviceIdx:{deviceIndex}:{device.ToString()},{device.displayName} update");
+                return false;
+            }
 
             ////TODO: limit stateSize and StateOffset by the device's state memory
 
@@ -3533,8 +3553,20 @@ namespace UnityEngine.InputSystem
                     deviceBuffer + stateBlockOfDevice.byteOffset,
                     stateSize, stateOffsetInDevice);
 
+            if (device.ToString() != "Mouse:/Mouse" && haveSignalledMonitors)
+            {
+                Debug.Log($"JAMES: InputManager::UpdateStateB Just signalledMonitors");
+            }
             var deviceStateOffset = device.m_StateBlock.byteOffset + stateOffsetInDevice;
             var deviceStatePtr = deviceBuffer + deviceStateOffset;
+            if (device.ToString() != "Mouse:/Mouse")
+            {
+                Debug.Log($"JAMES: InputManager::UpdateStateB(device:{device.ToString()}): deviceIndex:{device.m_DeviceIndex}), ");
+                var primaryTouchState = (TouchState*)((byte*)statePtr + deviceStateOffset);
+                Debug.Log($"JAMES: Touchscreen::UpdateStateB() - statePtr:{primaryTouchState->ToString()}");
+                var deviceState = (TouchState*)((byte*)deviceStatePtr);
+                Debug.Log($"JAMES: Touchscreen::UpdateStateB() - deviceState:{deviceState->ToString()}");
+            }
 
             ////REVIEW: Should we do this only for events but not for InputState.Change()?
             // If noise filtering on .current is turned on and the device may have noise,
@@ -3571,7 +3603,10 @@ namespace UnityEngine.InputSystem
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
             if (haveSignalledMonitors)
+            {
+                Debug.Log($"JAMES: InputManager::UpdateState() haveSignalledMonitors == true");
                 FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
+            }
 
             return makeDeviceCurrent;
         }

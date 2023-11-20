@@ -390,6 +390,17 @@ namespace UnityEngine.InputSystem
             }
         }
 
+
+        //1) Reset to Disabled from here?????
+        //    17:57:49.645  I JAMES: InputActionState::ResetActionState(7, Disabled, False
+        //         UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+        //         UnityEngine.DebugLogHandler:LogFormat(UnityEngine.LogType, UnityEngine.Object, string, object[])
+        //         UnityEngine.Logger:Log(UnityEngine.LogType, object)
+        //         UnityEngine.Debug:Log(object)
+        //         UnityEngine.InputSystem.InputActionState:ResetActionState(int, UnityEngine.InputSystem.InputActionPhase, bool) (at D:/UnitySrc/InputSystem/develop/Packages/com.unity.inputsystem/InputSystem/Actions/InputActionState.cs:828)
+        //         UnityEngine.InputSystem.InputActionState:DisableAllActions(UnityEngine.InputSystem.InputActionMap) (at D:/UnitySrc/InputSystem/develop/Packages/com.unity.inputsystem/InputSystem/Actions/InputActionState.cs:1041)
+        //         UnityEngine.InputSystem.InputActionState:PrepareForBindingReResolution(bool, UnityEngine.InputSystem.InputControlList`1<Un
+
         internal void PrepareForBindingReResolution(bool needFullResolve,
             ref InputControlList<InputControl> activeControls, ref bool hasEnabledActions)
         {
@@ -409,6 +420,7 @@ namespace UnityEngine.InputSystem
                         // all that were enabled after bindings have been resolved (plus we also flip on
                         // initial state checks for those actions to make sure they react right away
                         // to whatever state controls are in).
+                        Debug.Log($"JAMES: InputActionState::PrepareForBindingReResolution(needFullResolve:{needFullResolve}, hasEnabledActions:{hasEnabledActions}, {activeControls}");
                         DisableAllActions(map);
                     }
                     else
@@ -743,15 +755,24 @@ namespace UnityEngine.InputSystem
 
         private void ResetActionStatesDrivenBy(InputDevice device)
         {
+            //Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy({device.displayName})");
+
             using (InputActionRebindingExtensions.DeferBindingResolution())
             {
                 for (var actionIndex = 0; actionIndex < totalActionCount; ++actionIndex)
                 {
                     var actionState = &actionStates[actionIndex];
 
+                    //if (device.displayName == "sec_touchpad")
+                    //    continue;
+
                     // Skip actions that aren't in progress.
                     if (actionState->phase == InputActionPhase.Waiting || actionState->phase == InputActionPhase.Disabled)
+                    {
+                        //if (device.displayName.ToLower().Contains("touch"))
+                        //    Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy  - skipped as actionIndex: {actionIndex} is in phase: {actionState->phase}");
                         continue;
+                    }
 
                     // Skip actions not driven from this device.
                     if (actionState->isPassThrough)
@@ -761,6 +782,16 @@ namespace UnityEngine.InputSystem
                         // not just the one that happen to trigger last.
                         if (!IsActionBoundToControlFromDevice(device, actionIndex))
                             continue;
+
+                        // @TODO: Maybe ensure this is triggered, by doing it before the WAITING check?
+                        if (actionIndex == 7)
+                        {
+
+                            Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy SKIPPING {actionIndex} - PassThrough, actionState->phase:{actionState->phase.ToString()}");
+                            continue;
+                        }
+                        Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy {actionIndex} - PassThrough, actionState->phase:{actionState->phase.ToString()}");
+
                     }
                     else
                     {
@@ -772,6 +803,7 @@ namespace UnityEngine.InputSystem
                         var control = controls[controlIndex];
                         if (control.device != device)
                             continue;
+                        //Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy {actionIndex} - NOT PassThrough");
                     }
 
                     // Reset.
@@ -814,6 +846,14 @@ namespace UnityEngine.InputSystem
         /// persists even if an action is disabled.</param>
         public void ResetActionState(int actionIndex, InputActionPhase toPhase = InputActionPhase.Waiting, bool hardReset = false)
         {
+            //if (actionIndex == 7 && toPhase == InputActionPhase.Disabled && hardReset == false)
+            //{
+            //    Debug.Log($"JAMES: InputActionState::ResetActionState({actionIndex}, {toPhase}, {hardReset} -- SKIPPED");
+            //    return;
+            //}
+
+            //Debug.Log($"JAMES: InputActionState::ResetActionState({actionIndex}, {toPhase}, {hardReset}");
+
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range when resetting action");
             Debug.Assert(toPhase == InputActionPhase.Waiting || toPhase == InputActionPhase.Disabled,
                 "Phase must be Waiting or Disabled");
@@ -1217,6 +1257,7 @@ namespace UnityEngine.InputSystem
             if (m_OnBeforeUpdateHooked)
                 return;
 
+            Debug.Log($"JAMES: HookOnBeforeUpdate()");
             if (m_OnBeforeUpdateDelegate == null)
                 m_OnBeforeUpdateDelegate = OnBeforeInitialUpdate;
             InputSystem.s_Manager.onBeforeUpdate += m_OnBeforeUpdateDelegate;
@@ -1228,6 +1269,7 @@ namespace UnityEngine.InputSystem
             if (!m_OnBeforeUpdateHooked)
                 return;
 
+            Debug.Log($"JAMES: UnhookOnBeforeUpdate()");
             InputSystem.s_Manager.onBeforeUpdate -= m_OnBeforeUpdateDelegate;
             m_OnBeforeUpdateHooked = false;
         }
@@ -1247,6 +1289,8 @@ namespace UnityEngine.InputSystem
                 #endif
             )
                 return;
+
+            Debug.Log($"JAMES: OnBeforeInitialUpdate()");
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
@@ -1287,9 +1331,12 @@ namespace UnityEngine.InputSystem
 
                     if (!control.CheckStateIsAtDefault())
                     {
+                        Debug.Log($"JAMES: OnBeforeInitialUpdate() CheckStateIsAtDefault == false controlIdx:{controlIndex}, ({controlStartIndex}+{n})");
+
                         // Update press times.
                         if (control.IsValueConsideredPressed(control.magnitude))
                         {
+                            Debug.Log($"JAMES: OnBeforeInitialUpdate() PRESSED controlIdx:{controlIndex}, ({controlStartIndex}+{n}), magnitude: {control.magnitude}");
                             // ReSharper disable once CompareOfFloatsByEqualityOperator
                             if (bindingState.pressTime == default || bindingState.pressTime > time)
                                 bindingState.pressTime = time;
@@ -1302,6 +1349,7 @@ namespace UnityEngine.InputSystem
                         if (isComposite && didFindControlToSignal)
                             continue;
 
+                        Debug.Log($"JAMES: OnBeforeInitialUpdate() signal controlIdx:{controlIndex}, ({controlStartIndex}+{n})");
                         manager.SignalStateChangeMonitor(control, this);
                         didFindControlToSignal = true;
                     }
@@ -1319,6 +1367,8 @@ namespace UnityEngine.InputSystem
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time,
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
+            Debug.Log($"JAMES: NotifyControlStateChanged() control:{control.displayName}, device:{control.device}, pressed:{control.IsPressed()}");
+
             #if UNITY_EDITOR
             if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
@@ -1891,6 +1941,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         private void ProcessDefaultInteraction(ref TriggerState trigger, int actionIndex)
         {
+            if (actionIndex == 7)
+                Debug.Log($"JAMES: ProcessDefaultInteraction (action 7): trigger: {trigger.ToString()}, trigger.phase:{trigger.phase.ToString()}, pressedInUpdate:{trigger.pressedInUpdate}");
+
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when processing default interaction");
 
@@ -1903,9 +1956,10 @@ namespace UnityEngine.InputSystem
                     // to waiting.
                     if (trigger.isPassThrough)
                     {
-                        ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
-                            phaseAfterPerformedOrCanceled: InputActionPhase.Waiting);
-                        break;
+                            Debug.Log($"JAMES: ProcessDefaultInteraction (action 7): PASSTHROUGH:  WAITING -> PERFORMED");
+                            ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                                phaseAfterPerformedOrCanceled: InputActionPhase.Waiting);
+                            break;
                     }
                     // Button actions need to cross the button-press threshold.
                     if (trigger.isButton)
@@ -2305,6 +2359,8 @@ namespace UnityEngine.InputSystem
         private bool ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
             InputActionPhase phaseAfterPerformedOrCanceled = InputActionPhase.Waiting)
         {
+            Debug.Log($"JAMES: InputActionState::ChangePhaseOfAction(newPhase:{newPhase}, phaseAfterPerformedOrCanceled:{phaseAfterPerformedOrCanceled})");
+
             Debug.Assert(newPhase != InputActionPhase.Disabled, "Should not disable an action using this method");
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount, "Map index out of range");
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount, "Control index out of range");
@@ -4414,6 +4470,7 @@ namespace UnityEngine.InputSystem
                     // that are in fact just resets of buttons to their default state.
                     case InputDeviceChange.SoftReset:
                     case InputDeviceChange.HardReset:
+                        //Debug.Log($"JAMES: InputActionState::OnDeviceChange({change})");
                         if (!state.IsUsingDevice(device))
                             continue;
                         state.ResetActionStatesDrivenBy(device);

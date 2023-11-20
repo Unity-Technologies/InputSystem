@@ -127,12 +127,18 @@ namespace UnityEngine.InputSystem
 
                 ref var listener = ref monitorsForDevice.listeners[i];
                 if (listener.control == control && listener.monitor == monitor)
+                {
+                    if (i == 0)
+                        Debug.Log("JAMES: SignalStateChangeMonitor");
+
                     monitorsForDevice.signalled.SetBit(i);
+                }
             }
         }
 
         public unsafe void FireStateChangeNotifications()
         {
+            Debug.Log($"JAMES: InputManagerStateMonitors::FireStateChangeNotifications(B)");
             var time = m_Runtime.currentTime;
             var count = Math.Min(m_StateChangeMonitors.LengthSafe(), m_DevicesCount);
             for (var i = 0; i < count; ++i)
@@ -304,6 +310,8 @@ namespace UnityEngine.InputSystem
             var signals = m_StateChangeMonitors[deviceIndex].signalled;
             var haveChangedSignalsBitfield = false;
 
+            if (deviceIndex == 7)
+                Debug.Log($"JAMES: ProcessStateChangeMonitors(deviceIndex:{deviceIndex}) numMonitors:{numMonitors}, signals[0]:{signals.TestBit(0)}");
             // For every memory region that overlaps what we got in the event, compare memory contents
             // between the old device state and what's in the event. If the contents different, the
             // respective state monitor signals.
@@ -319,6 +327,8 @@ namespace UnityEngine.InputSystem
                     // NOTE: We're using EraseAtWithCapacity here rather than EraseAtByMovingTail to preserve
                     //       order which makes the order of callbacks somewhat more predictable.
 
+                    if (i == 0)
+                        Debug.Log($"JAMES: ProcessStateChangeMonitors(deviceIndex:{deviceIndex}) will erasing monitor records");
                     var listenerCount = numMonitors;
                     var memoryRegionCount = numMonitors;
                     m_StateChangeMonitors[deviceIndex].listeners.EraseAtWithCapacity(ref listenerCount, i);
@@ -334,6 +344,15 @@ namespace UnityEngine.InputSystem
                 if (overlap.isEmpty || MemoryHelpers.Compare(oldStateOfDevice, (byte*)newStateFromEvent - newStateOffsetInBytes, overlap))
                     continue;
 
+                if (i == 0)
+                {
+                    var primaryTouchState = (TouchState*)((byte*)newStateFromEvent);
+                    var oldTouchState = (TouchState*)((byte*)oldStateOfDevice+memoryRegion.bitOffset);
+                    Debug.Log($"JAMES: ProcessStateChangeMonitors(deviceIndex:{deviceIndex}) will SetBit(0)");
+                    Debug.Log($"JAMES: ProcessStateChangeMonitors(deviceIndex:{deviceIndex}) newTouchState:{primaryTouchState->ToString()}");
+                    Debug.Log($"JAMES: ProcessStateChangeMonitors(deviceIndex:{deviceIndex}) oldTouchState?:{oldTouchState->ToString()}");
+                    memoryRegion.ToString();
+                }
                 signals.SetBit(i);
                 haveChangedSignalsBitfield = true;
                 signalled = true;
@@ -349,6 +368,7 @@ namespace UnityEngine.InputSystem
 
         internal unsafe void FireStateChangeNotifications(int deviceIndex, double internalTime, InputEvent* eventPtr)
         {
+            Debug.Log($"JAMES: InputManagerStateMonitors::FireStateChangeNotifications(A) deviceIndex:{deviceIndex}");
             Debug.Assert(m_StateChangeMonitors != null);
             Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
 
@@ -359,6 +379,20 @@ namespace UnityEngine.InputSystem
             ref var signals = ref m_StateChangeMonitors[deviceIndex].signalled;
             ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
             var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+
+            if (deviceIndex == 7)
+            {
+                Debug.Log($"JAMES: signals: {signals.TestBit(0)}, {signals.TestBit(1)}, {signals.TestBit(2)}");
+                Debug.Log($"JAMES: listeners.length: {listeners.Length}");
+                if (eventPtr == null)
+                    Debug.Log($"JAMES: eventPtr == null");
+                else
+                {
+                    var primaryTouchState = (TouchState*)((byte*)eventPtr);
+                    Debug.Log($"JAMES: eventPtr: {*eventPtr}");
+                    Debug.Log($"JAMES: eventPtrAsTouchState {primaryTouchState->ToString()}");
+                }
+            }
 
             // If we don't have an event, gives us as dummy, invalid instance.
             // What matters is that InputEventPtr.valid is false for these.
@@ -377,6 +411,7 @@ namespace UnityEngine.InputSystem
                 var listener = listeners[i];
                 try
                 {
+                    Debug.Log($"JAMES: notify for signal: {i} / {signals.length-1}");
                     listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr,
                         listener.monitorIndex);
                 }

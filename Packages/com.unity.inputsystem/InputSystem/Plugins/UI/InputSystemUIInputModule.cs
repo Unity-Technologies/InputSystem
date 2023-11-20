@@ -1990,6 +1990,11 @@ namespace UnityEngine.InputSystem.UI
             state.changedThisFrame = true;
             if (IgnoreNextClick(ref context, wasPressed))
                 state.leftButton.ignoreNextClick = true;
+
+            if (context.canceled)
+                Debug.Log($"JAMES: context.canceled:{context.canceled}");
+            //return context.canceled && !InputRuntime.s_Instance.isPlayerFocused && !context.control.device.canRunInBackground && wasPressed;
+            Debug.Log($"JAMES: LEFT CLICK CB. index:{index}, Control:{context.control.displayName}, Phase:{context.phase.ToString()}, isPressed:{state.leftButton.isPressed}, wasPressed:{wasPressed}, ignoreNext:{state.leftButton.ignoreNextClick}");
 #if UNITY_2022_3_OR_NEWER
             state.eventData.displayIndex = GetDisplayIndexFor(context.control);
 #endif

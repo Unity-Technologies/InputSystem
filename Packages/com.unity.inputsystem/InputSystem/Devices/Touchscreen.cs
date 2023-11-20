@@ -967,17 +967,35 @@ namespace UnityEngine.InputSystem
             ////      What we're doing here is constructing an event solely for the purpose of Finger.ShouldRecordTouch() not
             ////      ignoring the state change like it does for delta resets.
 
+            Debug.Log($"JAMES: Touchscreen::CustomDeviceReset()");
             using (var buffer = new NativeArray<byte>(StateEvent.GetEventSizeWithPayload<TouchState>(), Allocator.Temp))
             {
                 var eventPtr = (StateEvent*)buffer.GetUnsafePtr();
 
                 eventPtr->baseEvent = new InputEvent(StateEvent.Type, buffer.Length, deviceId);
 
+                Debug.Log($"JAMES: Touchscreen::Reset() - TouchState buffer size:{buffer.Length}");
+                Debug.Log($"JAMES: Touchscreen::Reset() - primaryTouch.stateBlock(sizeInBits:{primaryTouch.stateBlock.sizeInBits}, byteOffset: {primaryTouch.stateBlock.byteOffset}) (end:{primaryTouch.stateBlock.byteOffset+(primaryTouch.stateBlock.sizeInBits/8)})");
+                Debug.Log($"JAMES: Touchscreen::Reset() - touches[0].stateBlock(sizeInBits:{touches[0].stateBlock.sizeInBits}, byteOffset: {touches[0].stateBlock.byteOffset})");
+                Debug.Log($"JAMES: Touchscreen::Reset() - primaryTouch.phase.valueSizeInBytes:{primaryTouch.phase.valueSizeInBytes}");
+
                 var primaryTouchState = (TouchState*)((byte*)statePtr + primaryTouch.stateBlock.byteOffset);
+                Debug.Log($"JAMES: Touchscreen::CustomDeviceReset() phase: {primaryTouchState->phase}");
                 if (primaryTouchState->phase.IsActive())
                 {
+                    //THIS doesn't set the action to Cancelled. UIInputModule ignores next click based on that
+                    //Check Renes Focus PR for how the cancelled logic should work on focus change
+
+                    Debug.Log("JAMES: Touchscreen::Reset() - PrimaryTouch -> Canceled");
+                    Debug.Log($"JAMES: Touchscreen::Reset() - PrimaryTouch {primaryTouchState->ToString()}");
+                    //primaryTouchState = default;
+                    primaryTouchState->phase = TouchPhase.Canceled;
+
+
+                    //primaryTouch.phase.stateBlock.effectiveByteOffset = TouchPhaseControl;
+
                     UnsafeUtility.MemCpy(eventPtr->state, primaryTouchState, UnsafeUtility.SizeOf<TouchState>());
-                    ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                    //((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
                     InputState.Change(primaryTouch.phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
                 }
 
@@ -985,11 +1003,20 @@ namespace UnityEngine.InputSystem
                 var touchCount = touches.Count;
                 for (var i = 0; i < touchCount; ++i)
                 {
+                    Debug.Log($"JAMES: Touchscreen::Reset() - touches[{i}]:{touchStates[i].phase.ToString()})");
                     if (touchStates[i].phase.IsActive())
                     {
+                        Debug.Log($"JAMES: Touchscreen::Reset() - touches[{i}] -> Canceled (was {touchStates[i]})");
+                        Debug.Log($"JAMES: Touchscreen::Reset() - touches[{i}] {touchStates[i].ToString()}");
+                        //touchStates[i] = default;
+
                         UnsafeUtility.MemCpy(eventPtr->state, &touchStates[i], UnsafeUtility.SizeOf<TouchState>());
-                        ((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
-                        InputState.Change(touches[i].phase, TouchPhase.Canceled, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                        //((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
+                        InputState.Change(touches[i].phase, TouchPhase.None, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+                        //THIS REMOVED THE CALLBACK AND MONITOR TRIGGER
+                        //    but keyboard still appears on screen!!!!
+                        //    is the deviceIdx changed? (my printf logging is filtered heavily)
+                        //    is it one of the keyboard devices itself??? what if we look at events on that??
                     }
                 }
             }
