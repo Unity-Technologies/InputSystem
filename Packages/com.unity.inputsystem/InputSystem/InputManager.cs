@@ -2933,9 +2933,10 @@ namespace UnityEngine.InputSystem
                 // Early out if there's no events to process.
                 eventBuffer.eventCount == 0
                 || canFlushBuffer
+
+#if UNITY_EDITOR
                 // If we're in the background and not supposed to process events in this update (but somehow
                 // still ended up here), we're done.
-#if UNITY_EDITOR
                 || ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
                     ((m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices && updateType != InputUpdateType.Editor)
                         || (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus && updateType != InputUpdateType.Editor)
