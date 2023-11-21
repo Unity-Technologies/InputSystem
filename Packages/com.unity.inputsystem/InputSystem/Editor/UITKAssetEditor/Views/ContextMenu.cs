@@ -29,17 +29,24 @@ namespace UnityEngine.InputSystem.Editor
             }) { target = treeViewItem };
         }
 
-        public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
+        public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, int index)
+        {
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                AppendRenameAction(menuEvent, index, treeViewItem);
+                AppendDuplicateAction(menuEvent, treeViewItem);
+                AppendDeleteAction(menuEvent, treeViewItem);
+            }) { target = treeViewItem };
+        }
+
+        public static void GetContextMenuForActionAddItem(InputActionsTreeViewItem treeViewItem, string controlLayout, VisualElement target)
         {
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
                 AppendCompositeMenuItems(treeViewItem, controlLayout, menuEvent.menu);
                 menuEvent.menu.AppendSeparator();
-                AppendRenameAction(menuEvent, index, treeViewItem);
-                AppendDuplicateAction(menuEvent, treeViewItem);
-                AppendDeleteAction(menuEvent, treeViewItem);
-            }) { target = treeViewItem };
+            }) { target = target, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}} };
         }
 
         private static void AppendCompositeMenuItems(InputActionsTreeViewItem treeViewItem, string expectedControlLayout, DropdownMenu menu)

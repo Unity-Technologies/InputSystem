@@ -40,7 +40,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 e.Q<Label>("name").text = item.name;
-                var addBindingButton = e.Q<Button>("add-new-binding-button");
+                var addBindingButton = e.Q<VisualElement>("add-new-binding-button");
+                addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
                 treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
@@ -49,15 +50,14 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
                 else if (item.isAction)
-                    ContextMenu.GetContextMenuForActionItem(treeViewItem, item.controlLayout, i);
+                    ContextMenu.GetContextMenuForActionItem(treeViewItem, i);
                 else
                     ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
                 if (item.isAction)
                 {
                     addBindingButton.style.display = DisplayStyle.Flex;
-                    addBindingButton.clickable = null; //reset the clickable to avoid multiple subscriptions
-                    addBindingButton.clicked += () => AddBinding(item.name);
+                    ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout, addBindingButton);
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
                         m_RenameOnActionAdded = false;
