@@ -784,12 +784,12 @@ namespace UnityEngine.InputSystem
                             continue;
 
                         // @TODO: Maybe ensure this is triggered, by doing it before the WAITING check?
-                        if (actionIndex == 7)
-                        {
+                        //if (actionIndex == 7)
+                        //{
 
-                            Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy SKIPPING {actionIndex} - PassThrough, actionState->phase:{actionState->phase.ToString()}");
-                            continue;
-                        }
+                        //    Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy SKIPPING {actionIndex} - PassThrough, actionState->phase:{actionState->phase.ToString()}");
+                        //    continue;
+                        //}
                         Debug.Log($"JAMES: InputActionState::ResetActionStatesDrivenBy {actionIndex} - PassThrough, actionState->phase:{actionState->phase.ToString()}");
 
                     }

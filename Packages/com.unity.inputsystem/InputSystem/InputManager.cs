@@ -3527,12 +3527,12 @@ namespace UnityEngine.InputSystem
             var deviceIndex = device.m_DeviceIndex;
             ref var stateBlockOfDevice = ref device.m_StateBlock;
 
-            if (device.ToString().ToLower().Contains("keyboard"))// ||
-             //(device.ToString().ToLower().Contains("touch") && s_focusCount >= 2 ))
-            {
-                Debug.Log($"JAMES: BLOCKED deviceIdx:{deviceIndex}:{device.ToString()},{device.displayName} update");
-                return false;
-            }
+            //if (device.ToString().ToLower().Contains("keyboard"))// ||
+            // //(device.ToString().ToLower().Contains("touch") && s_focusCount >= 2 ))
+            //{
+            //    Debug.Log($"JAMES: BLOCKED deviceIdx:{deviceIndex}:{device.ToString()},{device.displayName} update");
+            //    return false;
+            //}
 
             ////TODO: limit stateSize and StateOffset by the device's state memory
 

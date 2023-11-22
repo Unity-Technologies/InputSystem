@@ -1010,9 +1010,13 @@ namespace UnityEngine.InputSystem
                         Debug.Log($"JAMES: Touchscreen::Reset() - touches[{i}] {touchStates[i].ToString()}");
                         //touchStates[i] = default;
 
+                        touchStates[i].phase = TouchPhase.None;
                         UnsafeUtility.MemCpy(eventPtr->state, &touchStates[i], UnsafeUtility.SizeOf<TouchState>());
                         //((TouchState*)eventPtr->state)->phase = TouchPhase.Canceled;
-                        InputState.Change(touches[i].phase, TouchPhase.None, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
+
+                        // THIS PREVENTS THE PERFORMED, but even the single cancelled event seems enough to trigger
+                        if (i != 0)
+                            InputState.Change(touches[i].phase, TouchPhase.None, eventPtr: new InputEventPtr((InputEvent*)eventPtr));
                         //THIS REMOVED THE CALLBACK AND MONITOR TRIGGER
                         //    but keyboard still appears on screen!!!!
                         //    is the deviceIdx changed? (my printf logging is filtered heavily)
