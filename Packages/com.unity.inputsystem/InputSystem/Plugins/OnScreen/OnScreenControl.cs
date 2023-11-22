@@ -17,6 +17,36 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
+    /// Defines the update policy to be adapted by the <code>OnScreenControl</code>.
+    /// </summary>
+    public enum OnScreenControlUpdateMode
+    {
+        /// <summary>
+        /// Using this update mode, control state updates are managed via input queue events using
+        /// <see cref="InputSystem.QueueEvent(InputEventPtr)" />.
+        /// This is similar to the operation of a custom device and implies that any control data
+        /// written during the current frame is not seen until the next update (frame buffer swap) introducing
+        /// a latency of 1 frame with respect to the input driving the OnScreenControl.
+        /// </summary>
+        /// <remarks>
+        /// Prefer <see cref="OnScreenControlUpdateMode.ChangeState"/> if the associated target control supports
+        /// it. This is the default update mode to not break backwards compability.
+        /// </remarks>
+        QueueEvents,
+
+        /// <summary>
+        /// Using this update mode, control state updates are managed via
+        /// <see cref="InputState.Change(InputDevice,InputEventPtr,InputUpdateType)"/>
+        /// which avoids introducing any frame latency due to control state being changed directly within the
+        /// scope of the current frame and triggering associated state monitors.
+        /// </summary>
+        /// <remarks>
+        /// This is the recommended update mode to use when the associated target control supports it.
+        /// </remarks>
+        ChangeState
+    }
+
+    /// <summary>
     /// Base class for on-screen controls.
     /// </summary>
     /// <remarks>
@@ -37,6 +67,30 @@ namespace UnityEngine.InputSystem.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
+        /// <summary>
+        /// Specifies the <see cref="OnScreenControlUpdateMode"/> to be used to update control state
+        /// associated with this <code>OnScreenControl</code>.
+        /// </summary>
+        /// <remarks>
+        /// Throws <see cref="ArgumentOutOfRangeException"/> if the given value is outside valid range.
+        /// </remarks>
+        public OnScreenControlUpdateMode updateMode
+        {
+            get => m_UpdateMode;
+            set
+            {
+                switch (value)
+                {
+                    case OnScreenControlUpdateMode.ChangeState: // fall-through
+                    case OnScreenControlUpdateMode.QueueEvents:
+                        m_UpdateMode = value;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"Invalid {nameof(OnScreenControlUpdateMode)}: {(int)value}");
+                }
+            }
+        }
+
         /// <summary>
         /// The control path (see <see cref="InputControlPath"/>) for the control that the on-screen
         /// control will feed input into.
@@ -78,6 +132,7 @@ namespace UnityEngine.InputSystem.OnScreen
         private InputControl m_Control;
         private OnScreenControl m_NextControlOnDevice;
         private InputEventPtr m_InputEventPtr;
+        private OnScreenControlUpdateMode m_UpdateMode;
 
         /// <summary>
         /// Accessor for the <see cref="controlPath"/> of the component. Must be implemented by subclasses.
@@ -187,14 +242,13 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Control == null)
                 return;
 
-            if (!(m_Control is InputControl<TValue> control))
+            if (!(m_Control is InputControl<TValue> inputControl))
                 throw new ArgumentException(
                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
-            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
-            control.WriteValueIntoEvent(value, m_InputEventPtr);
-            InputSystem.QueueEvent(m_InputEventPtr);
+            inputControl.WriteValueIntoEvent(value, m_InputEventPtr);
+            Change(m_InputEventPtr);
         }
 
         protected void SentDefaultValueToControl()
@@ -202,10 +256,9 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Control == null)
                 return;
 
-            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             m_Control.ResetToDefaultStateInEvent(m_InputEventPtr);
-            InputSystem.QueueEvent(m_InputEventPtr);
+            Change(m_InputEventPtr);
         }
 
         protected virtual void OnEnable()
@@ -249,6 +302,21 @@ namespace UnityEngine.InputSystem.OnScreen
                 Debug.Assert(m_NextControlOnDevice == null);
 
                 break;
+            }
+        }
+
+        private void Change(InputEventPtr inputEventPtr)
+        {
+            switch (m_UpdateMode)
+            {
+                case OnScreenControlUpdateMode.ChangeState:
+                    InputState.Change(control.m_Device, m_InputEventPtr);
+                    break;
+                case OnScreenControlUpdateMode.QueueEvents:
+                default:
+                    // Note that this gives us a one-frame lag
+                    InputSystem.QueueEvent(m_InputEventPtr);
+                    break;
             }
         }
 
