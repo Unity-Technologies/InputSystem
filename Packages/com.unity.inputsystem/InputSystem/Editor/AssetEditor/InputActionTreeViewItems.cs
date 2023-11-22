@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.Utilities;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
 
 ////TODO: sync expanded state of SerializedProperties to expanded state of tree (will help preserving expansion in inspector)
 
