@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 e.Q<Label>("name").text = item.name;
-                var addBindingButton = e.Q<VisualElement>("add-new-binding-button");
+                var addBindingButton = e.Q<Button>("add-new-binding-button");
                 addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
@@ -56,8 +56,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
+                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout, addBindingButton);
+                    addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
-                    ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout, addBindingButton);
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
                         m_RenameOnActionAdded = false;

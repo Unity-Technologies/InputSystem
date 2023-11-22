@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -39,17 +40,18 @@ namespace UnityEngine.InputSystem.Editor
             }) { target = treeViewItem };
         }
 
-        public static void GetContextMenuForActionAddItem(InputActionsTreeViewItem treeViewItem, string controlLayout, VisualElement target)
+        public static Action GetContextMenuForActionAddItem(InputActionsTreeViewItem treeViewItem, string controlLayout, VisualElement target)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            return () =>
             {
-                menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
-                AppendCompositeMenuItems(treeViewItem, controlLayout, menuEvent.menu);
-                menuEvent.menu.AppendSeparator();
-            }) { target = target, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}} };
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent(add_Binding_String), false, () => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
+                AppendCompositeMenuItems(treeViewItem, controlLayout, menu);
+                menu.ShowAsContext();
+            };
         }
 
-        private static void AppendCompositeMenuItems(InputActionsTreeViewItem treeViewItem, string expectedControlLayout, DropdownMenu menu)
+        private static void AppendCompositeMenuItems(InputActionsTreeViewItem treeViewItem, string expectedControlLayout, GenericMenu menu)
         {
             foreach (var compositeName in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
@@ -72,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 var displayName = compositeType.GetCustomAttribute<DisplayNameAttribute>();
                 var niceName = displayName != null ? displayName.DisplayName.Replace('/', '\\') : ObjectNames.NicifyVariableName(compositeName) + " Composite";
-                menu.AppendAction($"Add {niceName}",  _ => InputActionViewsControlsHolder.AddComposite.Invoke(treeViewItem, compositeName));
+                menu.AddItem(new GUIContent($"Add {niceName}"), false,  () => InputActionViewsControlsHolder.AddComposite.Invoke(treeViewItem, compositeName));
             }
         }
 
