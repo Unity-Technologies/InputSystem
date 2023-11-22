@@ -1077,8 +1077,8 @@ namespace UnityEngine.InputSystem
         /// control referenced from <see cref="activeControl"/>.
         /// <br />
         /// However, if the binding that triggered is a composite, then the composite
-        /// will determine the magnitude and not the individual control that triggered (that
-        /// one just feeds values into the composite).
+        /// will determine the magnitude and not the individual control that triggered.
+        /// Instead, the value of the control that triggered the action will be fed into the composite magnitude calculation.
         /// </remarks>
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         /// <seealso cref="InputBindingComposite.EvaluateMagnitude"/>

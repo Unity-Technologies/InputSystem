@@ -3611,10 +3611,10 @@ namespace UnityEngine.InputSystem
             [FieldOffset(26)] private ushort m_InteractionIndex;
             [FieldOffset(28)] private float m_Magnitude;
             [FieldOffset(32)] private uint m_LastPerformedInUpdate;
-            [FieldOffset(36)] private uint m_LastUnperformedInUpdate;
-            [FieldOffset(40)] private uint m_LastCanceledInUpdate;
-            [FieldOffset(44)] private uint m_PressedInUpdate;
-            [FieldOffset(48)] private uint m_ReleasedInUpdate;
+            [FieldOffset(36)] private uint m_LastCanceledInUpdate;
+            [FieldOffset(40)] private uint m_PressedInUpdate;
+            [FieldOffset(44)] private uint m_ReleasedInUpdate;
+            [FieldOffset(48)] private uint m_LastUnperformedInUpdate;
 
             /// <summary>
             /// Phase being triggered by the control value change.
