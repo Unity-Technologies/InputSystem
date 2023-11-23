@@ -7,7 +7,7 @@ using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
 public class UnityRemoteTestScript : MonoBehaviour
 {
-    public new Camera camera;
+    public Camera camera;
 
     public Text accelerometerInputText;
     public Text touchInputText;
