@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed missing confirmation popup when deleting a control scheme.
+- Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
