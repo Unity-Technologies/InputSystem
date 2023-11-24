@@ -50,13 +50,13 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
                 else if (item.isAction)
-                    ContextMenu.GetContextMenuForActionItem(treeViewItem, i);
+                    ContextMenu.GetContextMenuForActionItem(treeViewItem,item.controlLayout, i);
                 else
                     ContextMenu.GetContextMenuForBindingItem(treeViewItem);
 
                 if (item.isAction)
                 {
-                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout, addBindingButton);
+                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
                     addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
                     treeViewItem.EditTextFinishedCallback = newName =>
