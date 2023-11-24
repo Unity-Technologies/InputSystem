@@ -1,6 +1,7 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,11 +25,6 @@ namespace UnityEngine.InputSystem.Editor
 
         //save TreeView element id's of individual input actions and bindings to ensure saving of expanded state
         private Dictionary<Guid, int> m_GuidToTreeViewId;
-
-        private const string kCmd_Rename = "Rename";
-        private const string kCmd_Delete = "Delete";
-        private const string kCmd_SoftDelete = "SoftDelete";
-        private const string kCmd_Duplicate = "Duplicate";
 
         public ActionsTreeView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
@@ -262,18 +258,18 @@ namespace UnityEngine.InputSystem.Editor
         {
             switch (evt.commandName)
             {
-                case kCmd_Rename:
+                case CmdEvents.Rename:
                     var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
                     if (data.isAction || data.isComposite)
                         m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
                     else
                         return;
                     break;
-                case kCmd_Delete:
-                case kCmd_SoftDelete:
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
                     m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
                     break;
-                case kCmd_Duplicate:
+                case CmdEvents.Duplicate:
                     m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
                     break;
                 default:
@@ -287,10 +283,10 @@ namespace UnityEngine.InputSystem.Editor
             // Mark commands as supported for Execute by stopping propagation of the event
             switch (evt.commandName)
             {
-                case kCmd_Rename:
-                case kCmd_Delete:
-                case kCmd_SoftDelete:
-                case kCmd_Duplicate:
+                case CmdEvents.Rename:
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
+                case CmdEvents.Duplicate:
                     evt.StopPropagation();
                     break;
             }

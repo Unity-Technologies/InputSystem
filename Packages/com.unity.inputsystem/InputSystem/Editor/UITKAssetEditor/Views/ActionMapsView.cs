@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -11,11 +12,6 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal class ActionMapsView : ViewBase<ActionMapsView.ViewState>
     {
-        private const string kCmd_Rename = "Rename";
-        private const string kCmd_Delete = "Delete";
-        private const string kCmd_SoftDelete = "SoftDelete";
-        private const string kCmd_Duplicate = "Duplicate";
-
         public ActionMapsView(VisualElement root, StateContainer stateContainer)
             : base(stateContainer)
         {
@@ -122,14 +118,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             switch (evt.commandName)
             {
-                case kCmd_Rename:
+                case CmdEvents.Rename:
                     ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.FocusOnRenameTextField();
                     break;
-                case kCmd_Delete:
-                case kCmd_SoftDelete:
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
                     ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DeleteItem();
                     break;
-                case kCmd_Duplicate:
+                case CmdEvents.Duplicate:
                     ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
                     break;
                 default:
@@ -143,10 +139,10 @@ namespace UnityEngine.InputSystem.Editor
             // Mark commands as supported for Execute by stopping propagation of the event
             switch (evt.commandName)
             {
-                case kCmd_Rename:
-                case kCmd_Delete:
-                case kCmd_SoftDelete:
-                case kCmd_Duplicate:
+                case CmdEvents.Rename:
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
+                case CmdEvents.Duplicate:
                     evt.StopPropagation();
                     break;
             }
