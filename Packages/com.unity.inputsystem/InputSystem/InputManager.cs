@@ -2686,9 +2686,7 @@ namespace UnityEngine.InputSystem
                 m_HasFocus = focus;
                 return;
             }
-            #endif
 
-            #if UNITY_EDITOR
             var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
             #endif
 
@@ -2934,22 +2932,21 @@ namespace UnityEngine.InputSystem
             var canEarlyOut =
                 // Early out if there's no events to process.
                 eventBuffer.eventCount == 0
-                || canFlushBuffer ||
+                || canFlushBuffer
+
+#if UNITY_EDITOR
                 // If we're in the background and not supposed to process events in this update (but somehow
                 // still ended up here), we're done.
-                ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
+                || ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
                     ((m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices && updateType != InputUpdateType.Editor)
-#if UNITY_EDITOR
                         || (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus && updateType != InputUpdateType.Editor)
                         || (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView && updateType == InputUpdateType.Editor)
-#endif
                     )
-#if UNITY_EDITOR
                     // When the game is playing and has focus, we never process input in editor updates. All we
                     // do is just switch to editor state buffers and then exit.
-                    || (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor)
+                    || (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor))
 #endif
-                );
+            ;
 
 
 #if UNITY_EDITOR
@@ -3124,7 +3121,7 @@ namespace UnityEngine.InputSystem
                             }
                         }
                     }
-                    #endif
+#endif
 
                     // If device is disabled, we let the event through only in certain cases.
                     // Removal and configuration change events should always be processed.
