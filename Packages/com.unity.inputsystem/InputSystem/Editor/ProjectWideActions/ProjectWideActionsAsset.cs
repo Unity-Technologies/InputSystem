@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static InputActionAsset CreateNewActionAsset()
         {
-            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath));
+            var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
 
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
             asset.LoadFromJson(json);
