@@ -181,6 +181,16 @@
     background-image: resource('d_Toolbar Minus.png');
 }
 
+.add-binging-button-dark-theme {
+    background-image: resource('d_Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.add-binging-button {
+    background-image: resource('Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .search-field {
     display: none;
     width: 190px;
