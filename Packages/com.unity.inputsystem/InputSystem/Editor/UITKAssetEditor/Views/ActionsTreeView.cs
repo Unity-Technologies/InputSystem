@@ -114,6 +114,8 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
+            ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
+
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
             {
@@ -239,6 +241,11 @@ namespace UnityEngine.InputSystem.Editor
         private void DuplicateItem(ActionOrBindingData data)
         {
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
+        }
+
+        internal void CopyItems(bool isAction) //TODO remove parameter for multi selection
+        {
+            Dispatch(Commands.CopyActionBindingSelection(isAction));
         }
 
         private void ChangeActionName(ActionOrBindingData data, string newName)

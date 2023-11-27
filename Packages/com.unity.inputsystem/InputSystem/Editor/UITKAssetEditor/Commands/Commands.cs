@@ -97,6 +97,27 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command CopyActionMapSelection() 
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty>{Selectors.GetSelectedActionMap(state)?.wrappedProperty});
+                return state;
+            };
+        }
+        
+        public static Command CopyActionBindingSelection(bool isAction) //TODO remove bool for multiselection
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                if(isAction)
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty>{Selectors.GetSelectedAction(state)?.wrappedProperty});
+                else
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty>{Selectors.GetSelectedBinding(state)?.wrappedProperty});
+                return state;
+            };
+        }
+
         public static Command DuplicateActionMap(int actionMapIndex)
         {
             return (in InputActionsEditorState state) =>

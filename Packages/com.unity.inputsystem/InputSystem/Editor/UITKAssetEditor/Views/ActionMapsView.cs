@@ -61,6 +61,7 @@ namespace UnityEngine.InputSystem.Editor
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
 
             addActionMapButton.clicked += AddActionMap;
+            ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
         }
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");
@@ -100,6 +101,11 @@ namespace UnityEngine.InputSystem.Editor
         private void DuplicateActionMap(int index)
         {
             Dispatch(Commands.DuplicateActionMap(index));
+        }
+
+        internal void CopyItems()
+        {
+            Dispatch(Commands.CopyActionMapSelection());
         }
 
         private void ChangeActionMapName(int index, string newName)

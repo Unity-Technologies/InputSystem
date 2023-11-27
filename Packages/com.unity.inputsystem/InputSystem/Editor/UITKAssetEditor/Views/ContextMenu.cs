@@ -12,6 +12,9 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class ContextMenu
     {
+        private static readonly string copy_String = "Copy";
+        private static readonly string paste_String = "Paste";
+
         private static readonly string rename_String = "Rename";
         private static readonly string duplicate_String = "Duplicate";
         private static readonly string delete_String = "Delete";
@@ -28,6 +31,26 @@ namespace UnityEngine.InputSystem.Editor
                 AppendDuplicateActionMap(menuEvent, treeViewItem);
                 AppendDeleteActionMap(menuEvent, treeViewItem);
             }) { target = treeViewItem };
+        }
+
+        public static void GetContextMenuForActionMapListView(ActionMapsView mapView, VisualElement listView)
+        {
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
+                //menuEvent.menu.AppendAction(paste_String, _ => );
+            }) { target = listView };
+        }
+
+        public static void GetContextMenuForActionListView(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
+        {
+            var _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
+                //menuEvent.menu.AppendAction(paste_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
+            }) { target = target };
         }
 
         public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
