@@ -1,5 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-using System;
+using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
@@ -55,7 +55,8 @@ namespace UnityEngine.InputSystem.Editor
                 item.FocusOnRenameTextField();
             };
 
-            m_ListView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+            m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
@@ -119,31 +120,38 @@ namespace UnityEngine.InputSystem.Editor
             m_EnterRenamingMode = true;
         }
 
-        private void OnKeyDownEvent(KeyDownEvent e)
+        private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
-            if (e.keyCode == KeyCode.F2)
-                OnKeyDownEventForRename();
-            else if (e.keyCode == KeyCode.Delete)
-                OnKeyDownEventForDelete();
-            else if (IsDuplicateShortcutPressed(e))
-                OnKeyDownEventForDuplicate();
+            switch (evt.commandName)
+            {
+                case CmdEvents.Rename:
+                    ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.FocusOnRenameTextField();
+                    break;
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
+                    ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DeleteItem();
+                    break;
+                case CmdEvents.Duplicate:
+                    ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
+                    break;
+                default:
+                    return; // Skip StopPropagation if we didn't execute anything
+            }
+            evt.StopPropagation();
         }
 
-        private void OnKeyDownEventForRename()
+        private void OnValidateCommand(ValidateCommandEvent evt)
         {
-            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            item.FocusOnRenameTextField();
-        }
-
-        private void OnKeyDownEventForDelete()
-        {
-            var item = (InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex);
-            item.DeleteItem();
-        }
-
-        private void OnKeyDownEventForDuplicate()
-        {
-            ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
+            // Mark commands as supported for Execute by stopping propagation of the event
+            switch (evt.commandName)
+            {
+                case CmdEvents.Rename:
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
+                case CmdEvents.Duplicate:
+                    evt.StopPropagation();
+                    break;
+            }
         }
 
         private readonly CollectionViewSelectionChangeFilter m_ListViewSelectionChangeFilter;

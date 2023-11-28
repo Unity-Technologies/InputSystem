@@ -113,16 +113,6 @@ namespace UnityEngine.InputSystem.Editor
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;
         private bool m_IsFirstUpdate = true;
-
-
-        protected bool IsDuplicateShortcutPressed(KeyDownEvent keyDownEvent)
-        {
-#if UNITY_STANDALONE_OSX
-            return keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Command;
-#else
-            return keyDownEvent.keyCode == KeyCode.D && keyDownEvent.modifiers == EventModifiers.Control;
-#endif
-        }
     }
 
     internal class ViewStateSelector<TReturn> : IViewStateSelector<TReturn>
