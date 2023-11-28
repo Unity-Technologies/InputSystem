@@ -642,7 +642,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             // The Next/Previous action is not part of the input actions asset
             UnregisterNextPreviousAction();
 
+#if UNITY_EDITOR
             UnityEngine.Object.DestroyImmediate(m_InputActionAsset);
+#else
+            UnityEngine.Object.Destroy(m_InputActionAsset);
+#endif
         }
 
         public struct Configuration
