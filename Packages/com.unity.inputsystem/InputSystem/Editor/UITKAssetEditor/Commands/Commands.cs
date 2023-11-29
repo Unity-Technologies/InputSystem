@@ -97,23 +97,39 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command CopyActionMapSelection() 
+        public static Command CopyActionMapSelection()
         {
             return (in InputActionsEditorState state) =>
             {
-                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty>{Selectors.GetSelectedActionMap(state)?.wrappedProperty});
+                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedActionMap(state)?.wrappedProperty}, typeof(InputActionMap));
                 return state;
             };
         }
-        
+
         public static Command CopyActionBindingSelection(bool isAction) //TODO remove bool for multiselection
         {
             return (in InputActionsEditorState state) =>
             {
-                if(isAction)
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty>{Selectors.GetSelectedAction(state)?.wrappedProperty});
+                if (isAction)
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedAction(state)?.wrappedProperty}, typeof(InputAction));
                 else
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty>{Selectors.GetSelectedBinding(state)?.wrappedProperty});
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
+                return state;
+            };
+        }
+
+        public static Command PasteActionMapSelection()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
+                if (typeOfCopiedData == typeof(InputActionMap))
+                    CopyPasteHelper.PasteFromClipboard(new int[] {state.selectedActionMapIndex});
+                else if (typeOfCopiedData == typeof(InputAction))
+                    CopyPasteHelper.PasteFromClipboard(new[] {state.selectedActionIndex});
+                else
+                    CopyPasteHelper.PasteFromClipboard(new[] {state.selectedBindingIndex});
+
                 return state;
             };
         }
