@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 - Fixed missing confirmation popup when deleting a control scheme.
+- Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
 - Fixed add bindings button to support left button click.
 - Fixed icon for adding bindings and composites button.
 - Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
