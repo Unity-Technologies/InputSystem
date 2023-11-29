@@ -237,6 +237,11 @@ namespace UnityEngine.InputSystem.Editor
             mapProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
             mapProperty.FindPropertyRelative("m_Actions").ClearArray();
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
+            // NB: This isn't always required: If there's already values in the mapArrayProperty, then inserting a new
+            // element will duplicate the values from the adjacent element to the new element.
+            // However, if the array has been emptied - i.e. if all action maps have been deleted -
+            // then the m_Asset property is null, and needs setting here.
+            mapProperty.FindPropertyRelative("m_Asset").boxedValue ??= asset.targetObject;
 
             return mapProperty;
         }

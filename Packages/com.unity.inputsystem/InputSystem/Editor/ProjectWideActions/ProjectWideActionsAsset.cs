@@ -120,8 +120,7 @@ namespace UnityEngine.InputSystem.Editor
             // Check if referenced input action exists in the asset and remove the reference if it doesn't.
             foreach (var actionReference in existingReferences)
             {
-                var action = asset.FindAction(actionReference.action.id);
-                if (action == null)
+                if (actionReference.action != null && asset.FindAction(actionReference.action.id) == null)
                 {
                     actionReference.Set(null);
                     AssetDatabase.RemoveObjectFromAsset(actionReference);
@@ -131,6 +130,9 @@ namespace UnityEngine.InputSystem.Editor
             // Check if all actions have a reference
             foreach (var action in asset)
             {
+                // Catch error that's possible to appear in previous versions of the package.
+                action.actionMap.m_Asset ??= asset;
+                    
                 var actionReference = existingReferences.FirstOrDefault(r => r.m_ActionId == action.id.ToString());
                 // The input action doesn't have a reference, create a new one.
                 if (actionReference == null)
