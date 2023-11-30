@@ -118,18 +118,50 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command PasteActionMapSelection()
+        public static Command PasteActionMaps()
         {
             return (in InputActionsEditorState state) =>
             {
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
-                if (typeOfCopiedData == typeof(InputActionMap))
-                    CopyPasteHelper.PasteFromClipboard(new int[] {state.selectedActionMapIndex});
-                else if (typeOfCopiedData == typeof(InputAction))
-                    CopyPasteHelper.PasteFromClipboard(new[] {state.selectedActionIndex});
-                else
-                    CopyPasteHelper.PasteFromClipboard(new[] {state.selectedBindingIndex});
+                if (typeOfCopiedData != typeof(InputActionMap)) return state;
+                var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+                CopyPasteHelper.PasteFromClipboard(new int[] { state.selectedActionMapIndex }, actionMapArray);
+                if (CopyPasteHelper.lastNewElement != null)
+                {
+                    state.serializedObject.ApplyModifiedProperties();
+                    return state.SelectActionMap(CopyPasteHelper.lastNewElement.GetIndexOfArrayElement());
+                }
+                return state;
+            };
+        }
 
+        public static Command PasteActionsOrBindings()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
+                if (typeOfCopiedData == typeof(InputAction))
+                {
+                    var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
+                    var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray);
+                    if (CopyPasteHelper.lastNewElement != null)
+                    {
+                        state.serializedObject.ApplyModifiedProperties();
+                        return state.SelectAction(CopyPasteHelper.lastNewElement.GetIndexOfArrayElement());
+                    }
+                }
+                else
+                {
+                    var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
+                    var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedBindingIndex }, bindingsArray);
+                    if (CopyPasteHelper.lastNewElement != null)
+                    {
+                        state.serializedObject.ApplyModifiedProperties();
+                        return state.SelectBinding(CopyPasteHelper.lastNewElement.GetIndexOfArrayElement());
+                    }
+                }
                 return state;
             };
         }

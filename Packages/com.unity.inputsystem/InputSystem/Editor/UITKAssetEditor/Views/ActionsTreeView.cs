@@ -250,6 +250,11 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.CopyActionBindingSelection(isAction));
         }
 
+        internal void PasteItems()
+        {
+            Dispatch(Commands.PasteActionsOrBindings());
+        }
+
         private void ChangeActionName(ActionOrBindingData data, string newName)
         {
             m_RenameOnActionAdded = false;

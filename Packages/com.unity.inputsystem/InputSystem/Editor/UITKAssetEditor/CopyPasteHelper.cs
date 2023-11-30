@@ -13,16 +13,15 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal const string k_CopyPasteMarker = "INPUTASSET ";
         private const string k_StartOfText = "\u0002";
-        private const string k_StartOfHeading = "\u0001";
         private const string k_EndOfTransmission = "\u0004";
-        private const string k_EndOfTransmissionBlock = "\u0017";
-
         private static readonly Dictionary<Type, string> k_TypeMarker = new Dictionary<Type, string>()
         {
             {typeof(InputActionMap), "InputActionMap"},
             {typeof(InputAction), "InputAction"},
             {typeof(InputBinding), "InputBinding"},
         };
+
+        public static SerializedProperty lastNewElement;
 
         public static void CopySelectedTreeViewItemsToClipboard(List<SerializedProperty> items, Type type)
         {
@@ -44,19 +43,16 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void CopyItemData(SerializedProperty item, StringBuilder buffer)
         {
-            buffer.Append(k_StartOfHeading);
-            buffer.Append(item.FindPropertyRelative("m_Name").stringValue);
             buffer.Append(k_StartOfText);
             // InputActionMaps have back-references to InputActionAssets. Make sure we ignore those.
             buffer.Append(item.CopyToJson());
-            buffer.Append(k_EndOfTransmissionBlock);
 
             // if (!item.serializedDataIncludesChildren && item.hasChildrenIncludingHidden) //TODO: copying child data necessary?
             //     foreach (var child in item.childrenIncludingHidden)
             //         CopyItemData(child, buffer);
         }
 
-        public bool HavePastableClipboardData(Type selectedType)
+        public static bool HavePastableClipboardData(Type selectedType)
         {
             var clipboard = EditorGUIUtility.systemCopyBuffer;
             var isInputAssetData = clipboard.StartsWith(k_CopyPasteMarker);
@@ -76,36 +72,45 @@ namespace UnityEngine.InputSystem.Editor
             return null;
         }
 
-        public static void PasteFromClipboard(int[] indicesToInsert)
+        public static void PasteFromClipboard(int[] indicesToInsert, SerializedProperty arrayToInsertInto)
         {
-            PasteData(EditorGUIUtility.systemCopyBuffer, indicesToInsert);
+            lastNewElement = null;
+            PasteData(EditorGUIUtility.systemCopyBuffer, indicesToInsert, arrayToInsertInto);
         }
 
-        private static void PasteData(string copyBufferString, int[] indicesToInsert)
+        private static void PasteData(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)
         {
             if (!copyBufferString.StartsWith(k_CopyPasteMarker))
                 return;
 
             ////REVIEW: filtering out children may remove the very item we need to get the right match for a copy block?
-            PasteItems(copyBufferString, indicesToInsert);
+            PasteItems(copyBufferString, indicesToInsert, arrayToInsertInto);
         }
 
-        private static void PasteItems(string copyBufferString, int[] indicesToInsert, bool assignNewIDs = true, bool selectNewItems = true)
+        private static void PasteItems(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto, bool assignNewIDs = true, bool selectNewItems = true)
         {
             var newItemPropertyPaths = new List<string>();
 
             // Split buffer into transmissions and then into transmission blocks. Each transmission is an item subtree
             // meant to be pasted as a whole and each transmission block is a single chunk of serialized data.
+            int indexOffset = 0;
             foreach (var transmission in copyBufferString.Substring(k_CopyPasteMarker.Length + k_TypeMarker[GetCopiedClipboardType()].Length)
                      .Split(new[] {k_EndOfTransmission}, StringSplitOptions.RemoveEmptyEntries))
             {
-                foreach (var location in indicesToInsert)
-                    PasteBlocks(transmission, location, assignNewIDs, newItemPropertyPaths);
+                indexOffset += 1;
+                foreach (var index in indicesToInsert)
+                    PasteBlocks(transmission, index + indexOffset, arrayToInsertInto);
             }
         }
 
-        private static void PasteBlocks(string transmission, int indexToInsert, bool assignNewIDs, List<string> newItemPropertyPaths)
+        private static void PasteBlocks(string transmission, int indexToInsert, SerializedProperty arrayToInsertInto)
         {
+            var block = transmission.Substring(transmission.IndexOf(k_StartOfText) + 1);
+            var pastedProperty = InputActionSerializationHelpers.AddElement(arrayToInsertInto, "name", indexToInsert);
+            pastedProperty.RestoreFromJson(block);
+            InputActionSerializationHelpers.EnsureUniqueName(pastedProperty);
+            InputActionSerializationHelpers.AssignUniqueIDs(pastedProperty);
+            lastNewElement = pastedProperty;
         }
     }
 }

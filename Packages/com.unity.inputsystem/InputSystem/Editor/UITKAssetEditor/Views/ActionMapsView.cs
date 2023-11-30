@@ -108,6 +108,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.CopyActionMapSelection());
         }
+        
+        internal void PasteItems()
+        {
+            Dispatch(Commands.PasteActionMaps());
+        }
 
         private void ChangeActionMapName(int index, string newName)
         {

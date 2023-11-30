@@ -39,7 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
-                //menuEvent.menu.AppendAction(paste_String, _ => );
+                if (CopyPasteHelper.HavePastableClipboardData(typeof(InputActionMap)))
+                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems());
             }) { target = listView };
         }
 
@@ -49,7 +50,11 @@ namespace UnityEngine.InputSystem.Editor
             {
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
-                //menuEvent.menu.AppendAction(paste_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
+                var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
+                var hasPasteableActionData = item.isAction && CopyPasteHelper.HavePastableClipboardData(typeof(InputAction));
+                var hasPasteableBindingData = !item.isAction && CopyPasteHelper.HavePastableClipboardData(typeof(InputBinding));
+                if (hasPasteableActionData || hasPasteableBindingData)
+                    menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
             }) { target = target };
         }
 
