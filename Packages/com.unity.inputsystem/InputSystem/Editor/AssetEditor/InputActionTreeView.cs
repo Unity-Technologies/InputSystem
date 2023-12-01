@@ -867,15 +867,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Add an element to the array. Then read the serialized properties stored in the copy data
             // back into the element.
-            var property = InputActionSerializationHelpers.AddElement(array, "tempName", arrayIndex);
+            var property = CopyPasteHelper.AddElement(array, "tempName", arrayIndex);
             property.RestoreFromJson(data);
             if (tag == k_ActionTag || tag == k_ActionMapTag)
-                InputActionSerializationHelpers.EnsureUniqueName(property);
+                CopyPasteHelper.EnsureUniqueName(property);
             if (assignNewIDs)
             {
                 // Assign new IDs to the element as well as to any elements it contains. This means
                 // that for action maps, we will also assign new IDs to every action and binding in the map.
-                InputActionSerializationHelpers.AssignUniqueIDs(property);
+                CopyPasteHelper.AssignUniqueIDs(property);
             }
 
             // If the element is a binding, update its action target and binding group, if necessary.

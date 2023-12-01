@@ -476,12 +476,12 @@ partial class CoreTests
         var obj = new SerializedObject(asset);
 
         var maps = obj.FindProperty("m_ActionMaps");
-        InputActionSerializationHelpers.AddElement(maps, "new map", 0);
+        CopyPasteHelper.AddElement(maps, "new map", 0);
 
         var actions = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Actions");
         var bindings = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Bindings");
-        InputActionSerializationHelpers.AddElement(actions, "new action", 1);
-        InputActionSerializationHelpers.AddElement(bindings, "new binding", 1);
+        CopyPasteHelper.AddElement(actions, "new action", 1);
+        CopyPasteHelper.AddElement(bindings, "new binding", 1);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 

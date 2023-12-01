@@ -144,7 +144,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray);
+                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, actionMap);
                     if (CopyPasteHelper.lastNewElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var name = actionMap?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
-                var newMap = InputActionSerializationHelpers.DuplicateElement(actionMapArray, actionMap, name, actionMap.GetIndexOfArrayElement() + 1);
+                var newMap = CopyPasteHelper.DuplicateElement(actionMapArray, actionMap, name, actionMap.GetIndexOfArrayElement() + 1);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectActionMap(newMap.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue);
             };
@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionName = action?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                InputActionSerializationHelpers.DuplicateAction(actionMap, actionArray, action, actionName);
+                CopyPasteHelper.DuplicateAction(actionMap, actionArray, action, actionName);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectAction(state.selectedActionIndex + 1);
             };
@@ -201,7 +201,7 @@ namespace UnityEngine.InputSystem.Editor
                 var actionName = binding?.FindPropertyRelative("m_Action").stringValue;
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-                var newIndex = InputActionSerializationHelpers.DuplicateBinding(bindingsArray, binding, actionName, binding.GetIndexOfArrayElement() + 1);
+                var newIndex = CopyPasteHelper.DuplicateBinding(bindingsArray, binding, actionName, binding.GetIndexOfArrayElement() + 1);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectBinding(newIndex);
             };
