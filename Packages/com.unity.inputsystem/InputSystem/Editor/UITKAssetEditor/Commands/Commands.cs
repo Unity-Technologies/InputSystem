@@ -126,10 +126,26 @@ namespace UnityEngine.InputSystem.Editor
                 if (typeOfCopiedData != typeof(InputActionMap)) return state;
                 var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
                 CopyPasteHelper.PasteFromClipboard(new int[] { state.selectedActionMapIndex }, actionMapArray);
-                if (CopyPasteHelper.lastNewElement != null)
+                if (CopyPasteHelper.lastAddedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.SelectActionMap(CopyPasteHelper.lastNewElement.GetIndexOfArrayElement());
+                    return state.SelectActionMap(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
+                }
+                return state;
+            };
+        }
+
+        public static Command PasteActionFromActionMap()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
+                var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+                CopyPasteHelper.PasteFromClipboard(new[] { actionArray.arraySize - 1 }, actionArray, actionMap);
+                if (CopyPasteHelper.lastAddedElement != null)
+                {
+                    state.serializedObject.ApplyModifiedProperties();
+                    return state.SelectAction(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
                 }
                 return state;
             };
@@ -145,21 +161,24 @@ namespace UnityEngine.InputSystem.Editor
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
                     CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, actionMap);
-                    if (CopyPasteHelper.lastNewElement != null)
+                    if (CopyPasteHelper.lastAddedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
-                        return state.SelectAction(CopyPasteHelper.lastNewElement.GetIndexOfArrayElement());
+                        return state.SelectAction(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
                     }
                 }
                 else
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedBindingIndex }, bindingsArray);
-                    if (CopyPasteHelper.lastNewElement != null)
+                    var actionName = state.selectionType == SelectionType.Action ?
+                        Selectors.GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative("m_Name").stringValue
+                        : Selectors.GetSelectedBinding(state)?.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
+                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedBindingIndex }, bindingsArray, actionName: actionName);
+                    if (CopyPasteHelper.lastAddedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
-                        return state.SelectBinding(CopyPasteHelper.lastNewElement.GetIndexOfArrayElement());
+                        return state.SelectBinding(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
                     }
                 }
                 return state;
