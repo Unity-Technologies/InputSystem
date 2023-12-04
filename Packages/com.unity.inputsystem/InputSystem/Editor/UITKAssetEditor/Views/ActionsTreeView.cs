@@ -44,10 +44,6 @@ namespace UnityEngine.InputSystem.Editor
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
                 addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
-                treeViewItem.DeleteCallback = _ => DeleteItem(item);
-                treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
-                treeViewItem.OnDeleteItem += treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem += treeViewItem.DuplicateCallback;
                 if (item.isComposite)
                     ContextMenu.GetContextMenuForCompositeItem(treeViewItem, i);
                 else if (item.isAction)
@@ -110,8 +106,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (item.isAction || item.isComposite)
                     treeViewItem.Reset();
 
-                treeViewItem.OnDeleteItem -= treeViewItem.DeleteCallback;
-                treeViewItem.OnDuplicateItem -= treeViewItem.DuplicateCallback;
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
@@ -132,6 +126,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            m_ActionsTreeView.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -230,7 +225,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.AddComposite(compositeType));
         }
 
-        private void DeleteItem(ActionOrBindingData data)
+        internal void DeleteItem(ActionOrBindingData data)
         {
             if (data.isAction)
                 Dispatch(Commands.DeleteAction(data.actionMapIndex, data.name));
@@ -238,7 +233,7 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.DeleteBinding(data.actionMapIndex, data.bindingIndex));
         }
 
-        private void DuplicateItem(ActionOrBindingData data)
+        internal void DuplicateItem(ActionOrBindingData data)
         {
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
@@ -268,10 +263,10 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Delete:
                 case CmdEvents.SoftDelete:
-                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
+                    DeleteItem(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex));
                     break;
                 case CmdEvents.Duplicate:
-                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                    DuplicateItem(m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(m_ActionsTreeView.selectedIndex));
                     break;
                 default:
                     return; // Skip StopPropagation if we didn't execute anything
@@ -290,6 +285,20 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Duplicate:
                     evt.StopPropagation();
                     break;
+            }
+        }
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            // Allow right clicks to select an item before we bring up the matching context menu.
+            if (evt.button == (int)MouseButton.RightMouse && evt.clickCount == 1)
+            {
+                // Look upwards to the immediate child of the scroll view, so we know what Index to use
+                var element = (evt.target as VisualElement);
+                while (element.name != "unity-tree-view__item")
+                    element = element.parent;
+
+                m_ActionsTreeView.SetSelection(element.parent.IndexOf(element));
             }
         }
 

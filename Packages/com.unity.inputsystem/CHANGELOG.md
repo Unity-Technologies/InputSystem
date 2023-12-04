@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
+- Fixed selection not changing when right clicking an Action Map or Action.
 
 ## [1.8.0-pre.2] - 2023-11-09
 

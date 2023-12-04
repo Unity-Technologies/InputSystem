@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void DeleteActionItem(InputActionsTreeViewItem treeViewItem)
         {
-            treeViewItem.DeleteItem();
+            m_ActionsTreeView.DeleteItem(m_TreeView.GetItemDataForIndex<ActionOrBindingData>(m_TreeView.selectedIndex));
         }
 
         private static void DeleteActionMapItem(InputActionMapsTreeViewItem treeViewItem)
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void DuplicateActionItem(InputActionsTreeViewItem inputActionsTreeViewItem)
         {
-            inputActionsTreeViewItem.DuplicateItem();
+            m_ActionsTreeView.DuplicateItem(m_TreeView.GetItemDataForIndex<ActionOrBindingData>(m_TreeView.selectedIndex));
         }
     }
 }
