@@ -131,8 +131,9 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var action in asset)
             {
                 // Catch error that's possible to appear in previous versions of the package.
-                action.actionMap.m_Asset ??= asset;
-                    
+                if (action.actionMap.m_Asset == null)
+                    action.actionMap.m_Asset = asset;
+
                 var actionReference = existingReferences.FirstOrDefault(r => r.m_ActionId == action.id.ToString());
                 // The input action doesn't have a reference, create a new one.
                 if (actionReference == null)

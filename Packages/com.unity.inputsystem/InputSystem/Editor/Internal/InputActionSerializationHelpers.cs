@@ -241,7 +241,8 @@ namespace UnityEngine.InputSystem.Editor
             // element will duplicate the values from the adjacent element to the new element.
             // However, if the array has been emptied - i.e. if all action maps have been deleted -
             // then the m_Asset property is null, and needs setting here.
-            mapProperty.FindPropertyRelative("m_Asset").boxedValue ??= asset.targetObject;
+            if (mapProperty.FindPropertyRelative("m_Asset").objectReferenceValue == null)
+                mapProperty.FindPropertyRelative("m_Asset").objectReferenceValue = asset.targetObject;
 
             return mapProperty;
         }

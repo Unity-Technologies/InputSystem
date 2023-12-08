@@ -17,7 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed icon for adding bindings and composites button.
 - Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
-- Fixed possible exceptions thrown when deleting and adding Action Maps. 
+- Fixed possible exceptions thrown when deleting and adding Action Maps.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
