@@ -6,6 +6,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.LowLevel;
 #endif
 
 ////FIXME: apparently shutdown events are not coming through in the analytics backend
@@ -16,7 +17,7 @@ namespace UnityEngine.InputSystem
     {
         public const string kEventStartup = "input_startup";
         public const string kEventShutdown = "input_shutdown";
-        public const string kEventInputActionEditorWindowSession = "input_action_editor_window_session";
+        public const string kEventInputActionEditorWindowSession = "inputActionEditorWindowSession";
 
         public static void Initialize(InputManager manager)
         {
@@ -65,12 +66,6 @@ namespace UnityEngine.InputSystem
 
             manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 100, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
-            
-            // TODO Isn't it a bad habit to handle this via run-time?
-            #if UNITY_EDITOR
-            // Editor usage analytics are only available in editor
-            manager.m_Runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, maxPerHour: 100, maxPropertiesPerEvent: 100);
-            #endif
         }
 
         public static void OnShutdown(InputManager manager)
@@ -183,8 +178,16 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
 
         [Serializable]
+        #if UNITY_2023_2_OR_NEWER
+        public struct InputActionsEditorSessionData : UnityEngine.Analytics.IAnalytic.IData
+        #else
         public struct InputActionsEditorSessionData
+        #endif
         {
+            /// <summary>
+            /// Constructs a <c>InputActionsEditorSessionData</c>.
+            /// </summary>
+            /// <param name="kind">Specifies the kind of editor metrics is being collected for.</param>
             public InputActionsEditorSessionData(InputActionsEditorKind kind)
             {
                 this.kind = kind;
@@ -197,17 +200,64 @@ namespace UnityEngine.InputSystem
                 bindingModificationCount = 0;
                 explicitSaveCount = 0;
                 autoSaveCount = 0;
+                resetCount = 0;
+                controlSchemeModificationCount = 0;
             }
             
-            [FormerlySerializedAs("type")] public InputActionsEditorKind kind;
+            /// <summary>
+            /// Specifies what kind of Input Actions editor this event represents.
+            /// </summary>
+            public InputActionsEditorKind kind;
+            
+            /// <summary>
+            /// The total duration for the session, i.e. the duration during which the editor window was open.
+            /// </summary>
             public float sessionDurationSeconds;
+            
+            /// <summary>
+            /// The total duration for which the editor window was open and had focus.
+            /// </summary>
             public float sessionFocusDurationSeconds;
+            
+            /// <summary>
+            /// Specifies the number of times the window has transitioned from not having focus to having focus in a single session.  
+            /// </summary>
             public int sessionFocusSwitchCount;
+            
+            /// <summary>
+            /// The total number of action map modifications during the session.
+            /// </summary>
             public int actionMapModificationCount;
+            
+            /// <summary>
+            /// The total number of action modifications during the session.
+            /// </summary>
             public int actionModificationCount;
+            
+            /// <summary>
+            /// The total number of binding modifications during the session.
+            /// </summary>
             public int bindingModificationCount;
+            
+            /// <summary>
+            /// The total number of controls scheme modifications during the session.
+            /// </summary>
+            public int controlSchemeModificationCount;
+            
+            /// <summary>
+            /// The total number of explicit saves during the session, i.e. as in user-initiated save.
+            /// </summary>
             public int explicitSaveCount;
+            
+            /// <summary>
+            /// The total number of automatic saves during the session, i.e. as in auto-save on close or focus-lost.
+            /// </summary>
             public int autoSaveCount;
+
+            /// <summary>
+            /// The total number of user-initiated resets during the session, i.e. as in using Reset option in menu.
+            /// </summary>
+            public int resetCount;
 
             public bool isValid => kind != InputActionsEditorKind.Invalid && sessionDurationSeconds >= 0;
             
@@ -220,8 +270,10 @@ namespace UnityEngine.InputSystem
                        $"{nameof(actionMapModificationCount)}: {actionMapModificationCount}, " +
                        $"{nameof(actionModificationCount)}: {actionModificationCount}, " +
                        $"{nameof(bindingModificationCount)}: {bindingModificationCount}, " +
+                       $"{nameof(controlSchemeModificationCount)}: {controlSchemeModificationCount}, " +
                        $"{nameof(explicitSaveCount)}: {explicitSaveCount}, " +
-                       $"{nameof(autoSaveCount)}: {autoSaveCount}";
+                       $"{nameof(autoSaveCount)}: {autoSaveCount}" +
+                       $"{nameof(resetCount)}: {resetCount}";
             }
         }
         
@@ -233,18 +285,26 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
             /// </summary>
-            /// <param name="manager"></param>
+            /// <param name="runtime">The associated IInputRuntime. Defaults to null in which case
+            /// the default runtime is used.</param>
             /// <param name="kind">The editor type for which this record is valid.</param>
-            public InputActionsEditorSession(InputActionsEditorKind kind, InputManager manager = null)
+            public InputActionsEditorSession(InputActionsEditorKind kind, IInputRuntime runtime = null)
             {
                 if (kind == InputActionsEditorKind.Invalid)
                     throw new ArgumentException(nameof(kind));
-
-                manager ??= InputSystem.s_Manager;
-                m_InputManager = manager ?? throw new NullReferenceException(nameof(manager));
-                m_FocusStart = float.NaN;
-                m_SessionStart = float.NaN;
-                m_Data = new InputActionsEditorSessionData(kind);
+                
+                m_InputRuntime = runtime ?? throw new NullReferenceException(nameof(runtime));
+                
+                Initialize(kind);
+                
+                #if UNITY_2023_2_OR_NEWER
+                // Analytics do not need explicit registration
+                #else
+                // Prior to 2023.2.a11 explicit registration is needed.
+                // Note that registration happens multiple times on every instantiation but should be ok?
+                runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, 
+                    maxPerHour: 100, maxPropertiesPerEvent: 100);
+                #endif
             }
 
             /// <summary>
@@ -252,12 +312,8 @@ namespace UnityEngine.InputSystem
             /// </summary>
             public void RegisterActionMapEdit()
             {
-                if (!hasSession)
-                    return;
-                if (!hasFocus)
-                    RegisterEditorFocusIn();
-                
-                ++m_Data.actionMapModificationCount;
+                if (ImplicitFocus())
+                    ++m_Data.actionMapModificationCount;
             }
 
             /// <summary>
@@ -265,12 +321,8 @@ namespace UnityEngine.InputSystem
             /// </summary>
             public void RegisterActionEdit()
             {
-                if (!hasSession)
-                    return;
-                if (!hasFocus)
-                    RegisterEditorFocusIn();
-                
-                ++m_Data.actionModificationCount;
+                if (ImplicitFocus())
+                    ++m_Data.actionModificationCount;
             }
 
             /// <summary>
@@ -278,12 +330,14 @@ namespace UnityEngine.InputSystem
             /// </summary>
             public void RegisterBindingEdit()
             {
-                if (!hasSession)
-                    return;
-                if (!hasFocus)
-                    RegisterEditorFocusIn();
-                    
-                ++m_Data.bindingModificationCount;
+                if (ImplicitFocus())    
+                    ++m_Data.bindingModificationCount;
+            }
+
+            public void RegisterControlSchemeEdit()
+            {
+                if (ImplicitFocus())
+                    ++m_Data.controlSchemeModificationCount;
             }
 
             /// <summary>
@@ -295,7 +349,7 @@ namespace UnityEngine.InputSystem
                 if (!hasSession || hasFocus)
                     return;
 
-                m_FocusStart = CurrentTime();
+                m_FocusStart = currentTime();
             }
 
             /// <summary>
@@ -310,10 +364,45 @@ namespace UnityEngine.InputSystem
                 if (!hasSession || !hasFocus)
                     return;
                 
-                var duration = CurrentTime() - m_FocusStart;
+                var duration = currentTime() - m_FocusStart;
                 m_FocusStart = float.NaN;
                 m_Data.sessionFocusDurationSeconds += (float)duration;
                 ++m_Data.sessionFocusSwitchCount;
+            }
+            
+            /// <summary>
+            /// Register a user-event related to explicitly saving in the editor, e.g.
+            /// using a button, menu or short-cut to trigger the save command.
+            /// </summary>
+            public void RegisterExplicitSave()
+            {
+                if (!hasSession)
+                    return; // No pending session
+                
+                ++m_Data.explicitSaveCount;
+            }
+
+            /// <summary>
+            /// Register a user-event related to implicitly saving in the editor, e.g.
+            /// by having auto-save enabled and indirectly saving the associated asset.
+            /// </summary>
+            public void RegisterAutoSave()
+            {
+                if (!hasSession)
+                    return; // No pending session
+
+                ++m_Data.autoSaveCount;
+            }
+
+            /// <summary>
+            /// Register a user-event related to resetting the editor action configuration to defaults.
+            /// </summary>
+            public void RegisterReset()
+            {
+                if (!hasSession)
+                    return; // No pending session
+
+                ++m_Data.resetCount;
             }
 
             /// <summary>
@@ -328,7 +417,7 @@ namespace UnityEngine.InputSystem
                 if (hasSession)
                     return; // Session already started.
                 
-                m_SessionStart = CurrentTime();
+                m_SessionStart = currentTime();
             }
 
             /// <summary>
@@ -348,41 +437,48 @@ namespace UnityEngine.InputSystem
                     RegisterEditorFocusOut();
                 
                 // Compute and record total session duration
-                var duration = CurrentTime() - m_SessionStart;
+                var duration = currentTime() - m_SessionStart;
                 m_Data.sessionDurationSeconds += (float)duration;
                 
                 // Send analytics event
-                inputManager?.m_Runtime?.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
+                runtime.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
                 
-                Debug.Log(m_Data);
+                Debug.Log(m_Data); // TODO Remove, temporary
+                
+                // Reset
+                Initialize(m_Data.kind);
+            }
+            
+            private void Initialize(InputActionsEditorKind kind)
+            {
+                m_FocusStart = float.NaN;
+                m_SessionStart = float.NaN;
+                
+                m_Data = new InputActionsEditorSessionData(kind);
             }
 
-            private readonly InputManager m_InputManager;
+            private bool ImplicitFocus()
+            {
+                if (!hasSession)
+                    return false;
+                if (!hasFocus)
+                    RegisterEditorFocusIn();
+                return true;
+            }
 
+            private readonly IInputRuntime m_InputRuntime;
             private InputActionsEditorSessionData m_Data;
-            
             private double m_FocusStart;
             private double m_SessionStart;
+            private static bool m_Registered;
             
-            private InputManager inputManager => m_InputManager ?? InputSystem.s_Manager;
+            private IInputRuntime runtime => m_InputRuntime ?? InputSystem.s_Manager.m_Runtime;
             private bool hasFocus => !double.IsNaN(m_FocusStart);
             private bool hasSession => !double.IsNaN(m_SessionStart);
             // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
             // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
-            private double CurrentTime() => m_InputManager.m_Runtime.currentTime;
+            private double currentTime() => runtime.currentTime;
             public bool isValid => m_Data.sessionDurationSeconds >= 0;
-        }
-
-        /// <summary>
-        /// Reports analytics for a single Input Actions Asset editing session.
-        /// </summary>
-        /// <param name="session">The session related analytics.</param>
-        public static void OnInputActionEditorSessionEnd(ref InputActionsEditorSession session)
-        {
-            if (!session.isValid)
-                return;
-            
-            Debug.Log("OnInputActionsEditorEndSession: " + session);
         }
     }
     

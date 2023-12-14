@@ -19,21 +19,20 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
-        { }
+        {}
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             base.OnActivate(searchContext, rootElement);
-            
+
             m_IsActivated = true;
-            Debug.Log("OnActivate");
-            
+
             m_RootVisualElement = rootElement;
-            
+
             var asset = ProjectWideActionsAsset.GetOrCreate();
             var serializedAsset = new SerializedObject(asset);
-            m_State = new InputActionsEditorState(serializedAsset);
-            
+            m_State = new InputActionsEditorState(m_ActionEditorAnalytics, serializedAsset);
+
             BuildUI();
 
             // Always begin a session when activated (note that OnActivate isn't called when navigating back
@@ -41,12 +40,12 @@ namespace UnityEngine.InputSystem.Editor
             m_ActionEditorAnalytics = new InputAnalytics.InputActionsEditorSession(
                 InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
             m_ActionEditorAnalytics.Begin();
-            
+
             // Monitor focus state of root element
             m_RootVisualElement.focusable = true;
             m_RootVisualElement.RegisterCallback<FocusOutEvent>(OnFocusOut);
             m_RootVisualElement.RegisterCallback<FocusInEvent>(OnFocusIn);
-            
+
             // Note that focused element will be set if we are navigating back to
             // an existing instance when switching setting in the left project settings panel since
             // this doesn't recreate the editor.
@@ -61,9 +60,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!m_IsActivated)
                 return; // Observed that when switching back to settings from another setting OnDeactivate is called before OnActivate.
             m_IsActivated = false;
-            
-            Debug.Log("OnDeactivate");
-            
+
             if (m_RootVisualElement != null)
             {
                 m_RootVisualElement.UnregisterCallback<FocusInEvent>(OnFocusIn);
@@ -77,7 +74,7 @@ namespace UnityEngine.InputSystem.Editor
                 OnFocusOut();
                 m_HasEditFocus = false;
             }
-            
+
             // Always end a session when deactivated.
             m_ActionEditorAnalytics?.End();
         }
@@ -98,12 +95,12 @@ namespace UnityEngine.InputSystem.Editor
             // elements outside of project settings Editor Window. Also note that @event is null when we call this
             // from OnDeactivate().
             var element = (VisualElement)@event?.relatedTarget;
-            if (element != null || !m_HasEditFocus) 
+            if (element != null || !m_HasEditFocus)
                 return;
             m_HasEditFocus = false;
             OnEditFocusLost();
         }
-        
+
         private void OnEditFocus()
         {
             m_ActionEditorAnalytics.RegisterEditorFocusIn();
@@ -114,14 +111,12 @@ namespace UnityEngine.InputSystem.Editor
 #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             InputActionsEditorWindowUtils.SaveAsset(m_State.serializedObject);
 #endif
-                
+
             m_ActionEditorAnalytics.RegisterEditorFocusOut();
         }
 
         private void OnStateChanged(InputActionsEditorState newState)
         {
-            Debug.Log("StateChanged");
-            
             #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             // No action, auto-saved on edit-focus lost
             #else
@@ -152,7 +147,7 @@ namespace UnityEngine.InputSystem.Editor
         private void OnResetAsset(InputActionAsset newAsset)
         {
             var serializedAsset = new SerializedObject(newAsset);
-            m_State = new InputActionsEditorState(serializedAsset);
+            m_State = new InputActionsEditorState(m_ActionEditorAnalytics, serializedAsset);
         }
 
         [SettingsProvider]

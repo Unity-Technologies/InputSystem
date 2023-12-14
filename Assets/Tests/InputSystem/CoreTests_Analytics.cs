@@ -216,7 +216,7 @@ partial class CoreTests
         // Editor session analytics is stateful and instantiated
         var session = new InputAnalytics.InputActionsEditorSession(
             InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
-            InputSystem.s_Manager);
+            InputSystem.s_Manager.m_Runtime);
 
         InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
@@ -262,7 +262,7 @@ partial class CoreTests
         // Editor session analytics is stateful and instantiated
         var session = new InputAnalytics.InputActionsEditorSession(
             InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
-            InputSystem.s_Manager);
+            InputSystem.s_Manager.m_Runtime);
 
         InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
@@ -273,11 +273,13 @@ partial class CoreTests
         session.RegisterActionEdit();       // the user adds an action, or renames it, or deletes one or add binding
         session.RegisterBindingEdit();      // the user modifies a binding configuration
         session.RegisterEditorFocusOut();   // the window looses focus due to user closing e.g. project settings
+        session.RegisterAutoSave();         // the asset is saved by automatic trigger
         runtime.currentTime += 30;          // the user has switched to something else but still has the window open.
         session.RegisterEditorFocusIn();    // the user switches back to the window
         runtime.currentTime += 2;           // the user spends some time in edit focus
         session.RegisterBindingEdit();      // the user is editing a binding.
         session.RegisterEditorFocusOut();   // the user is dismissing the window and loosing focus
+        session.RegisterAutoSave();         // the asset is saved by automatic trigger
         session.End();                      // the window is destroyed and the session ends.
 
         // Assert: Registration
@@ -295,7 +297,7 @@ partial class CoreTests
         var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
         Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
-        Assert.That(data.autoSaveCount, Is.EqualTo(0));
+        Assert.That(data.autoSaveCount, Is.EqualTo(2));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(37.0));
         Assert.That(data.sessionFocusDurationSeconds, Is.EqualTo(7.0));
         Assert.That(data.sessionFocusSwitchCount, Is.EqualTo(2)); // TODO Unclear name
@@ -311,8 +313,9 @@ partial class CoreTests
         CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
-            InputSystem.s_Manager);
+        var session = new InputAnalytics.InputActionsEditorSession(
+            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
+            InputSystem.s_Manager.m_Runtime);
 
         InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
@@ -324,6 +327,7 @@ partial class CoreTests
         session.RegisterBindingEdit();      // the user modifies a binding configuration
         runtime.currentTime += 25;          // the user spends some time in edit focus
         // session.RegisterEditorFocusOut();// assumes we fail to detect focus out event due to UI framework malfunction
+        session.RegisterExplicitSave();     // the user presses a save button
         session.End();                      // the window is destroyed and the session ends.
 
         // Assert: Registration
@@ -340,7 +344,7 @@ partial class CoreTests
         // Assert: Data content
         var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
         Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
-        Assert.That(data.explicitSaveCount, Is.EqualTo(0));
+        Assert.That(data.explicitSaveCount, Is.EqualTo(1));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(30.0));
         Assert.That(data.sessionFocusDurationSeconds, Is.EqualTo(25.0));

@@ -29,6 +29,7 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetPath;
         private string m_AssetJson;
         private bool m_IsDirty;
+        private InputAnalytics.InputActionsEditorSession m_Analytics;
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
@@ -124,7 +125,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_AssetPath = AssetDatabase.GetAssetPath(asset);
             var serializedAsset = new SerializedObject(asset);
-            m_State = new InputActionsEditorState(serializedAsset);
+            m_State = new InputActionsEditorState(m_Analytics, serializedAsset);
 
             // Select the action that was selected on the Asset window.
             if (actionMapToSelect != null && actionToSelect != null)

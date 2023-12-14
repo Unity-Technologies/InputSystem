@@ -21,6 +21,8 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedDeviceRequirementIndex { get {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme;
 
+        public InputAnalytics.InputActionsEditorSession m_Analytics;
+
         [SerializeField] int m_selectedActionMapIndex;
         [SerializeField] int m_selectedActionIndex;
         [SerializeField] int m_selectedBindingIndex;
@@ -29,6 +31,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] int m_selectedDeviceRequirementIndex;
 
         public InputActionsEditorState(
+            InputAnalytics.InputActionsEditorSession analytics,
             SerializedObject inputActionAsset,
             int selectedActionMapIndex = 0,
             int selectedActionIndex = 0,
@@ -39,6 +42,8 @@ namespace UnityEngine.InputSystem.Editor
             int selectedControlSchemeIndex = -1,
             int selectedDeviceRequirementIndex = -1)
         {
+            m_Analytics = analytics;
+
             serializedObject = inputActionAsset;
 
             this.m_selectedActionMapIndex = selectedActionMapIndex;
@@ -56,6 +61,8 @@ namespace UnityEngine.InputSystem.Editor
 
         public InputActionsEditorState(InputActionsEditorState other, SerializedObject asset)
         {
+            m_Analytics = other.m_Analytics;
+
             serializedObject = asset;
 
             m_selectedActionMapIndex = other.m_selectedActionMapIndex;
@@ -83,6 +90,7 @@ namespace UnityEngine.InputSystem.Editor
             Dictionary<(string, string), HashSet<int>> expandedBindingIndices = null)
         {
             return new InputActionsEditorState(
+                m_Analytics,
                 serializedObject,
                 selectedActionMapIndex ?? this.selectedActionMapIndex,
                 selectedActionIndex ?? this.selectedActionIndex,

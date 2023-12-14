@@ -14,20 +14,29 @@ namespace UnityEngine.InputSystem.Editor
 
         public static Command AddNewControlScheme()
         {
-            return (in InputActionsEditorState state) => state.With(selectedControlScheme: new InputControlScheme(
-                MakeUniqueControlSchemeName(state, kNewControlSchemeName)));
+            return (in InputActionsEditorState state) =>
+            {
+                state.m_Analytics.RegisterControlSchemeEdit();
+                return state.With(selectedControlScheme: new InputControlScheme(
+                    MakeUniqueControlSchemeName(state, kNewControlSchemeName)));
+            };
         }
 
         public static Command AddDeviceRequirement(InputControlScheme.DeviceRequirement requirement)
         {
-            return (in InputActionsEditorState state) => state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
-                state.selectedControlScheme.deviceRequirements.Append(requirement)));
+            return (in InputActionsEditorState state) =>
+            {
+                state.m_Analytics.RegisterControlSchemeEdit();
+                return state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
+                    state.selectedControlScheme.deviceRequirements.Append(requirement)));
+            };
         }
 
         public static Command RemoveDeviceRequirement(int selectedDeviceIndex)
         {
             return (in InputActionsEditorState state) =>
             {
+                state.m_Analytics.RegisterControlSchemeEdit();
                 return state.With(selectedControlScheme: new InputControlScheme(state.selectedControlScheme.name,
                     state.selectedControlScheme.deviceRequirements.Where((r, i) => i != selectedDeviceIndex)));
             };
@@ -132,9 +141,14 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public static Command DuplicateSelectedControlScheme()
         {
-            return (in InputActionsEditorState state) => state.With(selectedControlScheme: new InputControlScheme(
-                MakeUniqueControlSchemeName(state, state.selectedControlScheme.name),
-                state.selectedControlScheme.deviceRequirements));
+            return (in InputActionsEditorState state) =>
+            {
+                state.m_Analytics.RegisterControlSchemeEdit();
+
+                return state.With(selectedControlScheme: new InputControlScheme(
+                    MakeUniqueControlSchemeName(state, state.selectedControlScheme.name),
+                    state.selectedControlScheme.deviceRequirements));
+            };
         }
 
         public static Command DeleteSelectedControlScheme()
@@ -164,6 +178,8 @@ namespace UnityEngine.InputSystem.Editor
                         selectedControlSchemeIndex: serializedArray.arraySize - 1,
                         selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)));
 
+                state.m_Analytics.RegisterControlSchemeEdit();
+
                 return state.With(
                     selectedControlSchemeIndex: indexOfArrayElement,
                     selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)));
@@ -191,6 +207,8 @@ namespace UnityEngine.InputSystem.Editor
                 requirement.isOptional = !isRequired;
                 deviceRequirements[deviceRequirementIndex] = requirement;
 
+                state.m_Analytics.RegisterControlSchemeEdit();
+
                 return state.With(selectedControlScheme: new InputControlScheme(
                     state.selectedControlScheme.name,
                     deviceRequirements,
@@ -206,6 +224,8 @@ namespace UnityEngine.InputSystem.Editor
                 var requirement = deviceRequirements[oldPosition];
                 deviceRequirements.RemoveAt(oldPosition);
                 deviceRequirements.Insert(newPosition, requirement);
+
+                state.m_Analytics.RegisterControlSchemeEdit();
 
                 return state.With(selectedControlScheme: new InputControlScheme(
                     state.selectedControlScheme.name,
@@ -238,6 +258,8 @@ namespace UnityEngine.InputSystem.Editor
                         .Split(InputBinding.kSeparatorString)
                         .Where(s => s != controlScheme)
                         .Join(InputBinding.kSeparatorString);
+
+                state.m_Analytics.RegisterBindingEdit();
 
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
