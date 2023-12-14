@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem.Editor
 
         static string s_DefaultAssetPath = kDefaultAssetPath;
         static string s_AssetPath = kAssetPath;
+        static InputActionMap s_DefaultUIMap;
 
 #if UNITY_INCLUDE_TESTS
         internal static void SetAssetPaths(string defaultAssetPath, string assetPath)
@@ -59,6 +60,8 @@ namespace UnityEngine.InputSystem.Editor
             asset.LoadFromJson(json);
             asset.name = kAssetName;
 
+            GetDefaultUIActionMap();
+
             AssetDatabase.AddObjectToAsset(asset, s_AssetPath);
 
             // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
@@ -92,6 +95,13 @@ namespace UnityEngine.InputSystem.Editor
 
             return asset;
         }
+        
+        private static void GetDefaultUIActionMap()
+        {
+            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath));
+            var actionMaps = InputActionMap.FromJson(json);
+            s_DefaultUIMap = actionMaps.FirstOrDefault(m => m.name == "UI");
+        }
 
         private static void CreateInputActionReferences(InputActionAsset asset)
         {
@@ -103,6 +113,36 @@ namespace UnityEngine.InputSystem.Editor
                     var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
                     actionReference.Set(action);
                     AssetDatabase.AddObjectToAsset(actionReference, asset);
+                }
+            }
+        }
+
+        internal static void CheckForDefaultUIActionMapChanges()
+        {
+            var asset = GetOrCreate();
+            if (asset != null)
+            {
+                if (s_DefaultUIMap == null)
+                    GetDefaultUIActionMap();
+                
+                var uiMap = asset.actionMaps.FirstOrDefault(m => m.name == "UI");
+                // "UI" action map has been removed or renamed.
+                if (uiMap == null)
+                {
+                    Debug.LogWarning("The default UI action map does not exist.\r\n " +
+                        "This will break the UI input at runtime. Please revert the changes to restore the default UI action map.");
+                    return;
+                }
+
+                // "UI" action map has been modified.
+                foreach (var action in s_DefaultUIMap)
+                {
+                    if(uiMap.FindAction(action.name) == null)
+                    {
+                        Debug.LogWarning($"The UI action \"{action.name}\" has been modified.\r\n " +
+                            "This will break the UI input at runtime. Please revert the changes to restore the default UI action map.");
+                        return;
+                    }
                 }
             }
         }
