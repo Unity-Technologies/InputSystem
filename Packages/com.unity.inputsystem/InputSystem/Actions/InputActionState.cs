@@ -4370,33 +4370,6 @@ namespace UnityEngine.InputSystem
             return numFound;
         }
 
-        // Walk all maps and find by the action's ID.
-        internal static InputAction FindAction(Guid id)
-        {
-            var stateCount = s_GlobalState.globalList.length;
-            for (var i = 0; i < stateCount; ++i)
-            {
-                var handle = s_GlobalState.globalList[i];
-                if (!handle.IsAllocated)
-                    continue;
-                var state = (InputActionState)handle.Target;
-                if (state == null)
-                    continue;
-
-                var mapCount = state.totalMapCount;
-                var maps = state.maps;
-                for (var n = 0; n < mapCount; ++n)
-                {
-                    var map = maps[n];
-                    var action = map.FindAction(id);
-                    if (action != null)
-                        return action;
-                }
-            }
-
-            return null;
-        }
-
         ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them
 
         /// <summary>

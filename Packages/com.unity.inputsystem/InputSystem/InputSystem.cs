@@ -3308,23 +3308,6 @@ namespace UnityEngine.InputSystem
             return InputActionState.FindAllEnabledActions(actions);
         }
 
-        /// <summary>
-        /// Find an action by its ID (see <see cref="InputAction.id"/>).
-        /// </summary>
-        /// <param name="id">ID of the action to look for.</param>
-        /// <returns>Returns the action with the given ID or <see langword="null"/> if no action could be found with the given ID.</returns>
-        /// <remarks>
-        /// For the action to be found, the action must be part of an <see cref="InputActionAsset"/>
-        /// that has had any of its actions enabled at some point. For embedded actions that are not part of an asset, the
-        /// action must have been enabled at some point.
-        /// </remarks>
-        /// <seealso cref="InputActionAsset.FindAction(Guid)"/>
-        /// <seealso cref="InputActionMap.FindAction(Guid)"/>
-        public static InputAction FindAction(Guid id)
-        {
-            return InputActionState.FindAction(id);
-        }
-
         #endregion
 
         #region Remoting
