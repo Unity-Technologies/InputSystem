@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.Editor
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
                 if (typeOfCopiedData != typeof(InputActionMap)) return state;
                 var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
-                CopyPasteHelper.PasteFromClipboard(new int[] { state.selectedActionMapIndex }, actionMapArray);
+                CopyPasteHelper.PasteFromClipboard(new int[] { state.selectedActionMapIndex }, actionMapArray, state);
                 if (CopyPasteHelper.lastAddedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
@@ -141,7 +141,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                CopyPasteHelper.PasteFromClipboard(new[] { actionArray.arraySize - 1 }, actionArray, actionMap);
+                CopyPasteHelper.PasteFromClipboard(new[] { actionArray.arraySize - 1 }, actionArray, state);
                 if (CopyPasteHelper.lastAddedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
@@ -160,7 +160,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, actionMap);
+                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, state);
                     if (CopyPasteHelper.lastAddedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
@@ -171,10 +171,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-                    var actionName = state.selectionType == SelectionType.Action ?
-                        Selectors.GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative("m_Name").stringValue
-                        : Selectors.GetSelectedBinding(state)?.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
-                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedBindingIndex }, bindingsArray, actionName: actionName);
+                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedBindingIndex }, bindingsArray, state);
                     if (CopyPasteHelper.lastAddedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
@@ -203,10 +200,9 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
-                var actionName = action?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                CopyPasteHelper.DuplicateAction(actionMap, actionArray, action, actionName);
+                CopyPasteHelper.DuplicateAction(actionArray, action);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectAction(state.selectedActionIndex + 1);
             };

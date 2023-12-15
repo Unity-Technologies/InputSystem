@@ -1467,7 +1467,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This is not serialized. The action map will restore this back references after deserialization.
         /// </remarks>
-        [SerializeField] internal InputActionMap m_ActionMap;
+        [NonSerialized] internal InputActionMap m_ActionMap;
 
         // Listeners. No array allocations if only a single listener.
         [NonSerialized] internal CallbackArray<Action<CallbackContext>> m_OnStarted;

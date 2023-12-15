@@ -20,6 +20,14 @@ namespace UnityEngine.InputSystem.Editor
                 ?? Enumerable.Empty<string>();
         }
 
+        public static SerializedProperty GetActionMapForAction(InputActionsEditorState state, string id)
+        {
+            return state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?
+                .FirstOrDefault(map=>map.FindPropertyRelative("m_Actions")
+                    .Select(a=>a.FindPropertyRelative("m_Id").stringValue)
+                    .Contains(id));
+        }
+
         public static IEnumerable<SerializedInputAction> GetActionsForSelectedActionMap(InputActionsEditorState state)
         {
             var actionMap = GetActionMapAtIndex(state, state.selectedActionMapIndex);
