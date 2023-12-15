@@ -1618,7 +1618,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanQueryIfUnperformedInCurrentFrame()
+    public void Actions_WhenDisabled_DoesNotBecomeUnperformed()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
