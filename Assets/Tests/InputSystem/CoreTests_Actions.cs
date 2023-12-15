@@ -2171,13 +2171,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | W -> S, P, S*    | T/  |              |        |
-            // | Value  | Press       | W -> S           |  /  | true         |        |
-            // | Value  | Hold        | W    (No Change) |  /  |              | true   |
-            // | Button | Default     | W -> S           |  /  | true         |        |
-            // | Button | Press       | W -> S           |  /  | true         |        |
-            // | Button | Hold        | W    (No Change) |  /  |              | true   |
-            // | Pass   | Default     | W -> P           | T/  |              |        |
+            // | Value  | Default     | W -> S, P, S*    | T/F |              |        |
+            // | Value  | Press       | W -> S           | F/F | true         |        |
+            // | Value  | Hold        | W    (No Change) | F/F |              | true   |
+            // | Button | Default     | W -> S           | F/F | true         |        |
+            // | Button | Press       | W -> S           | F/F | true         |        |
+            // | Button | Hold        | W    (No Change) | F/F |              | true   |
+            // | Pass   | Default     | W -> P           | T/F |              |        |
 
             Assert.That(action.IsPressed(), Is.False);
             Assert.That(action.WasPressedThisFrame(), Is.False);
@@ -2222,13 +2222,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | S -> P, S*       | T/  |              |        |
-            // | Value  | Press       | S -> P           | T/  | true         |        |
-            // | Value  | Hold        | W -> S           |  /  |              | true   |
-            // | Button | Default     | S -> P           | T/  | true         |        |
-            // | Button | Press       | S -> P           | T/  | true         |        |
-            // | Button | Hold        | W -> S           |  /  |              | true   |
-            // | Pass   | Default     | P -> P           | T/  |              |        |
+            // | Value  | Default     | S -> P, S*       | T/F |              |        |
+            // | Value  | Press       | S -> P           | T/F | true         |        |
+            // | Value  | Hold        | W -> S           | F/F |              | true   |
+            // | Button | Default     | S -> P           | T/F | true         |        |
+            // | Button | Press       | S -> P           | T/F | true         |        |
+            // | Button | Hold        | W -> S           | F/F |              | true   |
+            // | Pass   | Default     | P -> P           | T/F |              |        |
 
             Assert.That(action.IsPressed(), Is.True);
             Assert.That(action.WasPressedThisFrame(), Is.True);
@@ -2324,13 +2324,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | W -> S, P, S*    | T/  |              |        |
-            // | Value  | Press       | W -> S, P        | T/  | true         |        |
-            // | Value  | Hold        | W -> S           |  /  |              | true   |
-            // | Button | Default     | W    (No Change) |  /  | true         |        |
-            // | Button | Press       | W    (No Change) |  /  | true         |        |
-            // | Button | Hold        | W    (No Change) |  /  |              | true   |
-            // | Pass   | Default     | W    (No Change) |  /  |              |        |
+            // | Value  | Default     | W -> S, P, S*    | T/F |              |        |
+            // | Value  | Press       | W -> S, P        | T/F | true         |        |
+            // | Value  | Hold        | W -> S           | F/F |              | true   |
+            // | Button | Default     | W    (No Change) | F/F | true         |        |
+            // | Button | Press       | W    (No Change) | F/F | true         |        |
+            // | Button | Hold        | W    (No Change) | F/F |              | true   |
+            // | Pass   | Default     | W    (No Change) | F/F |              |        |
 
             // Value actions perform an initial state check which flips the press state
             // back on.
@@ -2381,10 +2381,10 @@ partial class CoreTests
                 // P/U = Performed/Unperformed
                 // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
                 // |--------|-------------|------------------|-----|--------------|--------|
-                // | Button | Default     | W -> S, P        | T/  | true         |        |
-                // | Button | Press       | W -> S, P        | T/  | true         |        |
-                // | Button | Hold        | W -> S           |  /  |              | true   |
-                // | Pass   | Default     | W -> P           | T/  |              |        |
+                // | Button | Default     | W -> S, P        | T/F | true         |        |
+                // | Button | Press       | W -> S, P        | T/F | true         |        |
+                // | Button | Hold        | W -> S           | F/F |              | true   |
+                // | Pass   | Default     | W -> P           | T/F |              |        |
 
                 Assert.That(action.IsPressed(), Is.True);
                 Assert.That(action.WasPressedThisFrame(), Is.True);
@@ -2423,13 +2423,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | S -> P, S*       | T/  |              |        |
-            // | Value  | Press       | P    (No Change) |  /  | true         |        |
-            // | Value  | Hold        | S    (No Change) |  /  |              | true   |
-            // | Button | Default     | P    (No Change) |  /  | true         |        |
-            // | Button | Press       | P    (No Change) |  /  | true         |        |
-            // | Button | Hold        | S    (No Change) |  /  |              | true   |
-            // | Pass   | Default     | P -> P           | T/  |              |        |
+            // | Value  | Default     | S -> P, S*       | T/F |              |        |
+            // | Value  | Press       | P    (No Change) | F/F | true         |        |
+            // | Value  | Hold        | S    (No Change) | F/F |              | true   |
+            // | Button | Default     | P    (No Change) | F/F | true         |        |
+            // | Button | Press       | P    (No Change) | F/F | true         |        |
+            // | Button | Hold        | S    (No Change) | F/F |              | true   |
+            // | Pass   | Default     | P -> P           | T/F |              |        |
 
             Assert.That(action.IsPressed(), Is.True);
             Assert.That(action.WasPressedThisFrame(), Is.False);
@@ -2474,13 +2474,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | S -> P, S*       | T/  |              |        |
-            // | Value  | Press       | P -> S           |  /T | true         |        |
-            // | Value  | Hold        | S    (No Change) |  /  |              | true   |
-            // | Button | Default     | P -> S           |  /T | true         |        |
-            // | Button | Press       | P -> S           |  /T | true         |        |
-            // | Button | Hold        | S    (No Change) |  /  |              | true   |
-            // | Pass   | Default     | P -> P           | T/  |              |        |
+            // | Value  | Default     | S -> P, S*       | T/F |              |        |
+            // | Value  | Press       | P -> S           | F/T | true         |        |
+            // | Value  | Hold        | S    (No Change) | F/F |              | true   |
+            // | Button | Default     | P -> S           | F/T | true         |        |
+            // | Button | Press       | P -> S           | F/T | true         |        |
+            // | Button | Hold        | S    (No Change) | F/F |              | true   |
+            // | Pass   | Default     | P -> P           | T/F |              |        |
 
             Assert.That(action.IsPressed(), Is.False);
             Assert.That(action.WasPressedThisFrame(), Is.False);
@@ -2589,13 +2589,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | W -> S, P, S*    | T/  |              |        |
-            // | Value  | Press       | W -> S           |  /  | true         |        |
-            // | Value  | Hold        | W    (No Change) |  /  |              | true   |
-            // | Button | Default     | W    (No Change) |  /  | true         |        |
-            // | Button | Press       | W    (No Change) |  /  | true         |        |
-            // | Button | Hold        | W    (No Change) |  /  |              | true   |
-            // | Pass   | Default     | W    (No Change) |  /  |              |        |
+            // | Value  | Default     | W -> S, P, S*    | T/F |              |        |
+            // | Value  | Press       | W -> S           | F/F | true         |        |
+            // | Value  | Hold        | W    (No Change) | F/F |              | true   |
+            // | Button | Default     | W    (No Change) | F/F | true         |        |
+            // | Button | Press       | W    (No Change) | F/F | true         |        |
+            // | Button | Hold        | W    (No Change) | F/F |              | true   |
+            // | Pass   | Default     | W    (No Change) | F/F |              |        |
 
             Assert.That(action.IsPressed(), Is.False);
             Assert.That(action.WasPressedThisFrame(), Is.False);
@@ -2634,13 +2634,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | S -> P, S*, P, S*| T/  |              |        |
+            // | Value  | Default     | S -> P, S*, P, S*| T/F |              |        |
             // | Value  | Press       | S -> P, S        | T/T | true         |        |
-            // | Value  | Hold        | W -> S           |  /  |              | true   |
+            // | Value  | Hold        | W -> S           | F/F |              | true   |
             // | Button | Default     | W -> S, P, S     | T/T | true         |        |
             // | Button | Press       | W -> S, P, S     | T/T | true         |        |
-            // | Button | Hold        | W -> S           |  /  |              | true   |
-            // | Pass   | Default     | W -> P, P        | T/  |              |        |
+            // | Button | Hold        | W -> S           | F/F |              | true   |
+            // | Pass   | Default     | W -> P, P        | T/F |              |        |
 
             Assert.That(action.IsPressed(), Is.False);
             Assert.That(action.WasPressedThisFrame(), Is.True);
@@ -2690,13 +2690,13 @@ partial class CoreTests
             // W = Waiting, S = Started, P = Performed, C = Canceled
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
-            // | Value  | Default     | S    (No Change) |  /  |              |        |
-            // | Value  | Press       | S    (No Change) |  /  | true         |        |
-            // | Value  | Hold        | S    (No Change) |  /  |              | true   |
-            // | Button | Default     | S    (No Change) |  /  | true         |        |
-            // | Button | Press       | S    (No Change) |  /  | true         |        |
-            // | Button | Hold        | S    (No Change) |  /  |              | true   |
-            // | Pass   | Default     | P    (No Change) |  /  |              |        |
+            // | Value  | Default     | S    (No Change) | F/F |              |        |
+            // | Value  | Press       | S    (No Change) | F/F | true         |        |
+            // | Value  | Hold        | S    (No Change) | F/F |              | true   |
+            // | Button | Default     | S    (No Change) | F/F | true         |        |
+            // | Button | Press       | S    (No Change) | F/F | true         |        |
+            // | Button | Hold        | S    (No Change) | F/F |              | true   |
+            // | Pass   | Default     | P    (No Change) | F/F |              |        |
 
             Assert.That(action.IsPressed(), Is.False);
             Assert.That(action.WasPressedThisFrame(), Is.False);
@@ -2728,13 +2728,13 @@ partial class CoreTests
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change             | P/U | isButtonLike | isHold |
             // |--------|-------------|--------------------------|-----|--------------|--------|
-            // | Value  | Default     | S -> P, S*, P, S*, P, S* | T/  |              |        |
+            // | Value  | Default     | S -> P, S*, P, S*, P, S* | T/F |              |        |
             // | Value  | Press       | S -> P, S, P             | T/T | true         |        |
-            // | Value  | Hold        | S    (No Change)         |  /  |              | true   |
+            // | Value  | Hold        | S    (No Change)         | F/F |              | true   |
             // | Button | Default     | S -> P, S, P             | T/T | true         |        |
             // | Button | Press       | S -> P, S, P             | T/T | true         |        |
-            // | Button | Hold        | S    (No Change)         |  /  |              | true   |
-            // | Pass   | Default     | P -> P, P, P             | T/  |              |        |
+            // | Button | Hold        | S    (No Change)         | F/F |              | true   |
+            // | Pass   | Default     | P -> P, P, P             | T/F |              |        |
 
             Assert.That(action.IsPressed(), Is.True);
             Assert.That(action.WasPressedThisFrame(), Is.True);
