@@ -139,8 +139,9 @@ namespace UnityEngine.InputSystem.Editor
             return duplicatedProperty;
         }
 
-        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate)
+        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, InputActionsEditorState state)
         {
+            m_State = state;
             var json = toDuplicate.CopyToJson(true);
             PasteAction(arrayProperty, json, toDuplicate.GetIndexOfArrayElement() + 1);
         }

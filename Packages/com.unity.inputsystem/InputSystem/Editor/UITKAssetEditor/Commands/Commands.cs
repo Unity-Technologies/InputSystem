@@ -202,7 +202,7 @@ namespace UnityEngine.InputSystem.Editor
                 var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                CopyPasteHelper.DuplicateAction(actionArray, action);
+                CopyPasteHelper.DuplicateAction(actionArray, action, state);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectAction(state.selectedActionIndex + 1);
             };
