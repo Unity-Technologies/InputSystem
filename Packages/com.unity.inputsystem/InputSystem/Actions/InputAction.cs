@@ -608,7 +608,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Type of value returned by <see cref="ReadValueAsObject"/> and expected
+        /// Type of value returned by <see cref="ReadValueAsObject"/> and currently expected
         /// by <see cref="ReadValue{TValue}"/>. <see langword="null"/> while the action
         /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
         /// state as this is based on the currently active control that is driving the action.
@@ -622,6 +622,12 @@ namespace UnityEngine.InputSystem
         /// However, if the binding that triggered is a composite, then the composite
         /// will determine values and not the individual control that triggered (that
         /// one just feeds values into the composite).
+        ///
+        /// The active value type may change depending on which controls are actuated if there are multiple
+        /// bindings with different control types. This property can be used to ensure you are calling the
+        /// <see cref="ReadValue{TValue}"/> method with the expected type parameter if your action is
+        /// configured to allow multiple control types as otherwise that method will throw an <see cref="InvalidOperationException"/>
+        /// if the type of the control that triggered the action does not match the type parameter.
         /// </remarks>
         /// <seealso cref="InputControl.valueType"/>
         /// <seealso cref="InputBindingComposite.valueType"/>
@@ -1345,8 +1351,8 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Check whether <see cref="phase"/> changed away from <see cref="InputActionPhase.Performed"/> at any point
-        /// in the current frame after being in performed state.
+        /// Check whether <see cref="phase"/> transitioned from <see cref="InputActionPhase.Performed"/> to any other phase
+        /// value at least once in the current frame.
         /// </summary>
         /// <returns>True if the action unperformed this frame.</returns>
         /// <remarks>
