@@ -1371,15 +1371,17 @@ namespace UnityEngine.InputSystem
         /// and only in the frame where the hold performed.
         ///
         /// For another example where the action could be considered pressed but also unperformed, let's say the action
-        /// is bound to the thumbstick and that the binding has a Sector interaction assigned to it such that it only
-        /// performs in the forward sector area past a button press threshold. In the frame where the thumbstick is
-        /// pushed forward, both <see cref="WasPressedThisFrame"/> will be true (because the thumbstick actuation is
+        /// is bound to the thumbstick and that the binding has a Sector interaction from the XR Interaction Toolkit assigned
+        /// to it such that it only performs in the forward sector area past a button press threshold. In the frame where the
+        /// thumbstick is pushed forward, both <see cref="WasPressedThisFrame"/> will be true (because the thumbstick actuation is
         /// now considered pressed) and <see cref="WasPerformedThisFrame"/> will be true (because the thumbstick is in
         /// the forward sector). If the thumbstick is then moved to the left in a sweeping motion, <see cref="IsPressed"/>
         /// will still be true. However, <c>WasUnperformedThisFrame</c> will also be true (because the thumbstick is
         /// no longer in the forward sector while still crossed the button press threshold) and only in the frame where
-        /// the thumbstick was no longer within the forward sector.
-        ///
+        /// the thumbstick was no longer within the forward sector. For more details about the Sector interaction, see
+        /// <a href="https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@2.5/api/UnityEngine.XR.Interaction.Toolkit.Inputs.Interactions.SectorInteraction.html"><c>SectorInteraction</c></a>
+        /// in the XR Interaction Toolkit Scripting API documentation.
+        /// <br />
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (that is, until the next
         /// <see cref="InputSystem.Update"/> runs) as long as the action was unperformed at least once.
