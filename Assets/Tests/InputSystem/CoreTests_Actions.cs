@@ -2167,7 +2167,7 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.25f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
@@ -2218,7 +2218,7 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.75f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
@@ -2320,7 +2320,7 @@ partial class CoreTests
             InputSystem.Update();
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
@@ -2378,7 +2378,7 @@ partial class CoreTests
                 Set(gamepad.leftTrigger, 0.6f);
 
                 // W = Waiting, S = Started, P = Performed, C = Canceled
-                // P/U = Performed/Unperformed
+                // P/U = Performed/Unperformed, T = True, F = False
                 // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
                 // |--------|-------------|------------------|-----|--------------|--------|
                 // | Button | Default     | W -> S, P        | T/F | true         |        |
@@ -2419,7 +2419,7 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.41f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
@@ -2470,7 +2470,7 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.2f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
@@ -2585,7 +2585,7 @@ partial class CoreTests
             InputSystem.Update();
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
@@ -2630,7 +2630,7 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.25f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed
+            // P/U = Performed/Unperformed, T = True, F = False
             // (* means listeners not invoked)
             // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
