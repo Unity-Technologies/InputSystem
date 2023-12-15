@@ -1618,6 +1618,63 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanQueryIfHoldInteractionUnperformedInCurrentFrame()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var holdAction = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.5)");
+
+        holdAction.Enable();
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.False);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.True);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
+
+        InputSystem.Update();
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.False);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
+
+        // Release before the hold duration threshold was met.
+        Release(gamepad.buttonSouth);
+
+        Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
+        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.True);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
+
+        currentTime += 1;
+        InputSystem.Update();
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.False);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.False);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
+
+        // Release after the hold duration threshold was met.
+        Release(gamepad.buttonSouth);
+
+        Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
+        Assert.That(holdAction.WasUnperformedThisFrame(), Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(holdAction.WasPressedThisFrame(), Is.False);
+        Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenDisabled_DoesNotBecomeUnperformed()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
