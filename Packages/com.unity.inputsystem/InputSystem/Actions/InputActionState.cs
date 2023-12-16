@@ -548,7 +548,7 @@ namespace UnityEngine.InputSystem
 
                 newActionState.lastCanceledInUpdate = oldActionState.lastCanceledInUpdate;
                 newActionState.lastPerformedInUpdate = oldActionState.lastPerformedInUpdate;
-                newActionState.lastUnperformedInUpdate = oldActionState.lastUnperformedInUpdate;
+                newActionState.lastCompletedInUpdate = oldActionState.lastCompletedInUpdate;
                 newActionState.pressedInUpdate = oldActionState.pressedInUpdate;
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
@@ -874,7 +874,7 @@ namespace UnityEngine.InputSystem
             {
                 actionState->lastCanceledInUpdate = default;
                 actionState->lastPerformedInUpdate = default;
-                actionState->lastUnperformedInUpdate = default;
+                actionState->lastCompletedInUpdate = default;
                 actionState->pressedInUpdate = default;
                 actionState->releasedInUpdate = default;
             }
@@ -2437,11 +2437,11 @@ namespace UnityEngine.InputSystem
 
             // When we go from Performed to Disabling, we take a detour through Canceled.
             // To replicate the behavior of releasedInUpdate where it doesn't get updated when the action is disabled
-            // from being performed, we skip updating lastUnperformedInUpdate if Disabled is the phase after Canceled.
+            // from being performed, we skip updating lastCompletedInUpdate if Disabled is the phase after Canceled.
             if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed && !isDisablingAction)
-                newState.lastUnperformedInUpdate = InputUpdate.s_UpdateStepCount;
+                newState.lastCompletedInUpdate = InputUpdate.s_UpdateStepCount;
             else
-                newState.lastUnperformedInUpdate = actionState->lastUnperformedInUpdate;
+                newState.lastCompletedInUpdate = actionState->lastCompletedInUpdate;
 
             newState.pressedInUpdate = actionState->pressedInUpdate;
             newState.releasedInUpdate = actionState->releasedInUpdate;
@@ -3614,7 +3614,7 @@ namespace UnityEngine.InputSystem
             [FieldOffset(36)] private uint m_LastCanceledInUpdate;
             [FieldOffset(40)] private uint m_PressedInUpdate;
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
-            [FieldOffset(48)] private uint m_LastUnperformedInUpdate;
+            [FieldOffset(48)] private uint m_LastCompletedInUpdate;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3771,13 +3771,13 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action unperformed last.
-            /// Zero if the action did not become unperformed yet. Also reset to zero when the action is hard reset.
+            /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action completed last.
+            /// Zero if the action did not become completed yet. Also reset to zero when the action is hard reset.
             /// </summary>
-            public uint lastUnperformedInUpdate
+            public uint lastCompletedInUpdate
             {
-                get => m_LastUnperformedInUpdate;
-                set => m_LastUnperformedInUpdate = value;
+                get => m_LastCompletedInUpdate;
+                set => m_LastCompletedInUpdate = value;
             }
 
             public uint lastCanceledInUpdate

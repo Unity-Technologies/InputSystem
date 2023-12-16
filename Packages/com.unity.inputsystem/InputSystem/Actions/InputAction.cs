@@ -1277,7 +1277,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
-        /// <seealso cref="WasUnperformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
         public unsafe bool WasReleasedThisFrame()
         {
             var state = GetOrCreateActionMap().m_State;
@@ -1333,7 +1333,7 @@ namespace UnityEngine.InputSystem
         /// The meaning of "frame" is either the current "dynamic" update (<c>MonoBehaviour.Update</c>) or the current
         /// fixed update (<c>MonoBehaviour.FixedUpdate</c>) depending on the value of the <see cref="InputSettings.updateMode"/> setting.
         /// </remarks>
-        /// <seealso cref="WasUnperformedThisFrame"/>
+        /// <seealso cref="WasCompletedThisFrame"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="phase"/>
         public unsafe bool WasPerformedThisFrame()
@@ -1354,8 +1354,11 @@ namespace UnityEngine.InputSystem
         /// Check whether <see cref="phase"/> transitioned from <see cref="InputActionPhase.Performed"/> to any other phase
         /// value at least once in the current frame.
         /// </summary>
-        /// <returns>True if the action unperformed this frame.</returns>
+        /// <returns>True if the action completed this frame.</returns>
         /// <remarks>
+        /// Although <see cref="InputActionPhase.Disabled"/> is technically a phase, this method does not consider disabling
+        /// the action while the action is in <see cref="InputActionPhase.Performed"/> to be "completed".
+        ///
         /// This method is different from <see cref="WasReleasedThisFrame"/> in that it depends directly on the
         /// interaction(s) driving the action (including the default interaction if no specific interaction
         /// has been added to the action or binding).
@@ -1365,18 +1368,19 @@ namespace UnityEngine.InputSystem
         /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
         /// but <see cref="WasPerformedThisFrame"/> will still be false (because the hold has not been performed yet).
         /// If at that time the space bar is released, <see cref="WasReleasedThisFrame"/> will be true (because the
-        /// button/key is now released) but <c>WasUnperformedThisFrame</c> will still be false (because the hold
-        /// had not been performed yet). If instead the space bar is held down for long enough for the hold interaction
-        /// and then released, <c>WasUnperformedThisFrame</c> will be true (because the action is no longer performed)
-        /// and only in the frame where the hold performed.
+        /// button/key is now released) but <c>WasCompletedThisFrame</c> will still be false (because the hold
+        /// had not been performed yet). If instead the space bar is held down for long enough for the hold interaction,
+        /// the phase will change to and stay <see cref="InputActionPhase.Performed"/> and <see cref="WasPerformedThisFrame"/>
+        /// will be true for one frame as it meets the duration threshold. Once released, <c>WasCompletedThisFrame</c> will be true
+        /// (because the action is no longer performed) and only in the frame where the hold transitioned away from Performed.
         ///
-        /// For another example where the action could be considered pressed but also unperformed, let's say the action
+        /// For another example where the action could be considered pressed but also completed, let's say the action
         /// is bound to the thumbstick and that the binding has a Sector interaction from the XR Interaction Toolkit assigned
         /// to it such that it only performs in the forward sector area past a button press threshold. In the frame where the
         /// thumbstick is pushed forward, both <see cref="WasPressedThisFrame"/> will be true (because the thumbstick actuation is
         /// now considered pressed) and <see cref="WasPerformedThisFrame"/> will be true (because the thumbstick is in
         /// the forward sector). If the thumbstick is then moved to the left in a sweeping motion, <see cref="IsPressed"/>
-        /// will still be true. However, <c>WasUnperformedThisFrame</c> will also be true (because the thumbstick is
+        /// will still be true. However, <c>WasCompletedThisFrame</c> will also be true (because the thumbstick is
         /// no longer in the forward sector while still crossed the button press threshold) and only in the frame where
         /// the thumbstick was no longer within the forward sector. For more details about the Sector interaction, see
         /// <a href="https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@2.5/api/UnityEngine.XR.Interaction.Toolkit.Inputs.Interactions.SectorInteraction.html"><c>SectorInteraction</c></a>
@@ -1384,14 +1388,14 @@ namespace UnityEngine.InputSystem
         /// <br />
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (that is, until the next
-        /// <see cref="InputSystem.Update"/> runs) as long as the action was unperformed at least once.
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was completed at least once.
         ///
         /// <example>
         /// <code>
         /// var teleport = playerInput.actions["Teleport"];
         /// if (teleport.WasPerformedThisFrame())
         ///     InitiateTeleport();
-        /// else if (teleport.WasUnperformedThisFrame())
+        /// else if (teleport.WasCompletedThisFrame())
         ///     StopTeleport();
         /// </code>
         /// </example>
@@ -1405,7 +1409,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="WasPerformedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
         /// <seealso cref="phase"/>
-        public unsafe bool WasUnperformedThisFrame()
+        public unsafe bool WasCompletedThisFrame()
         {
             var state = GetOrCreateActionMap().m_State;
 
@@ -1413,7 +1417,7 @@ namespace UnityEngine.InputSystem
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
-                return actionStatePtr->lastUnperformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+                return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
 
             return false;
@@ -1442,8 +1446,8 @@ namespace UnityEngine.InputSystem
         /// completion percentage and <see cref="phase"/>.
         ///
         /// The meaning of the timeout is dependent on the interaction in play. For a <see cref="Interactions.HoldInteraction"/>,
-        /// the timeout represents "completion" (that is, the time until a "hold" is considered to be performed), whereas
-        /// for a <see cref="Interactions.TapInteraction"/> it represents "time to failure" (that is, the remaining time window
+        /// "completion" represents the duration timeout (that is, the time until a "hold" is considered to be performed), whereas
+        /// for a <see cref="Interactions.TapInteraction"/> "completion" represents "time to failure" (that is, the remaining time window
         /// that the interaction can be completed within).
         ///
         /// Note that an interaction might run multiple timeouts in succession. One such example is <see cref="Interactions.MultiTapInteraction"/>.

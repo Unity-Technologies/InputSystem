@@ -1618,7 +1618,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanQueryIfHoldInteractionUnperformedInCurrentFrame()
+    public void Actions_CanQueryIfHoldInteractionCompletedInCurrentFrame()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1643,7 +1643,7 @@ partial class CoreTests
         Release(gamepad.buttonSouth);
 
         Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         Press(gamepad.buttonSouth);
 
@@ -1665,7 +1665,7 @@ partial class CoreTests
         Release(gamepad.buttonSouth);
 
         Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.True);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.True);
 
         InputSystem.Update();
 
@@ -1675,7 +1675,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WhenDisabled_DoesNotBecomeUnperformed()
+    public void Actions_WhenDisabled_DoesNotBecomeCompleted()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1686,64 +1686,64 @@ partial class CoreTests
         holdAction.Enable();
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         Press(gamepad.buttonSouth);
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         currentTime += 1;
         InputSystem.Update();
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         holdAction.Disable();
 
         Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         holdAction.Enable();
 
         Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         InputSystem.Update();
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         Release(gamepad.buttonSouth);
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         simpleAction.Disable();
         holdAction.Disable();
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
         simpleAction.Enable();
         holdAction.Enable();
 
         Assert.That(simpleAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(simpleAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(simpleAction.WasCompletedThisFrame(), Is.False);
         Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
     }
 
     [Test]
@@ -1751,7 +1751,7 @@ partial class CoreTests
     [TestCase(InputActionType.Value)]
     [TestCase(InputActionType.Button)]
     [TestCase(InputActionType.PassThrough)]
-    public void Actions_CanDistinguishCanceledAndUnperformedInCurrentFrame(InputActionType actionType)
+    public void Actions_CanDistinguishCanceledAndCompletedInCurrentFrame(InputActionType actionType)
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1781,19 +1781,19 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.True);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(pressTrace, Started(pressAction).AndThen(Performed(pressAction)));
             Assert.That(pressAction.WasPressedThisFrame(), Is.True);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(holdTrace, Started(holdAction));
             Assert.That(holdAction.WasPressedThisFrame(), Is.True);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
             defaultTrace.Clear();
             pressTrace.Clear();
@@ -1806,25 +1806,25 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(pressTrace, Is.Empty);
             Assert.That(pressAction.WasPressedThisFrame(), Is.False);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(holdTrace, Is.Empty);
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
             defaultTrace.Clear();
             pressTrace.Clear();
             holdTrace.Clear();
 
-            // Release button, the actions should cancel. The hold action should not be considered unperformed
+            // Release button, the actions should cancel. The hold action should not be considered completed
             // since it was not held long enough to be performed.
             Release(gamepad.buttonSouth);
 
@@ -1834,19 +1834,19 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.True);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.EqualTo(actionType == InputActionType.PassThrough));
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.EqualTo(actionType == InputActionType.Button));
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.EqualTo(actionType == InputActionType.Button));
 
             Assert.That(pressTrace, Canceled(pressAction));
             Assert.That(pressAction.WasPressedThisFrame(), Is.False);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.True);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.True);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.True);
 
             Assert.That(holdTrace, Canceled(holdAction));
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
             defaultTrace.Clear();
             pressTrace.Clear();
@@ -1861,19 +1861,19 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.True);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(pressTrace, Started(pressAction).AndThen(Performed(pressAction)));
             Assert.That(pressAction.WasPressedThisFrame(), Is.True);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(holdTrace, Started(holdAction));
             Assert.That(holdAction.WasPressedThisFrame(), Is.True);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
             defaultTrace.Clear();
             pressTrace.Clear();
@@ -1887,19 +1887,19 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(pressTrace, Is.Empty);
             Assert.That(pressAction.WasPressedThisFrame(), Is.False);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(holdTrace, Performed(holdAction));
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.True);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
             defaultTrace.Clear();
             pressTrace.Clear();
@@ -1912,25 +1912,25 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.False);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(pressTrace, Is.Empty);
             Assert.That(pressAction.WasPressedThisFrame(), Is.False);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.False);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.False);
 
             Assert.That(holdTrace, Is.Empty);
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.False);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.False);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.False);
 
             defaultTrace.Clear();
             pressTrace.Clear();
             holdTrace.Clear();
 
-            // Release button, the actions should cancel. The hold action should now be considered unperformed
+            // Release button, the actions should cancel. The hold action should now be considered completed
             // since it was held long enough to be performed.
             Release(gamepad.buttonSouth);
 
@@ -1940,19 +1940,19 @@ partial class CoreTests
             Assert.That(defaultAction.WasPressedThisFrame(), Is.False);
             Assert.That(defaultAction.WasReleasedThisFrame(), Is.True);
             Assert.That(defaultAction.WasPerformedThisFrame(), Is.EqualTo(actionType == InputActionType.PassThrough));
-            Assert.That(defaultAction.WasUnperformedThisFrame(), Is.EqualTo(actionType == InputActionType.Button));
+            Assert.That(defaultAction.WasCompletedThisFrame(), Is.EqualTo(actionType == InputActionType.Button));
 
             Assert.That(pressTrace, Canceled(pressAction));
             Assert.That(pressAction.WasPressedThisFrame(), Is.False);
             Assert.That(pressAction.WasReleasedThisFrame(), Is.True);
             Assert.That(pressAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(pressAction.WasUnperformedThisFrame(), Is.True);
+            Assert.That(pressAction.WasCompletedThisFrame(), Is.True);
 
             Assert.That(holdTrace, Canceled(holdAction));
             Assert.That(holdAction.WasPressedThisFrame(), Is.False);
             Assert.That(holdAction.WasReleasedThisFrame(), Is.True);
             Assert.That(holdAction.WasPerformedThisFrame(), Is.False);
-            Assert.That(holdAction.WasUnperformedThisFrame(), Is.True);
+            Assert.That(holdAction.WasCompletedThisFrame(), Is.True);
         }
     }
 
@@ -2189,7 +2189,7 @@ partial class CoreTests
     {
         // This test is structured the same as Actions_CanReadValueFromAction_AsButton above,
         // but with additional testing that the phase changes are correct for the given action type and interaction,
-        // and additinally test functionality of WasPerformedThisFrame() and WasUnperformedThisFrame(), which can
+        // and additionally test functionality of WasPerformedThisFrame() and WasCompletedThisFrame(), which can
         // be different than WasPressedThisFrame() and WasReleasedThisFrame().
 
         // Set global press and release points to known values.
@@ -2218,15 +2218,15 @@ partial class CoreTests
             Assert.That(trace, Is.Empty);
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
             Assert.That(action.WasPerformedThisFrame(), Is.False);
-            Assert.That(action.WasUnperformedThisFrame(), Is.False);
+            Assert.That(action.WasCompletedThisFrame(), Is.False);
 
             // Press such that it stays below press threshold.
             Set(gamepad.leftTrigger, 0.25f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | W -> S, P, S*    | T/F |              |        |
             // | Value  | Press       | W -> S           | F/F | true         |        |
@@ -2245,28 +2245,28 @@ partial class CoreTests
                 Assert.That(trace, Started(action).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isButtonLike)
             {
                 Assert.That(trace, Started(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isHold)
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (action.type == InputActionType.PassThrough)
             {
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2275,9 +2275,9 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.75f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | S -> P, S*       | T/F |              |        |
             // | Value  | Press       | S -> P           | T/F | true         |        |
@@ -2296,21 +2296,21 @@ partial class CoreTests
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isHold)
             {
                 Assert.That(trace, Started(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2328,17 +2328,17 @@ partial class CoreTests
             if (action.type == InputActionType.Value && interactions == null)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isHold)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2358,17 +2358,17 @@ partial class CoreTests
             if (action.type == InputActionType.Value && interactions == null)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isHold)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2377,9 +2377,9 @@ partial class CoreTests
             InputSystem.Update();
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | W -> S, P, S*    | T/F |              |        |
             // | Value  | Press       | W -> S, P        | T/F | true         |        |
@@ -2402,21 +2402,21 @@ partial class CoreTests
                     Assert.That(trace, Started(action).AndThen(Performed(action)));
                     Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                     Assert.That(action.WasPerformedThisFrame(), Is.True);
-                    Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                    Assert.That(action.WasCompletedThisFrame(), Is.False);
                 }
                 else if (isPress)
                 {
                     Assert.That(trace, Started(action).AndThen(Performed(action)));
                     Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                     Assert.That(action.WasPerformedThisFrame(), Is.True);
-                    Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                    Assert.That(action.WasCompletedThisFrame(), Is.False);
                 }
                 else if (isHold)
                 {
                     Assert.That(trace, Started(action));
                     Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                     Assert.That(action.WasPerformedThisFrame(), Is.False);
-                    Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                    Assert.That(action.WasCompletedThisFrame(), Is.False);
                 }
             }
             else
@@ -2428,15 +2428,15 @@ partial class CoreTests
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
 
                 trace.Clear();
 
                 Set(gamepad.leftTrigger, 0.6f);
 
                 // W = Waiting, S = Started, P = Performed, C = Canceled
-                // P/U = Performed/Unperformed, T = True, F = False
-                // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+                // P/C = Performed/Completed, T = True, F = False
+                // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
                 // |--------|-------------|------------------|-----|--------------|--------|
                 // | Button | Default     | W -> S, P        | T/F | true         |        |
                 // | Button | Press       | W -> S, P        | T/F | true         |        |
@@ -2452,21 +2452,21 @@ partial class CoreTests
                     Assert.That(trace, Started(action).AndThen(Performed(action)));
                     Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                     Assert.That(action.WasPerformedThisFrame(), Is.True);
-                    Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                    Assert.That(action.WasCompletedThisFrame(), Is.False);
                 }
                 else if (isHold)
                 {
                     Assert.That(trace, Started(action));
                     Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                     Assert.That(action.WasPerformedThisFrame(), Is.False);
-                    Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                    Assert.That(action.WasCompletedThisFrame(), Is.False);
                 }
                 else
                 {
                     Assert.That(trace, Performed(action));
                     Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                     Assert.That(action.WasPerformedThisFrame(), Is.True);
-                    Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                    Assert.That(action.WasCompletedThisFrame(), Is.False);
                 }
             }
 
@@ -2476,9 +2476,9 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.41f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | S -> P, S*       | T/F |              |        |
             // | Value  | Press       | P    (No Change) | F/F | true         |        |
@@ -2497,28 +2497,28 @@ partial class CoreTests
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isButtonLike)
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isHold)
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2527,9 +2527,9 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.2f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | S -> P, S*       | T/F |              |        |
             // | Value  | Press       | P -> S           | F/T | true         |        |
@@ -2548,28 +2548,28 @@ partial class CoreTests
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isButtonLike)
             {
                 Assert.That(trace, Started(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.True);
+                Assert.That(action.WasCompletedThisFrame(), Is.True);
             }
             else if (isHold)
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(trace, Performed(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2586,22 +2586,22 @@ partial class CoreTests
             if (action.type == InputActionType.Value && interactions == null)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isButtonLike)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.True);
+                Assert.That(action.WasCompletedThisFrame(), Is.True);
             }
             else if (isHold)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2618,22 +2618,22 @@ partial class CoreTests
             if (action.type == InputActionType.Value && interactions == null)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isButtonLike)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.True);
+                Assert.That(action.WasCompletedThisFrame(), Is.True);
             }
             else if (isHold)
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2642,9 +2642,9 @@ partial class CoreTests
             InputSystem.Update();
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | W -> S, P, S*    | T/F |              |        |
             // | Value  | Press       | W -> S           | F/F | true         |        |
@@ -2663,21 +2663,21 @@ partial class CoreTests
                 Assert.That(trace, Started(action).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (action.type == InputActionType.Value && isPress)
             {
                 Assert.That(trace, Started(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2687,9 +2687,9 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 0.25f);
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // P/U = Performed/Unperformed, T = True, F = False
+            // P/C = Performed/Completed, T = True, F = False
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | S -> P, S*, P, S*| T/F |              |        |
             // | Value  | Press       | S -> P, S        | T/T | true         |        |
@@ -2708,35 +2708,35 @@ partial class CoreTests
                 Assert.That(trace, Performed(action).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (action.type == InputActionType.Value && isPress)
             {
                 Assert.That(trace, Performed(action).AndThen(Started(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.True);
+                Assert.That(action.WasCompletedThisFrame(), Is.True);
             }
             else if (isHold)
             {
                 Assert.That(trace, Started(action));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (action.type == InputActionType.Button && isButtonLike)
             {
                 Assert.That(trace, Started(action).AndThen(Performed(action)).AndThen(Started(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.True);
+                Assert.That(action.WasCompletedThisFrame(), Is.True);
             }
             else
             {
                 Assert.That(trace, Performed(action).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2745,7 +2745,7 @@ partial class CoreTests
             InputSystem.Update();
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
-            // | Type   | Interaction | Phase Change     | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change     | P/C | isButtonLike | isHold |
             // |--------|-------------|------------------|-----|--------------|--------|
             // | Value  | Default     | S    (No Change) | F/F |              |        |
             // | Value  | Press       | S    (No Change) | F/F | true         |        |
@@ -2764,14 +2764,14 @@ partial class CoreTests
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
 
             trace.Clear();
@@ -2783,7 +2783,7 @@ partial class CoreTests
 
             // W = Waiting, S = Started, P = Performed, C = Canceled
             // (* means listeners not invoked)
-            // | Type   | Interaction | Phase Change             | P/U | isButtonLike | isHold |
+            // | Type   | Interaction | Phase Change             | P/C | isButtonLike | isHold |
             // |--------|-------------|--------------------------|-----|--------------|--------|
             // | Value  | Default     | S -> P, S*, P, S*, P, S* | T/F |              |        |
             // | Value  | Press       | S -> P, S, P             | T/T | true         |        |
@@ -2802,28 +2802,28 @@ partial class CoreTests
                 Assert.That(trace, Performed(action).AndThen(Performed(action)).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (isButtonLike)
             {
                 Assert.That(trace, Performed(action).AndThen(Started(action)).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.True);
+                Assert.That(action.WasCompletedThisFrame(), Is.True);
             }
             else if (isHold)
             {
                 Assert.That(trace, Is.Empty);
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
                 Assert.That(action.WasPerformedThisFrame(), Is.False);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
             else if (action.type == InputActionType.PassThrough)
             {
                 Assert.That(trace, Performed(action).AndThen(Performed(action)).AndThen(Performed(action)));
                 Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
                 Assert.That(action.WasPerformedThisFrame(), Is.True);
-                Assert.That(action.WasUnperformedThisFrame(), Is.False);
+                Assert.That(action.WasCompletedThisFrame(), Is.False);
             }
         }
     }
@@ -4095,7 +4095,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.False);
         Assert.That(action.WasPerformedThisFrame(), Is.False);
         Assert.That(action.WasReleasedThisFrame(), Is.False);
-        Assert.That(action.WasUnperformedThisFrame(), Is.False);
+        Assert.That(action.WasCompletedThisFrame(), Is.False);
         Assert.That(action.activeControl, Is.Null);
 
         Set(gamepad.leftTrigger, 1f);
@@ -4104,7 +4104,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.True);
         Assert.That(action.WasPerformedThisFrame(), Is.True);
         Assert.That(action.WasReleasedThisFrame(), Is.False);
-        Assert.That(action.WasUnperformedThisFrame(), Is.False);
+        Assert.That(action.WasCompletedThisFrame(), Is.False);
         Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
 
         Set(gamepad.rightTrigger, 0.6f);
@@ -4113,7 +4113,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.False);
         Assert.That(action.WasPerformedThisFrame(), Is.False);
         Assert.That(action.WasReleasedThisFrame(), Is.False);
-        Assert.That(action.WasUnperformedThisFrame(), Is.False);
+        Assert.That(action.WasCompletedThisFrame(), Is.False);
         Assert.That(action.activeControl, Is.SameAs(gamepad.leftTrigger));
 
         Set(gamepad.leftTrigger, 0f);
@@ -4122,7 +4122,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.False);
         Assert.That(action.WasPerformedThisFrame(), Is.True);
         Assert.That(action.WasReleasedThisFrame(), Is.False);
-        Assert.That(action.WasUnperformedThisFrame(), Is.False);
+        Assert.That(action.WasCompletedThisFrame(), Is.False);
         Assert.That(action.activeControl, Is.SameAs(gamepad.rightTrigger));
 
         Set(gamepad.rightTrigger, 0f);
@@ -4131,7 +4131,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame(), Is.False);
         Assert.That(action.WasPerformedThisFrame(), Is.False);
         Assert.That(action.WasReleasedThisFrame(), Is.True);
-        Assert.That(action.WasUnperformedThisFrame(), Is.False);
+        Assert.That(action.WasCompletedThisFrame(), Is.False);
         Assert.That(action.activeControl, Is.Null);
     }
 
@@ -10547,7 +10547,7 @@ partial class CoreTests
 
         Assert.That(buttonAction.WasPerformedThisFrame(), Is.False);
         Assert.That(buttonAction.WasReleasedThisFrame(), Is.False);
-        Assert.That(buttonAction.WasUnperformedThisFrame(), Is.False);
+        Assert.That(buttonAction.WasCompletedThisFrame(), Is.False);
         Assert.That(buttonAction.activeControl, Is.SameAs(gamepad.rightTrigger));
         Assert.That(passThroughAction.WasPerformedThisFrame(), Is.True);
         Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.leftTrigger));
@@ -10562,7 +10562,7 @@ partial class CoreTests
         Set(gamepad.rightTrigger, 0f);
 
         Assert.That(buttonAction.WasReleasedThisFrame(), Is.True);
-        Assert.That(buttonAction.WasUnperformedThisFrame(), Is.True);
+        Assert.That(buttonAction.WasCompletedThisFrame(), Is.True);
         Assert.That(buttonAction.activeControl, Is.Null);
         Assert.That(passThroughAction.WasPerformedThisFrame(), Is.True);
         Assert.That(passThroughAction.activeControl, Is.SameAs(gamepad.rightTrigger));
