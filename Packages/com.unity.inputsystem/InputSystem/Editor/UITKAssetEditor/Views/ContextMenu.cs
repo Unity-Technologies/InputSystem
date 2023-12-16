@@ -1,4 +1,5 @@
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -34,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
             var _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
-                AppendCompositeMenuItems(treeViewItem, controlLayout, menuEvent.menu);
+                AppendCompositeMenuItems(treeViewItem, controlLayout, (name, action) => menuEvent.menu.AppendAction(name, _ => action.Invoke()));
                 menuEvent.menu.AppendSeparator();
                 AppendRenameAction(menuEvent, index, treeViewItem);
                 AppendDuplicateAction(menuEvent, treeViewItem);
@@ -42,7 +43,18 @@ namespace UnityEngine.InputSystem.Editor
             }) { target = treeViewItem };
         }
 
-        private static void AppendCompositeMenuItems(InputActionsTreeViewItem treeViewItem, string expectedControlLayout, DropdownMenu menu)
+        public static Action GetContextMenuForActionAddItem(InputActionsTreeViewItem treeViewItem, string controlLayout)
+        {
+            return () =>
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent(add_Binding_String), false, () => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
+                AppendCompositeMenuItems(treeViewItem, controlLayout, (name, action) => menu.AddItem(new GUIContent(name), false, action.Invoke));
+                menu.ShowAsContext();
+            };
+        }
+
+        private static void AppendCompositeMenuItems(InputActionsTreeViewItem treeViewItem, string expectedControlLayout, Action<string, Action> addToMenuAction)
         {
             foreach (var compositeName in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
@@ -65,7 +77,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 var displayName = compositeType.GetCustomAttribute<DisplayNameAttribute>();
                 var niceName = displayName != null ? displayName.DisplayName.Replace('/', '\\') : ObjectNames.NicifyVariableName(compositeName) + " Composite";
-                menu.AppendAction($"Add {niceName}",  _ => InputActionViewsControlsHolder.AddComposite.Invoke(treeViewItem, compositeName));
+                addToMenuAction.Invoke($"Add {niceName}",  () => InputActionViewsControlsHolder.AddComposite.Invoke(treeViewItem, compositeName));
             }
         }
 
