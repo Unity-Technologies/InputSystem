@@ -209,16 +209,13 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics__ShouldReportEditorSessionAnalytics__IfNotAccordingToEditorSessionAnalyticsFiniteStateMachine()
+    public void Analytics__ShouldReportEditorSessionAnalytics__IfAccordingToEditorSessionAnalyticsFiniteStateMachine()
     {
         CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
 
         // Editor session analytics is stateful and instantiated
         var session = new InputAnalytics.InputActionsEditorSession(
-            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
-            InputSystem.s_Manager.m_Runtime);
-
-        InputSystem.Update();               // TODO This is annoying, why not in initialization?
+            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -251,20 +248,13 @@ partial class CoreTests
         Assert.That(data.actionMapModificationCount, Is.EqualTo(1));
         Assert.That(data.actionModificationCount, Is.EqualTo(1));
         Assert.That(data.bindingModificationCount, Is.EqualTo(1));
+        Assert.That(data.controlSchemeModificationCount, Is.EqualTo(0));
+        Assert.That(data.resetCount, Is.EqualTo(0));
     }
 
-    [Test]
-    [Category("Analytics")]
-    public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__IfNotAccordingToEditorSessionAnalyticsFiniteStateMachine()
+    private void TestMultipleEditorFocusSessions(InputAnalytics.InputActionsEditorSession session = null)
     {
         CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
-
-        // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(
-            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
-            InputSystem.s_Manager.m_Runtime);
-
-        InputSystem.Update();               // TODO This is annoying, why not in initialization?
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -272,6 +262,7 @@ partial class CoreTests
         session.RegisterActionMapEdit();    // the user adds an action map or renames and action map or deletes one
         session.RegisterActionEdit();       // the user adds an action, or renames it, or deletes one or add binding
         session.RegisterBindingEdit();      // the user modifies a binding configuration
+        session.RegisterControlSchemeEdit();// the user modifies control schemes
         session.RegisterEditorFocusOut();   // the window looses focus due to user closing e.g. project settings
         session.RegisterAutoSave();         // the asset is saved by automatic trigger
         runtime.currentTime += 30;          // the user has switched to something else but still has the window open.
@@ -304,6 +295,16 @@ partial class CoreTests
         Assert.That(data.actionMapModificationCount, Is.EqualTo(1));
         Assert.That(data.actionModificationCount, Is.EqualTo(1));
         Assert.That(data.bindingModificationCount, Is.EqualTo(2));
+        Assert.That(data.controlSchemeModificationCount, Is.EqualTo(1));
+        Assert.That(data.resetCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Analytics")]
+    public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__IfHavingMultipleFocusSessionsWithinSession()
+    {
+        TestMultipleEditorFocusSessions(
+            new InputAnalytics.InputActionsEditorSession(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
     }
 
     [Test]
@@ -314,10 +315,7 @@ partial class CoreTests
 
         // Editor session analytics is stateful and instantiated
         var session = new InputAnalytics.InputActionsEditorSession(
-            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings,
-            InputSystem.s_Manager.m_Runtime);
-
-        InputSystem.Update();               // TODO This is annoying, why not in initialization?
+            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         // session.RegisterEditorFocusIn(); // assumes we fail to capture focus-in event due to UI framework malfunction
@@ -352,6 +350,22 @@ partial class CoreTests
         Assert.That(data.actionMapModificationCount, Is.EqualTo(2));
         Assert.That(data.actionModificationCount, Is.EqualTo(0));
         Assert.That(data.bindingModificationCount, Is.EqualTo(1));
+        Assert.That(data.controlSchemeModificationCount, Is.EqualTo(0));
+        Assert.That(data.resetCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Analytics")]
+    public void Analytics__ShouldReportEditorSessionAnalytics__IfMultipleSessionsAreReportedUsingTheSameInstance()
+    {
+        // We reuse an existing test case to prove that the object is reset properly and can be reused after
+        // ending the session. We currently let CollectAnalytics reset test harness state which is fine for
+        // the targeted verification aspect since only affecting test harness data.
+        var session = new InputAnalytics.InputActionsEditorSession(
+            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
+
+        TestMultipleEditorFocusSessions(session);
+        TestMultipleEditorFocusSessions(session);
     }
 }
 #endif // UNITY_ANALYTICS || UNITY_EDITOR
