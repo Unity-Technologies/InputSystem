@@ -35,7 +35,7 @@ An Interaction has a set of distinct phases it can go through in response to rec
 |`Waiting`|The Interaction is waiting for input.|
 |`Started`|The Interaction has been started (that is, it received some of its expected input), but is not complete yet.|
 |`Performed`|The Interaction is complete.|
-|`Canceled`|The Interaction was interrupted and aborted. For example, the user pressed and then released a button before the minimum time required for a [hold  Interaction](#hold) to complete.|
+|`Canceled`|The Interaction was interrupted and aborted. For example, the user pressed and then released a button before the minimum time required for a [hold Interaction](#hold) to complete.|
 
 Not every Interaction triggers every phase, and the pattern in which specific Interactions trigger phases depends on the Interaction type.
 
