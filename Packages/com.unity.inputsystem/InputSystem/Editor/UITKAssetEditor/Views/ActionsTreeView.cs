@@ -1,6 +1,7 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
 #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
                 e.Q<Label>("name").text = item.name;
                 var addBindingButton = e.Q<Button>("add-new-binding-button");
+                addBindingButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
                 var treeViewItem = (InputActionsTreeViewItem)e;
                 treeViewItem.DeleteCallback = _ => DeleteItem(item);
                 treeViewItem.DuplicateCallback = _ => DuplicateItem(item);
@@ -55,9 +57,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 if (item.isAction)
                 {
+                    addBindingButton.clicked += ContextMenu.GetContextMenuForActionAddItem(treeViewItem, item.controlLayout);
+                    addBindingButton.clickable.activators.Add(new ManipulatorActivationFilter(){button = MouseButton.RightMouse});
                     addBindingButton.style.display = DisplayStyle.Flex;
-                    addBindingButton.clickable = null; //reset the clickable to avoid multiple subscriptions
-                    addBindingButton.clicked += () => AddBinding(item.name);
                     treeViewItem.EditTextFinishedCallback = newName =>
                     {
                         m_RenameOnActionAdded = false;
@@ -128,7 +130,8 @@ namespace UnityEngine.InputSystem.Editor
                 }
             };
 
-            m_ActionsTreeView.RegisterCallback<KeyDownEvent>(OnKeyDownEvent);
+            m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -252,33 +255,42 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.ChangeCompositeName(data.actionMapIndex, data.bindingIndex, newName));
         }
 
-        private void OnKeyDownEvent(KeyDownEvent e)
+        private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
-            if (e.keyCode == KeyCode.F2)
-                OnKeyDownEventForRename();
-            else if (e.keyCode == KeyCode.Delete)
-                OnKeyDownEventForDelete();
-            else if (IsDuplicateShortcutPressed(e))
-                OnKeyDownEventForDuplicate();
+            switch (evt.commandName)
+            {
+                case CmdEvents.Rename:
+                    var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
+                    if (data.isAction || data.isComposite)
+                        m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
+                    else
+                        return;
+                    break;
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
+                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DeleteItem();
+                    break;
+                case CmdEvents.Duplicate:
+                    m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                    break;
+                default:
+                    return; // Skip StopPropagation if we didn't execute anything
+            }
+            evt.StopPropagation();
         }
 
-        private void OnKeyDownEventForRename()
+        private void OnValidateCommand(ValidateCommandEvent evt)
         {
-            var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
-            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
-            if (item != null && (data.isAction || data.isComposite))
-                item.FocusOnRenameTextField();
-        }
-
-        private void OnKeyDownEventForDelete()
-        {
-            var item = m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>();
-            item?.DeleteItem();
-        }
-
-        private void OnKeyDownEventForDuplicate()
-        {
-            m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+            // Mark commands as supported for Execute by stopping propagation of the event
+            switch (evt.commandName)
+            {
+                case CmdEvents.Rename:
+                case CmdEvents.Delete:
+                case CmdEvents.SoftDelete:
+                case CmdEvents.Duplicate:
+                    evt.StopPropagation();
+                    break;
+            }
         }
 
         internal class ViewState

@@ -165,6 +165,12 @@ namespace UnityEngine.InputSystem.Editor
                     throw new InvalidOperationException("Control scheme doesn't exist in collection.");
 
                 var indexOfArrayElement = serializedControlScheme.GetIndexOfArrayElement();
+
+                // Ask for confirmation.
+                if (!EditorUtility.DisplayDialog("Delete scheme?",
+                    $"Do you want to delete control scheme '{selectedControlSchemeName}'?", "Delete", "Cancel"))
+                    return state;
+
                 serializedArray.DeleteArrayElementAtIndex(indexOfArrayElement);
                 state.serializedObject.ApplyModifiedProperties();
 
