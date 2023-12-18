@@ -285,26 +285,13 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
             /// </summary>
-            /// <param name="runtime">The associated IInputRuntime. Defaults to null in which case
-            /// the default runtime is used.</param>
             /// <param name="kind">The editor type for which this record is valid.</param>
-            public InputActionsEditorSession(InputActionsEditorKind kind, IInputRuntime runtime = null)
+            public InputActionsEditorSession(InputActionsEditorKind kind)
             {
                 if (kind == InputActionsEditorKind.Invalid)
                     throw new ArgumentException(nameof(kind));
                 
-                m_InputRuntime = runtime ?? throw new NullReferenceException(nameof(runtime));
-                
                 Initialize(kind);
-                
-                #if UNITY_2023_2_OR_NEWER
-                // Analytics do not need explicit registration
-                #else
-                // Prior to 2023.2.a11 explicit registration is needed.
-                // Note that registration happens multiple times on every instantiation but should be ok?
-                runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, 
-                    maxPerHour: 100, maxPropertiesPerEvent: 100);
-                #endif
             }
 
             /// <summary>
@@ -441,11 +428,19 @@ namespace UnityEngine.InputSystem
                 m_Data.sessionDurationSeconds += (float)duration;
                 
                 // Send analytics event
+#if UNITY_2023_2_OR_NEWER
+                // Analytics do not need explicit registration
+#else
+                // Prior to 2023.2.a11 explicit registration is needed.
+                // Note that registration happens multiple times on every instantiation but should be ok?
+                runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, 
+                    maxPerHour: 100, maxPropertiesPerEvent: 100);
+#endif
                 runtime.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
                 
                 Debug.Log(m_Data); // TODO Remove, temporary
                 
-                // Reset
+                // Reset to allow instance to be reused
                 Initialize(m_Data.kind);
             }
             
@@ -472,7 +467,7 @@ namespace UnityEngine.InputSystem
             private double m_SessionStart;
             private static bool m_Registered;
             
-            private IInputRuntime runtime => m_InputRuntime ?? InputSystem.s_Manager.m_Runtime;
+            private IInputRuntime runtime => InputSystem.s_Manager.m_Runtime;
             private bool hasFocus => !double.IsNaN(m_FocusStart);
             private bool hasSession => !double.IsNaN(m_SessionStart);
             // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
