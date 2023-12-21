@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.Editor
         StateContainer m_StateContainer;
 
         private bool m_IsActivated;
-        InputAnalytics.InputActionsEditorSession m_ActionEditorAnalytics;
+        InputAnalytics.InputActionsEditorSessionAnalytic m_ActionEditorAnalytics;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Always begin a session when activated (note that OnActivate isn't called when navigating back
             // to editor from another setting category)
-            m_ActionEditorAnalytics = new InputAnalytics.InputActionsEditorSession(
+            m_ActionEditorAnalytics = new InputAnalytics.InputActionsEditorSessionAnalytic(
                 InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
             m_ActionEditorAnalytics.Begin();
 

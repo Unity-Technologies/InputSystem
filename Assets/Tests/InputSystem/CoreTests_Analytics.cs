@@ -33,7 +33,12 @@ partial class CoreTests
         runtime.onSendAnalyticsEvent =
             (name, data) =>
         {
+            #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            // Registration handled by framework
+            Assert.That(registeredNames.Count, Is.EqualTo(0));
+            #else
             Assert.That(registeredNames.Contains(name));
+            #endif
             Assert.That(receivedName, Is.Null);
             receivedName = name;
             receivedData = data;
@@ -65,7 +70,7 @@ partial class CoreTests
 
         InputSystem.Update();
 
-        Assert.That(receivedName, Is.EqualTo(InputAnalytics.kEventStartup));
+        Assert.That(receivedName, Is.EqualTo(InputAnalytics.StartupEventAnalytic.kEventName));
         Assert.That(receivedData, Is.TypeOf<InputAnalytics.StartupEventData>());
 
         var startupData = (InputAnalytics.StartupEventData)receivedData;
@@ -175,7 +180,12 @@ partial class CoreTests
         runtime.onSendAnalyticsEvent =
             (name, data) =>
         {
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            // Registration handled by framework
+            Assert.That(registeredNames.Count, Is.EqualTo(0));
+#else
             Assert.That(registeredNames.Contains(name));
+#endif
             Assert.That(receivedData, Is.Null);
             receivedName = name;
             receivedData = data;
@@ -184,7 +194,7 @@ partial class CoreTests
         // Simulate shutdown.
         runtime.onShutdown();
 
-        Assert.That(receivedName, Is.EqualTo(InputAnalytics.kEventShutdown));
+        Assert.That(receivedName, Is.EqualTo(InputAnalytics.ShutdownEventDataAnalytic.kEventName));
         Assert.That(receivedData, Is.TypeOf<InputAnalytics.ShutdownEventData>());
 
         var shutdownData = (InputAnalytics.ShutdownEventData)receivedData;
@@ -211,10 +221,10 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics__ShouldReportEditorSessionAnalytics__IfAccordingToEditorSessionAnalyticsFiniteStateMachine()
     {
-        CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
+        CollectAnalytics(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(
+        var session = new InputAnalytics.InputActionsEditorSessionAnalytic(
             InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
@@ -227,14 +237,19 @@ partial class CoreTests
         session.End();                      // the window is destroyed and the session ends.
 
         // Assert: Registration
+#if (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
+        // Registration is a responsibility of the framework
+        Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
+#else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
         Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
+#endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputAnalytics.InputActionsEditorSessionData>());
 
         // Assert: Data content
@@ -252,9 +267,9 @@ partial class CoreTests
         Assert.That(data.resetCount, Is.EqualTo(0));
     }
 
-    private void TestMultipleEditorFocusSessions(InputAnalytics.InputActionsEditorSession session = null)
+    private void TestMultipleEditorFocusSessions(InputAnalytics.InputActionsEditorSessionAnalytic session = null)
     {
-        CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
+        CollectAnalytics(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -274,14 +289,19 @@ partial class CoreTests
         session.End();                      // the window is destroyed and the session ends.
 
         // Assert: Registration
+#if (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
+        // Registration is a responsibility of the framework
+        Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
+#else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
         Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
+#endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputAnalytics.InputActionsEditorSessionData>());
 
         // Assert: Data content
@@ -304,17 +324,17 @@ partial class CoreTests
     public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__IfHavingMultipleFocusSessionsWithinSession()
     {
         TestMultipleEditorFocusSessions(
-            new InputAnalytics.InputActionsEditorSession(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
+            new InputAnalytics.InputActionsEditorSessionAnalytic(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
     }
 
     [Test]
     [Category("Analytics")]
     public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__WhenActionsDriveImplicitConditions()
     {
-        CollectAnalytics(InputAnalytics.kEventInputActionEditorWindowSession);
+        CollectAnalytics(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSession(
+        var session = new InputAnalytics.InputActionsEditorSessionAnalytic(
             InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
@@ -329,14 +349,19 @@ partial class CoreTests
         session.End();                      // the window is destroyed and the session ends.
 
         // Assert: Registration
+        #if (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
+        // Registration is a responsibility of the framework
+        Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
+        #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
         Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
+        #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputAnalytics.InputActionsEditorSessionData>());
 
         // Assert: Data content
@@ -361,7 +386,7 @@ partial class CoreTests
         // We reuse an existing test case to prove that the object is reset properly and can be reused after
         // ending the session. We currently let CollectAnalytics reset test harness state which is fine for
         // the targeted verification aspect since only affecting test harness data.
-        var session = new InputAnalytics.InputActionsEditorSession(
+        var session = new InputAnalytics.InputActionsEditorSessionAnalytic(
             InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
 
         TestMultipleEditorFocusSessions(session);

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine.InputSystem.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
@@ -449,14 +451,31 @@ namespace UnityEngine.InputSystem
         public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
         public Action<string, object> onSendAnalyticsEvent { get; set; }
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            onRegisterAnalyticsEvent?.Invoke(name, maxPerHour, maxPropertiesPerEvent);
-        }
+            #if UNITY_2023_2_OR_NEWER
 
-        public void SendAnalyticsEvent(string name, object data)
-        {
-            onSendAnalyticsEvent?.Invoke(name, data);
+            // Mimic editor analytics for Unity 2023.2+ invoking TryGatherData to send
+            var analyticInfoAttribute = analytic.GetType().GetCustomAttributes(
+                typeof(AnalyticInfoAttribute), true).FirstOrDefault() as AnalyticInfoAttribute;
+            var info = analytic.info;
+            #if UNITY_EDITOR
+            // Registration handled by framework
+            #else
+            onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements); // only to avoid writing two tests per Unity version (registration handled by framework)
+            #endif
+            if (analytic.TryGatherData(out var data, out var ex) && data != null && analyticInfoAttribute != null)
+                onSendAnalyticsEvent?.Invoke(analyticInfoAttribute.eventName, data);
+            else if (ex != null)
+                throw ex; // rethrow for visibility in test scope
+
+            #else
+
+            var info = analytic.info;
+            onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements);
+            onSendAnalyticsEvent?.Invoke(info.Name, data);
+
+            #endif // UNITY_2023_2_OR_NEWER
         }
 
         #endif // UNITY_ANALYTICS || UNITY_EDITOR

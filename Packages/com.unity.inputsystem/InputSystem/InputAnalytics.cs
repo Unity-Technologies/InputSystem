@@ -1,13 +1,11 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
-using System.Collections.Generic;
-using UnityEditor;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.LowLevel;
-#endif
+#endif // UNITY_EDITOR
 
 ////FIXME: apparently shutdown events are not coming through in the analytics backend
 
@@ -15,10 +13,44 @@ namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics
     {
-        public const string kEventStartup = "input_startup";
-        public const string kEventShutdown = "input_shutdown";
-        public const string kEventInputActionEditorWindowSession = "inputActionEditorWindowSession";
+        public const string kVendorKey = "unity.input";
+        
+        // Struct similar to AnalyticInfo for simplifying usage.
+        public struct InputAnalyticInfo
+        {
+            public InputAnalyticInfo(string name, int maxEventsPerHour, int maxNumberOfElements)
+            {
+                Name = name;
+                MaxEventsPerHour = maxEventsPerHour;
+                MaxNumberOfElements = maxNumberOfElements;
+            }
+            
+            public readonly string Name;
+            public readonly int MaxEventsPerHour;
+            public readonly int MaxNumberOfElements;
+        } 
+        
+        // Unity 2023.2+ deprecates legacy interfaces for registering and sending editor analytics and
+        // replaces them with attribute annotations and required interface implementations.
+        // The IInputAnalytic interface have been introduced here to simplify supporting both variants
+        // of analytics reporting. Notice that a difference is that data is collected lazily as part
+        // of sending the analytics via the framework.
+        public interface IInputAnalytic 
+#if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
+            : IAnalytic
+#endif
+        {
+            InputAnalyticInfo info { get; } // May be removed when only supporting 2023.2+ versions
+            
+#if !UNITY_2023_2_OR_NEWER
+            interface IData 
+            {
+            }
 
+            bool TryGatherData(out IInputAnalytic.IData data, out Exception error);
+#endif
+        }
+        
         public static void Initialize(InputManager manager)
         {
             Debug.Assert(manager.m_Runtime != null);
@@ -26,65 +58,14 @@ namespace UnityEngine.InputSystem
 
         public static void OnStartup(InputManager manager)
         {
-            var data = new StartupEventData
-            {
-                version = InputSystem.version.ToString(),
-            };
-
-            // Collect recognized devices.
-            var devices = manager.devices;
-            var deviceList = new List<StartupEventData.DeviceInfo>();
-            for (var i = 0; i < devices.Count; ++i)
-            {
-                var device = devices[i];
-
-                deviceList.Add(
-                    StartupEventData.DeviceInfo.FromDescription(device.description, device.native, device.layout));
-            }
-            data.devices = deviceList.ToArray();
-
-            // Collect unrecognized devices.
-            deviceList.Clear();
-            var availableDevices = manager.m_AvailableDevices;
-            var availableDeviceCount = manager.m_AvailableDeviceCount;
-            for (var i = 0; i < availableDeviceCount; ++i)
-            {
-                var deviceId = availableDevices[i].deviceId;
-                if (manager.TryGetDeviceById(deviceId) != null)
-                    continue;
-
-                deviceList.Add(StartupEventData.DeviceInfo.FromDescription(availableDevices[i].description,
-                    availableDevices[i].isNative));
-            }
-
-            data.unrecognized_devices = deviceList.ToArray();
-
-            #if UNITY_EDITOR
-            data.new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
-            data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
-            #endif
-
-            manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 100, 100);
-            manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
+            manager.m_Runtime.SendAnalytic(new StartupEventAnalytic(manager));
         }
 
         public static void OnShutdown(InputManager manager)
         {
-            var metrics = manager.metrics;
-            var data = new ShutdownEventData
-            {
-                max_num_devices = metrics.maxNumDevices,
-                max_state_size_in_bytes = metrics.maxStateSizeInBytes,
-                total_event_bytes = metrics.totalEventBytes,
-                total_event_count = metrics.totalEventCount,
-                total_frame_count = metrics.totalUpdateCount,
-                total_event_processing_time = (float)metrics.totalEventProcessingTime,
-            };
-
-            manager.m_Runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
-            manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
+            manager.m_Runtime.SendAnalytic(new ShutdownEventDataAnalytic(manager));
         }
-
+        
         /// <summary>
         /// Data about what configuration we start up with.
         /// </summary>
@@ -96,7 +77,7 @@ namespace UnityEngine.InputSystem
         /// on desktops or touchscreen on phones).
         /// </remarks>
         [Serializable]
-        public struct StartupEventData
+        public struct StartupEventData : IInputAnalytic.IData
         {
             public string version;
             public DeviceInfo[] devices;
@@ -140,11 +121,86 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)    
+        [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
+#endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
+        public struct StartupEventAnalytic : IInputAnalytic
+        {
+            public const string kEventName = "input_startup";
+            public const int kMaxEventsPerHour = 100;
+            public const int kMaxNumberOfElements = 100;
+
+            private InputManager m_InputManager;
+
+            public StartupEventAnalytic(InputManager manager)
+            {
+                m_InputManager = manager;
+            }
+            
+            public InputAnalyticInfo info => new(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+
+            public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
+            {
+                try
+                {
+                    data = new StartupEventData
+                    {
+                        version = InputSystem.version.ToString(),
+                        devices = CollectRecognizedDevices(m_InputManager),
+                        unrecognized_devices = CollectUnrecognizedDevices(m_InputManager),
+#if UNITY_EDITOR
+                        new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled,
+                        old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled,
+#endif // UNITY_EDITOR
+                    };
+                    error = null;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    data = null;
+                    error = e;
+                    return false;
+                }
+            }
+            
+            private static StartupEventData.DeviceInfo[] CollectRecognizedDevices(InputManager manager)
+            {
+                var deviceInfo = new StartupEventData.DeviceInfo[manager.devices.Count];
+                for (var i = 0; i < manager.devices.Count; ++i)
+                {
+                    deviceInfo[i] = StartupEventData.DeviceInfo.FromDescription(
+                        manager.devices[i].description, manager.devices[i].native, manager.devices[i].layout); 
+                }
+                return deviceInfo;
+            }
+
+            private static StartupEventData.DeviceInfo[] CollectUnrecognizedDevices(InputManager manager)
+            {
+                var n = 0;
+                var deviceInfo = new StartupEventData.DeviceInfo[manager.m_AvailableDeviceCount];
+                for (var i = 0; i < deviceInfo.Length; ++i)
+                {
+                    var deviceId = manager.m_AvailableDevices[i].deviceId;
+                    if (manager.TryGetDeviceById(deviceId) != null)
+                        continue;
+
+                    deviceInfo[n++] = StartupEventData.DeviceInfo.FromDescription(
+                        manager.m_AvailableDevices[i].description, manager.m_AvailableDevices[i].isNative);
+                }
+            
+                if (deviceInfo.Length > n)
+                    Array.Resize(ref deviceInfo, n);
+            
+                return deviceInfo;
+            }
+        }
+
         /// <summary>
         /// Data about when after startup the user first interacted with the application.
         /// </summary>
         [Serializable]
-        public struct FirstUserInteractionEventData
+        public struct FirstUserInteractionEventData : IInputAnalytic.IData
         {
         }
 
@@ -152,7 +208,7 @@ namespace UnityEngine.InputSystem
         /// Data about what level of data we pumped through the system throughout its lifetime.
         /// </summary>
         [Serializable]
-        public struct ShutdownEventData
+        public struct ShutdownEventData : IInputAnalytic.IData
         {
             public int max_num_devices;
             public int max_state_size_in_bytes;
@@ -161,7 +217,53 @@ namespace UnityEngine.InputSystem
             public int total_frame_count;
             public float total_event_processing_time;
         }
+        
+#if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)    
+        [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, 
+            maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
+#endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
+        public struct ShutdownEventDataAnalytic : IInputAnalytic
+        {
+            public const string kEventName = "input_shutdown";
+            public const int kMaxEventsPerHour = 100;
+            public const int kMaxNumberOfElements = 100;
+            
+            private readonly InputManager m_InputManager;
+            
+            public ShutdownEventDataAnalytic(InputManager manager)
+            {
+                m_InputManager = manager;
+            }
 
+            public InputAnalyticInfo info => new(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            
+            public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
+            {
+                try
+                {
+                    var metrics = m_InputManager.metrics;
+                    data = new ShutdownEventData
+                    {
+                        max_num_devices = metrics.maxNumDevices,
+                        max_state_size_in_bytes = metrics.maxStateSizeInBytes,
+                        total_event_bytes = metrics.totalEventBytes,
+                        total_event_count = metrics.totalEventCount,
+                        total_frame_count = metrics.totalUpdateCount,
+                        total_event_processing_time = (float)metrics.totalEventProcessingTime,
+                    };
+                    error = null;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    data = null;
+                    error = e;
+                    return false;
+                }
+            }
+        }
+
+#if UNITY_EDITOR
         /// <summary>
         /// Represents an editor type.
         /// </summary>
@@ -174,15 +276,9 @@ namespace UnityEngine.InputSystem
             FreeFloatingEditorWindow = 1,
             EmbeddedInProjectSettings = 2
         }
-
-#if UNITY_EDITOR
-
+        
         [Serializable]
-        #if UNITY_2023_2_OR_NEWER
-        public struct InputActionsEditorSessionData : UnityEngine.Analytics.IAnalytic.IData
-        #else
-        public struct InputActionsEditorSessionData
-        #endif
+        public struct InputActionsEditorSessionData : IInputAnalytic.IData
         {
             /// <summary>
             /// Constructs a <c>InputActionsEditorSessionData</c>.
@@ -280,13 +376,21 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Analytics record for tracking engagement with Input Action Asset editor(s).
         /// </summary>
-        public class InputActionsEditorSession
+#if (UNITY_2023_2_OR_NEWER)    
+        [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, 
+            maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
+#endif // (UNITY_2023_2_OR_NEWER)
+        public class InputActionsEditorSessionAnalytic : IInputAnalytic
         {
+            public const string kEventName = "inputActionEditorWindowSession";
+            public const int kMaxEventsPerHour = 100; // default: 1000
+            public const int kMaxNumberOfElements = 100; // default: 1000
+            
             /// <summary>
             /// Construct a new <c>InputActionsEditorSession</c> record of the given <para>type</para>.
             /// </summary>
             /// <param name="kind">The editor type for which this record is valid.</param>
-            public InputActionsEditorSession(InputActionsEditorKind kind)
+            public InputActionsEditorSessionAnalytic(InputActionsEditorKind kind)
             {
                 if (kind == InputActionsEditorKind.Invalid)
                     throw new ArgumentException(nameof(kind));
@@ -428,20 +532,18 @@ namespace UnityEngine.InputSystem
                 m_Data.sessionDurationSeconds += (float)duration;
                 
                 // Send analytics event
-#if UNITY_2023_2_OR_NEWER
-                // Analytics do not need explicit registration
-#else
-                // Prior to 2023.2.a11 explicit registration is needed.
-                // Note that registration happens multiple times on every instantiation but should be ok?
-                runtime.RegisterAnalyticsEvent(name: kEventInputActionEditorWindowSession, 
-                    maxPerHour: 100, maxPropertiesPerEvent: 100);
-#endif
-                runtime.SendAnalyticsEvent(kEventInputActionEditorWindowSession, m_Data);
-                
-                Debug.Log(m_Data); // TODO Remove, temporary
+                runtime.SendAnalytic(this);
                 
                 // Reset to allow instance to be reused
                 Initialize(m_Data.kind);
+            }
+            
+            public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
+            {
+                // TODO Throw exception if attempting to TryGatherData with invalid state
+                data = this.m_Data;
+                error = null;
+                return true; // Cannot fail
             }
             
             private void Initialize(InputActionsEditorKind kind)
@@ -474,10 +576,12 @@ namespace UnityEngine.InputSystem
             // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
             private double currentTime() => runtime.currentTime;
             public bool isValid => m_Data.sessionDurationSeconds >= 0;
+            public InputAnalyticInfo info => new (kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
         }
     }
     
 #endif // UNITY_EDITOR    
     
 }
+
 #endif // UNITY_ANALYTICS || UNITY_EDITOR

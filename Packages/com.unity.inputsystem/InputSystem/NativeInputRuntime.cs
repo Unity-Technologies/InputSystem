@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -376,27 +377,25 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #endif // UNITY_EDITOR
 
-        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
-        {
-            #if UNITY_ANALYTICS
-            const string vendorKey = "unity.input";
-            #if UNITY_EDITOR
-            EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #else
-            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
-        }
+        #if UNITY_ANALYTICS || UNITY_EDITOR
 
-        public void SendAnalyticsEvent(string name, object data)
+        public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
-            #if UNITY_ANALYTICS
-            #if UNITY_EDITOR
-            EditorAnalytics.SendEventWithLimit(name, data);
+            #if (UNITY_EDITOR)
+            #if (UNITY_2023_2_OR_NEWER)
+            EditorAnalytics.SendAnalytic(analytic);
             #else
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(name, data);
+            #endif // UNITY_2023_2_OR_NEWER
+            #elif UNITY_ANALYTICS // Implicitly: !UNITY_EDITOR
+            var info = analytic.info;
+            Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
             Analytics.Analytics.SendEvent(name, data);
             #endif // UNITY_EDITOR
-            #endif // UNITY_ANALYTICS
         }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

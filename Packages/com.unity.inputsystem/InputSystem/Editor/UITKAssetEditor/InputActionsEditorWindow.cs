@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
         private string m_AssetPath;
         private string m_AssetJson;
         private bool m_IsDirty;
-        private InputAnalytics.InputActionsEditorSession m_Analytics;
+        private InputAnalytics.InputActionsEditorSessionAnalytic m_Analytics;
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
         [OnOpenAsset]
