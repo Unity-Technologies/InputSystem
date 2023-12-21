@@ -640,8 +640,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             // The Next/Previous action is not part of the input actions asset
             UnregisterNextPreviousAction();
-
-            UnityEngine.Object.Destroy(m_InputActionAsset); // TODO check if this is ok
         }
 
         public struct Configuration
@@ -658,7 +656,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             public static Configuration GetDefaultConfiguration()
             {
-                
                 return new Configuration
                 {
                     ActionAsset = InputSystem.actions,
