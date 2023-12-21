@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Removing bindings or renaming actions will break UI input for UI toolkit.
+
 ### Fixed
 - Fixed missing confirmation popup when deleting a control scheme.
 - Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
