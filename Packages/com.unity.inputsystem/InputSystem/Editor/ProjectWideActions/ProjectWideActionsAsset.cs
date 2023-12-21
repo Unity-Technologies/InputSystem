@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static InputActionMap GetDefaultUIActionMap()
         {
-            var json = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, s_DefaultAssetPath));
+            var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
             var actionMaps = InputActionMap.FromJson(json);
             return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
         }
@@ -136,7 +136,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (uiMap.FindAction(action.name) == null)
                     {
                         Debug.LogWarning($"The UI action \"{action.name}\" name has been modified.\r\n " +
-                            $"This will break the UI input at runtime. Please make sure the action name with {action.name} exists.");
+                            $"This will break the UI input at runtime. Please make sure the action name with \"{action.name}\" exists.");
                         return;
                     }
                 }
