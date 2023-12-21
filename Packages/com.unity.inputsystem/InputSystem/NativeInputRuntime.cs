@@ -387,12 +387,12 @@ namespace UnityEngine.InputSystem.LowLevel
             #else
             var info = analytic.info;
             EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
-            EditorAnalytics.SendEventWithLimit(name, data);
+            EditorAnalytics.SendEventWithLimit(info.Name, data);
             #endif // UNITY_2023_2_OR_NEWER
             #elif UNITY_ANALYTICS // Implicitly: !UNITY_EDITOR
             var info = analytic.info;
             Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
-            Analytics.Analytics.SendEvent(name, data);
+            Analytics.Analytics.SendEvent(info.Name, data);
             #endif // UNITY_EDITOR
         }
 
