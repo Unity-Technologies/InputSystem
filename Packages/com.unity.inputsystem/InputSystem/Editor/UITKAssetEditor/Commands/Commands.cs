@@ -141,7 +141,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                CopyPasteHelper.PasteFromClipboard(new[] { actionArray.arraySize - 1 }, actionArray, state);
+                var index = actionArray.arraySize - 1;
+                CopyPasteHelper.PasteFromClipboard(new[] { index }, actionArray, state);
                 if (CopyPasteHelper.lastAddedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
@@ -171,7 +172,8 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedBindingIndex }, bindingsArray, state);
+                    var index = state.selectionType == SelectionType.Action ? Selectors.GetLastBindingIndexForSelectedAction(state) : Selectors.GetSelectedBindingIndexAfterCompositeBindings(state);
+                    CopyPasteHelper.PasteFromClipboard(new[] { index }, bindingsArray, state);
                     if (CopyPasteHelper.lastAddedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
