@@ -195,6 +195,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             var property = PasteElement(arrayProperty, toDuplicate, index, out _, out var oldId, "", false);
             var actionName = Selectors.GetSelectedBinding(m_State)?.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
+            if (m_State.selectionType == SelectionType.Action)
+                actionName = Selectors.GetSelectedAction(m_State)?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
             if (IsComposite(property))
             {
                 PasteComposite(arrayProperty, property, PropertyName(property), actionName, index, oldId);

@@ -52,8 +52,9 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
                 var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
-                var hasPastableData =  CopyPasteHelper.HavePastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
-                if (hasPastableData)
+                var hasPastableDataForAction =  item.isAction && (CopyPasteHelper.HavePastableClipboardData(typeof(InputAction)) || CopyPasteHelper.HavePastableClipboardData(typeof(InputBinding)));
+                var hasPastableDataForBinding=  ! item.isAction && CopyPasteHelper.HavePastableClipboardData(typeof(InputBinding));
+                if (hasPastableDataForAction || hasPastableDataForBinding)
                     menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
             }) { target = target };
         }
