@@ -139,6 +139,14 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Duplicate:
                     ((InputActionMapsTreeViewItem)m_ListView.GetRootElementForIndex(m_ListView.selectedIndex))?.DuplicateItem();
                     break;
+                case CmdEvents.Copy:
+                    CopyItems();
+                    break;
+                case CmdEvents.Paste:
+                    var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                    if (CopyPasteHelper.HavePastableClipboardData(typeof(InputActionMap)))
+                        PasteItems(copiedAction);
+                    break;
                 default:
                     return; // Skip StopPropagation if we didn't execute anything
             }
@@ -154,6 +162,8 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Delete:
                 case CmdEvents.SoftDelete:
                 case CmdEvents.Duplicate:
+                case CmdEvents.Copy:
+                case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
             }

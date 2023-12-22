@@ -85,7 +85,6 @@ namespace UnityEngine.InputSystem.Editor
             var toSkip = 0;
             while (item.isPartOfComposite)
             {
-                Debug.Log("do");
                 toSkip++;
                 index++;
                 item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index));

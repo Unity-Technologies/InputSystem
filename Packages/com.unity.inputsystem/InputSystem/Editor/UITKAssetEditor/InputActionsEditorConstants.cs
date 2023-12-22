@@ -37,6 +37,8 @@ namespace UnityEngine.InputSystem.Editor
             public const string Delete = "Delete";
             public const string SoftDelete = "SoftDelete";
             public const string Duplicate = "Duplicate";
+            public const string Copy = "Copy";
+            public const string Paste = "Paste";
         }
     }
 }

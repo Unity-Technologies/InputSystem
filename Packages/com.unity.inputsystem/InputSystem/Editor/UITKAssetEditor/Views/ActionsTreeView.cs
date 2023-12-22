@@ -269,10 +269,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
+            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
             switch (evt.commandName)
             {
                 case CmdEvents.Rename:
-                    var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
                     if (data.isAction || data.isComposite)
                         m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
                     else
@@ -284,6 +284,15 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Duplicate:
                     m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                    break;
+                case CmdEvents.Copy:
+                    CopyItems(data.isAction);
+                    break;
+                case CmdEvents.Paste:
+                    var hasPastableDataForAction =  data.isAction && (CopyPasteHelper.HavePastableClipboardData(typeof(InputAction)) || CopyPasteHelper.HavePastableClipboardData(typeof(InputBinding)));
+                    var hasPastableDataForBinding =  !data.isAction && CopyPasteHelper.HavePastableClipboardData(typeof(InputBinding));
+                    if (hasPastableDataForAction || hasPastableDataForBinding)
+                        PasteItems();
                     break;
                 default:
                     return; // Skip StopPropagation if we didn't execute anything
@@ -300,6 +309,8 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Delete:
                 case CmdEvents.SoftDelete:
                 case CmdEvents.Duplicate:
+                case CmdEvents.Copy:
+                case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
             }
