@@ -19,6 +19,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
 
+### Added
+- Added Copy and Paste support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
+
 ## [1.8.0-pre.2] - 2023-11-09
 
 ### Changed
