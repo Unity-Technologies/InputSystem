@@ -108,6 +108,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.CopyActionMapSelection());
         }
+        
+        internal void CutItems()
+        {
+            Dispatch(Commands.CutActionMapSelection());
+        }
 
         internal void PasteItems(bool copiedAction)
         {
@@ -141,6 +146,9 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Copy:
                     CopyItems();
+                    break;
+                case CmdEvents.Cut:
+                    CutItems();
                     break;
                 case CmdEvents.Paste:
                     var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);

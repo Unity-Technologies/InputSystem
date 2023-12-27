@@ -106,6 +106,15 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command CutActionMapSelection()
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedActionMap(state)?.wrappedProperty}, typeof(InputActionMap));
+                return DeleteActionMap(state.selectedActionMapIndex).Invoke(state);
+            };
+        }
+
         public static Command CopyActionBindingSelection(bool isAction) //TODO remove bool for multiselection
         {
             return (in InputActionsEditorState state) =>
@@ -115,6 +124,21 @@ namespace UnityEngine.InputSystem.Editor
                 else
                     CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
                 return state;
+            };
+        }
+        
+        public static Command CutActionsOrBindings(bool isAction) //TODO remove bool for multiselection
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                if (isAction)
+                {
+                    var selectedAction = Selectors.GetSelectedAction(state)?.wrappedProperty;
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> { selectedAction }, typeof(InputAction));
+                    return DeleteAction(state.selectedActionMapIndex, selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state);
+                }
+                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
+                return DeleteBinding(state.selectedActionMapIndex, state.selectedBindingIndex).Invoke(state);
             };
         }
 

@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.Editor
     internal static class ContextMenu
     {
         private static readonly string copy_String = "Copy";
+        private static readonly string cut_String = "Cut";
         private static readonly string paste_String = "Paste";
 
         private static readonly string rename_String = "Rename";
@@ -39,6 +40,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
+                menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
                 var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
                 if (CopyPasteHelper.HavePastableClipboardData(typeof(InputActionMap)))
                     menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
@@ -51,6 +53,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
+                menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
                 var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
                 var hasPastableData = CopyPasteHelper.HavePastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
                 if (hasPastableData)

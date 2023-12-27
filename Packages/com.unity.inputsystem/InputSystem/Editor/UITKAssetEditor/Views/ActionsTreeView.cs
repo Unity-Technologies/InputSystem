@@ -250,6 +250,11 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(Commands.CopyActionBindingSelection(isAction));
         }
 
+        internal void CutItems(bool isAction)
+        {
+            Dispatch(Commands.CutActionsOrBindings(isAction));
+        }
+
         internal void PasteItems()
         {
             Dispatch(Commands.PasteActionsOrBindings());
@@ -287,6 +292,9 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Copy:
                     CopyItems(data.isAction);
+                    break;
+                case CmdEvents.Cut:
+                    CutItems(data.isAction);
                     break;
                 case CmdEvents.Paste:
                     var hasPastableData = CopyPasteHelper.HavePastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
