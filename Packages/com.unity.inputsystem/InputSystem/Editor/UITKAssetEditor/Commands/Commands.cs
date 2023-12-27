@@ -125,11 +125,11 @@ namespace UnityEngine.InputSystem.Editor
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
                 if (typeOfCopiedData != typeof(InputActionMap)) return state;
                 var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
-                CopyPasteHelper.PasteFromClipboard(new int[] { state.selectedActionMapIndex }, actionMapArray, state);
-                if (CopyPasteHelper.lastAddedElement != null)
+                var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionMapIndex }, actionMapArray, state);
+                if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.SelectActionMap(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
+                    return state.SelectActionMap(lastPastedElement.GetIndexOfArrayElement());
                 }
                 return state;
             };
@@ -142,11 +142,11 @@ namespace UnityEngine.InputSystem.Editor
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
                 var index = actionArray.arraySize - 1;
-                CopyPasteHelper.PasteFromClipboard(new[] { index }, actionArray, state);
-                if (CopyPasteHelper.lastAddedElement != null)
+                var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { index }, actionArray, state);
+                if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    return state.SelectAction(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
+                    return state.SelectAction(lastPastedElement.GetIndexOfArrayElement());
                 }
                 return state;
             };
@@ -161,11 +161,11 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                    CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, state);
-                    if (CopyPasteHelper.lastAddedElement != null)
+                    var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, state);
+                    if (lastPastedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
-                        return state.SelectAction(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
+                        return state.SelectAction(lastPastedElement.GetIndexOfArrayElement());
                     }
                 }
                 else
@@ -173,11 +173,11 @@ namespace UnityEngine.InputSystem.Editor
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
                     var index = state.selectionType == SelectionType.Action ? Selectors.GetLastBindingIndexForSelectedAction(state) : Selectors.GetSelectedBindingIndexAfterCompositeBindings(state);
-                    CopyPasteHelper.PasteFromClipboard(new[] { index }, bindingsArray, state);
-                    if (CopyPasteHelper.lastAddedElement != null)
+                    var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { index }, bindingsArray, state);
+                    if (lastPastedElement != null)
                     {
                         state.serializedObject.ApplyModifiedProperties();
-                        return state.SelectBinding(CopyPasteHelper.lastAddedElement.GetIndexOfArrayElement());
+                        return state.SelectBinding(lastPastedElement.GetIndexOfArrayElement());
                     }
                 }
                 return state;

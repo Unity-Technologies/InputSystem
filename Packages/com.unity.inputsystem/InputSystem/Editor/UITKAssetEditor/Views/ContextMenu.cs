@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string add_Binding_String = "Add Binding";
         public static void GetContextMenuForActionMapItem(InputActionMapsTreeViewItem treeViewItem)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateActionMap.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForActionMapListView(ActionMapsView mapView, VisualElement listView)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForActionListView(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendSeparator();
                 menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
@@ -60,7 +60,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
                 AppendCompositeMenuItems(treeViewItem, controlLayout, (name, action) => menuEvent.menu.AppendAction(name, _ => action.Invoke()));
@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForCompositeItem(InputActionsTreeViewItem treeViewItem, int index)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 AppendRenameAction(menuEvent, index, treeViewItem);
                 AppendDuplicateAction(menuEvent, treeViewItem);
@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForBindingItem(InputActionsTreeViewItem treeViewItem)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);

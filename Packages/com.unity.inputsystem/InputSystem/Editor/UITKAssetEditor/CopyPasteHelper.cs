@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class CopyPasteHelper : MonoBehaviour
     {
-        internal const string k_CopyPasteMarker = "INPUTASSET ";
+        private const string k_CopyPasteMarker = "INPUTASSET ";
         private const string k_StartOfText = "\u0002";
         private const string k_EndOfTransmission = "\u0004";
         private static readonly Dictionary<Type, string> k_TypeMarker = new Dictionary<Type, string>()
@@ -22,8 +22,8 @@ namespace UnityEngine.InputSystem.Editor
             {typeof(InputBinding), "InputBinding"},
         };
 
-        public static SerializedProperty lastAddedElement;
-        private static InputActionsEditorState m_State;
+        private static SerializedProperty lastAddedElement;
+        private static InputActionsEditorState s_State;
 
         public static void CopySelectedTreeViewItemsToClipboard(List<SerializedProperty> items, Type type)
         {
@@ -80,11 +80,12 @@ namespace UnityEngine.InputSystem.Editor
             return null;
         }
 
-        public static void PasteFromClipboard(int[] indicesToInsert, SerializedProperty arrayToInsertInto, InputActionsEditorState state)
+        public static SerializedProperty PasteFromClipboard(int[] indicesToInsert, SerializedProperty arrayToInsertInto, InputActionsEditorState state)
         {
             lastAddedElement = null;
-            m_State = state;
+            s_State = state;
             PasteData(EditorGUIUtility.systemCopyBuffer, indicesToInsert, arrayToInsertInto);
+            return lastAddedElement;
         }
 
         private static void PasteData(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)
@@ -141,7 +142,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, InputActionsEditorState state)
         {
-            m_State = state;
+            s_State = state;
             var json = toDuplicate.CopyToJson(true);
             PasteAction(arrayProperty, json, toDuplicate.GetIndexOfArrayElement() + 1);
         }
@@ -151,8 +152,8 @@ namespace UnityEngine.InputSystem.Editor
             var property = PasteElement(arrayProperty, jsonToInsert, indexToInsert, out var name, out var id, "");
             var newName = property.FindPropertyRelative("m_Name").stringValue;
             var newId = property.FindPropertyRelative("m_Id").stringValue;
-            var actionMapFrom = Selectors.GetActionMapForAction(m_State, id);
-            var actionMapTo = Selectors.GetActionMapForAction(m_State, newId);
+            var actionMapFrom = Selectors.GetActionMapForAction(s_State, id);
+            var actionMapTo = Selectors.GetActionMapForAction(s_State, newId);
             var bindingsArray = actionMapFrom.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
             var bindings = bindingsArray.Where(binding => binding.FindPropertyRelative("m_Action").stringValue.Equals(name)).ToList();
             var bindingArrayToInsertTo = actionMapTo.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
@@ -194,9 +195,9 @@ namespace UnityEngine.InputSystem.Editor
         private static void PasteBindingOrComposite(SerializedProperty arrayProperty, string toDuplicate, int index)
         {
             var property = PasteElement(arrayProperty, toDuplicate, index, out _, out var oldId, "", false);
-            var actionName = Selectors.GetSelectedBinding(m_State)?.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
-            if (m_State.selectionType == SelectionType.Action)
-                actionName = Selectors.GetSelectedAction(m_State)?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
+            var actionName = Selectors.GetSelectedBinding(s_State)?.wrappedProperty.FindPropertyRelative("m_Action").stringValue;
+            if (s_State.selectionType == SelectionType.Action)
+                actionName = Selectors.GetSelectedAction(s_State)?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
             if (IsComposite(property))
             {
                 PasteComposite(arrayProperty, property, PropertyName(property), actionName, index, oldId);
@@ -215,7 +216,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             duplicatedComposite.FindPropertyRelative("m_Name").stringValue = name;
             duplicatedComposite.FindPropertyRelative("m_Action").stringValue = actionName;
-            var composite = Selectors.GetBindingForId(m_State, oldId, out var bindingsFrom);
+            var composite = Selectors.GetBindingForId(s_State, oldId, out var bindingsFrom);
             var bindings = GetBindingsForComposite(bindingsFrom, composite.GetIndexOfArrayElement());
             PasteBindingsForComposite(bindingsArray, bindings, ++index, actionName);
         }
