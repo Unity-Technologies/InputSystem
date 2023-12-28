@@ -183,8 +183,7 @@ namespace UnityEngine.InputSystem.Editor
             var index = bindingArrayToInsertTo.Where(b => b.FindPropertyRelative("m_Action").stringValue.Equals(prevActionName)).Last().GetIndexOfArrayElement() + 1;
             foreach (var bindingJson in bindingJsons)
             {
-                Debug.Log(index);
-                var newIndex = PasteBindingOrComposite(bindingArrayToInsertTo, bindingJson, index, newName);
+                var newIndex = PasteBindingOrComposite(bindingArrayToInsertTo, bindingJson, index, newName, false);
                 index = newIndex;
             }
         }
@@ -201,11 +200,11 @@ namespace UnityEngine.InputSystem.Editor
             return PasteBinding(binding, index, newActionName);
         }
 
-        private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName)
+        private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName, bool createCompositeParts = true)
         {
             var property = PasteElement(arrayProperty, json, index, out _, out var oldId, "", false);
             if (IsComposite(property))
-                return PasteComposite(arrayProperty, property, PropertyName(property), actionName, index, oldId);
+                return PasteComposite(arrayProperty, property, PropertyName(property), actionName, index, oldId, createCompositeParts);
             PasteBinding(property, index, actionName);
             return index + 1;
         }
@@ -216,10 +215,16 @@ namespace UnityEngine.InputSystem.Editor
             return index;
         }
 
-        private static int PasteComposite(SerializedProperty bindingsArray, SerializedProperty duplicatedComposite, string name, string actionName, int index, string oldId)
+        private static int PasteComposite(SerializedProperty bindingsArray, SerializedProperty duplicatedComposite, string name, string actionName, int index, string oldId, bool createCompositeParts)
         {
             duplicatedComposite.FindPropertyRelative("m_Name").stringValue = name;
             duplicatedComposite.FindPropertyRelative("m_Action").stringValue = actionName;
+            if (createCompositeParts)
+            {
+                var composite = Selectors.GetBindingForId(s_State, oldId, out var bindingsFrom);
+                var bindings = GetBindingsForComposite(bindingsFrom, composite.GetIndexOfArrayElement());
+                PasteBindingsForComposite(bindingsArray, bindings, ++index, actionName);
+            }
             return index + 1;
         }
 
