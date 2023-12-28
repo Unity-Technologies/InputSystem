@@ -119,10 +119,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 if (isAction)
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedAction(state)?.wrappedProperty}, typeof(InputAction), Selectors.GetSelectedActionMap(state)?.wrappedProperty);
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedAction(state)?.wrappedProperty}, typeof(InputAction), actionMap);
                 else
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding), actionMap);
                 return state;
             };
         }
@@ -131,13 +132,14 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 if (isAction)
                 {
                     var selectedAction = Selectors.GetSelectedAction(state)?.wrappedProperty;
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> { selectedAction }, typeof(InputAction), Selectors.GetSelectedActionMap(state)?.wrappedProperty);
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> { selectedAction }, typeof(InputAction), actionMap);
                     return DeleteAction(state.selectedActionMapIndex, selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state);
                 }
-                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
+                CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding), actionMap);
                 return DeleteBinding(state.selectedActionMapIndex, state.selectedBindingIndex).Invoke(state);
             };
         }
@@ -228,7 +230,7 @@ namespace UnityEngine.InputSystem.Editor
                 var action = Selectors.GetSelectedAction(state)?.wrappedProperty;
                 var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
-                CopyPasteHelper.DuplicateAction(actionArray, action, state);
+                CopyPasteHelper.DuplicateAction(actionArray, action, actionMap, state);
                 state.serializedObject.ApplyModifiedProperties();
                 return state.SelectAction(state.selectedActionIndex + 1);
             };

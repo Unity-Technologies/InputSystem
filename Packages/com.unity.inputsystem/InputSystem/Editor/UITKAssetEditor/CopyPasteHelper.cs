@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Editor
         public static void CopySelectedTreeViewItemsToClipboard(List<SerializedProperty> items, Type type, SerializedProperty actionMap = null)
         {
             var copyBuffer = new StringBuilder();
-            CopyItems(items, copyBuffer, type, actionMap); // TODO: sort out contained children
+            CopyItems(items, copyBuffer, type, actionMap);
             EditorGUIUtility.systemCopyBuffer = copyBuffer.ToString();
         }
 
@@ -49,9 +49,27 @@ namespace UnityEngine.InputSystem.Editor
         {
             buffer.Append(k_StartOfText);
             buffer.Append(item.CopyToJson(true));
-            if (type != typeof(InputAction)) return;
+            if (type == typeof(InputAction))
+                AppendBindingDataForAction(buffer, actionMap, item);
+            if (type == typeof(InputBinding) && item.FindPropertyRelative("m_Flags")?.intValue == (int)InputBinding.Flags.Composite)
+                AppendBindingDataForComposite(buffer, actionMap, item);
+        }
+
+        private static void AppendBindingDataForAction(StringBuilder buffer, SerializedProperty actionMap, SerializedProperty item)
+        {
             buffer.Append(k_BindingData);
             foreach (var binding in GetBindingsForActionInMap(actionMap, item))
+            {
+                buffer.Append(binding.CopyToJson(true));
+                buffer.Append(k_EndOfBinding);
+            }
+        }
+
+        private static void AppendBindingDataForComposite(StringBuilder buffer, SerializedProperty actionMap, SerializedProperty item)
+        {
+            var bindingsArray = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            buffer.Append(k_BindingData);
+            foreach (var binding in GetBindingsForComposite(bindingsArray, item.GetIndexOfArrayElement()))
             {
                 buffer.Append(binding.CopyToJson(true));
                 buffer.Append(k_EndOfBinding);
@@ -163,11 +181,13 @@ namespace UnityEngine.InputSystem.Editor
             return duplicatedProperty;
         }
 
-        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, InputActionsEditorState state)
+        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, SerializedProperty actionMap, InputActionsEditorState state)
         {
             s_State = state;
-            var json = toDuplicate.CopyToJson(true);
-            PasteAction(arrayProperty, json, toDuplicate.GetIndexOfArrayElement() + 1);
+            var buffer = new StringBuilder();
+            buffer.Append(toDuplicate.CopyToJson(true));
+            AppendBindingDataForAction(buffer, actionMap, toDuplicate);
+            PasteAction(arrayProperty, buffer.ToString(), toDuplicate.GetIndexOfArrayElement() + 1);
         }
 
         private static void PasteAction(SerializedProperty arrayProperty, string jsonToInsert, int indexToInsert)
@@ -189,7 +209,6 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private static bool IsComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite;
-        private static bool IsPartComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite;
         private static string PropertyName(SerializedProperty property) => property.FindPropertyRelative("m_Name").stringValue;
 
         public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
@@ -202,10 +221,25 @@ namespace UnityEngine.InputSystem.Editor
 
         private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName, bool createCompositeParts = true)
         {
+            if (json.Contains(k_BindingData))
+                return PasteCompositeFromJson(arrayProperty, json, index, actionName);
             var property = PasteElement(arrayProperty, json, index, out _, out var oldId, "", false);
             if (IsComposite(property))
                 return PasteComposite(arrayProperty, property, PropertyName(property), actionName, index, oldId, createCompositeParts);
             PasteBinding(property, index, actionName);
+            return index + 1;
+        }
+
+        private static int PasteCompositeFromJson(SerializedProperty arrayProperty, string json, int index, string actionName)
+        {
+            var jsons = json.Split(k_BindingData, StringSplitOptions.RemoveEmptyEntries);
+            var property = PasteElement(arrayProperty, jsons.First(), index, out _, out var oldId, "", false);
+            var bindingJsons = jsons.Last().Split(k_EndOfBinding, StringSplitOptions.RemoveEmptyEntries);
+            property.FindPropertyRelative("m_Action").stringValue = actionName;
+            foreach (var bindingJson in bindingJsons)
+            {
+                PasteBindingOrComposite(arrayProperty, bindingJson, ++index, actionName, false);
+            }
             return index + 1;
         }
 
