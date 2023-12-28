@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 if (isAction)
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedAction(state)?.wrappedProperty}, typeof(InputAction));
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedAction(state)?.wrappedProperty}, typeof(InputAction), Selectors.GetSelectedActionMap(state)?.wrappedProperty);
                 else
                     CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
                 return state;
@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (isAction)
                 {
                     var selectedAction = Selectors.GetSelectedAction(state)?.wrappedProperty;
-                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> { selectedAction }, typeof(InputAction));
+                    CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> { selectedAction }, typeof(InputAction), Selectors.GetSelectedActionMap(state)?.wrappedProperty);
                     return DeleteAction(state.selectedActionMapIndex, selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state);
                 }
                 CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding));
