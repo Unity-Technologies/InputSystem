@@ -77,17 +77,13 @@ namespace UnityEngine.InputSystem.Editor
         public static int GetSelectedBindingIndexAfterCompositeBindings(InputActionsEditorState state)
         {
             var bindings = GetSelectedActionMap(state)?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var index = state.selectedBindingIndex;
-            var item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index));
-            if (item.isComposite)
-                index++;
-            item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index));
+            var item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(state.selectedBindingIndex));
+            var index = state.selectedBindingIndex + (item.isComposite || item.isPartOfComposite ? 1 : 0);
             var toSkip = 0;
-            while (item.isPartOfComposite)
+            while (new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index)).isPartOfComposite)
             {
                 toSkip++;
                 index++;
-                item = new SerializedInputBinding(bindings?.GetArrayElementAtIndex(index));
             }
             return state.selectedBindingIndex + toSkip;
         }
