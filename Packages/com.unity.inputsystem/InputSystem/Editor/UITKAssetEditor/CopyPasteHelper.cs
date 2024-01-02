@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -209,6 +210,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private static bool IsComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite;
+        private static bool IsPartOfComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite;
         private static string PropertyName(SerializedProperty property) => property.FindPropertyRelative("m_Name").stringValue;
 
         public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
@@ -221,6 +223,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private static int PasteBindingOrComposite(SerializedProperty arrayProperty, string json, int index, string actionName, bool createCompositeParts = true)
         {
+            var pastePartOfComposite = IsPartOfComposite(json);
+            var currentProperty = arrayProperty.GetArrayElementAtIndex(index - 1);
+            if (pastePartOfComposite)
+            {
+                if (!(IsComposite(currentProperty) || IsPartOfComposite(currentProperty)))
+                    return index;
+            }
+            index = pastePartOfComposite && IsPartOfComposite(currentProperty) ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
             if (json.Contains(k_BindingData))
                 return PasteCompositeFromJson(arrayProperty, json, index, actionName);
             var property = PasteElement(arrayProperty, json, index, out _, out var oldId, "", false);
@@ -230,10 +240,18 @@ namespace UnityEngine.InputSystem.Editor
             return index + 1;
         }
 
+        private static bool IsPartOfComposite(string json)
+        {
+            if (!json.Contains("m_Flags"))
+                return false;
+            var ob = JObject.Parse(json);
+            return (int)ob["m_Flags"] == (int)InputBinding.Flags.PartOfComposite;
+        }
+
         private static int PasteCompositeFromJson(SerializedProperty arrayProperty, string json, int index, string actionName)
         {
             var jsons = json.Split(k_BindingData, StringSplitOptions.RemoveEmptyEntries);
-            var property = PasteElement(arrayProperty, jsons.First(), index, out _, out var oldId, "", false);
+            var property = PasteElement(arrayProperty, jsons.First(), index, out _, out _, "", false);
             var bindingJsons = jsons.Last().Split(k_EndOfBinding, StringSplitOptions.RemoveEmptyEntries);
             property.FindPropertyRelative("m_Action").stringValue = actionName;
             foreach (var bindingJson in bindingJsons)

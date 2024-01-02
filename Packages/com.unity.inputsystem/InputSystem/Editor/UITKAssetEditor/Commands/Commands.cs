@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-                    var index = state.selectionType == SelectionType.Action ? Selectors.GetLastBindingIndexForSelectedAction(state) : Selectors.GetSelectedBindingIndexAfterCompositeBindings(state);
+                    var index = state.selectionType == SelectionType.Action ? Selectors.GetLastBindingIndexForSelectedAction(state) : state.selectedBindingIndex;
                     var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { index }, bindingsArray, state);
                     if (lastPastedElement != null)
                     {
