@@ -317,6 +317,7 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.SoftDelete:
                 case CmdEvents.Duplicate:
                 case CmdEvents.Copy:
+                case CmdEvents.Cut:
                 case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
