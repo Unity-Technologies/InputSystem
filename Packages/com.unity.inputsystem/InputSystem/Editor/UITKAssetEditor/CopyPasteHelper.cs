@@ -347,10 +347,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void AssignUniqueIDs(SerializedProperty element)
         {
-            // Assign new ID to map.
             AssignUniqueID(element);
-
-            //
             foreach (var child in element.GetChildren())
             {
                 if (!child.isArray)
@@ -360,7 +357,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
                     fieldType == typeof(InputActionMap))
                 {
-                    ////TODO: update bindings that refer to actions by {id}
                     for (var i = 0; i < child.arraySize; ++i)
                         using (var childElement = child.GetArrayElementAtIndex(i))
                             AssignUniqueIDs(childElement);

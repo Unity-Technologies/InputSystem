@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command CopyActionBindingSelection(bool isAction) //TODO remove bool for multiselection
+        public static Command CopyActionBindingSelection(bool isAction) 
         {
             return (in InputActionsEditorState state) =>
             {
@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
         
-        public static Command CutActionsOrBindings(bool isAction) //TODO remove bool for multiselection
+        public static Command CutActionsOrBindings(bool isAction)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -137,7 +137,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var selectedAction = Selectors.GetSelectedAction(state)?.wrappedProperty;
                     CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> { selectedAction }, typeof(InputAction), actionMap);
-                    return DeleteAction(state.selectedActionMapIndex, selectedAction.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state);
+                    return DeleteAction(state.selectedActionMapIndex, selectedAction?.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state);
                 }
                 CopyPasteHelper.CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {Selectors.GetSelectedBinding(state)?.wrappedProperty}, typeof(InputBinding), actionMap);
                 return DeleteBinding(state.selectedActionMapIndex, state.selectedBindingIndex).Invoke(state);
