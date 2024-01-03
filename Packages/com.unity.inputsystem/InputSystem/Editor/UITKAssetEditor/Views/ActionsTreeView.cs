@@ -245,7 +245,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
-        internal void CopyItems(bool isAction) //TODO remove parameter for multi selection
+        internal void CopyItems(bool isAction) 
         {
             Dispatch(Commands.CopyActionBindingSelection(isAction));
         }

@@ -20,7 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
 
 ### Added
-- Added Copy and Paste support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
+- Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
