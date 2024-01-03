@@ -3,6 +3,7 @@ uid: input-system-settings
 ---
 # Input settings
 
+* [Create Settings Asset](#create-settings-asset)
 * [Update Mode](#update-mode)
 * [Background Behavior](#background-behavior)
 * [Filter Noise on .current](#filter-noise-on-current)
@@ -12,23 +13,26 @@ uid: input-system-settings
 * [Platform-specific Settings](#platform-specific-settings)
 * [Play Mode Input Behavior](#play-mode-input-behavior)
 
-To configure the Input System individually for each project, go to __Edit > Project Settings… > Input System Package__ from Unity's main menu.
+To configure the Input System individually for each project, go to __Edit__ > __Project Settings…__ > __Input System Package__ from Unity's main menu.
 
 ![Input Settings](Images/InputSettings.png)
 
-The Input System stores input settings in Assets. If your Project doesn't contain an input settings Asset, click __Create settings asset__ in the Settings window to create one. If your Project contains multiple settings Assets, use the gear menu in the top-right corner of the window to choose which one to use. You can also use this menu to create additional settings Assets.
-
->__Note__: Unity saves changes to these settings when you save the Project.
-
 This page describes each input setting in detail.
+
+## Create Settings Asset
+
+When you first view the input settings, they are not editable, and instead a button to __Create settings asset__ is displayed at the top of the input settings window.
+
+![The Create Settings Asset button](Images/CreateSettingsAsset.png)
+
+If you want to customise the input settings, you must first click this button, which creates a settings asset in your Project. Once your project contains a settings asset, the __Create settings asset__ is no longer displayed, and the settings fields become editable. Unity saves changes to your settings in the settings asset when you save the project.
+
+If your project contains multiple settings assets, you can use the gear menu in the top-right corner of the window to choose which asset to use. You can also use this menu to create additional settings assets.
+
 
 ## Update Mode
 
-![Update Mode](Images/UpdateMode.png)
-
-This is a fundamental setting that determines when the Input System processes input.
-
-The Input System processes input in one of three distinct ways:
+This setting determines when the Input System processes input. The Input System can process input in one of three distinct ways:
 
 |Type|Description|
 |----|-----------|
@@ -40,13 +44,11 @@ The Input System processes input in one of three distinct ways:
 
 ## Background Behavior
 
-![Background Behavior](Images/BackgroundBehavior.png)
+Background Behaviour determines what happens when [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is lost or regained, and how input behaves while the application is not in the foreground.
 
-Determines how [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is handled. That is, what happens when focus is lost or gained and how input behaves while the application is not in the foreground.
+This setting is only relevant when "Run In Background" is enabled in the [Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettings.html) for the project. This setting is only supported on some platforms. On platforms such as Android and iOS, your app will not run when it is not in the foreground.
 
-This setting is only relevant when "Run In Background" is enabled in the [Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettings.html) for the project. This setting is only supported on some platforms. On platforms such as Android and iOS, the game will not be run while the application is not in the foreground.
-
-Note that in the editor, "Run In Background" is considered to always be enabled as the player loop will be kept running regardless of whether a Game View is focused or not. Also, in development players on desktop platforms, the setting is force-enabled during the build process.
+In the Editor, "Run In Background" is considered to always be enabled as the player loop is kept running regardless of whether a Game View is focused or not. Also, in development players on desktop platforms, the setting is force-enabled during the build process.
 
 >__Note__: In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](Devices.md#background-and-focus-change-behavior) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
 
@@ -117,10 +119,6 @@ If __Supported Devices__ is empty, no restrictions apply, which means that the I
 
 To add Devices to the list, click the Add (+) icon and choose a Device from the menu that appears.
 
-![Add Supported Device](Images/AddSupportedDevice.png)
-
-__Abstract Devices__ contains common Device abstractions such as "Keyboard" and "Mouse". __Specific Devices__ contains specific hardware products.
-
 ### Override in Editor
 
 In the Editor, you might want to use input Devices that the application doesn't support. For example, you might want to use a tablet in the Editor even if your application only supports gamepads.
@@ -129,24 +127,18 @@ To force the Editor to add all locally available Devices, even if they're not in
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 
-This setting is stored as a user setting (that is, other users who open the same Project can't see the setting).
+>__Note__: This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.
 
 ## Platform-specific settings
 
 ### iOS/tvOS
 
-![iOSSettings](Images/iOSSettings.png)
-
-* __Motion Usage__<br>
-  Governs access to the [pedometer](Sensors.md#stepcounter) on the device. If enabled, the __Description__ string supplied in the settings will be added to the application's Info.plist
+__Motion Usage__
+  Governs access to the [pedometer](Sensors.md#stepcounter) on the device. If you enable this setting, the __Description__ field becomes editable. The text you enter into the Description field is added to your application's `Info.plist`.
 
 ### Editor
 
-#### Play Mode Input Behavior
-
-![Play Mode Input Behavior](Images/PlayModeInputBehavior.png)
-
-Determines how input is handled in the Editor when in play mode. Unlike in players, in the Editor Unity (and thus its input backends) will keep running for as long as the Editor is active regardless of whether a Game View is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
+__Play Mode Input Behavior__ determines how input is handled in the Editor when in play mode. Unlike in built players, in the Unity Editor the input back-ends keep running for as long as the Editor is active, regardless of whether a Game View window is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
 
 |Setting|Description|
 |-------|-----------|
