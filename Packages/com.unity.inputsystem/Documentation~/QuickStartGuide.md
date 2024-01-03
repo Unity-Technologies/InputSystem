@@ -5,6 +5,34 @@ This page has a brief description of how to quickly start using the Input System
 
 First, install the Input System package. For information on how to install the new Input System, see [Installation](Installation.md).
 
+
+## View and edit the default input settings
+
+The **Input Actions Settings window** allows you to view and edit the default input settings. Open the  Input Actions Settings window by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**.
+
+![The Input Actions Settings window](Images/ProjectSettingsInputActionsSimpleShot.png)
+
+You can use this window to view all the default Actions to find out their names, value types, and what their corresponding bindings. You can also modify, delete, or add new Actions here.
+
+> **Note:** If you create more than one Action with same name in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`
+
+[Read more about using the Input Action Settings Window.](ActionsEditor.md)
+
+
+## The default Action Maps and Actions
+
+Action Maps allow you to organise Actions into groups which represent specific situations where a set of actions make sense together.
+
+The Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
+
+The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
+
+ Each each default action has bindings to several different types of Control. For example:
+
+- The "Move" action is bound to the "WSAD" keyboard keys and arrow keys, a gamepad stick, the primary 2D axis on an XR controller
+- The "Jump" action is bound to the space key, the "south" button on a gamepad, and the secondary button on an XR controller.
+
+
 ## Read values from the default Actions
 
 The Input System comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input most types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen and XR.
@@ -56,28 +84,3 @@ public class Example : MonoBehaviour
 These actions named "Move" and "Jump" in this script work straight away with no configuration required because they match the names of some of the pre-configured defaults in the Input System package.
 
 > **Note**: Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
-
-## The default Action Maps and Actions
-
-Action Maps allow you to organise Actions into groups which represent specific situations where a set of actions make sense together.
-
-The Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
-
-The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
-
- Each each default action has bindings to several different types of Control. For example:
-
-- The "Move" action is bound to the "WSAD" keyboard keys and arrow keys, a gamepad stick, the primary 2D axis on an XR controller
-- The "Jump" action is bound to the space key, the "south" button on a gamepad, and the secondary button on an XR controller.
-
-## View and edit the default input settings
-
-The **Input Actions Settings window** allows you to view and edit the default input settings. Open the  Input Actions Settings window by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**.
-
-![The Input Actions Settings window](Images/ProjectSettingsInputActionsSimpleShot.png)
-
-You can use this window to view all the default Actions to find out their names, value types, and what their corresponding bindings. You can also modify, delete, or add new Actions here.
-
-> **Note:** If you create Actions with duplicate names in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character, when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`
-
-[Read more about using the Input Action Settings Window.](ActionsEditor.md)
