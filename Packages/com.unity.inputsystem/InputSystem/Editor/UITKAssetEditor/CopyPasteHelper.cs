@@ -226,7 +226,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!(IsComposite(currentProperty) || IsPartOfComposite(currentProperty)))
                     return index;
             }
-            index = pastePartOfComposite && (IsPartOfComposite(currentProperty) || IsComposite(currentProperty)) ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
+            index = (pastePartOfComposite && (IsPartOfComposite(currentProperty) || IsComposite(currentProperty))) || s_State.selectionType == SelectionType.Action ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
             if (json.Contains(k_BindingData))
                 return PasteCompositeFromJson(arrayProperty, json, index, actionName);
             var property = PasteElement(arrayProperty, json, index, out _, out var oldId, "", false);
