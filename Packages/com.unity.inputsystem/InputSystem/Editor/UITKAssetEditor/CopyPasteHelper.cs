@@ -1,13 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
-using UnityEngine;
-using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -230,7 +226,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!(IsComposite(currentProperty) || IsPartOfComposite(currentProperty)))
                     return index;
             }
-            index = pastePartOfComposite && IsPartOfComposite(currentProperty) ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
+            index = pastePartOfComposite && (IsPartOfComposite(currentProperty) || IsComposite(currentProperty)) ? index : Selectors.GetSelectedBindingIndexAfterCompositeBindings(s_State) + 1;
             if (json.Contains(k_BindingData))
                 return PasteCompositeFromJson(arrayProperty, json, index, actionName);
             var property = PasteElement(arrayProperty, json, index, out _, out var oldId, "", false);
@@ -242,7 +238,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static bool IsPartOfComposite(string json)
         {
-            if (!json.Contains("m_Flags"))
+            if (!json.Contains("m_Flags") || json.Contains(k_BindingData))
                 return false;
             var ob = JObject.Parse(json);
             return (int)ob["m_Flags"] == (int)InputBinding.Flags.PartOfComposite;
