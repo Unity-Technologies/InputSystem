@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.Editor
 
         #endregion
 
-        #region PasteCheckHelpers
+        #region PasteChecks
         public static bool HasPastableClipboardData(Type selectedType)
         {
             var clipboard = EditorGUIUtility.systemCopyBuffer;
@@ -167,46 +167,6 @@ namespace UnityEngine.InputSystem.Editor
                 PasteBindingOrComposite(arrayToInsertInto, block, indexToInsert, actionName);
             }
         }
-
-        #endregion
-
-        #region Duplicate
-        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, SerializedProperty actionMap, InputActionsEditorState state)
-        {
-            s_State = state;
-            var buffer = new StringBuilder();
-            buffer.Append(toDuplicate.CopyToJson(true));
-            AppendBindingDataForAction(buffer, actionMap, toDuplicate);
-            PasteAction(arrayProperty, buffer.ToString(), toDuplicate.GetIndexOfArrayElement() + 1);
-        }
-
-        public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
-        {
-            if (IsComposite(toDuplicate))
-                return DuplicateComposite(arrayProperty, toDuplicate, PropertyName(toDuplicate), newActionName, index, out _).GetIndexOfArrayElement();
-            var binding = DuplicateElement(arrayProperty, toDuplicate, newActionName, index, false);
-            binding.FindPropertyRelative("m_Action").stringValue = newActionName;
-            return index;
-        }
-
-        private static SerializedProperty DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string actionName, int index, out int newIndex, bool increaseIndex = true)
-        {
-            if (increaseIndex)
-                index += InputActionSerializationHelpers.GetCompositePartCount(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
-            var newComposite = DuplicateElement(bindingsArray, compositeToDuplicate, name, index++, false);
-            newComposite.FindPropertyRelative("m_Action").stringValue = actionName;
-            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
-            newIndex = PastePartsOfComposite(bindingsArray, bindings, index, actionName);
-            return newComposite;
-        }
-
-        public static SerializedProperty DuplicateElement(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, int index, bool changeName = true)
-        {
-            var json = toDuplicate.CopyToJson(true);
-            return PasteElement(arrayProperty, json, index, out _, name, changeName);
-        }
-
-        #endregion
 
         private static SerializedProperty PasteElement(SerializedProperty arrayProperty, string json, int index, out string oldId, string name = "newElement",  bool changeName = true, bool assignUniqueIDs = true)
         {
@@ -314,6 +274,46 @@ namespace UnityEngine.InputSystem.Editor
 
             return elementProperty;
         }
+
+        #endregion
+
+        #region Duplicate
+        public static void DuplicateAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, SerializedProperty actionMap, InputActionsEditorState state)
+        {
+            s_State = state;
+            var buffer = new StringBuilder();
+            buffer.Append(toDuplicate.CopyToJson(true));
+            AppendBindingDataForAction(buffer, actionMap, toDuplicate);
+            PasteAction(arrayProperty, buffer.ToString(), toDuplicate.GetIndexOfArrayElement() + 1);
+        }
+
+        public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
+        {
+            if (IsComposite(toDuplicate))
+                return DuplicateComposite(arrayProperty, toDuplicate, PropertyName(toDuplicate), newActionName, index, out _).GetIndexOfArrayElement();
+            var binding = DuplicateElement(arrayProperty, toDuplicate, newActionName, index, false);
+            binding.FindPropertyRelative("m_Action").stringValue = newActionName;
+            return index;
+        }
+
+        private static SerializedProperty DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string actionName, int index, out int newIndex, bool increaseIndex = true)
+        {
+            if (increaseIndex)
+                index += InputActionSerializationHelpers.GetCompositePartCount(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
+            var newComposite = DuplicateElement(bindingsArray, compositeToDuplicate, name, index++, false);
+            newComposite.FindPropertyRelative("m_Action").stringValue = actionName;
+            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
+            newIndex = PastePartsOfComposite(bindingsArray, bindings, index, actionName);
+            return newComposite;
+        }
+
+        public static SerializedProperty DuplicateElement(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, int index, bool changeName = true)
+        {
+            var json = toDuplicate.CopyToJson(true);
+            return PasteElement(arrayProperty, json, index, out _, name, changeName);
+        }
+
+        #endregion
 
         #region HelperMethods
         private static List<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, int indexOfComposite)
