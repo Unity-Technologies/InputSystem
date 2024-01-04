@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
                 menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
                 var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                if (CopyPasteHelper.HavePastableClipboardData(typeof(InputActionMap)))
+                if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
                     menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
             }) { target = listView };
         }
@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.Editor
                 menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
                 menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
                 var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
-                var hasPastableData = CopyPasteHelper.HavePastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
+                var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
                 if (hasPastableData)
                     menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
             }) { target = target };

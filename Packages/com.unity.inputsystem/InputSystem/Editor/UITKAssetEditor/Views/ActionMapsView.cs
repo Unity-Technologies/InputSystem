@@ -152,7 +152,7 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Paste:
                     var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
-                    if (CopyPasteHelper.HavePastableClipboardData(typeof(InputActionMap)))
+                    if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
                         PasteItems(copiedAction);
                     break;
                 default:

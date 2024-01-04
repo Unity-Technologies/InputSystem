@@ -44,6 +44,24 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public static SerializedProperty LastOneThatFits(this SerializedProperty property, Func<SerializedProperty, bool> predicate)
+        {
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
+
+            if (property.isArray == false || property.arraySize == 0)
+                return null;
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            for (int i = property.arraySize - 1; i >= 0; i--)
+            {
+                if (predicate(property.GetArrayElementAtIndex(i)))
+                    return property.GetArrayElementAtIndex(i);
+            }
+            return null;
+        }
+
         public static SerializedProperty FirstOrDefault(this SerializedProperty property)
         {
             if (property == null)

@@ -297,7 +297,7 @@ namespace UnityEngine.InputSystem.Editor
                     CutItems(data.isAction);
                     break;
                 case CmdEvents.Paste:
-                    var hasPastableData = CopyPasteHelper.HavePastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
+                    var hasPastableData = CopyPasteHelper.HasPastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
                     if (hasPastableData)
                         PasteItems();
                     break;
