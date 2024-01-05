@@ -28,7 +28,28 @@ namespace UnityEngine.InputSystem.Editor
         private static string PropertyName(SerializedProperty property) => property.FindPropertyRelative("m_Name").stringValue;
 
         #region Copy
-        public static void CopySelectedTreeViewItemsToClipboard(List<SerializedProperty> items, Type type, SerializedProperty actionMap = null)
+
+        public static void CopyActionMap(InputActionsEditorState state)
+        {
+            var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+            var selectedObject = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+            CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {selectedObject}, typeof(InputActionMap), actionMap);
+        }
+
+        public static void Copy(InputActionsEditorState state)
+        {
+            var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+            var selectedObject = Selectors.GetSelectedAction(state)?.wrappedProperty;
+            var type = typeof(InputAction);
+            if (state.selectionType == SelectionType.Binding)
+            {
+                selectedObject = Selectors.GetSelectedBinding(state)?.wrappedProperty;
+                type = typeof(InputBinding);
+            }
+            CopySelectedTreeViewItemsToClipboard(new List<SerializedProperty> {selectedObject}, type, actionMap);
+        }
+
+        private static void CopySelectedTreeViewItemsToClipboard(List<SerializedProperty> items, Type type, SerializedProperty actionMap = null)
         {
             var copyBuffer = new StringBuilder();
             CopyItems(items, copyBuffer, type, actionMap);
@@ -122,12 +143,47 @@ namespace UnityEngine.InputSystem.Editor
         #endregion
 
         #region Paste
-        public static SerializedProperty PasteFromClipboard(int[] indicesToInsert, SerializedProperty arrayToInsertInto, InputActionsEditorState state)
+
+        public static SerializedProperty PasteActionMapsFromClipboard(InputActionsEditorState state)
+        {
+            s_lastAddedElement = null;
+            var typeOfCopiedData = GetCopiedClipboardType();
+            if (typeOfCopiedData != typeof(InputActionMap)) return null;
+            s_State = state;
+            var actionMapArray = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+            PasteData(EditorGUIUtility.systemCopyBuffer, new[] {state.selectedActionMapIndex}, actionMapArray);
+            return s_lastAddedElement;
+        }
+
+        public static SerializedProperty PasteActionsOrBindingsFromClipboard(InputActionsEditorState state, bool addLast = false)
         {
             s_lastAddedElement = null;
             s_State = state;
-            PasteData(EditorGUIUtility.systemCopyBuffer, indicesToInsert, arrayToInsertInto);
+            var typeOfCopiedData = GetCopiedClipboardType();
+            if (typeOfCopiedData == typeof(InputAction))
+                PasteActionsFromClipboard(state, addLast);
+            if (typeOfCopiedData == typeof(InputBinding))
+                PasteBindingsFromClipboard(state);
             return s_lastAddedElement;
+        }
+
+        private static void PasteActionsFromClipboard(InputActionsEditorState state, bool addLast)
+        {
+            var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+            var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+            if (actionArray == null) return;
+            var index = state.selectedActionIndex;
+            if (addLast)
+                index = actionArray.arraySize - 1;
+            PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, actionArray);
+        }
+
+        private static void PasteBindingsFromClipboard(InputActionsEditorState state)
+        {
+            var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+            var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
+            var index = state.selectionType == SelectionType.Action ? Selectors.GetLastBindingIndexForSelectedAction(state) : state.selectedBindingIndex;
+            PasteData(EditorGUIUtility.systemCopyBuffer, new[] {index}, bindingsArray);
         }
 
         private static void PasteData(string copyBufferString, int[] indicesToInsert, SerializedProperty arrayToInsertInto)

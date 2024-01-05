@@ -245,14 +245,14 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
-        internal void CopyItems(bool isAction) 
+        internal void CopyItems() 
         {
-            Dispatch(Commands.CopyActionBindingSelection(isAction));
+            Dispatch(Commands.CopyActionBindingSelection());
         }
 
-        internal void CutItems(bool isAction)
+        internal void CutItems()
         {
-            Dispatch(Commands.CutActionsOrBindings(isAction));
+            Dispatch(Commands.CutActionsOrBindings());
         }
 
         internal void PasteItems()
@@ -291,10 +291,10 @@ namespace UnityEngine.InputSystem.Editor
                     m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
                     break;
                 case CmdEvents.Copy:
-                    CopyItems(data.isAction);
+                    CopyItems();
                     break;
                 case CmdEvents.Cut:
-                    CutItems(data.isAction);
+                    CutItems();
                     break;
                 case CmdEvents.Paste:
                     var hasPastableData = CopyPasteHelper.HasPastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
