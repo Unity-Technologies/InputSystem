@@ -52,8 +52,8 @@ namespace UnityEngine.InputSystem.Editor
             _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendSeparator();
-                menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
-                menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction)); //TODO modify for multiselect
+                menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction));
+                menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems(treeView.GetSelectedItems<ActionOrBindingData>().First().data.isAction));
                 var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
                 var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
                 if (hasPastableData)

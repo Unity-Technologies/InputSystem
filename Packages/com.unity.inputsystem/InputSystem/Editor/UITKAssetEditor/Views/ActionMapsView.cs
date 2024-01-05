@@ -108,7 +108,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             Dispatch(Commands.CopyActionMapSelection());
         }
-        
+
         internal void CutItems()
         {
             Dispatch(Commands.CutActionMapSelection());
@@ -151,9 +151,9 @@ namespace UnityEngine.InputSystem.Editor
                     CutItems();
                     break;
                 case CmdEvents.Paste:
-                    var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                    var isActionCopied = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
                     if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
-                        PasteItems(copiedAction);
+                        PasteItems(isActionCopied);
                     break;
                 default:
                     return; // Skip StopPropagation if we didn't execute anything
