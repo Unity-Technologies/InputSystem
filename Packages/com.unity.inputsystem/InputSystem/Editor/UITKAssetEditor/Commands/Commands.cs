@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command CopyActionBindingSelection(bool isAction) 
+        public static Command CopyActionBindingSelection(bool isAction)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -127,7 +127,7 @@ namespace UnityEngine.InputSystem.Editor
                 return state;
             };
         }
-        
+
         public static Command CutActionsOrBindings(bool isAction)
         {
             return (in InputActionsEditorState state) =>
@@ -165,8 +165,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
+                if (actionArray == null) return state;
                 var index = actionArray.arraySize - 1;
                 var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { index }, actionArray, state);
                 if (lastPastedElement != null)
@@ -183,9 +184,9 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var typeOfCopiedData = CopyPasteHelper.GetCopiedClipboardType();
+                var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
                 if (typeOfCopiedData == typeof(InputAction))
                 {
-                    var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
                     var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { state.selectedActionIndex }, actionArray, state);
                     if (lastPastedElement != null)
@@ -196,7 +197,6 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 else
                 {
-                    var actionMap = Selectors.GetActionMapAtIndex(state, state.selectedActionMapIndex)?.wrappedProperty;
                     var bindingsArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
                     var index = state.selectionType == SelectionType.Action ? Selectors.GetLastBindingIndexForSelectedAction(state) : state.selectedBindingIndex;
                     var lastPastedElement = CopyPasteHelper.PasteFromClipboard(new[] { index }, bindingsArray, state);
@@ -253,7 +253,7 @@ namespace UnityEngine.InputSystem.Editor
         private static InputActionsEditorState SelectPrevActionMap(InputActionsEditorState state)
         {
             var count = Selectors.GetActionMapCount(state);
-            int index = 0;
+            var index = 0;
             if (count != null && count.Value > 0)
                 index = Math.Max(state.selectedActionMapIndex - 1, 0);
             return state.SelectActionMap(index);

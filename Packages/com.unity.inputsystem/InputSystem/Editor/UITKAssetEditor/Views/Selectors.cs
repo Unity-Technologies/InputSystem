@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps));
             if (actionMaps == null || index < 0 || index > actionMaps.arraySize - 1)
                 return null;
-            return new SerializedInputActionMap(actionMaps?.GetArrayElementAtIndex(index));
+            return new SerializedInputActionMap(actionMaps.GetArrayElementAtIndex(index));
         }
 
         public static int? GetBindingCount(SerializedProperty actionMap)
@@ -129,11 +129,6 @@ namespace UnityEngine.InputSystem.Editor
             }
             bindingArray = null;
             return null;
-        }
-
-        public static SerializedProperty GetActionMapForBinding(InputActionsEditorState state, SerializedProperty binding)
-        {
-            return state.serializedObject?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.FirstOrDefault(aM => aM.FindPropertyRelative(nameof(InputActionMap.m_Bindings))?.FirstOrDefault(bindings => bindings.FirstOrDefault(b => b.Equals(binding)) != null) != null);
         }
 
         public static SerializedProperty GetSelectedBindingPath(InputActionsEditorState state)
