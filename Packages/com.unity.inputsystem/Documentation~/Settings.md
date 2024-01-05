@@ -3,15 +3,15 @@ uid: input-system-settings
 ---
 # Input settings
 
-* [Create Settings Asset](#create-settings-asset)
-* [Update Mode](#update-mode)
-* [Background Behavior](#background-behavior)
-* [Filter Noise on .current](#filter-noise-on-current)
-* [Compensate orientation](#compensate-orientation)
-* [Default value properties](#default-value-properties)
-* [Supported Devices](#supported-devices)
-* [Platform-specific Settings](#platform-specific-settings)
-* [Play Mode Input Behavior](#play-mode-input-behavior)
+- [Create Settings Asset](#create-settings-asset)
+- [Update Mode](#update-mode)
+- [Background Behavior](#background-behavior)
+- [Filter Noise On Current](#filter-noise-on-current)
+- [Compensate Orientation](#compensate-orientation)
+- [Default value properties](#default-value-properties)
+- [Supported Devices](#supported-devices)
+- [Platform-specific settings](#platform-specific-settings)
+
 
 To configure the Input System individually for each project, go to __Edit__ > __Project Settings…__ > __Input System Package__ from Unity's main menu.
 
@@ -137,6 +137,8 @@ __Motion Usage__
   Governs access to the [pedometer](Sensors.md#stepcounter) on the device. If you enable this setting, the __Description__ field becomes editable. The text you enter into the Description field is added to your application's `Info.plist`.
 
 ### Editor
+
+#### Play Mode Input Behavior
 
 __Play Mode Input Behavior__ determines how input is handled in the Editor when in play mode. Unlike in built players, in the Unity Editor the input back-ends keep running for as long as the Editor is active, regardless of whether a Game View window is focused or not. This setting determines how input should behave when focus is __not__ on any Game View &ndash; and thus [`Application.isFocused`](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is false and the player considered to be running in the background.
 
