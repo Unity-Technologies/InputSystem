@@ -313,7 +313,7 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(data.isAction);
 
             // If TreeView currently (before delete) has more than one Action, select the one immediately
-            // above or immediately below depending (if data is first in the list)
+            // above or immediately below depending if data is first in the list
             var treeView = ViewStateSelector.GetViewState(stateContainer.GetState()).treeViewData;
             if (treeView.Count > 1)
             {
@@ -322,7 +322,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (index > 0)
                     index--;
                 else
-                    index++;
+                    index++; // Also handles case if actionName wasn't found; FindIndex() returns -1 that's incremented to 0
 
                 return treeView[index].data.name;
             }
@@ -357,6 +357,7 @@ namespace UnityEngine.InputSystem.Editor
                         int prevIndex = Math.Max(childIndex - 1, 0);
                         var node = parentNode.children.ElementAt(prevIndex);
                         retVal = node.data.bindingIndex;
+                        break;
                     }
                 }
             }

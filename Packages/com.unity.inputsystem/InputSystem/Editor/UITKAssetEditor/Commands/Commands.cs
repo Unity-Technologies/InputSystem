@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem.Editor
                 state.serializedObject.ApplyModifiedProperties();
 
                 // ActionsTreeView will dispatch a separate command to select the previous Action
-                return state.With(selectedActionIndex: -1);
+                return state;
             };
         }
 
@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Editor
                 state.serializedObject.ApplyModifiedProperties();
 
                 // ActionsTreeView will dispatch a separate command to select the previous Binding
-                return state.With(selectedBindingIndex: -1);
+                return state;
             };
         }
 
