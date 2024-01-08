@@ -18,7 +18,9 @@ namespace UnityEngine.InputSystem.Editor
             // For project-wide actions asset save works differently. The asset is in YAML format, not JSON.
             if (asset.name == ProjectWideActionsAsset.kAssetName)
             {
+#if UNITY_2023_2_OR_NEWER
                 ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
+#endif
                 ProjectWideActionsAsset.UpdateInputActionReferences();
                 AssetDatabase.SaveAssets();
                 return;

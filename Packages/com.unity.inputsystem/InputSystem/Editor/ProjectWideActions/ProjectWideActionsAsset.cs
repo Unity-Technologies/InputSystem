@@ -114,6 +114,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        #if UNITY_2023_2_OR_NEWER
         /// <summary>
         /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
         /// break the UI input at runtime, when using the UI Toolkit.
@@ -141,11 +142,12 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         Debug.LogWarning($"The UI action \"{action.name}\" name has been modified.\r\n " +
                             $"This will break the UI input at runtime. Please make sure the action name with \"{action.name}\" exists.");
-                        return;
                     }
                 }
             }
         }
+
+        #endif
 
         /// <summary>
         /// Updates the input action references in the asset by updating names, removing dangling references
