@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        private static InputActionMap GetDefaultUIActionMap()
+        internal static InputActionMap GetDefaultUIActionMap()
         {
             var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
             var actionMaps = InputActionMap.FromJson(json);
@@ -114,25 +114,29 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        /// <summary>
+        /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
+        /// break the UI input at runtime, when using the UI Toolkit.
+        /// </summary>
         internal static void CheckForDefaultUIActionMapChanges()
         {
             var asset = GetOrCreate();
             if (asset != null)
             {
                 var defaultUIActionMap = GetDefaultUIActionMap();
+                var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
 
-                var uiMap = asset.actionMaps[asset.actionMaps.IndexOf(x => x.name == "UI")];
                 // "UI" action map has been removed or renamed.
-                if (uiMap == null)
+                if (uiMapIndex == -1)
                 {
                     Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
                         "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
                     return;
                 }
-
-                // "UI" action map has been modified.
+                var uiMap = asset.m_ActionMaps[uiMapIndex];
                 foreach (var action in defaultUIActionMap.actions)
                 {
+                    // "UI" actions have been modified.
                     if (uiMap.FindAction(action.name) == null)
                     {
                         Debug.LogWarning($"The UI action \"{action.name}\" name has been modified.\r\n " +
