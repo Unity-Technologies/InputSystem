@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -44,20 +45,19 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static SerializedProperty LastOneThatFits(this SerializedProperty property, Func<SerializedProperty, bool> predicate)
+        public static SerializedProperty FindLast(this SerializedProperty property, Func<SerializedProperty, bool> predicate)
         {
-            if (property == null)
-                throw new ArgumentNullException(nameof(property));
+            Debug.Assert(predicate != null, "Missing predicate for FindLast function.");
+            Debug.Assert(property != null, "SerializedProperty missing for FindLast function.");
 
-            if (property.isArray == false || property.arraySize == 0)
+            if (property.isArray == false)
                 return null;
-            if (predicate == null)
-                throw new ArgumentNullException(nameof(predicate));
 
             for (int i = property.arraySize - 1; i >= 0; i--)
             {
-                if (predicate(property.GetArrayElementAtIndex(i)))
-                    return property.GetArrayElementAtIndex(i);
+                var element = property.GetArrayElementAtIndex(i);
+                if (predicate(element))
+                    return element;
             }
             return null;
         }
