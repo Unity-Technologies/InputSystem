@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem
         public interface IInputAnalytic 
 #if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
             : IAnalytic
-#endif
+#endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
         {
             InputAnalyticInfo info { get; } // May be removed when only supporting 2023.2+ versions
             
@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem
             }
 
             bool TryGatherData(out IInputAnalytic.IData data, out Exception error);
-#endif
+#endif // !UNITY_2023_2_OR_NEWER
         }
         
         public static void Initialize(InputManager manager)
@@ -222,7 +222,7 @@ namespace UnityEngine.InputSystem
         [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, 
             maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
 #endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
-        public struct ShutdownEventDataAnalytic : IInputAnalytic
+        public readonly struct ShutdownEventDataAnalytic : IInputAnalytic
         {
             public const string kEventName = "input_shutdown";
             public const int kMaxEventsPerHour = 100;
@@ -440,7 +440,7 @@ namespace UnityEngine.InputSystem
                 if (!hasSession || hasFocus)
                     return;
 
-                m_FocusStart = currentTime();
+                m_FocusStart = currentTime;
             }
 
             /// <summary>
@@ -455,7 +455,7 @@ namespace UnityEngine.InputSystem
                 if (!hasSession || !hasFocus)
                     return;
                 
-                var duration = currentTime() - m_FocusStart;
+                var duration = currentTime - m_FocusStart;
                 m_FocusStart = float.NaN;
                 m_Data.sessionFocusDurationSeconds += (float)duration;
                 ++m_Data.sessionFocusSwitchCount;
@@ -508,7 +508,7 @@ namespace UnityEngine.InputSystem
                 if (hasSession)
                     return; // Session already started.
                 
-                m_SessionStart = currentTime();
+                m_SessionStart = currentTime;
             }
 
             /// <summary>
@@ -528,7 +528,7 @@ namespace UnityEngine.InputSystem
                     RegisterEditorFocusOut();
                 
                 // Compute and record total session duration
-                var duration = currentTime() - m_SessionStart;
+                var duration = currentTime - m_SessionStart;
                 m_Data.sessionDurationSeconds += (float)duration;
                 
                 // Send analytics event
@@ -540,10 +540,16 @@ namespace UnityEngine.InputSystem
             
             public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
             {
-                // TODO Throw exception if attempting to TryGatherData with invalid state
+                if (!isValid)
+                {
+                    data = null;
+                    error = new Exception("Unable to gather data without a valid session");
+                    return false;
+                }
+                
                 data = this.m_Data;
                 error = null;
-                return true; // Cannot fail
+                return true; 
             }
             
             private void Initialize(InputActionsEditorKind kind)
@@ -567,14 +573,13 @@ namespace UnityEngine.InputSystem
             private InputActionsEditorSessionData m_Data;
             private double m_FocusStart;
             private double m_SessionStart;
-            private static bool m_Registered;
             
             private IInputRuntime runtime => InputSystem.s_Manager.m_Runtime;
             private bool hasFocus => !double.IsNaN(m_FocusStart);
             private bool hasSession => !double.IsNaN(m_SessionStart);
             // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
             // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
-            private double currentTime() => runtime.currentTime;
+            private double currentTime => runtime.currentTime;
             public bool isValid => m_Data.sessionDurationSeconds >= 0;
             public InputAnalyticInfo info => new (kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
         }

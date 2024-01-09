@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.Editor
         StateContainer m_StateContainer;
 
         private bool m_IsActivated;
-        InputAnalytics.InputActionsEditorSessionAnalytic m_ActionEditorAnalytics;
+        private InputAnalytics.InputActionsEditorSessionAnalytic m_ActionEditorAnalytics;
 
         public InputActionsEditorSettingsProvider(string path, SettingsScope scopes, IEnumerable<string> keywords = null)
             : base(path, scopes, keywords)
@@ -29,17 +29,17 @@ namespace UnityEngine.InputSystem.Editor
 
             m_RootVisualElement = rootElement;
 
-            var asset = ProjectWideActionsAsset.GetOrCreate();
-            var serializedAsset = new SerializedObject(asset);
-            m_State = new InputActionsEditorState(m_ActionEditorAnalytics, serializedAsset);
-
-            BuildUI();
-
             // Always begin a session when activated (note that OnActivate isn't called when navigating back
             // to editor from another setting category)
             m_ActionEditorAnalytics = new InputAnalytics.InputActionsEditorSessionAnalytic(
                 InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
             m_ActionEditorAnalytics.Begin();
+
+            var asset = ProjectWideActionsAsset.GetOrCreate();
+            var serializedAsset = new SerializedObject(asset);
+            m_State = new InputActionsEditorState(m_ActionEditorAnalytics, serializedAsset);
+
+            BuildUI();
 
             // Monitor focus state of root element
             m_RootVisualElement.focusable = true;
@@ -147,6 +147,7 @@ namespace UnityEngine.InputSystem.Editor
         private void OnResetAsset(InputActionAsset newAsset)
         {
             var serializedAsset = new SerializedObject(newAsset);
+            m_ActionEditorAnalytics.RegisterReset();
             m_State = new InputActionsEditorState(m_ActionEditorAnalytics, serializedAsset);
         }
 
