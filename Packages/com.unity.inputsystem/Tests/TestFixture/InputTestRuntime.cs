@@ -473,7 +473,11 @@ namespace UnityEngine.InputSystem
 
             var info = analytic.info;
             onRegisterAnalyticsEvent?.Invoke(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements);
-            onSendAnalyticsEvent?.Invoke(info.Name, data);
+
+            if (analytic.TryGatherData(out var data, out var error))
+                onSendAnalyticsEvent?.Invoke(info.Name, data);
+            else
+                throw error; // For visibility in tests
 
             #endif // UNITY_2023_2_OR_NEWER
         }

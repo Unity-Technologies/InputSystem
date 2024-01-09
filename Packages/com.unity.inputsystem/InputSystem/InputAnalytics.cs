@@ -137,7 +137,7 @@ namespace UnityEngine.InputSystem
                 m_InputManager = manager;
             }
             
-            public InputAnalyticInfo info => new(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
             public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
             {
@@ -235,7 +235,7 @@ namespace UnityEngine.InputSystem
                 m_InputManager = manager;
             }
 
-            public InputAnalyticInfo info => new(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
             
             public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
             {
@@ -581,7 +581,7 @@ namespace UnityEngine.InputSystem
             // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
             private double currentTime => runtime.currentTime;
             public bool isValid => m_Data.sessionDurationSeconds >= 0;
-            public InputAnalyticInfo info => new (kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
         }
     }
     

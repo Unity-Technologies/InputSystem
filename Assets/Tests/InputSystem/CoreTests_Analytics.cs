@@ -242,7 +242,7 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
@@ -294,7 +294,7 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
@@ -354,7 +354,7 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
         #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.kEventInputActionEditorWindowSession));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
         #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)

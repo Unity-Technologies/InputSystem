@@ -963,7 +963,7 @@ namespace UnityEngine.InputSystem
             runtime.onRegisterAnalyticsEvent = (name, maxPerHour, maxPropertiesPerEvent) =>
             {
                 if (analyticsNameFilter(name))
-                    m_RegisteredAnalytics.Add(new(name: name, maxPerHour: maxPerHour, maxPropertiesPerEvent: maxPropertiesPerEvent) );
+                    m_RegisteredAnalytics.Add(new AnalyticsRegistrationEventData(name: name, maxPerHour: maxPerHour, maxPropertiesPerEvent: maxPropertiesPerEvent));
             };
 
             // Store sent analytic events when called if filter applies
