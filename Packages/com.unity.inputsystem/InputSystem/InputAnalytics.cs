@@ -33,11 +33,9 @@ namespace UnityEngine.InputSystem
         // Note: Needs to be externalized from interface depending on C# version
         public interface IInputAnalyticData 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
-            : IInputAnalytic.IData
+            : IAnalytic.IData
 #endif
-        {
-            // Empty
-        }
+        { }
         
         // Unity 2023.2+ deprecates legacy interfaces for registering and sending editor analytics and
         // replaces them with attribute annotations and required interface implementations.
@@ -143,8 +141,12 @@ namespace UnityEngine.InputSystem
             }
             
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
-
+            
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+#else
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
+#endif
             {
                 try
                 {
@@ -242,7 +244,11 @@ namespace UnityEngine.InputSystem
 
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
             
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+#else
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
+#endif
             {
                 try
                 {
@@ -542,8 +548,12 @@ namespace UnityEngine.InputSystem
                 // Reset to allow instance to be reused
                 Initialize(m_Data.kind);
             }
-            
+
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+#else
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
+#endif
             {
                 if (!isValid)
                 {
@@ -579,7 +589,7 @@ namespace UnityEngine.InputSystem
             private double m_FocusStart;
             private double m_SessionStart;
             
-            private IInputRuntime runtime => InputSystem.s_Manager.m_Runtime;
+            private static IInputRuntime runtime => InputSystem.s_Manager.m_Runtime;
             private bool hasFocus => !double.IsNaN(m_FocusStart);
             private bool hasSession => !double.IsNaN(m_SessionStart);
             // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
