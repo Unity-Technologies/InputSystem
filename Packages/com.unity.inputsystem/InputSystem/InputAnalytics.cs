@@ -28,7 +28,16 @@ namespace UnityEngine.InputSystem
             public readonly string Name;
             public readonly int MaxEventsPerHour;
             public readonly int MaxNumberOfElements;
-        } 
+        }
+
+        // Note: Needs to be externalized from interface depending on C# version
+        public interface IInputAnalyticData 
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            : IInputAnalytic.IData
+#endif
+        {
+            // Empty
+        }
         
         // Unity 2023.2+ deprecates legacy interfaces for registering and sending editor analytics and
         // replaces them with attribute annotations and required interface implementations.
@@ -43,11 +52,7 @@ namespace UnityEngine.InputSystem
             InputAnalyticInfo info { get; } // May be removed when only supporting 2023.2+ versions
             
 #if !UNITY_2023_2_OR_NEWER
-            interface IData 
-            {
-            }
-
-            bool TryGatherData(out IInputAnalytic.IData data, out Exception error);
+            bool TryGatherData(out IInputAnalyticData data, out Exception error);
 #endif // !UNITY_2023_2_OR_NEWER
         }
         
@@ -77,7 +82,7 @@ namespace UnityEngine.InputSystem
         /// on desktops or touchscreen on phones).
         /// </remarks>
         [Serializable]
-        public struct StartupEventData : IInputAnalytic.IData
+        public struct StartupEventData : IInputAnalyticData
         {
             public string version;
             public DeviceInfo[] devices;
@@ -139,7 +144,7 @@ namespace UnityEngine.InputSystem
             
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
-            public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
+            public bool TryGatherData(out IInputAnalyticData data, out Exception error)
             {
                 try
                 {
@@ -200,7 +205,7 @@ namespace UnityEngine.InputSystem
         /// Data about when after startup the user first interacted with the application.
         /// </summary>
         [Serializable]
-        public struct FirstUserInteractionEventData : IInputAnalytic.IData
+        public struct FirstUserInteractionEventData : IInputAnalyticData
         {
         }
 
@@ -208,7 +213,7 @@ namespace UnityEngine.InputSystem
         /// Data about what level of data we pumped through the system throughout its lifetime.
         /// </summary>
         [Serializable]
-        public struct ShutdownEventData : IInputAnalytic.IData
+        public struct ShutdownEventData : IInputAnalyticData
         {
             public int max_num_devices;
             public int max_state_size_in_bytes;
@@ -237,7 +242,7 @@ namespace UnityEngine.InputSystem
 
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
             
-            public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
+            public bool TryGatherData(out IInputAnalyticData data, out Exception error)
             {
                 try
                 {
@@ -278,7 +283,7 @@ namespace UnityEngine.InputSystem
         }
         
         [Serializable]
-        public struct InputActionsEditorSessionData : IInputAnalytic.IData
+        public struct InputActionsEditorSessionData : IInputAnalyticData
         {
             /// <summary>
             /// Constructs a <c>InputActionsEditorSessionData</c>.
@@ -538,7 +543,7 @@ namespace UnityEngine.InputSystem
                 Initialize(m_Data.kind);
             }
             
-            public bool TryGatherData(out IInputAnalytic.IData data, out Exception error)
+            public bool TryGatherData(out IInputAnalyticData data, out Exception error)
             {
                 if (!isValid)
                 {
