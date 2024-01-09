@@ -36,9 +36,9 @@ namespace UnityEngine.InputSystem
         // of analytics reporting. Notice that a difference is that data is collected lazily as part
         // of sending the analytics via the framework.
         public interface IInputAnalytic 
-#if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
             : IAnalytic
-#endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
+#endif // UNITY_EDITOR && UNITY_2023_2_OR_NEWER
         {
             InputAnalyticInfo info { get; } // May be removed when only supporting 2023.2+ versions
             
@@ -121,9 +121,9 @@ namespace UnityEngine.InputSystem
             }
         }
 
-#if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)    
+#if UNITY_EDITOR && UNITY_2023_2_OR_NEWER    
         [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
-#endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
+#endif // UNITY_EDITOR && UNITY_2023_2_OR_NEWER
         public struct StartupEventAnalytic : IInputAnalytic
         {
             public const string kEventName = "input_startup";
@@ -376,10 +376,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Analytics record for tracking engagement with Input Action Asset editor(s).
         /// </summary>
-#if (UNITY_2023_2_OR_NEWER)    
+#if UNITY_2023_2_OR_NEWER    
         [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, 
             maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
-#endif // (UNITY_2023_2_OR_NEWER)
+#endif // UNITY_2023_2_OR_NEWER
         public class InputActionsEditorSessionAnalytic : IInputAnalytic
         {
             public const string kEventName = "inputActionEditorWindowSession";
