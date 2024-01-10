@@ -287,10 +287,8 @@ namespace UnityEngine.InputSystem.Editor
             #region IInputAnalytic Interface
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
-            /// <inheritdoc cref="UnityEngine.InputSystem.InputAnalytics.IInputAnalytic"/>
-            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+            public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
-            /// <inheritdoc cref="InputAnalytics.IInputAnalytic"/>
             public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
 #endif
             {
@@ -306,7 +304,7 @@ namespace UnityEngine.InputSystem.Editor
                 return true;
             }
 
-            public UnityEngine.InputSystem.InputAnalytics.InputAnalyticInfo info => new UnityEngine.InputSystem.InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            public InputAnalytics.InputAnalyticInfo info => new InputAnalytics.InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
             #endregion
 
@@ -327,7 +325,6 @@ namespace UnityEngine.InputSystem.Editor
                 return true;
             }
 
-            private readonly IInputRuntime m_InputRuntime;
             private InputActionsEditorSessionData m_Data;
             private double m_FocusStart;
             private double m_SessionStart;
