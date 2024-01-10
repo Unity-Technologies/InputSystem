@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
+using InputAnalytics = UnityEngine.InputSystem.InputAnalytics;
 using Random = UnityEngine.Random;
 
 public static class TestData
@@ -34,7 +35,7 @@ public static class TestData
 
     internal static Generator<InputActionsEditorState> editorState =
         new(() => new InputActionsEditorState(
-            new InputAnalytics.InputActionsEditorSessionAnalytic(InputAnalytics.InputActionsEditorKind.FreeFloatingEditorWindow),
+            new InputEditorAnalytics.InputActionsEditorSessionAnalytic(InputEditorAnalytics.InputActionsEditorSessionData.Kind.FreeFloatingEditorWindow),
             new SerializedObject(ScriptableObject.CreateInstance<InputActionAsset>())));
 
     internal static Generator<InputActionsEditorState> EditorStateWithAsset(ScriptableObject asset)

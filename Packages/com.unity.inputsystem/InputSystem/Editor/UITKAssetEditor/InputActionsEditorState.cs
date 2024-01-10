@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
         public int selectedDeviceRequirementIndex { get {return m_selectedDeviceRequirementIndex; } }
         public InputControlScheme selectedControlScheme => m_ControlScheme;
 
-        public InputAnalytics.InputActionsEditorSessionAnalytic m_Analytics;
+        public InputEditorAnalytics.InputActionsEditorSessionAnalytic m_Analytics;
 
         [SerializeField] int m_selectedActionMapIndex;
         [SerializeField] int m_selectedActionIndex;
@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] int m_selectedDeviceRequirementIndex;
 
         public InputActionsEditorState(
-            InputAnalytics.InputActionsEditorSessionAnalytic analytics,
+            InputEditorAnalytics.InputActionsEditorSessionAnalytic analytics,
             SerializedObject inputActionAsset,
             int selectedActionMapIndex = 0,
             int selectedActionIndex = 0,

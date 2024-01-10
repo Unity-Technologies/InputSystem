@@ -4,10 +4,12 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Unity.PerformanceTesting.Data;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using InputAnalytics = UnityEngine.InputSystem.InputAnalytics;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -221,11 +223,11 @@ partial class CoreTests
     [Category("Analytics")]
     public void Analytics__ShouldReportEditorSessionAnalytics__IfAccordingToEditorSessionAnalyticsFiniteStateMachine()
     {
-        CollectAnalytics(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName);
+        CollectAnalytics(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSessionAnalytic(
-            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
+        var session = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
+            InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -243,18 +245,18 @@ partial class CoreTests
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
         Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
-        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
+        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
+        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputAnalytics.InputActionsEditorSessionData>());
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputActionsEditorSessionData>());
 
         // Assert: Data content
-        var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
+        var data = (InputEditorAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
+        Assert.That(data.kind, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(5.0));
@@ -267,9 +269,9 @@ partial class CoreTests
         Assert.That(data.resetCount, Is.EqualTo(0));
     }
 
-    private void TestMultipleEditorFocusSessions(InputAnalytics.InputActionsEditorSessionAnalytic session = null)
+    private void TestMultipleEditorFocusSessions(InputEditorAnalytics.InputActionsEditorSessionAnalytic session = null)
     {
-        CollectAnalytics(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName);
+        CollectAnalytics(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         session.RegisterEditorFocusIn();    // when window opens, it receives edit focus directly
@@ -295,18 +297,18 @@ partial class CoreTests
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
         Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
-        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
+        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
+        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputAnalytics.InputActionsEditorSessionData>());
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputActionsEditorSessionData>());
 
         // Assert: Data content
-        var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
+        var data = (InputEditorAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
+        Assert.That(data.kind, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(0));
         Assert.That(data.autoSaveCount, Is.EqualTo(2));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(37.0));
@@ -324,18 +326,18 @@ partial class CoreTests
     public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__IfHavingMultipleFocusSessionsWithinSession()
     {
         TestMultipleEditorFocusSessions(
-            new InputAnalytics.InputActionsEditorSessionAnalytic(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
+            new InputEditorAnalytics.InputActionsEditorSessionAnalytic(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
     }
 
     [Test]
     [Category("Analytics")]
     public void Analytics__ShouldReportEditorSessionAnalyticsWithFocusTime__WhenActionsDriveImplicitConditions()
     {
-        CollectAnalytics(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName);
+        CollectAnalytics(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName);
 
         // Editor session analytics is stateful and instantiated
-        var session = new InputAnalytics.InputActionsEditorSessionAnalytic(
-            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
+        var session = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
+            InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
 
         session.Begin();                    // the user opens project settings and navigates to Input Actions
         // session.RegisterEditorFocusIn(); // assumes we fail to capture focus-in event due to UI framework malfunction
@@ -355,18 +357,18 @@ partial class CoreTests
         #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
         Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(100));            // REVIEW: what to use?
-        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(100)); // REVIEW: what to use?
+        Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
+        Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
         #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
 
         // Assert: Data received
         Assert.That(sentAnalyticsEvents.Count, Is.EqualTo(1));
-        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
-        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputAnalytics.InputActionsEditorSessionData>());
+        Assert.That(sentAnalyticsEvents[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(sentAnalyticsEvents[0].data, Is.TypeOf<InputEditorAnalytics.InputActionsEditorSessionData>());
 
         // Assert: Data content
-        var data = (InputAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
-        Assert.That(data.kind, Is.EqualTo(InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings));
+        var data = (InputEditorAnalytics.InputActionsEditorSessionData)sentAnalyticsEvents[0].data;
+        Assert.That(data.kind, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings));
         Assert.That(data.explicitSaveCount, Is.EqualTo(1));
         Assert.That(data.autoSaveCount, Is.EqualTo(0));
         Assert.That(data.sessionDurationSeconds, Is.EqualTo(30.0));
@@ -386,8 +388,8 @@ partial class CoreTests
         // We reuse an existing test case to prove that the object is reset properly and can be reused after
         // ending the session. We currently let CollectAnalytics reset test harness state which is fine for
         // the targeted verification aspect since only affecting test harness data.
-        var session = new InputAnalytics.InputActionsEditorSessionAnalytic(
-            InputAnalytics.InputActionsEditorKind.EmbeddedInProjectSettings);
+        var session = new InputEditorAnalytics.InputActionsEditorSessionAnalytic(
+            InputEditorAnalytics.InputActionsEditorSessionData.Kind.EmbeddedInProjectSettings);
 
         TestMultipleEditorFocusSessions(session);
         TestMultipleEditorFocusSessions(session);
