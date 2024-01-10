@@ -141,7 +141,7 @@ namespace UnityEngine.InputSystem
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
-            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+            public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
 #endif
@@ -243,7 +243,7 @@ namespace UnityEngine.InputSystem
             public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
-            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+            public bool TryGatherData(out UnityEngine.Analytics.IAnalytic.IData data, out Exception error)
 #else
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
 #endif
