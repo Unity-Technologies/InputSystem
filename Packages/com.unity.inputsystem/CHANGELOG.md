@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
+
 ### Fixed
 - Fixed missing confirmation popup when deleting a control scheme.
 - Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
@@ -18,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Documentation~/filter.yml GlobalNamespace rule removing all API documentation.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
+- Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
 
 ## [1.8.0-pre.2] - 2023-11-09
 
