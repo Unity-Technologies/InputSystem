@@ -1,6 +1,5 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
-using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -124,7 +123,7 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
-        [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
+        [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour, maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
 #endif // UNITY_EDITOR && UNITY_2023_2_OR_NEWER
         public struct StartupEventAnalytic : IInputAnalytic
         {
@@ -225,7 +224,7 @@ namespace UnityEngine.InputSystem
         }
 
 #if (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
-        [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
+        [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
             maxNumberOfElements: kMaxNumberOfElements, vendorKey: kVendorKey)]
 #endif // (UNITY_EDITOR && UNITY_2023_2_OR_NEWER)
         public readonly struct ShutdownEventDataAnalytic : IInputAnalytic

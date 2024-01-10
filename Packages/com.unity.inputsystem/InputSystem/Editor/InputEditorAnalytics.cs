@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem.Editor
         /// Analytics record for tracking engagement with Input Action Asset editor(s).
         /// </summary>
 #if UNITY_2023_2_OR_NEWER
-        [AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
+        [UnityEngine.Analytics.AnalyticInfo(eventName: kEventName, maxEventsPerHour: kMaxEventsPerHour,
             maxNumberOfElements: kMaxNumberOfElements, vendorKey: UnityEngine.InputSystem.InputAnalytics.kVendorKey)]
 #endif // UNITY_2023_2_OR_NEWER
         public class InputActionsEditorSessionAnalytic : UnityEngine.InputSystem.InputAnalytics.IInputAnalytic
