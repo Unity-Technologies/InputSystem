@@ -245,7 +245,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                InputActionSerializationHelpers.ChangeBinding(bindingProperty.wrappedProperty, partName);
+                InputActionSerializationHelpers.SetBindingPartName(bindingProperty, partName);
                 state.serializedObject.ApplyModifiedProperties();
                 return state;
             };
