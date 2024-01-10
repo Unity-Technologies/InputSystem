@@ -244,7 +244,7 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
@@ -296,7 +296,7 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
 #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
 #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)
@@ -356,7 +356,7 @@ partial class CoreTests
         Assert.That(registeredAnalytics.Count, Is.EqualTo(0));
         #else
         Assert.That(registeredAnalytics.Count, Is.EqualTo(1));
-        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputAnalytics.InputActionsEditorSessionAnalytic.kEventName));
+        Assert.That(registeredAnalytics[0].name, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kEventName));
         Assert.That(registeredAnalytics[0].maxPerHour, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxEventsPerHour));
         Assert.That(registeredAnalytics[0].maxPropertiesPerEvent, Is.EqualTo(InputEditorAnalytics.InputActionsEditorSessionAnalytic.kMaxNumberOfElements));
         #endif // (UNITY_2023_2_OR_NEWER && UNITY_EDITOR)

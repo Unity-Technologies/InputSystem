@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 
 using System;
-using UnityEngine.Analytics;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Editor
@@ -291,8 +290,8 @@ namespace UnityEngine.InputSystem.Editor
             /// <inheritdoc cref="UnityEngine.InputSystem.InputAnalytics.IInputAnalytic"/>
             public bool TryGatherData(out IAnalytic.IData data, out Exception error)
 #else
-            /// <inheritdoc cref="IInputAnalytic"/>
-            public bool TryGatherData(out IInputAnalyticData data, out Exception error)
+            /// <inheritdoc cref="InputAnalytics.IInputAnalytic"/>
+            public bool TryGatherData(out InputAnalytics.IInputAnalyticData data, out Exception error)
 #endif
             {
                 if (!isValid)
