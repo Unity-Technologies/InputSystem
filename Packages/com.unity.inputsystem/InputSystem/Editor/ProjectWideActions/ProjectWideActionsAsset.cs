@@ -93,6 +93,13 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
+        internal static InputActionMap GetDefaultUIActionMap()
+        {
+            var json = File.ReadAllText(FileUtil.GetPhysicalPath(s_DefaultAssetPath));
+            var actionMaps = InputActionMap.FromJson(json);
+            return actionMaps[actionMaps.IndexOf(x => x.name == "UI")];
+        }
+
         private static void CreateInputActionReferences(InputActionAsset asset)
         {
             var maps = asset.actionMaps;
@@ -106,6 +113,41 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
         }
+
+        #if UNITY_2023_2_OR_NEWER
+        /// <summary>
+        /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
+        /// break the UI input at runtime, when using the UI Toolkit.
+        /// </summary>
+        internal static void CheckForDefaultUIActionMapChanges()
+        {
+            var asset = GetOrCreate();
+            if (asset != null)
+            {
+                var defaultUIActionMap = GetDefaultUIActionMap();
+                var uiMapIndex = asset.actionMaps.IndexOf(x => x.name == "UI");
+
+                // "UI" action map has been removed or renamed.
+                if (uiMapIndex == -1)
+                {
+                    Debug.LogWarning("The action map named 'UI' does not exist.\r\n " +
+                        "This will break the UI input at runtime. Please revert the changes to have an action map named 'UI'.");
+                    return;
+                }
+                var uiMap = asset.m_ActionMaps[uiMapIndex];
+                foreach (var action in defaultUIActionMap.actions)
+                {
+                    // "UI" actions have been modified.
+                    if (uiMap.FindAction(action.name) == null)
+                    {
+                        Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
+                            $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
+                    }
+                }
+            }
+        }
+
+        #endif
 
         /// <summary>
         /// Updates the input action references in the asset by updating names, removing dangling references
