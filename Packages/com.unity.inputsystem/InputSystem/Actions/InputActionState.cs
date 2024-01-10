@@ -4441,7 +4441,9 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < s_GlobalState.globalList.length; ++i)
                 {
                     var handle = s_GlobalState.globalList[i];
-                    if (!handle.IsAllocated || handle.Target == null)
+
+                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
+                    if (state == null)
                     {
                         // Stale entry in the list. State has already been reclaimed by GC. Remove it.
                         if (handle.IsAllocated)
@@ -4451,7 +4453,6 @@ namespace UnityEngine.InputSystem
                         continue;
                     }
 
-                    var state = (InputActionState)handle.Target;
                     for (var n = 0; n < state.totalMapCount; ++n)
                         state.maps[n].ResolveBindingsIfNecessary();
                 }

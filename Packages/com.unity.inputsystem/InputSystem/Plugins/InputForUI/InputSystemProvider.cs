@@ -78,7 +78,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_TouchState.Reset();
             m_SeenTouchEvents = false;
 
-            // TODO should UITK somehow override this?
             m_Cfg = Configuration.GetDefaultConfiguration();
             RegisterActions(m_Cfg);
         }
@@ -564,7 +563,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void RegisterActions(Configuration cfg)
         {
-            m_InputActionAsset = InputActionAsset.FromJson(cfg.InputActionAssetAsJson);
+            m_InputActionAsset = cfg.ActionAsset;
 
             m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
             m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
@@ -641,17 +640,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             // The Next/Previous action is not part of the input actions asset
             UnregisterNextPreviousAction();
-
-#if UNITY_EDITOR
-            UnityEngine.Object.DestroyImmediate(m_InputActionAsset);
-#else
-            UnityEngine.Object.Destroy(m_InputActionAsset);
-#endif
         }
 
         public struct Configuration
         {
-            public string InputActionAssetAsJson;
+            public InputActionAsset ActionAsset;
             public string PointAction;
             public string MoveAction;
             public string SubmitAction;
@@ -663,14 +656,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             public static Configuration GetDefaultConfiguration()
             {
-                // TODO this is a weird way of doing that, is there an easier way?
-                var asset = new DefaultInputActions();
-                var json = asset.asset.ToJson();
-                UnityEngine.Object.DestroyImmediate(asset.asset); // TODO just Dispose doesn't work in edit mode
-
                 return new Configuration
                 {
-                    InputActionAssetAsJson = json,
+                    ActionAsset = InputSystem.actions,
                     PointAction = "UI/Point",
                     MoveAction = "UI/Navigate",
                     SubmitAction = "UI/Submit",
