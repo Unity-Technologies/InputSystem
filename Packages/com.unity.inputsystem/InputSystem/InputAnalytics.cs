@@ -436,6 +436,9 @@ namespace UnityEngine.InputSystem
                     ++m_Data.bindingModificationCount;
             }
 
+            /// <summary>
+            /// Register that a control scheme edit has occurred.
+            /// </summary>
             public void RegisterControlSchemeEdit()
             {
                 if (ImplicitFocus())
@@ -549,9 +552,13 @@ namespace UnityEngine.InputSystem
                 Initialize(m_Data.kind);
             }
 
+            #region IInputAnalytic Interface
+            
 #if UNITY_EDITOR && UNITY_2023_2_OR_NEWER
+            /// <inheritdoc cref="IInputAnalytic"/>
             public bool TryGatherData(out IAnalytic.IData data, out Exception error)
 #else
+            /// <inheritdoc cref="IInputAnalytic"/>
             public bool TryGatherData(out IInputAnalyticData data, out Exception error)
 #endif
             {
@@ -566,6 +573,10 @@ namespace UnityEngine.InputSystem
                 error = null;
                 return true; 
             }
+            
+            public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            
+            #endregion
             
             private void Initialize(InputActionsEditorKind kind)
             {
@@ -595,8 +606,7 @@ namespace UnityEngine.InputSystem
             // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
             // IInputRuntime.currentTime corresponds to EditorApplication.timeSinceStartup in editor.
             private double currentTime => runtime.currentTime;
-            public bool isValid => m_Data.sessionDurationSeconds >= 0;
-            public InputAnalyticInfo info => new InputAnalyticInfo(kEventName, kMaxEventsPerHour, kMaxNumberOfElements);
+            private bool isValid => m_Data.sessionDurationSeconds >= 0;
         }
     }
     
