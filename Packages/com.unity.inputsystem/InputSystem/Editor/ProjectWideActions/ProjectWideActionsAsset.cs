@@ -140,8 +140,8 @@ namespace UnityEngine.InputSystem.Editor
                     // "UI" actions have been modified.
                     if (uiMap.FindAction(action.name) == null)
                     {
-                        Debug.LogWarning($"The UI action \"{action.name}\" name has been modified.\r\n " +
-                            $"This will break the UI input at runtime. Please make sure the action name with \"{action.name}\" exists.");
+                        Debug.LogWarning($"The UI action '{action.name}' name has been modified.\r\n" +
+                            $"This will break the UI input at runtime. Please make sure the action name with '{action.name}' exists.");
                     }
                 }
             }

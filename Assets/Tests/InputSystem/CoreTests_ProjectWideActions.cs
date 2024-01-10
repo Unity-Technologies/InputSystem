@@ -158,8 +158,8 @@ internal partial class CoreTests
 
         ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
 
-        LogAssert.Expect(LogType.Warning, new Regex($"The UI action \"{defaultActionName0}\" name has been modified"));
-        LogAssert.Expect(LogType.Warning, new Regex($"The UI action \"{defaultActionName1}\" name has been modified"));
+        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName0}' name has been modified"));
+        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName1}' name has been modified"));
     }
 
     #endif
