@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 CopyPasteHelper.Copy(state);
                 return state.selectionType == SelectionType.Action ?
-                    DeleteAction(state.selectedActionMapIndex, Selectors.GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative("m_Name").stringValue).Invoke(state)
+                    DeleteAction(state.selectedActionMapIndex, Selectors.GetSelectedAction(state)?.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue).Invoke(state)
                     : DeleteBinding(state.selectedActionMapIndex, state.selectedBindingIndex).Invoke(state);
             };
         }
