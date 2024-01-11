@@ -4,10 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -20,10 +23,11 @@ internal partial class CoreTests
     string m_TemplateAssetPath;
 
 #if UNITY_EDITOR
-    const int initialActionCount = 2;
-    const int initialMapCount = 1;
+    const int initialTotalActionCount = 12;
+    const int initialMapCount = 2;
+    const int initialFirstActionMapCount = 2;
 #else
-    const int initialActionCount = 19;
+    const int initialTotalActionCount = 19;
     const int initialMapCount = 2;
 #endif
 
@@ -41,6 +45,8 @@ internal partial class CoreTests
         var testAsset = ScriptableObject.CreateInstance<TestActionsAsset>();
         AssetDatabase.CreateAsset(testAsset, TestAssetPath);
 
+        var defaultUIMapTemplate = ProjectWideActionsAsset.GetDefaultUIActionMap();
+
         // Create a template `InputActionAsset` containing some test actions.
         // This will then be used to populate the initially empty `TestActionsAsset` when it is first acessed.
         var templateActions = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -48,6 +54,9 @@ internal partial class CoreTests
         var map = templateActions.AddActionMap("InitialActionMapOne");
         map.AddAction("InitialActionOne");
         map.AddAction("InitialActionTwo");
+
+        // Add the default UI map to the template
+        templateActions.AddActionMap(defaultUIMapTemplate);
 
         m_TemplateAssetPath = Path.Combine(Environment.CurrentDirectory, "Assets/ProjectWideActionsTemplate.inputactions");
         File.WriteAllText(m_TemplateAssetPath, templateActions.ToJson());
@@ -82,7 +91,7 @@ internal partial class CoreTests
 
         Assert.That(asset, Is.Not.Null);
         Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount));
-        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialActionCount));
+        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount));
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
     }
 
@@ -94,7 +103,7 @@ internal partial class CoreTests
 
         Assert.That(asset, Is.Not.Null);
         Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount));
-        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialActionCount));
+        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount));
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
 
         asset.Disable(); // Cannot modify active actions
@@ -107,7 +116,7 @@ internal partial class CoreTests
         asset.actionMaps[0].actions[0].Rename("FirstAction");
 
         // Add another map
-        asset.AddActionMap("ActionMapTwo").AddAction("AnotherAction");
+        asset.AddActionMap("ActionMapThree").AddAction("AnotherAction");
 
         // Save
         AssetDatabase.SaveAssets();
@@ -117,11 +126,43 @@ internal partial class CoreTests
 
         Assert.That(asset, Is.Not.Null);
         Assert.That(asset.actionMaps.Count, Is.EqualTo(initialMapCount + 1));
-        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialActionCount + 2));
-        Assert.That(asset.actionMaps[1].actions.Count, Is.EqualTo(1));
+        Assert.That(asset.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount + 2));
+        Assert.That(asset.actionMaps[1].actions.Count, Is.EqualTo(10));
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("FirstAction"));
-        Assert.That(asset.actionMaps[1].actions[0].name, Is.EqualTo("AnotherAction"));
+        Assert.That(asset.actionMaps[2].actions[0].name, Is.EqualTo("AnotherAction"));
     }
+
+    #if UNITY_2023_2_OR_NEWER
+    [Test]
+    [Category(TestCategory)]
+    public void ProjectWideActions_ShowsErrorWhenUIActionMapHasNameChanges()  // This test is only relevant for the InputForUI module
+    {
+        var asset = ProjectWideActionsAsset.GetOrCreate();
+        var indexOf = asset.m_ActionMaps.IndexOf(x => x.name == "UI");
+        var uiMap = asset.m_ActionMaps[indexOf];
+
+        // Change the name of the UI action map
+        uiMap.m_Name = "UI2";
+
+        ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
+
+        LogAssert.Expect(LogType.Warning, new Regex("The action map named 'UI' does not exist"));
+
+        // Change the name of some UI map back to default and change the name of the actions
+        uiMap.m_Name = "UI";
+        var defaultActionName0 = uiMap.m_Actions[0].m_Name;
+        var defaultActionName1 = uiMap.m_Actions[1].m_Name;
+
+        uiMap.m_Actions[0].Rename("Navigation");
+        uiMap.m_Actions[1].Rename("Show");
+
+        ProjectWideActionsAsset.CheckForDefaultUIActionMapChanges();
+
+        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName0}' name has been modified"));
+        LogAssert.Expect(LogType.Warning, new Regex($"The UI action '{defaultActionName1}' name has been modified"));
+    }
+
+    #endif
 
 #endif
 
@@ -141,7 +182,7 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions.actionMaps.Count, Is.EqualTo(initialMapCount));
 
 #if UNITY_EDITOR
-        Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(initialActionCount));
+        Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(initialFirstActionMapCount));
         Assert.That(InputSystem.actions.actionMaps[0].actions[0].name, Is.EqualTo("InitialActionOne"));
 #else
         Assert.That(InputSystem.actions.actionMaps[0].actions.Count, Is.EqualTo(9));
@@ -154,14 +195,14 @@ internal partial class CoreTests
     public void ProjectWideActions_AppearInEnabledActions()
     {
         var enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(initialActionCount));
+        Assert.That(enabledActions, Has.Count.EqualTo(initialTotalActionCount));
 
         // Add more actions also work
         var action = new InputAction(name: "standaloneAction");
         action.Enable();
 
         enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(initialActionCount + 1));
+        Assert.That(enabledActions, Has.Count.EqualTo(initialTotalActionCount + 1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
 
         // Disabling works
@@ -179,7 +220,7 @@ internal partial class CoreTests
         Assert.That(InputSystem.actions, Is.Not.Null);
         Assert.That(InputSystem.actions.enabled, Is.True);
         var enabledActions = InputSystem.ListEnabledActions();
-        Assert.That(enabledActions, Has.Count.EqualTo(initialActionCount));
+        Assert.That(enabledActions, Has.Count.EqualTo(initialTotalActionCount));
 
         // Build new asset
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
