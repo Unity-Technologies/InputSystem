@@ -230,9 +230,9 @@ namespace UnityEngine.InputSystem.Editor
             duplicatedProperty.RestoreFromJson(json);
             oldId = duplicatedProperty.FindPropertyRelative("m_Id").stringValue;
             if (changeName)
-                EnsureUniqueName(duplicatedProperty);
+                InputActionSerializationHelpers.EnsureUniqueName(duplicatedProperty);
             if (assignUniqueIDs)
-                AssignUniqueIDs(duplicatedProperty);
+                InputActionSerializationHelpers.AssignUniqueIDs(duplicatedProperty);
             s_lastAddedElement = duplicatedProperty;
             return duplicatedProperty;
         }
@@ -385,7 +385,6 @@ namespace UnityEngine.InputSystem.Editor
 
         #endregion
 
-        #region HelperMethods
         private static List<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, int indexOfComposite)
         {
             var compositeBindings = new List<SerializedProperty>();
@@ -403,41 +402,5 @@ namespace UnityEngine.InputSystem.Editor
             }
             return compositeBindings;
         }
-
-        public static void EnsureUniqueName(SerializedProperty arrayElement)
-        {
-            var arrayProperty = arrayElement.GetArrayPropertyFromElement();
-            var arrayIndexOfElement = arrayElement.GetIndexOfArrayElement();
-            var nameProperty = arrayElement.FindPropertyRelative("m_Name");
-            var baseName = nameProperty.stringValue;
-            nameProperty.stringValue = InputActionSerializationHelpers.FindUniqueName(arrayProperty, baseName, ignoreIndex: arrayIndexOfElement);
-        }
-
-        public static void AssignUniqueIDs(SerializedProperty element)
-        {
-            AssignUniqueID(element);
-            foreach (var child in element.GetChildren())
-            {
-                if (!child.isArray)
-                    continue;
-
-                var fieldType = child.GetFieldType();
-                if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
-                    fieldType == typeof(InputActionMap))
-                {
-                    for (var i = 0; i < child.arraySize; ++i)
-                        using (var childElement = child.GetArrayElementAtIndex(i))
-                            AssignUniqueIDs(childElement);
-                }
-            }
-        }
-
-        private static void AssignUniqueID(SerializedProperty property)
-        {
-            var idProperty = property.FindPropertyRelative("m_Id");
-            idProperty.stringValue = Guid.NewGuid().ToString();
-        }
-
-        #endregion
     }
 }

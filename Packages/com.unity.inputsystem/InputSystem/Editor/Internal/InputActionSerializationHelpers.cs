@@ -358,6 +358,15 @@ namespace UnityEngine.InputSystem.Editor
             var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
             DeleteBinding(bindingProperty, bindingArrayProperty, bindingIndex);
         }
+        
+        public static void EnsureUniqueName(SerializedProperty arrayElement)
+        {
+            var arrayProperty = arrayElement.GetArrayPropertyFromElement();
+            var arrayIndexOfElement = arrayElement.GetIndexOfArrayElement();
+            var nameProperty = arrayElement.FindPropertyRelative("m_Name");
+            var baseName = nameProperty.stringValue;
+            nameProperty.stringValue = FindUniqueName(arrayProperty, baseName, ignoreIndex: arrayIndexOfElement);
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly", Justification = "False positive (possibly caused by lambda expression?).")]
         public static string FindUniqueName(SerializedProperty arrayProperty, string baseName, int ignoreIndex = -1)
@@ -375,6 +384,31 @@ namespace UnityEngine.InputSystem.Editor
                             nameof(arrayProperty));
                     return nameProperty.stringValue;
                 });
+        }
+
+        public static void AssignUniqueIDs(SerializedProperty element)
+        {
+            AssignUniqueID(element);
+            foreach (var child in element.GetChildren())
+            {
+                if (!child.isArray)
+                    continue;
+
+                var fieldType = child.GetFieldType();
+                if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
+                    fieldType == typeof(InputActionMap))
+                {
+                    for (var i = 0; i < child.arraySize; ++i)
+                        using (var childElement = child.GetArrayElementAtIndex(i))
+                            AssignUniqueIDs(childElement);
+                }
+            }
+        }
+
+        private static void AssignUniqueID(SerializedProperty property)
+        {
+            var idProperty = property.FindPropertyRelative("m_Id");
+            idProperty.stringValue = Guid.NewGuid().ToString();
         }
 
         public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
