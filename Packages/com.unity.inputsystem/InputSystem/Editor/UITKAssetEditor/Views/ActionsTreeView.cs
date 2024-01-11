@@ -260,7 +260,7 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
-        internal void CopyItems() 
+        internal void CopyItems()
         {
             Dispatch(Commands.CopyActionBindingSelection());
         }
@@ -289,6 +289,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
+            if (m_ActionsTreeView.selectedItem == null)
+                return;
+
             var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
             switch (evt.commandName)
             {
