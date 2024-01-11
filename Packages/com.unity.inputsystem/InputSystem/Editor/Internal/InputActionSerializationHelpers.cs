@@ -397,7 +397,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void SetBindingPartName(SerializedInputBinding bindingProperty, string partName)
         {
-            //expects nicified part name
+            //expects beautified partName
             bindingProperty.wrappedProperty.FindPropertyRelative("m_Name").stringValue = partName;
         }
 

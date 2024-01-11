@@ -19,7 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
-- Fixed composite parts not editable issue
+- Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
