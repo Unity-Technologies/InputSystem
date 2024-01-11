@@ -240,19 +240,10 @@ namespace UnityEngine.InputSystem.Editor
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
-                if (state.selectedActionIndex >= actionIndex)
-                    return SelectPrevAction(state, actionMap);
-                return state.SelectAction(state.selectedActionIndex);
-            };
-        }
 
-        private static InputActionsEditorState SelectPrevAction(InputActionsEditorState state, SerializedProperty actionMap)
-        {
-            var count = Selectors.GetActionCount(actionMap);
-            int index = -1;
-            if (count != null && count.Value > 0)
-                index = Math.Max(state.selectedActionIndex - 1, 0);
-            return state.SelectAction(index);
+                // ActionsTreeView will dispatch a separate command to select the previous Action
+                return state;
+            };
         }
 
         public static Command DeleteBinding(int actionMapIndex, int bindingIndex)
@@ -263,19 +254,10 @@ namespace UnityEngine.InputSystem.Editor
                 var binding = Selectors.GetCompositeOrBindingInMap(actionMap, bindingIndex).wrappedProperty;
                 InputActionSerializationHelpers.DeleteBinding(binding, actionMap);
                 state.serializedObject.ApplyModifiedProperties();
-                if (state.selectedBindingIndex >= bindingIndex)
-                    return SelectPrevBinding(state, actionMap);
-                return state.SelectBinding(state.selectedBindingIndex);
-            };
-        }
 
-        private static InputActionsEditorState SelectPrevBinding(InputActionsEditorState state, SerializedProperty actionMap)
-        {
-            var count = Selectors.GetBindingCount(actionMap);
-            var index = -1;
-            if (count != null && count.Value > 0)
-                index = Math.Max(state.selectedBindingIndex - 1, 0);
-            return state.SelectBinding(index);
+                // ActionsTreeView will dispatch a separate command to select the previous Binding
+                return state;
+            };
         }
 
         public static Command ExpandCompositeBinding(SerializedInputBinding binding)
