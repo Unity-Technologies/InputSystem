@@ -13,14 +13,31 @@ uid: input-system-ui-support
 * [UI and game input](#ui-and-game-input)
 * [UI Toolkit support](#ui-toolkit-support)
 
-You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html). The integration between the Input System and the UI system is handled by the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
+You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html).
+
+
+⭐ From **Unity 2023.2.x** and newer, the Input System and UI Toolkit are fully integrated. To configure UI Input you can
+configure the UI action map of project-wide actions in **[Project Settings > Input System Package > Input Actions](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.8/manual/Workflow-Actions.html)**.
+For older versions, the integration between the Input System and the UI system is handled by the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
+
 
 >[!NOTE]
 >The Input System package does not support IMGUI. If you have `OnGUI` methods in your player code (Editor code is unaffected), Unity does not receive any input events in those methods when the **Active Input Handling** [Player Setting](https://docs.unity3d.com/Manual/class-PlayerSettings.html) is set to **Input System Package**. To restore functionality you can change the setting to **Both**, but this means that Unity processes the input twice.
 
 ## Setting up UI input
 
-The [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System instead of the legacy Input Manager to drive UI input.
+When using the project-wide actions (Unity 2023.2.x and newer), you can configure the UI action map of project-wide actions in **Project Settings > Input System Package > Input Actions)**.
+
+![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
+
+
+You can add and remove bindings as intended for you necessary functionality. However, the action map 'UI' and all of its actions must remain with the same name, otherwise the UI input will not work correctly.
+
+The actions names are equivalent in functionality to the ones present in [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
+
+
+
+Alternatively, if you're on a Unity version older than 2023.2, the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package has. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System instead of the legacy Input Manager to drive UI input.
 
 If you have a [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component on a GameObject, and the Input System is installed, Unity shows a button in the Inspector offering to automatically replace it with a [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) for you. The [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) is pre-configured to use default Input Actions to drive the UI, but you can override that configuration to suit your needs.
 
@@ -194,6 +211,13 @@ An explicit mode switch is implemented by temporarily switching to UI control wh
 ## UI Toolkit support
 
 As of Unity 2021.2, [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is supported as an alternative to the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system for implementing UIs in players.
+
+### From Unity 2023.2 and newer
+
+As mentioned in the [beginning of this document](#ui-support), from Unity 2023.2 the Input System and UI Toolkit are fully integrated.
+
+
+### Before Unity 2023.2
 
 Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) and [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is based on the same [EventSystem](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/EventSystem.html) and [BaseInputModule](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/InputModules.html) subsystem. In other words, the same input setup based on [InputSystemUIInputModule](#setting-up-ui-input) supports input in either UI solution and nothing extra needs to be done.
 
