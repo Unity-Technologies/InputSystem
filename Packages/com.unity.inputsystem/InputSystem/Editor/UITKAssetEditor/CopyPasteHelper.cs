@@ -252,18 +252,19 @@ namespace UnityEngine.InputSystem.Editor
                 var newIndex = PasteBindingOrComposite(bindingArrayToInsertTo, bindingJson, index, newName, false);
                 index = newIndex;
             }
+            s_lastAddedElement = property;
         }
 
         private static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
         {
-            var offset = -1; //previous action offset
+            var offset = 1; //previous action offset
             while (indexToInsert - offset >= 0)
             {
                 var prevActionName = PropertyName(arrayProperty.GetArrayElementAtIndex(indexToInsert - offset));
                 var lastBindingOfAction = bindingArrayToInsertTo.FindLast(b => b.FindPropertyRelative("m_Action").stringValue.Equals(prevActionName));
                 if (lastBindingOfAction != null) //if action has no bindings lastBindingOfAction will be null
                     return lastBindingOfAction.GetIndexOfArrayElement() + 1;
-                offset--;
+                offset++;
             }
             return 0; //no actions with bindings before paste index
         }

@@ -236,7 +236,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
                 var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
-                var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 InputActionSerializationHelpers.DeleteActionAndBindings(actionMap, actionID);
                 state.serializedObject.ApplyModifiedProperties();
@@ -258,16 +257,6 @@ namespace UnityEngine.InputSystem.Editor
                 // ActionsTreeView will dispatch a separate command to select the previous Binding
                 return state;
             };
-        }
-
-        public static Command ExpandCompositeBinding(SerializedInputBinding binding)
-        {
-            return (in InputActionsEditorState state) => state.ExpandCompositeBinding(binding);
-        }
-
-        public static Command CollapseCompositeBinding(SerializedInputBinding binding)
-        {
-            return (in InputActionsEditorState state) => state.CollapseCompositeBinding(binding);
         }
 
         public static Command SelectBinding(int bindingIndex)
