@@ -172,9 +172,9 @@ namespace UnityEngine.InputSystem.Editor
                 if (lastPastedElement != null)
                 {
                     state.serializedObject.ApplyModifiedProperties();
-                    if(typeOfCopiedData == typeof(InputAction))
+                    if (typeOfCopiedData == typeof(InputAction))
                         return state.SelectAction(lastPastedElement.GetIndexOfArrayElement());
-                    if(typeOfCopiedData == typeof(InputBinding))
+                    if (typeOfCopiedData == typeof(InputBinding))
                         return state.SelectBinding(lastPastedElement.GetIndexOfArrayElement());
                 }
                 return state;
