@@ -5,7 +5,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class CopyPasteHelper : MonoBehaviour
+    internal static class CopyPasteHelper
     {
         private const string k_CopyPasteMarker = "INPUTASSET ";
         private const string k_StartOfText = "\u0002";
