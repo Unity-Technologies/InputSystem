@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Newtonsoft.Json.Linq;
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
@@ -325,8 +324,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!json.Contains("m_Flags") || json.Contains(k_BindingData))
                 return false;
-            var ob = JObject.Parse(json);
-            return (int)ob["m_Flags"] == (int)InputBinding.Flags.PartOfComposite;
+            var ob = JsonUtility.FromJson<InputBinding>(json);
+            return ob.m_Flags == InputBinding.Flags.PartOfComposite;
         }
 
         public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
