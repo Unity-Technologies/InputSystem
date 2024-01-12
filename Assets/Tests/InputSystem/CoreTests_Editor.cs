@@ -474,14 +474,13 @@ partial class CoreTests
         var binding3Id = map.bindings[2].id;
 
         var obj = new SerializedObject(asset);
-
         var maps = obj.FindProperty("m_ActionMaps");
-        CopyPasteHelper.AddElement(maps, "new map", 0);
+        InputActionTreeView.AddElement(maps, "new map", 0);
 
         var actions = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Actions");
         var bindings = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Bindings");
-        CopyPasteHelper.AddElement(actions, "new action", 1);
-        CopyPasteHelper.AddElement(bindings, "new binding", 1);
+        InputActionTreeView.AddElement(actions, "new action", 1);
+        InputActionTreeView.AddElement(bindings, "new binding", 1);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 

@@ -329,7 +329,7 @@ namespace UnityEngine.InputSystem.Editor
             return ob.m_Flags == InputBinding.Flags.PartOfComposite;
         }
 
-        public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
+        private static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
         {
             var uniqueName = InputActionSerializationHelpers.FindUniqueName(arrayProperty, name);
             if (index < 0)
