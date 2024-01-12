@@ -364,7 +364,7 @@ namespace UnityEngine.InputSystem.Editor
             var bindingProperty = bindingArrayProperty.GetArrayElementAtIndex(bindingIndex);
             DeleteBinding(bindingProperty, bindingArrayProperty, bindingIndex);
         }
-        
+
         public static void EnsureUniqueName(SerializedProperty arrayElement)
         {
             var arrayProperty = arrayElement.GetArrayPropertyFromElement();
