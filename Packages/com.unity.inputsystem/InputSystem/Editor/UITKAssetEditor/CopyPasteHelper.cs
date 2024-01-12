@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Editor
         private const string k_EndOfTransmission = "\u0004";
         private const string k_BindingData = "bindingData";
         private const string k_EndOfBinding = "+++";
-        private static readonly Dictionary<Type, string> k_TypeMarker = new()
+        private static readonly Dictionary<Type, string> k_TypeMarker = new Dictionary<Type, string>
         {
             {typeof(InputActionMap), "InputActionMap"},
             {typeof(InputAction), "InputAction"},
