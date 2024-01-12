@@ -861,7 +861,7 @@ namespace UnityEngine.InputSystem.Editor
             tag = block.Substring(0, indexOfStartOfTextChar + 1);
             data = block.Substring(indexOfStartOfTextChar + 1);
         }
-        
+
         private static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
         {
             var uniqueName = InputActionSerializationHelpers.FindUniqueName(arrayProperty, name);
