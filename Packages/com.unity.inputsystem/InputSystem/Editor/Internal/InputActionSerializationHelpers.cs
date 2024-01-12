@@ -287,6 +287,12 @@ namespace UnityEngine.InputSystem.Editor
             return newBindingProperty;
         }
 
+        public static void SetBindingPartName(SerializedProperty bindingProperty, string partName)
+        {
+            //expects beautified partName
+            bindingProperty.FindPropertyRelative("m_Name").stringValue = partName;
+        }
+
         public static void ChangeBinding(SerializedProperty bindingProperty, string path = null, string groups = null,
             string interactions = null, string processors = null, string action = null)
         {
