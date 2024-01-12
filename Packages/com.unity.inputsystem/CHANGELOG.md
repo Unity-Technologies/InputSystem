@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+- From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
+
 ### Fixed
 - Fixed missing confirmation popup when deleting a control scheme.
 - Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
@@ -60,6 +63,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
 - Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
 - Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
+- Fixed issue where deleting a binding in the Input Action Editor would usually result in an unexpected item being selected next.
 
 ## [1.8.0-pre.1] - 2023-09-04
 

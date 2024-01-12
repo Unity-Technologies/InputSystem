@@ -110,6 +110,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         protected readonly StateContainer stateContainer;
+        protected IViewStateSelector<TViewState> ViewStateSelector => m_ViewStateSelector;
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;
         private bool m_IsFirstUpdate = true;
