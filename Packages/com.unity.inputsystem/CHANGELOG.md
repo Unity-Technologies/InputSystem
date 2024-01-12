@@ -24,6 +24,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 
+### Added
+- Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
+
 ## [1.8.0-pre.2] - 2023-11-09
 
 ### Changed

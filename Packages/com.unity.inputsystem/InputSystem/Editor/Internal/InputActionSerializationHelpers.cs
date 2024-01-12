@@ -111,114 +111,6 @@ namespace UnityEngine.InputSystem.Editor
             return indexInArray;
         }
 
-        public static SerializedProperty DuplicateElement(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name, int index, bool changeName = true)
-        {
-            var json = toDuplicate.CopyToJson(true);
-            var duplicatedProperty = AddElement(arrayProperty, name, index);
-            duplicatedProperty.RestoreFromJson(json);
-            if (changeName)
-                EnsureUniqueName(duplicatedProperty);
-            AssignUniqueIDs(duplicatedProperty);
-            return duplicatedProperty;
-        }
-
-        public static void DuplicateAction(SerializedProperty actionMap, SerializedProperty arrayProperty, SerializedProperty toDuplicate, string name)
-        {
-            var property = DuplicateElement(arrayProperty, toDuplicate, name, toDuplicate.GetIndexOfArrayElement() + 1);
-            var newName = property.FindPropertyRelative("m_Name").stringValue;
-            var bindingsArray = actionMap.FindPropertyRelative(nameof(InputActionMap.m_Bindings));
-            var bindings = bindingsArray.Where(binding => binding.FindPropertyRelative("m_Action").stringValue.Equals(name)).ToList();
-            var index = bindings.Select(b => b.GetIndexOfArrayElement()).Max() + 1;
-            foreach (var binding in bindings)
-            {
-                var newIndex = DuplicateBindingAsPartOfAction(bindingsArray, binding, newName, index);
-                index = newIndex;
-            }
-        }
-
-        private static SerializedProperty DuplicateComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate, string name, string actionName, int index, out int newIndex, bool increaseIndex = true)
-        {
-            newIndex = index;
-            var bindings = GetBindingsForComposite(bindingsArray, compositeToDuplicate);
-            if (increaseIndex)
-                newIndex += GetCompositePartCount(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
-            var newComposite = DuplicateElement(bindingsArray, compositeToDuplicate, name, newIndex++, false);
-            newComposite.FindPropertyRelative("m_Action").stringValue = actionName;
-            foreach (var binding in bindings)
-            {
-                var newBinding = DuplicateElement(bindingsArray, binding, binding.FindPropertyRelative("m_Name").stringValue, newIndex++, false);
-                newBinding.FindPropertyRelative("m_Action").stringValue = actionName;
-            }
-            return newComposite;
-        }
-
-        private static List<SerializedProperty> GetBindingsForComposite(SerializedProperty bindingsArray, SerializedProperty compositeToDuplicate)
-        {
-            var compositeBindings = new List<SerializedProperty>();
-            var compositeStartIndex = GetCompositeStartIndex(bindingsArray, compositeToDuplicate.GetIndexOfArrayElement());
-            if (compositeStartIndex == -1)
-                return compositeBindings;
-
-            for (var i = compositeStartIndex + 1; i < bindingsArray.arraySize; ++i)
-            {
-                var bindingProperty = bindingsArray.GetArrayElementAtIndex(i);
-                var bindingFlags = (InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue;
-                if ((bindingFlags & InputBinding.Flags.PartOfComposite) == 0)
-                    break;
-                compositeBindings.Add(bindingProperty);
-            }
-            return compositeBindings;
-        }
-
-        private static bool IsComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.Composite;
-        private static bool IsPartComposite(SerializedProperty property) => property.FindPropertyRelative("m_Flags").intValue == (int)InputBinding.Flags.PartOfComposite;
-        private static string PropertyName(SerializedProperty property) => property.FindPropertyRelative("m_Name").stringValue;
-
-        private static int DuplicateBindingAsPartOfAction(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
-        {
-            if (IsComposite(toDuplicate))
-            {
-                DuplicateComposite(arrayProperty, toDuplicate, PropertyName(toDuplicate), newActionName, index, out var newIndex, false);
-                return newIndex;
-            }
-            if (IsPartComposite(toDuplicate))
-                return index;
-            var duplicatedBinding = DuplicateElement(arrayProperty, toDuplicate, PropertyName(toDuplicate), index++, false);
-            duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newActionName;
-            return index;
-        }
-
-        public static int DuplicateBinding(SerializedProperty arrayProperty, SerializedProperty toDuplicate, string newActionName, int index)
-        {
-            if (IsComposite(toDuplicate))
-            {
-                var newComposite = DuplicateComposite(arrayProperty, toDuplicate, PropertyName(toDuplicate), newActionName, index, out _);
-                index = newComposite.GetIndexOfArrayElement();
-            }
-            else
-            {
-                var duplicatedBinding = DuplicateElement(arrayProperty, toDuplicate, PropertyName(toDuplicate), index, false);
-                duplicatedBinding.FindPropertyRelative("m_Action").stringValue = newActionName;
-            }
-            return index;
-        }
-
-        public static SerializedProperty AddElement(SerializedProperty arrayProperty, string name, int index = -1)
-        {
-            var uniqueName = FindUniqueName(arrayProperty, name);
-            if (index < 0)
-                index = arrayProperty.arraySize;
-
-            arrayProperty.InsertArrayElementAtIndex(index);
-            var elementProperty = arrayProperty.GetArrayElementAtIndex(index);
-            elementProperty.ResetValuesToDefault();
-
-            elementProperty.FindPropertyRelative("m_Name").stringValue = uniqueName;
-            elementProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
-
-            return elementProperty;
-        }
-
         public static SerializedProperty AddActionMap(SerializedObject asset, int index = -1)
         {
             if (!(asset.targetObject is InputActionAsset))
@@ -473,35 +365,6 @@ namespace UnityEngine.InputSystem.Editor
             DeleteBinding(bindingProperty, bindingArrayProperty, bindingIndex);
         }
 
-        public static void AssignUniqueIDs(SerializedProperty element)
-        {
-            // Assign new ID to map.
-            AssignUniqueID(element);
-
-            //
-            foreach (var child in element.GetChildren())
-            {
-                if (!child.isArray)
-                    continue;
-
-                var fieldType = child.GetFieldType();
-                if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
-                    fieldType == typeof(InputActionMap))
-                {
-                    ////TODO: update bindings that refer to actions by {id}
-                    for (var i = 0; i < child.arraySize; ++i)
-                        using (var childElement = child.GetArrayElementAtIndex(i))
-                            AssignUniqueIDs(childElement);
-                }
-            }
-        }
-
-        public static void AssignUniqueID(SerializedProperty property)
-        {
-            var idProperty = property.FindPropertyRelative("m_Id");
-            idProperty.stringValue = Guid.NewGuid().ToString();
-        }
-
         public static void EnsureUniqueName(SerializedProperty arrayElement)
         {
             var arrayProperty = arrayElement.GetArrayPropertyFromElement();
@@ -527,6 +390,31 @@ namespace UnityEngine.InputSystem.Editor
                             nameof(arrayProperty));
                     return nameProperty.stringValue;
                 });
+        }
+
+        public static void AssignUniqueIDs(SerializedProperty element)
+        {
+            AssignUniqueID(element);
+            foreach (var child in element.GetChildren())
+            {
+                if (!child.isArray)
+                    continue;
+
+                var fieldType = child.GetFieldType();
+                if (fieldType == typeof(InputBinding[]) || fieldType == typeof(InputAction[]) ||
+                    fieldType == typeof(InputActionMap))
+                {
+                    for (var i = 0; i < child.arraySize; ++i)
+                        using (var childElement = child.GetArrayElementAtIndex(i))
+                            AssignUniqueIDs(childElement);
+                }
+            }
+        }
+
+        private static void AssignUniqueID(SerializedProperty property)
+        {
+            var idProperty = property.FindPropertyRelative("m_Id");
+            idProperty.stringValue = Guid.NewGuid().ToString();
         }
 
         public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
