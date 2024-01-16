@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 - Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
+- Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
 
 ## [1.8.0-pre.2] - 2023-11-09
 
