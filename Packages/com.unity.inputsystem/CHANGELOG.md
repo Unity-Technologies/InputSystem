@@ -13,7 +13,14 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 - From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
 
+### Added
+- Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
+  - [`InputAction.activeValueType`](xref:UnityEngine.InputSystem.InputAction.activeValueType) returns the `Type` expected by `ReadValue<TValue>` based on the currently active control that is driving the action.
+  - [`InputAction.GetMagnitude`](xref:UnityEngine.InputSystem.InputAction.GetMagnitude) returns the current amount of actuation of the control that is driving the action.
+  - [`InputAction.WasCompletedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasCompletedThisFrame) returns `true` on the frame that the action stopped being in the performed phase. This allows for similar functionality to [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)/[`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) when paired with [`WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) except it is directly based on the interactions driving the action. For example, you can use it to distinguish between the button being released or whether it was released after being held for long enough to perform when using the Hold interaction.
+
 ### Fixed
+- Fixed syntax of code examples in API documentation for [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite).
 - Fixed missing confirmation popup when deleting a control scheme.
 - Fixed support for menu bar/customisable keyboard shortcuts used when interacting with Actions and Action Maps.
 - Fixed add bindings button to support left button click.
