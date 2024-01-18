@@ -28,6 +28,7 @@ namespace UnityEngine.InputSystem.Editor
         private int m_AssetId;
         private string m_AssetPath;
         private string m_AssetJson;
+        private string m_AssetName;
         private bool m_IsDirty;
         static readonly Vector2 k_MinWindowSize = new Vector2(650, 450);
 
@@ -88,7 +89,8 @@ namespace UnityEngine.InputSystem.Editor
 
             window.m_IsDirty = false;
             window.m_AssetId = instanceId;
-            window.titleContent = new GUIContent("Input Actions Editor");
+            window.m_AssetName = asset.name;
+            window.titleContent = new GUIContent(asset.name + " (Input Actions Editor)");
             window.minSize = k_MinWindowSize;
             window.SetAsset(asset, actionToSelect, actionMapToSelect);
             window.Show();
@@ -190,7 +192,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void UpdateWindowTitle()
         {
-            titleContent = m_IsDirty ? new GUIContent("(*) Input Actions Editor") : new GUIContent("Input Actions Editor");
+            titleContent = m_IsDirty ?
+                new GUIContent(m_AssetName + "(*) (Input Actions Editor)") :
+                new GUIContent(m_AssetName + " (Input Actions Editor)");
         }
 
         private void Save()
@@ -286,6 +290,7 @@ namespace UnityEngine.InputSystem.Editor
             window.m_State = m_State;
             window.m_AssetPath = m_AssetPath;
             window.m_AssetJson = m_AssetJson;
+            window.m_AssetName = m_AssetName;
             window.m_IsDirty = true;
         }
 
