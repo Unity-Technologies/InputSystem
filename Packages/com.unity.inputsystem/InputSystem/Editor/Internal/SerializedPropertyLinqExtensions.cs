@@ -44,6 +44,23 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public static SerializedProperty FindLast(this SerializedProperty property, Func<SerializedProperty, bool> predicate)
+        {
+            Debug.Assert(predicate != null, "Missing predicate for FindLast function.");
+            Debug.Assert(property != null, "SerializedProperty missing for FindLast function.");
+
+            if (property.isArray == false)
+                return null;
+
+            for (int i = property.arraySize - 1; i >= 0; i--)
+            {
+                var element = property.GetArrayElementAtIndex(i);
+                if (predicate(element))
+                    return element;
+            }
+            return null;
+        }
+
         public static SerializedProperty FirstOrDefault(this SerializedProperty property)
         {
             if (property == null)

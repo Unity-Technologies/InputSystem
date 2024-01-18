@@ -115,6 +115,8 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished -= treeViewItem.EditTextFinishedCallback;
             };
 
+            ContextMenu.GetContextMenuForActionListView(this, m_ActionsTreeView, m_ActionsTreeView.parent);
+
             m_ActionsTreeViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ActionsTreeView);
             m_ActionsTreeViewSelectionChangeFilter.selectedIndicesChanged += (_) =>
             {
@@ -258,6 +260,21 @@ namespace UnityEngine.InputSystem.Editor
             Dispatch(data.isAction ? Commands.DuplicateAction() : Commands.DuplicateBinding());
         }
 
+        internal void CopyItems()
+        {
+            Dispatch(Commands.CopyActionBindingSelection());
+        }
+
+        internal void CutItems()
+        {
+            Dispatch(Commands.CutActionsOrBindings());
+        }
+
+        internal void PasteItems()
+        {
+            Dispatch(Commands.PasteActionsOrBindings());
+        }
+
         private void ChangeActionName(ActionOrBindingData data, string newName)
         {
             m_RenameOnActionAdded = false;
@@ -272,10 +289,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnExecuteCommand(ExecuteCommandEvent evt)
         {
+            if (m_ActionsTreeView.selectedItem == null)
+                return;
+
+            var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
             switch (evt.commandName)
             {
                 case CmdEvents.Rename:
-                    var data = (ActionOrBindingData)m_ActionsTreeView.selectedItem;
                     if (data.isAction || data.isComposite)
                         m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.FocusOnRenameTextField();
                     else
@@ -287,6 +307,17 @@ namespace UnityEngine.InputSystem.Editor
                     break;
                 case CmdEvents.Duplicate:
                     m_ActionsTreeView.GetRootElementForIndex(m_ActionsTreeView.selectedIndex)?.Q<InputActionsTreeViewItem>()?.DuplicateItem();
+                    break;
+                case CmdEvents.Copy:
+                    CopyItems();
+                    break;
+                case CmdEvents.Cut:
+                    CutItems();
+                    break;
+                case CmdEvents.Paste:
+                    var hasPastableData = CopyPasteHelper.HasPastableClipboardData(data.isAction ? typeof(InputAction) : typeof(InputBinding));
+                    if (hasPastableData)
+                        PasteItems();
                     break;
                 default:
                     return; // Skip StopPropagation if we didn't execute anything
@@ -303,6 +334,9 @@ namespace UnityEngine.InputSystem.Editor
                 case CmdEvents.Delete:
                 case CmdEvents.SoftDelete:
                 case CmdEvents.Duplicate:
+                case CmdEvents.Copy:
+                case CmdEvents.Cut:
+                case CmdEvents.Paste:
                     evt.StopPropagation();
                     break;
             }

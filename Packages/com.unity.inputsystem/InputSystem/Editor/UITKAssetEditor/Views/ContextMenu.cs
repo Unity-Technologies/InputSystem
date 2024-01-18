@@ -12,6 +12,10 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal static class ContextMenu
     {
+        private static readonly string copy_String = "Copy";
+        private static readonly string cut_String = "Cut";
+        private static readonly string paste_String = "Paste";
+
         private static readonly string rename_String = "Rename";
         private static readonly string duplicate_String = "Duplicate";
         private static readonly string delete_String = "Delete";
@@ -20,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly string add_Binding_String = "Add Binding";
         public static void GetContextMenuForActionMapItem(InputActionMapsTreeViewItem treeViewItem)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Action_String, _ => InputActionViewsControlsHolder.CreateActionMap.Invoke(treeViewItem));
                 menuEvent.menu.AppendSeparator();
@@ -30,9 +34,36 @@ namespace UnityEngine.InputSystem.Editor
             }) { target = treeViewItem };
         }
 
+        public static void GetContextMenuForActionMapListView(ActionMapsView mapView, VisualElement listView)
+        {
+            _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(copy_String, _ => mapView.CopyItems());
+                menuEvent.menu.AppendAction(cut_String, _ => mapView.CutItems());
+                var copiedAction = CopyPasteHelper.GetCopiedClipboardType() == typeof(InputAction);
+                if (CopyPasteHelper.HasPastableClipboardData(typeof(InputActionMap)))
+                    menuEvent.menu.AppendAction(paste_String, _ => mapView.PasteItems(copiedAction));
+            }) { target = listView };
+        }
+
+        public static void GetContextMenuForActionListView(ActionsTreeView actionsTreeView, TreeView treeView, VisualElement target)
+        {
+            _ = new ContextualMenuManipulator(menuEvent =>
+            {
+                menuEvent.menu.AppendSeparator();
+                menuEvent.menu.AppendAction(copy_String, _ => actionsTreeView.CopyItems());
+                menuEvent.menu.AppendAction(cut_String, _ => actionsTreeView.CutItems());
+                var item = treeView.GetItemDataForIndex<ActionOrBindingData>(treeView.selectedIndex);
+                var hasPastableData = CopyPasteHelper.HasPastableClipboardData(item.isAction ? typeof(InputAction) : typeof(InputBinding));
+                if (hasPastableData)
+                    menuEvent.menu.AppendAction(paste_String, _ => actionsTreeView.PasteItems());
+            }) { target = target };
+        }
+
         public static void GetContextMenuForActionItem(InputActionsTreeViewItem treeViewItem, string controlLayout, int index)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 menuEvent.menu.AppendAction(add_Binding_String, _ => InputActionViewsControlsHolder.AddBinding.Invoke(treeViewItem));
                 AppendCompositeMenuItems(treeViewItem, controlLayout, (name, action) => menuEvent.menu.AppendAction(name, _ => action.Invoke()));
@@ -83,7 +114,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForCompositeItem(InputActionsTreeViewItem treeViewItem, int index)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 AppendRenameAction(menuEvent, index, treeViewItem);
                 AppendDuplicateAction(menuEvent, treeViewItem);
@@ -93,7 +124,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void GetContextMenuForBindingItem(InputActionsTreeViewItem treeViewItem)
         {
-            var _ = new ContextualMenuManipulator(menuEvent =>
+            _ = new ContextualMenuManipulator(menuEvent =>
             {
                 AppendDuplicateAction(menuEvent, treeViewItem);
                 AppendDeleteAction(menuEvent, treeViewItem);

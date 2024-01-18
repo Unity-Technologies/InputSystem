@@ -29,6 +29,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Destroy may not be called from edit mode` error [ISXB-695](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-695)
 - Fixed possible exceptions thrown when deleting and adding Action Maps.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
+- Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
+
+### Added
+- Added Copy, Paste and Cut support for Action Maps, Actions and Bindings via context menu and key command shortcuts.
+- Added Dual Sense Edge controller to be mapped to the same layout as the Dual Sense controller
 
 ## [1.8.0-pre.2] - 2023-11-09
 
