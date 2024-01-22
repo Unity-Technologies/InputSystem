@@ -84,6 +84,11 @@ namespace UnityEngine.InputSystem.Editor
         private void OnSaveButton()
         {
             Dispatch(Commands.SaveAsset(postSaveAction));
+
+            // Don't let focus linger after clicking (ISX-1482). Ideally this would be only applied on mouse click,
+            // rather than if the user is using tab to navigate UI, but there doesn't seem to be a way to differentiate
+            // between those interactions at the moment.
+            m_Root.Q<ToolbarButton>(name: saveButtonId).Blur();
         }
 
         private void OnAutoSaveToggle(ChangeEvent<bool> evt)
