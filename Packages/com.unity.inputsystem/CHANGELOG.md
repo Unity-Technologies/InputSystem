@@ -33,6 +33,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed potential race condition on access to GCHandle in DefferedResolutionOfBindings and halved number of calls to GCHandle resolution [ISXB-726](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-726)
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
+- Fixed missing name in window title for Input Action assets.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
