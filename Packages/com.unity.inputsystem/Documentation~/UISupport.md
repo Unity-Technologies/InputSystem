@@ -17,7 +17,7 @@ You can use the Input System package to control any in-game UI created with the 
 
 
 ⭐ From **Unity 2023.2.x** and newer, the Input System and UI Toolkit are fully integrated. To configure UI Input you can
-configure the UI action map of project-wide actions in **[Project Settings > Input System Package > Input Actions](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.8/manual/Workflow-Actions.html)**.
+configure the UI action map of project-wide actions in **[Project Settings > Input System Package > Input Actions](Workflow-Actions.html)**.
 For older versions, the integration between the Input System and the UI system is handled by the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
 
@@ -33,9 +33,13 @@ When using the project-wide actions (Unity 2023.2.x and newer), you can configur
 
 You can add and remove bindings as intended for you necessary functionality. However, the action map 'UI' and all of its actions must remain with the same name, otherwise the UI input will not work correctly.
 
+You can also reset the UI action map to its default bindings by clicking the **Reset** button on the top left kebab button. However, this will reset both the 'Player' and 'UI' action maps to their default bindings.
+
+
 The actions names are equivalent in functionality to the ones present in [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
 
-
+>[!NOTE]
+> If there is any [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) in the project, the project-wide actions won't configure UI input and will instead use the configuration of the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
 Alternatively, if you're on a Unity version older than 2023.2, the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package has. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System instead of the legacy Input Manager to drive UI input.
 
