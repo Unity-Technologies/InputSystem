@@ -10,20 +10,12 @@ public class SceneLoader : MonoBehaviour
     public TMP_Text buttonText;
 
     public void Start()
-    {
-        
+    {  
         sceneName = buttonText.name.ToString();
-        
     }
     public void LoadSceneOnButtonPress()
     {
         SceneManager.LoadScene(sceneName);
         SceneManager.LoadScene("Esc Menu Additive", LoadSceneMode.Additive);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
