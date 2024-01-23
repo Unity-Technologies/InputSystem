@@ -905,10 +905,11 @@ namespace UnityEngine.InputSystem
             // This quite invasively goes into InputSystem internals. Unfortunately, we
             // have no proper way of simulating domain reloads ATM. So we directly call various
             // internal methods here in a sequence similar to what we'd get during a domain reload.
+            // Since we're faking it, pass 'true' for calledFromCtor param.
 
             InputSystem.s_SystemObject.OnBeforeSerialize();
             InputSystem.s_SystemObject = null;
-            InputSystem.InitializeInEditor(runtime);
+            InputSystem.InitializeInEditor(true, runtime);
         }
 
         #endif

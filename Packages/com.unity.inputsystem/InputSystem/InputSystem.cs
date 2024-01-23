@@ -80,9 +80,19 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-
     public static partial class InputSystem
     {
+        static InputSystem()
+        {
+            GlobalInitialize(true);
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RuntimeInitialize()
+    {
+            GlobalInitialize(false);
+        }
+
         #region Layouts
 
         /// <summary>
@@ -3102,7 +3112,7 @@ namespace UnityEngine.InputSystem
                     return;
 
                 var valueIsNotNull = value != null;
-#if UNITY_EDITOR
+                #if UNITY_EDITOR
                 // Do not allow assigning non-persistent assets (pure in-memory objects)
                 if (valueIsNotNull && !EditorUtility.IsPersistent(value))
                     throw new ArgumentException($"Assigning a non-persistent {nameof(InputActionAsset)} to this property is not allowed. The assigned asset need to be persisted on disc inside the /Assets folder.");
@@ -3117,7 +3127,7 @@ namespace UnityEngine.InputSystem
 
                 // Note that we do not enable/disable any actions until play-mode
             }
-        }
+            }
 
         /// <summary>
         /// Event that is triggered if the instance assigned to property <see cref="actions"/> changes.
@@ -3129,7 +3139,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="actions"/>
         /// <seealso cref="InputActionAsset"/>
         public static event Action onActionsChange
-        {
+            {
             add => s_Manager.onActionsChange += value;
             remove => s_Manager.onActionsChange -= value;
         }
@@ -3487,30 +3497,42 @@ namespace UnityEngine.InputSystem
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
-        static InputSystem()
+
+        private static bool IsDomainReloadDisabledForPlayMode()
         {
-            #if UNITY_EDITOR
-            InitializeInEditor();
-            #else
-            InitializeInPlayer();
+#if UNITY_EDITOR && !ENABLE_CORECLR
+            if (!EditorSettings.enterPlayModeOptionsEnabled || (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableDomainReload) == 0)
+                return false;
             #endif
+            return true;
         }
 
-        ////FIXME: Unity is not calling this method if it's inside an #if block that is not
-        ////       visible to the editor; that shouldn't be the case
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void RunInitializeInPlayer()
+        private static void GlobalInitialize(bool calledFromCtor)
         {
-            // We're using this method just to make sure the class constructor is called
-            // so we don't need any code in here. When the engine calls this method, the
-            // class constructor will be run if it hasn't been run already.
+            // This method is called twice: once from the static ctor and again from RuntimeInitialize().
+            // We handle the calls differently for the Editor and Player.
 
-            // IL2CPP has a bug that causes the class constructor to not be run when
-            // the RuntimeInitializeOnLoadMethod is invoked. So we need an explicit check
-            // here until that is fixed (case 1014293).
-            #if !UNITY_EDITOR
-            if (s_Manager == null)
+#if UNITY_EDITOR
+            // If Domain Reloads are enabled, InputSystem is initialized via the ctor and we can ignore
+            // the second call from "Runtime", otherwise (DRs are disabled) the ctor isn't fired, so we
+            // must initialize via the Runtime call.
+
+            if (calledFromCtor || IsDomainReloadDisabledForPlayMode())
+        {
+                InitializeInEditor(calledFromCtor);
+            }
+#else
+            // In the Player, simply initialize InputSystem from the ctor and then execute the initial update
+            // from the second call. This saves us from needing another RuntimeInitializeOnLoad attribute.
+
+            if (calledFromCtor)
+            {
                 InitializeInPlayer();
+            }
+            else
+            {
+                RunInitialUpdate();
+            }
             #endif
         }
 
@@ -3524,18 +3546,24 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
         internal static InputSystemObject s_SystemObject;
 
-        internal static void InitializeInEditor(IInputRuntime runtime = null)
+        internal static void InitializeInEditor(bool calledFromCtor, IInputRuntime runtime = null)
         {
             Profiler.BeginSample("InputSystem.InitializeInEditor");
 
+            // This is only necessary after a Domain Reload but otherwise can be skipped.
+            bool globalReset = calledFromCtor || !IsDomainReloadDisabledForPlayMode();
+
+            if (globalReset)
             Reset(runtime: runtime);
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
+                if (globalReset)
+                {
                 ////FIXME: does not preserve action map state
 
-                // We're coming back out of a domain reload. We're restoring part of the
+                    // If we're coming back out of a domain reload. We're restoring part of the
                 // InputManager state here but we're still waiting from layout registrations
                 // that happen during domain initialization.
 
@@ -3558,6 +3586,7 @@ namespace UnityEngine.InputSystem
 
                 // Get rid of saved state.
                 s_SystemObject.systemState = new State();
+            }
             }
             else
             {
@@ -3761,7 +3790,6 @@ namespace UnityEngine.InputSystem
 
 #endif // UNITY_EDITOR
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake
@@ -3898,9 +3926,9 @@ namespace UnityEngine.InputSystem
 
             // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
             // Note this is too early for editor ! actions is not setup yet.
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
-            #endif
+#endif
 
             Profiler.EndSample();
         }
