@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 [InitializeOnLoad]
@@ -9,6 +10,13 @@ public class AddScenesToBuild : EditorWindow
     {
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
     }
+    
+    [MenuItem("QA Tools/Open Core Scene Menu")]
+    static void OpenScene()
+    {
+        EditorSceneManager.OpenScene("Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity");
+    }
+
 
     [MenuItem("QA Tools/Add All Core Samples to Build")]
     private static void AddAllScenesToBuildExcludingXboxAndXR()
