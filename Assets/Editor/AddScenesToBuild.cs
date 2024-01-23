@@ -10,7 +10,7 @@ public class AddScenesToBuild : EditorWindow
         EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
     }
 
-    [MenuItem("Tools/Add All Scenes to Build")]
+    [MenuItem("QA Tools/Add All Core Samples to Build")]
     private static void AddAllScenesToBuildExcludingXboxAndXR()
     {
         // Get all available scenes in the project
@@ -31,6 +31,9 @@ public class AddScenesToBuild : EditorWindow
                 filteredScenePaths.Add(path);
             }
         }
+
+        // Ensure "Core Platforms Menu" is at the beginning of the list
+        filteredScenePaths.Insert(0, "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity");
 
         // Update the build settings
         EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[filteredScenePaths.Count];
