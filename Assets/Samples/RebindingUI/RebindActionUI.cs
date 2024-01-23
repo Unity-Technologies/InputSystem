@@ -268,14 +268,16 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
                     operation =>
                     {
                         m_RebindStopEvent?.Invoke(this, operation);
-                        m_RebindOverlay?.SetActive(false);
+                        if (m_RebindOverlay != null)
+                            m_RebindOverlay.SetActive(false);
                         UpdateBindingDisplay();
                         CleanUp();
                     })
                 .OnComplete(
                     operation =>
                     {
-                        m_RebindOverlay?.SetActive(false);
+                        if (m_RebindOverlay != null)
+                            m_RebindOverlay.SetActive(false);
                         m_RebindStopEvent?.Invoke(this, operation);
                         UpdateBindingDisplay();
                         CleanUp();
