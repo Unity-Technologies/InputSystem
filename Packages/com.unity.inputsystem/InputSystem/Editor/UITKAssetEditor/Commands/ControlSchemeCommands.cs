@@ -1,7 +1,8 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
@@ -32,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command SaveControlScheme(string newName = "", bool updateExisting = false)
+        public static Command SaveControlScheme(string newControlSchemeName = "", bool updateExisting = false)
         {
             return (in InputActionsEditorState state) =>
             {
@@ -42,7 +43,9 @@ namespace UnityEngine.InputSystem.Editor
                 var controlScheme = controlSchemesArray
                     .FirstOrDefault(sp => sp.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue == controlSchemeName);
 
-                // if the control scheme is null, we're saving a new control scheme, otherwise editing an existing one
+                var actionMaps = state.serializedObject.FindProperty(nameof(InputActionAsset.m_ActionMaps));
+
+                // If the control scheme is null, we're saving a new control scheme, otherwise editing an existing one
                 if (controlScheme == null && updateExisting)
                     throw new InvalidOperationException("Tried to update a non-existent control scheme.");
 
@@ -52,8 +55,15 @@ namespace UnityEngine.InputSystem.Editor
                     controlSchemesArray.InsertArrayElementAtIndex(controlSchemesArray.arraySize);
                     controlScheme = controlSchemesArray.GetArrayElementAtIndex(controlSchemesArray.arraySize - 1);
                 }
+                // If we're renaming a control scheme, we need to update the bindings that use it and make a unique name
+                if (!string.IsNullOrEmpty(newControlSchemeName))
+                {
+                    newControlSchemeName = MakeUniqueControlSchemeName(state, newControlSchemeName);
+                    RenameBindingsControlSchemeHelper(controlScheme, actionMaps, controlSchemeName, newControlSchemeName);
+                }
 
-                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue = string.IsNullOrEmpty(newName) ? controlSchemeName  : newName;
+                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_Name)).stringValue = string.IsNullOrEmpty(newControlSchemeName) ? controlSchemeName  : newControlSchemeName;
+                controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_BindingGroup)).stringValue = string.IsNullOrEmpty(newControlSchemeName) ? controlSchemeName  : newControlSchemeName;
 
                 var serializedDeviceRequirements = controlScheme.FindPropertyRelative(nameof(InputControlScheme.m_DeviceRequirements));
                 serializedDeviceRequirements.ClearArray();
@@ -71,8 +81,32 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 state.serializedObject.ApplyModifiedProperties();
-                return state.With(selectedControlScheme: new InputControlScheme(controlScheme));
+                return state.With(
+                    selectedControlScheme: new InputControlScheme(controlScheme),
+                    // Select the control scheme updated, otherwise select the new one it was added
+                    selectedControlSchemeIndex: updateExisting? state.selectedControlSchemeIndex: controlSchemesArray.arraySize - 1);
             };
+        }
+
+        static void RenameBindingsControlSchemeHelper(SerializedProperty controlScheme, SerializedProperty actionMaps, string controlSchemeName, string newName)
+        {
+            foreach (SerializedProperty actionMap in actionMaps)
+            {
+                var bindings = actionMap
+                    .FindPropertyRelative(nameof(InputActionMap.m_Bindings))
+                    .Select(sp => new SerializedInputBinding(sp))
+                    .ToList();
+
+                var bindingsToRename = bindings.Where(b => b.controlSchemes.Contains(controlSchemeName)).ToList();
+
+                foreach (var binding in bindingsToRename)
+                {
+                    var bindingGroups = binding.controlSchemes.ToList();
+                    bindingGroups.Remove(controlSchemeName);
+                    bindingGroups.Add(newName);
+                    binding.wrappedProperty.FindPropertyRelative(nameof(InputBinding.m_Groups)).stringValue = bindingGroups.Join(InputBinding.kSeparatorString);
+                }
+            }
         }
 
         public static Command SelectControlScheme(int controlSchemeIndex)
@@ -80,7 +114,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 if (controlSchemeIndex == -1)
-                    return state.With(selectedControlSchemeIndex: controlSchemeIndex);
+                    return state.With(selectedControlSchemeIndex: controlSchemeIndex, selectedControlScheme: new InputControlScheme());
 
                 var controlSchemeSerializedProperty = state.serializedObject
                     .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
@@ -117,6 +151,12 @@ namespace UnityEngine.InputSystem.Editor
                     throw new InvalidOperationException("Control scheme doesn't exist in collection.");
 
                 var indexOfArrayElement = serializedControlScheme.GetIndexOfArrayElement();
+
+                // Ask for confirmation.
+                if (!EditorUtility.DisplayDialog("Delete scheme?",
+                    $"Do you want to delete control scheme '{selectedControlSchemeName}'?", "Delete", "Cancel"))
+                    return state;
+
                 serializedArray.DeleteArrayElementAtIndex(indexOfArrayElement);
                 state.serializedObject.ApplyModifiedProperties();
 

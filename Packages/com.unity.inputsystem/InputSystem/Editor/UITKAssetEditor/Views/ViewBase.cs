@@ -1,6 +1,7 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -33,7 +34,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_ViewStateSelector == null)
             {
-                Debug.LogWarning($"View '{GetType().Name}' has no selector and will not render. Create a selector for the " +
+                Debug.LogWarning(
+                    $"View '{GetType().Name}' has no selector and will not render. Create a selector for the " +
                     $"view using the CreateSelector method.");
                 return;
             }
@@ -108,6 +110,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         protected readonly StateContainer stateContainer;
+        protected IViewStateSelector<TViewState> ViewStateSelector => m_ViewStateSelector;
         private IViewStateSelector<TViewState> m_ViewStateSelector;
         private IList<IView> m_ChildViews;
         private bool m_IsFirstUpdate = true;

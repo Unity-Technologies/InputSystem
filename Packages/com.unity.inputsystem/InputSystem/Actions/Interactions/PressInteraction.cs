@@ -218,7 +218,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.OnGUI();
         }
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             root.Add(new HelpBox(s_HelpBoxText.text, HelpBoxMessageType.None));

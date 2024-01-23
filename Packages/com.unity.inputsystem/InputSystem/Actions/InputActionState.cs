@@ -548,9 +548,11 @@ namespace UnityEngine.InputSystem
 
                 newActionState.lastCanceledInUpdate = oldActionState.lastCanceledInUpdate;
                 newActionState.lastPerformedInUpdate = oldActionState.lastPerformedInUpdate;
+                newActionState.lastCompletedInUpdate = oldActionState.lastCompletedInUpdate;
                 newActionState.pressedInUpdate = oldActionState.pressedInUpdate;
                 newActionState.releasedInUpdate = oldActionState.releasedInUpdate;
                 newActionState.startTime = oldActionState.startTime;
+                newActionState.bindingIndex = oldActionState.bindingIndex;
 
                 if (oldActionState.phase != InputActionPhase.Disabled)
                 {
@@ -628,6 +630,7 @@ namespace UnityEngine.InputSystem
                     // so we can simply look on the binding for where the control is now.
                     var newControlIndex = FindControlIndexOnBinding(bindingIndex, control);
 
+                    // This assert is used by test: Actions_ActiveBindingsHaveCorrectBindingIndicesAfterBindingResolution
                     Debug.Assert(newControlIndex != kInvalidIndex, "Could not find active control after binding resolution");
                     if (newControlIndex != kInvalidIndex)
                     {
@@ -837,7 +840,7 @@ namespace UnityEngine.InputSystem
                         for (var i = 0; i < interactionCount; ++i)
                         {
                             var interactionIndex = interactionStartIndex + i;
-                            ResetInteractionStateAndCancelIfNecessary(mapIndex, bindingIndex, interactionIndex);
+                            ResetInteractionStateAndCancelIfNecessary(mapIndex, bindingIndex, interactionIndex, phaseAfterCanceled: toPhase);
                         }
                     }
                 }
@@ -850,7 +853,8 @@ namespace UnityEngine.InputSystem
                         "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
 
                     if (actionState->phase != InputActionPhase.Canceled)
-                        ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex]);
+                        ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex],
+                            phaseAfterPerformedOrCanceled: toPhase);
                 }
             }
 
@@ -870,6 +874,7 @@ namespace UnityEngine.InputSystem
             {
                 actionState->lastCanceledInUpdate = default;
                 actionState->lastPerformedInUpdate = default;
+                actionState->lastCompletedInUpdate = default;
                 actionState->pressedInUpdate = default;
                 actionState->releasedInUpdate = default;
             }
@@ -1597,7 +1602,7 @@ namespace UnityEngine.InputSystem
         /// If an action has multiple controls bound to it, control state changes on the action may conflict with each other.
         /// If that happens, we resolve the conflict by always sticking to the most actuated control.
         ///
-        /// Pass-through actions (<see cref="InputAction.passThrough"/>) will always bypass conflict resolution and respond
+        /// Pass-through actions (<see cref="InputActionType.PassThrough"/>) will always bypass conflict resolution and respond
         /// to every value change.
         ///
         /// Actions that are resolved to only a single control will early out of conflict resolution.
@@ -2131,6 +2136,8 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputActionPhase.Waiting"/> (default), <see cref="InputActionPhase.Started"/> (if the action is supposed
         /// to be oscillate between started and performed), or <see cref="InputActionPhase.Performed"/> (if the action is
         /// supposed to perform over and over again until canceled).</param>
+        /// <param name="phaseAfterCanceled">If <paramref name="newPhase"/> is <see cref="InputActionPhase.Canceled"/>,
+        /// this determines which phase to transition to after the action has been canceled.</param>
         /// <param name="processNextInteractionOnCancel">Indicates if the system should try and change the phase of other
         /// interactions on the same action that are already started or performed after cancelling this interaction. This should be
         /// false when resetting interactions.</param>
@@ -2149,7 +2156,9 @@ namespace UnityEngine.InputSystem
         /// long and the SlowTapInteraction will get to drive the action next).
         /// </remarks>
         internal void ChangePhaseOfInteraction(InputActionPhase newPhase, ref TriggerState trigger,
-            InputActionPhase phaseAfterPerformed = InputActionPhase.Waiting, bool processNextInteractionOnCancel = true)
+            InputActionPhase phaseAfterPerformed = InputActionPhase.Waiting,
+            InputActionPhase phaseAfterCanceled = InputActionPhase.Waiting,
+            bool processNextInteractionOnCancel = true)
         {
             var interactionIndex = trigger.interactionIndex;
             var bindingIndex = trigger.bindingIndex;
@@ -2163,6 +2172,8 @@ namespace UnityEngine.InputSystem
             var phaseAfterPerformedOrCanceled = InputActionPhase.Waiting;
             if (newPhase == InputActionPhase.Performed)
                 phaseAfterPerformedOrCanceled = phaseAfterPerformed;
+            else if (newPhase == InputActionPhase.Canceled)
+                phaseAfterPerformedOrCanceled = phaseAfterCanceled;
 
             // Any time an interaction changes phase, we cancel all pending timeouts.
             ref var interactionState = ref interactionStates[interactionIndex];
@@ -2183,8 +2194,7 @@ namespace UnityEngine.InputSystem
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
                     // We're the first interaction to go to the start phase.
-                    if (!ChangePhaseOfAction(newPhase, ref trigger,
-                        phaseAfterPerformedOrCanceled: phaseAfterPerformedOrCanceled))
+                    if (!ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled))
                         return;
                 }
                 else if (newPhase == InputActionPhase.Canceled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
@@ -2193,7 +2203,7 @@ namespace UnityEngine.InputSystem
                     // to go into start phase. *Or* there's an interaction that has
                     // already performed.
 
-                    if (!ChangePhaseOfAction(newPhase, ref trigger))
+                    if (!ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled))
                         return;
 
                     if (processNextInteractionOnCancel == false)
@@ -2219,7 +2229,7 @@ namespace UnityEngine.InputSystem
                                 time = startTime,
                                 startTime = startTime,
                             };
-                            if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction))
+                            if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction, phaseAfterPerformedOrCanceled))
                                 return;
 
                             // If the interaction has already performed, trigger it now.
@@ -2235,7 +2245,7 @@ namespace UnityEngine.InputSystem
                                     time = interactionStates[index].performedTime, // Time when the interaction performed.
                                     startTime = startTime,
                                 };
-                                if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction))
+                                if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction, phaseAfterPerformedOrCanceled))
                                     return;
                             }
                             break;
@@ -2291,7 +2301,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="newPhase">New phase to transition to.</param>
         /// <param name="trigger">Trigger that caused the change in phase.</param>
-        /// <param name="phaseAfterPerformedOrCanceled"></param>
+        /// <param name="phaseAfterPerformedOrCanceled">The phase to immediately transition to after <paramref name="newPhase"/>
+        /// when that is <see cref="InputActionPhase.Performed"/> or <see cref="InputActionPhase.Canceled"/> (<see cref="InputActionPhase.Waiting"/>
+        /// by default).</param>
         /// <remarks>
         /// The change in phase is visible to observers, i.e. on the various callbacks and notifications.
         ///
@@ -2328,7 +2340,8 @@ namespace UnityEngine.InputSystem
                 if (actionState->isPassThrough && trigger.interactionIndex == kInvalidIndex)
                 {
                     // No constraints on pass-through actions except if there are interactions driving the action.
-                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
+                        isDisablingAction: newPhase == InputActionPhase.Canceled && phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
                         return false;
                 }
@@ -2354,7 +2367,8 @@ namespace UnityEngine.InputSystem
                 }
                 else if (actionState->phase != newPhase || newPhase == InputActionPhase.Performed) // We allow Performed to trigger repeatedly.
                 {
-                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
+                        isDisablingAction: newPhase == InputActionPhase.Canceled && phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
                         return false;
 
@@ -2378,7 +2392,7 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger)
+        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger, bool isDisablingAction = false)
         {
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
@@ -2392,7 +2406,7 @@ namespace UnityEngine.InputSystem
             if (newPhase != InputActionPhase.Canceled)
                 newState.magnitude = trigger.magnitude;
             else
-                newState.magnitude = 0;
+                newState.magnitude = 0f;
 
             newState.phase = newPhase;
             if (newPhase == InputActionPhase.Performed)
@@ -2420,6 +2434,15 @@ namespace UnityEngine.InputSystem
                 newState.lastPerformedInUpdate = actionState->lastPerformedInUpdate;
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
             }
+
+            // When we go from Performed to Disabling, we take a detour through Canceled.
+            // To replicate the behavior of releasedInUpdate where it doesn't get updated when the action is disabled
+            // from being performed, we skip updating lastCompletedInUpdate if Disabled is the phase after Canceled.
+            if (actionState->phase == InputActionPhase.Performed && newPhase != InputActionPhase.Performed && !isDisablingAction)
+                newState.lastCompletedInUpdate = InputUpdate.s_UpdateStepCount;
+            else
+                newState.lastCompletedInUpdate = actionState->lastCompletedInUpdate;
+
             newState.pressedInUpdate = actionState->pressedInUpdate;
             newState.releasedInUpdate = actionState->releasedInUpdate;
             if (newPhase == InputActionPhase.Started)
@@ -2594,7 +2617,8 @@ namespace UnityEngine.InputSystem
             return maps[mapIndex];
         }
 
-        private void ResetInteractionStateAndCancelIfNecessary(int mapIndex, int bindingIndex, int interactionIndex)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "mapIndex", Justification = "Keep this for future implementation")]
+        private void ResetInteractionStateAndCancelIfNecessary(int mapIndex, int bindingIndex, int interactionIndex, InputActionPhase phaseAfterCanceled)
         {
             Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount, "Interaction index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
@@ -2613,7 +2637,9 @@ namespace UnityEngine.InputSystem
                 {
                     case InputActionPhase.Started:
                     case InputActionPhase.Performed:
-                        ChangePhaseOfInteraction(InputActionPhase.Canceled, ref actionStates[actionIndex], processNextInteractionOnCancel: false);
+                        ChangePhaseOfInteraction(InputActionPhase.Canceled, ref actionStates[actionIndex],
+                            phaseAfterCanceled: phaseAfterCanceled,
+                            processNextInteractionOnCancel: false);
                         break;
                 }
 
@@ -3565,7 +3591,7 @@ namespace UnityEngine.InputSystem
         /// other is to represent the current actuation state of an action as a whole. The latter is stored in <see cref="actionStates"/>
         /// while the former is passed around as temporary instances on the stack.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 48)]
+        [StructLayout(LayoutKind.Explicit, Size = 52)]
         public struct TriggerState
         {
             public const int kMaxNumMaps = byte.MaxValue;
@@ -3588,6 +3614,7 @@ namespace UnityEngine.InputSystem
             [FieldOffset(36)] private uint m_LastCanceledInUpdate;
             [FieldOffset(40)] private uint m_PressedInUpdate;
             [FieldOffset(44)] private uint m_ReleasedInUpdate;
+            [FieldOffset(48)] private uint m_LastCompletedInUpdate;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -3735,12 +3762,22 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action triggered/performed last.
-            /// Zero if the action did not trigger yet. Also reset to zero when the action is disabled.
+            /// Zero if the action did not trigger yet. Also reset to zero when the action is hard reset.
             /// </summary>
             public uint lastPerformedInUpdate
             {
                 get => m_LastPerformedInUpdate;
                 set => m_LastPerformedInUpdate = value;
+            }
+
+            /// <summary>
+            /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action completed last.
+            /// Zero if the action did not become completed yet. Also reset to zero when the action is hard reset.
+            /// </summary>
+            public uint lastCompletedInUpdate
+            {
+                get => m_LastCompletedInUpdate;
+                set => m_LastCompletedInUpdate = value;
             }
 
             public uint lastCanceledInUpdate
@@ -4438,7 +4475,9 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < s_GlobalState.globalList.length; ++i)
                 {
                     var handle = s_GlobalState.globalList[i];
-                    if (!handle.IsAllocated || handle.Target == null)
+
+                    var state = handle.IsAllocated ? (InputActionState)handle.Target : null;
+                    if (state == null)
                     {
                         // Stale entry in the list. State has already been reclaimed by GC. Remove it.
                         if (handle.IsAllocated)
@@ -4448,7 +4487,6 @@ namespace UnityEngine.InputSystem
                         continue;
                     }
 
-                    var state = (InputActionState)handle.Target;
                     for (var n = 0; n < state.totalMapCount; ++n)
                         state.maps[n].ResolveBindingsIfNecessary();
                 }

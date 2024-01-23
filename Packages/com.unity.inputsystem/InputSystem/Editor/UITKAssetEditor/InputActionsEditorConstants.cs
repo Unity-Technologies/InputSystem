@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.Editor
         public const string CompositeBindingPropertiesViewUxml = "/CompositeBindingPropertiesEditor.uxml";
         public const string CompositePartBindingPropertiesViewUxml = "/CompositePartBindingPropertiesEditor.uxml";
         public const string ControlSchemeEditorViewUxml = "/ControlSchemeEditor.uxml";
+        public const string InputActionMapsTreeViewItemUxml = "/InputActionMapsTreeViewItem.uxml";
         public const string InputActionsTreeViewItemUxml = "/InputActionsTreeViewItem.uxml";
 
         /// Classes
@@ -29,6 +30,17 @@ namespace UnityEngine.InputSystem.Editor
             "Whether in the next input update after the action was enabled, the action should "
             + "immediately trigger if any of its bound controls are currently in a non-default state. "
             + "This check happens implicitly for Value actions but can be explicitly enabled for Button and Pass-Through actions.";
+
+        public struct CommandEvents
+        {
+            public const string Rename = "Rename";
+            public const string Delete = "Delete";
+            public const string SoftDelete = "SoftDelete";
+            public const string Duplicate = "Duplicate";
+            public const string Copy = "Copy";
+            public const string Cut = "Cut";
+            public const string Paste = "Paste";
+        }
     }
 }
 

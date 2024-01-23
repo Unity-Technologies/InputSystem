@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using UnityEditor;
 
@@ -12,6 +12,7 @@ namespace UnityEngine.InputSystem.Editor
             // serialized fields and make sure they're present?
             wrappedProperty = serializedProperty ?? throw new ArgumentNullException(nameof(serializedProperty));
 
+            id = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue;
             name = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue;
             expectedControlType = ReadExpectedControlType(serializedProperty);
             type = (InputActionType)serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).intValue;
@@ -22,6 +23,7 @@ namespace UnityEngine.InputSystem.Editor
             expectedControlTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).GetTooltip();
         }
 
+        public string id { get; }
         public string name { get; }
         public string expectedControlType { get; }
         public InputActionType type { get; }

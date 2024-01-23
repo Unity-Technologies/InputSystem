@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
@@ -23,6 +23,7 @@ namespace UnityEngine.InputSystem.Editor
                 (_, controlSchemes, s) => new ViewState
                 {
                     controlSchemes = controlSchemes,
+                    currentControlScheme = s.selectedControlScheme,
                     selectedBinding = Selectors.GetSelectedBinding(s),
                     selectedBindingIndex = s.selectedBindingIndex,
                     selectedBindingPath = Selectors.GetSelectedBindingPath(s),
@@ -57,6 +58,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                     () => { Dispatch(Commands.ApplyModifiedProperties()); });
+                controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
 
                 var inputAction = viewState.selectedInputAction;
                 controlPathEditor.SetExpectedControlLayout(inputAction?.expectedControlType ?? "");
@@ -100,6 +102,7 @@ namespace UnityEngine.InputSystem.Editor
             public int selectedBindingIndex;
             public SerializedInputBinding? selectedBinding;
             public ViewStateCollection<InputControlScheme> controlSchemes;
+            public InputControlScheme currentControlScheme;
             public SerializedProperty selectedBindingPath;
             public SerializedInputAction? selectedInputAction;
         }

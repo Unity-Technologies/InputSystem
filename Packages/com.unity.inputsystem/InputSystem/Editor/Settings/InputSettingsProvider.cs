@@ -13,10 +13,23 @@ using UnityEngine.UIElements;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
+    internal static class InputSettingsPath
+    {
+        public const string kSettingsRootPath = "Project/Input System Package";
+    }
+
     internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
+        public const string kEditorBuildSettingsActionsConfigKey = "com.unity.input.settings.actions";
+
+        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // When Project Wide Actions are enabled we place this as a child node to main settings node.
+        public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
+        #else
+        // When Project Wide Actions are not enabled we let this be the main settings node.
         public const string kSettingsPath = "Project/Input System Package";
+        #endif
 
         public static void Open()
         {
@@ -26,7 +39,14 @@ namespace UnityEngine.InputSystem.Editor
         [SettingsProvider]
         public static SettingsProvider CreateInputSettingsProvider()
         {
-            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project);
+            return new InputSettingsProvider(kSettingsPath, SettingsScope.Project)
+            {
+                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+                // We put this in a child node called "Settings" when Project-wide Actions is enabled.
+                // When not enabled it sits on the main package Settings node.
+                label = "Settings"
+                #endif
+            };
         }
 
         private InputSettingsProvider(string path, SettingsScope scopes)

@@ -474,14 +474,13 @@ partial class CoreTests
         var binding3Id = map.bindings[2].id;
 
         var obj = new SerializedObject(asset);
-
         var maps = obj.FindProperty("m_ActionMaps");
-        InputActionSerializationHelpers.AddElement(maps, "new map", 0);
+        InputActionTreeView.AddElement(maps, "new map", 0);
 
         var actions = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Actions");
         var bindings = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Bindings");
-        InputActionSerializationHelpers.AddElement(actions, "new action", 1);
-        InputActionSerializationHelpers.AddElement(bindings, "new binding", 1);
+        InputActionTreeView.AddElement(actions, "new action", 1);
+        InputActionTreeView.AddElement(bindings, "new binding", 1);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 
@@ -2837,6 +2836,18 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_LeavingPlayMode_DestroysAllActionStates()
     {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // Exclude project-wide actions from this test
+        // With Project-wide Actions `InputSystem.actions`, we begin with some initial ActionState
+        // Disabling Project-wide actions so that we begin from zero.
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
+        InputSystem.actions?.Disable();
+        InputActionState.DestroyAllActionMapStates();
+#endif
+
+        // Initial state
+        Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(0));
+
         InputSystem.AddDevice<Gamepad>();
 
         // Enter play mode.

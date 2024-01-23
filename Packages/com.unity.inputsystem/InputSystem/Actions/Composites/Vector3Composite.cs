@@ -137,6 +137,13 @@ namespace UnityEngine.InputSystem.Composites
             }
         }
 
+        /// <inheritdoc />
+        public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            var value = ReadValue(ref context);
+            return value.magnitude;
+        }
+
         /// <summary>
         /// Determines how a <c>Vector3</c> is synthesized from part controls.
         /// </summary>
@@ -177,7 +184,7 @@ namespace UnityEngine.InputSystem.Composites
             target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 
-#if UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             var modeField = new EnumField("Mode", target.mode)

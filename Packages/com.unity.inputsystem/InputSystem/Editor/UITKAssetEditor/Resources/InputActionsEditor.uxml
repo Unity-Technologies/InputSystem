@@ -2,10 +2,8 @@
     <Style src="project://database/Packages/com.unity.inputsystem/InputSystem/Editor/UITKAssetEditor/Resources/InputActionsEditorStyles.uss?fileID=7433441132597879392&amp;guid=7dac9c49a90bca4499371d0adc9b617b&amp;type=3#InputActionsEditorStyles" />
     <ui:VisualElement name="header" class="header">
         <ui:Label text="Input Actions" display-tooltip-when-elided="true" name="title-label" class="header-label" style="width: auto; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0;" />
-        <uie:ToolbarSearchField focusable="true" name="search-actions-text-field" class="search-field" />
-    </ui:VisualElement>
-    <ui:VisualElement name="save-asset-toolbar-container">
-        <uie:Toolbar />
+        <uie:ToolbarSearchField focusable="true" name="search-actions-text-field" class="search-field" style="display: none;" />
+        <ui:VisualElement name="asset-menu" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); width: 16px; flex-shrink: 0; -unity-background-scale-mode: scale-to-fit;" />
     </ui:VisualElement>
     <ui:VisualElement name="control-schemes-toolbar-container">
         <uie:Toolbar>
@@ -13,7 +11,7 @@
                 <uie:ToolbarMenu display-tooltip-when-elided="true" text="No Control Schemes" name="control-schemes-toolbar-menu" style="min-width: 135px;" />
                 <uie:ToolbarMenu display-tooltip-when-elided="true" text="All Devices" enabled="false" name="control-schemes-filter-toolbar-menu" />
             </ui:VisualElement>
-            <ui:VisualElement style="flex-direction: row; justify-content: flex-end;">
+            <ui:VisualElement name="save-asset-toolbar-container" style="flex-direction: row; justify-content: flex-end;">
                 <uie:ToolbarButton text="Save Asset" display-tooltip-when-elided="true" name="save-asset-toolbar-button" style="align-items: auto;" />
                 <uie:ToolbarToggle focusable="false" label="Auto-Save" name="auto-save-toolbar-toggle" style="width: 69px;" />
             </ui:VisualElement>

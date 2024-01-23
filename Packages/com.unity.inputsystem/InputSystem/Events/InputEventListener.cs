@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.InputSystem.Utilities;
 
+#pragma warning disable CA2225
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
@@ -51,6 +52,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </example>
         /// </remarks>
         /// <seealso cref="InputSystem.onEvent"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "_", Justification = "Keep this for future implementation")]
         public static InputEventListener operator+(InputEventListener _, Action<InputEventPtr, InputDevice> callback)
         {
             if (callback == null)
@@ -75,6 +77,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </example>
         /// </remarks>
         /// <seealso cref="InputSystem.onEvent"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "_", Justification = "Keep this for future implementation")]
         public static InputEventListener operator-(InputEventListener _, Action<InputEventPtr, InputDevice> callback)
         {
             if (callback == null)
@@ -144,3 +147,4 @@ namespace UnityEngine.InputSystem.LowLevel
         }
     }
 }
+#pragma warning restore CA2225

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_UI_TK_ASSET_EDITOR
+#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -149,7 +149,8 @@ namespace UnityEngine.InputSystem.Editor
                 return With(selectedActionIndex: i, selectionType: SelectionType.Action);
             }
 
-            throw new InvalidOperationException($"Couldn't find an action map with name '{actionName}'.");
+            // If we cannot find the desired map we should return invalid index
+            return With(selectedActionIndex: -1, selectionType: SelectionType.Action);
         }
 
         public InputActionsEditorState SelectAction(SerializedProperty state)
