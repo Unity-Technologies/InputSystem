@@ -22,10 +22,4 @@ public class AddBuildScenes : MonoBehaviour
         // Set the Build Settings window Scene list
         EditorBuildSettings.scenes = editorBuildSettingsScenes.ToArray();
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
