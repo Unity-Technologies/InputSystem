@@ -205,7 +205,7 @@ namespace UnityEngine.InputSystem.Editor
             addActionButton.SetEnabled(viewState.actionMapCount > 0);
 
             // Don't want to show action properties if there's no actions.
-            m_Root.Q<VisualElement>("properties-container").visible = m_ActionsTreeView.GetTreeCount() > 0;
+            m_Root.Q<VisualElement>("properties-container").Children().OfType<ScrollView>().First().visible = m_ActionsTreeView.GetTreeCount() > 0;
         }
 
         private void RenameNewAction(int id)
