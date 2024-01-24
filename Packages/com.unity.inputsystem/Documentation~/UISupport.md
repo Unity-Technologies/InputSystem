@@ -34,7 +34,7 @@ You can modify, add, or remove bindings to the named actions in the UI action ma
 You can also reset the UI action map to its default bindings by selecting **Reset** from the **More (⋮)** menu, at the top right of the actions editor window. However, this will reset both the 'Player' and 'UI' action maps to their default bindings.
 
 > **Note:**
-> If you have any instances of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your project, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions.
+> If you have an instance of the [Input System UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in your scene, the settings on that component takes priority and are used instead of the UI settings in your project-wide actions.
 
 For versions of Unity prior to Unity 2023.2, the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package has. [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same functionality as  [StandaloneInputModule](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System package instead of the legacy Input Manager to drive UI input.
 
