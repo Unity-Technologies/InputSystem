@@ -477,11 +477,7 @@ partial class CoreTests
         public FakeRemote()
         {
             runtime = new InputTestRuntime();
-            var manager = new InputManager();
-            manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.InitializeData();
-            manager.InstallRuntime(runtime);
-            manager.ApplySettings();
+            var manager = InputManager.CreateAndInitialize(runtime, null, true);
 
             local = new InputRemoting(InputSystem.s_Manager);
             remote = new InputRemoting(manager);
@@ -524,8 +520,8 @@ partial class CoreTests
             }
             if (remoteManager != null)
             {
-                Object.Destroy(remoteManager.m_Settings);
-                remoteManager.Destroy();
+                Object.Destroy(remoteManager.settings);
+                remoteManager.Dispose();
             }
         }
     }

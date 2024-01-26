@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.iOS
             InputSystem.RegisterLayout<iOSStepCounter>();
             // Don't add devices for InputTestRuntime
             // TODO: Maybe there should be a better place for adding device from C#
-            if (InputSystem.s_Manager.m_Runtime is NativeInputRuntime)
+            if (InputSystem.s_Manager.runtime is NativeInputRuntime)
             {
                 if (iOSStepCounter.IsAvailable())
                     InputSystem.AddDevice<iOSStepCounter>();
