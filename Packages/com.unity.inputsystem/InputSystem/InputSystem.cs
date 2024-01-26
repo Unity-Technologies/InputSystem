@@ -2905,7 +2905,7 @@ namespace UnityEngine.InputSystem
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
-                if (s_Manager.m_Settings == value)
+                if (s_Manager.settings == value)
                     return;
 
                 // In the editor, we keep track of the settings asset through EditorBuildSettings.
@@ -3350,8 +3350,8 @@ namespace UnityEngine.InputSystem
         /// <param name="value">The boolean value to set to <see cref="NativeInputRuntime.runInBackground"/></param>
         public static bool runInBackground
         {
-            get => s_Manager.m_Runtime.runInBackground;
-            set => s_Manager.m_Runtime.runInBackground = value;
+            get => s_Manager.runtime.runInBackground;
+            set => s_Manager.runtime.runInBackground = value;
         }
 
         ////REVIEW: restrict metrics to editor and development builds?
@@ -3367,7 +3367,7 @@ namespace UnityEngine.InputSystem
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         internal static RemoteInputPlayerConnection s_RemoteConnection;
 
-        private static void SetUpRemoting()
+        internal static void SetUpRemoting()
         {
             Debug.Assert(s_Manager != null);
 
@@ -3448,7 +3448,7 @@ namespace UnityEngine.InputSystem
 
             if (calledFromCtor)
             {
-                InitializeInPlayer();
+                InitializeInPlayer(null, true);
             }
             else
             {
@@ -3471,11 +3471,26 @@ namespace UnityEngine.InputSystem
         {
             Profiler.BeginSample("InputSystem.InitializeInEditor");
 
-            // This is only necessary after a Domain Reload but otherwise can be skipped.
             bool globalReset = calledFromCtor || !IsDomainReloadDisabledForPlayMode();
 
+            // We must initialize a new InputManager object first thing since other parts
+            // of the init flow depend on it.
             if (globalReset)
-                Reset(runtime: runtime);
+            {
+                if (s_Manager != null)
+                    s_Manager.Dispose();
+
+                // Settings object should get set by an actual InputSettings asset.
+                s_Manager = InputManager.CreateAndInitialize(runtime ?? NativeInputRuntime.instance, null);
+                s_Manager.runtime.onPlayModeChanged = OnPlayModeChange;
+                s_Manager.runtime.onProjectChange = OnProjectChange;
+
+                InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+                InputSystem.PerformDefaultPluginInitialization();
+#endif
+            }
 
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
@@ -3515,13 +3530,9 @@ namespace UnityEngine.InputSystem
                 s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
-                    out InputSettings settingsAsset))
+                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey, out InputSettings settingsAsset))
                 {
-                    if (s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                        ScriptableObject.DestroyImmediate(s_Manager.m_Settings);
-                    s_Manager.m_Settings = settingsAsset;
-                    s_Manager.ApplySettings();
+                    s_Manager.settings = settingsAsset;
                 }
 
                 InputEditorUserSettings.Load();
@@ -3540,7 +3551,7 @@ namespace UnityEngine.InputSystem
             // running in batch mode.
             if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !s_Manager.m_Runtime.isInBatchMode)
+                !s_Manager.runtime.isInBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -3619,7 +3630,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private static void OnProjectChange()
+        internal static void OnProjectChange()
         {
             ////TODO: use dirty count to find whether settings have actually changed
             // May have added, removed, moved, or renamed settings asset. Force a refresh
@@ -3630,7 +3641,7 @@ namespace UnityEngine.InputSystem
             // temporary settings object.
             // NOTE: We access m_Settings directly here to make sure we're not running into asserts
             //       from the settings getter checking it has a valid object.
-            if (EditorUtility.InstanceIDToObject(s_Manager.m_Settings.GetInstanceID()) == null)
+            if (EditorUtility.InstanceIDToObject(s_Manager.settings.GetInstanceID()) == null)
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
@@ -3662,15 +3673,16 @@ namespace UnityEngine.InputSystem
         }
 
 #else
-        private static void InitializeInPlayer(IInputRuntime runtime = null, InputSettings settings = null)
+        internal static void InitializeInPlayer(IInputRuntime runtime, bool loadSettingsAsset)
         {
-            if (settings == null)
-                settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault() ?? ScriptableObject.CreateInstance<InputSettings>();
+            InputSettings settings = null;
+
+            if (loadSettingsAsset)
+                settings = Resources.FindObjectsOfTypeAll<InputSettings>().FirstOrDefault();
 
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
+            s_Manager = InputManager.CreateAndInitialize(runtime ?? NativeInputRuntime.instance, settings);
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
@@ -3691,6 +3703,38 @@ namespace UnityEngine.InputSystem
 
 #endif // UNITY_EDITOR
 
+#if UNITY_INCLUDE_TESTS
+        //
+        // A (hopefully) temporary work-around to being unable to define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        // within the Test-Framework assembly; called from within InputTestStateManager.Reset().
+        //
+        // This code should be removed when Actions init/reset flows are refactored, but we need it for now
+        // so ProjectWideActionstests will pass
+        //
+        internal static void DisableActionsForTests()
+        {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
+            if (s_ProjectWideActions)
+            {
+                s_ProjectWideActions.Disable();
+                s_ProjectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
+                s_ProjectWideActions = null;
+            }
+#endif
+        }
+
+        internal static void EnableActionsForTests()
+        {
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            // Touching the `actions` property will initialise it here (if it wasn't already).
+            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
+            actions?.Enable();
+#endif
+
+        }
+#endif // UNITY_INCLUDE_TESTS
+
         private static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake
@@ -3704,7 +3748,7 @@ namespace UnityEngine.InputSystem
         }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-        private static void PerformDefaultPluginInitialization()
+        internal static void PerformDefaultPluginInitialization()
         {
             UISupport.Initialize();
 
@@ -3763,101 +3807,10 @@ namespace UnityEngine.InputSystem
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
 
-        // For testing, we want the ability to push/pop system state even in the player.
-        // However, we don't want it in release players.
+
+
+
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        /// <summary>
-        /// Return the input system to its default state.
-        /// </summary>
-        private static void Reset(bool enableRemoting = false, IInputRuntime runtime = null)
-        {
-            Profiler.BeginSample("InputSystem.Reset");
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Avoid touching the `actions` property directly here, to prevent unwanted initialisation.
-            if (s_ProjectWideActions)
-            {
-                s_ProjectWideActions.Disable();
-                s_ProjectWideActions?.OnSetupChanged();  // Cleanup ActionState (remove unused controls after disabling)
-                s_ProjectWideActions = null;
-            }
-#endif
-
-            // Some devices keep globals. Get rid of them by pretending the devices
-            // are removed.
-            if (s_Manager != null)
-            {
-                foreach (var device in s_Manager.devices)
-                    device.NotifyRemoved();
-
-                s_Manager.UninstallGlobals();
-            }
-
-            // Create temporary settings. In the tests, this is all we need. But outside of tests,d
-            // this should get replaced with an actual InputSettings asset.
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            settings.hideFlags = HideFlags.HideAndDontSave;
-
-            #if UNITY_EDITOR
-            s_Manager = new InputManager();
-            s_Manager.Initialize(runtime ?? NativeInputRuntime.instance, settings);
-
-            s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
-            s_Manager.m_Runtime.onProjectChange = OnProjectChange;
-
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
-
-            if (enableRemoting)
-                SetUpRemoting();
-
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-            PerformDefaultPluginInitialization();
-            #endif
-
-            #else
-            InitializeInPlayer(runtime, settings);
-            #endif
-
-            Mouse.s_PlatformMouseDevice = null;
-
-            InputEventListener.s_ObserverState = default;
-            InputUser.ResetGlobals();
-            EnhancedTouchSupport.Reset();
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Touching the `actions` property will initialise it here (if it wasn't already).
-            // This is the point where we initialise project-wide actions for the Editor, Editor Tests and Player Tests.
-            actions?.Enable();
-#endif
-
-            Profiler.EndSample();
-        }
-
-        /// <summary>
-        /// Destroy the current setup of the input system.
-        /// </summary>
-        /// <remarks>
-        /// NOTE: This also de-allocates data we're keeping in unmanaged memory!
-        /// </remarks>
-        private static void Destroy()
-        {
-            // NOTE: Does not destroy InputSystemObject. We want to destroy input system
-            //       state repeatedly during tests but we want to not create InputSystemObject
-            //       over and over.
-            s_Manager.Destroy();
-            if (s_RemoteConnection != null)
-                Object.DestroyImmediate(s_RemoteConnection);
-            #if UNITY_EDITOR
-            EditorInputControlLayoutCache.Clear();
-            InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
-            #endif
-
-            s_Manager = null;
-            s_RemoteConnection = null;
-            s_Remote = null;
-        }
-
         /// <summary>
         /// Snapshot of the state used by the input system.
         /// </summary>
@@ -3872,105 +3825,15 @@ namespace UnityEngine.InputSystem
             [SerializeField] public RemoteInputPlayerConnection remoteConnection;
             [SerializeField] public InputManager.SerializedState managerState;
             [SerializeField] public InputRemoting.SerializedState remotingState;
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
             [SerializeField] public string systemObject;
-            #endif
+#endif
             ////TODO: make these saved states capable of surviving domain reloads
             [NonSerialized] public ISavedState inputActionState;
             [NonSerialized] public ISavedState touchState;
             [NonSerialized] public ISavedState inputUserState;
         }
-
-        private static Stack<State> s_SavedStateStack;
-
-        internal static State GetSavedState()
-        {
-            return s_SavedStateStack.Peek();
-        }
-
-        /// <summary>
-        /// Push the current state of the input system onto a stack and
-        /// reset the system to its default state.
-        /// </summary>
-        /// <remarks>
-        /// The save stack is not able to survive domain reloads. It is intended solely
-        /// for use in tests.
-        /// </remarks>
-        internal static void SaveAndReset(bool enableRemoting = false, IInputRuntime runtime = null)
-        {
-            if (s_SavedStateStack == null)
-                s_SavedStateStack = new Stack<State>();
-
-            ////FIXME: does not preserve global state in InputActionState
-            ////TODO: preserve InputUser state
-            ////TODO: preserve EnhancedTouchSupport state
-
-            s_SavedStateStack.Push(new State
-            {
-                manager = s_Manager,
-                remote = s_Remote,
-                remoteConnection = s_RemoteConnection,
-                managerState = s_Manager.SaveState(),
-                remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
-                #if UNITY_EDITOR
-                userSettings = InputEditorUserSettings.s_Settings,
-                systemObject = JsonUtility.ToJson(s_SystemObject),
-                #endif
-                inputActionState = InputActionState.SaveAndResetState(),
-                touchState = EnhancedTouch.Touch.SaveAndResetState(),
-                inputUserState = InputUser.SaveAndResetState()
-            });
-
-            Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
-        }
-
-        ////FIXME: this method doesn't restore things like InputDeviceDebuggerWindow.onToolbarGUI
-        /// <summary>
-        /// Restore the state of the system from the last state pushed with <see cref="SaveAndReset"/>.
-        /// </summary>
-        internal static void Restore()
-        {
-            Debug.Assert(s_SavedStateStack != null && s_SavedStateStack.Count > 0);
-
-            // Load back previous state.
-            var state = s_SavedStateStack.Pop();
-
-            state.inputUserState.StaticDisposeCurrentState();
-            state.touchState.StaticDisposeCurrentState();
-            state.inputActionState.StaticDisposeCurrentState();
-
-            // Nuke what we have.
-            Destroy();
-
-            state.inputUserState.RestoreSavedState();
-            state.touchState.RestoreSavedState();
-            state.inputActionState.RestoreSavedState();
-
-            s_Manager = state.manager;
-            s_Remote = state.remote;
-            s_RemoteConnection = state.remoteConnection;
-
-            InputUpdate.Restore(state.managerState.updateState);
-
-            s_Manager.InstallRuntime(s_Manager.m_Runtime);
-            s_Manager.InstallGlobals();
-            s_Manager.ApplySettings();
-
-            #if UNITY_EDITOR
-            InputEditorUserSettings.s_Settings = state.userSettings;
-            JsonUtility.FromJsonOverwrite(state.systemObject, s_SystemObject);
-            #endif
-
-            // Get devices that keep global lists (like Gamepad) to re-initialize them
-            // by pretending the devices have been added.
-            foreach (var device in devices)
-            {
-                device.NotifyAdded();
-                device.MakeCurrent();
-            }
-        }
-
-#endif
+#endif // DEVELOPMENT_BUILD || UNITY_EDITOR
     }
 }

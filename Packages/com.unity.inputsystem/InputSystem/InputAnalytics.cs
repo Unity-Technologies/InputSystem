@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem
 
         public static void Initialize(InputManager manager)
         {
-            Debug.Assert(manager.m_Runtime != null);
+            Debug.Assert(manager.runtime != null);
         }
 
         public static void OnStartup(InputManager manager)
@@ -60,8 +60,8 @@ namespace UnityEngine.InputSystem
             data.old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
             #endif
 
-            manager.m_Runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
-            manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
+            manager.runtime.RegisterAnalyticsEvent(kEventStartup, 10, 100);
+            manager.runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
         public static void OnShutdown(InputManager manager)
@@ -77,8 +77,8 @@ namespace UnityEngine.InputSystem
                 total_event_processing_time = (float)metrics.totalEventProcessingTime,
             };
 
-            manager.m_Runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
-            manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
+            manager.runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
+            manager.runtime.SendAnalyticsEvent(kEventShutdown, data);
         }
 
         /// <summary>
