@@ -16,6 +16,8 @@ using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+using UnityEngine.Tilemaps;
+
 #endif
 
 #if UNITY_EDITOR
@@ -55,13 +57,85 @@ namespace UnityEngine.InputSystem
     ///
     /// Manages devices, layouts, and event processing.
     /// </remarks>
-    internal partial class InputManager
+    internal partial class InputManager : IDisposable
     {
+        private InputManager() { }
+
+        public static InputManager CreateAndInitialize(IInputRuntime runtime, InputSettings settings, bool fakeRemove = false)
+        {
+            var newInst = new InputManager();
+
+            // If settings object wasn't provided, create a temporary settings object for now
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<InputSettings>();
+                settings.hideFlags = HideFlags.HideAndDontSave;
+            }    
+            newInst.m_Settings = settings;
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            newInst.InitializeActions();
+#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
+            newInst.InitializeData();
+            newInst.InstallRuntime(runtime);
+
+            // Skip if initializing for "Fake Remove" manager (in tests)
+            if (!fakeRemove)
+                newInst.InstallGlobals();
+
+            newInst.ApplySettings();
+
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            newInst.ApplyActions();
+#endif
+            return newInst;
+        }
+
+#region Dispose implementation
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // Notify devices are being removed but don't actually removed them; no point when disposing
+                    for (var i = 0; i < m_DevicesCount; ++i)
+                        m_Devices[i].NotifyRemoved();
+
+                    m_StateBuffers.FreeAll();
+                    UninstallGlobals();
+
+                    // If we're still holding the "temporary" settings object make sure to delete it
+                    if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                        Object.DestroyImmediate(m_Settings);
+
+                    // Project-wide Actions are never temporary so we do not destroy them.
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        ~InputManager()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        private bool disposedValue;
+#endregion
+
         public ReadOnlyArray<InputDevice> devices => new ReadOnlyArray<InputDevice>(m_Devices, 0, m_DevicesCount);
 
         public TypeTable processors => m_Processors;
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
+        internal IInputRuntime runtime => m_Runtime;
 
         public InputMetrics metrics
         {
@@ -91,13 +165,16 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                Debug.Assert(m_Settings != null);
                 return m_Settings;
             }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
+
+                // Delete the "temporary" settings if necessary
+                if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                    ScriptableObject.DestroyImmediate(m_Settings);
 
                 if (m_Settings == value)
                     return;
@@ -1769,45 +1846,6 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime, InputSettings settings)
-        {
-            Debug.Assert(settings != null);
-
-            m_Settings = settings;
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            InitializeActions();
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            InitializeData();
-            InstallRuntime(runtime);
-            InstallGlobals();
-
-            ApplySettings();
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            ApplyActions();
-            #endif
-        }
-
-        internal void Destroy()
-        {
-            // There isn't really much of a point in removing devices but we still
-            // want to clear out any global state they may be keeping. So just tell
-            // the devices that they got removed without actually removing them.
-            for (var i = 0; i < m_DevicesCount; ++i)
-                m_Devices[i].NotifyRemoved();
-
-            // Free all state memory.
-            m_StateBuffers.FreeAll();
-
-            // Uninstall globals.
-            UninstallGlobals();
-
-            // Destroy settings if they are temporary.
-            if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                Object.DestroyImmediate(m_Settings);
-
-            // Project-wide Actions are never temporary so we do not destroy them.
-        }
 
 #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Initialize project-wide actions:
@@ -2113,12 +2151,12 @@ namespace UnityEngine.InputSystem
         private bool m_HaveSentStartupAnalytics;
         #endif
 
-        internal IInputRuntime m_Runtime;
-        internal InputMetrics m_Metrics;
-        internal InputSettings m_Settings;
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        private IInputRuntime m_Runtime;
+        private InputMetrics m_Metrics;
+        private InputSettings m_Settings;
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private InputActionAsset m_Actions;
-        #endif
+#endif
 
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
@@ -2564,6 +2602,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal void ApplySettings()
         {
+            Debug.Assert(m_Settings != null);
+
             // Sync update mask.
             var newUpdateMask = InputUpdateType.Editor;
             if ((m_UpdateMask & InputUpdateType.BeforeRender) != 0)
@@ -3917,8 +3957,16 @@ namespace UnityEngine.InputSystem
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
 
-            if (m_Settings != null)
+            // Cached settings might be null if the ScriptableObject was destroyed; create new default instance in this case.
+            if (state.settings == null)
+            {
+                state.settings = ScriptableObject.CreateInstance<InputSettings>();
+                state.settings.hideFlags = HideFlags.HideAndDontSave;
+            }
+
+            if (m_Settings != null && m_Settings != state.settings)
                 Object.DestroyImmediate(m_Settings);
+
             m_Settings = state.settings;
 
             #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
@@ -4076,7 +4124,6 @@ namespace UnityEngine.InputSystem
 
             return true;
         }
-
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD
     }
 }

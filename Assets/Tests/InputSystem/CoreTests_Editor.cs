@@ -71,6 +71,19 @@ partial class CoreTests
         }
     }
 
+    private void SimulateDomainReload()
+    {
+        // This quite invasively goes into InputSystem internals. Unfortunately, we
+        // have no proper way of simulating domain reloads ATM. So we directly call various
+        // internal methods here in a sequence similar to what we'd get during a domain reload.
+        // Since we're faking it, pass 'true' for calledFromCtor param.
+
+        InputSystem.s_SystemObject.OnBeforeSerialize();
+        InputSystem.s_SystemObject = null;
+        InputSystem.s_Manager = null; // Do NOT Dispose()! The native memory cannot be freed as it's reference by saved state
+        InputSystem.InitializeInEditor(true, runtime);
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_PackageVersionAndAssemblyVersionAreTheSame()
@@ -147,11 +160,11 @@ partial class CoreTests
         }.ToJson());
         InputSystem.Update();
 
-        InputSystem.SaveAndReset();
+        m_StateManager.SaveAndReset(false, null);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
 
-        InputSystem.Restore();
+        m_StateManager.Restore();
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("layout").EqualTo("MyDevice").And.TypeOf<Gamepad>());
@@ -195,11 +208,11 @@ partial class CoreTests
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
 
-        InputSystem.SaveAndReset();
+        m_StateManager.SaveAndReset(false, null);
 
         Assert.That(InputSystem.devices, Is.Empty);
 
-        var state = InputSystem.GetSavedState();
+        var state = m_StateManager.GetSavedState();
         var manager = InputSystem.s_Manager;
 
         manager.m_SavedAvailableDevices = state.managerState.availableDevices;
@@ -209,7 +222,7 @@ partial class CoreTests
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
 
-        InputSystem.Restore();
+        m_StateManager.Restore();
     }
 
     [Test]
@@ -350,7 +363,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
-        InputSystem.SaveAndReset();
+        m_StateManager.SaveAndReset(false, null);
 
         var receivedOnEvent = 0;
         var receivedOnDeviceChange = 0;
@@ -358,7 +371,7 @@ partial class CoreTests
         InputSystem.onEvent += (e, d) => ++ receivedOnEvent;
         InputSystem.onDeviceChange += (c, d) => ++ receivedOnDeviceChange;
 
-        InputSystem.Restore();
+        m_StateManager.Restore();
 
         var device = InputSystem.AddDevice("Gamepad");
         InputSystem.QueueStateEvent(device, new GamepadState());
@@ -375,8 +388,8 @@ partial class CoreTests
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
         InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        m_StateManager.SaveAndReset(false, null);
+        m_StateManager.Restore();
 
         var device = InputSystem.AddDevice("TestLayout");
 
