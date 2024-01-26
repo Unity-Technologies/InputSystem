@@ -116,7 +116,6 @@ namespace UnityEngine.InputSystem.Editor
             AssetDatabase.SaveAssets();
         }
 
-
 #if UNITY_2023_2_OR_NEWER
         /// <summary>
         /// Checks if the default UI action map has been modified or removed, to let the user know if their changes will
@@ -152,7 +151,7 @@ namespace UnityEngine.InputSystem.Editor
 
 #endif
         /// <summary>
-        /// Reset project wide input actions asset 
+        /// Reset project wide input actions asset
         /// </summary>
         /// <param name="asset"></param>
         internal static void ResetActionAsset()
@@ -190,7 +189,6 @@ namespace UnityEngine.InputSystem.Editor
                 AssetDatabase.SaveAssets();
             }
         }
-
 
         /// <summary>
         /// Updates the input action references in the asset by updating names, removing dangling references
