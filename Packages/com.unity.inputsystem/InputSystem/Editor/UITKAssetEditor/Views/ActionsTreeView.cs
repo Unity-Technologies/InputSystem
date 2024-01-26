@@ -37,6 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             m_GuidToTreeViewId = new Dictionary<Guid, int>();
             m_ActionsTreeView.selectionType = UIElements.SelectionType.Single;
             m_ActionsTreeView.makeItem = () => new InputActionsTreeViewItem();
+            m_ActionsTreeView.reorderable = true;
             m_ActionsTreeView.bindItem = (e, i) =>
             {
                 var item = m_ActionsTreeView.GetItemDataForIndex<ActionOrBindingData>(i);
@@ -132,9 +133,12 @@ namespace UnityEngine.InputSystem.Editor
                 }
             };
 
+            m_ActionsTreeView.RegisterCallback<DragUpdatedEvent>(OnDrag);
+            m_ActionsTreeView.RegisterCallback<DragPerformEvent>(OnDragPerformed);
             m_ActionsTreeView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ActionsTreeView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
-            m_ActionsTreeView.AddManipulator(new DragManipulator(OnDragStarted));
+            //m_ActionsTreeView.AddManipulator(new DragManipulator(OnDragStarted));
+            //m_ActionsTreeView.AddManipulator(new DropManipulator(OnDrop));
 
             CreateSelector(Selectors.GetActionsForSelectedActionMap, Selectors.GetActionMapCount,
                 (_, count, state) =>
@@ -149,6 +153,16 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             addActionButton.clicked += AddAction;
+        }
+
+        void OnDrag(DragUpdatedEvent evt)
+        {
+            m_ActionsTreeView.ReleaseMouse();
+        }
+
+        void OnDragPerformed(DragPerformEvent evt)
+        {
+            m_ActionsTreeView.ReleaseMouse();
         }
 
         void OnDragStarted(PointerMoveEvent evt)

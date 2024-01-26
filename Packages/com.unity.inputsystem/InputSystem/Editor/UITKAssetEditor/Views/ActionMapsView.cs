@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView = m_Root?.Q<ListView>("action-maps-list-view");
             m_ListView.selectionType = UIElements.SelectionType.Single;
-
+            m_ListView.reorderable = true;
             m_ListViewSelectionChangeFilter = new CollectionViewSelectionChangeFilter(m_ListView);
             m_ListViewSelectionChangeFilter.selectedIndicesChanged += (selectedIndices) =>
             {
