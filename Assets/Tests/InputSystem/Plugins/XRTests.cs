@@ -729,6 +729,35 @@ internal class XRTests : CoreTestsFixture
     }
 
     [Test]
+    [Category("Components")]
+    public void Components_TrackedPoseDriver_RetainsPoseWhenNoTrackedDeviceIsConnected()
+    {
+        // Tests/reproduces the scenario described in https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699
+        // i.e. that rotation and/or position is not updated if device is not connected and track state isn't ignored.
+
+        var position = new Vector3(1f, 2f, 3f);
+        var rotation = new Quaternion(0.09853293f, 0.09853293f, 0.09853293f, 0.9853293f);
+
+        var go = new GameObject();
+        go.transform.position = position;
+        go.transform.rotation = rotation;
+
+        var tpd = go.AddComponent<TrackedPoseDriver>();
+        tpd.updateType = TrackedPoseDriver.UpdateType.Update;
+        tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+        tpd.ignoreTrackingState = false;
+        var transform = tpd.transform;
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(transform.position, Is.EqualTo(position));
+        Assert.That(transform.rotation, Is.EqualTo(rotation));
+    }
+
+    [Test]
     [Category("Layouts")]
     public void Layouts_PoseControlsCanBeCreatedBySubcontrols()
     {
