@@ -34,7 +34,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
 - Fixed missing name in window title for Input Action assets.
-- Fixed InputManager.asset file growing in size on each Reset call (ISX-1839)
+- Fixed InputManager.asset file growing in size on each Reset call.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
