@@ -1,6 +1,4 @@
-using System;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -39,20 +37,33 @@ namespace UnityEngine.InputSystem.Editor
             evt.StopImmediatePropagation();
             DragAndDrop.AcceptDrag();
             DroppedPerformedCallback.Invoke(evt);
+            Reset();
         }
 
+        private int initialIndex = -1;
         void OnDragUpdatedEvent(DragUpdatedEvent evt)
         {
             if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is not null) //TODO
             {
-                (target as ListView)?.Focus(); //TODO focus element on the listview
+                if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is not int) //TODO
+                    return;
+                (target as ListView)?.Focus();
+                if (initialIndex < 0)
+                    initialIndex = ((ListView)target).selectedIndex;
+                (target as ListView)?.SetSelectionWithoutNotify(new[] {(int)target.panel.Pick(evt.mousePosition).FindAncestorUserData()});
                 DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
                 evt.StopImmediatePropagation();
             }
             else
-            {
-                otherVerticalList.Focus();
-            }
+                Reset();
+        }
+
+        void Reset()
+        {
+            (otherVerticalList as TreeView)?.Focus();
+            if (initialIndex >= 0)
+                (target as ListView)?.SetSelectionWithoutNotify(new[] {initialIndex});
+            initialIndex = -1;
         }
     }
 }

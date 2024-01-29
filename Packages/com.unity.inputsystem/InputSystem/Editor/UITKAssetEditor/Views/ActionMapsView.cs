@@ -2,7 +2,6 @@
 using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
@@ -76,15 +75,15 @@ namespace UnityEngine.InputSystem.Editor
 
             //TODO
             //get treeview item (all tree or just an item? confirm this)
-            var actionOrBinding = (ActionOrBindingData)DragAndDrop.GetGenericData("tree");
+            // var actionOrBinding = (ActionOrBindingData)DragAndDrop.GetGenericData("tree");
 
             // get destination action map index and name
-            var listView = (ListView)evt.target;
-            var destinationActionMapIndex = (int)listView.panel.Pick(evt.mousePosition).FindAncestorUserData();
-            var destinationActionMapName = (string)listView.itemsSource[destinationActionMapIndex];
+            // var listView = (ListView)evt.target;
+            // var destinationActionMapIndex = (int)listView.panel.Pick(evt.mousePosition).FindAncestorUserData();
+            // var destinationActionMapName = (string)listView.itemsSource[destinationActionMapIndex];
 
             // TODO get original data (copy)
-            Dispatch(Commands.SelectAction(actionOrBinding.name));
+            // Dispatch(Commands.SelectAction(actionOrBinding.name));
             // TODO paste data into destination action map
             // TODO remove action from source action map where it was before
         }
