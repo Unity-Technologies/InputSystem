@@ -12,65 +12,47 @@ namespace UnityEngine.InputSystem.Editor
     public class DropManipulator : Manipulator
     {
         EventCallback<DragPerformEvent> DroppedPerformedCallback;
+        VisualElement otherVerticalList;
 
-        public DropManipulator(EventCallback<DragPerformEvent> droppedPerformedCallback)
+        public DropManipulator(EventCallback<DragPerformEvent> droppedPerformedCallback, VisualElement otherVerticalList)
         {
             DroppedPerformedCallback = droppedPerformedCallback;
+            this.otherVerticalList = otherVerticalList;
         }
 
         protected override void RegisterCallbacksOnTarget()
         {
-            target.RegisterCallback<DragEnterEvent>(OnDragEnterEvent);
-            target.RegisterCallback<DragLeaveEvent>(OnDragLeaveEvent);
-            target.RegisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
-            target.RegisterCallback<DragPerformEvent>(OnDragPerformEvent);
-            target.RegisterCallback<DragExitedEvent>(OnDragExitedEvent);
+            otherVerticalList.RegisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
+            otherVerticalList.RegisterCallback<DragPerformEvent>(OnDragPerformEvent, TrickleDown.TrickleDown);
         }
 
         protected override void UnregisterCallbacksFromTarget()
         {
-            target.UnregisterCallback<DragEnterEvent>(OnDragEnterEvent);
-            target.UnregisterCallback<DragLeaveEvent>(OnDragLeaveEvent);
-            target.UnregisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
-            target.UnregisterCallback<DragPerformEvent>(OnDragPerformEvent);
-            target.UnregisterCallback<DragExitedEvent>(OnDragExitedEvent);
-        }
-
-        void OnDragExitedEvent(DragExitedEvent evt)
-        {
-            Debug.Log("Drag exited");
-            if (DragManipulator.dragging)
-            {
-                DragManipulator.dragging = false;
-                DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-            }
+            otherVerticalList.UnregisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
+            otherVerticalList.UnregisterCallback<DragPerformEvent>(OnDragPerformEvent, TrickleDown.TrickleDown);
         }
 
         void OnDragPerformEvent(DragPerformEvent evt)
         {
+            if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is null) //TODO
+                return;
+            evt.StopImmediatePropagation();
             DragAndDrop.AcceptDrag();
             DroppedPerformedCallback.Invoke(evt);
-            DragManipulator.dragging = false;
         }
 
         void OnDragUpdatedEvent(DragUpdatedEvent evt)
         {
-            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-            evt.StopImmediatePropagation();
-        }
-
-        void OnDragLeaveEvent(DragLeaveEvent evt)
-        {
-            DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
-        }
-
-        void OnDragEnterEvent(DragEnterEvent evt)
-        {
-            Debug.Log("Drag enter event " + evt.currentTarget);
-
-            //TODO
-            // This event can be used to mae sure that drop is only allowed on the correct type of element that started
-            // the drag.
+            if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is not null) //TODO
+            {
+                (target as ListView)?.Focus(); //TODO focus element on the listview
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                evt.StopImmediatePropagation();
+            }
+            else
+            {
+                otherVerticalList.Focus();
+            }
         }
     }
 }

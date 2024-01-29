@@ -59,7 +59,9 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ListView.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             m_ListView.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
-            m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler));
+            var treeView = m_Root.Q<TreeView>("actions-tree-view");
+            m_ListView.AddManipulator(new DropManipulator(OnDroppedHandler, treeView));
+
 
             CreateSelector(s => new ViewStateCollection<string>(Selectors.GetActionMapNames(s)),
                 (actionMapNames, state) => new ViewState(Selectors.GetSelectedActionMap(state), actionMapNames));
