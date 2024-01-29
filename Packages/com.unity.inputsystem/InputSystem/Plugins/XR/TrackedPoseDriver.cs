@@ -491,7 +491,8 @@ namespace UnityEngine.InputSystem.XR
             {
                 // Treat an Input Action Reference with no reference the same as
                 // an enabled Input Action with no authored bindings, and allow driving the Transform pose.
-                m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
+                // TODO Remove if suggested fix seems valid. m_CurrentTrackingState = TrackingStates.Position | TrackingStates.Rotation;
+                m_CurrentTrackingState = TrackingStates.None;
                 return;
             }
 
