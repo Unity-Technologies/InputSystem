@@ -34,6 +34,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
 - Fixed missing name in window title for Input Action assets.
+- Fixed a bug that would case `TrackedBasedDriver` to update position and rotation when no HMD device is connected [ISXB-699](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699) instead of keeping it unchanged.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
