@@ -173,15 +173,15 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             var view = new InputActionsEditorView(rootVisualElement, stateContainer);
             view.postSaveAction += PostSaveAction;
-            
-            // Hide header when used as a window since redundant with window title and/or tab title 
+
+            // Hide header when used as a window since redundant with window title and/or tab title
             var element = rootVisualElement.Q("header");
             if (element != null)
             {
                 element.style.visibility = Visibility.Hidden;
                 element.style.display = DisplayStyle.None;
             }
-            
+
             stateContainer.Initialize();
         }
 

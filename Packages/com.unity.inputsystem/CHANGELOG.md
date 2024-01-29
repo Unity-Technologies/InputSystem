@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 - From 2023.2 forward: UI toolkit now uses the "UI" action map of project-wide actions as their default input actions. Previously, the actions were hardcoded and were based on `DefaultInputActions` asset which didn't allow user changes. Also, removing bindings or renaming the 'UI' action map of project wide actions will break UI input for UI toolkit.
+- Removed "Input Actions" title from UI-Toolkit Input Action Editor when used in a window and not embedded in Project Settings.
 
 ### Added
 - Added new methods and properties to [`InputAction`](xref:UnityEngine.InputSystem.InputAction):
@@ -34,6 +35,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue where composite part dropdown manipulates binding path and leaves composite part field unchanged.
 - Fixed lingering highlight effect on Save Asset button after clicking.
 - Fixed missing name in window title for Input Action assets.
+- Fixed Project Settings header title styling for Input Actions editor.
 
 ## [1.8.0-pre.2] - 2023-11-09
 
