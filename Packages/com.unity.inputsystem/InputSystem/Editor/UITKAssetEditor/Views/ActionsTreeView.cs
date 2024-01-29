@@ -193,6 +193,13 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void RedrawUI(ViewState viewState)
         {
+            // It's possible for RedrawUI to be called when m_Root is empty, throwing errors in the console.
+            // This can happen when the view is discarded immediately after being loaded, i.e. jumping to the input settings
+            // page in Preferences when the last window shown there was the main view, which the editor (briefly) loads first.
+            // Compare against the number of m_ChildViews as a cheap way to know we should skip redrawing. (ISX-1721)
+            if (m_Root.childCount != ChildViewCount())
+                return;
+
             m_ActionsTreeView.Clear();
             m_ActionsTreeView.SetRootItems(viewState.treeViewData);
             m_ActionsTreeView.Rebuild();

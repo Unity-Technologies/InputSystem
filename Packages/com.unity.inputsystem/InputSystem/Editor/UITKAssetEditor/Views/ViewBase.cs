@@ -65,6 +65,11 @@ namespace UnityEngine.InputSystem.Editor
             view.DestroyView();
         }
 
+        public int ChildViewCount()
+        {
+            return m_ChildViews.Count;
+        }
+
         public void Dispatch(Command command)
         {
             stateContainer.Dispatch(command);
