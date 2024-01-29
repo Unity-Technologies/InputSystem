@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Editor
             // Note that focused element will be set if we are navigating back to
             // an existing instance when switching setting in the left project settings panel since
             // this doesn't recreate the editor.
-            if (m_RootVisualElement.focusController.focusedElement != null)
+            if (m_RootVisualElement.focusController?.focusedElement != null)
                 OnEditFocus();
         }
 
