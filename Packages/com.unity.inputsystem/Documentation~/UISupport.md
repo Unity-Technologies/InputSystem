@@ -13,7 +13,7 @@ uid: input-system-ui-support
 * [UI and game input](#ui-and-game-input)
 * [UI Toolkit support](#ui-toolkit-support)
 
-You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html).
+You can use the Input System package to control any in-game UI bindings created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html).
 
 
 From **Unity 2023.2** onwards, the Input System and UI Toolkit are fully integrated with each other. To configure UI Input you can configure the UI action map of [project-wide actions](Workflow-Actions.html) in **Project Settings > Input System Package > Input Actions**.
@@ -29,7 +29,7 @@ When using [project-wide actions](Workflow-Actions.html) in Unity 2023.2 and new
 
 ![ProjectSettingsInputActionsUIActionMap](Images/ProjectSettingsInputActionsUIActionMap.png)
 
-You can modify, add, or remove bindings to the named actions in the UI action map to suit your project, however in order to remain compatible with UI Toolkit, the name of the action map ("UI") and the names of the actions it contains ("Navigate", "Submit", "Cancel", etc) must remain the same. This is because the actions names match the action property names in the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class.
+You can modify, add, or remove bindings to the named actions in the UI action map to suit your project, however in order to remain compatible with UI Toolkit, the name of the action map ("UI") and the names of the actions it contains ("Navigate", "Submit", "Cancel", etc) and their respective *Action Types* must remain the same to be compatible with expectations indirectly defined by the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class.
 
 You can also reset the UI action map to its default bindings by selecting **Reset** from the **More (⋮)** menu, at the top right of the actions editor window. However, this will reset both the 'Player' and 'UI' action maps to their default bindings.
 
