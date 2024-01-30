@@ -24,8 +24,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private bool m_IsEditing;
 
-        DropManipulator m_Manipulator;
-
         public InputActionsTreeViewItem()
         {
             var template = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(

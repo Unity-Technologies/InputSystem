@@ -4,33 +4,33 @@ using UnityEngine.UIElements;
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
-    /// Class to handle drop events on a UI element.
+    /// Class to handle drop from the actions tree view to the action maps list view.
     /// </summary>
-    /// Created by setting a callback to the constructor that will run only when the drop is performed.
     public class DropManipulator : Manipulator
     {
-        EventCallback<DragPerformEvent> DroppedPerformedCallback;
-        VisualElement otherVerticalList;
+        private EventCallback<DragPerformEvent> DroppedPerformedCallback;
+        private VisualElement m_OtherVerticalList;
+        private ListView listView => target as ListView;
 
         public DropManipulator(EventCallback<DragPerformEvent> droppedPerformedCallback, VisualElement otherVerticalList)
         {
             DroppedPerformedCallback = droppedPerformedCallback;
-            this.otherVerticalList = otherVerticalList;
+            m_OtherVerticalList = otherVerticalList;
         }
 
         protected override void RegisterCallbacksOnTarget()
         {
-            otherVerticalList.RegisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
-            otherVerticalList.RegisterCallback<DragPerformEvent>(OnDragPerformEvent, TrickleDown.TrickleDown);
+            m_OtherVerticalList.RegisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
+            m_OtherVerticalList.RegisterCallback<DragPerformEvent>(OnDragPerformEvent, TrickleDown.TrickleDown);
         }
 
         protected override void UnregisterCallbacksFromTarget()
         {
-            otherVerticalList.UnregisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
-            otherVerticalList.UnregisterCallback<DragPerformEvent>(OnDragPerformEvent, TrickleDown.TrickleDown);
+            m_OtherVerticalList.UnregisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent, TrickleDown.TrickleDown);
+            m_OtherVerticalList.UnregisterCallback<DragPerformEvent>(OnDragPerformEvent, TrickleDown.TrickleDown);
         }
 
-        void OnDragPerformEvent(DragPerformEvent evt)
+        private void OnDragPerformEvent(DragPerformEvent evt)
         {
             if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is null) //TODO
                 return;
@@ -40,17 +40,17 @@ namespace UnityEngine.InputSystem.Editor
             Reset();
         }
 
-        private int initialIndex = -1;
-        void OnDragUpdatedEvent(DragUpdatedEvent evt)
+        private int m_InitialIndex = -1;
+        private void OnDragUpdatedEvent(DragUpdatedEvent evt)
         {
-            if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is not null) //TODO
+            var treeViewItem = target.panel.Pick(evt.mousePosition)?.parent;
+            if (treeViewItem is InputActionMapsTreeViewItem mapItem)
             {
-                if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is not int) //TODO
-                    return;
-                (target as ListView)?.Focus();
-                if (initialIndex < 0)
-                    initialIndex = ((ListView)target).selectedIndex;
-                (target as ListView)?.SetSelectionWithoutNotify(new[] {(int)target.panel.Pick(evt.mousePosition).FindAncestorUserData()});
+                listView?.Focus();
+                if (m_InitialIndex < 0 && listView != null)
+                    m_InitialIndex = listView.selectedIndex;
+                //select map item to visualize the drop
+                listView?.SetSelectionWithoutNotify(new[] { (int)mapItem.userData }); //the user data contains the index of the map item
                 DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
                 evt.StopImmediatePropagation();
             }
@@ -58,12 +58,13 @@ namespace UnityEngine.InputSystem.Editor
                 Reset();
         }
 
-        void Reset()
+        private void Reset()
         {
-            (otherVerticalList as TreeView)?.Focus();
-            if (initialIndex >= 0)
-                (target as ListView)?.SetSelectionWithoutNotify(new[] {initialIndex});
-            initialIndex = -1;
+            var treeView = m_OtherVerticalList as TreeView;
+            treeView?.Focus();
+            if (m_InitialIndex >= 0)
+                listView?.SetSelectionWithoutNotify(new[] {m_InitialIndex});
+            m_InitialIndex = -1;
         }
     }
 }
