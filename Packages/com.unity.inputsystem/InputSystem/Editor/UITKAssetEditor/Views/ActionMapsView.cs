@@ -69,23 +69,10 @@ namespace UnityEngine.InputSystem.Editor
             ContextMenu.GetContextMenuForActionMapListView(this, m_ListView.parent);
         }
 
-        void OnDroppedHandler(DragPerformEvent evt)
+        void OnDroppedHandler(int mapIndex)
         {
-            Debug.Log("Dropped performed");
-
-            //TODO
-            //get treeview item (all tree or just an item? confirm this)
-            // var actionOrBinding = (ActionOrBindingData)DragAndDrop.GetGenericData("tree");
-
-            // get destination action map index and name
-            // var listView = (ListView)evt.target;
-            // var destinationActionMapIndex = (int)listView.panel.Pick(evt.mousePosition).FindAncestorUserData();
-            // var destinationActionMapName = (string)listView.itemsSource[destinationActionMapIndex];
-
-            // TODO get original data (copy)
-            // Dispatch(Commands.SelectAction(actionOrBinding.name));
-            // TODO paste data into destination action map
-            // TODO remove action from source action map where it was before
+            Dispatch(Commands.CutActionsOrBindings());
+            Dispatch(Commands.PasteActionIntoActionMap(mapIndex));
         }
 
         private Button addActionMapButton => m_Root?.Q<Button>("add-new-action-map-button");

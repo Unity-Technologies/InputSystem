@@ -149,6 +149,17 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command PasteActionIntoActionMap(int actionMapIndex)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state, true, actionMapIndex);
+                if (lastPastedElement != null)
+                    state.serializedObject.ApplyModifiedProperties();
+                return state;
+            };
+        }
+
         public static Command PasteActionFromActionMap()
         {
             return (in InputActionsEditorState state) =>

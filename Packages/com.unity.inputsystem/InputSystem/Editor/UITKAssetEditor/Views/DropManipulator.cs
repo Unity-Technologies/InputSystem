@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -8,11 +11,12 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     public class DropManipulator : Manipulator
     {
-        private EventCallback<DragPerformEvent> DroppedPerformedCallback;
+        private EventCallback<int> DroppedPerformedCallback;
         private VisualElement m_OtherVerticalList;
         private ListView listView => target as ListView;
+        private TreeView treeView => m_OtherVerticalList as TreeView;
 
-        public DropManipulator(EventCallback<DragPerformEvent> droppedPerformedCallback, VisualElement otherVerticalList)
+        public DropManipulator(EventCallback<int> droppedPerformedCallback, VisualElement otherVerticalList)
         {
             DroppedPerformedCallback = droppedPerformedCallback;
             m_OtherVerticalList = otherVerticalList;
@@ -32,11 +36,16 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDragPerformEvent(DragPerformEvent evt)
         {
-            if (target.panel.Pick(evt.mousePosition).FindAncestorUserData() is null) //TODO
+            var treeViewItem = target.panel.Pick(evt.mousePosition)?.parent;
+            if (treeViewItem is not InputActionMapsTreeViewItem mapItem)
+                return;
+            var index = treeView.selectedIndices.First();
+            var draggedItem = treeView.GetItemDataForIndex<ActionOrBindingData>(index);
+            if (!draggedItem.isAction)
                 return;
             evt.StopImmediatePropagation();
             DragAndDrop.AcceptDrag();
-            DroppedPerformedCallback.Invoke(evt);
+            DroppedPerformedCallback.Invoke((int)mapItem.userData);
             Reset();
         }
 
@@ -60,7 +69,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Reset()
         {
-            var treeView = m_OtherVerticalList as TreeView;
             treeView?.Focus();
             if (m_InitialIndex >= 0)
                 listView?.SetSelectionWithoutNotify(new[] {m_InitialIndex});

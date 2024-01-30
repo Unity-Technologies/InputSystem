@@ -155,21 +155,22 @@ namespace UnityEngine.InputSystem.Editor
             return s_lastAddedElement;
         }
 
-        public static SerializedProperty PasteActionsOrBindingsFromClipboard(InputActionsEditorState state, bool addLast = false)
+        public static SerializedProperty PasteActionsOrBindingsFromClipboard(InputActionsEditorState state, bool addLast = false, int mapIndex = -1)
         {
             s_lastAddedElement = null;
             s_State = state;
             var typeOfCopiedData = GetCopiedClipboardType();
             if (typeOfCopiedData == typeof(InputAction))
-                PasteActionsFromClipboard(state, addLast);
+                PasteActionsFromClipboard(state, addLast, mapIndex);
             if (typeOfCopiedData == typeof(InputBinding))
                 PasteBindingsFromClipboard(state);
             return s_lastAddedElement;
         }
 
-        private static void PasteActionsFromClipboard(InputActionsEditorState state, bool addLast)
+        private static void PasteActionsFromClipboard(InputActionsEditorState state, bool addLast, int mapIndex)
         {
-            var actionMap = Selectors.GetSelectedActionMap(state)?.wrappedProperty;
+            var actionMap = mapIndex >= 0 ? Selectors.GetActionMapAtIndex(state, mapIndex)?.wrappedProperty
+                : Selectors.GetSelectedActionMap(state)?.wrappedProperty;
             var actionArray = actionMap?.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             if (actionArray == null) return;
             var index = state.selectedActionIndex;
