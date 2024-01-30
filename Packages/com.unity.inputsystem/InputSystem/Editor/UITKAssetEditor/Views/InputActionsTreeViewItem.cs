@@ -41,60 +41,8 @@ namespace UnityEngine.InputSystem.Editor
             renameTextfield.selectAllOnMouseUp = false;
 
 
-            // RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
-            // RegisterCallback<DragEnterEvent>(OnDragEnterEvent);
-            // RegisterCallback<DragLeaveEvent>(OnDragLeaveEvent);
-            // RegisterCallback<DragUpdatedEvent>(OnDragUpdatedEvent);
-            // RegisterCallback<DragPerformEvent>(OnDragPerformEvent);
-            // RegisterCallback<DragExitedEvent>(OnDragExitedEvent);
-
+            RegisterCallback<MouseDownEvent>(OnMouseDownEventForRename);
             renameTextfield.RegisterCallback<FocusOutEvent>(e => OnEditTextFinished());
-        }
-
-        void OnDragExitedEvent(DragExitedEvent evt)
-        {
-            Debug.Log("Drag exited");
-            // ((Label)evt.target).style.backgroundColor = Color.clear;
-            object draggedLabel = DragAndDrop.GetGenericData("string");
-            if (DragManipulator.dragging)
-            {
-                DragManipulator.dragging = false;
-            }
-        }
-
-        void OnDragPerformEvent(DragPerformEvent evt)
-        {
-            DragAndDrop.AcceptDrag();
-            object data = DragAndDrop.GetGenericData("string");
-            Debug.Log("Drag performed with data: " + data + "to target: " + evt.currentTarget);
-            DragManipulator.dragging = false;
-        }
-
-        void OnDragUpdatedEvent(DragUpdatedEvent evt)
-        {
-            Debug.Log("Drag UPDATE event " + (evt.target as VisualElement));
-            DragAndDrop.visualMode = DragAndDropVisualMode.Move;
-            // Unclear why we need this, but saw it in another example.
-            // evt.StopPropagation();
-        }
-
-        void OnDragLeaveEvent(DragLeaveEvent evt)
-        {
-            Debug.Log("Drag leave");
-            // ((Label)evt.target).style.backgroundColor = Color.clear;
-        }
-
-        void OnDragEnterEvent(DragEnterEvent evt)
-        {
-            Debug.Log("Drag enter event " + (evt.target as VisualElement));
-
-            // This makes sure that drop is only allowed on the correct type of element that started the drag.
-            // The drag element will set a string in the DragAndDrop generic data, which we can use to check if the
-            // drop is allowed.
-            if (DragAndDrop.GetGenericData("string") != null)
-            {
-                // ((Label)evt.target).style.backgroundColor = Color.gray;
-            }
         }
 
         public Label label => this.Q<Label>();
