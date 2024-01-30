@@ -55,7 +55,6 @@ namespace UnityEngine.InputSystem.Editor
             var treeViewItem = target.panel.Pick(evt.mousePosition)?.parent;
             if (treeViewItem is InputActionMapsTreeViewItem mapItem)
             {
-                listView?.Focus();
                 if (m_InitialIndex < 0 && listView != null)
                     m_InitialIndex = listView.selectedIndex;
                 //select map item to visualize the drop
@@ -69,7 +68,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void Reset()
         {
-            treeView?.Focus();
             if (m_InitialIndex >= 0)
                 listView?.SetSelectionWithoutNotify(new[] {m_InitialIndex});
             m_InitialIndex = -1;
