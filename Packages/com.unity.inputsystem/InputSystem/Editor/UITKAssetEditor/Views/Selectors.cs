@@ -213,6 +213,11 @@ namespace UnityEngine.InputSystem.Editor
                 ?.wrappedProperty.FindPropertyRelative(nameof(InputActionMap.m_Actions));
             if (actions == null || actions.arraySize - 1 < state.selectedActionIndex || state.selectedActionIndex < 0)
                 return null;
+
+            // If we've currently selected a binding, get the parent input action for it.
+            if (state.selectionType == SelectionType.Binding)
+                return GetRelatedInputAction(state);
+
             return new SerializedInputAction(actions.GetArrayElementAtIndex(state.selectedActionIndex));
         }
 
