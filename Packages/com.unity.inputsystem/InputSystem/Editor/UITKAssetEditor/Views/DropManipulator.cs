@@ -47,6 +47,7 @@ namespace UnityEngine.InputSystem.Editor
             DragAndDrop.AcceptDrag();
             DroppedPerformedCallback.Invoke((int)mapItem.userData);
             Reset();
+            treeView.ReleaseMouse();
         }
 
         private int m_InitialIndex = -1;
