@@ -18,10 +18,13 @@ You can then get a reference to this action in your code, and check its value, o
 
 Actions also make it simpler to create a system that lets your players [customize their bindings at runtime](ActionBindings.md#interactive-rebinding), which is a common requirement for games.
 
->**Note**
->Actions are a runtime only feature. You can't use them in `EditorWindow` code.
-
->__Note__: It is possible to read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
+>**Notes:**
+> - Actions are a runtime only feature. You can't use them in [Editor window code](xref:EditorWindow).
+>
+> - You can read input without using Actions and Bindings by directly reading specific device controls. This is less flexible, but can be quicker to implement for certain situations. Read more about [directly reading devices from script](Workflow-Direct.md).
+>
+> - Although you can reorder actions in this window, the ordering is for visual convenience only, and does not affect the order in which the actions are triggered in your code. If multiple actions are performed in the same frame, the order in which they are reported by the input system is undefined. To avoid problems, you should not write code that assumes they will be reported in a particular order.
+> <br/>&nbsp;
 
 
 ## Overview
