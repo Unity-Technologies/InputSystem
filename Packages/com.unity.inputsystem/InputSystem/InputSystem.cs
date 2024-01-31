@@ -3099,6 +3099,9 @@ namespace UnityEngine.InputSystem
         public static InputActionAsset actions
         {
             get => s_Manager?.actions;
+            {
+                return UnityEngine.InputSystem.Editor.ProjectWideActionsAsset.instance;
+            }
             set
             {
                 // Prevent this property from being assigned in play-mode.
@@ -3110,7 +3113,6 @@ namespace UnityEngine.InputSystem
                 var current = s_Manager.actions;
                 if (ReferenceEquals(current, value))
                     return;
-
                 var valueIsNotNull = value != null;
                 #if UNITY_EDITOR
                 // Do not allow assigning non-persistent assets (pure in-memory objects)
@@ -3127,8 +3129,6 @@ namespace UnityEngine.InputSystem
 
                 // Note that we do not enable/disable any actions until play-mode
             }
-            }
-
         /// <summary>
         /// Event that is triggered if the instance assigned to property <see cref="actions"/> changes.
         /// </summary>
@@ -3143,7 +3143,6 @@ namespace UnityEngine.InputSystem
             add => s_Manager.onActionsChange += value;
             remove => s_Manager.onActionsChange -= value;
         }
-
 #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         /// <summary>
@@ -3571,6 +3570,10 @@ namespace UnityEngine.InputSystem
 #endif
             }
 
+#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+            ProjectWideActionsAsset.EnsureInitialized();
+#endif
+
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
@@ -3627,10 +3630,8 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            #if UNITY_EDITOR
             Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
                 "InputSettings has lost its native object");
-            #endif
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
@@ -3904,8 +3905,6 @@ namespace UnityEngine.InputSystem
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-
-
 
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
